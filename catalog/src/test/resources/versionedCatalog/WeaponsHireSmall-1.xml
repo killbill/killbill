@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2010-2011 Ning, Inc.
+  ~
+  ~ Ning licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../../../main/resources/CatalogSchema.xsd ">
+
+	<effectiveDate>2011-01-01T00:00:00+00:00</effectiveDate>
+
+	<currencies>
+		<currency>USD</currency>
+		<currency>EUR</currency>
+		<currency>GBP</currency>
+	</currencies>
+	
+	<productTypes>
+		<productType name="Firearms" />
+	</productTypes>
+
+	<products>
+		<product name="Pistol">
+			<type>Firearms</type>
+			<category>BASE</category>
+		</product>
+		<product name="Shotgun">
+			<type>Firearms</type>
+			<category>BASE</category>
+		</product>
+		<product name="Laser-Scope">
+			<type>Firearms</type>
+			<category>ADD_ON</category>
+		</product>
+	</products>
+	 
+	<rules>
+		<tiers>
+			<tier>
+				<product>Pistol</product>
+				<product>Shotgun</product>
+			</tier>
+		</tiers>
+		<changeRule>
+			<qualifier>DEFAULT</qualifier>
+			<policy>END_OF_TERM</policy>
+		</changeRule>
+		<changeRule>
+			<qualifier>TERM_FROM_SHORT_TO_LONG</qualifier>
+			<policy>IMMEDIATE</policy>
+		</changeRule>
+		<changeRule>
+			<qualifier>PRODUCT_FROM_LOW_TO_HIGH</qualifier>
+			<policy>IMMEDIATE</policy>
+		</changeRule>
+		<changeRule>
+			<qualifier>PRODUCT_FROM_LOW_TO_HIGH</qualifier>
+			<policy>IMMEDIATE</policy>
+		</changeRule>
+		<changeCase> 
+			<fromBillingPeriod>MONTHLY</fromBillingPeriod>
+			<toProduct>Shotgun</toProduct>
+			<toBillingPeriod>MONTHLY</toBillingPeriod>
+			<policy>END_OF_TERM</policy>
+		</changeCase>
+		<changeCase> 
+			<phaseType>TRIAL</phaseType>
+			<policy>IMMEDIATE</policy>
+		</changeCase>	
+		<alignmentCase>
+			<alignment>START_OF_SUBSCRIPTION</alignment>
+		</alignmentCase>
+	</rules>
+
+	<plans>
+		<plan name="pistol-monthly">
+			<product>Pistol</product>
+			<initialPhases>
+				<phase type="TRIAL">
+					<duration>
+						<unit>DAYS</unit>
+						<number>30</number>
+					</duration>
+					<fixedPrice> <!-- empty price implies $0 -->
+					</fixedPrice>
+				</phase>
+			</initialPhases>
+			<finalPhase type="EVERGREEN">
+				<duration>
+					<unit>UNLIMITED</unit>
+				</duration>
+				<billingPeriod>MONTHLY</billingPeriod>
+				<recurringPrice>
+					<price><currency>GBP</currency><value>29.95</value></price>
+					<price><currency>EUR</currency><value>29.95</value></price> 
+					<price><currency>USD</currency><value>29.95</value></price>								
+				</recurringPrice>
+			</finalPhase>
+			<billingAlignment>ACCOUNT</billingAlignment>
+		</plan>
+		<plan name="shotgun-monthly">
+			<product>Shotgun</product>
+			<initialPhases>
+				<phase type="TRIAL">
+					<duration>
+						<unit>DAYS</unit>
+						<number>30</number>
+					</duration>
+					<fixedPrice></fixedPrice>
+				    <!-- no price implies $0 -->
+				</phase>
+			</initialPhases>
+			<finalPhase type="EVERGREEN">
+				<duration>
+					<unit>UNLIMITED</unit>
+					<number>-1</number>
+				</duration>
+				<billingPeriod>MONTHLY</billingPeriod>
+				<recurringPrice>
+					<price><currency>USD</currency><value>249.95</value></price>								
+					<price><currency>EUR</currency><value>149.95</value></price>
+					<price><currency>GBP</currency><value>169.95</value></price>
+				</recurringPrice>
+			</finalPhase>
+			<billingAlignment>ACCOUNT</billingAlignment>
+		</plan>
+		<plan name="shotgun-annual">
+			<product>Shotgun</product>
+			<initialPhases>
+				<phase type="TRIAL">
+					<duration>
+						<unit>DAYS</unit>
+						<number>30</number>
+					</duration>
+					<fixedPrice>
+					</fixedPrice>
+				</phase>
+			</initialPhases>
+			<finalPhase type="EVERGREEN">
+				<duration>
+					<unit>UNLIMITED</unit>
+				</duration>
+				<billingPeriod>ANNUAL</billingPeriod>
+				<recurringPrice>
+					<price><currency>USD</currency><value>2399.95</value></price>								
+					<price><currency>EUR</currency><value>1499.95</value></price>
+					<price><currency>GBP</currency><value>1699.95</value></price>
+				</recurringPrice>
+			</finalPhase>
+			<billingAlignment>SUBSCRIPTION</billingAlignment>
+		</plan>
+	</plans>
+	<priceLists>
+		<priceList name="standardBase"> 
+			<isDefault>true</isDefault>			
+				<plans>	
+				<plan>pistol-monthly</plan>
+				<plan>shotgun-monthly</plan>
+				<plan>shotgun-annual</plan>
+			</plans>
+		</priceList>
+	</priceLists>
+</catalog>
