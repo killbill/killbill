@@ -32,8 +32,6 @@ public interface IPlan {
 
 	public abstract BillingPeriod getBillingPeriod();
 
-	public abstract BillingAlignment getBillingAlignment();
-
 	public abstract int getPlansAllowedInBundle();
 
 }

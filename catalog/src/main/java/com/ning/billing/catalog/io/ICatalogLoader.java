@@ -14,10 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.api;
+package com.ning.billing.catalog.io;
 
-public interface IProductType {
+import java.io.IOException;
+import java.net.URL;
 
-	public abstract String getName();
+import javax.xml.bind.JAXBException;
+
+import org.xml.sax.SAXException;
+
+import com.ning.billing.catalog.VersionedCatalog;
+import com.ning.billing.catalog.api.InvalidConfigException;
+
+public interface ICatalogLoader {
+
+	public abstract VersionedCatalog load(URL url) throws IOException,
+			SAXException, InvalidConfigException, JAXBException;
 
 }

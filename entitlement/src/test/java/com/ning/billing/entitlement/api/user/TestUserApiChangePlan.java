@@ -37,7 +37,7 @@ import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanAlignment;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.events.IEvent;
@@ -211,11 +211,11 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
     }
 
 
-    protected void testChangePlanSubscriptionAlignEOTWithChargeThroughDateReal() {
-        tChangePlanSubscriptionAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, "standard", "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
+    protected void testChangePlanChangePlanAlignEOTWithChargeThroughDateReal() {
+        tChangePlanChangePlanAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, "standard", "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
     }
 
-    private void tChangePlanSubscriptionAlignEOTWithChargeThroughDate(String fromProd, BillingPeriod fromTerm, String fromPlanSet,
+    private void tChangePlanChangePlanAlignEOTWithChargeThroughDate(String fromProd, BillingPeriod fromTerm, String fromPlanSet,
             String toProd, BillingPeriod toTerm, String toPlanSet) {
 
         log.info("Starting testChangePlanBundleAlignEOTWithChargeThroughDate");
@@ -328,7 +328,6 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), "Assault-Rifle");
             assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-            assertEquals(currentPlan.getPlanAlignment(), PlanAlignment.START_OF_BUNDLE);
             assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
 
             IPlanPhase currentPhase = subscription.getCurrentPhase();
@@ -379,7 +378,6 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), "Assault-Rifle");
             assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-            assertEquals(currentPlan.getPlanAlignment(), PlanAlignment.START_OF_BUNDLE);
             assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
 
             IPlanPhase currentPhase = subscription.getCurrentPhase();
@@ -397,7 +395,6 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), "Pistol");
             assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-            assertEquals(currentPlan.getPlanAlignment(), PlanAlignment.START_OF_BUNDLE);
             assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
 
             currentPhase = subscription.getCurrentPhase();

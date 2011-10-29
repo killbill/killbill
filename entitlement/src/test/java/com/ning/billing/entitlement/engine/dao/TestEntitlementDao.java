@@ -61,7 +61,7 @@ public class TestEntitlementDao extends TestUserApiBase {
 
         DateTime now = new DateTime();
         IPlan plan = catalog.getPlan(productName, term, planSetName);
-        IEvent event = new ApiEventCreate(UUID.randomUUID(), now, now, plan,planSetName, now, now, 1);
+        IEvent event = new ApiEventCreate(UUID.randomUUID(), now, now, plan.getName(), "evergreen", planSetName, now, now, 1);
         dao.insertEvent(event);
 
         sleep();
@@ -105,7 +105,7 @@ public class TestEntitlementDao extends TestUserApiBase {
         String planSetName = "standard";
 
         IPlan plan = catalog.getPlan(productName, term, planSetName);
-        final IEvent event = new ApiEventCreate(UUID.randomUUID(), now, now, plan, planSetName, now, now, 1);
+        final IEvent event = new ApiEventCreate(UUID.randomUUID(), now, now, plan.getName(), "evergreen", planSetName, now, now, 1);
 
         dao.inTransaction(new Transaction<Void, ISubscriptionSqlDao>() {
 

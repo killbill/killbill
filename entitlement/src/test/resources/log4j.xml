@@ -26,7 +26,7 @@
 
 
     <logger name="com.ning.billing.entitlement">
-        <level value="debug"/>
+        <level value="info"/>
     </logger>
 
     <root>

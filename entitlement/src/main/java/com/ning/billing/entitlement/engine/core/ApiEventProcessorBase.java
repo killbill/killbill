@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.glue.IEngineConfig;
+import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.clock.IClock;
 
 public abstract class ApiEventProcessorBase implements IApiEventProcessor {
@@ -51,14 +51,14 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
     protected final IClock clock;
 
     private Executor executor;
-    private final IEngineConfig config;
+    private final IEntitlementConfig config;
     protected IEventListener listener;
 
     protected long nbProcessedEvents;
     protected volatile boolean isProcessingEvents;
 
     @Inject
-    public ApiEventProcessorBase(IClock clock, IEntitlementDao dao, IEngineConfig config) {
+    public ApiEventProcessorBase(IClock clock, IEntitlementDao dao, IEntitlementConfig config) {
         this.clock = clock;
         this.dao = dao;
         this.config = config;

@@ -27,7 +27,7 @@ import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 public class ApiEventPause extends ApiEventBase {
 
     public ApiEventPause(UUID subscriptionId, DateTime now, DateTime requestedDate, DateTime effectiveDate, long version) {
-        super(subscriptionId, null, now, null, null, requestedDate, ApiEventType.PAUSE, effectiveDate, version);
+        super(subscriptionId, null, now, requestedDate, ApiEventType.PAUSE, effectiveDate, version);
     }
 
     public ApiEventPause(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,

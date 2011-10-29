@@ -19,28 +19,22 @@
 	xsi:noNamespaceSchemaLocation="../../../main/resources/CatalogSchema.xsd ">
 
 	<effectiveDate>2011-03-03T00:00:00+00:00</effectiveDate>
+	<catalogName>WeaponsHireSmall</catalogName>
 
 	<currencies>
 		<currency>USD</currency>
 		<currency>EUR</currency>
 		<currency>GBP</currency>
 	</currencies>
-	
-	<productTypes>
-		<productType name="Firearms" />
-	</productTypes>
 
 	<products>
 		<product name="Pistol">
-			<type>Firearms</type>
 			<category>BASE</category>
 		</product>
 		<product name="Shotgun">
-			<type>Firearms</type>
 			<category>BASE</category>
 		</product>
 		<product name="Laser-Scope">
-			<type>Firearms</type>
 			<category>ADD_ON</category>
 		</product>
 	</products>
@@ -52,35 +46,35 @@
 				<product>Shotgun</product>
 			</tier>
 		</tiers>
-		<changeRule>
+		<changePolicyRule>
 			<qualifier>DEFAULT</qualifier>
 			<policy>END_OF_TERM</policy>
-		</changeRule>
-		<changeRule>
+		</changePolicyRule>
+		<changePolicyRule>
 			<qualifier>TERM_FROM_SHORT_TO_LONG</qualifier>
 			<policy>IMMEDIATE</policy>
-		</changeRule>
-		<changeRule>
+		</changePolicyRule>
+		<changePolicyRule>
 			<qualifier>PRODUCT_FROM_LOW_TO_HIGH</qualifier>
 			<policy>IMMEDIATE</policy>
-		</changeRule>
-		<changeRule>
+		</changePolicyRule>
+		<changePolicyRule>
 			<qualifier>PRODUCT_FROM_LOW_TO_HIGH</qualifier>
 			<policy>IMMEDIATE</policy>
-		</changeRule>
-		<changeCase> 
+		</changePolicyRule>
+		<changePolicyCase> 
 			<fromBillingPeriod>MONTHLY</fromBillingPeriod>
 			<toProduct>Shotgun</toProduct>
 			<toBillingPeriod>MONTHLY</toBillingPeriod>
 			<policy>END_OF_TERM</policy>
-		</changeCase>
-		<changeCase> 
+		</changePolicyCase>
+		<changePolicyCase> 
 			<phaseType>TRIAL</phaseType>
 			<policy>IMMEDIATE</policy>
-		</changeCase>	
-		<alignmentCase>
+		</changePolicyCase>	
+		<changeAlignmentCase>
 			<alignment>START_OF_SUBSCRIPTION</alignment>
-		</alignmentCase>
+		</changeAlignmentCase>
 	</rules>
 
 	<plans>
@@ -107,7 +101,6 @@
 					<price><currency>USD</currency><value>29.95</value></price>								
 				</recurringPrice>
 			</finalPhase>
-			<billingAlignment>ACCOUNT</billingAlignment>
 		</plan>
 		<plan name="shotgun-monthly">
 			<product>Shotgun</product>
@@ -133,7 +126,6 @@
 					<price><currency>GBP</currency><value>169.95</value></price>
 				</recurringPrice>
 			</finalPhase>
-			<billingAlignment>ACCOUNT</billingAlignment>
 		</plan>
 		<plan name="shotgun-annual">
 			<product>Shotgun</product>
@@ -158,7 +150,6 @@
 					<price><currency>GBP</currency><value>1699.95</value></price>
 				</recurringPrice>
 			</finalPhase>
-			<billingAlignment>SUBSCRIPTION</billingAlignment>
 		</plan>
 	</plans>
 	<priceLists>

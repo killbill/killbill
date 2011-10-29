@@ -14,11 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.api;
+package com.ning.billing.entitlement.glue;
 
-public enum PlanAlignment {
-	START_OF_BUNDLE,
-	START_OF_SUBSCRIPTION,
-	CHANGE_OF_PLAN,
-	CHANGE_OF_PRICELIST
+import org.skife.config.Config;
+
+public interface IEntitlementConfig {
+
+    @Config("killbill.entitlement.dao.claim.time")
+    public long getDaoClaimTimeMs();
+
+    @Config("killbill.entitlement.dao.ready.max")
+    public int getDaoMaxReadyEvents();
+
+    @Config("killbill.entitlement.catalog.config.file")
+    public String getCatalogConfigFileName();
+
+    @Config("killbill.entitlement.engine.notifications.sleep")
+    public long getNotificationSleepTimeMs();
 }

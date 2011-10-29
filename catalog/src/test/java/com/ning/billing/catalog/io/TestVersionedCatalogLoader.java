@@ -15,12 +15,6 @@
  */
 package com.ning.billing.catalog.io;
 
-import static com.ning.billing.catalog.io.VersionedCatalogLoader.appendToURL;
-import static com.ning.billing.catalog.io.VersionedCatalogLoader.extractHrefs;
-import static com.ning.billing.catalog.io.VersionedCatalogLoader.findXmlFileReferences;
-import static com.ning.billing.catalog.io.VersionedCatalogLoader.findXmlUrlReferences;
-import static com.ning.billing.catalog.io.VersionedCatalogLoader.load;
-import static com.ning.billing.catalog.io.VersionedCatalogLoader.pullContentsFrom;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
@@ -28,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -43,11 +36,12 @@ import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
 
 public class TestVersionedCatalogLoader {
+	private final VersionedCatalogLoader loader = new VersionedCatalogLoader();
 
 
 	@Test(enabled=true)
 	public void testPullContentsFrom() throws MalformedURLException, IOException {
-		String contents = pullContentsFrom(new File("src/test/resources/WeaponsHireSmall.xml").toURI().toURL());
+		String contents = loader.pullContentsFrom(new File("src/test/resources/WeaponsHireSmall.xml").toURI().toURL());
 
 		assertTrue(contents.length() > 0);
 		
@@ -56,10 +50,10 @@ public class TestVersionedCatalogLoader {
 	@Test(enabled=true)
 	public void testAppendToURL() throws MalformedURLException, IOException {
 		URL u1 = new URL("http://www.ning.com/foo");
-		assertEquals("http://www.ning.com/foo/bar",appendToURL(u1, "bar").toString());
+		assertEquals("http://www.ning.com/foo/bar",loader.appendToURL(u1, "bar").toString());
 
 		URL u2 = new URL("http://www.ning.com/foo/");
-		assertEquals("http://www.ning.com/foo/bar",appendToURL(u2, "bar").toString());
+		assertEquals("http://www.ning.com/foo/bar",loader.appendToURL(u2, "bar").toString());
 		
 	}
 	
@@ -72,7 +66,7 @@ public class TestVersionedCatalogLoader {
 				"replica.foo\n" + 
 				"snv1/\n" + 
 				"viking.xml\n" ;
-		List<URL> urls = findXmlFileReferences(page, new URL("http://ning.com/"));
+		List<URL> urls = loader.findXmlFileReferences(page, new URL("http://ning.com/"));
 		assertEquals(2, urls.size());
 		assertEquals("http://ning.com/dg.xml", urls.get(0).toString());
 		assertEquals("http://ning.com/viking.xml", urls.get(1).toString());
@@ -98,7 +92,7 @@ public class TestVersionedCatalogLoader {
 				"</ul>" + 
 				"<address>Apache/2.2.3 (CentOS) Server at <a href=\"mailto:kate@ning.com\">gepo.ningops.net</a> Port 80</address>" + 
 				"</body></html>" ;
-		List<String> hrefs = extractHrefs(page);
+		List<String> hrefs = loader.extractHrefs(page);
 		assertEquals(8, hrefs.size());
 		assertEquals("/config/trunk/", hrefs.get(0));
 		assertEquals("dg.xml", hrefs.get(1));
@@ -123,7 +117,7 @@ public class TestVersionedCatalogLoader {
 				"</ul>" + 
 				"<address>Apache/2.2.3 (CentOS) Server at <a href=\"mailto:kate@ning.com\">gepo.ningops.net</a> Port 80</address>" + 
 				"</body></html>" ;
-		List<URL> urls = findXmlUrlReferences(page, new URL("http://ning.com/"));
+		List<URL> urls = loader.findXmlUrlReferences(page, new URL("http://ning.com/"));
 		assertEquals(2, urls.size());
 		assertEquals("http://ning.com/dg.xml", urls.get(0).toString());
 		assertEquals("http://ning.com/viking.xml", urls.get(1).toString());
@@ -132,7 +126,7 @@ public class TestVersionedCatalogLoader {
 	
 	@Test(enabled=true)
 	public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException {
-		VersionedCatalog c = load(new File("src/test/resources/versionedCatalog").toURI().toURL());
+		VersionedCatalog c = loader.load(new File("src/test/resources/versionedCatalog").toURI().toURL());
 		assertEquals(4, c.size());
 		Iterator<Catalog> it = c.iterator();
 		it.next(); //discard the baseline

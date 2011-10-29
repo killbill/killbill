@@ -85,7 +85,7 @@ public class TestBusinessSubscription
         Assert.assertEquals(subscription.getPrice(), phase.getRecurringPrice().getPrice(null));
         Assert.assertEquals(subscription.getProductCategory(), product.getCategory());
         Assert.assertEquals(subscription.getProductName(), product.getName());
-        Assert.assertEquals(subscription.getProductType(), product.getType().getName());
+        Assert.assertEquals(subscription.getProductType(), product.getCatalogName());
         Assert.assertEquals(subscription.getStartDate(), isubscription.getStartDate());
     }
 

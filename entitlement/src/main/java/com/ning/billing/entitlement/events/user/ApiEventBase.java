@@ -21,7 +21,9 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.entitlement.alignment.EntitlementAlignment;
+import com.ning.billing.entitlement.alignment.IPlanAligner;
+import com.ning.billing.entitlement.alignment.PlanAligner;
+import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.events.EventBase;
 import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 
@@ -34,14 +36,24 @@ public class ApiEventBase extends EventBase implements IUserEvent {
     private final String eventPriceList;
 
 
-    public ApiEventBase(UUID subscriptionId, DateTime bundleStartDate, DateTime processed, IPlan eventPlan,
+    public ApiEventBase(UUID subscriptionId, DateTime bundleStartDate, DateTime processed, String planName, String phaseName,
             String priceList, DateTime requestedDate,  ApiEventType eventType, DateTime effectiveDate, long activeVersion) {
         super(subscriptionId, requestedDate, effectiveDate, processed, activeVersion, true);
         this.eventType = eventType;
         this.eventPriceList = priceList;
-        this.eventPlan = (eventPlan != null) ? eventPlan.getName() : null;
-        this.eventPlanPhase = (eventPlan != null) ? getPhaseName(eventPlan, bundleStartDate, effectiveDate) : null;
+        this.eventPlan = planName;
+        this.eventPlanPhase = phaseName;
     }
+
+    public ApiEventBase(UUID subscriptionId, DateTime bundleStartDate, DateTime processed,
+            DateTime requestedDate,  ApiEventType eventType, DateTime effectiveDate, long activeVersion) {
+        super(subscriptionId, requestedDate, effectiveDate, processed, activeVersion, true);
+        this.eventType = eventType;
+        this.eventPriceList = null;
+        this.eventPlan = null;
+        this.eventPlanPhase = null;
+    }
+
 
     public ApiEventBase(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,
             String priceList, DateTime requestedDate,  ApiEventType eventType, DateTime effectiveDate, long activeVersion,
@@ -97,15 +109,4 @@ public class ApiEventBase extends EventBase implements IUserEvent {
                 + ", getSubscriptionId()=" + getSubscriptionId()
                 + ", isActive()=" + isActive() + "]";
     }
-
-    private String getPhaseName(IPlan eventPlan, DateTime bundleStartDate, DateTime effectiveDate) {
-
-        if (eventType != ApiEventType.CREATE && eventType != ApiEventType.CHANGE) {
-            return null;
-        }
-        EntitlementAlignment align = new EntitlementAlignment(bundleStartDate, eventPlan, effectiveDate);
-        return align.getCurrentTimedPhase().getPhase().getName();
-     }
-
-
 }

@@ -29,8 +29,8 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.entitlement.alignment.EntitlementAlignment;
-import com.ning.billing.entitlement.alignment.EntitlementAlignment.TimedPhase;
+import com.ning.billing.entitlement.alignment.IPlanAligner;
+import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.api.user.IApiListener;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
@@ -50,13 +50,15 @@ public class UserApi implements IUserApi {
     private final IClock clock;
     private final IEntitlementDao dao;
     private final ICatalog catalog;
+    private final IPlanAligner planAligner;
 
     @Inject
-    public UserApi(Engine engine, IClock clock, IEntitlementDao dao) {
+    public UserApi(Engine engine, IClock clock, IPlanAligner planAligner, IEntitlementDao dao) {
         super();
         this.engine = engine;
         this.clock = clock;
         this.dao = dao;
+        this.planAligner = planAligner;
         this.catalog = engine.getCatalog();
     }
 
@@ -139,14 +141,17 @@ public class UserApi implements IUserApi {
                      plan.getProduct().getCategory().toString()));
         }
 
-        Subscription subscription = new Subscription(bundleId, plan.getProduct().getCategory(), bundleStartDate, now);
-        ApiEventCreate creationEvent =
-            new ApiEventCreate(subscription.getId(), bundleStartDate, now, plan, realPriceList,
-                    now, now, subscription.getActiveVersion());
+        DateTime effectiveDate = now;
 
-        EntitlementAlignment planPhaseAlignment = new EntitlementAlignment(subscription.getId(), now,
-                bundleStartDate, plan, now, subscription.getActiveVersion());
-        IPhaseEvent nextPhaseEvent = planPhaseAlignment.getNextPhaseEvent();
+        Subscription subscription = new Subscription(bundleId, plan.getProduct().getCategory(), bundleStartDate, effectiveDate);
+
+        TimedPhase currentTimedPhase =  planAligner.getCurrentTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
+        ApiEventCreate creationEvent =
+            new ApiEventCreate(subscription.getId(), bundleStartDate, now, plan.getName(), currentTimedPhase.getPhase().getName(), realPriceList,
+                    now, effectiveDate, subscription.getActiveVersion());
+
+        TimedPhase nextTimedPhase =  planAligner.getNextTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
+        IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, subscription, now);
         List<IEvent> events = new ArrayList<IEvent>();
         events.add(creationEvent);
         if (nextPhaseEvent != null) {

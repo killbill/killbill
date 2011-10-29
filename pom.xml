@@ -121,8 +121,8 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.jetty</groupId>
-                <artifactId>ning-service-skeleton-core</artifactId>
-                <version>0.0.2</version>
+                <artifactId>ning-service-skeleton-utils</artifactId>
+                <version>0.0.6-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>

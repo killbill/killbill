@@ -24,7 +24,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 import com.google.inject.Inject;
-import com.ning.billing.entitlement.glue.IEngineConfig;
+import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.clock.IClock;
 
 public class EntitlementDaoSqlMock extends EntitlementDao implements IEntitlementDaoMock {
@@ -32,7 +32,7 @@ public class EntitlementDaoSqlMock extends EntitlementDao implements IEntitlemen
     private final ResetSqlDao resetDao;
 
     @Inject
-    public EntitlementDaoSqlMock(DBI dbi, IClock clock, IEngineConfig config) {
+    public EntitlementDaoSqlMock(DBI dbi, IClock clock, IEntitlementConfig config) {
         super(dbi, clock, config);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
     }

@@ -128,7 +128,7 @@ public class BusinessSubscriptionEvent
         final IPlan currentPlan = subscription.getCurrentPlan();
         if (currentPlan != null && currentPlan.getProduct() != null) {
             final IProduct product = currentPlan.getProduct();
-            if (product.getType() != null && product.getCategory() != null) {
+            if (product.getCatalogName() != null && product.getCategory() != null) {
                 return product.getCategory();
             }
         }

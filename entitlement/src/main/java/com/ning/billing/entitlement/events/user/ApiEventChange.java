@@ -27,8 +27,9 @@ import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 
 public class ApiEventChange extends ApiEventBase {
 
-    public ApiEventChange(UUID subscriptionId,  DateTime bundleStartDate, DateTime now, IPlan eventPlan, String priceList, DateTime requestedDate, DateTime effectiveDate, long version) {
-        super(subscriptionId, bundleStartDate, now, eventPlan, priceList, requestedDate, ApiEventType.CHANGE, effectiveDate, version);
+    public ApiEventChange(UUID subscriptionId,  DateTime bundleStartDate, DateTime now, String planName, String phaseName, String priceList,
+            DateTime requestedDate, DateTime effectiveDate, long version) {
+        super(subscriptionId, bundleStartDate, now, planName, phaseName, priceList, requestedDate, ApiEventType.CHANGE, effectiveDate, version);
     }
 
     public ApiEventChange(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase, String priceList,

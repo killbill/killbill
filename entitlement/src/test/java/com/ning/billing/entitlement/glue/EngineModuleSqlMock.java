@@ -21,7 +21,7 @@ import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
 
-public class EngineModuleSqlMock extends EngineModule {
+public class EngineModuleSqlMock extends EntitlementModule {
 
     @Override
     protected void installEntitlementDao() {

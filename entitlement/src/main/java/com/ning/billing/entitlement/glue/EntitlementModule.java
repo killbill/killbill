@@ -24,6 +24,8 @@ import com.ning.billing.catalog.CatalogUserApi;
 import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
+import com.ning.billing.entitlement.alignment.IPlanAligner;
+import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.billing.BillingApi;
 import com.ning.billing.entitlement.api.billing.IBillingApi;
 import com.ning.billing.entitlement.api.user.IUserApi;
@@ -38,7 +40,7 @@ import com.ning.billing.util.clock.IClock;
 
 
 
-public class EngineModule extends AbstractModule {
+public class EntitlementModule extends AbstractModule {
 
     protected void installCatalog() {
         bind(ICatalogUserApi.class).to(CatalogUserApi.class).asEagerSingleton();
@@ -53,8 +55,8 @@ public class EngineModule extends AbstractModule {
     }
 
     protected void installConfig() {
-        final IEngineConfig config = new ConfigurationObjectFactory(System.getProperties()).build(IEngineConfig.class);
-        bind(IEngineConfig.class).toInstance(config);
+        final IEntitlementConfig config = new ConfigurationObjectFactory(System.getProperties()).build(IEntitlementConfig.class);
+        bind(IEntitlementConfig.class).toInstance(config);
     }
 
     protected void installApiEventProcessor() {
@@ -65,8 +67,9 @@ public class EngineModule extends AbstractModule {
         bind(IEntitlementDao.class).to(EntitlementDao.class).asEagerSingleton();
     }
 
-    protected void installEngine() {
+    protected void installEntitlementCore() {
         bind(Engine.class).asEagerSingleton();
+        bind(IPlanAligner.class).to(PlanAligner.class).asEagerSingleton();
     }
 
     protected void installUserApi() {
@@ -90,7 +93,7 @@ public class EngineModule extends AbstractModule {
         installCatalog();
         installApiEventProcessor();
         installEntitlementDao();
-        installEngine();
+        installEntitlementCore();
         installUserApi();
         installBillingApi();
         installDBI();

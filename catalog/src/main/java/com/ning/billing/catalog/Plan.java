@@ -52,9 +52,6 @@ public class Plan extends ValidatingConfig implements IPlan {
 	@XmlElement(name="finalPhase", required=true)
     private PlanPhase finalPhase;
 	
-	@XmlElement(required=true)
-	private BillingAlignment billingAlignment;
-
 	//If this is missing it defaults to 1
 	//No other value is allowed for BASE plans.
 	//No other value is allowed for Tiered ADDONS
@@ -135,7 +132,6 @@ public class Plan extends ValidatingConfig implements IPlan {
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
 		return errors;
-		
 	}
 	
 	@Override
@@ -150,18 +146,6 @@ public class Plan extends ValidatingConfig implements IPlan {
 	@Override
 	public BillingPeriod getBillingPeriod(){
 		return finalPhase.getBillingPeriod();
-	}
-
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPlan#getBillingAlignment()
-	 */
-	@Override
-	public BillingAlignment getBillingAlignment() {
-		return billingAlignment;
-	}
-
-	public void setBillingAlignment(BillingAlignment billingAlignment) {
-		this.billingAlignment = billingAlignment;
 	}
 
 	/* (non-Javadoc)

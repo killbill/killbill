@@ -16,8 +16,6 @@
 
 package com.ning.billing.catalog.io;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
@@ -25,7 +23,6 @@ import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -33,12 +30,6 @@ import javax.xml.validation.SchemaFactory;
 import org.xml.sax.SAXException;
 
 import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.Duration;
-import com.ning.billing.catalog.Plan;
-import com.ning.billing.catalog.PlanPhase;
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
-import com.ning.billing.catalog.ProductType;
 import com.ning.billing.catalog.ValidatingConfig.ValidationErrors;
 import com.ning.billing.catalog.api.InvalidConfigException;
 
@@ -46,7 +37,7 @@ public class XMLReader {
 
 
     public static Catalog getCatalogFromName(URL url) throws SAXException, InvalidConfigException, JAXBException {
-        JAXBContext context =JAXBContext.newInstance(Catalog.class,Plan.class,Duration.class, Product.class, ProductType.class, PlanPhase.class, PriceList.class);
+        JAXBContext context =JAXBContext.newInstance(Catalog.class);
 
         InputStream resourceStream = XMLReader.class.getResourceAsStream("/CatalogSchema.xsd");
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI );
@@ -68,17 +59,5 @@ public class XMLReader {
             return null;
         }
     }
-	/**
-	 * @param args
-	 * @throws SAXException
-	 * @throws InvalidConfigException
-	 */
-	public static void main(String[] args) throws IOException, TransformerException, JAXBException, SAXException, InvalidConfigException {
-		String curDir = System.getProperty("user.dir");
-		getCatalogFromName(new File("src/test/resources/WeaponsHire.xml").toURI().toURL());
-		getCatalogFromName(new File("src/test/resources/WeaponsHireSmall.xml").toURI().toURL());
-
-	}
-	
 	
 }

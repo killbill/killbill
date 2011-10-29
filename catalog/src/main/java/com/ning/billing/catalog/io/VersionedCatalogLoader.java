@@ -33,13 +33,17 @@ import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
 
-public class VersionedCatalogLoader {
-	private static final String XML_EXTENSION = ".xml";
-	private static final String HREF_LOW_START = "href=\""; 
-	private static final String HREF_CAPS_START = "HREF=\""; 
-	private static final String HREF_SEARCH_END = "\"";
+public class VersionedCatalogLoader implements ICatalogLoader {
+	private  final String XML_EXTENSION = ".xml";
+	private  final String HREF_LOW_START = "href=\""; 
+	private  final String HREF_CAPS_START = "HREF=\""; 
+	private  final String HREF_SEARCH_END = "\"";
 		
-	public static VersionedCatalog load(URL url) throws IOException, SAXException, InvalidConfigException, JAXBException {
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.io.ICatalogLoader#load(java.net.URL)
+	 */
+	@Override
+	public  VersionedCatalog load(URL url) throws IOException, SAXException, InvalidConfigException, JAXBException {
 		String directoryContents = pullContentsFrom(url);
 		List<URL> xmlURLs = findXmlReferences(directoryContents, url);
 		VersionedCatalog result = new VersionedCatalog();
@@ -50,14 +54,14 @@ public class VersionedCatalogLoader {
 		return result;
 	}
 	
-	protected static List<URL> findXmlReferences(String directoryContents, URL url) throws MalformedURLException {
+	protected  List<URL> findXmlReferences(String directoryContents, URL url) throws MalformedURLException {
 		if(url.getProtocol().equals("file")) {
 			return findXmlFileReferences(directoryContents, url);
 		} 
 		return findXmlUrlReferences(directoryContents, url);
 	}
 
-	protected static List<URL> findXmlUrlReferences(String directoryContents, URL url) throws MalformedURLException {
+	protected  List<URL> findXmlUrlReferences(String directoryContents, URL url) throws MalformedURLException {
 		List<URL> results = new ArrayList<URL>();
 		List<String> urlFragments = extractHrefs(directoryContents);
 		for(String u : urlFragments) {
@@ -74,7 +78,7 @@ public class VersionedCatalogLoader {
 		return results;
 	}
 
-	protected static List<String> extractHrefs(String directoryContents) {
+	protected  List<String> extractHrefs(String directoryContents) {
 		List<String> results = new ArrayList<String>();
 		int start = 0;
 		int end = 0;
@@ -102,7 +106,7 @@ public class VersionedCatalogLoader {
 		return results;
 	}
 
-	protected static List<URL> findXmlFileReferences(String directoryContents, URL url) throws MalformedURLException {
+	protected  List<URL> findXmlFileReferences(String directoryContents, URL url) throws MalformedURLException {
 		List<URL> results = new ArrayList<URL>();
 		String[] filenames = directoryContents.split("\\n");
 		for(String filename : filenames) {
@@ -113,7 +117,7 @@ public class VersionedCatalogLoader {
 		return results;
 	}
 
-	protected static URL appendToURL(final URL url, final String filename) throws MalformedURLException {
+	protected  URL appendToURL(final URL url, final String filename) throws MalformedURLException {
 		String f = filename;
 		if (!url.toString().endsWith("/")) {
 			f = "/" + filename;
@@ -121,14 +125,9 @@ public class VersionedCatalogLoader {
 		return new URL(url.toString() + f);
 	}
 
-	protected static String pullContentsFrom(final URL url) throws IOException {
+	protected  String pullContentsFrom(final URL url) throws IOException {
 		URLConnection connection = url.openConnection();
 		InputStream content = connection.getInputStream();
 		return new Scanner(content).useDelimiter("\\A").next();
-	}
-	
-	public static void main (String[] args) throws Exception {		
-		//new VersionedCatalog().initialize(new URL("http://gepo.ningops.net/config/trunk/xno/viking/master/viking-core/"));
-		new VersionedCatalogLoader().load(new URL("file:///Users/mwesthead/work/killbill/catalog/src/test/resources/"));
 	}
 }

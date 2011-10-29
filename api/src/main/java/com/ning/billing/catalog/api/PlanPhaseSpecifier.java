@@ -20,9 +20,9 @@ public class PlanPhaseSpecifier extends PlanSpecifier {
 
 	private final PhaseType phaseType;
 	
-	public PlanPhaseSpecifier(String productName, BillingPeriod billingPeriod,
+	public PlanPhaseSpecifier(String productName, ProductCategory productCategory, BillingPeriod billingPeriod,
 			String priceListName, PhaseType phaseType) {
-		super(productName, billingPeriod, priceListName);
+		super(productName, productCategory, billingPeriod, priceListName);
 		this.phaseType = phaseType;
 	}
 

@@ -42,7 +42,7 @@ import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IUserEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.entitlement.glue.IEngineConfig;
+import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.clock.IClock;
 
@@ -54,11 +54,11 @@ public class EntitlementDao implements IEntitlementDao {
     private final ISubscriptionSqlDao subscriptionsDao;
     private final IBundleSqlDao bundlesDao;
     private final IEventSqlDao eventsDao;
-    private final IEngineConfig config;
+    private final IEntitlementConfig config;
     private final String hostname;
 
     @Inject
-    public EntitlementDao(DBI dbi, IClock clock, IEngineConfig config) {
+    public EntitlementDao(DBI dbi, IClock clock, IEntitlementConfig config) {
         this.clock = clock;
         this.config = config;
         this.subscriptionsDao = dbi.onDemand(ISubscriptionSqlDao.class);

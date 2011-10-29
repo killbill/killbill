@@ -17,9 +17,7 @@
 package com.ning.billing.catalog;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -28,32 +26,38 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.IProductType;
-import com.ning.billing.catalog.api.PlanAlignment;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
+import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 public class Catalog extends ValidatingConfig implements ICatalog {
+	public PlanRules getPlanRules() {
+		return planRules;
+	}
+
+	public void setPlanRules(PlanRules planRules) {
+		this.planRules = planRules;
+	}
 
 	@XmlElement(required=true)
 	private Date effectiveDate;
+
+	@XmlElement(required=true)
+	private String catalogName;
 
 	private URL catalogURL;
 
 	@XmlElementWrapper(name="currencies", required=true)
 	@XmlElement(name="currency", required=true)
 	private Currency[] supportedCurrencies;
-
-	@XmlElementWrapper(name="productTypes", required=true)
-	@XmlElement(name="productType", required=true)
-    private ProductType[] productTypes;
 
 	@XmlElementWrapper(name="products", required=true)
 	@XmlElement(name="product", required=true)
@@ -93,12 +97,12 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 	}
 
     /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.ICatalog#getProductTypes()
+	 * @see com.ning.billing.catalog.ICatalog#getCalalogName()
 	 */
     @Override
-	public ProductType[] getProductTypes() {
-        return productTypes;
-    }
+	public String getCalalogName() {
+		return catalogName;
+	}
 
     /* (non-Javadoc)
 	 * @see com.ning.billing.catalog.ICatalog#getProducts()
@@ -138,20 +142,6 @@ public class Catalog extends ValidatingConfig implements ICatalog {
     }
 
     /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.ICatalog#getProductsForType(com.ning.billing.catalog.ProductType)
-	 */
-    @Override
-	public List<IProduct> getProductsForType(IProductType productType) {
-    	ArrayList<IProduct> result = new ArrayList<IProduct>();
-    	for(Product p : products) {
-			if(p.getType().equals(productType)) {
-				result.add(p);
-			}
-		}
-        return result;
-    }
-
-    /* (non-Javadoc)
 	 * @see com.ning.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
 	 */
     @Override
@@ -170,10 +160,6 @@ public class Catalog extends ValidatingConfig implements ICatalog {
         }
         return null;
     }
-
-	public void setProductTypes(ProductType[] productTypes) {
-		this.productTypes = productTypes;
-	}
 
 	@Override
 	public Currency[] getSupportedCurrencies() {
@@ -200,7 +186,6 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
 		errors.addAll(validate(catalog,errors, products));
-		errors.addAll(validate(catalog,errors, productTypes));
 		errors.addAll(validate(catalog,errors, priceLists));
 		errors.addAll(validate(catalog,errors, plans));
 		errors.addAll(planRules.validate(catalog, errors));
@@ -211,6 +196,11 @@ public class Catalog extends ValidatingConfig implements ICatalog {
     public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from, PlanSpecifier to) {
         return planRules.getPlanChangePolicy(from, to, this);
     }
+    
+    @Override
+    public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from, PlanSpecifier to) {
+        return planRules.getPlanChangeAlignment(from, to, this);
+    }
 
     @Override
     public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase) {
@@ -218,12 +208,20 @@ public class Catalog extends ValidatingConfig implements ICatalog {
     }
     
     @Override
-    public PlanAlignment getPlanAlignment(PlanPhaseSpecifier from, PlanSpecifier to) {
-        return planRules.getPlanAlignment(from, to, this);
+    public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier planPhase) {
+    	PlanPhaseSpecifier specifier = new PlanPhaseSpecifier(planPhase.getProductName(), planPhase.getProductCategory(), planPhase.getBillingPeriod(), planPhase.getPriceListName(), null);
+    	
+        return planRules.getPlanCreateAlignment(specifier, this);
+    }
+    
+    @Override
+    public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase) {
+        return planRules.getBillingAlignment(planPhase, this);
     }
 
+
     @Override
-    public IPlan getPlanFromName(String name) {
+    public Plan getPlanFromName(String name) {
         if (name == null) {
             return null;
         }
@@ -296,6 +294,12 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 
 	public void setPriceLists(PriceList[] priceLists) {
 		this.priceLists = priceLists;
+	}
+
+	@Override
+	public void configureEffectiveDate(Date date) {
+		// Nothing to do here this is a method that is only inplemented on VersionedCatalog
+		
 	}
 	
 	//TODO: MDW validation - only allow one default pricelist

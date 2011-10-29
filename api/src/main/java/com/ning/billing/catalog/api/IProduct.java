@@ -19,8 +19,6 @@ package com.ning.billing.catalog.api;
 
 public interface IProduct {
 
-	public abstract IProductType getType();
-
 	public abstract String getName();
 
 	public abstract IProduct[] getAvailable();
@@ -28,5 +26,7 @@ public interface IProduct {
 	public abstract IProduct[] getIncluded();
 
 	public abstract ProductCategory getCategory();
+
+	public abstract String getCatalogName();
 
 }

@@ -33,14 +33,16 @@ import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.alignment.EntitlementAlignment;
-import com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
+import com.ning.billing.entitlement.alignment.IPlanAligner;
+import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
+import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -61,6 +63,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
     private final IClock clock;
     private final IEntitlementDao dao;
     private final ICatalog catalog;
+    private final IPlanAligner planAligner;
 
     // STEPH interaction with billing /payment system
     private final DateTime chargedThroughDate;
@@ -148,7 +151,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         this.clock = engine.getClock();
         this.dao = engine.getDao();
         this.catalog = engine.getCatalog();
-
+        this.planAligner = engine.getPlanAligner();
         this.id = id;
         this.bundleId = bundleId;
         this.startDate = startDate;
@@ -218,8 +221,13 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
         DateTime now = clock.getUTCNow();
 
-        PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(getCurrentPlan().getProduct().getName(),
-        		getCurrentPlan().getBillingPeriod(), getCurrentPriceList(), getCurrentPhase().getPhaseType());
+        IPlan currentPlan = getCurrentPlan();
+        PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
+                currentPlan.getProduct().getCategory(),
+        		getCurrentPlan().getBillingPeriod(),
+        		getCurrentPriceList(),
+        		getCurrentPhase().getPhaseType());
+
         ActionPolicy policy = catalog.getPlanCancelPolicy(planPhase);
         DateTime effectiveDate = getPlanChangeEffectiveDate(policy, now);
         IEvent cancelEvent = new ApiEventCancel(id, bundleStartDate, now, now, effectiveDate, activeVersion);
@@ -237,10 +245,9 @@ public class Subscription extends PrivateFields  implements ISubscription {
         List<IEvent> uncancelEvents = new ArrayList<IEvent>();
         uncancelEvents.add(uncancelEvent);
 
-        // Recalculate Plan alignment for next phase event
-        EntitlementAlignment planPhaseAlignment = new EntitlementAlignment(id, now, bundleStartDate, getCurrentPlan(),
-                now, activeVersion);
-        IPhaseEvent nextPhaseEvent = planPhaseAlignment.getNextPhaseEvent();
+        DateTime planStartDate = getCurrentPlanStart();
+        TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(this, getCurrentPlan(), now, planStartDate);
+        IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, this, now);
         if (nextPhaseEvent != null) {
             uncancelEvents.add(nextPhaseEvent);
         }
@@ -271,20 +278,25 @@ public class Subscription extends PrivateFields  implements ISubscription {
                     productName, term.toString(), realPriceList);
         }
 
-        PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(getCurrentPlan().getProduct().getName(),
-        		getCurrentPlan().getBillingPeriod(),
+        IPlan currentPlan = getCurrentPlan();
+        PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
+        		currentPlan.getProduct().getCategory(),
+                currentPlan.getBillingPeriod(),
         		currentPriceList, getCurrentPhase().getPhaseType());
-        PlanPhaseSpecifier toPlanPhase = new PlanPhaseSpecifier(newPlan.getProduct().getName(),
+        PlanSpecifier toPlanPhase = new PlanSpecifier(newPlan.getProduct().getName(),
+                newPlan.getProduct().getCategory(),
         		newPlan.getBillingPeriod(),
-        		realPriceList, null);
+        		realPriceList);
 
         ActionPolicy policy = catalog.getPlanChangePolicy(fromPlanPhase, toPlanPhase);
         DateTime effectiveDate = getPlanChangeEffectiveDate(policy, now);
-        IEvent changeEvent = new ApiEventChange(id, bundleStartDate, now, newPlan, realPriceList, now, effectiveDate, activeVersion);
 
-        EntitlementAlignment planPhaseAlignment = new EntitlementAlignment(id, now, bundleStartDate, newPlan,
-                effectiveDate, activeVersion);
-        IPhaseEvent nextPhaseEvent = planPhaseAlignment.getNextPhaseEvent();
+        TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(this, newPlan, realPriceList, effectiveDate);
+        IEvent changeEvent = new ApiEventChange(id, bundleStartDate, now, newPlan.getName(), currentTimedPhase.getPhase().getName(),
+                realPriceList, now, effectiveDate, activeVersion);
+
+        TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(this, newPlan, realPriceList, effectiveDate);
+        IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, this, now);
         List<IEvent> changeEvents = new ArrayList<IEvent>();
         // Add phase event first so we expect to see PHASE event first-- mostly for test expectation
         if (nextPhaseEvent != null) {
@@ -341,6 +353,28 @@ public class Subscription extends PrivateFields  implements ISubscription {
         return paidThroughDate;
     }
 
+    public DateTime getCurrentPlanStart() {
+
+        if (transitions == null) {
+            throw new EntitlementError(String.format("No transitions for subscription %s", getId()));
+        }
+
+        Iterator<SubscriptionTransition> it = ((LinkedList<SubscriptionTransition>) transitions).descendingIterator();
+        while (it.hasNext()) {
+            SubscriptionTransition cur = it.next();
+            if (cur.getTransitionTime().isAfter(clock.getUTCNow())) {
+                // Skip future events
+                continue;
+            }
+            if (cur.getEventType() == EventType.API_USER &&
+                    cur.getApiEventType() == ApiEventType.CHANGE) {
+                return cur.getTransitionTime();
+            }
+        }
+        // CREATE event
+        return transitions.get(0).getTransitionTime();
+    }
+
     public List<ISubscriptionTransition> getActiveTransitions() {
         if (transitions == null) {
             return null;
@@ -380,7 +414,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         for (SubscriptionTransition cur : transitions) {
             if (cur.getTransitionTime().isBefore(clock.getUTCNow()) ||
                     cur.getEventType() == EventType.PHASE ||
-                        cur.getApiEventType() != ApiEventType.CHANGE) {
+                    cur.getApiEventType() != ApiEventType.CHANGE) {
                 continue;
             }
             return true;
@@ -406,6 +440,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         }
         return effectiveDate;
     }
+
 
     private DateTime getCurrentPhaseStart() {
 

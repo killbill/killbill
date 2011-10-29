@@ -15,47 +15,54 @@
  */
 package com.ning.billing.catalog;
 
+import com.ning.billing.catalog.api.ProductCategory;
+
 
 public class TestPlanRules {
 
-	public Catalog createCatalog(PlanChangeRule[] generalRules, 
-			PlanChangeCase[] specialCaseRules,
-			PlanCancelCase[] cancelCaseRules,
+	public Catalog createCatalog(PlanPolicyChangeRule[] generalRules, 
+			CaseChangePlanPolicy[] specialCaseRules,
+			CaseCancelPolicy[] cancelCaseRules,
 					Product fromP,
 					Product toP) {
 		Catalog c = new Catalog();
-		PlanRules pcr = new PlanRules();
-		pcr.setGeneralRules(generalRules);
-		pcr.setSpecialCaseRules(specialCaseRules);
-		pcr.setCancelCaseRules(cancelCaseRules);
+		PlanRules pcr = new PlanRules(
+				new ProductTier[] {new ProductTier(new Product[]{ fromP, toP })},
+				generalRules,
+				specialCaseRules,
+				cancelCaseRules,
+				null,
+				null
+		);
 		c.setPlanChangeRules(pcr);
-		pcr.setProductTiers(new ProductTier[] {new ProductTier(new Product[]{ fromP, toP })});
 		c.setProducts(new Product[] { fromP, toP });
 		return c;
 	}
 	
-	public Catalog createCatalog(PlanChangeRule[] generalRules, 
-			PlanChangeCase[] specialCaseRules,
-			PlanCancelCase[] cancelCaseRules,
-			PlanAlignmentCase[] alignmentCases,
+	public Catalog createCatalog(PlanPolicyChangeRule[] generalRules, 
+			CaseChangePlanPolicy[] specialCaseRules,
+			CaseCancelPolicy[] cancelCaseRules,
+			CaseChangePlanAlignment[] alignmentChangeCases,
 					Product fromP,
 					Product toP) {
 		Catalog c = new Catalog();
-		PlanRules pcr = new PlanRules();
-		pcr.setGeneralRules(generalRules);
-		pcr.setSpecialCaseRules(specialCaseRules);
-		pcr.setCancelCaseRules(cancelCaseRules);
-		pcr.setAlignmentCase(alignmentCases);
+		PlanRules pcr = new PlanRules(
+				new ProductTier[] {new ProductTier(new Product[]{ fromP, toP })},
+				generalRules,
+				specialCaseRules,
+				cancelCaseRules,
+				alignmentChangeCases,
+				null
+		);
+
 		c.setPlanChangeRules(pcr);
-		pcr.setProductTiers(new ProductTier[] {new ProductTier(new Product[]{ fromP, toP })});
 		c.setProducts(new Product[] { fromP, toP });
 		return c;
 	}
 
 	
 	public Product createProduct(String name) {
-		ProductType type = new ProductType("TestType");
-		return new Product(type, name);
+		return new Product(name, ProductCategory.BASE);
 	}
 	
 

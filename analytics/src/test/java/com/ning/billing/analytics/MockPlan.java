@@ -21,7 +21,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.PlanAlignment;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
 
 import java.util.Iterator;
 
@@ -68,18 +68,6 @@ public class MockPlan implements IPlan
 
     @Override
     public BillingPeriod getBillingPeriod()
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BillingAlignment getBillingAlignment()
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public PlanAlignment getPlanAlignment()
     {
         throw new UnsupportedOperationException();
     }

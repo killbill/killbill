@@ -69,11 +69,6 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
     }
 
     @Test(enabled=true, groups={"sql"})
-    public void testChangePlanSubscriptionAlignEOTWithChargeThroughDate() {
-        invokeRealMethod(this);
-    }
-
-    @Test(enabled=true, groups={"sql"})
     public void testMultipleChangeLastIMM() {
         invokeRealMethod(this);
     }
@@ -82,4 +77,11 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
     public void testMultipleChangeLastEOT() {
         invokeRealMethod(this);
     }
+
+    // STEPH rescue not implemented
+    @Test(enabled=false, groups={"sql"})
+    public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() {
+        invokeRealMethod(this);
+    }
+
 }

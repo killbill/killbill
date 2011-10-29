@@ -42,7 +42,7 @@ import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IUserEvent;
-import com.ning.billing.entitlement.glue.IEngineConfig;
+import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.clock.IClock;
 
 public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDaoMock {
@@ -53,10 +53,10 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     private final List<ISubscription> subscriptions;
     private final TreeSet<IEvent> events;
     private final IClock clock;
-    private final IEngineConfig config;
+    private final IEntitlementConfig config;
 
     @Inject
-    public EntitlementDaoMemoryMock(IClock clock, IEngineConfig config) {
+    public EntitlementDaoMemoryMock(IClock clock, IEntitlementConfig config) {
         super();
         this.clock = clock;
         this.config = config;

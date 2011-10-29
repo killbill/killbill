@@ -21,14 +21,14 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.glue.IEngineConfig;
+import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.clock.IClock;
 
 public class ApiEventProcessorMemoryMock extends ApiEventProcessorBase {
 
 
     @Inject
-    public ApiEventProcessorMemoryMock(IClock clock, IEntitlementDao dao, IEngineConfig config) {
+    public ApiEventProcessorMemoryMock(IClock clock, IEntitlementDao dao, IEntitlementConfig config) {
         super(clock, dao, config);
     }
 

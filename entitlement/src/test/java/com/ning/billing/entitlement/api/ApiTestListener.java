@@ -62,7 +62,7 @@ public class ApiTestListener implements IApiListener {
             }
         }
         if (!completed) {
-            log.warn("ApiTestListener did not complete in " + timeout + " ms");
+            log.debug("ApiTestListener did not complete in " + timeout + " ms");
         }
         return completed;
     }
@@ -72,15 +72,15 @@ public class ApiTestListener implements IApiListener {
     }
 
     private void notifyIfStackEmpty() {
-        log.info("notifyIfStackEmpty ENTER");
+        log.debug("notifyIfStackEmpty ENTER");
         synchronized (this) {
             if (nextExpectedEvent.isEmpty()) {
-                log.info("notifyIfStackEmpty EMPTY");
+                log.debug("notifyIfStackEmpty EMPTY");
                 completed = true;
                 notify();
             }
         }
-        log.info("notifyIfStackEmpty EXIT");
+        log.debug("notifyIfStackEmpty EXIT");
     }
 
     private void assertEqualsNicely(NextEvent expected, NextEvent real) {
@@ -100,35 +100,35 @@ public class ApiTestListener implements IApiListener {
 
     @Override
     public void subscriptionCreated(ISubscriptionTransition created) {
-        log.info("-> Got event CREATED");
+        log.debug("-> Got event CREATED");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.CREATE);
         notifyIfStackEmpty();
     }
 
     @Override
     public void subscriptionCancelled(ISubscriptionTransition cancelled) {
-        log.info("-> Got event CANCEL");
+        log.debug("-> Got event CANCEL");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.CANCEL);
         notifyIfStackEmpty();
     }
 
     @Override
     public void subscriptionChanged(ISubscriptionTransition changed) {
-        log.info("-> Got event CHANGE");
+        log.debug("-> Got event CHANGE");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.CHANGE);
         notifyIfStackEmpty();
     }
 
     @Override
     public void subscriptionPaused(ISubscriptionTransition paused) {
-        log.info("-> Got event PAUSE");
+        log.debug("-> Got event PAUSE");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.PAUSE);
         notifyIfStackEmpty();
     }
 
     @Override
     public void subscriptionResumed(ISubscriptionTransition resumed) {
-        log.info("-> Got event RESUME");
+        log.debug("-> Got event RESUME");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.RESUME);
         notifyIfStackEmpty();
     }
@@ -136,7 +136,7 @@ public class ApiTestListener implements IApiListener {
     @Override
     public void subscriptionPhaseChanged(
             ISubscriptionTransition phaseChanged) {
-        log.info("-> Got event PHASE");
+        log.debug("-> Got event PHASE");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.PHASE);
         notifyIfStackEmpty();
     }

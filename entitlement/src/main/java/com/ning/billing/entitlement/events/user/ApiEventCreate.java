@@ -26,9 +26,9 @@ import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 public class ApiEventCreate extends ApiEventBase {
 
 
-    public ApiEventCreate(UUID subscriptionId, DateTime bundleStartDate, DateTime now, IPlan eventPlan, String priceList,
+    public ApiEventCreate(UUID subscriptionId, DateTime bundleStartDate, DateTime now, String planName, String phaseName, String priceList,
             DateTime requestedDate, DateTime effectiveDate, long version) {
-        super(subscriptionId, bundleStartDate, now, eventPlan, priceList, requestedDate, ApiEventType.CREATE, effectiveDate, version);
+        super(subscriptionId, bundleStartDate, now, planName, phaseName, priceList, requestedDate, ApiEventType.CREATE, effectiveDate, version);
     }
 
 

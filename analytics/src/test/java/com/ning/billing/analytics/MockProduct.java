@@ -17,7 +17,6 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.IProductType;
 import com.ning.billing.catalog.api.ProductCategory;
 
 public class MockProduct implements IProduct
@@ -34,16 +33,9 @@ public class MockProduct implements IProduct
     }
 
     @Override
-    public IProductType getType()
+    public String getCatalogName()
     {
-        return new IProductType()
-        {
-            @Override
-            public String getName()
-            {
-                return type;
-            }
-        };
+        return type;
     }
 
     @Override

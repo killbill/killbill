@@ -22,9 +22,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.PlanAlignment;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
+import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 
@@ -35,63 +37,62 @@ public class PlanRules extends ValidatingConfig  {
 	@XmlElement(name="tier", required=false) // may not have tiers in some catalogs
 	private ProductTier[] productTiers;
 
-	@XmlElement(name="changeRule", required=true)
-	private PlanChangeRule[] rules;
+	@XmlElement(name="changePolicyRule", required=true)
+	private PlanPolicyChangeRule[] rules;
 
-	@XmlElement(name="changeCase", required=false)
-	private PlanChangeCase[] changeCase;
+	@XmlElement(name="changePolicyCase", required=false)
+	private CaseChangePlanPolicy[] changeCase;
 	
-	@XmlElement(name="cancelCase", required=false)
-	private PlanCancelCase[] cancelCase;
+	@XmlElement(name="changeAlignmentCase", required=false)
+	private CaseChangePlanAlignment[] changeAlignmentCase;
 
-	@XmlElement(name="alignmentCase", required=false)
-	private PlanAlignmentCase[] alignmentCase;
+	@XmlElement(name="cancelPolicyCase", required=false)
+	private CaseCancelPolicy[] cancelCase;
 
-	public PlanChangeRule[] getRules() {
-		return rules;
-	}
-
-	public void setGeneralRules(PlanChangeRule[] generalRules) {
-		this.rules = generalRules;
-	}
-
-	public PlanChangeCase[] getSpecialCase() {
-		return changeCase;
-	}
-
-	protected void setSpecialCaseRules(PlanChangeCase[] specialchangeCaseCaseRules) {
-		this.changeCase = specialchangeCaseCaseRules;
-	}
+	@XmlElement(name="createAlignmentCase", required=false)
+	private CaseCreateAlignment[] createAlignmentCase;
 	
-	protected void setCancelCaseRules(PlanCancelCase[] cancelCase) {
-		this.cancelCase = cancelCase;
-	}
-	
-	public void setAlignmentCase(PlanAlignmentCase[] alignmentCase) {
-		this.alignmentCase = alignmentCase;
-	}
+	@XmlElement(name="billingAlignmentCase", required=false)
+	private CaseBillingAlignment[] billingAlignmentCase;
 
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
 		return errors;
 
 	}
+	
+	public PlanRules(){}
+
+	//For test
+	protected PlanRules(ProductTier[] productTiers, PlanPolicyChangeRule[] rules,
+			CaseChangePlanPolicy[] changeCase, CaseCancelPolicy[] cancelCase,
+			CaseChangePlanAlignment[] changeAlignmentCase,
+			CaseCreateAlignment[] createAlignmentCase) {
+		super();
+		this.productTiers = productTiers;
+		this.rules = rules;
+		this.changeCase = changeCase;
+		this.cancelCase = cancelCase;
+		this.changeAlignmentCase = changeAlignmentCase;
+		this.createAlignmentCase = createAlignmentCase;
+	}
 
 	public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from,
 			PlanSpecifier to, Catalog catalog) {
-    	if(changeCase != null) {
-    		for(int i = changeCase.length - 1; i >=0; i --) {
-    			ActionPolicy policy = changeCase[i].getPlanChangePolicy(from, to, catalog);
-    			if (policy != null) { return policy; }        					
-    		}
-    	}
+		
+		ActionPolicy policy = CaseChange.getResult(changeCase, from, to, catalog); 
+		if (policy != null) {
+			return policy;
+		}
+
+    	
         for(int i = rules.length - 1; i >=0; i --) {
         	int fromProductIndex       = getProductIndex(catalog.getProductFromName(from.getProductName()));
         	int fromBillingPeriodIndex = getBillingPeriodIndex(from.getBillingPeriod());
 			int toProductIndex         = getProductIndex(catalog.getProductFromName(to.getProductName()));
 			int toBillingPeriodIndex   = getBillingPeriodIndex(to.getBillingPeriod());
 			
-        	ActionPolicy policy = rules[i].getPlanChangePolicy(
+			policy = rules[i].getPlanChangePolicy(
         		fromProductIndex, fromBillingPeriodIndex,
         		toProductIndex, toBillingPeriodIndex,
         		from.getPhaseType());
@@ -100,39 +101,7 @@ public class PlanRules extends ValidatingConfig  {
         return null;
         
     }
-
-	public PlanAlignment getPlanAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to, Catalog catalog) {
-    	if(alignmentCase != null) {
-    		for(int i = alignmentCase.length - 1; i >=0; i --) {
-    			PlanAlignment alignment = alignmentCase[i].getPlanAlignment(from, to, catalog);
-    			if(alignment != null) { 
-    				return alignment; 
-    			}        					
-    		}
-    	}
-        return null;
-        
-    }
-
 	
-	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase, Catalog catalog) {
-    	if(cancelCase != null) {
-    		for(int i = cancelCase.length - 1; i >=0; i --) {
-    			ActionPolicy policy = cancelCase[i].getPlanCancelPolicy(planPhase, catalog);
-    			if (policy != null) { 
-    				return policy; 
-    			}        					
-    		}
-    	}
-
-		return null;
-	}
-
-	private int getBillingPeriodIndex(BillingPeriod src) {
-		return src.ordinal();
-	}
-
 	private int getProductIndex(IProduct src) {
 		for(ProductTier tier : productTiers) {
 			for(int i = 0; i < tier.getProducts().length; i++ ){
@@ -143,10 +112,32 @@ public class PlanRules extends ValidatingConfig  {
 		}
 		return 0;
 	}
+	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
+			PlanSpecifier to, Catalog catalog) {
+		return CaseChange.getResult(changeAlignmentCase, from, to, catalog);      
+    }
+
+	public PlanAlignmentCreate getPlanCreateAlignment(PlanPhaseSpecifier planPhase, Catalog catalog) {
+		return Case.getResult(createAlignmentCase, planPhase, catalog);      
+    }
+	
+	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase, Catalog catalog) {
+		return Case.getResult(cancelCase, planPhase, catalog);      
+	}
+
+	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase, Catalog catalog) {
+		return Case.getResult(billingAlignmentCase, planPhase, catalog);      
+	}
+
+	private int getBillingPeriodIndex(BillingPeriod src) {
+		return src.ordinal();
+	}
+
 
 	protected void setProductTiers(ProductTier[] productTiers) {
 		this.productTiers = productTiers;
 	}
+
 
 
 	

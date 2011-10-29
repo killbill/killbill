@@ -24,7 +24,7 @@ import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.PhaseType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PlanChangeRule extends ValidatingConfig {
+public class PlanPolicyChangeRule extends ValidatingConfig {
 	public enum Qualifier {
 		DEFAULT,
 		PRODUCT_FROM_LOW_TO_HIGH,
@@ -42,9 +42,9 @@ public class PlanChangeRule extends ValidatingConfig {
 	@XmlElement(required=true)
 	private ActionPolicy policy;
 
-	public PlanChangeRule(){}
+	public PlanPolicyChangeRule(){}
 	
-	protected PlanChangeRule(Qualifier qualifier, ActionPolicy policy, PhaseType type) {
+	protected PlanPolicyChangeRule(Qualifier qualifier, ActionPolicy policy, PhaseType type) {
 		this.qualifier = qualifier;
 		this.policy = policy;
 		this.restrictedToPhaseType = type;

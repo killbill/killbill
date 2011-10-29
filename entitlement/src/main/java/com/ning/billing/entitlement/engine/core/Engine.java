@@ -27,8 +27,10 @@ import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.entitlement.alignment.EntitlementAlignment;
-import com.ning.billing.entitlement.alignment.EntitlementAlignment.TimedPhase;
+
+import com.ning.billing.entitlement.alignment.IPlanAligner;
+import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
+import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.user.IApiListener;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -39,7 +41,7 @@ import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IUserEvent;
-import com.ning.billing.entitlement.glue.IEngineConfig;
+import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.clock.IClock;
 
 public class Engine implements IEventListener {
@@ -52,19 +54,25 @@ public class Engine implements IEventListener {
     private final IEntitlementDao dao;
     private final IApiEventProcessor apiEventProcessor;
     private final ICatalogUserApi catalogApi;
+    private final IPlanAligner planAligner;
 
     private List<IApiListener> observers;
 
     @Inject
-    public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor, ICatalogUserApi catalogApi, IEngineConfig config) {
+    public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor, ICatalogUserApi catalogApi,
+            IPlanAligner planAligner, IEntitlementConfig config) {
         super();
         this.clock = clock;
         this.catalogApi = catalogApi;
         this.dao = dao;
         this.apiEventProcessor = apiEventProcessor;
+        this.planAligner = planAligner;
         this.catalog = readCatalogFromConfig(config.getCatalogConfigFileName());
         this.observers = null;
         instance = this;
+
+        // STEPH yack
+        ((PlanAligner) planAligner).init(catalog);
     }
 
     public void start() {
@@ -126,11 +134,8 @@ public class Engine implements IEventListener {
 
         DateTime now = clock.getUTCNow();
 
-
-        EntitlementAlignment planPhaseAlignment = new EntitlementAlignment(subscription.getId(),
-                now, subscription.getBundleStartDate(), subscription.getCurrentPlan(),
-                subscription.getLatestTranstion().getTransitionTime(), subscription.getActiveVersion());
-        IPhaseEvent nextPhaseEvent = planPhaseAlignment.getNextPhaseEvent();
+        TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, subscription.getCurrentPlan(), now, subscription.getCurrentPlanStart());
+        IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, subscription, now);
         if (nextPhaseEvent != null) {
             // STEPH Harden since event could be processed twice
             dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent);
@@ -161,6 +166,10 @@ public class Engine implements IEventListener {
 
     public IEntitlementDao getDao() {
         return dao;
+    }
+
+    public IPlanAligner getPlanAligner() {
+        return planAligner;
     }
 
 }

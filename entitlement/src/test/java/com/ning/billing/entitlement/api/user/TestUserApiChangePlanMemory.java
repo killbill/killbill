@@ -33,7 +33,6 @@ public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
 
     @Test(enabled=true, groups={"fast"})
     public void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
-        System.err.println("STEPH THE TEST");
         invokeRealMethod(this);
     }
 
@@ -48,11 +47,6 @@ public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
     }
 
     @Test(enabled=true, groups={"fast"})
-    public void testChangePlanSubscriptionAlignEOTWithChargeThroughDate() {
-        invokeRealMethod(this);
-    }
-
-    @Test(enabled=true, groups={"fast"})
     public void testMultipleChangeLastIMM() {
         invokeRealMethod(this);
     }
@@ -62,16 +56,10 @@ public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
         invokeRealMethod(this);
     }
 
-    @Test(enabled=false, groups={"stress"})
-    public void stressTest() {
-        for (int i = 0; i < 20; i++) {
-            cleanupTest();
-            setupTest();
-            testMultipleChangeLastEOT();
-            cleanupTest();
-            setupTest();
-            testMultipleChangeLastIMM();
-        }
+    // STEPH set to false until we implement rescue example.
+    @Test(enabled=false, groups={"fast"})
+    public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() {
+        invokeRealMethod(this);
     }
 
 }

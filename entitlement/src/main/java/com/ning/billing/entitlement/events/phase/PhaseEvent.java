@@ -22,6 +22,8 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
+import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.events.EventBase;
 import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 
@@ -69,6 +71,14 @@ public class PhaseEvent extends EventBase implements IPhaseEvent {
                 + ", getProcessedDate()=" + getProcessedDate()
                 + ", getSubscriptionId()=" + getSubscriptionId()
                 + ", isActive()=" + isActive() + "]\n";
+    }
+
+    public static final IPhaseEvent getNextPhaseEvent(TimedPhase nextTimedPhase, Subscription subscription, DateTime now) {
+        return (nextTimedPhase == null) ?
+                null :
+                    new PhaseEvent(subscription.getId(), nextTimedPhase.getPhase(), now, nextTimedPhase.getStartPhase(),
+                            now,  subscription.getActiveVersion());
+
     }
 
 }

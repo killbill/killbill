@@ -21,15 +21,11 @@ import java.util.List;
 
 public interface ICatalog {
 
-	public abstract IProductType[] getProductTypes();
-
 	public abstract IProduct[] getProducts();
 
 	public abstract IPriceList[] getPriceLists();
 
 	public abstract IPriceList getPriceListFromName(String priceListName);
-
-	public abstract List<IProduct> getProductsForType(IProductType productType);
 
 	public abstract IPlan getPlan(String productName, BillingPeriod term, String priceList);
 
@@ -52,7 +48,16 @@ public interface ICatalog {
 
     public abstract ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase);
 
-    public abstract PlanAlignment getPlanAlignment(PlanPhaseSpecifier from, PlanSpecifier to);
+    public abstract void configureEffectiveDate(Date date);
+
+    public abstract String getCalalogName();
+
+    public abstract PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier);
+
+    public abstract BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase);
+
+    public abstract PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
+			PlanSpecifier to);
 
 	
 }

@@ -37,17 +37,12 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 
 import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.Duration;
-import com.ning.billing.catalog.Plan;
-import com.ning.billing.catalog.PlanPhase;
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
-import com.ning.billing.catalog.ProductType;
 
 public class XMLSchemaGenerator {
 
+	//Note: this main method is called byt the maven build to generate the schema for the jar
 	public static void main(String[] args) throws IOException, TransformerException, JAXBException {
-		JAXBContext context =JAXBContext.newInstance(Catalog.class,Plan.class,Duration.class, Product.class, ProductType.class, PlanPhase.class, PriceList.class);
+		JAXBContext context =JAXBContext.newInstance(Catalog.class);
 		String xsdFileName = "CatalogSchema.xsd";
 		if(args.length != 0) {
 			xsdFileName = args[0] + "/" + xsdFileName;

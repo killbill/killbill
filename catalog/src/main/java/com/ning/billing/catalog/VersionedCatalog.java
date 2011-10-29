@@ -23,14 +23,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.IProductType;
-import com.ning.billing.catalog.api.PlanAlignment;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
+import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 
@@ -74,7 +74,8 @@ public class VersionedCatalog extends ValidatingConfig implements ICatalog {
 		return versions.iterator();
 	}
 	
-	public void applyEffectiveDate(Date date) {
+	@Override
+	public void configureEffectiveDate(Date date) {
 		currentCatalog = versionForDate(date); // 
 	}
 
@@ -82,93 +83,58 @@ public class VersionedCatalog extends ValidatingConfig implements ICatalog {
 		return versions.size();
 	}
 
-	public boolean equals(Object arg0) {
-		return currentCatalog.equals(arg0);
-	}
-
-	public ProductType[] getProductTypes() {
-		return currentCatalog.getProductTypes();
-	}
-
+	@Override
 	public Product[] getProducts() {
 		return currentCatalog.getProducts();
 	}
 
-	public void setProducts(Product[] products) {
-		currentCatalog.setProducts(products);
-	}
-
+	@Override
 	public PriceList[] getPriceLists() {
 		return currentCatalog.getPriceLists();
 	}
 
-	public void setPlanSets(PriceList[] planSets) {
-		currentCatalog.setPlanSets(planSets);
-	}
-
+	@Override
 	public PriceList getPriceListFromName(String planSetName) {
 		return currentCatalog.getPriceListFromName(planSetName);
 	}
 
-	public List<IProduct> getProductsForType(IProductType productType) {
-		return currentCatalog.getProductsForType(productType);
-	}
-
+	@Override
 	public Plan getPlan(String productName, BillingPeriod term,
 			String planSetName) {
 		return currentCatalog.getPlan(productName, term, planSetName);
 	}
 
-	public void setProductTypes(ProductType[] productTypes) {
-		currentCatalog.setProductTypes(productTypes);
-	}
-
+	@Override
 	public Currency[] getSupportedCurrencies() {
 		return currentCatalog.getSupportedCurrencies();
 	}
 
+	@Override
 	public Plan[] getPlans() {
 		return currentCatalog.getPlans();
 	}
 
-	public IPlan getPlanFromName(String name) {
+	@Override
+	public Plan getPlanFromName(String name) {
 		return currentCatalog.getPlanFromName(name);
 	}
 
+
+	@Override
 	public IPlanPhase getPhaseFromName(String name) {
 		return currentCatalog.getPhaseFromName(name);
 	}
 
+	@Override
 	public Date getEffectiveDate() {
 		return currentCatalog.getEffectiveDate();
 	}
 
-	public int hashCode() {
-		return currentCatalog.hashCode();
-	}
-
+	@Override
 	public void initialize(Catalog catalog) {
-		currentCatalog.initialize(catalog);
-	}
-
-	public void setSupportedCurrencies(Currency[] supportedCurrencies) {
-		currentCatalog.setSupportedCurrencies(supportedCurrencies);
-	}
-
-	public void setPlanChangeRules(PlanRules planChangeRules) {
-		currentCatalog.setPlanChangeRules(planChangeRules);
-	}
-
-	public void setPlans(Plan[] plans) {
-		currentCatalog.setPlans(plans);
-	}
-
-	public void setEffectiveDate(Date effectiveDate) {
-		currentCatalog.setEffectiveDate(effectiveDate);
-	}
-
-	public String toString() {
-		return currentCatalog.toString();
+		for(Catalog c : versions) {
+			c.initialize(catalog);
+		}
 	}
 
 	@Override
@@ -202,9 +168,27 @@ public class VersionedCatalog extends ValidatingConfig implements ICatalog {
 	}
 
 	@Override
-	public PlanAlignment getPlanAlignment(PlanPhaseSpecifier from,
+	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
 			PlanSpecifier to) {
-		return currentCatalog.getPlanAlignment(from, to);
+		return currentCatalog.getPlanChangeAlignment(from, to);
 	}
+
+	@Override
+	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier) {
+		return currentCatalog.getPlanCreateAlignment(specifier);
+	}
+
+	@Override
+	public String getCalalogName() {
+		return currentCatalog.getCalalogName();
+	}
+
+	@Override
+	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase) {
+		return currentCatalog.getBillingAlignment(planPhase);
+	}
+	
+	//TODO MDW validation - ensure all catalog versions have a single name
+	//TODO MDW validation - ensure effective dates are different (actually do we want this?)
  
 }

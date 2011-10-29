@@ -21,14 +21,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
 
-import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.ProductCategory;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PlanChangeCase extends ValidatingConfig {
+public abstract class CaseChange<T>  extends ValidatingConfig {
 
 	@XmlElement(required=false)
 	private PhaseType phaseType;
@@ -38,14 +38,10 @@ public class PlanChangeCase extends ValidatingConfig {
 	private Product fromProduct;
 
 	@XmlElement(required=false)
+	private ProductCategory fromProductCategory;
+
+	@XmlElement(required=false)
 	private BillingPeriod fromBillingPeriod;
-
-	@XmlElement(required=false)
-	@XmlIDREF
-	private Product toProduct;
-
-	@XmlElement(required=false)
-	private BillingPeriod toBillingPeriod;
 
 	@XmlElement(required=false)
 	@XmlIDREF
@@ -53,72 +49,71 @@ public class PlanChangeCase extends ValidatingConfig {
 
 	@XmlElement(required=false)
 	@XmlIDREF
-	private PriceList toPriceList;
+	private Product toProduct;
 
-	@XmlElement(required=true)
-	private ActionPolicy policy;
+	@XmlElement(required=false)
+	private ProductCategory toProductCategory;
+
+	@XmlElement(required=false)
+	private BillingPeriod toBillingPeriod;
+
+	@XmlElement(required=false)
+	@XmlIDREF
+	private PriceList toPriceList;
 	
-	public PlanChangeCase(){}
+	public CaseChange(){}
 	
-	protected PlanChangeCase (
+	protected CaseChange (
 			Product from, Product to, 
+			ProductCategory fromProductCategory, ProductCategory toProductCategory, 
 			BillingPeriod fromBP, BillingPeriod toBP, 
-			PhaseType fromType, PhaseType toType,
 			PriceList fromPriceList, PriceList toPriceList,
-			ActionPolicy policy) {
+			PhaseType fromType,
+			T result) {
 		this.fromProduct = from;
 		this.toProduct = to;
+		this.fromProductCategory = fromProductCategory;
+		this.toProductCategory = toProductCategory;
 		this.fromBillingPeriod = fromBP;
 		this.toBillingPeriod = toBP;
 		this.phaseType = fromType;
 		this.fromPriceList = fromPriceList;
 		this.toPriceList = toPriceList;
-		this.policy = policy;
 	}
 
-	public Product getFromProduct() {
-		return fromProduct;
-	}
-
-	public BillingPeriod getFromBillingPeriod() {
-		return fromBillingPeriod;
-	}
+	protected abstract T getResult();
 	
-	public Product getToProduct() {
-		return toProduct;
-	}
-
-	public BillingPeriod getToBillingPeriod() {
-		return toBillingPeriod;
-	}
-
-	public ActionPolicy getPolicy() {
-		return policy;
-	}
-	public void setPolicy(ActionPolicy policy) {
-		this.policy = policy;
-	}
-
-	public PhaseType getFromPhaseType() {
-		return phaseType;
-	}
-
-	public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from,
+	public T getResult(PlanPhaseSpecifier from,
 			PlanSpecifier to, Catalog catalog) {
 		if(	
-				(phaseType     	   == null || from.getPhaseType() == phaseType) &&
-				(fromProduct 	   == null || fromProduct.equals(catalog.getProductFromName(from.getProductName()))) &&
-				(fromBillingPeriod == null || fromBillingPeriod.equals(from.getBillingPeriod())) &&
-				(toProduct         == null || toProduct.equals(catalog.getProductFromName(to.getProductName()))) &&
-				(toBillingPeriod   == null || toBillingPeriod.equals(to.getBillingPeriod())) &&
-				(fromPriceList     == null || fromPriceList.equals(catalog.getPriceListFromName(from.getPriceListName()))) &&
-				(toPriceList       == null || toPriceList.equals(catalog.getPriceListFromName(to.getPriceListName())))
+				(phaseType     	     == null || from.getPhaseType() == phaseType) &&
+				(fromProduct 	     == null || fromProduct.equals(catalog.getProductFromName(from.getProductName()))) &&
+				(fromProductCategory == null || fromProductCategory.equals(from.getProductCategory())) &&
+				(fromBillingPeriod   == null || fromBillingPeriod.equals(from.getBillingPeriod())) &&
+				(toProduct           == null || toProduct.equals(catalog.getProductFromName(to.getProductName()))) &&
+				(toProductCategory   == null || toProductCategory.equals(to.getProductCategory())) &&
+				(toBillingPeriod     == null || toBillingPeriod.equals(to.getBillingPeriod())) &&
+				(fromPriceList       == null || fromPriceList.equals(catalog.getPriceListFromName(from.getPriceListName()))) &&
+				(toPriceList         == null || toPriceList.equals(catalog.getPriceListFromName(to.getPriceListName())))
 				) {
-			return getPolicy();
+			return getResult();
 		}
 		return null;
 	}
 	
+	static public <K> K getResult(CaseChange<K>[] cases, PlanPhaseSpecifier from,
+			PlanSpecifier to, Catalog catalog) {
+    	if(cases != null) {
+    		for(int i = cases.length - 1; i >=0; i --) {
+    			K result = cases[i].getResult(from, to, catalog);
+    			if(result != null) { 
+    				return result; 
+    			}        					
+    		}
+    	}
+        return null;
+        
+    }
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
 		// TODO Auto-generated method stub

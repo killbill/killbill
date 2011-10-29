@@ -30,36 +30,39 @@ import org.xml.sax.SAXException;
 import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
+import com.ning.billing.catalog.io.ICatalogLoader;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 
 public class TestVersionedCatalog {
+	private final ICatalogLoader loader = new VersionedCatalogLoader();
+
 	@Test(enabled=true)
 	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException {
-		VersionedCatalog vc = VersionedCatalogLoader.load(new File("src/test/resources/versionedCatalog").toURI().toURL());
+		VersionedCatalog vc = loader.load(new File("src/test/resources/versionedCatalog").toURI().toURL());
 		vc.add(new Catalog(new Date()));
 		assertEquals(5, vc.size());
 	}
 	
 	@Test(enabled=true)
 	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException {
-		VersionedCatalog vc = VersionedCatalogLoader.load(new File("src/test/resources/versionedCatalog").toURI().toURL());
+		VersionedCatalog vc = loader.load(new File("src/test/resources/versionedCatalog").toURI().toURL());
 		Date d = new Date(1L);
-		vc.applyEffectiveDate(d);
+		vc.configureEffectiveDate(d);
 		assertEquals(new Date(0), vc.getEffectiveDate()); // Start at the begining of time
 		
 		DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
 		d = new Date(dt.getMillis() + 1000);
-		vc.applyEffectiveDate(d);
+		vc.configureEffectiveDate(d);
 		assertEquals(dt.toDate(),vc.getEffectiveDate());
 		
 		dt = new DateTime("2011-02-02T00:00:00+00:00");
 		d = new Date(dt.getMillis() + 1000);
-		vc.applyEffectiveDate(d);
+		vc.configureEffectiveDate(d);
 		assertEquals(dt.toDate(),vc.getEffectiveDate());
 		
 		dt = new DateTime("2011-03-03T00:00:00+00:00");
 		d = new Date(dt.getMillis() + 1000);
-		vc.applyEffectiveDate(d);
+		vc.configureEffectiveDate(d);
 		assertEquals(dt.toDate(),vc.getEffectiveDate());
 		
 	}

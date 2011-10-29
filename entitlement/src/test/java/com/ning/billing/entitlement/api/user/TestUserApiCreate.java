@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanAlignment;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.events.IEvent;
@@ -70,7 +70,6 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), productName);
             assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
-            assertEquals(currentPlan.getPlanAlignment(), PlanAlignment.START_OF_BUNDLE);
             assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
             IPlanPhase currentPhase = subscription.getCurrentPhase();

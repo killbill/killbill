@@ -27,7 +27,7 @@ import static org.testng.AssertJUnit.assertNull;
 
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.PlanChangeRule.Qualifier;
+import com.ning.billing.catalog.PlanPolicyChangeRule.Qualifier;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -40,8 +40,8 @@ public class TestPlanChangeRules extends TestPlanRules {
 		Product P2 = createProduct("BP");
 
 		Catalog c = createCatalog(
-				new PlanChangeRule[]{
-						new PlanChangeRule(Qualifier.DEFAULT, ActionPolicy.END_OF_TERM, null)
+				new PlanPolicyChangeRule[]{
+						new PlanPolicyChangeRule(Qualifier.DEFAULT, ActionPolicy.END_OF_TERM, null)
 				}, 
 				null,
 				null,
@@ -49,8 +49,8 @@ public class TestPlanChangeRules extends TestPlanRules {
 				P2
 				);
 		assertEquals(ActionPolicy.END_OF_TERM,c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("FP", ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", ANNUAL, null, EVERGREEN)
+				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN),
+				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN)
 				));
 	}
 
@@ -60,8 +60,8 @@ public class TestPlanChangeRules extends TestPlanRules {
 		Product P2 = createProduct("BP");
 
 		Catalog c = createCatalog(
-				new PlanChangeRule[]{
-						new PlanChangeRule(Qualifier.TERM_FROM_LONG_TO_SHORT, END_OF_TERM, null)
+				new PlanPolicyChangeRule[]{
+						new PlanPolicyChangeRule(Qualifier.TERM_FROM_LONG_TO_SHORT, END_OF_TERM, null)
 				}, 
 				null,
 				null,
@@ -70,13 +70,13 @@ public class TestPlanChangeRules extends TestPlanRules {
 				);
 		
 		assertEquals(END_OF_TERM,c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("FP", ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", MONTHLY, null, EVERGREEN)
+				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN),
+				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("FP", MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", ANNUAL, null, EVERGREEN)
+				new PlanPhaseSpecifier("FP", null, MONTHLY, null, EVERGREEN),
+				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN)
 				));
 
 
@@ -89,8 +89,8 @@ public class TestPlanChangeRules extends TestPlanRules {
 		Product P2 = createProduct("BP");
 
 		Catalog c = createCatalog(
-				new PlanChangeRule[]{
-						new PlanChangeRule(Qualifier.TERM_FROM_SHORT_TO_LONG, END_OF_TERM, null)
+				new PlanPolicyChangeRule[]{
+						new PlanPolicyChangeRule(Qualifier.TERM_FROM_SHORT_TO_LONG, END_OF_TERM, null)
 				}, 
 				null,
 				null,
@@ -99,13 +99,13 @@ public class TestPlanChangeRules extends TestPlanRules {
 				);
 
 		assertEquals(END_OF_TERM,c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("FP", MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", ANNUAL, null, EVERGREEN)
+				new PlanPhaseSpecifier("FP", null, MONTHLY, null, EVERGREEN),
+				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("FP", ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", MONTHLY, null, EVERGREEN)
+				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN),
+				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN)
 				));
 
 }
@@ -116,8 +116,8 @@ public class TestPlanChangeRules extends TestPlanRules {
 		Product P2 = createProduct("BP");
 
 		Catalog c = createCatalog(
-				new PlanChangeRule[]{
-						new PlanChangeRule(Qualifier.TERM_FROM_SHORT_TO_LONG, END_OF_TERM, PhaseType.EVERGREEN)
+				new PlanPolicyChangeRule[]{
+						new PlanPolicyChangeRule(Qualifier.TERM_FROM_SHORT_TO_LONG, END_OF_TERM, PhaseType.EVERGREEN)
 				}, 
 				null,
 				null,
@@ -126,13 +126,13 @@ public class TestPlanChangeRules extends TestPlanRules {
 				);
 
 		assertEquals(END_OF_TERM,c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("FP", MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", ANNUAL, null, EVERGREEN)
+				new PlanPhaseSpecifier("FP", null, MONTHLY, null, EVERGREEN),
+				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("FP", MONTHLY, null, TRIAL),
-				new PlanPhaseSpecifier("BP", ANNUAL, null, TRIAL)
+				new PlanPhaseSpecifier("FP", null, MONTHLY, null, TRIAL),
+				new PlanPhaseSpecifier("BP", null, ANNUAL, null, TRIAL)
 				));
 		
 	}
@@ -143,8 +143,8 @@ public class TestPlanChangeRules extends TestPlanRules {
 		Product P2 = createProduct("BP");
 
 		Catalog c = createCatalog(
-				new PlanChangeRule[]{
-						new PlanChangeRule(Qualifier.PRODUCT_FROM_LOW_TO_HIGH, IMMEDIATE, null)
+				new PlanPolicyChangeRule[]{
+						new PlanPolicyChangeRule(Qualifier.PRODUCT_FROM_LOW_TO_HIGH, IMMEDIATE, null)
 				}, 
 				null,
 				null,
@@ -153,13 +153,13 @@ public class TestPlanChangeRules extends TestPlanRules {
 				);
 		
 		assertEquals(IMMEDIATE,c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("FP", MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", ANNUAL, null, EVERGREEN)
+				new PlanPhaseSpecifier("FP", null, MONTHLY, null, EVERGREEN),
+				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("BP", MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("FP", ANNUAL, null, EVERGREEN)
+				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN),
+				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN)
 				));
 		
 
@@ -171,8 +171,8 @@ public class TestPlanChangeRules extends TestPlanRules {
 		Product P2 = createProduct("BP");
 
 		Catalog c = createCatalog(
-				new PlanChangeRule[]{
-						new PlanChangeRule(Qualifier.PRODUCT_FROM_HIGH_TO_LOW, IMMEDIATE, null)
+				new PlanPolicyChangeRule[]{
+						new PlanPolicyChangeRule(Qualifier.PRODUCT_FROM_HIGH_TO_LOW, IMMEDIATE, null)
 				}, 
 				null,
 				null,
@@ -181,13 +181,13 @@ public class TestPlanChangeRules extends TestPlanRules {
 				);
 
 		assertEquals(IMMEDIATE,c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("BP", ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("FP", MONTHLY, null, EVERGREEN)
+				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN),
+				new PlanPhaseSpecifier("FP", null, MONTHLY, null, EVERGREEN)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("FP", MONTHLY, null, TRIAL),
-				new PlanPhaseSpecifier("BP", ANNUAL, null, TRIAL)
+				new PlanPhaseSpecifier("FP", null, MONTHLY, null, TRIAL),
+				new PlanPhaseSpecifier("BP", null, ANNUAL, null, TRIAL)
 				));
 		
 	}
@@ -198,12 +198,12 @@ public class TestPlanChangeRules extends TestPlanRules {
 		Product P2 = createProduct("BP");
 
 		Catalog c = createCatalog(
-				new PlanChangeRule[]{
-						new PlanChangeRule(Qualifier.TERM_FROM_LONG_TO_SHORT, IMMEDIATE, null),
-						new PlanChangeRule(Qualifier.PRODUCT_FROM_LOW_TO_HIGH, END_OF_TERM, null)
+				new PlanPolicyChangeRule[]{
+						new PlanPolicyChangeRule(Qualifier.TERM_FROM_LONG_TO_SHORT, IMMEDIATE, null),
+						new PlanPolicyChangeRule(Qualifier.PRODUCT_FROM_LOW_TO_HIGH, END_OF_TERM, null)
 				}, 
-				new PlanChangeCase[] {
-						new PlanChangeCase(P1, P2, MONTHLY, MONTHLY, null, null, null, null, null  ), 
+				new CaseChangePlanPolicy[] {
+						new CaseChangePlanPolicy(P1, P2, null, null, MONTHLY, MONTHLY, null, null, null, IMMEDIATE  ), 
 				},
 				null,
 				P1,
@@ -211,16 +211,42 @@ public class TestPlanChangeRules extends TestPlanRules {
 				);
 		
 		assertEquals(END_OF_TERM,c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("FP", ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", MONTHLY, null, EVERGREEN)
+				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN),
+				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
-				new PlanPhaseSpecifier("BP", MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("FP", ANNUAL, null, EVERGREEN)
+				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN),
+				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN)
 				));
 
 	}
+	@Test(enabled=true)
+	public void testPrecedenceSpecialCaseTrumpsRule() {
+		Product P1 = createProduct("FP");
+		Product P2 = createProduct("BP");
 
+		Catalog c = createCatalog(
+				new PlanPolicyChangeRule[]{
+						new PlanPolicyChangeRule(Qualifier.PRODUCT_FROM_LOW_TO_HIGH, END_OF_TERM, null)
+				}, 
+				new CaseChangePlanPolicy[] {
+						new CaseChangePlanPolicy(P1, P2, null, null, ANNUAL, MONTHLY, null, null, null, IMMEDIATE ), 
+				},
+				null,
+				P1,
+				P2
+				);
+		
+		assertEquals(IMMEDIATE,c.getPlanChangePolicy(
+				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN),
+				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN)
+				));
+		
+		assertNull(c.getPlanChangePolicy(
+				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN),
+				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN)
+				));
 
+	}
 }

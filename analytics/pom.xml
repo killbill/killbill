@@ -48,7 +48,7 @@
         </dependency>
         <dependency>
             <groupId>com.ning.jetty</groupId>
-            <artifactId>ning-service-skeleton-core</artifactId>
+            <artifactId>ning-service-skeleton-utils</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

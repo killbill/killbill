@@ -18,19 +18,24 @@ package com.ning.billing.catalog.api;
 
 public class PlanSpecifier {
 	private final String productName;
+	private final ProductCategory productCategory;
 	private final BillingPeriod billingPeriod;
 	private final String priceListName;
 	
-	public PlanSpecifier(String productName, BillingPeriod billingPeriod,
+	public PlanSpecifier(String productName, ProductCategory productCategory, BillingPeriod billingPeriod,
 			String priceListName) {
 		super();
 		this.productName = productName;
+		this.productCategory = productCategory;
 		this.billingPeriod = billingPeriod;
 		this.priceListName = priceListName;
 	}
 	
 	public String getProductName() {
 		return productName;
+	}
+	public ProductCategory getProductCategory() {
+		return productCategory;
 	}
 	public BillingPeriod getBillingPeriod() {
 		return billingPeriod;

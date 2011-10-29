@@ -24,7 +24,7 @@ import org.joda.time.DateTime;
 public class ApiEventUncancel extends ApiEventBase {
 
     public ApiEventUncancel(UUID subscriptionId, DateTime bundleStartDate, DateTime now, DateTime requestedDate, DateTime effectiveDate, long version) {
-        super(subscriptionId, bundleStartDate, now, null, null, requestedDate, ApiEventType.UNCANCEL, effectiveDate, version);
+        super(subscriptionId, bundleStartDate, now, requestedDate, ApiEventType.UNCANCEL, effectiveDate, version);
     }
 
     public ApiEventUncancel(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,

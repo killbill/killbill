@@ -28,7 +28,7 @@ import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 public class ApiEventResume extends ApiEventBase {
 
     public ApiEventResume(UUID subscriptionId, DateTime now, DateTime requestedDate, DateTime effectiveDate, long version) {
-        super(subscriptionId, null, now, null, null, requestedDate, ApiEventType.RESUME, effectiveDate, version);
+        super(subscriptionId, null, now, requestedDate, ApiEventType.RESUME, effectiveDate, version);
     }
 
     public ApiEventResume(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,

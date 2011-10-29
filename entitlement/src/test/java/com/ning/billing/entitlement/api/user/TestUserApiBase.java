@@ -55,7 +55,7 @@ import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IUserEvent;
-import com.ning.billing.entitlement.glue.IEngineConfig;
+import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
 
@@ -69,7 +69,7 @@ public abstract class TestUserApiBase {
     protected IUserApi entitlementApi;
     protected IBillingApi billingApi;
     protected ICatalogUserApi catalogApi;
-    protected IEngineConfig config;
+    protected IEntitlementConfig config;
     protected IEntitlementDao dao;
     protected ClockMock clock;
 
@@ -109,7 +109,7 @@ public abstract class TestUserApiBase {
         entitlementApi = g.getInstance(IUserApi.class);
         catalogApi = g.getInstance(ICatalogUserApi.class);
         billingApi = g.getInstance(IBillingApi.class);
-        config = g.getInstance(IEngineConfig.class);
+        config = g.getInstance(IEntitlementConfig.class);
         dao = g.getInstance(IEntitlementDao.class);
         clock = (ClockMock) g.getInstance(IClock.class);
         try {

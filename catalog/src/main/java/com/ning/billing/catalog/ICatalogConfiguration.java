@@ -14,21 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.glue;
+package com.ning.billing.catalog;
 
 import org.skife.config.Config;
 
-public interface IEngineConfig {
+public interface ICatalogConfiguration {
+	
+    @Config("killbill.catalog.config.directory")
+    public String getCatalogDirectoryURL();
 
-    @Config("killbill.entitlement.dao.claim.time")
-    public long getDaoClaimTimeMs();
-
-    @Config("killbill.entitlement.dao.ready.max")
-    public int getDaoMaxReadyEvents();
-
-    @Config("killbill.entitlement.catalog.config.file")
-    public String getCatalogConfigFileName();
-
-    @Config("killbill.entitlement.engine.notifications.sleep")
-    public long getNotificationSleepTimeMs();
 }

@@ -26,7 +26,7 @@ import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 public class ApiEventCancel extends ApiEventBase {
 
     public ApiEventCancel(UUID subscriptionId, DateTime bundleStartDate, DateTime now, DateTime requestedDate, DateTime effectiveDate, long version) {
-        super(subscriptionId, bundleStartDate, now, null, null, requestedDate, ApiEventType.CANCEL, effectiveDate, version);
+        super(subscriptionId, bundleStartDate, now, requestedDate, ApiEventType.CANCEL, effectiveDate, version);
     }
 
     public ApiEventCancel(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,
