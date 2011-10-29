@@ -83,12 +83,6 @@ Use Cases to do:
 		<product name="Refurbish-Maintenance">
 			<category>ADD_ON</category>
 		</product>
-		<product name="Bowie-Knife">
-			<category>BASE</category>
-		</product>
-		<product name="Samuri-Sword">
-			<category>BASE</category>
-		</product>
 	</products>
 	 
 	<rules>

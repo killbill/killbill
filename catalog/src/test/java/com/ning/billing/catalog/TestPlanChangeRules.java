@@ -31,6 +31,7 @@ import com.ning.billing.catalog.PlanPolicyChangeRule.Qualifier;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PlanSpecifier;
 
 public class TestPlanChangeRules extends TestPlanRules {
 
@@ -50,7 +51,7 @@ public class TestPlanChangeRules extends TestPlanRules {
 				);
 		assertEquals(ActionPolicy.END_OF_TERM,c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN)
+				new PlanSpecifier("BP", null, ANNUAL, null)
 				));
 	}
 
@@ -71,12 +72,12 @@ public class TestPlanChangeRules extends TestPlanRules {
 		
 		assertEquals(END_OF_TERM,c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN)
+				new PlanSpecifier("BP", null, MONTHLY, null)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN)
+				new PlanSpecifier("BP", null, ANNUAL, null)
 				));
 
 
@@ -100,12 +101,12 @@ public class TestPlanChangeRules extends TestPlanRules {
 
 		assertEquals(END_OF_TERM,c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN)
+				new PlanSpecifier("BP", null, ANNUAL, null)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN)
+				new PlanSpecifier("BP", null, MONTHLY, null)
 				));
 
 }
@@ -127,12 +128,12 @@ public class TestPlanChangeRules extends TestPlanRules {
 
 		assertEquals(END_OF_TERM,c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN)
+				new PlanSpecifier("BP", null, ANNUAL, null)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, MONTHLY, null, TRIAL),
-				new PlanPhaseSpecifier("BP", null, ANNUAL, null, TRIAL)
+				new PlanSpecifier("BP", null, ANNUAL, null)
 				));
 		
 	}
@@ -154,12 +155,12 @@ public class TestPlanChangeRules extends TestPlanRules {
 		
 		assertEquals(IMMEDIATE,c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN)
+				new PlanSpecifier("BP", null, ANNUAL, null)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN)
+				new PlanSpecifier("FP", null, ANNUAL, null)
 				));
 		
 
@@ -182,12 +183,12 @@ public class TestPlanChangeRules extends TestPlanRules {
 
 		assertEquals(IMMEDIATE,c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("BP", null, ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("FP", null, MONTHLY, null, EVERGREEN)
+				new PlanSpecifier("FP", null, MONTHLY, null)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, MONTHLY, null, TRIAL),
-				new PlanPhaseSpecifier("BP", null, ANNUAL, null, TRIAL)
+				new PlanSpecifier("BP", null, ANNUAL, null)
 				));
 		
 	}
@@ -212,12 +213,12 @@ public class TestPlanChangeRules extends TestPlanRules {
 		
 		assertEquals(END_OF_TERM,c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN)
+				new PlanSpecifier("BP", null, MONTHLY, null)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN)
+				new PlanSpecifier("FP", null, ANNUAL, null)
 				));
 
 	}
@@ -240,12 +241,12 @@ public class TestPlanChangeRules extends TestPlanRules {
 		
 		assertEquals(IMMEDIATE,c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN),
-				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN)
+				new PlanSpecifier("BP", null, MONTHLY, null)
 				));
 		
 		assertNull(c.getPlanChangePolicy(
 				new PlanPhaseSpecifier("BP", null, MONTHLY, null, EVERGREEN),
-				new PlanPhaseSpecifier("FP", null, ANNUAL, null, EVERGREEN)
+				new PlanSpecifier("FP", null, ANNUAL, null)
 				));
 
 	}

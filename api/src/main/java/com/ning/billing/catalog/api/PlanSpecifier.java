@@ -31,6 +31,14 @@ public class PlanSpecifier {
 		this.priceListName = priceListName;
 	}
 	
+	public PlanSpecifier(PlanPhaseSpecifier planPhase) {
+		super();
+		this.productName = planPhase.getProductName();
+		this.productCategory = planPhase.getProductCategory();
+		this.billingPeriod = planPhase.getBillingPeriod();
+		this.priceListName = planPhase.getPriceListName();
+	}
+	
 	public String getProductName() {
 		return productName;
 	}

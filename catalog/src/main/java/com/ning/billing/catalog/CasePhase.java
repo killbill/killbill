@@ -18,10 +18,10 @@ package com.ning.billing.catalog;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.ValidatingConfig.ValidationErrors;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 
 public abstract class CasePhase<T> extends Case<T> {
@@ -39,17 +39,17 @@ public abstract class CasePhase<T> extends Case<T> {
 	}
 	
 	
-	public T getResult(PlanPhaseSpecifier planPhase, Catalog c) {
+	public T getResult(PlanPhaseSpecifier specifier, Catalog c) {
 		if (	
-				(phaseType       == null || planPhase.getPhaseType() == null || planPhase.getPhaseType() == phaseType) &&
-				satisfiesCase(planPhase, c)
+				(phaseType       == null || specifier.getPhaseType() == null || specifier.getPhaseType() == phaseType) &&
+				satisfiesCase(new PlanSpecifier(specifier), c)
 				) {
 			return getResult(); 
 		}
 		return null;
 	}
 	
-	public static <K> K getResult(Case<K>[] cases, PlanPhaseSpecifier planSpec, Catalog catalog) {
+	public static <K> K getResult(CasePhase<K>[] cases, PlanPhaseSpecifier planSpec, Catalog catalog) {
     	if(cases != null) {
     		for(int i = cases.length - 1; i >=0; i --) {
     			K result = cases[i].getResult(planSpec, catalog);

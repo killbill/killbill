@@ -117,16 +117,16 @@ public class PlanRules extends ValidatingConfig  {
 		return CaseChange.getResult(changeAlignmentCase, from, to, catalog);      
     }
 
-	public PlanAlignmentCreate getPlanCreateAlignment(PlanPhaseSpecifier planPhase, Catalog catalog) {
-		return Case.getResult(createAlignmentCase, planPhase, catalog);      
+	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier, Catalog catalog) {
+		return Case.getResult(createAlignmentCase, specifier, catalog);      
     }
 	
 	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase, Catalog catalog) {
-		return Case.getResult(cancelCase, planPhase, catalog);      
+		return CasePhase.getResult(cancelCase, planPhase, catalog);      
 	}
 
 	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase, Catalog catalog) {
-		return Case.getResult(billingAlignmentCase, planPhase, catalog);      
+		return CasePhase.getResult(billingAlignmentCase, planPhase, catalog);      
 	}
 
 	private int getBillingPeriodIndex(BillingPeriod src) {

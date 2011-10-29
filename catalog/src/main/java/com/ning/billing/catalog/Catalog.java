@@ -208,9 +208,7 @@ public class Catalog extends ValidatingConfig implements ICatalog {
     }
     
     @Override
-    public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier planPhase) {
-    	PlanPhaseSpecifier specifier = new PlanPhaseSpecifier(planPhase.getProductName(), planPhase.getProductCategory(), planPhase.getBillingPeriod(), planPhase.getPriceListName(), null);
-    	
+    public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier) {
         return planRules.getPlanCreateAlignment(specifier, this);
     }
     
