@@ -27,7 +27,7 @@ import com.ning.billing.entitlement.events.user.ApiEventCreate;
 public class SubscriptionBundle extends PrivateFields implements ISubscriptionBundle {
 
     private final UUID id;
-    private final String name;
+    private final String key;
     private final UUID accountId;
     private final DateTime startDate;
 
@@ -35,17 +35,17 @@ public class SubscriptionBundle extends PrivateFields implements ISubscriptionBu
         this(UUID.randomUUID(), name, accountId, null);
     }
 
-    public SubscriptionBundle(UUID id, String name, UUID accountId, DateTime startDate) {
+    public SubscriptionBundle(UUID id, String key, UUID accountId, DateTime startDate) {
         super();
         this.id = id;
-        this.name = name;
+        this.key = key;
         this.accountId = accountId;
         this.startDate = startDate;
     }
 
     @Override
-    public String getName() {
-        return name;
+    public String getKey() {
+        return key;
     }
 
     @Override

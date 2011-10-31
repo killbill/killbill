@@ -26,9 +26,9 @@ public interface ISubscriptionBundle extends IPrivateFields {
 
     public UUID getAccountId();
 
-    public String getName();
-
     public UUID getId();
 
     public DateTime getStartDate();
+
+    public String getKey();
 }
