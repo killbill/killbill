@@ -64,7 +64,7 @@ public interface IBundleSqlDao extends Transactional<IEventSqlDao>, CloseMe, Tra
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, SubscriptionBundle bundle) {
             stmt.bind("id", bundle.getId().toString());
             stmt.bind("start_dt", getDate(bundle.getStartDate()));
-            stmt.bind("name", bundle.getName());
+            stmt.bind("name", bundle.getKey());
             stmt.bind("account_id", bundle.getAccountId().toString());
         }
     }
