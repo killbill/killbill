@@ -123,7 +123,8 @@ public class AnalyticsListener implements IApiListener
         recordTransition(transitionKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
     }
 
-    private void recordTransition(final String key, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription)
+    // Public for now for internal reasons
+    public void recordTransition(final String key, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription)
     {
         final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
             key,
