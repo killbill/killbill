@@ -16,19 +16,16 @@
 
 package com.ning.billing.analytics.setup;
 
+
 import com.google.inject.AbstractModule;
 import com.ning.billing.analytics.dao.EventDao;
 import com.ning.billing.analytics.dao.EventDaoProvider;
-import com.ning.jetty.utils.providers.DBIProvider;
-
-import org.skife.jdbi.v2.DBI;
 
 public class AnalyticsModule extends AbstractModule
 {
     @Override
     protected void configure()
     {
-        bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
         bind(EventDao.class).toProvider(EventDaoProvider.class).asEagerSingleton();
     }
 }

@@ -16,12 +16,18 @@
 
 package com.ning.billing.entitlement.glue;
 
+import org.skife.config.ConfigurationObjectFactory;
+import org.skife.jdbi.v2.DBI;
+
+import com.ning.billing.dbi.DBIProvider;
+import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.entitlement.engine.dao.EntitlementDaoSqlMock;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
 
 public class EngineModuleSqlMock extends EntitlementModule {
+
 
     @Override
     protected void installEntitlementDao() {
@@ -31,5 +37,17 @@ public class EngineModuleSqlMock extends EntitlementModule {
     @Override
     protected void installClock() {
         bind(IClock.class).to(ClockMock.class).asEagerSingleton();
+    }
+
+    protected void installDBI() {
+        bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
+        final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
+        bind(DbiConfig.class).toInstance(config);
+    }
+
+    @Override
+    protected void configure() {
+        installDBI();
+        super.configure();
     }
 }

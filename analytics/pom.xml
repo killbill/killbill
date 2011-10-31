@@ -26,12 +26,16 @@
     <artifactId>killbill-analytics</artifactId>
     <name>killbill-analytics</name>
     <packaging>jar</packaging>
-    <dependencies>
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <scope>provided</scope>
-        </dependency>
+	<dependencies>
+		<dependency>
+			<groupId>org.jdbi</groupId>
+			<artifactId>jdbi</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
+			<scope>provided</scope>
+		</dependency>
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>management</artifactId>
@@ -45,10 +49,6 @@
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.jetty</groupId>
-            <artifactId>ning-service-skeleton-utils</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

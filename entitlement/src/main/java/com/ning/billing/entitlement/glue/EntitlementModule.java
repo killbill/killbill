@@ -80,11 +80,6 @@ public class EntitlementModule extends AbstractModule {
         bind(IBillingApi.class).to(BillingApi.class).asEagerSingleton();
     }
 
-    protected void installDBI() {
-        bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-        final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-        bind(DbiConfig.class).toInstance(config);
-    }
 
     @Override
     protected void configure() {
@@ -96,6 +91,5 @@ public class EntitlementModule extends AbstractModule {
         installEntitlementCore();
         installUserApi();
         installBillingApi();
-        installDBI();
     }
 }
