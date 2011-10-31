@@ -26,9 +26,14 @@ import com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
 
 public interface ISubscriptionTransition {
 
+
+    UUID getBundleId();
+
     UUID getSubscriptionId();
 
-    DateTime getTransitionTime();
+    DateTime getRequestedTransitionTime();
+
+    DateTime getEffectiveTransitionTime();
 
     SubscriptionState getPreviousState();
 

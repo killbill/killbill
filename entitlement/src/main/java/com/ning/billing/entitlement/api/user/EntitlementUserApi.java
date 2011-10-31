@@ -34,7 +34,7 @@ import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.api.user.IApiListener;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
-import com.ning.billing.entitlement.api.user.IUserApi;
+import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
@@ -44,7 +44,7 @@ import com.ning.billing.entitlement.events.user.ApiEventCreate;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.IClock;
 
-public class UserApi implements IUserApi {
+public class EntitlementUserApi implements IEntitlementUserApi {
 
     private final Engine engine;
     private final IClock clock;
@@ -53,7 +53,7 @@ public class UserApi implements IUserApi {
     private final IPlanAligner planAligner;
 
     @Inject
-    public UserApi(Engine engine, IClock clock, IPlanAligner planAligner, IEntitlementDao dao) {
+    public EntitlementUserApi(Engine engine, IClock clock, IPlanAligner planAligner, IEntitlementDao dao) {
         super();
         this.engine = engine;
         this.clock = clock;

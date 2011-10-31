@@ -23,7 +23,7 @@ import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.BillingPeriod;
 
 
-public interface IUserApi {
+public interface IEntitlementUserApi {
 
     public void initialize(List<IApiListener> listeners);
 

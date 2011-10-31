@@ -207,11 +207,6 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
 
     @Override
-    public IAccount getAccount() {
-        return null;
-    }
-
-    @Override
     public void cancel() throws EntitlementUserApiException  {
 
         SubscriptionState currentState = getState();
@@ -325,7 +320,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         }
         ISubscriptionTransition latestSubscription = null;
         for (ISubscriptionTransition cur : transitions) {
-            if (cur.getTransitionTime().isAfter(clock.getUTCNow())) {
+            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
                 break;
             }
             latestSubscription = cur;
@@ -362,17 +357,17 @@ public class Subscription extends PrivateFields  implements ISubscription {
         Iterator<SubscriptionTransition> it = ((LinkedList<SubscriptionTransition>) transitions).descendingIterator();
         while (it.hasNext()) {
             SubscriptionTransition cur = it.next();
-            if (cur.getTransitionTime().isAfter(clock.getUTCNow())) {
+            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
                 // Skip future events
                 continue;
             }
             if (cur.getEventType() == EventType.API_USER &&
                     cur.getApiEventType() == ApiEventType.CHANGE) {
-                return cur.getTransitionTime();
+                return cur.getEffectiveTransitionTime();
             }
         }
         // CREATE event
-        return transitions.get(0).getTransitionTime();
+        return transitions.get(0).getEffectiveTransitionTime();
     }
 
     public List<ISubscriptionTransition> getActiveTransitions() {
@@ -382,7 +377,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
         List<ISubscriptionTransition> activeTransitions = new ArrayList<ISubscriptionTransition>();
         for (ISubscriptionTransition cur : transitions) {
-            if (cur.getTransitionTime().isAfter(clock.getUTCNow())) {
+            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
                 activeTransitions.add(cur);
             }
         }
@@ -395,7 +390,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         }
 
         for (SubscriptionTransition cur : transitions) {
-            if (cur.getTransitionTime().isBefore(clock.getUTCNow()) ||
+            if (cur.getEffectiveTransitionTime().isBefore(clock.getUTCNow()) ||
                     cur.getEventType() == EventType.PHASE ||
                         cur.getApiEventType() != ApiEventType.CANCEL) {
                 continue;
@@ -412,7 +407,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         }
 
         for (SubscriptionTransition cur : transitions) {
-            if (cur.getTransitionTime().isBefore(clock.getUTCNow()) ||
+            if (cur.getEffectiveTransitionTime().isBefore(clock.getUTCNow()) ||
                     cur.getEventType() == EventType.PHASE ||
                     cur.getApiEventType() != ApiEventType.CHANGE) {
                 continue;
@@ -451,16 +446,16 @@ public class Subscription extends PrivateFields  implements ISubscription {
         Iterator<SubscriptionTransition> it = ((LinkedList<SubscriptionTransition>) transitions).descendingIterator();
         while (it.hasNext()) {
             SubscriptionTransition cur = it.next();
-            if (cur.getTransitionTime().isAfter(clock.getUTCNow())) {
+            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
                 // Skip future events
                 continue;
             }
             if (cur.getEventType() == EventType.PHASE) {
-                return cur.getTransitionTime();
+                return cur.getEffectiveTransitionTime();
             }
         }
         // CREATE event
-        return transitions.get(0).getTransitionTime();
+        return transitions.get(0).getEffectiveTransitionTime();
     }
 
     private void rebuildTransitions() {
@@ -542,7 +537,8 @@ public class Subscription extends PrivateFields  implements ISubscription {
             IPlanPhase nextPhase = catalog.getPhaseFromName(nextPhaseName);
 
             SubscriptionTransition transition =
-                new SubscriptionTransition(id, cur.getType(), apiEventType, cur.getEffectiveDate(),
+                new SubscriptionTransition(id, bundleId, cur.getType(), apiEventType,
+                        cur.getRequestedDate(), cur.getEffectiveDate(),
                         previousState, previousPlan, previousPhase, previousPriceList,
                         nextState, nextPlan, nextPhase, nextPriceList);
             transitions.add(transition);

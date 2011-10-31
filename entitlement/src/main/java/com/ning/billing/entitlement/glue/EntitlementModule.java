@@ -24,9 +24,9 @@ import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.billing.BillingApi;
-import com.ning.billing.entitlement.api.billing.IBillingApi;
-import com.ning.billing.entitlement.api.user.IUserApi;
-import com.ning.billing.entitlement.api.user.UserApi;
+import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
+import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.engine.core.ApiEventProcessor;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.core.IApiEventProcessor;
@@ -70,11 +70,11 @@ public class EntitlementModule extends AbstractModule {
     }
 
     protected void installUserApi() {
-        bind(IUserApi.class).to(UserApi.class).asEagerSingleton();
+        bind(IEntitlementUserApi.class).to(EntitlementUserApi.class).asEagerSingleton();
     }
 
     protected void installBillingApi() {
-        bind(IBillingApi.class).to(BillingApi.class).asEagerSingleton();
+        bind(IEntitlementBillingApi.class).to(BillingApi.class).asEagerSingleton();
     }
 
 

@@ -32,7 +32,7 @@ import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.util.clock.IClock;
 
-public class BillingApi implements IBillingApi {
+public class BillingApi implements IEntitlementBillingApi {
 
     private final Engine engine;
     private final IClock clock;

@@ -24,7 +24,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.account.api.IAccount;
 
-public interface IBillingApi {
+public interface IEntitlementBillingApi {
 
     /**
      *

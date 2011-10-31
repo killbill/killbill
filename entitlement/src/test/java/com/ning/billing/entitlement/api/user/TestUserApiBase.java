@@ -47,7 +47,7 @@ import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.api.billing.IBillingApi;
+import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDaoMock;
@@ -66,8 +66,8 @@ public abstract class TestUserApiBase {
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
 
     protected Engine engine;
-    protected IUserApi entitlementApi;
-    protected IBillingApi billingApi;
+    protected IEntitlementUserApi entitlementApi;
+    protected IEntitlementBillingApi billingApi;
     protected ICatalogUserApi catalogApi;
     protected IEntitlementConfig config;
     protected IEntitlementDao dao;
@@ -106,9 +106,9 @@ public abstract class TestUserApiBase {
         final Injector g = getInjector();
 
         engine = g.getInstance(Engine.class);
-        entitlementApi = g.getInstance(IUserApi.class);
+        entitlementApi = g.getInstance(IEntitlementUserApi.class);
         catalogApi = g.getInstance(ICatalogUserApi.class);
-        billingApi = g.getInstance(IBillingApi.class);
+        billingApi = g.getInstance(IEntitlementBillingApi.class);
         config = g.getInstance(IEntitlementConfig.class);
         dao = g.getInstance(IEntitlementDao.class);
         clock = (ClockMock) g.getInstance(IClock.class);

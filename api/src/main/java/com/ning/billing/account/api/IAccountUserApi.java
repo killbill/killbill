@@ -19,7 +19,7 @@ package com.ning.billing.account.api;
 import java.util.List;
 import java.util.UUID;
 
-public interface IUserApi {
+public interface IAccountUserApi {
 
     public IAccount createAccount(IAccountData data);
 

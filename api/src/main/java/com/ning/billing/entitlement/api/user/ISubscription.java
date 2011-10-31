@@ -65,6 +65,4 @@ public interface ISubscription extends IPrivateFields {
 
     public IPlanPhase getCurrentPhase();
 
-    public IAccount getAccount();
-
 }

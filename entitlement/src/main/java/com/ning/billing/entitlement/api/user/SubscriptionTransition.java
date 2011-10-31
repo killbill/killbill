@@ -30,9 +30,11 @@ public class SubscriptionTransition implements ISubscriptionTransition {
 
 
     private final UUID subscriptionId;
+    private final UUID bundleId;
     private final EventType eventType;
     private final ApiEventType apiEventType;
-    private final DateTime transitionTime;
+    private final DateTime requestedTransitionTime;
+    private final DateTime effectiveTransitionTime;
     private final SubscriptionState previousState;
     private final String previousPriceList;
     private final IPlan previousPlan;
@@ -42,15 +44,17 @@ public class SubscriptionTransition implements ISubscriptionTransition {
     private final IPlan nextPlan;
     private final IPlanPhase nextPhase;
 
-    public SubscriptionTransition(UUID subscriptionId, EventType eventType,
-            ApiEventType apiEventType, DateTime transitionTime,
+    public SubscriptionTransition(UUID subscriptionId, UUID bundleId, EventType eventType,
+            ApiEventType apiEventType, DateTime requestedTransitionTime, DateTime effectiveTransitionTime,
             SubscriptionState previousState, IPlan previousPlan, IPlanPhase previousPhase, String previousPriceList,
             SubscriptionState nextState, IPlan nextPlan, IPlanPhase nextPhase, String nextPriceList) {
         super();
         this.subscriptionId = subscriptionId;
+        this.bundleId = bundleId;
         this.eventType = eventType;
         this.apiEventType = apiEventType;
-        this.transitionTime = transitionTime;
+        this.requestedTransitionTime = requestedTransitionTime;
+        this.effectiveTransitionTime = effectiveTransitionTime;
         this.previousState = previousState;
         this.previousPriceList = previousPriceList;
         this.previousPlan = previousPlan;
@@ -67,9 +71,10 @@ public class SubscriptionTransition implements ISubscriptionTransition {
     }
 
     @Override
-    public DateTime getTransitionTime() {
-        return transitionTime;
+    public UUID getBundleId() {
+        return bundleId;
     }
+
 
     @Override
     public SubscriptionState getPreviousState() {
@@ -121,10 +126,22 @@ public class SubscriptionTransition implements ISubscriptionTransition {
     }
 
     @Override
+    public DateTime getRequestedTransitionTime() {
+        return requestedTransitionTime;
+    }
+
+    @Override
+    public DateTime getEffectiveTransitionTime() {
+        return effectiveTransitionTime;
+    }
+
+
+    @Override
     public String toString() {
         return "SubscriptionTransition [subscriptionId=" + subscriptionId
                 + ", eventType=" + eventType + ", apiEventType="
-                + apiEventType + ", transitionTime=" + transitionTime
+                + apiEventType + ", requestedTransitionTime=" + requestedTransitionTime
+                + ", effectiveTransitionTime=" + effectiveTransitionTime
                 + ", previousState=" + previousState + ", previousPlan="
                 + ((previousPlan != null) ? previousPlan.getName()  : null)
                 + ", previousPhase=" + ((previousPhase != null) ? previousPhase.getName() : null)
