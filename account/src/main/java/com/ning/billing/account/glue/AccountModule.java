@@ -17,24 +17,16 @@
 package com.ning.billing.account.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
 
 import com.google.inject.AbstractModule;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.IAccountDao;
-import com.ning.billing.dbi.DBIProvider;
-import com.ning.billing.dbi.DbiConfig;
 
 public class AccountModule extends AbstractModule {
 
     protected void installConfig() {
         final IAccountConfig config = new ConfigurationObjectFactory(System.getProperties()).build(IAccountConfig.class);
         bind(IAccountConfig.class).toInstance(config);
-    }
-    protected void installDBI() {
-        bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-        final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-        bind(DbiConfig.class).toInstance(config);
     }
 
     protected void installAccountDao() {
@@ -44,7 +36,6 @@ public class AccountModule extends AbstractModule {
     @Override
     protected void configure() {
         installConfig();
-        installDBI();
         installAccountDao();
     }
 

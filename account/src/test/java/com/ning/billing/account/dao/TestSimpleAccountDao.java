@@ -36,6 +36,7 @@ import com.google.inject.Stage;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.glue.AccountModule;
+import com.ning.billing.account.glue.AccountModuleMock;
 
 public class TestSimpleAccountDao {
 
@@ -55,7 +56,7 @@ public class TestSimpleAccountDao {
 
 
     private  Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new AccountModule());
+        return Guice.createInjector(Stage.DEVELOPMENT, new AccountModuleMock());
     }
 
 

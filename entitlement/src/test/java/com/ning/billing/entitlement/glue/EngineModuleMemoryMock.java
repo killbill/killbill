@@ -27,7 +27,6 @@ import com.ning.billing.entitlement.engine.core.IApiEventProcessor;
 import com.ning.billing.entitlement.engine.dao.EntitlementDaoMemoryMock;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.glue.EntitlementModule;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
 
@@ -56,7 +55,7 @@ public class EngineModuleMemoryMock extends EntitlementModule {
 
     @Override
     protected void configure() {
-        installDBI();
         super.configure();
+        installDBI();
     }
 }

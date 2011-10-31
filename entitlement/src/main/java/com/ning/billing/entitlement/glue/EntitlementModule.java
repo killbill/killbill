@@ -17,13 +17,10 @@
 package com.ning.billing.entitlement.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
 
 import com.google.inject.AbstractModule;
 import com.ning.billing.catalog.CatalogUserApi;
 import com.ning.billing.catalog.api.ICatalogUserApi;
-import com.ning.billing.dbi.DBIProvider;
-import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.billing.BillingApi;

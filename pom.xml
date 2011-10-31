@@ -69,6 +69,13 @@
                 <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-util</artifactId>
                 <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-util</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jolbox</groupId>
@@ -118,11 +125,6 @@
                 <groupId>com.ning.jdbi</groupId>
                 <artifactId>jdbi-metrics</artifactId>
                 <version>1.0.1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.ning.jetty</groupId>
-                <artifactId>ning-service-skeleton-utils</artifactId>
-                <version>0.0.6-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
