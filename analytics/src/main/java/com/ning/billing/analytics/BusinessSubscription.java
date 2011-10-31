@@ -96,12 +96,8 @@ public class BusinessSubscription
             final IProduct product = currentPlan.getProduct();
             productName = product.getName();
             productCategory = product.getCategory();
-            if (product.getCatalogName() != null) {
-                productType = product.getCatalogName();
-            }
-            else {
-                productType = null;
-            }
+            // TODO - we should keep the product type
+            productType = product.getCatalogName();
         }
         else {
             productName = null;
