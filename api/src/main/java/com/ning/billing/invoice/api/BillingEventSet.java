@@ -16,34 +16,11 @@
 
 package com.ning.billing.invoice.api;
 
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.IBillingEvent;
-import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 
 public class BillingEventSet extends ArrayList<IBillingEvent> {
-    private Currency targetCurrency;
-    private DateTime targetDate;
-
-    public BillingEventSet(Currency targetCurrency) {
-        this.targetCurrency = targetCurrency;
-        this.targetDate = new DateTime();
-    }
-
-    public BillingEventSet(Currency targetCurrency, DateTime targetDate) {
-        this.targetCurrency = targetCurrency;
-        this.targetDate = targetDate;
-    }
-
-    public Currency getTargetCurrency() {
-        return targetCurrency;
-    }
-
-    public DateTime getTargetDate() {
-        return targetDate;
-    }
-
     public IBillingEvent getLast() {
         if (this.size() == 0) {return null;}
 

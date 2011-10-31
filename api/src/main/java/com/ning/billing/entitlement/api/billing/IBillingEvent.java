@@ -84,4 +84,10 @@ public interface IBillingEvent extends Comparable<IBillingEvent> {
      * @return the billing mode for the current event
      */
     public BillingMode getBillingMode();
+
+    /**
+     *
+     * @return the description of the billing event
+     */
+    public String getDescription();
 }

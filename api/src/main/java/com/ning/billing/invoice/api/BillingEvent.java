@@ -36,6 +36,7 @@ public class BillingEvent implements IBillingEvent {
     private final int billCycleDay;
     private final BillingMode billingMode;
 
+
     public BillingEvent(UUID subscriptionId, DateTime startDate, String planName, String planPhaseName, IInternationalPrice price,
                         BillingPeriod billingPeriod, int billCycleDay, BillingMode billingMode) {
         this.subscriptionId = subscriptionId;
@@ -46,6 +47,17 @@ public class BillingEvent implements IBillingEvent {
         this.billingPeriod = billingPeriod;
         this.billCycleDay = billCycleDay;
         this.billingMode = billingMode;
+    }
+
+    public BillingEvent(IBillingEvent event, DateTime startDate) {
+        this.subscriptionId = event.getSubscriptionId();
+        this.startDate = startDate;
+        this.planName = event.getPlanName();
+        this.planPhaseName = event.getPlanPhaseName();
+        this.price = event.getPrice();
+        this.billingPeriod = event.getBillingPeriod();
+        this.billCycleDay = event.getBillCycleDay();
+        this.billingMode = event.getBillingMode();
     }
 
     @Override
@@ -94,10 +106,13 @@ public class BillingEvent implements IBillingEvent {
     }
 
     @Override
-    public int compareTo(IBillingEvent billingEvent) {
-//        // strict date comparison here breaks SortedTree if multiple events occur on the same day
-//        return getEffectiveDate().compareTo(billingEvent.getEffectiveDate()) > 0 ? 1 : -1;
+    public String getDescription() {
+        return planName + "(" + planPhaseName + ")";
+    }
 
+    @Override
+    public int compareTo(IBillingEvent billingEvent) {
+        // strict date comparison here breaks SortedTree if multiple events occur on the same day
         int compareSubscriptions = getSubscriptionId().compareTo(billingEvent.getSubscriptionId());
 
         if (compareSubscriptions == 0) {

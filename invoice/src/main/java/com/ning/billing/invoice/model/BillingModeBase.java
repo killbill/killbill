@@ -53,12 +53,8 @@ public abstract class BillingModeBase implements IBillingMode {
         DateTime endBillCycleDate = calculateBillingCycleDateAfter(targetDate, firstBillCycleDate, billingCycleDay, billingPeriod);
         BigDecimal numberOfBillingPeriods = calculateNumberOfWholeBillingPeriods(firstBillCycleDate, endBillCycleDate, billingPeriod);
 
-        if (targetDate.equals(endBillCycleDate)) {
-            numberOfBillingPeriods = numberOfBillingPeriods.add(BigDecimal.ONE);
-        }
-
         return precedingProRation.add(numberOfBillingPeriods);
-}
+    }
 
     protected DateTime buildDate(final int year, final int month, final int day) {
         return new DateTime(year, month, day, 0, 0, 0, 0);
@@ -68,7 +64,9 @@ public abstract class BillingModeBase implements IBillingMode {
         return !(targetDate.isBefore(startDate) || !targetDate.isBefore(endDate));
     }
 
-    protected abstract DateTime calculateEffectiveEndDate(DateTime billCycleDate, DateTime targetDate, DateTime endDate, BillingPeriod billingPeriod);
+    public abstract DateTime calculateEffectiveEndDate(final DateTime startDate, final DateTime targetDate, final int billingCycleDay, final BillingPeriod billingPeriod);
+
+    public abstract DateTime calculateEffectiveEndDate(final DateTime startDate, final DateTime endDate, final DateTime targetDate, final int billingCycleDay, final BillingPeriod billingPeriod);
 
     protected abstract BigDecimal calculateNumberOfWholeBillingPeriods(final DateTime startDate, final DateTime endDate, final BillingPeriod billingPeriod);
 
@@ -81,4 +79,6 @@ public abstract class BillingModeBase implements IBillingMode {
     protected abstract BigDecimal calculateProRationBeforeFirstBillingPeriod(final DateTime startDate, final int billingCycleDay, final BillingPeriod billingPeriod);
 
     protected abstract BigDecimal calculateProRationAfterLastBillingCycleDate(final DateTime endDate, final DateTime previousBillThroughDate, final BillingPeriod billingPeriod);
+
+    protected abstract DateTime calculateEffectiveEndDate(final DateTime billCycleDate, final DateTime targetDate, final DateTime endDate, final BillingPeriod billingPeriod);
 }

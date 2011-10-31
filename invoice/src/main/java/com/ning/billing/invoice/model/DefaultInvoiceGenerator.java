@@ -24,17 +24,59 @@ import com.ning.billing.invoice.api.BillingEventSet;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class DefaultInvoiceGenerator implements IInvoiceGenerator {
     @Override
-    public Invoice generateInvoice(BillingEventSet events) {
+    public Invoice generateInvoice(final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
         if (events == null) {return new Invoice();}
         if (events.size() == 0) {return new Invoice();}
 
-        Currency targetCurrency = events.getTargetCurrency();
+        InvoiceItemList currentItems = generateInvoiceItems(events, targetDate, targetCurrency);
+        InvoiceItemList itemsToPost = reconcileInvoiceItems(currentItems, existingItems);
+
         Invoice invoice = new Invoice(targetCurrency);
-        DateTime targetDate = events.getTargetDate();
+        invoice.add(itemsToPost);
+
+        return invoice;
+    }
+
+    private InvoiceItemList reconcileInvoiceItems(final InvoiceItemList currentInvoiceItems, final InvoiceItemList existingInvoiceItems) {
+        InvoiceItemList currentItems = (InvoiceItemList) currentInvoiceItems.clone();
+        InvoiceItemList existingItems = (InvoiceItemList) existingInvoiceItems.clone();
+
+        Collections.sort(currentItems);
+        Collections.sort(existingItems);
+
+        List<InvoiceItem> existingItemsToRemove = new ArrayList<InvoiceItem>();
+
+        for (InvoiceItem currentItem : currentItems) {
+            // see if there are any existing items that are covered by the current item
+            for (InvoiceItem existingItem : existingItems) {
+                if (currentItem.duplicates(existingItem)) {
+                    currentItem.subtract(existingItem);
+                    existingItemsToRemove.add(existingItem);
+                }
+            }
+        }
+
+        existingItems.removeAll(existingItemsToRemove);
+
+        // remove zero-dollar invoice items
+        currentItems.removeZeroDollarItems();
+
+        // add existing items that aren't covered by current items as credit items
+        for (InvoiceItem existingItem : existingItems) {
+            currentItems.add(existingItem.asCredit());
+        }
+
+        return currentItems;
+    }
+
+    private InvoiceItemList generateInvoiceItems(BillingEventSet events, DateTime targetDate, Currency targetCurrency) {
+        InvoiceItemList items = new InvoiceItemList();
 
         // sort events; this relies on the sort order being by subscription id then start date
         Collections.sort(events);
@@ -46,36 +88,42 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
             IBillingEvent nextEvent = events.get(i + 1);
 
             if (thisEvent.getSubscriptionId() == nextEvent.getSubscriptionId()) {
-                processEvents(thisEvent, nextEvent, invoice, targetDate, targetCurrency);
+                processEvents(thisEvent, nextEvent, items, targetDate, targetCurrency);
             } else {
-                processEvent(thisEvent, invoice, targetDate, targetCurrency);
+                processEvent(thisEvent, items, targetDate, targetCurrency);
             }
         }
 
         // process the last item in the event set
-        processEvent(events.getLast(), invoice, targetDate, targetCurrency);
+        if (events.size() > 0) {
+            processEvent(events.getLast(), items, targetDate, targetCurrency);
+        }
 
-        return invoice;
+        return items;
     }
 
-    private void processEvent(IBillingEvent event, Invoice invoice, DateTime targetDate, Currency targetCurrency) {
+    private void processEvent(IBillingEvent event, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
         BigDecimal rate = event.getPrice(targetCurrency);
         BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(event, targetDate, rate);
+        IBillingMode billingMode = getBillingMode(event.getBillingMode());
+        DateTime billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
 
-        addInvoiceItem(invoice, invoiceItemAmount);
+        addInvoiceItem(items, event, billThroughDate, invoiceItemAmount, rate, targetCurrency);
     }
 
-    private void processEvents(IBillingEvent firstEvent, IBillingEvent secondEvent, Invoice invoice, DateTime targetDate, Currency targetCurrency) {
+    private void processEvents(IBillingEvent firstEvent, IBillingEvent secondEvent, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
         BigDecimal rate = firstEvent.getPrice(targetCurrency);
         BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
+        IBillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
+        DateTime billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
 
-        addInvoiceItem(invoice, invoiceItemAmount);
+        addInvoiceItem(items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
     }
 
-    private void addInvoiceItem(Invoice invoice, BigDecimal amount) {
-        if (!amount.equals(BigDecimal.ZERO)) {
-            InvoiceItem item = new InvoiceItem(amount);
-            invoice.add(item);
+    private void addInvoiceItem(List<InvoiceItem> items, IBillingEvent event, DateTime billThroughDate, BigDecimal amount, BigDecimal rate, Currency currency) {
+        if (!(amount.compareTo(BigDecimal.ZERO) == 0)) {
+            InvoiceItem item = new InvoiceItem(event.getSubscriptionId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
+            items.add(item);
         }
     }
 
@@ -114,6 +162,11 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
     }
 
     private IBillingMode getBillingMode(BillingMode billingMode) {
-        return new InAdvanceBillingMode();
+        switch (billingMode) {
+            case IN_ADVANCE:
+                return new InAdvanceBillingMode();
+            default:
+                return null;
+        }
     }
 }
