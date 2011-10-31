@@ -28,6 +28,10 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.Currency;
+
+import static com.ning.billing.catalog.api.Currency.*;
+
 public class TestBusinessSubscriptionTransition
 {
     private BusinessSubscription prevSubscription;
@@ -46,9 +50,9 @@ public class TestBusinessSubscriptionTransition
         final ISubscription prevISubscription = new MockSubscription(ISubscription.SubscriptionState.ACTIVE, plan, phase);
         final ISubscription nextISubscription = new MockSubscription(ISubscription.SubscriptionState.CANCELLED, plan, phase);
 
-        prevSubscription = new BusinessSubscription(prevISubscription);
-        nextSubscription = new BusinessSubscription(nextISubscription);
-        event = BusinessSubscriptionEvent.subscriptionCancelled(prevISubscription);
+        prevSubscription = new BusinessSubscription(prevISubscription, USD);
+        nextSubscription = new BusinessSubscription(nextISubscription, USD);
+        event = BusinessSubscriptionEvent.subscriptionCancelled(prevISubscription.getCurrentPlan());
         requestedTimestamp = new DateTime(DateTimeZone.UTC);
         key = "1234";
         transition = new BusinessSubscriptionTransition(key, requestedTimestamp, event, prevSubscription, nextSubscription);

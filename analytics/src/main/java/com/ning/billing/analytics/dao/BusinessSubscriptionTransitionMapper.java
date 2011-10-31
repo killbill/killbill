@@ -20,7 +20,6 @@ import com.ning.billing.analytics.BusinessSubscription;
 import com.ning.billing.analytics.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.BusinessSubscriptionTransition;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.ISubscription;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
@@ -30,6 +29,8 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
+
+import static com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
 
 public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<BusinessSubscriptionTransition>
 {
@@ -46,7 +47,7 @@ public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<Bus
             BigDecimal.valueOf(r.getDouble(10)), // mrr
             r.getString(11), // currency
             r.getLong(12) == 0 ? null : new DateTime(r.getLong(12), DateTimeZone.UTC), // startDate
-            r.getString(13) == null ? null : ISubscription.SubscriptionState.valueOf(r.getString(13)), // state
+            r.getString(13) == null ? null : SubscriptionState.valueOf(r.getString(13)), // state
             r.getString(14) == null ? null : UUID.fromString(r.getString(14)), // subscriptionId
             r.getString(15) == null ? null : UUID.fromString(r.getString(15)) //bundleId
         );
@@ -66,7 +67,7 @@ public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<Bus
             BigDecimal.valueOf(r.getDouble(22)), // mrr
             r.getString(23), // currency
             r.getLong(24) == 0 ? null : new DateTime(r.getLong(24), DateTimeZone.UTC), // startDate
-            r.getString(25) == null ? null : ISubscription.SubscriptionState.valueOf(r.getString(25)), // state
+            r.getString(25) == null ? null : SubscriptionState.valueOf(r.getString(25)), // state
             r.getString(26) == null ? null : UUID.fromString(r.getString(26)), // subscriptionId
             r.getString(27) == null ? null : UUID.fromString(r.getString(27)) //bundleId
         );

@@ -29,6 +29,8 @@ import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
 
+import static com.ning.billing.catalog.api.Currency.USD;
+
 public class TestBusinessSubscription
 {
     private final IDuration MONTHLY = MockDuration.MONHTLY();
@@ -58,7 +60,7 @@ public class TestBusinessSubscription
         plan = new MockPlan("platinum-monthly", product);
         phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
         isubscription = new MockSubscription(ISubscription.SubscriptionState.ACTIVE, plan, phase);
-        subscription = new BusinessSubscription(isubscription);
+        subscription = new BusinessSubscription(isubscription, USD);
     }
 
     @Test(groups = "fast")
@@ -97,6 +99,6 @@ public class TestBusinessSubscription
         Assert.assertTrue(subscription.equals(subscription));
 
         final ISubscription otherIsubscription = new MockSubscription(ISubscription.SubscriptionState.CANCELLED, plan, phase);
-        Assert.assertTrue(!subscription.equals(new BusinessSubscription(otherIsubscription)));
+        Assert.assertTrue(!subscription.equals(new BusinessSubscription(otherIsubscription, USD)));
     }
 }

@@ -16,7 +16,6 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
@@ -104,13 +103,6 @@ public class MockSubscription implements ISubscription
         return phase;
     }
 
-
-    @Override
-    public IAccount getAccount()
-    {
-        return null;
-    }
-
     @Override
     public void setPrivate(final String name, final String value)
     {
@@ -124,12 +116,14 @@ public class MockSubscription implements ISubscription
     }
 
     @Override
-    public void uncancel() throws EntitlementUserApiException {
+    public void uncancel() throws EntitlementUserApiException
+    {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String getCurrentPriceList() {
+    public String getCurrentPriceList()
+    {
         throw new UnsupportedOperationException();
     }
 }

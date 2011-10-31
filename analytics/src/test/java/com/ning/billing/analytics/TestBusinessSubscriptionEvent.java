@@ -69,39 +69,39 @@ public class TestBusinessSubscriptionEvent
     {
         BusinessSubscriptionEvent event;
 
-        event = BusinessSubscriptionEvent.subscriptionCreated(isubscription);
+        event = BusinessSubscriptionEvent.subscriptionCreated(isubscription.getCurrentPlan());
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.ADD);
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "ADD_BASE");
 
-        event = BusinessSubscriptionEvent.subscriptionCancelled(isubscription);
+        event = BusinessSubscriptionEvent.subscriptionCancelled(isubscription.getCurrentPlan());
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.CANCEL);
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "CANCEL_BASE");
 
-        event = BusinessSubscriptionEvent.subscriptionChanged(isubscription);
+        event = BusinessSubscriptionEvent.subscriptionChanged(isubscription.getCurrentPlan());
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.CHANGE);
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "CHANGE_BASE");
 
-        event = BusinessSubscriptionEvent.subscriptionPaused(isubscription);
+        event = BusinessSubscriptionEvent.subscriptionPaused(isubscription.getCurrentPlan());
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.PAUSE);
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "PAUSE_BASE");
 
-        event = BusinessSubscriptionEvent.subscriptionResumed(isubscription);
+        event = BusinessSubscriptionEvent.subscriptionResumed(isubscription.getCurrentPlan());
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.RESUME);
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "RESUME_BASE");
 
-        event = BusinessSubscriptionEvent.subscriptionPhaseChanged(isubscription);
+        event = BusinessSubscriptionEvent.subscriptionPhaseChanged(isubscription.getCurrentPlan(), isubscription.getState());
         // The subscription is still active, it's a system change
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CHANGE);
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "SYSTEM_CHANGE_BASE");
 
         isubscription = new MockSubscription(ISubscription.SubscriptionState.CANCELLED, plan, phase);
-        event = BusinessSubscriptionEvent.subscriptionPhaseChanged(isubscription);
+        event = BusinessSubscriptionEvent.subscriptionPhaseChanged(isubscription.getCurrentPlan(), isubscription.getState());
         // The subscription is cancelled, it's a system cancellation
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL);
         Assert.assertEquals(event.getCategory(), product.getCategory());
@@ -111,12 +111,12 @@ public class TestBusinessSubscriptionEvent
     @Test(groups = "fast")
     public void testEquals() throws Exception
     {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(isubscription);
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(isubscription.getCurrentPlan());
         Assert.assertSame(event, event);
         Assert.assertEquals(event, event);
         Assert.assertTrue(event.equals(event));
 
-        final BusinessSubscriptionEvent otherEvent = BusinessSubscriptionEvent.subscriptionPaused(isubscription);
+        final BusinessSubscriptionEvent otherEvent = BusinessSubscriptionEvent.subscriptionPaused(isubscription.getCurrentPlan());
         Assert.assertTrue(!event.equals(otherEvent));
     }
 }

@@ -19,7 +19,8 @@ package com.ning.billing.analytics;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.ISubscription;
+
+import static com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
 
 /**
  * Describe an event associated with a transition between two BusinessSubscription
@@ -78,56 +79,51 @@ public class BusinessSubscriptionEvent
         return eventType;
     }
 
-    public static BusinessSubscriptionEvent subscriptionCreated(final ISubscription subscription)
+    public static BusinessSubscriptionEvent subscriptionCreated(final IPlan plan)
     {
-        return eventFromType(EventType.ADD, subscription);
+        return eventFromType(EventType.ADD, plan);
     }
 
-    public static BusinessSubscriptionEvent subscriptionCancelled(final ISubscription subscription)
+    public static BusinessSubscriptionEvent subscriptionCancelled(final IPlan plan)
     {
-        return eventFromType(EventType.CANCEL, subscription);
+        return eventFromType(EventType.CANCEL, plan);
     }
 
-    public static BusinessSubscriptionEvent subscriptionChanged(final ISubscription subscription)
+    public static BusinessSubscriptionEvent subscriptionChanged(final IPlan plan)
     {
-        return eventFromType(EventType.CHANGE, subscription);
+        return eventFromType(EventType.CHANGE, plan);
     }
 
-    public static BusinessSubscriptionEvent subscriptionPaused(final ISubscription subscription)
+    public static BusinessSubscriptionEvent subscriptionPaused(final IPlan plan)
     {
-        return eventFromType(EventType.PAUSE, subscription);
+        return eventFromType(EventType.PAUSE, plan);
     }
 
-    public static BusinessSubscriptionEvent subscriptionResumed(final ISubscription subscription)
+    public static BusinessSubscriptionEvent subscriptionResumed(final IPlan plan)
     {
-        return eventFromType(EventType.RESUME, subscription);
+        return eventFromType(EventType.RESUME, plan);
     }
 
-    public static BusinessSubscriptionEvent subscriptionPhaseChanged(final ISubscription subscription)
+    public static BusinessSubscriptionEvent subscriptionPhaseChanged(final IPlan plan, final SubscriptionState state)
     {
-        if (subscription.getState() != null && subscription.getState().equals(ISubscription.SubscriptionState.CANCELLED)) {
-            return eventFromType(EventType.SYSTEM_CANCEL, subscription);
+        if (state != null && state.equals(SubscriptionState.CANCELLED)) {
+            return eventFromType(EventType.SYSTEM_CANCEL, plan);
         }
         else {
-            return eventFromType(EventType.SYSTEM_CHANGE, subscription);
+            return eventFromType(EventType.SYSTEM_CHANGE, plan);
         }
     }
 
-    private static BusinessSubscriptionEvent eventFromType(final EventType eventType, final ISubscription subscription)
+    private static BusinessSubscriptionEvent eventFromType(final EventType eventType, final IPlan plan)
     {
-        final ProductCategory category = getTypeFromSubscription(subscription);
+        final ProductCategory category = getTypeFromSubscription(plan);
         return new BusinessSubscriptionEvent(eventType, category);
     }
 
-    private static ProductCategory getTypeFromSubscription(final ISubscription subscription)
+    private static ProductCategory getTypeFromSubscription(final IPlan plan)
     {
-        if (subscription == null) {
-            return null;
-        }
-
-        final IPlan currentPlan = subscription.getCurrentPlan();
-        if (currentPlan != null && currentPlan.getProduct() != null) {
-            final IProduct product = currentPlan.getProduct();
+        if (plan != null && plan.getProduct() != null) {
+            final IProduct product = plan.getProduct();
             if (product.getCatalogName() != null && product.getCategory() != null) {
                 return product.getCategory();
             }

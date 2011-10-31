@@ -16,7 +16,6 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlan;
@@ -32,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.UUID;
+
+import static com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
 
 /**
  * Describe a subscription for Analytics purposes
@@ -54,11 +55,11 @@ public class BusinessSubscription
     private final BigDecimal mrr;
     private final String currency;
     private final DateTime startDate;
-    private final ISubscription.SubscriptionState state;
+    private final SubscriptionState state;
     private final UUID subscriptionId;
     private final UUID bundleId;
 
-    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory, final String slug, final String phase, final BigDecimal price, final BigDecimal mrr, final String currency, final DateTime startDate, final ISubscription.SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
+    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory, final String slug, final String phase, final BigDecimal price, final BigDecimal mrr, final String currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
     {
         this.productName = productName;
         this.productType = productType;
@@ -74,10 +75,23 @@ public class BusinessSubscription
         this.bundleId = bundleId;
     }
 
-    public BusinessSubscription(final ISubscription subscription)
+    /**
+     * For unit tests only.
+     * <p/>
+     * You can't really use this constructor in real life because the start date is likely not the one you want (you likely
+     * want the phase start date).
+     *
+     * @param subscription Subscription to use as a model
+     * @param currency     Account currency
+     */
+    BusinessSubscription(final ISubscription subscription, final Currency currency)
+    {
+        this(subscription.getCurrentPlan(), subscription.getCurrentPhase(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId());
+    }
+
+    public BusinessSubscription(final IPlan currentPlan, final IPlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
     {
         // Record plan information
-        final IPlan currentPlan = subscription.getCurrentPlan();
         if (currentPlan != null && currentPlan.getProduct() != null) {
             final IProduct product = currentPlan.getProduct();
             productName = product.getName();
@@ -96,7 +110,6 @@ public class BusinessSubscription
         }
 
         // Record phase information
-        final IPlanPhase currentPhase = subscription.getCurrentPhase();
         if (currentPhase != null) {
             slug = currentPhase.getName();
 
@@ -123,17 +136,17 @@ public class BusinessSubscription
             mrr = null;
         }
 
-        final IAccount account = subscription.getAccount();
-        if (account != null && account.getCurrency() != null) {
-            currency = account.getCurrency().toString();
+        if (currency != null) {
+            this.currency = currency.toString();
         }
         else {
-            currency = null;
+            this.currency = null;
         }
-        startDate = subscription.getStartDate();
-        state = subscription.getState();
-        subscriptionId = subscription.getId();
-        bundleId = subscription.getBundleId();
+
+        this.startDate = startDate;
+        this.state = state;
+        this.subscriptionId = subscriptionId;
+        this.bundleId = bundleId;
     }
 
     public UUID getBundleId()
@@ -196,7 +209,7 @@ public class BusinessSubscription
         return startDate;
     }
 
-    public ISubscription.SubscriptionState getState()
+    public SubscriptionState getState()
     {
         return state;
     }

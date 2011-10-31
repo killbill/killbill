@@ -24,6 +24,7 @@ import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.MockSubscription;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
@@ -41,6 +42,7 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 public class TestEventDao
 {
@@ -60,12 +62,10 @@ public class TestEventDao
         final IProduct product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         final IPlan plan = new MockPlan("platinum-monthly", product);
         final IPlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-        final ISubscription prevISubscription = new MockSubscription(ISubscription.SubscriptionState.ACTIVE, plan, phase);
-        final ISubscription nextISubscription = new MockSubscription(ISubscription.SubscriptionState.CANCELLED, plan, phase);
 
-        final BusinessSubscription prevSubscription = new BusinessSubscription(prevISubscription);
-        final BusinessSubscription nextSubscription = new BusinessSubscription(nextISubscription);
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(prevISubscription);
+        final BusinessSubscription prevSubscription = new BusinessSubscription(plan, phase, Currency.USD, new DateTime(DateTimeZone.UTC), ISubscription.SubscriptionState.ACTIVE, UUID.randomUUID(), UUID.randomUUID());
+        final BusinessSubscription nextSubscription = new BusinessSubscription(plan, phase, Currency.USD, new DateTime(DateTimeZone.UTC), ISubscription.SubscriptionState.CANCELLED, UUID.randomUUID(), UUID.randomUUID());
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan);
         final DateTime requestedTimestamp = new DateTime(DateTimeZone.UTC);
 
         transition = new BusinessSubscriptionTransition(KEY, requestedTimestamp, event, prevSubscription, nextSubscription);
