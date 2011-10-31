@@ -47,10 +47,10 @@
         <module>analytics</module>
         <module>api</module>
         <module>catalog</module>
-        <module>account</module>        
+        <module>account</module>
         <module>entitlement</module>
-        <module>invoice</module>                
-        <module>payment</module>        
+        <module>invoice</module>
+        <module>payment</module>
         <module>util</module>
     </modules>
     <dependencyManagement>
@@ -81,6 +81,12 @@
                 <groupId>com.jolbox</groupId>
                 <artifactId>bonecp</artifactId>
                 <version>0.7.1.RELEASE</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -190,10 +196,10 @@
                 <version>1.6.2</version>
             </dependency>
             <dependency>
-              <groupId>org.testng</groupId>
-              <artifactId>testng</artifactId>
-              <version>6.0</version>
-              <scope>test</scope>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>6.0</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
