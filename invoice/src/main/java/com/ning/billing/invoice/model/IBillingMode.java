@@ -25,4 +25,8 @@ public interface IBillingMode {
     BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
 
     BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
+
+    DateTime calculateEffectiveEndDate(DateTime startDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod);
+
+    DateTime calculateEffectiveEndDate(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod);
 }

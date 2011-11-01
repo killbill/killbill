@@ -19,13 +19,10 @@ package com.ning.billing.invoice.model;
 import com.ning.billing.catalog.api.Currency;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Invoice {
-    private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
-
-    private final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
+    private final InvoiceItemList items = new InvoiceItemList();
     private Currency currency;
 
     public Invoice() {}
@@ -34,8 +31,21 @@ public class Invoice {
         this.currency = currency;
     }
 
+    public Invoice(List<InvoiceItem> items, Currency currency) {
+        this.currency = currency;
+        this.items.addAll(items);
+    }
+
     public boolean add(InvoiceItem item) {
         return items.add(item);
+    }
+
+    public boolean add(List<InvoiceItem> items) {
+        return this.items.addAll(items);
+    }
+
+    public List<InvoiceItem> getItems() {
+        return items;
     }
 
     public Currency getCurrency() {
@@ -43,14 +53,7 @@ public class Invoice {
     }
 
     public BigDecimal getTotalAmount() {
-        // TODO: Jeff -- naive implementation, assumes all invoice items share the same currency
-        BigDecimal total = new BigDecimal("0");
-
-        for (InvoiceItem item : items) {
-            total = total.add(item.getAmount());
-        }
-
-        return total.setScale(NUMBER_OF_DECIMALS);
+        return items.getTotalAmount();
     }
 
     public int getNumberOfItems() {
