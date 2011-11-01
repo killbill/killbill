@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
+import com.google.common.io.Resources;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
@@ -41,7 +42,7 @@ public class TestVersionedCatalogLoader {
 
 	@Test(enabled=true)
 	public void testPullContentsFrom() throws MalformedURLException, IOException {
-		String contents = loader.pullContentsFrom(new File("src/test/resources/WeaponsHireSmall.xml").toURI().toURL());
+		String contents = loader.pullContentsFrom(Resources.getResource("WeaponsHireSmall.xml"));
 
 		assertTrue(contents.length() > 0);
 		
@@ -126,7 +127,7 @@ public class TestVersionedCatalogLoader {
 	
 	@Test(enabled=true)
 	public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException {
-		VersionedCatalog c = loader.load(new File("src/test/resources/versionedCatalog").toURI().toURL());
+		VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog"));
 		assertEquals(4, c.size());
 		Iterator<Catalog> it = c.iterator();
 		it.next(); //discard the baseline
