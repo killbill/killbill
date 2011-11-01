@@ -30,17 +30,14 @@ import java.util.List;
 
 public class DefaultInvoiceGenerator implements IInvoiceGenerator {
     @Override
-    public Invoice generateInvoice(final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
-        if (events == null) {return new Invoice();}
-        if (events.size() == 0) {return new Invoice();}
+    public InvoiceItemList generateInvoiceItems(final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
+        if (events == null) {return new InvoiceItemList();}
+        if (events.size() == 0) {return new InvoiceItemList();}
 
         InvoiceItemList currentItems = generateInvoiceItems(events, targetDate, targetCurrency);
         InvoiceItemList itemsToPost = reconcileInvoiceItems(currentItems, existingItems);
 
-        Invoice invoice = new Invoice(targetCurrency);
-        invoice.add(itemsToPost);
-
-        return invoice;
+        return itemsToPost;
     }
 
     private InvoiceItemList reconcileInvoiceItems(final InvoiceItemList currentInvoiceItems, final InvoiceItemList existingInvoiceItems) {
@@ -63,6 +60,9 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         }
 
         existingItems.removeAll(existingItemsToRemove);
+
+        // remove cancelling pairs of invoice items
+        existingItems.removeCancellingPairs();
 
         // remove zero-dollar invoice items
         currentItems.removeZeroDollarItems();

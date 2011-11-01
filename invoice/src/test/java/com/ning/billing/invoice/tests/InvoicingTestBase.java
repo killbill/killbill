@@ -34,33 +34,35 @@ public abstract class InvoicingTestBase {
     protected static final BigDecimal THREE = new BigDecimal("3.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal FOUR = new BigDecimal("4.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal FIVE = new BigDecimal("5.0").setScale(NUMBER_OF_DECIMALS);
-
+    protected static final BigDecimal SIX = new BigDecimal("6.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal SEVEN = new BigDecimal("7.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal EIGHT = new BigDecimal("8.0").setScale(NUMBER_OF_DECIMALS);
 
     protected static final BigDecimal TEN = new BigDecimal("10.0").setScale(NUMBER_OF_DECIMALS);
-
+    protected static final BigDecimal ELEVEN = new BigDecimal("11.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal TWELVE = new BigDecimal("12.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal THIRTEEN = new BigDecimal("13.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal FOURTEEN = new BigDecimal("14.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal FIFTEEN = new BigDecimal("15.0").setScale(NUMBER_OF_DECIMALS);
 
+    protected static final BigDecimal NINETEEN = new BigDecimal("19.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal TWENTY = new BigDecimal("20.0").setScale(NUMBER_OF_DECIMALS);
-    protected static final BigDecimal TWENTY_ONE = new BigDecimal("21.0").setScale(NUMBER_OF_DECIMALS);
 
     protected static final BigDecimal TWENTY_FOUR = new BigDecimal("24.0").setScale(NUMBER_OF_DECIMALS);
-
-    protected static final BigDecimal TWENTY_SIX = new BigDecimal("26.0").setScale(NUMBER_OF_DECIMALS);
 
     protected static final BigDecimal TWENTY_EIGHT = new BigDecimal("28.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal TWENTY_NINE = new BigDecimal("29.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal THIRTY = new BigDecimal("30.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal THIRTY_ONE = new BigDecimal("31.0").setScale(NUMBER_OF_DECIMALS);
 
+    protected static final BigDecimal FORTY = new BigDecimal("40.0").setScale(NUMBER_OF_DECIMALS);
+
     protected static final BigDecimal EIGHTY_NINE = new BigDecimal("89.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal NINETY = new BigDecimal("90.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal NINETY_ONE = new BigDecimal("91.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal NINETY_TWO = new BigDecimal("92.0").setScale(NUMBER_OF_DECIMALS);
+
+    protected static final BigDecimal ONE_HUNDRED = new BigDecimal("100.0").setScale(NUMBER_OF_DECIMALS);
 
     protected static final BigDecimal THREE_HUNDRED_AND_SIXTY_FIVE = new BigDecimal("365.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal THREE_HUNDRED_AND_SIXTY_SIX = new BigDecimal("366.0").setScale(NUMBER_OF_DECIMALS);

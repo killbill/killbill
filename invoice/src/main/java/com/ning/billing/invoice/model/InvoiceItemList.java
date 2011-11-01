@@ -19,7 +19,6 @@ package com.ning.billing.invoice.model;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class InvoiceItemList extends ArrayList<InvoiceItem> {
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
@@ -35,24 +34,29 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         return total.setScale(NUMBER_OF_DECIMALS);
     }
 
-    public List<InvoiceItem> getBySubscriptionId(UUID subscriptionId) {
-        List<InvoiceItem> thisList = new ArrayList<InvoiceItem>();
-
-        for (InvoiceItem item : this) {
-            if (item.getSubscriptionId() == subscriptionId) {
-                thisList.add(item);
-            }
-        }
-
-        return thisList;
-    }
-
     public void removeZeroDollarItems() {
         List<InvoiceItem> itemsToRemove = new ArrayList<InvoiceItem>();
 
         for (InvoiceItem item : this) {
             if (item.getAmount().compareTo(BigDecimal.ZERO) == 0) {
                 itemsToRemove.add(item);
+            }
+        }
+
+        this.removeAll(itemsToRemove);
+    }
+
+    public void removeCancellingPairs() {
+        List<InvoiceItem> itemsToRemove = new ArrayList<InvoiceItem>();
+
+        for (int firstItemIndex = 0; firstItemIndex < this.size(); firstItemIndex++) {
+            for (int secondItemIndex = firstItemIndex + 1; secondItemIndex < this.size(); secondItemIndex++) {
+                InvoiceItem firstItem = this.get(firstItemIndex);
+                InvoiceItem secondItem = this.get(secondItemIndex);
+                if (firstItem.cancels(secondItem)) {
+                    itemsToRemove.add(firstItem);
+                    itemsToRemove.add(secondItem);
+                }
             }
         }
 

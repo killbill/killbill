@@ -142,7 +142,7 @@ public class InAdvanceBillingMode extends BillingModeBase {
             DateTime startOfPeriod = billCycleDate;
             DateTime startOfNextPeriod = billCycleDate.plusMonths(numberOfMonthsInPeriod);
 
-            while (!isBetween(targetDate, startOfPeriod, startOfNextPeriod)) {
+            while (isNotBetween(targetDate, startOfPeriod, startOfNextPeriod)) {
                 startOfPeriod = startOfNextPeriod;
                 startOfNextPeriod = startOfPeriod.plusMonths(numberOfMonthsInPeriod);
             }

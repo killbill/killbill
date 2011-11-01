@@ -14,13 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.model;
+package com.ning.billing.invoice.dao;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.BillingEventSet;
-import org.joda.time.DateTime;
-
-// TODO: Jeff -- Determine what the consequence of account-level currency changes are on repair scenarios
-public interface IInvoiceGenerator {
-    public InvoiceItemList generateInvoiceItems(BillingEventSet events, InvoiceItemList items, DateTime targetDate, Currency targetCurrency);
+public interface IInvoiceDao {
 }

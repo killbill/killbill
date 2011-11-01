@@ -106,4 +106,20 @@ public class InvoiceItem implements Comparable<InvoiceItem> {
         DateRange thisDateRange = new DateRange(this.getStartDate(), this.getEndDate());
         return thisDateRange.contains(that.getStartDate()) && thisDateRange.contains(that.getEndDate());
     }
+
+    /**
+     * indicates whether the supplied item is a cancelling item for this item
+     * @param that
+     * @return
+     */
+    public boolean cancels(InvoiceItem that) {
+        if(!this.getSubscriptionId().equals(that.getSubscriptionId())) {return false;}
+        if(!this.getEndDate().equals(that.getEndDate())) {return false;}
+        if(!this.getStartDate().equals(that.getStartDate())) {return false;}
+        if(!this.getAmount().equals(that.getAmount().negate())) {return false;}
+        if(!this.getRate().equals(that.getRate())) {return false;}
+        if(!this.getCurrency().equals(that.getCurrency())) {return false;}
+
+        return true;
+    }
 }

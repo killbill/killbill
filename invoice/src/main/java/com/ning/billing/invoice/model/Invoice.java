@@ -55,9 +55,5 @@ public class Invoice {
     public BigDecimal getTotalAmount() {
         return items.getTotalAmount();
     }
-
-    public int getNumberOfItems() {
-        return items.size();
-    }
 }
 

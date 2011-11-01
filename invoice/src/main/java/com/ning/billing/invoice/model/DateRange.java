@@ -27,14 +27,6 @@ public class DateRange {
         this.endDate = endDate;
     }
 
-    public DateTime getStartDate() {
-        return startDate;
-    }
-
-    public DateTime getEndDate() {
-        return endDate;
-    }
-
     /**
      *
      * @param date the DateTime in question
@@ -45,7 +37,7 @@ public class DateRange {
     }
 
     public boolean overlaps(DateRange range) {
-        return (this.contains(range.getStartDate()) || this.contains(range.getEndDate()));
+        return (this.contains(range.startDate) || this.contains(range.endDate));
     }
 
     public DateRange calculateUnionWith(DateRange range) {

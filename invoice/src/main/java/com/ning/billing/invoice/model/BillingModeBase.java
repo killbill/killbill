@@ -56,12 +56,12 @@ public abstract class BillingModeBase implements IBillingMode {
         return precedingProRation.add(numberOfBillingPeriods);
     }
 
-    protected DateTime buildDate(final int year, final int month, final int day) {
+    DateTime buildDate(final int year, final int month, final int day) {
         return new DateTime(year, month, day, 0, 0, 0, 0);
     }
 
-    protected boolean isBetween(DateTime targetDate, DateTime startDate, DateTime endDate) {
-        return !(targetDate.isBefore(startDate) || !targetDate.isBefore(endDate));
+    boolean isNotBetween(DateTime targetDate, DateTime startDate, DateTime endDate) {
+        return (targetDate.isBefore(startDate) || !targetDate.isBefore(endDate));
     }
 
     public abstract DateTime calculateEffectiveEndDate(final DateTime startDate, final DateTime targetDate, final int billingCycleDay, final BillingPeriod billingPeriod);
