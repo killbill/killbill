@@ -16,6 +16,8 @@
 
 package com.ning.billing.catalog.io;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,12 +35,14 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Document;
 
 import com.ning.billing.catalog.Catalog;
 
 public class XMLSchemaGenerator {
+	final private static  int MAX_SCHEMA_SIZE_IN_BYTES = 100000;
 
 	//Note: this main method is called by the maven build to generate the schema for the jar
 	public static void main(String[] args) throws IOException, TransformerException, JAXBException {
@@ -51,6 +55,13 @@ public class XMLSchemaGenerator {
 		pojoToXSD(context, s);
 	}
 
+	public static StreamSource xmlSchema() throws IOException, TransformerException, JAXBException {
+		ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_SCHEMA_SIZE_IN_BYTES);
+		JAXBContext context =JAXBContext.newInstance(Catalog.class);
+		pojoToXSD(context, output);
+		StreamSource source = new StreamSource(new ByteArrayInputStream(output.toByteArray()));
+		return source;
+	}
 
 	public static void pojoToXSD(JAXBContext context, OutputStream out)
 		    throws IOException, TransformerException

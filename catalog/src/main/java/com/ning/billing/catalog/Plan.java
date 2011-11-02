@@ -27,7 +27,6 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 
-import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;

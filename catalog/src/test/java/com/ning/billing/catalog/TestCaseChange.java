@@ -25,8 +25,8 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier; 
-import com.ning.billing.catalog.api.PlanSpecifier; 
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 
 public class TestCaseChange {

@@ -16,14 +16,14 @@
 
 package com.ning.billing.catalog.io;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.net.URL;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.TransformerException;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
@@ -38,20 +38,14 @@ import com.ning.billing.catalog.api.InvalidConfigException;
 public class XMLReader {
 	public static Logger log = LoggerFactory.getLogger(XMLReader.class);
 
-    public static Catalog getCatalogFromName(URL url) throws SAXException, InvalidConfigException, JAXBException {
+    public static Catalog getCatalogFromName(URL url) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
         JAXBContext context =JAXBContext.newInstance(Catalog.class);
 
-        InputStream resourceStream = XMLReader.class.getResourceAsStream("/CatalogSchema.xsd");
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI );
         Unmarshaller um = context.createUnmarshaller();
-        
-        if(resourceStream == null) {
-        	log.error("Can't find XML Schema resource to validate content - if you are seeing " +
-        			"this as part of the release build process its OK to ignore, otherwie it needs attention");
-        } else {
-        	Schema schema = factory.newSchema(new StreamSource(resourceStream));
-            um.setSchema(schema);
-       }
+
+        Schema schema = factory.newSchema(XMLSchemaGenerator.xmlSchema());
+        um.setSchema(schema);
         
         Object o = um.unmarshal(url);
 

@@ -18,7 +18,6 @@ package com.ning.billing.catalog.io;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,12 +25,13 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 
-import com.google.common.io.Resources;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
+import com.google.common.io.Resources;
 import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
@@ -126,7 +126,7 @@ public class TestVersionedCatalogLoader {
 	}
 	
 	@Test(enabled=true)
-	public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException {
+	public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException {
 		VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog"));
 		assertEquals(4, c.size());
 		Iterator<Catalog> it = c.iterator();

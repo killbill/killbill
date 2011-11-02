@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 
 import org.xml.sax.SAXException;
 
@@ -43,7 +44,7 @@ public class VersionedCatalogLoader implements ICatalogLoader {
 	 * @see com.ning.billing.catalog.io.ICatalogLoader#load(java.net.URL)
 	 */
 	@Override
-	public  VersionedCatalog load(URL url) throws IOException, SAXException, InvalidConfigException, JAXBException {
+	public  VersionedCatalog load(URL url) throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException {
 		String directoryContents = pullContentsFrom(url);
 		List<URL> xmlURLs = findXmlReferences(directoryContents, url);
 		VersionedCatalog result = new VersionedCatalog();

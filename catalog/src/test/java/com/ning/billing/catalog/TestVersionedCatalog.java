@@ -16,20 +16,19 @@
 package com.ning.billing.catalog;
 
 import static org.testng.AssertJUnit.assertEquals;
-import java.io.File;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Date;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 
-import com.google.common.io.Resources;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.VersionedCatalog;
+import com.google.common.io.Resources;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.catalog.io.ICatalogLoader;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
@@ -38,14 +37,14 @@ public class TestVersionedCatalog {
 	private final ICatalogLoader loader = new VersionedCatalogLoader();
 
 	@Test(enabled=true)
-	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException {
+	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException {
 		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog"));
 		vc.add(new Catalog(new Date()));
 		assertEquals(5, vc.size());
 	}
 	
 	@Test(enabled=true)
-	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException {
+	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException {
 		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog"));
 		Date d = new Date(1L);
 		vc.configureEffectiveDate(d);

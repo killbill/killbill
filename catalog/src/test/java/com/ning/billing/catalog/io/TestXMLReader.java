@@ -16,16 +16,15 @@
 
 package com.ning.billing.catalog.io;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 
-import com.google.common.io.Resources;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
+import com.google.common.io.Resources;
 import com.ning.billing.catalog.api.InvalidConfigException;
 
 public class TestXMLReader {

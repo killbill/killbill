@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 
 import org.xml.sax.SAXException;
 
@@ -29,6 +30,6 @@ import com.ning.billing.catalog.api.InvalidConfigException;
 public interface ICatalogLoader {
 
 	public abstract VersionedCatalog load(URL url) throws IOException,
-			SAXException, InvalidConfigException, JAXBException;
+			SAXException, InvalidConfigException, JAXBException, TransformerException;
 
 }
