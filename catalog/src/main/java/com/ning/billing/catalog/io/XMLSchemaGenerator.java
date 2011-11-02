@@ -40,7 +40,7 @@ import com.ning.billing.catalog.Catalog;
 
 public class XMLSchemaGenerator {
 
-	//Note: this main method is called byt the maven build to generate the schema for the jar
+	//Note: this main method is called by the maven build to generate the schema for the jar
 	public static void main(String[] args) throws IOException, TransformerException, JAXBException {
 		JAXBContext context =JAXBContext.newInstance(Catalog.class);
 		String xsdFileName = "CatalogSchema.xsd";
