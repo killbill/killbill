@@ -23,7 +23,7 @@ import com.ning.billing.account.api.IAccount;
 
 public interface IAccountDao {
 
-    public void createAccount(IAccount account);
+    public IAccount createAccount(IAccount account);
 
     public IAccount getAccountByKey(String key);
 
