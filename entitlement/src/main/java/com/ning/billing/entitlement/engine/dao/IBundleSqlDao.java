@@ -35,22 +35,23 @@ import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
-
+@ExternalizedSqlViaStringTemplate3()
 public interface IBundleSqlDao extends Transactional<IEventSqlDao>, CloseMe, Transmogrifier {
 
-    @SqlUpdate("insert into bundles (id, start_dt, name, account_id) values (:id, :start_dt, :name, :account_id)")
+    @SqlUpdate
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundle bundle);
 
-    @SqlQuery("select id, start_dt, name, account_id from bundles where id = :id")
+    @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
     public ISubscriptionBundle getBundleFromId(@Bind("id") String id);
 
-    @SqlQuery("select id, start_dt, name, account_id from bundles where account_id = :account_id")
+    @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
     public List<ISubscriptionBundle> getBundleFromAccount(@Bind("account_id") String accountId);
 

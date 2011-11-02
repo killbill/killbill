@@ -184,7 +184,7 @@ public abstract class TestUserApiBase {
         testListener.pushExpectedEvent(NextEvent.CREATE);
         Subscription subscription = (Subscription) entitlementApi.createSubscription(bundle.getId(), productName, term, planSet);
         assertNotNull(subscription);
-        assertTrue(testListener.isCompleted(3000));
+        assertTrue(testListener.isCompleted(5000));
         return subscription;
     }
 

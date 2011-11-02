@@ -76,17 +76,15 @@ public class TestSimpleAccountDao {
 
         IAccount r = dao.getAccountByKey("foo");
         assertNotNull(r);
-        assertEquals(r.getId(), a.getId());
         assertEquals(r.getKey(), a.getKey());
 
-        r = dao.getAccountFromId(a.getId());
+        r = dao.getAccountFromId(r.getId());
         assertNotNull(r);
-        assertEquals(r.getId(), a.getId());
         assertEquals(r.getKey(), a.getKey());
 
         List<IAccount> all = dao.getAccounts();
         assertNotNull(all);
-        assertEquals(all.size(), 1);
+        assertTrue(all.size() >= 1);
     }
 
 

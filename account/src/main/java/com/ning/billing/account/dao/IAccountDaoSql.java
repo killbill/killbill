@@ -30,26 +30,27 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
 
-
+@ExternalizedSqlViaStringTemplate3()
 public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
 
-    @SqlUpdate("insert into accounts (id, key_name) values (:id, :key_name)")
+    @SqlUpdate
     public void insertAccount(@Bind(binder = IAccountSqlBinder.class) IAccount account);
 
-    @SqlQuery("select id, key_name from accounts where key_name = :key_name")
+    @SqlQuery
     @Mapper(IAccountSqlMapper.class)
     public IAccount getAccountByKey(@Bind("key_name") String key);
 
-    @SqlQuery("select id, key_name from accounts where id = :id")
+    @SqlQuery
     @Mapper(IAccountSqlMapper.class)
     public IAccount getAccountFromId(@Bind("id") String id);
 
-    @SqlQuery("select id, key_name from accounts")
+    @SqlQuery
     @Mapper(IAccountSqlMapper.class)
     public List<IAccount> getAccounts();
 
