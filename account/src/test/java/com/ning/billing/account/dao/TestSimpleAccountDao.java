@@ -22,6 +22,7 @@ import com.google.inject.Stage;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.glue.AccountModuleMock;
+
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
