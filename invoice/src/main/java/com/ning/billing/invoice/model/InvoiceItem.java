@@ -23,6 +23,8 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public class InvoiceItem implements Comparable<InvoiceItem> {
+    private final UUID invoiceItemId;
+    private final UUID invoiceId;
     private final UUID subscriptionId;
     private DateTime startDate;
     private DateTime endDate;
@@ -31,7 +33,9 @@ public class InvoiceItem implements Comparable<InvoiceItem> {
     private final BigDecimal rate;
     private final Currency currency;
 
-    public InvoiceItem(UUID subscriptionId, DateTime startDate, DateTime endDate, String description, BigDecimal amount, BigDecimal rate, Currency currency) {
+    public InvoiceItem(UUID invoiceId, UUID subscriptionId, DateTime startDate, DateTime endDate, String description, BigDecimal amount, BigDecimal rate, Currency currency) {
+        this.invoiceItemId = UUID.randomUUID();
+        this.invoiceId = invoiceId;
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -41,8 +45,20 @@ public class InvoiceItem implements Comparable<InvoiceItem> {
         this.currency = currency;
     }
 
-    public InvoiceItem asCredit() {
-        return new InvoiceItem(subscriptionId, startDate, endDate, description, amount.negate(), rate, currency);
+    public InvoiceItem(InvoiceItem that, UUID invoiceId) {
+        this.invoiceItemId = UUID.randomUUID();
+        this.invoiceId = invoiceId;
+        this.subscriptionId = that.subscriptionId;
+        this.startDate = that.startDate;
+        this.endDate = that.endDate;
+        this.description = that.description;
+        this.amount = that.amount;
+        this.rate = that.rate;
+        this.currency = that.currency;
+    }
+
+    public InvoiceItem asCredit(UUID invoiceId) {
+        return new InvoiceItem(invoiceId, subscriptionId, startDate, endDate, description, amount.negate(), rate, currency);
     }
 
     public UUID getSubscriptionId() {

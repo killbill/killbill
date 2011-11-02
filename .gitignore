@@ -15,5 +15,5 @@ logs/
 *.settings
 *.project
 */bin/
-catalog/src/main/resources/CatalogSchema.xsd
+catalog/src/test/resources/CatalogSchema.xsd
 */test-output/

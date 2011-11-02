@@ -16,21 +16,11 @@
 
 package com.ning.billing.analytics.dao;
 
-import com.ning.billing.analytics.BusinessSubscription;
-import com.ning.billing.analytics.BusinessSubscriptionEvent;
-import com.ning.billing.analytics.BusinessSubscriptionTransition;
-import com.ning.billing.analytics.MockDuration;
-import com.ning.billing.analytics.MockPhase;
-import com.ning.billing.analytics.MockPlan;
-import com.ning.billing.analytics.MockProduct;
-import com.ning.billing.analytics.MockSubscription;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.analytics.*;
+import com.ning.billing.catalog.api.*;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.ISubscription;
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.IDBI;
@@ -56,8 +46,10 @@ public class TestEventDao
     @BeforeClass(alwaysRun = true)
     public void startMysql() throws IOException, ClassNotFoundException, SQLException
     {
+        final String ddl = IOUtils.toString(EventDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
+
         helper.startMysql();
-        helper.initDb();
+        helper.initDb(ddl);
 
         final IProduct product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         final IPlan plan = new MockPlan("platinum-monthly", product);

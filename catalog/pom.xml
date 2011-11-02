@@ -49,7 +49,7 @@
                         <configuration>
                             <mainClass>com.ning.billing.catalog.io.XMLSchemaGenerator</mainClass>
                             <arguments>
-                                <argument>${project.basedir}/src/main/resources</argument>
+                                <argument>${project.basedir}/src/test/resources</argument>
                             </arguments>
                         </configuration>
                     </execution>
