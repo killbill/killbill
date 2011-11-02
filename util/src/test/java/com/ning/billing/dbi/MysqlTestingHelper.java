@@ -14,12 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.dao;
+package com.ning.billing.dbi;
 
 import com.mysql.management.MysqldResource;
 import com.mysql.management.MysqldResourceI;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -40,7 +39,7 @@ public class MysqlTestingHelper
 {
     private static final Logger log = LoggerFactory.getLogger(MysqlTestingHelper.class);
 
-    private static final String DB_NAME = "test_killbill_analytics";
+    private static final String DB_NAME = "test_killbill";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "";
 
@@ -110,10 +109,8 @@ public class MysqlTestingHelper
         return new DBI(dbiString, USERNAME, PASSWORD);
     }
 
-    public void initDb() throws IOException
+    public void initDb(final String ddl) throws IOException
     {
-        final String ddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/ddl.sql"));
-
         final IDBI dbi = getDBI();
         dbi.withHandle(new HandleCallback<Void>()
         {

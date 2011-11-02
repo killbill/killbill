@@ -16,27 +16,21 @@
 
 package com.ning.billing.account.dao;
 
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertFalse;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.account.glue.AccountModuleMock;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestSimpleAccountDao {
 

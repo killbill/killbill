@@ -1,0 +1,24 @@
+group InvoiceDao;
+
+getInvoicesByAccount() ::= <<
+  select * from invoices where account_id = :accountId order by invoiceDate asc;
+>>
+
+getInvoice() ::= <<
+  select * from invoices where invoice_id = :invoiceId;
+>>
+
+createInvoice() ::= <<
+  INSERT INTO invoices(invoice_id, account_id, invoiceDate)
+  VALUES (:invoiceId, :accountId, :invoiceDate);
+>>
+
+addPayment() ::= <<
+  UPDATE invoices SET amount_paid = amount_paid + :paymentAmount
+  WHERE invoice_id = :invoiceId;
+>>
+
+test() ::= <<
+  SELECT DISTINCT 1 FROM invoices;
+>>
+;
