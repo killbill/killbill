@@ -17,18 +17,23 @@
 package com.ning.billing.entitlement.glue;
 
 import org.skife.config.Config;
+import org.skife.config.Default;
 
 public interface IEntitlementConfig {
 
     @Config("killbill.entitlement.dao.claim.time")
+    @Default("60000")
     public long getDaoClaimTimeMs();
 
     @Config("killbill.entitlement.dao.ready.max")
+    @Default("1")
     public int getDaoMaxReadyEvents();
 
     @Config("killbill.entitlement.catalog.config.file")
+    @Default("hum, not sure")
     public String getCatalogConfigFileName();
 
     @Config("killbill.entitlement.engine.notifications.sleep")
+    @Default("1000")
     public long getNotificationSleepTimeMs();
 }
