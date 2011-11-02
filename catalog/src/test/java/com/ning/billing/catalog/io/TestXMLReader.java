@@ -22,6 +22,7 @@ import java.io.IOException;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 
+import com.google.common.io.Resources;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
@@ -31,8 +32,8 @@ public class TestXMLReader {
 
 	@Test(enabled=true)
 	public void testCatalogLoad() throws IOException, TransformerException, JAXBException, SAXException, InvalidConfigException {
-		XMLReader.getCatalogFromName(new File("src/test/resources/WeaponsHire.xml").toURI().toURL());
-		XMLReader.getCatalogFromName(new File("src/test/resources/WeaponsHireSmall.xml").toURI().toURL());
+		XMLReader.getCatalogFromName(Resources.getResource("WeaponsHire.xml"));
+		XMLReader.getCatalogFromName(Resources.getResource("WeaponsHireSmall.xml"));
 	}
 	
 }

@@ -23,6 +23,7 @@ import java.util.Date;
 
 import javax.xml.bind.JAXBException;
 
+import com.google.common.io.Resources;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
@@ -38,14 +39,14 @@ public class TestVersionedCatalog {
 
 	@Test(enabled=true)
 	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException {
-		VersionedCatalog vc = loader.load(new File("src/test/resources/versionedCatalog").toURI().toURL());
+		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog"));
 		vc.add(new Catalog(new Date()));
 		assertEquals(5, vc.size());
 	}
 	
 	@Test(enabled=true)
 	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException {
-		VersionedCatalog vc = loader.load(new File("src/test/resources/versionedCatalog").toURI().toURL());
+		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog"));
 		Date d = new Date(1L);
 		vc.configureEffectiveDate(d);
 		assertEquals(new Date(0), vc.getEffectiveDate()); // Start at the begining of time
