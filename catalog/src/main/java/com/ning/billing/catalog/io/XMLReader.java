@@ -44,6 +44,7 @@ public class XMLReader {
         if(o instanceof Catalog) {
             Catalog c = (Catalog)o;
             c.setCatalogURL(url.toString());
+            validate(c);
             return (Catalog) o;
         } else {
             return null;
@@ -55,6 +56,7 @@ public class XMLReader {
         if(o instanceof Catalog) {
             Catalog c = (Catalog)o;
             c.setCatalogURL("embedded catalog");
+            validate(c);
             return (Catalog) o;
         } else {
             return null;
