@@ -14,15 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.model;
+package com.ning.billing.invoice.dao;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.BillingEventSet;
-import org.joda.time.DateTime;
+import com.ning.billing.invoice.model.InvoiceItem;
+import org.skife.jdbi.v2.BeanMapper;
 
-import java.util.UUID;
-
-// TODO: Jeff -- Determine what the consequence of account-level currency changes are on repair scenarios
-public interface IInvoiceGenerator {
-    public Invoice generateInvoice(UUID accountId, BillingEventSet events, InvoiceItemList items, DateTime targetDate, Currency targetCurrency);
+public class InvoiceItemMapper extends BeanMapper<InvoiceItem> {
+    public InvoiceItemMapper() {
+        super(InvoiceItem.class);
+    }
 }

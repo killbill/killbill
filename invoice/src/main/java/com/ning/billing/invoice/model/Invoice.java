@@ -17,21 +17,35 @@
 package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
+import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 public class Invoice {
     private final InvoiceItemList items = new InvoiceItemList();
+    private final UUID invoiceId;
+    private UUID accountId;
+    private final DateTime invoiceDate;
     private Currency currency;
 
-    public Invoice() {}
+    public Invoice() {
+        this.invoiceId = UUID.randomUUID();
+        this.invoiceDate = new DateTime();
+    }
 
-    public Invoice(Currency currency) {
+    public Invoice(UUID accountId, Currency currency) {
+        this.invoiceId = UUID.randomUUID();
+        this.accountId = accountId;
+        this.invoiceDate = new DateTime();
         this.currency = currency;
     }
 
-    public Invoice(List<InvoiceItem> items, Currency currency) {
+    public Invoice(UUID accountId, List<InvoiceItem> items, Currency currency) {
+        this.invoiceId = UUID.randomUUID();
+        this.accountId = accountId;
+        this.invoiceDate = new DateTime();
         this.currency = currency;
         this.items.addAll(items);
     }
@@ -46,6 +60,22 @@ public class Invoice {
 
     public List<InvoiceItem> getItems() {
         return items;
+    }
+
+    public int getNumberOfItems() {
+        return items.size();
+    }
+
+    public UUID getInvoiceId() {
+        return invoiceId;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    public DateTime getInvoiceDate() {
+        return invoiceDate;
     }
 
     public Currency getCurrency() {

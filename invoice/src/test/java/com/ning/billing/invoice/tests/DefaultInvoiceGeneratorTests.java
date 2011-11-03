@@ -22,10 +22,7 @@ import com.ning.billing.entitlement.api.billing.BillingMode;
 import com.ning.billing.entitlement.api.billing.IBillingEvent;
 import com.ning.billing.invoice.api.BillingEvent;
 import com.ning.billing.invoice.api.BillingEventSet;
-import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
-import com.ning.billing.invoice.model.IInvoiceGenerator;
-import com.ning.billing.invoice.model.InvoiceItem;
-import com.ning.billing.invoice.model.InvoiceItemList;
+import com.ning.billing.invoice.model.*;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
@@ -41,11 +38,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
     @Test
     public void testWithNullEventSetAndNullInvoiceSet() {
-        InvoiceItemList invoiceItems = generator.generateInvoiceItems(null, null, new DateTime(), Currency.USD);
+        UUID accountId = UUID.randomUUID();
+        Invoice invoice = generator.generateInvoice(accountId, null, null, new DateTime(), Currency.USD);
 
-        assertNotNull(invoiceItems);
-        assertEquals(invoiceItems.size(), 0);
-        assertEquals(invoiceItems.getTotalAmount(), ZERO);
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 0);
+        assertEquals(invoice.getTotalAmount(), ZERO);
     }
 
     @Test
@@ -53,11 +51,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BillingEventSet events = new BillingEventSet();
 
         InvoiceItemList existingInvoiceItems = new InvoiceItemList();
-        InvoiceItemList invoiceItems = generator.generateInvoiceItems(events, existingInvoiceItems, new DateTime(), Currency.USD);
+        UUID accountId = UUID.randomUUID();
+        Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, new DateTime(), Currency.USD);
 
-        assertNotNull(invoiceItems);
-        assertEquals(invoiceItems.size(), 0);
-        assertEquals(invoiceItems.getTotalAmount(), ZERO);
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 0);
+        assertEquals(invoice.getTotalAmount(), ZERO);
     }
 
     @Test
@@ -77,11 +76,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         InvoiceItemList existingInvoiceItems = new InvoiceItemList();
         
         DateTime targetDate = buildDateTime(2011, 10, 3);
-        InvoiceItemList invoiceItems = generator.generateInvoiceItems(events, existingInvoiceItems, targetDate, Currency.USD);
+        UUID accountId = UUID.randomUUID();
+        Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, targetDate, Currency.USD);
 
-        assertNotNull(invoiceItems);
-        assertEquals(invoiceItems.size(), 1);
-        assertEquals(invoiceItems.getTotalAmount(), TWENTY);
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 1);
+        assertEquals(invoice.getTotalAmount(), TWENTY);
     }
 
     @Test
@@ -102,15 +102,16 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         InvoiceItemList existingInvoiceItems = new InvoiceItemList();
         
         DateTime targetDate = buildDateTime(2011, 10, 3);        
-        InvoiceItemList invoiceItems = generator.generateInvoiceItems(events, existingInvoiceItems, targetDate, Currency.USD);
+        UUID accountId = UUID.randomUUID();
+        Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, targetDate, Currency.USD);
 
-        assertNotNull(invoiceItems);
-        assertEquals(invoiceItems.size(), 1);
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 1);
 
         BigDecimal expectedNumberOfBillingCycles;
         expectedNumberOfBillingCycles = ONE.add(FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         BigDecimal expectedAmount = expectedNumberOfBillingCycles.multiply(rate).setScale(NUMBER_OF_DECIMALS);
-        assertEquals(invoiceItems.getTotalAmount(), expectedAmount);
+        assertEquals(invoice.getTotalAmount(), expectedAmount);
     }
 
     @Test
@@ -131,11 +132,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         InvoiceItemList existingInvoiceItems = new InvoiceItemList();
         DateTime targetDate = buildDateTime(2011, 10, 3);
-        InvoiceItemList invoiceItems = generator.generateInvoiceItems(events, existingInvoiceItems, targetDate, Currency.USD);
+        UUID accountId = UUID.randomUUID();
+        Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, targetDate, Currency.USD);
 
-        assertNotNull(invoiceItems);
-        assertEquals(invoiceItems.size(), 2);
-        assertEquals(invoiceItems.getTotalAmount(), FIVE.multiply(TWO).add(TEN).setScale(NUMBER_OF_DECIMALS));
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 2);
+        assertEquals(invoice.getTotalAmount(), FIVE.multiply(TWO).add(TEN).setScale(NUMBER_OF_DECIMALS));
     }
 
     @Test
@@ -157,10 +159,11 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         InvoiceItemList existingInvoiceItems = new InvoiceItemList();
         DateTime targetDate = buildDateTime(2011, 12, 3);
-        InvoiceItemList invoiceItems = generator.generateInvoiceItems(events, existingInvoiceItems, targetDate, Currency.USD);
+        UUID accountId = UUID.randomUUID();
+        Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, targetDate, Currency.USD);
 
-        assertNotNull(invoiceItems);
-        assertEquals(invoiceItems.size(), 2);
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 2);
 
         BigDecimal numberOfCyclesEvent1;
         numberOfCyclesEvent1 = ONE.add(FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
@@ -172,7 +175,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         expectedValue = expectedValue.add(numberOfCyclesEvent2.multiply(TEN));
         expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS);
 
-        assertEquals(invoiceItems.getTotalAmount(), expectedValue);
+        assertEquals(invoice.getTotalAmount(), expectedValue);
     }
 
     @Test
@@ -200,11 +203,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         InvoiceItemList existingInvoiceItems = new InvoiceItemList();
         DateTime targetDate = buildDateTime(2011, 12, 3);
-        InvoiceItemList invoiceItems = generator.generateInvoiceItems(events, existingInvoiceItems, targetDate, Currency.USD);
+        UUID accountId = UUID.randomUUID();
+        Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, targetDate, Currency.USD);
 
-        assertNotNull(invoiceItems);
-        assertEquals(invoiceItems.size(), 3);
-        assertEquals(invoiceItems.getTotalAmount(), FIVE.add(TEN).add(TWO.multiply(THIRTY)).setScale(NUMBER_OF_DECIMALS));
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 3);
+        assertEquals(invoice.getTotalAmount(), FIVE.add(TEN).add(TWO.multiply(THIRTY)).setScale(NUMBER_OF_DECIMALS));
     }
 
     @Test
@@ -222,16 +226,17 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         events.add(event1);
 
         InvoiceItemList existingInvoiceItems = new InvoiceItemList();
-        InvoiceItem invoiceItem = new InvoiceItem(subscriptionId, startDate, buildDateTime(2012, 1, 1), "",
+        InvoiceItem invoiceItem = new InvoiceItem(UUID.randomUUID(), subscriptionId, startDate, buildDateTime(2012, 1, 1), "",
                                                  rate.multiply(FOUR), rate, Currency.USD);
         existingInvoiceItems.add(invoiceItem);
 
         DateTime targetDate = buildDateTime(2011, 12, 3);
-        InvoiceItemList invoiceItems = generator.generateInvoiceItems(events, existingInvoiceItems, targetDate, Currency.USD);
+        UUID accountId = UUID.randomUUID();
+        Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, targetDate, Currency.USD);
 
-        assertNotNull(invoiceItems);
-        assertEquals(invoiceItems.size(), 0);
-        assertEquals(invoiceItems.getTotalAmount(), ZERO);
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 0);
+        assertEquals(invoice.getTotalAmount(), ZERO);
     }
 
     @Test
@@ -404,11 +409,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
     private void testInvoiceGeneration(BillingEventSet events, InvoiceItemList existingInvoiceItems, DateTime targetDate, int expectedNumberOfItems, BigDecimal expectedAmount) {
         Currency currency = Currency.USD;
-        InvoiceItemList invoiceItems = generator.generateInvoiceItems(events, existingInvoiceItems, targetDate, currency);
-        existingInvoiceItems.addAll(invoiceItems);
-        assertNotNull(invoiceItems);
-        assertEquals(invoiceItems.size(), expectedNumberOfItems);
-        assertEquals(invoiceItems.getTotalAmount(), expectedAmount);
+        UUID accountId = UUID.randomUUID();
+        Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, targetDate, currency);
+        existingInvoiceItems.addAll(invoice.getItems());
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), expectedNumberOfItems);
+        assertEquals(invoice.getTotalAmount(), expectedAmount);
     }
 
     // TODO: Jeff C -- how do we ensure that an annual add-on is properly aligned *at the end* with the base plan?

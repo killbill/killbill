@@ -16,5 +16,11 @@
 
 package com.ning.billing.invoice.dao;
 
-public interface IInvoiceDao {
+import com.ning.billing.invoice.model.Invoice;
+import org.skife.jdbi.v2.BeanMapper;
+
+public class InvoiceMapper extends BeanMapper<Invoice> {
+    public InvoiceMapper() {
+        super(Invoice.class);
+    }
 }

@@ -35,30 +35,28 @@ import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.Subscription;
 
+@ExternalizedSqlViaStringTemplate3()
 public interface ISubscriptionSqlDao extends Transactional<ISubscriptionSqlDao>, CloseMe, Transmogrifier {
 
-    final static String SUBSCRIPTION_FIELDS = " id, bundle_id, category, start_dt, bundle_start_dt, active_version, ctd_dt, ptd_dt ";
-    final static String SUBSCRIPTION_VALUES = " :id, :bundle_id, :category, :start_dt, :bundle_start_dt, :active_version, :ctd_dt, :ptd_dt ";
-
-
-    @SqlUpdate("insert into subscriptions (" + SUBSCRIPTION_FIELDS +") value (" + SUBSCRIPTION_VALUES + ")")
+    @SqlUpdate
     public void insertSubscription(@Bind(binder = ISubscriptionDaoBinder.class) Subscription sub);
 
-    @SqlQuery("select " + SUBSCRIPTION_FIELDS + " from subscriptions where id = :id")
+    @SqlQuery
     @Mapper(ISubscriptionDaoSqlMapper.class)
     public ISubscription getSubscriptionFromId(@Bind("id") String id);
 
-    @SqlQuery("select " + SUBSCRIPTION_FIELDS + "from subscriptions where bundle_id = :bundle_id")
+    @SqlQuery
     @Mapper(ISubscriptionDaoSqlMapper.class)
     public List<ISubscription> getSubscriptionsFromBundleId(@Bind("bundle_id") String bundleId);
 
-    @SqlUpdate("update subscriptions set active_version = :active_version, ctd_dt = :ctd_dt, ptd_dt = :ptd_dt")
+    @SqlUpdate
     public void updateSubscription(@Bind("active_version") long activeVersion, @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd);
 
     public static class ISubscriptionDaoBinder implements Binder<Bind, Subscription> {

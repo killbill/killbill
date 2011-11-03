@@ -35,6 +35,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.entitlement.events.IEvent;
@@ -52,46 +53,39 @@ import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.events.user.IUserEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 
+@ExternalizedSqlViaStringTemplate3()
 public interface IEventSqlDao extends Transactional<IEventSqlDao>, CloseMe, Transmogrifier  {
-
-    static final String EVENT_FIELDS = "event_id, event_type, user_type, created_dt, updated_dt, requested_dt, effective_dt, subscription_id, plan_name, phase_name, plist_name, current_version, is_active, processing_owner, processing_available_dt, processing_state";
-    static final String EVENT_VALUES = ":event_id, :event_type, :user_type, :created_dt, :updated_dt, :requested_dt, :effective_dt, :subscription_id, :plan_name, :phase_name, :plist_name, :current_version, :is_active, :processing_owner, :processing_available_dt, :processing_state";
-    static final String GET_READY_WHERE = "effective_dt <= :now and is_active = 1 and processing_state != 'PROCESSED' and (processing_owner IS NULL OR processing_available_dt <= :now)";
-    static final String CLAIM_WHERE = "event_id = :event_id and is_active = 1 and processing_state != 'PROCESSED' and (processing_owner IS NULL OR processing_available_dt <= :now)";
-    static final String EVENT_ORDER = " order by effective_dt asc, created_dt asc, requested_dt asc, id asc";
 
     //
     // APIs for event notifications
     //
-    @SqlQuery("select " + EVENT_FIELDS + " from events where " + GET_READY_WHERE + EVENT_ORDER + " limit :max")
+    @SqlQuery
     @Mapper(IEventSqlMapper.class)
     public List<IEvent> getReadyEvents(@Bind("now") Date now, @Bind("max") int max);
 
-    @SqlUpdate("update events set processing_owner = :owner, processing_available_dt = :next_available, processing_state = 'IN_PROCESSING' where " + CLAIM_WHERE)
+    @SqlUpdate
     public int claimEvent(@Bind("owner") String owner, @Bind("next_available") Date nextAvailable, @Bind("event_id") String eventId, @Bind("now") Date now);
 
-    @SqlUpdate("update events set processing_owner = NULL, processing_state = 'PROCESSED' where event_id = :event_id and processing_owner = :owner")
+    @SqlUpdate
     public void clearEvent(@Bind("event_id") String eventId, @Bind("owner") String owner);
 
-
-    @SqlUpdate("insert into events (" + EVENT_FIELDS + ") values (" + EVENT_VALUES + ")")
+    @SqlUpdate
     public void insertEvent(@Bind(binder = IEventSqlDaoBinder.class) IEvent evt);
 
-    @SqlUpdate("insert into claimed_events (sequence_id, owner_id, hostname, claimed_dt, event_id) values (:sequence_id, :owner_id, :hostname, :claimed_dt, :event_id)")
+    @SqlUpdate
     public void insertClaimedHistory(@Bind("sequence_id") int sequenceId, @Bind("owner_id") String ownerId, @Bind("hostname") String hostname, @Bind("claimed_dt") Date clainedDate, @Bind("event_id") String eventId);
 
-    @SqlUpdate("update events set is_active = 0, updated_dt = :now where event_id = :event_id")
+    @SqlUpdate
     public void unactiveEvent(@Bind("event_id")String eventId, @Bind("now") Date now);
 
-    @SqlUpdate("update events set is_active = 1, updated_dt = :now where event_id = :event_id")
+    @SqlUpdate
     public void reactiveEvent(@Bind("event_id")String eventId, @Bind("now") Date now);
 
-
-    @SqlQuery("select " + EVENT_FIELDS + " from events where subscription_id = :subscription_id and is_active = 1 and effective_dt > :now" + EVENT_ORDER)
+    @SqlQuery
     @Mapper(IEventSqlMapper.class)
     public List<IEvent> getFutureActiveEventForSubscription(@Bind("subscription_id") String subscriptionId, @Bind("now") Date now);
 
-    @SqlQuery("select " + EVENT_FIELDS + " from events where subscription_id = :subscription_id" + EVENT_ORDER)
+    @SqlQuery
     @Mapper(IEventSqlMapper.class)
     public List<IEvent> getEventsForSubscription(@Bind("subscription_id") String subscriptionId);
 

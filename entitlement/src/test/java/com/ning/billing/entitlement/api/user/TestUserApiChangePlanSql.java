@@ -25,7 +25,7 @@ import com.ning.billing.entitlement.glue.EngineModuleSqlMock;
 
 public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
 
-    private final int MAX_STRESS_ITERATIONS = 30;
+    private final int MAX_STRESS_ITERATIONS = 10;
 
     @Override
     public Injector getInjector() {

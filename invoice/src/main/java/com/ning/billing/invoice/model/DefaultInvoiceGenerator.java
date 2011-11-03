@@ -27,21 +27,28 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class DefaultInvoiceGenerator implements IInvoiceGenerator {
     @Override
-    public InvoiceItemList generateInvoiceItems(final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
-        if (events == null) {return new InvoiceItemList();}
-        if (events.size() == 0) {return new InvoiceItemList();}
+    public Invoice generateInvoice(final UUID accountId, final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
+        if (events == null) {return new Invoice(accountId, targetCurrency);}
+        if (events.size() == 0) {return new Invoice(accountId, targetCurrency);}
 
-        InvoiceItemList currentItems = generateInvoiceItems(events, targetDate, targetCurrency);
-        InvoiceItemList itemsToPost = reconcileInvoiceItems(currentItems, existingItems);
+        Invoice invoice = new Invoice(accountId, targetCurrency);
+        InvoiceItemList currentItems = generateInvoiceItems(events, invoice.getInvoiceId(), targetDate, targetCurrency);
+        InvoiceItemList itemsToPost = reconcileInvoiceItems(invoice.getInvoiceId(), currentItems, existingItems);
+        invoice.add(itemsToPost);
 
-        return itemsToPost;
+        return invoice;
     }
 
-    private InvoiceItemList reconcileInvoiceItems(final InvoiceItemList currentInvoiceItems, final InvoiceItemList existingInvoiceItems) {
-        InvoiceItemList currentItems = (InvoiceItemList) currentInvoiceItems.clone();
+    private InvoiceItemList reconcileInvoiceItems(final UUID invoiceId, final InvoiceItemList currentInvoiceItems, final InvoiceItemList existingInvoiceItems) {
+        InvoiceItemList currentItems = new InvoiceItemList();
+        for (InvoiceItem item : currentInvoiceItems) {
+            currentItems.add(new InvoiceItem(item, invoiceId));
+        }
+
         InvoiceItemList existingItems = (InvoiceItemList) existingInvoiceItems.clone();
 
         Collections.sort(currentItems);
@@ -69,13 +76,13 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
 
         // add existing items that aren't covered by current items as credit items
         for (InvoiceItem existingItem : existingItems) {
-            currentItems.add(existingItem.asCredit());
+            currentItems.add(existingItem.asCredit(invoiceId));
         }
 
         return currentItems;
     }
 
-    private InvoiceItemList generateInvoiceItems(BillingEventSet events, DateTime targetDate, Currency targetCurrency) {
+    private InvoiceItemList generateInvoiceItems(BillingEventSet events, UUID invoiceId, DateTime targetDate, Currency targetCurrency) {
         InvoiceItemList items = new InvoiceItemList();
 
         // sort events; this relies on the sort order being by subscription id then start date
@@ -88,41 +95,41 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
             IBillingEvent nextEvent = events.get(i + 1);
 
             if (thisEvent.getSubscriptionId() == nextEvent.getSubscriptionId()) {
-                processEvents(thisEvent, nextEvent, items, targetDate, targetCurrency);
+                processEvents(invoiceId, thisEvent, nextEvent, items, targetDate, targetCurrency);
             } else {
-                processEvent(thisEvent, items, targetDate, targetCurrency);
+                processEvent(invoiceId, thisEvent, items, targetDate, targetCurrency);
             }
         }
 
         // process the last item in the event set
         if (events.size() > 0) {
-            processEvent(events.getLast(), items, targetDate, targetCurrency);
+            processEvent(invoiceId, events.getLast(), items, targetDate, targetCurrency);
         }
 
         return items;
     }
 
-    private void processEvent(IBillingEvent event, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
+    private void processEvent(UUID invoiceId, IBillingEvent event, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
         BigDecimal rate = event.getPrice(targetCurrency);
         BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(event, targetDate, rate);
         IBillingMode billingMode = getBillingMode(event.getBillingMode());
         DateTime billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
 
-        addInvoiceItem(items, event, billThroughDate, invoiceItemAmount, rate, targetCurrency);
+        addInvoiceItem(invoiceId, items, event, billThroughDate, invoiceItemAmount, rate, targetCurrency);
     }
 
-    private void processEvents(IBillingEvent firstEvent, IBillingEvent secondEvent, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
+    private void processEvents(UUID invoiceId, IBillingEvent firstEvent, IBillingEvent secondEvent, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
         BigDecimal rate = firstEvent.getPrice(targetCurrency);
         BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
         IBillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
         DateTime billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
 
-        addInvoiceItem(items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
+        addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
     }
 
-    private void addInvoiceItem(List<InvoiceItem> items, IBillingEvent event, DateTime billThroughDate, BigDecimal amount, BigDecimal rate, Currency currency) {
+    private void addInvoiceItem(UUID invoiceId, List<InvoiceItem> items, IBillingEvent event, DateTime billThroughDate, BigDecimal amount, BigDecimal rate, Currency currency) {
         if (!(amount.compareTo(BigDecimal.ZERO) == 0)) {
-            InvoiceItem item = new InvoiceItem(event.getSubscriptionId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
+            InvoiceItem item = new InvoiceItem(invoiceId, event.getSubscriptionId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
             items.add(item);
         }
     }

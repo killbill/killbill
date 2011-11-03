@@ -1,0 +1,195 @@
+group IEventSqlDao;
+
+getReadyEvents(now, max) ::= <<
+    select
+      event_id
+      , event_type
+      , user_type
+      , created_dt
+      , updated_dt
+      , requested_dt
+      , effective_dt
+      , subscription_id
+      , plan_name
+      , phase_name
+      , plist_name
+      , current_version
+      , is_active
+      , processing_owner
+      , processing_available_dt
+      , processing_state
+    from events
+    where
+      effective_dt \<= :now
+      and is_active = 1
+      and processing_state != 'PROCESSED'
+      and (processing_owner IS NULL OR processing_available_dt \<= :now)
+    order by
+      effective_dt asc
+      , created_dt asc
+      , requested_dt asc
+      , id asc
+    limit :max
+    ;
+>>
+
+claimEvent(owner, next_available, event_id, now) ::= <<
+    update events
+    set
+      processing_owner = :owner
+      , processing_available_dt = :next_available
+      , processing_state = 'IN_PROCESSING'
+    where
+      event_id = :event_id
+      and is_active = 1
+      and processing_state != 'PROCESSED'
+      and (processing_owner IS NULL OR processing_available_dt \<= :now)
+    ;
+>>
+
+clearEvent(event_id, owner) ::= <<
+    update events
+    set
+      processing_owner = NULL
+      , processing_state = 'PROCESSED'
+    where
+      event_id = :event_id
+      and processing_owner = :owner
+    ;
+>>
+
+insertEvent() ::= <<
+    insert into events (
+      event_id
+      , event_type
+      , user_type
+      , created_dt
+      , updated_dt
+      , requested_dt
+      , effective_dt
+      , subscription_id
+      , plan_name
+      , phase_name
+      , plist_name
+      , current_version
+      , is_active
+      , processing_owner
+      , processing_available_dt
+      , processing_state
+    ) values (
+      :event_id
+      , :event_type
+      , :user_type
+      , :created_dt
+      , :updated_dt
+      , :requested_dt
+      , :effective_dt
+      , :subscription_id
+      , :plan_name
+      , :phase_name
+      , :plist_name
+      , :current_version
+      , :is_active
+      , :processing_owner
+      , :processing_available_dt
+      , :processing_state
+    );   
+>>
+
+insertClaimedHistory(sequence_id, owner_id, hostname, claimed_dt, event_id) ::= <<
+    insert into claimed_events (
+        sequence_id
+        , owner_id
+        , hostname
+        , claimed_dt
+        , event_id
+      ) values (
+        :sequence_id
+        , :owner_id
+        , :hostname
+        , :claimed_dt
+        , :event_id
+      );
+>>
+
+unactiveEvent(event_id, now) ::= <<
+    update events
+    set
+      is_active = 0
+      , updated_dt = :now
+    where
+      event_id = :event_id
+    ;
+>>
+
+reactiveEvent(event_id, now) ::= <<
+    update events
+    set
+      is_active = 1
+      , updated_dt = :now
+    where
+      event_id = :event_id
+    ;
+>>
+
+getFutureActiveEventForSubscription(subscription_id, now) ::= <<
+    select 
+      event_id
+      , event_type
+      , user_type
+      , created_dt
+      , updated_dt
+      , requested_dt
+      , effective_dt
+      , subscription_id
+      , plan_name
+      , phase_name
+      , plist_name
+      , current_version
+      , is_active
+      , processing_owner
+      , processing_available_dt
+      , processing_state    
+    from events
+    where
+      subscription_id = :subscription_id
+      and is_active = 1
+      and effective_dt > :now
+    order by
+      effective_dt asc
+      , created_dt asc
+      , requested_dt asc
+      , id asc
+    ;
+>> 
+
+getEventsForSubscription(subscription_id) ::= <<
+    select
+      event_id
+      , event_type
+      , user_type
+      , created_dt
+      , updated_dt
+      , requested_dt
+      , effective_dt
+      , subscription_id
+      , plan_name
+      , phase_name
+      , plist_name
+      , current_version
+      , is_active
+      , processing_owner
+      , processing_available_dt
+      , processing_state       
+    from events
+    where
+      subscription_id = :subscription_id
+    order by
+      effective_dt asc
+      , created_dt asc
+      , requested_dt asc
+      , id asc
+    ;      
+>>
+
+
