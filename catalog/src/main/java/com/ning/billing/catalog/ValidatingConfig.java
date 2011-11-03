@@ -27,7 +27,7 @@ public abstract class ValidatingConfig {
 	public static class ValidationErrors extends ArrayList<ValidationError>{
 		private static final long serialVersionUID = 1L;
 
-		public void add(String description, URL catalogURL,
+		public void add(String description, String catalogURL,
 				Class<? extends ValidatingConfig> objectType, String objectName) {
 			add(new ValidationError(description, catalogURL, objectType, objectName));
 			
