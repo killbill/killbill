@@ -28,6 +28,7 @@ import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.catalog.api.IPlan;
 
+import com.ning.billing.entitlement.IEntitlementSystem;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.alignment.PlanAligner;
@@ -44,7 +45,7 @@ import com.ning.billing.entitlement.events.user.IUserEvent;
 import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.clock.IClock;
 
-public class Engine implements IEventListener {
+public class Engine implements IEventListener, IEntitlementSystem {
 
     private final static Logger log = LoggerFactory.getLogger(Engine.class);
     private static Engine instance = null;
@@ -75,10 +76,18 @@ public class Engine implements IEventListener {
         ((PlanAligner) planAligner).init(catalog);
     }
 
+    @Override
+    public void initialize() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
     public void start() {
         apiEventProcessor.startNotifications(this);
     }
 
+    @Override
     public void stop() {
         apiEventProcessor.stopNotifications();
     }
@@ -171,5 +180,6 @@ public class Engine implements IEventListener {
     public IPlanAligner getPlanAligner() {
         return planAligner;
     }
+
 
 }

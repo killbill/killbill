@@ -14,22 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.account.dao;
+package com.ning.billing.entitlement;
 
-import java.util.List;
-import java.util.UUID;
+import java.io.InputStream;
 
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountData;
+public interface IEntitlementSystem {
 
-public interface IAccountDao {
+    public void initialize();
 
-    public IAccount createAccount(IAccountData account);
+    public void start();
 
-    public IAccount getAccountByKey(String key);
-
-    public IAccount getAccountFromId(UUID uid);
-
-    public List<IAccount> getAccounts();
-
+    public void stop();
 }

@@ -49,9 +49,9 @@ public class EntitlementUserApi implements IEntitlementUserApi {
     private final Engine engine;
     private final IClock clock;
     private final IEntitlementDao dao;
-    private final ICatalog catalog;
     private final IPlanAligner planAligner;
 
+    private ICatalog catalog;
     @Inject
     public EntitlementUserApi(Engine engine, IClock clock, IPlanAligner planAligner, IEntitlementDao dao) {
         super();
@@ -59,11 +59,12 @@ public class EntitlementUserApi implements IEntitlementUserApi {
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
-        this.catalog = engine.getCatalog();
+
     }
 
     @Override
     public void initialize(List<IApiListener> listeners) {
+        this.catalog = engine.getCatalog();
         engine.registerApiObservers(listeners);
     }
 

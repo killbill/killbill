@@ -21,6 +21,7 @@ import org.skife.config.ConfigurationObjectFactory;
 import com.google.inject.AbstractModule;
 import com.ning.billing.catalog.CatalogUserApi;
 import com.ning.billing.catalog.api.ICatalogUserApi;
+import com.ning.billing.entitlement.IEntitlementSystem;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.billing.BillingApi;
@@ -65,7 +66,7 @@ public class EntitlementModule extends AbstractModule {
     }
 
     protected void installEntitlementCore() {
-        bind(Engine.class).asEagerSingleton();
+        bind(IEntitlementSystem.class).to(Engine.class).asEagerSingleton();
         bind(IPlanAligner.class).to(PlanAligner.class).asEagerSingleton();
     }
 

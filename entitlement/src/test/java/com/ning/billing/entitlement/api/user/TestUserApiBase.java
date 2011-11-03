@@ -21,7 +21,10 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertFalse;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
@@ -45,6 +48,7 @@ import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.TimeUnit;
+import com.ning.billing.entitlement.IEntitlementSystem;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
@@ -65,6 +69,7 @@ public abstract class TestUserApiBase {
 
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
 
+    protected IEntitlementSystem service;
     protected Engine engine;
     protected IEntitlementUserApi entitlementApi;
     protected IEntitlementBillingApi billingApi;
@@ -105,6 +110,7 @@ public abstract class TestUserApiBase {
         loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = getInjector();
 
+        service = g.getInstance(IEntitlementSystem.class);
         engine = g.getInstance(Engine.class);
         entitlementApi = g.getInstance(IEntitlementUserApi.class);
         catalogApi = g.getInstance(ICatalogUserApi.class);
@@ -113,6 +119,8 @@ public abstract class TestUserApiBase {
         dao = g.getInstance(IEntitlementDao.class);
         clock = (ClockMock) g.getInstance(IClock.class);
         try {
+
+            service.initialize();
             init();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
@@ -149,12 +157,12 @@ public abstract class TestUserApiBase {
             Assert.fail(e.getMessage());
         }
         assertNotNull(bundle);
-        engine.start();
+        service.start();
     }
 
     @AfterMethod(groups={"setup"})
     public void cleanupTest() {
-        engine.stop();
+        service.stop();
         log.warn("DONE WITH TEST\n");
     }
 

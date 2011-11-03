@@ -25,6 +25,7 @@ import org.skife.jdbi.v2.Transaction;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IAccountData;
 
 public class AccountDao implements IAccountDao {
 
@@ -36,8 +37,8 @@ public class AccountDao implements IAccountDao {
     }
 
     @Override
-    public IAccount createAccount(IAccount account) {
-        IAccount result = new Account(account.getKey());
+    public IAccount createAccount(IAccountData input) {
+        IAccount result = new Account(input.getKey());
         dao.insertAccount(result);
         return result;
     }

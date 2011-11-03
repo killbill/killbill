@@ -33,7 +33,7 @@ public class AccountUserApi implements IAccountUserApi {
 
     @Override
     public IAccount createAccount(IAccountData data) {
-        return dao.createAccount((IAccount) data);
+        return dao.createAccount(data);
     }
 
     @Override

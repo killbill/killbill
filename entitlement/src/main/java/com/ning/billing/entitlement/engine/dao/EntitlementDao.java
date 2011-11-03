@@ -110,7 +110,7 @@ public class EntitlementDao implements IEntitlementDao {
     public void updateSubscription(Subscription subscription) {
         Date ctd = (subscription.getChargedThroughDate() != null)  ? subscription.getChargedThroughDate().toDate() : null;
         Date ptd = (subscription.getPaidThroughDate() != null)  ? subscription.getPaidThroughDate().toDate() : null;
-        subscriptionsDao.updateSubscription(subscription.getActiveVersion(), ctd, ptd);
+        subscriptionsDao.updateSubscription(subscription.getId().toString(), subscription.getActiveVersion(), ctd, ptd);
     }
 
     @Override
