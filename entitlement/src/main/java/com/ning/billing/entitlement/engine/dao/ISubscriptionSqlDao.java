@@ -57,7 +57,7 @@ public interface ISubscriptionSqlDao extends Transactional<ISubscriptionSqlDao>,
     public List<ISubscription> getSubscriptionsFromBundleId(@Bind("bundle_id") String bundleId);
 
     @SqlUpdate
-    public void updateSubscription(@Bind("active_version") long activeVersion, @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd);
+    public void updateSubscription(@Bind("id") String id, @Bind("active_version") long activeVersion, @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd);
 
     public static class ISubscriptionDaoBinder implements Binder<Bind, Subscription> {
 
