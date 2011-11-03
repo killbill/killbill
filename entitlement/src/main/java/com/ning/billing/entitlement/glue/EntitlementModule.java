@@ -67,6 +67,7 @@ public class EntitlementModule extends AbstractModule {
 
     protected void installEntitlementCore() {
         bind(IEntitlementSystem.class).to(Engine.class).asEagerSingleton();
+        bind(Engine.class).asEagerSingleton();
         bind(IPlanAligner.class).to(PlanAligner.class).asEagerSingleton();
     }
 

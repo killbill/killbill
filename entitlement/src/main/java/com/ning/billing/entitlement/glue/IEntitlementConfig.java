@@ -34,6 +34,6 @@ public interface IEntitlementConfig {
     public String getCatalogConfigFileName();
 
     @Config("killbill.entitlement.engine.notifications.sleep")
-    @Default("1000")
+    @Default("500")
     public long getNotificationSleepTimeMs();
 }
