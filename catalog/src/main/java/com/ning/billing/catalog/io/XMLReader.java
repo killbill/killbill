@@ -17,6 +17,7 @@
 package com.ning.billing.catalog.io;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 
 import javax.xml.XMLConstants;
@@ -39,26 +40,44 @@ public class XMLReader {
 	public static Logger log = LoggerFactory.getLogger(XMLReader.class);
 
     public static Catalog getCatalogFromName(URL url) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
-        JAXBContext context =JAXBContext.newInstance(Catalog.class);
-
-        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI );
-        Unmarshaller um = context.createUnmarshaller();
-
-        Schema schema = factory.newSchema(XMLSchemaGenerator.xmlSchema());
-        um.setSchema(schema);
-        
-        Object o = um.unmarshal(url);
-
+        Object o = unmarshaller().unmarshal(url);
         if(o instanceof Catalog) {
             Catalog c = (Catalog)o;
-            c.setCatalogURL(url);
-            c.initialize(c);
-            ValidationErrors errs = c.validate();
-            System.out.println("Errors: " + errs.size() + " for " + url);
+            c.setCatalogURL(url.toString());
             return (Catalog) o;
         } else {
             return null;
         }
+    }
+    
+    public static Catalog getCatalogFromName(InputStream stream) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
+        Object o = unmarshaller().unmarshal(stream);
+        if(o instanceof Catalog) {
+            Catalog c = (Catalog)o;
+            c.setCatalogURL("embedded catalog");
+            return (Catalog) o;
+        } else {
+            return null;
+        }
+    }
+
+    
+    public static void validate(Catalog c) {
+            c.initialize(c);
+            ValidationErrors errs = c.validate();
+            System.out.println("Errors: " + errs.size() + " for " + c.getCatalogURL());       
+    }
+    
+    public static Unmarshaller unmarshaller() throws JAXBException, SAXException, IOException, TransformerException {
+    	 JAXBContext context =JAXBContext.newInstance(Catalog.class);
+
+         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI );
+         Unmarshaller um = context.createUnmarshaller();
+
+         Schema schema = factory.newSchema(XMLSchemaGenerator.xmlSchema());
+         um.setSchema(schema);
+         
+         return um;
     }
 	
 }

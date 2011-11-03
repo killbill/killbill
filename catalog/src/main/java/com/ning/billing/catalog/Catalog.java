@@ -53,7 +53,7 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 	@XmlElement(required=true)
 	private String catalogName;
 
-	private URL catalogURL;
+	private String catalogURL;
 
 	@XmlElementWrapper(name="currencies", required=true)
 	@XmlElement(name="currency", required=true)
@@ -274,11 +274,11 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 		this.effectiveDate = effectiveDate;
 	}
 
-	public URL getCatalogURL() {
+	public String getCatalogURL() {
 		return catalogURL;
 	}
 
-	public void setCatalogURL(URL catalogURL) {
+	public void setCatalogURL(String catalogURL) {
 		this.catalogURL = catalogURL;
 	}
 

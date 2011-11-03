@@ -19,10 +19,10 @@ import java.net.URL;
 
 public class ValidationError {
 	private final String description;
-	private final URL catalogURL;
+	private final String catalogURL;
 	private final Class<? extends ValidatingConfig> objectType;
 	private final String objectName;
-	public ValidationError(String description, URL catalogURL,
+	public ValidationError(String description, String catalogURL,
 			Class<? extends ValidatingConfig> objectType, String objectName) {
 		super();
 		this.description = description;
@@ -33,7 +33,7 @@ public class ValidationError {
 	public String getDescription() {
 		return description;
 	}
-	public URL getCatalogURL() {
+	public String getCatalogURL() {
 		return catalogURL;
 	}
 	public Class<? extends ValidatingConfig> getObjectType() {
