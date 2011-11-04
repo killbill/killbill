@@ -18,6 +18,7 @@ package com.ning.billing.catalog.io;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 
 import javax.xml.XMLConstants;
@@ -36,12 +37,22 @@ import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.ValidatingConfig.ValidationErrors;
 import com.ning.billing.catalog.api.InvalidConfigException;
 
-public class XMLReader {
-	public static Logger log = LoggerFactory.getLogger(XMLReader.class);
+public class CatalogLoader {
+	private static final String URI_SCHEME_FOR_CLASSPATH = "jar";
+	public static Logger log = LoggerFactory.getLogger(CatalogLoader.class);
 
-    public static Catalog getCatalogFromName(URL url) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
+    public static Catalog getCatalogFromURI(URI uri) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
+        String scheme = uri.getScheme();
+        if (scheme.equals(URI_SCHEME_FOR_CLASSPATH)) {
+        	InputStream resourceStream = CatalogLoader.class.getResourceAsStream(uri.getPath());
+        	return getCatalogStream(resourceStream);
+        }
+        return getCatalogFromURL(uri.toURL());
+    }
+    
+    public static Catalog getCatalogFromURL(URL url) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
         Object o = unmarshaller().unmarshal(url);
-        if(o instanceof Catalog) {
+        if (o instanceof Catalog) {
             Catalog c = (Catalog)o;
             c.setCatalogURL(url.toString());
             validate(c);
@@ -50,10 +61,10 @@ public class XMLReader {
             return null;
         }
     }
-    
-    public static Catalog getCatalogFromName(InputStream stream) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
+
+    public static Catalog getCatalogStream(InputStream stream) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
         Object o = unmarshaller().unmarshal(stream);
-        if(o instanceof Catalog) {
+        if (o instanceof Catalog) {
             Catalog c = (Catalog)o;
             c.setCatalogURL("embedded catalog");
             validate(c);

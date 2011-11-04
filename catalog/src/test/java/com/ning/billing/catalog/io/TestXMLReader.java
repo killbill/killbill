@@ -31,8 +31,8 @@ public class TestXMLReader {
 
 	@Test(enabled=true)
 	public void testCatalogLoad() throws IOException, TransformerException, JAXBException, SAXException, InvalidConfigException {
-		XMLReader.getCatalogFromName(Resources.getResource("WeaponsHire.xml"));
-		XMLReader.getCatalogFromName(Resources.getResource("WeaponsHireSmall.xml"));
+		CatalogLoader.getCatalogFromURL(Resources.getResource("WeaponsHire.xml"));
+		CatalogLoader.getCatalogFromURL(Resources.getResource("WeaponsHireSmall.xml"));
 	}
 	
 }
