@@ -16,7 +16,11 @@
 
 package com.ning.billing.config;
 
+import org.skife.config.Config;
 
-public interface IKillbillConfig {
+public interface ICatalogConfig extends IKillbillConfig {
 
+    @Config("killbill.catalog.uri")
+    String getCatalogURI();
+    
 }

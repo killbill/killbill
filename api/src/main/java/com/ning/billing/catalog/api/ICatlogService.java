@@ -14,9 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.config;
+package com.ning.billing.catalog.api;
 
+import com.ning.billing.lifecycle.IService;
 
-public interface IKillbillConfig {
+public interface ICatlogService extends IService {
+
+	public abstract ICatalog getCatalog();
 
 }
