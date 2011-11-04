@@ -16,8 +16,13 @@
 
 package com.ning.billing.analytics.dao;
 
-import com.ning.billing.analytics.*;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.analytics.BusinessSubscription;
+import com.ning.billing.analytics.BusinessSubscriptionEvent;
+import com.ning.billing.analytics.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.MockDuration;
+import com.ning.billing.analytics.MockPhase;
+import com.ning.billing.analytics.MockPlan;
+import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import org.apache.commons.io.IOUtils;
