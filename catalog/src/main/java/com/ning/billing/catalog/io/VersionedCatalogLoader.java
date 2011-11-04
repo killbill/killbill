@@ -49,7 +49,7 @@ public class VersionedCatalogLoader implements ICatalogLoader {
 		List<URL> xmlURLs = findXmlReferences(directoryContents, url);
 		VersionedCatalog result = new VersionedCatalog();
 		for(URL u : xmlURLs) {
-			Catalog catalog = XMLReader.getCatalogFromName(u);
+			Catalog catalog = CatalogLoader.getCatalogFromURL(u);
 			result.add(catalog);
 		}
 		return result;
