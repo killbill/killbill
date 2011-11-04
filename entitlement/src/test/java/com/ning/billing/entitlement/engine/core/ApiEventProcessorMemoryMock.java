@@ -19,9 +19,9 @@ package com.ning.billing.entitlement.engine.core;
 import java.util.List;
 
 import com.google.inject.Inject;
+import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.clock.IClock;
 
 public class ApiEventProcessorMemoryMock extends ApiEventProcessorBase {

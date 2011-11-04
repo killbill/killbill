@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.glue;
+package com.ning.billing.config;
 
 import org.skife.config.Config;
 import org.skife.config.Default;

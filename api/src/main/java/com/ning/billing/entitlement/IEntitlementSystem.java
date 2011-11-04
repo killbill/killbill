@@ -16,13 +16,8 @@
 
 package com.ning.billing.entitlement;
 
-import java.io.InputStream;
+import com.ning.billing.lifecycle.IService;
 
-public interface IEntitlementSystem {
+public interface IEntitlementSystem extends IService {
 
-    public void initialize();
-
-    public void start();
-
-    public void stop();
 }

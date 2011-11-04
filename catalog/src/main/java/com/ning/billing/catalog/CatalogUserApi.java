@@ -26,7 +26,7 @@ public class CatalogUserApi implements ICatalogUserApi {
 
     @Override
     public ICatalog getCatalog(final String catalogName) {
-    	String name = catalogName; 
+    	String name = catalogName;
         try {
             return CatalogLoader.getCatalogFromURI(new File(name).toURI());
         } catch (Exception e) {

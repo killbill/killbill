@@ -16,9 +16,11 @@
 
 package com.ning.billing.catalog.io;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import javax.xml.XMLConstants;
@@ -41,15 +43,29 @@ public class CatalogLoader {
 	private static final String URI_SCHEME_FOR_CLASSPATH = "jar";
 	public static Logger log = LoggerFactory.getLogger(CatalogLoader.class);
 
-    public static Catalog getCatalogFromURI(URI uri) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
-        String scheme = uri.getScheme();
+
+
+	public static Catalog getCatalogFromProperty(String property) throws Exception {
+	    if (property == null) {
+	        return null;
+	    }
+	    URI uri = (property.startsWith(URI_SCHEME_FOR_CLASSPATH)) ?
+	            new URI(property) :
+	                new File("src/test/resources/testInput.xml").toURI();
+	            return getCatalogFromURI(uri);
+	}
+
+
+	public static Catalog getCatalogFromURI(URI uri) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
+
+	    String scheme = uri.getScheme();
         if (scheme.equals(URI_SCHEME_FOR_CLASSPATH)) {
         	InputStream resourceStream = CatalogLoader.class.getResourceAsStream(uri.getPath());
         	return getCatalogStream(resourceStream);
         }
         return getCatalogFromURL(uri.toURL());
     }
-    
+
     public static Catalog getCatalogFromURL(URL url) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
         Object o = unmarshaller().unmarshal(url);
         if (o instanceof Catalog) {
@@ -74,13 +90,13 @@ public class CatalogLoader {
         }
     }
 
-    
+
     public static void validate(Catalog c) {
             c.initialize(c);
             ValidationErrors errs = c.validate();
-            System.out.println("Errors: " + errs.size() + " for " + c.getCatalogURL());       
+            System.out.println("Errors: " + errs.size() + " for " + c.getCatalogURL());
     }
-    
+
     public static Unmarshaller unmarshaller() throws JAXBException, SAXException, IOException, TransformerException {
     	 JAXBContext context =JAXBContext.newInstance(Catalog.class);
 
@@ -89,8 +105,8 @@ public class CatalogLoader {
 
          Schema schema = factory.newSchema(XMLSchemaGenerator.xmlSchema());
          um.setSchema(schema);
-         
+
          return um;
     }
-	
+
 }

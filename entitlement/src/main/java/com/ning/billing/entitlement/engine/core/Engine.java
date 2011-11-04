@@ -25,60 +25,68 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ICatalog;
+import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.catalog.api.IPlan;
+import com.ning.billing.config.IEntitlementConfig;
 
 import com.ning.billing.entitlement.IEntitlementSystem;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.user.IApiListener;
-import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
-import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IUserEvent;
-import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.clock.IClock;
 
 public class Engine implements IEventListener, IEntitlementSystem {
+
+    private static final String ENTITLEMENT_SERVICE_NAME = "entitlement-service";
 
     private final static Logger log = LoggerFactory.getLogger(Engine.class);
     private static Engine instance = null;
 
     private final IClock clock;
-    private final ICatalog catalog;
+
     private final IEntitlementDao dao;
     private final IApiEventProcessor apiEventProcessor;
-    private final ICatalogUserApi catalogApi;
+    private final ICatalogService catalogService;
     private final IPlanAligner planAligner;
 
     private List<IApiListener> observers;
+    private ICatalog catalog;
+
 
     @Inject
-    public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor, ICatalogUserApi catalogApi,
+    public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor, ICatalogService catalogService,
             IPlanAligner planAligner, IEntitlementConfig config) {
         super();
         this.clock = clock;
-        this.catalogApi = catalogApi;
         this.dao = dao;
         this.apiEventProcessor = apiEventProcessor;
         this.planAligner = planAligner;
-        this.catalog = readCatalogFromConfig(config.getCatalogConfigFileName());
+        this.catalogService = catalogService;
         this.observers = null;
         instance = this;
 
-        // STEPH yack
-        ((PlanAligner) planAligner).init(catalog);
     }
 
     @Override
+    public String getName() {
+        return ENTITLEMENT_SERVICE_NAME;
+    }
+
+
+    @Override
     public void initialize() {
-        // TODO Auto-generated method stub
+        this.catalog = catalogService.getCatalog();
+        // STEPH yack
+        ((PlanAligner) planAligner).init(catalog);
 
     }
 
@@ -152,10 +160,6 @@ public class Engine implements IEventListener, IEntitlementSystem {
     }
 
 
-    private ICatalog readCatalogFromConfig(String configFile) {
-        return catalogApi.getCatalog(configFile);
-    }
-
     //
     // STEPH would be nice to have those go away..
     //
@@ -180,6 +184,7 @@ public class Engine implements IEventListener, IEntitlementSystem {
     public IPlanAligner getPlanAligner() {
         return planAligner;
     }
+
 
 
 }

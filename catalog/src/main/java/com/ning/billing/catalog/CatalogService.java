@@ -16,61 +16,74 @@
 
 package com.ning.billing.catalog;
 
+import java.io.File;
 import java.net.URI;
 
+import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.io.CatalogLoader;
-import com.ning.billing.config.IBusinessConfig;
 import com.ning.billing.config.ICatalogConfig;
-import com.ning.billing.config.IKillbillConfig;
 import com.ning.billing.lifecycle.IService;
 
 
 public class CatalogService implements IService, Provider<ICatalog>, ICatalogService {
-	
-	private static ICatalog catalog;
 
-	@Override
-	public void initialize(IBusinessConfig businessConfig,
-			IKillbillConfig killbillConfig) throws ServiceException {
-		if(killbillConfig instanceof ICatalogConfig) {
-			ICatalogConfig catalogConfig = (ICatalogConfig) killbillConfig;
-			try {
-				catalog = CatalogLoader.getCatalogFromURI(new URI(catalogConfig.getCatalogURI()));
-			} catch (Exception e) {
-				throw new ServiceException(e);
-			}
-		} else {
-			throw new ServiceException("Configuration does not include catalog configuration.");
-		}
-	}
 
-	@Override
-	public void start() throws ServiceException {
-		// Intentionally blank
-		
-	}
+    private static final String CATALOG_SERVICE_NAME = "catalog-service";
 
-	@Override
-	public void stop() throws ServiceException {
-		// Intentionally blank
-		
-	}
+    private final ICatalogConfig config;
 
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.ICatlogService#getCatalog()
-	 */
-	@Override
-	public ICatalog getCatalog() {
-		return catalog;
-	}
+    private static ICatalog catalog;
 
-	
-	// Should be able to use bind(ICatalog.class).toProvider(CatalogService.class);
-	@Override
-	public ICatalog get() {
-		return catalog;
-	}
+
+    @Inject
+    public CatalogService(ICatalogConfig config) {
+        this.config = config;
+        System.out.println(config.getCatalogURI());
+    }
+
+    @Override
+    public void initialize() throws ServiceException {
+        try {
+            catalog = CatalogLoader.getCatalogFromProperty(config.getCatalogURI());
+        } catch (Exception e) {
+            throw new ServiceException(e);
+        }
+    }
+
+    @Override
+    public String getName() {
+        return CATALOG_SERVICE_NAME;
+    }
+
+
+    @Override
+    public void start() throws ServiceException {
+        // Intentionally blank
+
+    }
+
+    @Override
+    public void stop() throws ServiceException {
+        // Intentionally blank
+
+    }
+
+    /* (non-Javadoc)
+     * @see com.ning.billing.catalog.ICatlogService#getCatalog()
+     */
+    @Override
+    public ICatalog getCatalog() {
+        return catalog;
+    }
+
+
+    // Should be able to use bind(ICatalog.class).toProvider(CatalogService.class);
+    @Override
+    public ICatalog get() {
+        return catalog;
+    }
+
 }

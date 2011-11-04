@@ -45,9 +45,11 @@ import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
+import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.TimeUnit;
+import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.IEntitlementSystem;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
@@ -59,7 +61,7 @@ import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IUserEvent;
-import com.ning.billing.entitlement.glue.IEntitlementConfig;
+import com.ning.billing.lifecycle.IService.ServiceException;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
 
@@ -69,11 +71,11 @@ public abstract class TestUserApiBase {
 
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
 
-    protected IEntitlementSystem service;
-    protected Engine engine;
+    protected IEntitlementSystem entitlementService;
+    //protected Engine engine;
     protected IEntitlementUserApi entitlementApi;
     protected IEntitlementBillingApi billingApi;
-    protected ICatalogUserApi catalogApi;
+    protected ICatalogService catalogService;
     protected IEntitlementConfig config;
     protected IEntitlementDao dao;
     protected ClockMock clock;
@@ -110,19 +112,23 @@ public abstract class TestUserApiBase {
         loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = getInjector();
 
-        service = g.getInstance(IEntitlementSystem.class);
-        engine = g.getInstance(Engine.class);
+        entitlementService = g.getInstance(IEntitlementSystem.class);
+        //engine = g.getInstance(Engine.class);
         entitlementApi = g.getInstance(IEntitlementUserApi.class);
-        catalogApi = g.getInstance(ICatalogUserApi.class);
+        catalogService = g.getInstance(ICatalogService.class);
         billingApi = g.getInstance(IEntitlementBillingApi.class);
         config = g.getInstance(IEntitlementConfig.class);
         dao = g.getInstance(IEntitlementDao.class);
         clock = (ClockMock) g.getInstance(IClock.class);
         try {
 
-            service.initialize();
+            catalogService.initialize();
+            entitlementService.initialize();
             init();
         } catch (EntitlementUserApiException e) {
+            Assert.fail(e.getMessage());
+        } catch (ServiceException e) {
+            e.printStackTrace();
             Assert.fail(e.getMessage());
         }
     }
@@ -133,7 +139,7 @@ public abstract class TestUserApiBase {
         account = getAccount();
         assertNotNull(account);
 
-        catalog = catalogApi.getCatalog(config.getCatalogConfigFileName());
+        catalog = catalogService.getCatalog();
         assertNotNull(catalog);
 
         testListener = new ApiTestListener();
@@ -145,25 +151,33 @@ public abstract class TestUserApiBase {
 
     @BeforeMethod(groups={"setup"})
     public void setupTest() {
-        log.warn("\n");
-        log.warn("RESET TEST FRAMEWORK\n\n");
-
-        testListener.reset();
-        clock.resetDeltaFromReality();
-        ((IEntitlementDaoMock) dao).reset();
         try {
-            bundle = entitlementApi.createBundleForAccount(account, "myDefaultBundle");
-        } catch (EntitlementUserApiException e) {
+            log.warn("\n");
+            log.warn("RESET TEST FRAMEWORK\n\n");
+
+            testListener.reset();
+            clock.resetDeltaFromReality();
+            ((IEntitlementDaoMock) dao).reset();
+            try {
+                bundle = entitlementApi.createBundleForAccount(account, "myDefaultBundle");
+            } catch (EntitlementUserApiException e) {
+                Assert.fail(e.getMessage());
+            }
+            assertNotNull(bundle);
+            entitlementService.start();
+        } catch (ServiceException e) {
             Assert.fail(e.getMessage());
         }
-        assertNotNull(bundle);
-        service.start();
     }
 
     @AfterMethod(groups={"setup"})
     public void cleanupTest() {
-        service.stop();
-        log.warn("DONE WITH TEST\n");
+        try {
+            entitlementService.stop();
+            log.warn("DONE WITH TEST\n");
+        } catch (ServiceException e) {
+            Assert.fail(e.getMessage());
+        }
     }
 
     // Glue magic to invoke the real test

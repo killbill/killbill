@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -42,7 +43,6 @@ import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IUserEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.clock.IClock;
 
