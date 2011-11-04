@@ -20,7 +20,7 @@ import java.net.URI;
 
 import com.google.inject.Provider;
 import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.ICatlogService;
+import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.io.CatalogLoader;
 import com.ning.billing.config.IBusinessConfig;
 import com.ning.billing.config.ICatalogConfig;
@@ -28,7 +28,7 @@ import com.ning.billing.config.IKillbillConfig;
 import com.ning.billing.lifecycle.IService;
 
 
-public class CatalogService implements IService, Provider<ICatalog>, ICatlogService {
+public class CatalogService implements IService, Provider<ICatalog>, ICatalogService {
 	
 	private static ICatalog catalog;
 

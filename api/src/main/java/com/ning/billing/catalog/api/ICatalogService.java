@@ -18,7 +18,7 @@ package com.ning.billing.catalog.api;
 
 import com.ning.billing.lifecycle.IService;
 
-public interface ICatlogService extends IService {
+public interface ICatalogService extends IService {
 
 	public abstract ICatalog getCatalog();
 
