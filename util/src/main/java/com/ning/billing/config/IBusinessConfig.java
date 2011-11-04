@@ -14,8 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.beatrix.config;
+package com.ning.billing.config;
 
-public interface IKillbillConfig {
+public interface IBusinessConfig {
 
 }

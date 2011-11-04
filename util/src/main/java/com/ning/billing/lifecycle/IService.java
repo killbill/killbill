@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.beatrix.lifecycle;
+package com.ning.billing.lifecycle;
 
-import com.ning.billing.beatrix.config.IBusinessConfig;
-import com.ning.billing.beatrix.config.IKillbillConfig;
+import com.ning.billing.config.IBusinessConfig;
+import com.ning.billing.config.IKillbillConfig;
 
 public interface IService {
 
