@@ -16,8 +16,17 @@
 
 package com.ning.billing.entitlement;
 
+import java.util.List;
+
+import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
+import com.ning.billing.entitlement.api.user.IApiListener;
+import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.lifecycle.IService;
 
-public interface IEntitlementSystem extends IService {
+public interface IEntitlementService extends IService {
+
+    IEntitlementUserApi getUserApi(List<IApiListener> listeners);
+
+    IEntitlementBillingApi getBillingApi();
 
 }

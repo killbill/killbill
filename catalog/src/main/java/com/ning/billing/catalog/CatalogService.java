@@ -33,23 +33,28 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
 
     private static final String CATALOG_SERVICE_NAME = "catalog-service";
 
-    private final ICatalogConfig config;
-
     private static ICatalog catalog;
+
+    private final ICatalogConfig config;
+    private boolean isInitialized;
 
 
     @Inject
     public CatalogService(ICatalogConfig config) {
         this.config = config;
         System.out.println(config.getCatalogURI());
+        this.isInitialized = false;
     }
 
     @Override
-    public void initialize() throws ServiceException {
-        try {
-            catalog = CatalogLoader.getCatalogFromProperty(config.getCatalogURI());
-        } catch (Exception e) {
-            throw new ServiceException(e);
+    public synchronized void initialize() throws ServiceException {
+        if (!isInitialized) {
+            try {
+                catalog = CatalogLoader.getCatalogFromProperty(config.getCatalogURI());
+                isInitialized = true;
+            } catch (Exception e) {
+                throw new ServiceException(e);
+            }
         }
     }
 

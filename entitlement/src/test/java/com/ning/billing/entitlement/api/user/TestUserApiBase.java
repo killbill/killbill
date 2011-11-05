@@ -50,7 +50,7 @@ import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.IEntitlementConfig;
-import com.ning.billing.entitlement.IEntitlementSystem;
+import com.ning.billing.entitlement.IEntitlementService;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
@@ -71,7 +71,7 @@ public abstract class TestUserApiBase {
 
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
 
-    protected IEntitlementSystem entitlementService;
+    protected IEntitlementService entitlementService;
     //protected Engine engine;
     protected IEntitlementUserApi entitlementApi;
     protected IEntitlementBillingApi billingApi;
@@ -112,11 +112,8 @@ public abstract class TestUserApiBase {
         loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = getInjector();
 
-        entitlementService = g.getInstance(IEntitlementSystem.class);
-        //engine = g.getInstance(Engine.class);
-        entitlementApi = g.getInstance(IEntitlementUserApi.class);
+        entitlementService = g.getInstance(IEntitlementService.class);
         catalogService = g.getInstance(ICatalogService.class);
-        billingApi = g.getInstance(IEntitlementBillingApi.class);
         config = g.getInstance(IEntitlementConfig.class);
         dao = g.getInstance(IEntitlementDao.class);
         clock = (ClockMock) g.getInstance(IClock.class);
@@ -145,7 +142,8 @@ public abstract class TestUserApiBase {
         testListener = new ApiTestListener();
         List<IApiListener> listeners =  new ArrayList<IApiListener>();
         listeners.add(testListener);
-        entitlementApi.initialize(listeners);
+        entitlementApi = entitlementService.getUserApi(listeners);
+        billingApi = entitlementService.getBillingApi();
 
     }
 

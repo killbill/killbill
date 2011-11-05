@@ -51,21 +51,27 @@ public class EntitlementUserApi implements IEntitlementUserApi {
     private final IEntitlementDao dao;
     private final IPlanAligner planAligner;
 
+    private boolean initialized;
+
     private ICatalog catalog;
-    @Inject
+
     public EntitlementUserApi(Engine engine, IClock clock, IPlanAligner planAligner, IEntitlementDao dao) {
         super();
         this.engine = engine;
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
+        this.initialized = false;
 
     }
 
     @Override
-    public void initialize(List<IApiListener> listeners) {
-        this.catalog = engine.getCatalog();
-        engine.registerApiObservers(listeners);
+    public synchronized void initialize(List<IApiListener> listeners) {
+        if (!initialized) {
+            this.catalog = engine.getCatalog();
+            engine.registerApiObservers(listeners);
+            initialized = true;
+        }
     }
 
     @Override

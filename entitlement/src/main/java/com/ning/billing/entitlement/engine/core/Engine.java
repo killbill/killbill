@@ -30,11 +30,15 @@ import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.config.IEntitlementConfig;
 
-import com.ning.billing.entitlement.IEntitlementSystem;
+import com.ning.billing.entitlement.IEntitlementService;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.alignment.PlanAligner;
+import com.ning.billing.entitlement.api.billing.BillingApi;
+import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.IApiListener;
+import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
@@ -44,7 +48,7 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.IUserEvent;
 import com.ning.billing.util.clock.IClock;
 
-public class Engine implements IEventListener, IEntitlementSystem {
+public class Engine implements IEventListener, IEntitlementService {
 
     private static final String ENTITLEMENT_SERVICE_NAME = "entitlement-service";
 
@@ -57,7 +61,8 @@ public class Engine implements IEventListener, IEntitlementSystem {
     private final IApiEventProcessor apiEventProcessor;
     private final ICatalogService catalogService;
     private final IPlanAligner planAligner;
-
+    private final IEntitlementUserApi userApi;
+    private final IEntitlementBillingApi billingApi;
     private List<IApiListener> observers;
     private ICatalog catalog;
 
@@ -72,6 +77,8 @@ public class Engine implements IEventListener, IEntitlementSystem {
         this.planAligner = planAligner;
         this.catalogService = catalogService;
         this.observers = null;
+        this.userApi = new EntitlementUserApi(this, clock, planAligner, dao);
+        this.billingApi = new BillingApi(this, clock, dao);
         instance = this;
 
     }
@@ -99,6 +106,18 @@ public class Engine implements IEventListener, IEntitlementSystem {
     public void stop() {
         apiEventProcessor.stopNotifications();
     }
+
+    @Override
+    public IEntitlementUserApi getUserApi(List<IApiListener> listeners) {
+        userApi.initialize(listeners);
+        return userApi;
+    }
+
+    @Override
+    public IEntitlementBillingApi getBillingApi() {
+        return billingApi;
+    }
+
 
     public void registerApiObservers(List<IApiListener> observers) {
         this.observers = observers;
@@ -184,7 +203,5 @@ public class Engine implements IEventListener, IEntitlementSystem {
     public IPlanAligner getPlanAligner() {
         return planAligner;
     }
-
-
 
 }
