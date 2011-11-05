@@ -23,7 +23,10 @@
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-api</artifactId>
-            <version>0.0.6-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-util</artifactId>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
