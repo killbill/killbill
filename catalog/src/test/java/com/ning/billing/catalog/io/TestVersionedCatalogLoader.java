@@ -20,6 +20,7 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
@@ -126,7 +127,7 @@ public class TestVersionedCatalogLoader {
 	}
 	
 	@Test(enabled=true)
-	public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException {
+	public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
 		VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog"));
 		assertEquals(4, c.size());
 		Iterator<Catalog> it = c.iterator();

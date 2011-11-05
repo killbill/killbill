@@ -22,8 +22,10 @@ import javax.xml.bind.annotation.XmlIDREF;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
-public abstract class Case<T> extends ValidatingConfig {
+public abstract class Case<T> extends ValidatingConfig<Catalog> {
 
 	@XmlElement(required=false)
 	@XmlIDREF

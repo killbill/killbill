@@ -13,17 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.catalog;
+package com.ning.billing.util.config;
 
-import java.net.URL;
 
 public class ValidationError {
 	private final String description;
 	private final String catalogURL;
-	private final Class<? extends ValidatingConfig> objectType;
+	private final Class<?> objectType;
 	private final String objectName;
 	public ValidationError(String description, String catalogURL,
-			Class<? extends ValidatingConfig> objectType, String objectName) {
+			Class<?> objectType, String objectName) {
 		super();
 		this.description = description;
 		this.catalogURL = catalogURL;
@@ -36,7 +35,7 @@ public class ValidationError {
 	public String getCatalogURL() {
 		return catalogURL;
 	}
-	public Class<? extends ValidatingConfig> getObjectType() {
+	public Class<?> getObjectType() {
 		return objectType;
 	}
 	public String getObjectName() {

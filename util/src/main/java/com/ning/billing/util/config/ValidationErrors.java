@@ -14,22 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.io;
+package com.ning.billing.util.config;
 
-import java.io.IOException;
-import java.net.URL;
+import java.util.ArrayList;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
+public class ValidationErrors extends ArrayList<ValidationError>{
+	private static final long serialVersionUID = 1L;
 
-import org.xml.sax.SAXException;
-
-import com.ning.billing.catalog.VersionedCatalog;
-import com.ning.billing.catalog.api.InvalidConfigException;
-
-public interface ICatalogLoader {
-
-	public abstract VersionedCatalog load(URL url) throws IOException,
-			SAXException, InvalidConfigException, JAXBException, TransformerException;
+	public void add(String description, String catalogURL,
+			Class<?> objectType, String objectName) {
+		add(new ValidationError(description, catalogURL, objectType, objectName));
+		
+	}
 
 }

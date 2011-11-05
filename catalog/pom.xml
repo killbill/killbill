@@ -29,6 +29,10 @@
             <artifactId>killbill-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-util</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>test</scope>
@@ -53,9 +57,10 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>com.ning.billing.catalog.io.XMLSchemaGenerator</mainClass>
+                            <mainClass>com.ning.billing.util.config.XMLSchemaGenerator</mainClass>
                             <arguments>
                                 <argument>${project.basedir}/src/test/resources</argument>
+                                <argument>com.ning.billing.catalog.Catalog</argument>
                             </arguments>
                         </configuration>
                     </execution>

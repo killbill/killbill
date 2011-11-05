@@ -27,9 +27,11 @@ import com.ning.billing.catalog.api.IInternationalPrice;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PlanPhase extends ValidatingConfig implements IPlanPhase {
+public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 
 	@XmlAttribute (required=true)
 	private PhaseType type;

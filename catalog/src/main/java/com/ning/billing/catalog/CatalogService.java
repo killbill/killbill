@@ -21,16 +21,17 @@ import java.net.URI;
 import com.google.inject.Provider;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.catalog.io.CatalogLoader;
 import com.ning.billing.config.IBusinessConfig;
 import com.ning.billing.config.ICatalogConfig;
 import com.ning.billing.config.IKillbillConfig;
 import com.ning.billing.lifecycle.IService;
+import com.ning.billing.util.config.XMLLoader;
 
 
 public class CatalogService implements IService, Provider<ICatalog>, ICatalogService {
 	
 	private static ICatalog catalog;
+
 
 	@Override
 	public void initialize(IBusinessConfig businessConfig,
@@ -38,7 +39,7 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
 		if(killbillConfig instanceof ICatalogConfig) {
 			ICatalogConfig catalogConfig = (ICatalogConfig) killbillConfig;
 			try {
-				catalog = CatalogLoader.getCatalogFromURI(new URI(catalogConfig.getCatalogURI()));
+				catalog = XMLLoader.getObjectFromURI(new URI(catalogConfig.getCatalogURI()), Catalog.class);
 			} catch (Exception e) {
 				throw new ServiceException(e);
 			}
