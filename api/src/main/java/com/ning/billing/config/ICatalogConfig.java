@@ -17,10 +17,12 @@
 package com.ning.billing.config;
 
 import org.skife.config.Config;
+import org.skife.config.Default;
 
-public interface ICatalogConfig extends IKillbillConfig {
+public interface ICatalogConfig {
 
     @Config("killbill.catalog.uri")
+    @Default("jar:///com/ning/billing/irs/catalog/NingCatalog.xml")
     String getCatalogURI();
-    
+
 }

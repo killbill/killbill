@@ -24,7 +24,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 import com.google.inject.Inject;
-import com.ning.billing.entitlement.glue.IEntitlementConfig;
+import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.util.clock.IClock;
 
 public class EntitlementDaoSqlMock extends EntitlementDao implements IEntitlementDaoMock {

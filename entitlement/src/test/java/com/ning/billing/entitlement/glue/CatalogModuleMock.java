@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.config;
+package com.ning.billing.entitlement.glue;
 
+import com.ning.billing.catalog.glue.CatalogModule;
 
-public interface IKillbillConfig {
+public class CatalogModuleMock extends CatalogModule {
 
 }

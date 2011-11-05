@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
+import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -38,11 +39,8 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
-import com.ning.billing.entitlement.events.phase.IPhaseEvent;
-import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IUserEvent;
-import com.ning.billing.entitlement.glue.IEntitlementConfig;
 import com.ning.billing.util.clock.IClock;
 
 public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDaoMock {

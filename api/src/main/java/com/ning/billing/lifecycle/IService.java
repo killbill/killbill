@@ -16,9 +16,6 @@
 
 package com.ning.billing.lifecycle;
 
-import com.ning.billing.config.IBusinessConfig;
-import com.ning.billing.config.IKillbillConfig;
-
 public interface IService {
 
     public static class ServiceException extends Exception  {
@@ -44,13 +41,17 @@ public interface IService {
 
     /**
      *
-     * @param businessConfig business configuration
-     * @param killbillConfig service detail configuration
+     * @return the name of the service
+     */
+    public String getName();
+
+    /**
+     *
      * @throws ServiceException
      *
      * Initialize the service prior to start
      */
-    public void initialize(IBusinessConfig businessConfig, IKillbillConfig killbillConfig)
+    public void initialize()
         throws ServiceException;
 
     /**

@@ -16,62 +16,73 @@
 
 package com.ning.billing.catalog;
 
-import java.net.URI;
-
+import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.config.IBusinessConfig;
 import com.ning.billing.config.ICatalogConfig;
-import com.ning.billing.config.IKillbillConfig;
 import com.ning.billing.lifecycle.IService;
 import com.ning.billing.util.config.XMLLoader;
 
-
 public class CatalogService implements IService, Provider<ICatalog>, ICatalogService {
-	
-	private static ICatalog catalog;
+
+    private static final String CATALOG_SERVICE_NAME = "catalog-service";
+
+    private static ICatalog catalog;
+
+    private final ICatalogConfig config;
+    private boolean isInitialized;
 
 
-	@Override
-	public void initialize(IBusinessConfig businessConfig,
-			IKillbillConfig killbillConfig) throws ServiceException {
-		if(killbillConfig instanceof ICatalogConfig) {
-			ICatalogConfig catalogConfig = (ICatalogConfig) killbillConfig;
-			try {
-				catalog = XMLLoader.getObjectFromURI(new URI(catalogConfig.getCatalogURI()), Catalog.class);
-			} catch (Exception e) {
-				throw new ServiceException(e);
-			}
-		} else {
-			throw new ServiceException("Configuration does not include catalog configuration.");
-		}
-	}
+    @Inject
+    public CatalogService(ICatalogConfig config) {
+        this.config = config;
+        System.out.println(config.getCatalogURI());
+        this.isInitialized = false;
+    }
 
-	@Override
-	public void start() throws ServiceException {
-		// Intentionally blank
-		
-	}
+    @Override
+    public synchronized void initialize() throws ServiceException {
+        if (!isInitialized) {
+            try {
+                catalog = XMLLoader.getObjectFromProperty(config.getCatalogURI(), Catalog.class);
+                isInitialized = true;
+            } catch (Exception e) {
+                throw new ServiceException(e);
+            }
+        }
+    }
 
-	@Override
-	public void stop() throws ServiceException {
-		// Intentionally blank
-		
-	}
+    public String getName() {
+        return CATALOG_SERVICE_NAME;
+    }
 
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.ICatlogService#getCatalog()
-	 */
-	@Override
-	public ICatalog getCatalog() {
-		return catalog;
-	}
 
-	
-	// Should be able to use bind(ICatalog.class).toProvider(CatalogService.class);
-	@Override
-	public ICatalog get() {
-		return catalog;
-	}
+    @Override
+    public void start() throws ServiceException {
+        // Intentionally blank
+
+    }
+
+    @Override
+    public void stop() throws ServiceException {
+        // Intentionally blank
+
+    }
+
+    /* (non-Javadoc)
+     * @see com.ning.billing.catalog.ICatlogService#getCatalog()
+     */
+    @Override
+    public ICatalog getCatalog() {
+        return catalog;
+    }
+
+
+    // Should be able to use bind(ICatalog.class).toProvider(CatalogService.class);
+    @Override
+    public ICatalog get() {
+        return catalog;
+    }
+
 }

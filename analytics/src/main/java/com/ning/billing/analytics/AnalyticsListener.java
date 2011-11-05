@@ -34,7 +34,6 @@ import java.util.List;
 public class AnalyticsListener implements IApiListener
 {
     private static final Logger log = LoggerFactory.getLogger(AnalyticsListener.class);
-
     private final EventDao dao;
     private final IEntitlementUserApi entitlementApi;
     private final IAccountUserApi accountApi;

@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.config;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -40,6 +41,18 @@ public class XMLLoader {
 	private static final String URI_SCHEME_FOR_CLASSPATH = "jar";
 	public static Logger log = LoggerFactory.getLogger(XMLLoader.class);
 
+	public static <T extends ValidatingConfig<T>> T getObjectFromProperty(String property, Class<T> objectType) throws Exception {
+		if (property == null) {
+			return null;
+		}
+		//TODO: fix this! - yuk!
+		URI uri = (property.startsWith(URI_SCHEME_FOR_CLASSPATH)) ?
+				new URI(property) :
+					new File("src/test/resources/testInput.xml").toURI();
+				return getObjectFromURI(uri, objectType);
+	}
+
+	
 	public static <T extends ValidatingConfig<T>> T getObjectFromURI(URI uri, Class<T> objectType) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, URISyntaxException {
         String scheme = uri.getScheme();
         if (scheme.equals(URI_SCHEME_FOR_CLASSPATH)) {

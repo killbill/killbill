@@ -22,6 +22,7 @@ import org.testng.annotations.Test;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.entitlement.glue.CatalogModuleMock;
 import com.ning.billing.entitlement.glue.EngineModuleMemoryMock;
 
 public class TestUserApiCancelMemory extends TestUserApiCancel {
@@ -29,7 +30,7 @@ public class TestUserApiCancelMemory extends TestUserApiCancel {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new EngineModuleMemoryMock());
+        return Guice.createInjector(Stage.DEVELOPMENT, new EngineModuleMemoryMock(), new CatalogModuleMock());
     }
 
     @Test(enabled=true, groups={"fast"})
