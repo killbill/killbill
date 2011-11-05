@@ -49,7 +49,7 @@ public class XMLSchemaGenerator {
 			printUsage();
 			System.exit(0);
 		}
-		Class<?> clazz = (Class<?>)args.getClass().getClassLoader().loadClass(args[1]);
+		Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(args[1]);
 		
 		JAXBContext context =JAXBContext.newInstance(clazz);
 		String xsdFileName = "Schema.xsd";
