@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,12 +66,11 @@ public class XMLSchemaGenerator {
 		
 	}
 
-	public static StreamSource xmlSchema(Class<?> clazz) throws IOException, TransformerException, JAXBException {
+	public static InputStream xmlSchema(Class<?> clazz) throws IOException, TransformerException, JAXBException {
 		ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_SCHEMA_SIZE_IN_BYTES);
 		JAXBContext context =JAXBContext.newInstance(clazz);
 		pojoToXSD(context, output);
-		StreamSource source = new StreamSource(new ByteArrayInputStream(output.toByteArray()));
-		return source;
+		return new ByteArrayInputStream(output.toByteArray());
 	}
 
 	public static void pojoToXSD(JAXBContext context, OutputStream out)
