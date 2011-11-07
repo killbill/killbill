@@ -37,10 +37,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <modules>
+        <module>account</module>
         <module>analytics</module>
         <module>api</module>
+        <module>beatrix</module>
         <module>catalog</module>
-        <module>account</module>
         <module>entitlement</module>
         <module>invoice</module>
         <module>payment</module>
