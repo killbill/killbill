@@ -14,25 +14,30 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.util.config;
 
-import java.io.File;
 
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.ICatalogUserApi;
-import com.ning.billing.util.config.XMLLoader;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 
-public class CatalogUserApi implements ICatalogUserApi {
-
-    @Override
-    public ICatalog getCatalog(final String catalogName) {
-    	String name = catalogName;
-        try {
-            return XMLLoader.getObjectFromURI(new File(name).toURI(), Catalog.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+@XmlAccessorType(XmlAccessType.NONE)
+public abstract class ValidatingConfig<Context> {
+	/**
+	 * All must implement validation
+	 * 
+	 * @param root
+	 * @param errors
+	 * @return
+	 */
+	public abstract ValidationErrors validate(Context root, ValidationErrors errors);
+	
+	
+	/**
+	 * Override  to initialize
+	 * 
+	 * @param root
+	 */
+	public void initialize(Context root){} 
+	
 
 }

@@ -26,9 +26,11 @@ import javax.xml.bind.annotation.XmlIDREF;
 
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Product extends ValidatingConfig implements IProduct {
+public class Product extends ValidatingConfig<Catalog> implements IProduct {
 	
 	@XmlAttribute (required=true)
 	@XmlID

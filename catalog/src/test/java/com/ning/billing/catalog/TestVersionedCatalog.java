@@ -19,6 +19,7 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.Date;
 
 import javax.xml.bind.JAXBException;
@@ -30,21 +31,20 @@ import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
 import com.ning.billing.catalog.api.InvalidConfigException;
-import com.ning.billing.catalog.io.ICatalogLoader;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 
 public class TestVersionedCatalog {
-	private final ICatalogLoader loader = new VersionedCatalogLoader();
+	private final VersionedCatalogLoader loader = new VersionedCatalogLoader();
 
 	@Test(enabled=true)
-	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException {
+	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
 		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog"));
 		vc.add(new Catalog(new Date()));
 		assertEquals(5, vc.size());
 	}
 	
 	@Test(enabled=true)
-	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException {
+	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
 		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog"));
 		Date d = new Date(1L);
 		vc.configureEffectiveDate(d);

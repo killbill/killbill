@@ -33,8 +33,10 @@ import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
-public class VersionedCatalog extends ValidatingConfig implements ICatalog {
+public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICatalog {
 	
 	private Catalog currentCatalog;
 	
@@ -140,7 +142,7 @@ public class VersionedCatalog extends ValidatingConfig implements ICatalog {
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
 		for(Catalog c : versions) {
-			errors.addAll(c.validate());
+			errors.addAll(c.validate(c, errors));
 		}
 		return errors;
 	}
