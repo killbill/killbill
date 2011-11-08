@@ -39,6 +39,7 @@
     <modules>
         <module>analytics</module>
         <module>api</module>
+        <module>beatrix</module>
         <module>catalog</module>
         <module>account</module>
         <module>entitlement</module>
