@@ -22,9 +22,11 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.TimeUnit;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Duration extends ValidatingConfig implements IDuration {
+public class Duration extends ValidatingConfig<Catalog> implements IDuration {
 	@XmlElement(required=true)
     private TimeUnit unit;
 

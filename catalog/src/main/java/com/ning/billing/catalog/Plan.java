@@ -31,9 +31,11 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Plan extends ValidatingConfig implements IPlan {
+public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 
 
 	@XmlAttribute(required=true)

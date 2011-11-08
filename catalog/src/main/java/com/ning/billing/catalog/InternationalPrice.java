@@ -26,9 +26,11 @@ import javax.xml.bind.annotation.XmlElement;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.IInternationalPrice;
 import com.ning.billing.catalog.api.IPrice;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class InternationalPrice extends ValidatingConfig implements IInternationalPrice {
+public class InternationalPrice extends ValidatingConfig<Catalog> implements IInternationalPrice {
 
 	//TODO MDW Validation - effectiveDateForExistingSubscriptons > catalog effectiveDate 
 	@XmlElement(required=false)

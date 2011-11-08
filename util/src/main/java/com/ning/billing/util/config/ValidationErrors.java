@@ -14,8 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.config;
+package com.ning.billing.util.config;
 
-public interface IKillbillConfig {
+import java.util.ArrayList;
+
+public class ValidationErrors extends ArrayList<ValidationError>{
+	private static final long serialVersionUID = 1L;
+
+	public void add(String description, String catalogURL,
+			Class<?> objectType, String objectName) {
+		add(new ValidationError(description, catalogURL, objectType, objectName));
+		
+	}
 
 }

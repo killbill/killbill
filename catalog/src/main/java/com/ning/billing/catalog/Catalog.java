@@ -16,7 +16,7 @@
 
 package com.ning.billing.catalog;
 
-import java.net.URL;
+import java.util.Collection;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -35,18 +35,21 @@ import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationError;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
-public class Catalog extends ValidatingConfig implements ICatalog {
-	public PlanRules getPlanRules() {
+public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
+	public PlanRules getPlanRules() { 
 		return planRules;
 	}
 
 	public void setPlanRules(PlanRules planRules) {
 		this.planRules = planRules;
 	}
-
+ 
 	@XmlElement(required=true)
 	private Date effectiveDate;
 
@@ -185,14 +188,22 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		errors.addAll(validate(catalog,errors, products));
-		errors.addAll(validate(catalog,errors, priceLists));
-		errors.addAll(validate(catalog,errors, plans));
-		errors.addAll(planRules.validate(catalog, errors));
+		validate(catalog,errors, products);
+		validate(catalog,errors, priceLists);
+		validate(catalog,errors, plans);
+		planRules.validate(catalog, errors);
 		return errors;
 	}
 
-    @Override
+    private Collection<? extends ValidationError> validate(Catalog catalog,
+			ValidationErrors errors, ValidatingConfig<Catalog>[] configs) {
+		for(ValidatingConfig<Catalog> config: configs) {
+			
+		}
+		return null;
+	}
+
+	@Override
     public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from, PlanSpecifier to) {
         return planRules.getPlanChangePolicy(from, to, this);
     }

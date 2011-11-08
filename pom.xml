@@ -17,7 +17,7 @@
     <groupId>com.ning.billing</groupId>
     <artifactId>killbill</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.7-SNAPSHOT</version>
+    <version>0.0.8-SNAPSHOT</version>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
     <url>http://github.com/sbrossie/killbill</url>
@@ -37,10 +37,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <modules>
+        <module>account</module>
         <module>analytics</module>
         <module>api</module>
+        <module>beatrix</module>
         <module>catalog</module>
-        <module>account</module>
         <module>entitlement</module>
         <module>invoice</module>
         <module>payment</module>
@@ -315,6 +316,7 @@
                                 <exclude>**/*.properties</exclude>
                                 <exclude>**/*.dont-let-git-remove-this-directory</exclude>
                                 <exclude>**/test-output/**</exclude>
+                                <exclude>**/bin/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>

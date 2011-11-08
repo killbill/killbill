@@ -22,9 +22,11 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PlanPolicyChangeRule extends ValidatingConfig {
+public class PlanPolicyChangeRule extends ValidatingConfig<Catalog> {
 	public enum Qualifier {
 		DEFAULT,
 		PRODUCT_FROM_LOW_TO_HIGH,
