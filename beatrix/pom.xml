@@ -25,6 +25,18 @@
             <artifactId>killbill-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-entitlement</artifactId>
+        </dependency>
+       <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-catalog</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.jolbox</groupId>
             <artifactId>bonecp</artifactId>
         </dependency>

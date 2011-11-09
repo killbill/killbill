@@ -119,15 +119,20 @@ public abstract class TestUserApiBase {
         clock = (ClockMock) g.getInstance(IClock.class);
         try {
 
+            /*
             catalogService.initialize();
             entitlementService.initialize();
+*/
             init();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
+        }
+            /*
         } catch (ServiceException e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
         }
+        */
     }
 
     protected abstract Injector getInjector();
@@ -149,6 +154,7 @@ public abstract class TestUserApiBase {
 
     @BeforeMethod(groups={"setup"})
     public void setupTest() {
+        /*
         try {
             log.warn("\n");
             log.warn("RESET TEST FRAMEWORK\n\n");
@@ -162,20 +168,27 @@ public abstract class TestUserApiBase {
                 Assert.fail(e.getMessage());
             }
             assertNotNull(bundle);
-            entitlementService.start();
+            // STEPH
+            //entitlementService.start();
         } catch (ServiceException e) {
             Assert.fail(e.getMessage());
         }
+        */
     }
 
     @AfterMethod(groups={"setup"})
     public void cleanupTest() {
+        /*
         try {
-            entitlementService.stop();
+            // STEPH
+            //entitlementService.stop();
             log.warn("DONE WITH TEST\n");
+
         } catch (ServiceException e) {
             Assert.fail(e.getMessage());
+
         }
+            */
     }
 
     // Glue magic to invoke the real test

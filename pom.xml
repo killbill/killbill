@@ -56,6 +56,11 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-entitlement</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-catalog</artifactId>
                 <version>${project.version}</version>
             </dependency>

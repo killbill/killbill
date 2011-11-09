@@ -16,34 +16,25 @@
 
 package com.ning.billing.lifecycle;
 
-public interface IService {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    public static class ServiceException extends Exception  {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface LyfecycleHandlerType {
 
-        private static final long serialVersionUID = 176191207L;
 
-        public ServiceException() {
-            super();
-        }
-
-        public ServiceException(String msg, Throwable e) {
-            super(msg, e);
-        }
-
-        public ServiceException(String msg) {
-            super(msg);
-        }
-
-        public ServiceException(Throwable msg) {
-            super(msg);
-        }
+    public enum LyfecycleLevel {
+        LOAD_CATALOG,
+        INIT_BUS,
+        REGISTER_EVENTS,
+        START_SERVICE,
+        STOP_SERVICE,
+        UNREGISTER_EVENTS,
+        SHUTDOWN
     }
 
-    /**
-     *
-     * @return the name of the service
-     */
-    public String getName();
-
-
+    public LyfecycleLevel value();
 }

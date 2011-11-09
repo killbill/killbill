@@ -89,6 +89,7 @@ public class Engine implements IEventListener, IEntitlementService {
     }
 
 
+    /*
     @Override
     public void initialize() {
         this.catalog = catalogService.getCatalog();
@@ -106,6 +107,8 @@ public class Engine implements IEventListener, IEntitlementService {
     public void stop() {
         apiEventProcessor.stopNotifications();
     }
+    */
+
 
     @Override
     public IEntitlementUserApi getUserApi(List<IApiListener> listeners) {

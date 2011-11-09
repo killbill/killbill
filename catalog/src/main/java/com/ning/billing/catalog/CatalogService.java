@@ -31,7 +31,7 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
     private static ICatalog catalog;
 
     private final ICatalogConfig config;
-    private boolean isInitialized;
+    private final boolean isInitialized;
 
 
     @Inject
@@ -41,6 +41,8 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
         this.isInitialized = false;
     }
 
+
+    /*
     @Override
     public synchronized void initialize() throws ServiceException {
         if (!isInitialized) {
@@ -53,11 +55,6 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
         }
     }
 
-    public String getName() {
-        return CATALOG_SERVICE_NAME;
-    }
-
-
     @Override
     public void start() throws ServiceException {
         // Intentionally blank
@@ -69,6 +66,16 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
         // Intentionally blank
 
     }
+    */
+
+
+
+    @Override
+    public String getName() {
+        return CATALOG_SERVICE_NAME;
+    }
+
+
 
     /* (non-Javadoc)
      * @see com.ning.billing.catalog.ICatlogService#getCatalog()
