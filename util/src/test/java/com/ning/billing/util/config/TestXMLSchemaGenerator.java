@@ -14,28 +14,27 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.io;
+package com.ning.billing.util.config;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.io.InputStream;
+import java.io.StringWriter;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 
+import org.apache.commons.io.IOUtils;
 import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
 
-import com.google.common.io.Resources;
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.api.InvalidConfigException; 
-import com.ning.billing.util.config.XMLLoader;
-
-public class TestXMLReader {
-
-	@Test(enabled=true)
-	public void testCatalogLoad() throws IOException, TransformerException, JAXBException, SAXException, InvalidConfigException, URISyntaxException {
-		XMLLoader.getObjectFromURL(Resources.getResource("WeaponsHire.xml"), Catalog.class);
-		XMLLoader.getObjectFromURL(Resources.getResource("WeaponsHireSmall.xml"), Catalog.class);
-	}
+public class TestXMLSchemaGenerator {
 	
+	@Test
+	public void test() throws IOException, TransformerException, JAXBException {
+		InputStream stream = XMLSchemaGenerator.xmlSchema(XmlTestClass.class);
+		StringWriter writer = new StringWriter();
+		IOUtils.copy(stream, writer);
+		String result = writer.toString();
+		
+		System.out.println(result);
+	}
 }

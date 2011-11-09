@@ -40,27 +40,29 @@ import com.ning.billing.catalog.api.InvalidConfigException;
 
 public class XMLLoader {
 	private static final String URI_SCHEME_FOR_CLASSPATH = "jar";
+	private static final String URI_SCHEME_FOR_FILE = "file";
 	public static Logger log = LoggerFactory.getLogger(XMLLoader.class);
 
 	public static <T extends ValidatingConfig<T>> T getObjectFromProperty(String property, Class<T> objectType) throws Exception {
 		if (property == null) {
 			return null;
 		}
-		//TODO: fix this! - yuk!
-		URI uri = (property.startsWith(URI_SCHEME_FOR_CLASSPATH)) ?
-				new URI(property) :
-					new File("src/test/resources/testInput.xml").toURI();
-				return getObjectFromURI(uri, objectType);
+		log.info("Initializing an object of class " + objectType.getName() + " from xml file at: " + property);
+					
+		return getObjectFromURI(new URI(property), objectType);
 	}
-
 	
-	public static <T extends ValidatingConfig<T>> T getObjectFromURI(URI uri, Class<T> objectType) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, URISyntaxException {
+	public static <T extends ValidatingConfig<T>> T getObjectFromURI(final URI uri, final Class<T> objectType) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, URISyntaxException {
         String scheme = uri.getScheme();
+        URI uriToCall = uri;
         if (scheme.equals(URI_SCHEME_FOR_CLASSPATH)) {
         	InputStream resourceStream = XMLLoader.class.getResourceAsStream(uri.getPath());
         	return getObjectFromStream(uri, resourceStream, objectType);
+        } else if (scheme.equals(URI_SCHEME_FOR_FILE) &&
+        	!uri.getSchemeSpecificPart().startsWith("/")) { // interpret URIs of this form as relative path uris
+        	uriToCall = new File("src/test/resources/testInput.xml").toURI();
         }
-        return getObjectFromURL(uri.toURL(), objectType);
+        return getObjectFromURL(uriToCall.toURL(), objectType);
     }
 
 	public static <T extends ValidatingConfig<T>> T getObjectFromURL(URL url, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, URISyntaxException {
@@ -76,7 +78,7 @@ public class XMLLoader {
         }
     }
 
-	private static <T extends ValidatingConfig<T>> T getObjectFromStream(URI uri,InputStream stream, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
+	public static <T extends ValidatingConfig<T>> T getObjectFromStream(URI uri,InputStream stream, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
         Object o = unmarshaller(clazz).unmarshal(stream);
         if (clazz.isInstance(o)) {
         	@SuppressWarnings("unchecked")
@@ -93,7 +95,7 @@ public class XMLLoader {
 	public static <T extends ValidatingConfig<T>> void validate(URI uri, T c) {
             c.initialize(c);
             ValidationErrors errs = c.validate(c, new ValidationErrors());
-            System.out.println("Errors: " + errs.size() + " for " + uri);       
+            log.info("Errors: " + errs.size() + " for " + uri);       
     }
     
     public static Unmarshaller unmarshaller(Class<?> clazz) throws JAXBException, SAXException, IOException, TransformerException {
