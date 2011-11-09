@@ -78,7 +78,7 @@ public class XMLLoader {
         }
     }
 
-	private static <T extends ValidatingConfig<T>> T getObjectFromStream(URI uri,InputStream stream, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
+	public static <T extends ValidatingConfig<T>> T getObjectFromStream(URI uri,InputStream stream, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
         Object o = unmarshaller(clazz).unmarshal(stream);
         if (clazz.isInstance(o)) {
         	@SuppressWarnings("unchecked")
