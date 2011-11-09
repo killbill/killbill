@@ -29,7 +29,7 @@ public class TestUserApiCreateMemory extends TestUserApiCreate {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new EngineModuleMemoryMock(), new CatalogModuleMock());
+        return Guice.createInjector(Stage.PRODUCTION, new EngineModuleMemoryMock(), new CatalogModuleMock());
     }
 
     @Test(enabled=true, groups={"fast"})

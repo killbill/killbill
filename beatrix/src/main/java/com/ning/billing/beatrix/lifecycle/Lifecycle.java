@@ -40,12 +40,13 @@ import com.google.inject.Injector;
 import com.ning.billing.lifecycle.IService;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
 import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
+import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel.Sequence;
 
 
 public class Lifecycle {
 
     private final static Logger log = LoggerFactory.getLogger(Lifecycle.class);
-    private final SetMultimap<LyfecycleLevel, LifecycleHandler> handlersByLevel;
+    private final SetMultimap<LyfecycleLevel, LifecycleHandler<? extends IService>> handlersByLevel;
 
     private final ServiceFinder serviceFinder;
 
@@ -55,14 +56,14 @@ public class Lifecycle {
     public Lifecycle(Injector injector) {
 
         this.serviceFinder = new ServiceFinder(Lifecycle.class.getClassLoader());
-        this.handlersByLevel = Multimaps.newSetMultimap(new ConcurrentHashMap<LyfecycleLevel, Collection<LifecycleHandler>>(),
+        this.handlersByLevel = Multimaps.newSetMultimap(new ConcurrentHashMap<LyfecycleLevel, Collection<LifecycleHandler<? extends IService>>>(),
 
-                new Supplier<Set<LifecycleHandler>>() {
-                  @Override
-                  public Set<LifecycleHandler> get() {
-                    return new CopyOnWriteArraySet<LifecycleHandler>();
-                  }
-                });
+                new Supplier<Set<LifecycleHandler<? extends IService>>>() {
+            @Override
+            public Set<LifecycleHandler<? extends IService>> get() {
+                return new CopyOnWriteArraySet<LifecycleHandler<? extends IService>>();
+            }
+        });
         this.injector = injector;
     }
 
@@ -74,21 +75,39 @@ public class Lifecycle {
         }
     }
 
-    public void fireStages() {
+    public void fireStartupSequence() {
         for (LyfecycleLevel level : LyfecycleLevel.values()) {
-            log.info("Firing stage {}", level);
-            Set<LifecycleHandler> handlers = handlersByLevel.get(level);
-            for (LifecycleHandler cur : handlers) {
-                log.debug("Calling handler {}", cur.getMethod().getName());
-                try {
-                    Method method = cur.getMethod();
-                    Object target = cur.getTarget();
-                    method.invoke(target);
-                } catch (Exception e) {
-                    log.warn("Failed to invoke lifecycle handler", e);
-                }
+            if (level.getSequence() == Sequence.SHUTOWN) {
+                break;
+            }
+            doFireStage(level);
+        }
+    }
+
+    public void fireShutdownSequence() {
+        for (LyfecycleLevel level : LyfecycleLevel.values()) {
+            if (level.getSequence() == Sequence.STARTUP) {
+                continue;
+            }
+            doFireStage(level);
+        }
+    }
+
+    private void doFireStage(LyfecycleLevel level) {
+        log.info("Killbill lifecycle firing stage {}", level);
+        Set<LifecycleHandler<? extends IService>> handlers = handlersByLevel.get(level);
+        for (LifecycleHandler<? extends IService> cur : handlers) {
+
+            try {
+                Method method = cur.getMethod();
+                IService target = cur.getTarget();
+                log.debug("Killbill lifecycle calling handler {} for service {}", cur.getMethod().getName(), target.getName());
+                method.invoke(target);
+            } catch (Exception e) {
+                log.warn("Killbill lifecycle failed to invoke lifecycle handler", e);
             }
         }
+
     }
 
     private Set<? extends IService> findServices() {
@@ -98,7 +117,6 @@ public class Lifecycle {
         for (Class<? extends IService> cur : services) {
             log.debug("Found service {}", cur);
             try {
-                IService service = injector.getInstance(cur);
                 result.add(injector.getInstance(cur));
             } catch (Exception e) {
                 log.warn("Failed to inject {}", cur.getName());
@@ -109,15 +127,15 @@ public class Lifecycle {
     }
 
 
-    public Multimap<LyfecycleLevel, LifecycleHandler> findAllHandlers(IService service) {
-        Multimap<LyfecycleLevel, LifecycleHandler> methodsInService =
+    public Multimap<LyfecycleLevel, LifecycleHandler<? extends IService>> findAllHandlers(IService service) {
+        Multimap<LyfecycleLevel, LifecycleHandler<? extends IService>> methodsInService =
             HashMultimap.create();
         Class<? extends IService> clazz = service.getClass();
         for (Method method : clazz.getMethods()) {
             LyfecycleHandlerType annotation = method.getAnnotation(LyfecycleHandlerType.class);
             if (annotation != null) {
                 LyfecycleLevel level = annotation.value();
-                LifecycleHandler handler = new LifecycleHandler(service, method);
+                LifecycleHandler<? extends IService> handler = new  LifecycleHandler<IService>(service, method);
                 methodsInService.put(level, handler);
             }
         }
@@ -125,16 +143,16 @@ public class Lifecycle {
     }
 
 
-    private final class LifecycleHandler {
-        private final Object target;
+    private final class LifecycleHandler<T> {
+        private final T target;
         private final Method method;
 
-        public LifecycleHandler(Object target, Method method) {
+        public LifecycleHandler(T target, Method method) {
             this.target = target;
             this.method = method;
         }
 
-        public Object getTarget() {
+        public T getTarget() {
             return target;
         }
 

@@ -43,7 +43,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
     protected void testCancelSubscriptionIMMReal() {
 
-        log.info("Starting testChangeSubscriptionEOTWithNoChargeThroughDate");
+        log.info("Starting testCancelSubscriptionIMM");
 
         try {
 

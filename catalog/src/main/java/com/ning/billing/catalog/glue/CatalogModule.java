@@ -20,7 +20,9 @@ import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
 import com.ning.billing.catalog.CatalogService;
+import com.ning.billing.catalog.CatalogUserApi;
 import com.ning.billing.catalog.api.ICatalogService;
+import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.config.ICatalogConfig;
 
 public class CatalogModule extends AbstractModule {
@@ -30,10 +32,15 @@ public class CatalogModule extends AbstractModule {
         bind(ICatalogConfig.class).toInstance(config);
     }
 
+    protected void installCatalog() {
+        bind(ICatalogUserApi.class).to(CatalogUserApi.class).asEagerSingleton();
+        bind(ICatalogService.class).to(CatalogService.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         installConfig();
-        bind(ICatalogService.class).to(CatalogService.class).asEagerSingleton();
+        installCatalog();
     }
 
 }

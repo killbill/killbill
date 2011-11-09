@@ -73,7 +73,7 @@ public class ServiceFinder {
 	}
 
     /*
-     *  Code originally from Kris Dover <krisdover@hotmail.com> and adapated for my purpose
+     *  Code originally from Kris Dover <krisdover@hotmail.com> and adapted for my purpose.
      *
      */
 	private static Set<Class<? extends IService>> findClasses(ClassLoader classLoader,

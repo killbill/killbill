@@ -21,7 +21,9 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 
+import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ICatalog;
+import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
@@ -35,16 +37,13 @@ import com.ning.billing.util.clock.Clock;
 
 public class PlanAligner implements IPlanAligner {
 
-    // STEPH this is a bit broken right now until we figure out to retrieve ICatalog
-    private /*final*/ ICatalog catalog;
+    private final ICatalogService catalogService;
 
-    public PlanAligner() {
-        //this.catalog = Engine.getInstance().getCatalog();
+    @Inject
+    public PlanAligner(ICatalogService catalogService) {
+        this.catalogService = catalogService;
     }
 
-    public void init(ICatalog catalog) {
-        this.catalog = catalog;
-    }
 
     private enum WhichPhase {
         CURRENT,
@@ -87,6 +86,8 @@ public class PlanAligner implements IPlanAligner {
     private TimedPhase getTimedPhaseOnCreate(Subscription subscription,
             IPlan plan, String priceList, DateTime effectiveDate, WhichPhase which) {
 
+        ICatalog catalog = catalogService.getCatalog();
+
             PlanSpecifier planSpecifier = new PlanSpecifier(plan.getProduct().getName(),
                     plan.getProduct().getCategory(),
                     plan.getBillingPeriod(),
@@ -110,6 +111,8 @@ public class PlanAligner implements IPlanAligner {
 
     private TimedPhase getTimedPhaseOnChange(Subscription subscription,
             IPlan plan, String priceList, DateTime effectiveDate, WhichPhase which) {
+
+        ICatalog catalog = catalogService.getCatalog();
 
         IPlanPhase currentPhase = subscription.getCurrentPhase();
         IPlan currentPlan = subscription.getCurrentPlan();

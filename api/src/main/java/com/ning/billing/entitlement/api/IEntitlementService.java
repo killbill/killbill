@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement;
+package com.ning.billing.entitlement.api;
 
 import java.util.List;
 
@@ -25,8 +25,12 @@ import com.ning.billing.lifecycle.IService;
 
 public interface IEntitlementService extends IService {
 
-    IEntitlementUserApi getUserApi(List<IApiListener> listeners);
 
-    IEntitlementBillingApi getBillingApi();
+    @Override
+    public String getName();
+
+    public IEntitlementUserApi getUserApi(List<IApiListener> listeners);
+
+    public IEntitlementBillingApi getBillingApi();
 
 }

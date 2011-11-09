@@ -22,6 +22,8 @@ import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.config.ICatalogConfig;
 import com.ning.billing.lifecycle.IService;
+import com.ning.billing.lifecycle.LyfecycleHandlerType;
+import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
 import com.ning.billing.util.config.XMLLoader;
 
 public class CatalogService implements IService, Provider<ICatalog>, ICatalogService {
@@ -31,7 +33,7 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
     private static ICatalog catalog;
 
     private final ICatalogConfig config;
-    private final boolean isInitialized;
+    private boolean isInitialized;
 
 
     @Inject
@@ -41,9 +43,7 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
         this.isInitialized = false;
     }
 
-
-    /*
-    @Override
+    @LyfecycleHandlerType(LyfecycleLevel.LOAD_CATALOG)
     public synchronized void initialize() throws ServiceException {
         if (!isInitialized) {
             try {
@@ -54,20 +54,6 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
             }
         }
     }
-
-    @Override
-    public void start() throws ServiceException {
-        // Intentionally blank
-
-    }
-
-    @Override
-    public void stop() throws ServiceException {
-        // Intentionally blank
-
-    }
-    */
-
 
 
     @Override

@@ -26,14 +26,65 @@ import java.lang.annotation.Target;
 public @interface LyfecycleHandlerType {
 
 
+    //
+    // The level themselves are still work in progress depending on what we really need
+    //
     public enum LyfecycleLevel {
-        LOAD_CATALOG,
-        INIT_BUS,
-        REGISTER_EVENTS,
-        START_SERVICE,
-        STOP_SERVICE,
-        UNREGISTER_EVENTS,
-        SHUTDOWN
+
+        /**
+         * Load and validate catalog (only for catalog subsytem)
+         */
+        LOAD_CATALOG(Sequence.STARTUP),
+        /**
+         * Initialize event bus (only for the event bus)
+         */
+        INIT_BUS(Sequence.STARTUP),
+        /**
+         * Service specific initalization
+         */
+        INIT_SERVICE(Sequence.STARTUP),
+        /**
+         * Service register their interest in events
+         */
+        REGISTER_EVENTS(Sequence.STARTUP),
+        /**
+         * Service start
+         * - API call should not work
+         * - Events might be triggered
+         * - Batch processing jobs started
+         */
+        START_SERVICE(Sequence.STARTUP),
+        /**
+         * Stop service
+         */
+        STOP_SERVICE(Sequence.SHUTOWN),
+        /**
+         * Unregister interest in events
+         */
+        UNREGISTER_EVENTS(Sequence.SHUTOWN),
+        /**
+         * Stop bus
+         */
+        STOP_BUS(Sequence.SHUTOWN),
+        /**
+         * Any service specific shutdown action before the end
+         */
+        SHUTDOWN(Sequence.SHUTOWN);
+
+        public enum Sequence {
+            STARTUP,
+            SHUTOWN
+        };
+
+        private Sequence seq;
+
+        LyfecycleLevel(Sequence seq) {
+            this.seq = seq;
+        }
+
+        public Sequence getSequence() {
+            return seq;
+        }
     }
 
     public LyfecycleLevel value();

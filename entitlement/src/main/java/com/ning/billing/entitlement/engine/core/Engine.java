@@ -17,7 +17,6 @@
 package com.ning.billing.entitlement.engine.core;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -26,14 +25,12 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.catalog.api.ICatalogUserApi;
-import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.config.IEntitlementConfig;
 
-import com.ning.billing.entitlement.IEntitlementService;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.alignment.PlanAligner;
+import com.ning.billing.entitlement.api.IEntitlementService;
 import com.ning.billing.entitlement.api.billing.BillingApi;
 import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
@@ -46,6 +43,8 @@ import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.lifecycle.LyfecycleHandlerType;
+import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
 import com.ning.billing.util.clock.IClock;
 
 public class Engine implements IEventListener, IEntitlementService {
@@ -53,34 +52,27 @@ public class Engine implements IEventListener, IEntitlementService {
     private static final String ENTITLEMENT_SERVICE_NAME = "entitlement-service";
 
     private final static Logger log = LoggerFactory.getLogger(Engine.class);
-    private static Engine instance = null;
 
     private final IClock clock;
-
     private final IEntitlementDao dao;
     private final IApiEventProcessor apiEventProcessor;
-    private final ICatalogService catalogService;
     private final IPlanAligner planAligner;
     private final IEntitlementUserApi userApi;
     private final IEntitlementBillingApi billingApi;
     private List<IApiListener> observers;
-    private ICatalog catalog;
 
 
     @Inject
-    public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor, ICatalogService catalogService,
+    public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor,
             IPlanAligner planAligner, IEntitlementConfig config) {
         super();
         this.clock = clock;
         this.dao = dao;
         this.apiEventProcessor = apiEventProcessor;
         this.planAligner = planAligner;
-        this.catalogService = catalogService;
         this.observers = null;
         this.userApi = new EntitlementUserApi(this, clock, planAligner, dao);
         this.billingApi = new BillingApi(this, clock, dao);
-        instance = this;
-
     }
 
     @Override
@@ -89,26 +81,19 @@ public class Engine implements IEventListener, IEntitlementService {
     }
 
 
-    /*
-    @Override
+    @LyfecycleHandlerType(LyfecycleLevel.INIT_SERVICE)
     public void initialize() {
-        this.catalog = catalogService.getCatalog();
-        // STEPH yack
-        ((PlanAligner) planAligner).init(catalog);
-
     }
 
-    @Override
+    @LyfecycleHandlerType(LyfecycleLevel.START_SERVICE)
     public void start() {
         apiEventProcessor.startNotifications(this);
     }
 
-    @Override
+    @LyfecycleHandlerType(LyfecycleLevel.STOP_SERVICE)
     public void stop() {
         apiEventProcessor.stopNotifications();
     }
-    */
-
 
     @Override
     public IEntitlementUserApi getUserApi(List<IApiListener> listeners) {
@@ -180,31 +165,4 @@ public class Engine implements IEventListener, IEntitlementService {
             dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent);
         }
     }
-
-
-    //
-    // STEPH would be nice to have those go away..
-    //
-
-    // For non Guice classes
-    public synchronized static Engine getInstance() {
-        return instance;
-    }
-
-    public IClock getClock() {
-        return clock;
-    }
-
-    public ICatalog getCatalog() {
-        return catalog;
-    }
-
-    public IEntitlementDao getDao() {
-        return dao;
-    }
-
-    public IPlanAligner getPlanAligner() {
-        return planAligner;
-    }
-
 }

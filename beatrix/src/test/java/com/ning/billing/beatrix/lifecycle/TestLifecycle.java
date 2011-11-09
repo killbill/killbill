@@ -16,10 +16,6 @@
 
 package com.ning.billing.beatrix.lifecycle;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
@@ -29,7 +25,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.entitlement.IEntitlementService;
 import com.ning.billing.lifecycle.IService;
 import com.ning.billing.lifecycle.Lifecycled;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
@@ -40,7 +35,11 @@ public class TestLifecycle {
 
     private final static Logger log = LoggerFactory.getLogger(TestLifecycle.class);
 
-    @Lifecycled
+    private Service1 s1;
+    private Service2 s2;
+
+    private Lifecycle lifecycle;
+
     public static class Service1 implements IService {
 
         @LyfecycleHandlerType(LyfecycleLevel.INIT_BUS)
@@ -75,10 +74,6 @@ public class TestLifecycle {
     }
 
 
-    private Service1 s1;
-    private Service2 s2;
-
-    private Lifecycle lifecycle;
 
     @BeforeClass(groups={"fast"})
     public void setup() {
@@ -91,7 +86,7 @@ public class TestLifecycle {
 
     @Test
     public void testLifecycle() {
-        lifecycle.fireStages();
+        lifecycle.fireStartupSequence();
     }
 
 
