@@ -44,7 +44,7 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
     }
 
     @LyfecycleHandlerType(LyfecycleLevel.LOAD_CATALOG)
-    public synchronized void initialize() throws ServiceException {
+    public synchronized void loadCatalog() throws ServiceException {
         if (!isInitialized) {
             try {
                 catalog = XMLLoader.getObjectFromProperty(config.getCatalogURI(), Catalog.class);
