@@ -23,7 +23,7 @@ public interface ICatalog {
 
 	public abstract IProduct[] getProducts();
 
-	public abstract IPriceList[] getPriceLists();
+	public abstract IPriceListSet getPriceLists();
 
 	public abstract IPriceList getPriceListFromName(String priceListName);
 

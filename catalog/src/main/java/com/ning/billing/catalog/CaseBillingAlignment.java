@@ -32,7 +32,7 @@ public class CaseBillingAlignment extends CasePhase<BillingAlignment> {
 	public CaseBillingAlignment() {}
 
 	public CaseBillingAlignment(Product product, ProductCategory productCategory, BillingPeriod billingPeriod,
-			PriceList priceList, PhaseType phaseType, BillingAlignment alignment) {
+			PriceListChild priceList, PhaseType phaseType, BillingAlignment alignment) {
 		super(product, productCategory, billingPeriod, priceList, phaseType, alignment);
 		this.alignment = alignment;
 	}

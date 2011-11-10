@@ -16,14 +16,15 @@
 
 package com.ning.billing.util.config;
 
+import java.net.URI;
 import java.util.ArrayList;
 
 public class ValidationErrors extends ArrayList<ValidationError>{
 	private static final long serialVersionUID = 1L;
 
-	public void add(String description, String catalogURL,
+	public void add(String description, URI catalogURI,
 			Class<?> objectType, String objectName) {
-		add(new ValidationError(description, catalogURL, objectType, objectName));
+		add(new ValidationError(description, catalogURI, objectType, objectName));
 		
 	}
 

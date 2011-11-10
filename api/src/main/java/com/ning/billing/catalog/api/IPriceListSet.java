@@ -16,8 +16,14 @@
 
 package com.ning.billing.catalog.api;
 
-public enum ProductCategory {
-	BASE,
-	ADD_ON,
-	STANDALONE
+public interface IPriceListSet {
+	
+	public static final String DEFAULT_PRICELIST_NAME = "DEFAULT";
+
+	public abstract IPriceList getDefaultPricelist();
+
+	public abstract IPriceList[] getChildPriceLists();
+
+	public abstract IPriceList getPriceListFromName(String priceListName);
+
 }

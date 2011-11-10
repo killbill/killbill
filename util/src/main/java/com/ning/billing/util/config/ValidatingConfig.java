@@ -17,6 +17,8 @@
 package com.ning.billing.util.config;
 
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
@@ -37,7 +39,6 @@ public abstract class ValidatingConfig<Context> {
 	 * 
 	 * @param root
 	 */
-	public void initialize(Context root){} 
-	
+	public void initialize(Context root, URI uri){}
 
 }

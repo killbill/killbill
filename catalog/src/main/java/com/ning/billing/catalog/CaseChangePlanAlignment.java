@@ -34,7 +34,7 @@ public class CaseChangePlanAlignment extends CaseChange<PlanAlignmentChange> {
 			Product from, Product to, 
 			ProductCategory fromProductCategory, ProductCategory toProductCategory, 
 			BillingPeriod fromBP,BillingPeriod toBP, 
-			PriceList fromPriceList, PriceList toPriceList,
+			PriceListChild fromPriceList, PriceListChild toPriceList,
 			PhaseType fromType, 
 			PlanAlignmentChange result) {
 		super(from, to, 

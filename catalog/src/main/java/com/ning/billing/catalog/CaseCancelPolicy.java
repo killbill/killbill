@@ -30,7 +30,7 @@ public class CaseCancelPolicy extends CasePhase<ActionPolicy>{
 
 	public CaseCancelPolicy() {}
 
-	public CaseCancelPolicy(Product product, ProductCategory productCategory, BillingPeriod billingPeriod, PriceList priceList,
+	public CaseCancelPolicy(Product product, ProductCategory productCategory, BillingPeriod billingPeriod, PriceListChild priceList,
 			PhaseType phaseType, ActionPolicy policy) {
 		super(product, productCategory, billingPeriod, priceList, phaseType, policy);
 		this.policy = policy;

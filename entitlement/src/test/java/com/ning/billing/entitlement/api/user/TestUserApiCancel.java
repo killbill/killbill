@@ -30,6 +30,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.PriceListSet;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlan;
@@ -51,7 +52,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             String prod = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSet = "standard";
+            String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
             Subscription subscription = createSubscription(prod, term, planSet);
@@ -90,7 +91,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             String prod = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSet = "standard";
+            String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
             Subscription subscription = createSubscription(prod, term, planSet);
@@ -143,7 +144,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             String prod = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSet = "standard";
+            String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
             Subscription subscription = createSubscription(prod, term, planSet);
@@ -187,7 +188,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             String prod = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSet = "standard";
+            String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
             Subscription subscription = createSubscription(prod, term, planSet);

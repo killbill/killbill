@@ -14,10 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.api;
+package com.ning.billing.catalog;
 
-public enum ProductCategory {
-	BASE,
-	ADD_ON,
-	STANDALONE
+public interface IPriceListDefault {
+
+	public abstract Plan[] getPlans();
+
+	public abstract Plan findPlanByProductName(String productName);
+
 }

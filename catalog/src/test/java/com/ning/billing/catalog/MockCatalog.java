@@ -72,13 +72,19 @@ public class MockCatalog extends Catalog {
 
 	public void populatePriceLists() {
 		Plan[] plans = getPlans();
-		PriceList[] priceList = new PriceList[plans.length];
-		for(int i = 0; i < plans.length; i++) {
-			priceList[i] = new PriceList();
-			priceList[i].setName(plans[i].getName()+ "-pl");
-			priceList[i].setPlans(new Plan[]{plans[i]});
+		PriceListSet set = new PriceListSet();
+		
+		set.setDefaultPricelist(new PriceListDefault());
+		set.getDefaultPricelist().setPlans(new Plan[]{plans[0]});
+		
+		PriceListChild[] priceList = new PriceListChild[plans.length - 1];
+		for(int i = 1; i < plans.length; i++) {
+			priceList[i-1] = new PriceListChild();
+			priceList[i-1].setName(plans[i].getName()+ "-pl");
+			priceList[i-1].setPlans(new Plan[]{plans[i]});
 		}
-		setPriceLists(priceList);
+		set.setChildPriceLists(priceList);
+		setPriceLists(set);
 	}
 	
 	public String[] getProductNames() {

@@ -26,5 +26,6 @@ public interface IPriceList {
 	public abstract IPlan findPlanByProductName(String productName);
 
 	public abstract boolean isDefault();
+	
 
 }

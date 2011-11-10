@@ -60,7 +60,7 @@ public class XMLLoader {
         	return getObjectFromStream(uri, resourceStream, objectType);
         } else if (scheme.equals(URI_SCHEME_FOR_FILE) &&
         	!uri.getSchemeSpecificPart().startsWith("/")) { // interpret URIs of this form as relative path uris
-        	uriToCall = new File("src/test/resources/testInput.xml").toURI();
+        	uriToCall = new File(uri.getSchemeSpecificPart()).toURI();
         }
         return getObjectFromURL(uriToCall.toURL(), objectType);
     }
@@ -93,7 +93,7 @@ public class XMLLoader {
     
 
 	public static <T extends ValidatingConfig<T>> void validate(URI uri, T c) {
-            c.initialize(c);
+            c.initialize(c, uri);
             ValidationErrors errs = c.validate(c, new ValidationErrors());
             log.info("Errors: " + errs.size() + " for " + uri);       
     }

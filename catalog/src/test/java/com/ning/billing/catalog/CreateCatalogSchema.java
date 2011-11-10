@@ -14,10 +14,29 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.api;
+package com.ning.billing.catalog;
 
-public enum ProductCategory {
-	BASE,
-	ADD_ON,
-	STANDALONE
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
+
+import com.ning.billing.util.config.XMLSchemaGenerator;
+
+public class CreateCatalogSchema {
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) throws Exception {
+		if(args.length != 1) {
+			System.err.println("Usage: <filepath>");
+		}
+		
+		File f = new File(args[0]);
+		Writer w = new FileWriter(f);
+		w.write(XMLSchemaGenerator.xmlSchemaAsString(Catalog.class));
+		w.close();
+
+	}
+
 }
