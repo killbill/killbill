@@ -123,7 +123,7 @@ public abstract class TestUserApiBase {
         clock = (ClockMock) g.getInstance(IClock.class);
         try {
 
-            ((CatalogService) catalogService).initialize();
+            ((CatalogService) catalogService).loadCatalog();
             ((Engine)entitlementService).initialize();
             init();
         } catch (EntitlementUserApiException e) {
