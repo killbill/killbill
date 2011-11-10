@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -42,6 +41,7 @@ import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventCreate;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.entitlement.glue.InjectorMagic;
 import com.ning.billing.util.clock.IClock;
 
 public class EntitlementUserApi implements IEntitlementUserApi {
@@ -68,7 +68,7 @@ public class EntitlementUserApi implements IEntitlementUserApi {
     @Override
     public synchronized void initialize(List<IApiListener> listeners) {
         if (!initialized) {
-            this.catalog = engine.getCatalog();
+            this.catalog = InjectorMagic.getCatlog();
             engine.registerApiObservers(listeners);
             initialized = true;
         }

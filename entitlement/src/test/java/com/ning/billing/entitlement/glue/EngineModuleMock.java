@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc
+ * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,26 +16,19 @@
 
 package com.ning.billing.entitlement.glue;
 
+import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.clock.IClock;
 
-import com.ning.billing.entitlement.engine.core.ApiEventProcessorMemoryMock;
-import com.ning.billing.entitlement.engine.core.IApiEventProcessor;
-import com.ning.billing.entitlement.engine.dao.EntitlementDaoMemoryMock;
-import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-
-public class EngineModuleMemoryMock extends EngineModuleMock {
-    @Override
-    protected void installApiEventProcessor() {
-        bind(IApiEventProcessor.class).to(ApiEventProcessorMemoryMock.class).asEagerSingleton();
-    }
+public class EngineModuleMock extends EntitlementModule {
 
     @Override
-    protected void installEntitlementDao() {
-        bind(IEntitlementDao.class).to(EntitlementDaoMemoryMock.class).asEagerSingleton();
+    protected void installClock() {
+        bind(IClock.class).to(ClockMock.class).asEagerSingleton();
     }
-
 
     @Override
     protected void configure() {
         super.configure();
     }
+
 }

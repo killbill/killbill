@@ -25,6 +25,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 
 public class CaseBillingAlignment extends CasePhase<BillingAlignment> {
 
+
 	@XmlElement(required=true)
 	private BillingAlignment alignment;
 

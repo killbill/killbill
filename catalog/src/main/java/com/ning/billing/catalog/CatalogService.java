@@ -22,6 +22,8 @@ import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.config.ICatalogConfig;
 import com.ning.billing.lifecycle.IService;
+import com.ning.billing.lifecycle.LyfecycleHandlerType;
+import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
 import com.ning.billing.util.config.XMLLoader;
 
 public class CatalogService implements IService, Provider<ICatalog>, ICatalogService {
@@ -41,8 +43,8 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
         this.isInitialized = false;
     }
 
-    @Override
-    public synchronized void initialize() throws ServiceException {
+    @LyfecycleHandlerType(LyfecycleLevel.LOAD_CATALOG)
+    public synchronized void loadCatalog() throws ServiceException {
         if (!isInitialized) {
             try {
                 catalog = XMLLoader.getObjectFromProperty(config.getCatalogURI(), Catalog.class);
@@ -53,22 +55,13 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
         }
     }
 
+
+    @Override
     public String getName() {
         return CATALOG_SERVICE_NAME;
     }
 
 
-    @Override
-    public void start() throws ServiceException {
-        // Intentionally blank
-
-    }
-
-    @Override
-    public void stop() throws ServiceException {
-        // Intentionally blank
-
-    }
 
     /* (non-Javadoc)
      * @see com.ning.billing.catalog.ICatlogService#getCatalog()

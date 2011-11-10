@@ -14,11 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.glue;
+package com.ning.billing.beatrix.glue;
 
-import com.ning.billing.catalog.glue.CatalogModule;
+import com.google.inject.AbstractModule;
+import com.ning.billing.beatrix.lifecycle.Lifecycle;
 
-public class CatalogModuleMock extends CatalogModule {
+public class BeatrixModule extends AbstractModule {
 
+    @Override
+    protected void configure() {
+        bind(Lifecycle.class).asEagerSingleton();
+    }
 
 }

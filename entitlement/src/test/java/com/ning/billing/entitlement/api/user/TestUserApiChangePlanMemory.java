@@ -28,7 +28,7 @@ public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new EngineModuleMemoryMock(), new CatalogModuleMock());
+        return Guice.createInjector(Stage.PRODUCTION, new EngineModuleMemoryMock(), new CatalogModuleMock());
     }
 
 

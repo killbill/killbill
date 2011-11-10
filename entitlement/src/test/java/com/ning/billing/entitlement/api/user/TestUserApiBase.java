@@ -36,23 +36,26 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.BeforeTest;
 
 import com.google.inject.Injector;
 import com.ning.billing.account.api.IAccount;
+import com.ning.billing.catalog.CatalogService;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.catalog.api.ICatalogUserApi;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.IEntitlementConfig;
-import com.ning.billing.entitlement.IEntitlementService;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.entitlement.api.IEntitlementService;
 import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
@@ -61,6 +64,7 @@ import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.glue.InjectorMagic;
 import com.ning.billing.lifecycle.IService.ServiceException;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
@@ -72,7 +76,6 @@ public abstract class TestUserApiBase {
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
 
     protected IEntitlementService entitlementService;
-    //protected Engine engine;
     protected IEntitlementUserApi entitlementApi;
     protected IEntitlementBillingApi billingApi;
     protected ICatalogService catalogService;
@@ -85,6 +88,7 @@ public abstract class TestUserApiBase {
     protected ApiTestListener testListener;
     protected ISubscriptionBundle bundle;
 
+    private InjectorMagic injectorMagic;
 
     public static void loadSystemPropertiesFromClasspath( final String resource )
     {
@@ -98,19 +102,19 @@ public abstract class TestUserApiBase {
         }
     }
 
+    @AfterClass(groups={"setup"})
+    public void tearDown() {
+        InjectorMagic.instance = null;
+    }
 
     @BeforeClass(groups={"setup"})
     public void setup() {
 
-        // Does not see to work ...
-        /*
-        TimeZone tz  = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
-        tz  = TimeZone.getDefault();
-         */
-
         loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = getInjector();
+
+        injectorMagic = g.getInstance(InjectorMagic.class);
+
 
         entitlementService = g.getInstance(IEntitlementService.class);
         catalogService = g.getInstance(ICatalogService.class);
@@ -119,13 +123,12 @@ public abstract class TestUserApiBase {
         clock = (ClockMock) g.getInstance(IClock.class);
         try {
 
-            catalogService.initialize();
-            entitlementService.initialize();
+            ((CatalogService) catalogService).loadCatalog();
+            ((Engine)entitlementService).initialize();
             init();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         } catch (ServiceException e) {
-            e.printStackTrace();
             Assert.fail(e.getMessage());
         }
     }
@@ -149,33 +152,29 @@ public abstract class TestUserApiBase {
 
     @BeforeMethod(groups={"setup"})
     public void setupTest() {
-        try {
-            log.warn("\n");
-            log.warn("RESET TEST FRAMEWORK\n\n");
 
-            testListener.reset();
-            clock.resetDeltaFromReality();
-            ((IEntitlementDaoMock) dao).reset();
-            try {
-                bundle = entitlementApi.createBundleForAccount(account, "myDefaultBundle");
-            } catch (EntitlementUserApiException e) {
-                Assert.fail(e.getMessage());
-            }
-            assertNotNull(bundle);
-            entitlementService.start();
-        } catch (ServiceException e) {
+        log.warn("\n");
+        log.warn("RESET TEST FRAMEWORK\n\n");
+
+        testListener.reset();
+        clock.resetDeltaFromReality();
+        ((IEntitlementDaoMock) dao).reset();
+        try {
+            bundle = entitlementApi.createBundleForAccount(account, "myDefaultBundle");
+        } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
+        assertNotNull(bundle);
+
+        ((Engine)entitlementService).start();
     }
 
     @AfterMethod(groups={"setup"})
     public void cleanupTest() {
-        try {
-            entitlementService.stop();
-            log.warn("DONE WITH TEST\n");
-        } catch (ServiceException e) {
-            Assert.fail(e.getMessage());
-        }
+
+
+        ((Engine)entitlementService).stop();
+        log.warn("DONE WITH TEST\n");
     }
 
     // Glue magic to invoke the real test

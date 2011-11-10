@@ -19,7 +19,9 @@ package com.ning.billing.account.glue;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
+import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.IAccountService;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.IAccountDao;
@@ -39,11 +41,16 @@ public class AccountModule extends AbstractModule {
         bind(IAccountUserApi.class).to(AccountUserApi.class).asEagerSingleton();
     }
 
+    protected void installAcountService() {
+        bind(IAccountService.class).to(AccountService.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         installConfig();
         installAccountDao();
         installAccountUserApi();
+        installAcountService();
     }
 
 }

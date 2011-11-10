@@ -16,7 +16,6 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.inject.Guice;
@@ -30,7 +29,7 @@ public class TestUserApiCancelMemory extends TestUserApiCancel {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new EngineModuleMemoryMock(), new CatalogModuleMock());
+        return Guice.createInjector(Stage.PRODUCTION, new EngineModuleMemoryMock(), new CatalogModuleMock());
     }
 
     @Test(enabled=true, groups={"fast"})

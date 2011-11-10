@@ -14,11 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.glue;
+package com.ning.billing.lifecycle;
 
-import com.ning.billing.catalog.glue.CatalogModule;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class CatalogModuleMock extends CatalogModule {
-
-
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface Lifecycled {
 }

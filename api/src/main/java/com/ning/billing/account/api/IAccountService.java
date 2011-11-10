@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.glue;
+package com.ning.billing.account.api;
 
-import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.lifecycle.IService;
 
-public class CatalogModuleMock extends CatalogModule {
+public interface IAccountService extends IService {
 
-
+    public IAccountUserApi getAccountUserApi();
 }

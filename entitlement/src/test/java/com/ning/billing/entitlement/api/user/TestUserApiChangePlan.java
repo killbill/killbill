@@ -74,7 +74,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
     private void tChangePlanBundleAlignEOTWithNoChargeThroughDate(String fromProd, BillingPeriod fromTerm, String fromPlanSet,
         String toProd, BillingPeriod toTerm, String toPlanSet) {
 
-        log.info("Starting testChangeSubscriptionEOTWithNoChargeThroughDate");
+        log.info("Starting testChangePlanBundleAlignEOTWithNoChargeThroughDateReal");
 
         try {
 

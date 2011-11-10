@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.0.8-SNAPSHOT</version>
+        <version>0.0.9-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-beatrix</artifactId>
@@ -23,6 +23,18 @@
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-entitlement</artifactId>
+        </dependency>
+       <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-catalog</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jolbox</groupId>

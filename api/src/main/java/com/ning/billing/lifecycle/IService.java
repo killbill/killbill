@@ -45,30 +45,5 @@ public interface IService {
      */
     public String getName();
 
-    /**
-     *
-     * @throws ServiceException
-     *
-     * Initialize the service prior to start
-     */
-    public void initialize()
-        throws ServiceException;
-
-    /**
-     *
-     * @throws ServiceException
-     *
-     * Start the given service
-     */
-    public void start()
-        throws ServiceException;
-
-    /**
-     * Stop the given service
-     *
-     * @throws ServiceException
-     */
-    public void stop()
-        throws ServiceException;
 
 }
