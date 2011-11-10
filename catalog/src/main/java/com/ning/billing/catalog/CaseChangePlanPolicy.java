@@ -36,7 +36,7 @@ public class CaseChangePlanPolicy extends CaseChange<ActionPolicy> {
 			Product from, Product to, 
 			ProductCategory fromProductCategory, ProductCategory toProductCategory, 
 			BillingPeriod fromBP,BillingPeriod toBP, 
-			PriceList fromPriceList, PriceList toPriceList,
+			PriceListChild fromPriceList, PriceListChild toPriceList,
 			PhaseType fromType,
 			ActionPolicy result) {
 		super(from, to, 

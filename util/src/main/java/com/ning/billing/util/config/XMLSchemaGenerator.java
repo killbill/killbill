@@ -65,6 +65,13 @@ public class XMLSchemaGenerator {
 		System.out.println(XMLSchemaGenerator.class.getName() + " <file> <class1>");
 		
 	}
+	
+	public static String xmlSchemaAsString(Class<?> clazz) throws IOException, TransformerException, JAXBException {
+		ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_SCHEMA_SIZE_IN_BYTES);
+		JAXBContext context =JAXBContext.newInstance(clazz);
+		pojoToXSD(context, output);
+		return new String(output.toByteArray());
+	}
 
 	public static InputStream xmlSchema(Class<?> clazz) throws IOException, TransformerException, JAXBException {
 		ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_SCHEMA_SIZE_IN_BYTES);

@@ -54,7 +54,7 @@ public class TestCasePhase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists()[0];
+		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -78,7 +78,7 @@ public class TestCasePhase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists()[0];
+		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -102,7 +102,7 @@ public class TestCasePhase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists()[0];
+		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -126,7 +126,7 @@ public class TestCasePhase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists()[0];
+		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -150,7 +150,7 @@ public class TestCasePhase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists()[0];
+		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -174,7 +174,7 @@ public class TestCasePhase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists()[0];
+		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(

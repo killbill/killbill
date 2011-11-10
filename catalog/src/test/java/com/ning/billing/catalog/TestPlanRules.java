@@ -66,8 +66,8 @@ public class TestPlanRules {
 	}
 	
 
-	protected PriceList createPriceList(String name) {
-		PriceList result = new PriceList();
+	protected PriceListChild createPriceList(String name) {
+		PriceListChild result = new PriceListChild();
 		result.setName(name);
 		return result;
 	}

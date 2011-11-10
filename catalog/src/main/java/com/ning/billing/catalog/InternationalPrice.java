@@ -74,7 +74,7 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		for (IPrice p : prices) {
 			Currency currency = p.getCurrency();
 			if(!currencyIsSupported(currency, supportedCurrencies)) {
-				errors.add("Unsupported currency: " + currency, catalog.getCatalogURL(), this.getClass(), "");
+				errors.add("Unsupported currency: " + currency, catalog.getCatalogURI(), this.getClass(), "");
 			}
 		}
 		return errors;

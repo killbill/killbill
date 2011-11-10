@@ -37,7 +37,7 @@ Use Cases to do:
 
  -->
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:noNamespaceSchemaLocation="../../main/resources/CatalogSchema.xsd ">
+	xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
 
 	<effectiveDate>2011-10-08T00:00:00+00:00</effectiveDate>
 	<catalogName>Firearms</catalogName>
@@ -549,8 +549,7 @@ Use Cases to do:
 		</plan>
 	</plans>
 	<priceLists>
-		<priceList name="standard">
-			<isDefault>true</isDefault>
+		<defaultPriceList> 
 			<plans>
 				<plan>pistol-monthly</plan>
 				<plan>shotgun-monthly</plan>
@@ -564,8 +563,8 @@ Use Cases to do:
 				<plan>holster-monthly-regular</plan>
 				<plan>refurbish-maintenance</plan>
 			</plans>
-		</priceList>
-		<priceList name="gunclubDiscount">
+		</defaultPriceList>
+		<childPriceList name="gunclubDiscount">
 			<plans>
 				<plan>pistol-monthly</plan>
 				<plan>shotgun-monthly</plan>
@@ -575,12 +574,12 @@ Use Cases to do:
 				<plan>assault-rifle-annual-gunclub-discount</plan>
 				<plan>holster-monthly-special</plan>
 			</plans>
-		</priceList>
-		<priceList name="rescue">
+		</childPriceList>
+		<childPriceList name="rescue">
 			<plans>
 				<plan>assault-rifle-annual-rescue</plan>
 			</plans>
-		</priceList>
+		</childPriceList>
 	</priceLists>
 
 </catalog>

@@ -16,6 +16,8 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -116,7 +118,7 @@ public class Product extends ValidatingConfig<Catalog> implements IProduct {
 	}
 	
 	@Override
-	public void initialize(Catalog catalog) {
+	public void initialize(Catalog catalog, URI sourceURI) {
 		catalogName = catalog.getCalalogName();
 	}
 

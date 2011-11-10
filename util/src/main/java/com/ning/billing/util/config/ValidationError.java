@@ -15,25 +15,27 @@
  */
 package com.ning.billing.util.config;
 
+import java.net.URI;
+
 
 public class ValidationError {
 	private final String description;
-	private final String catalogURL;
+	private final URI sourceURI;
 	private final Class<?> objectType;
 	private final String objectName;
-	public ValidationError(String description, String catalogURL,
+	public ValidationError(String description, URI sourceURI,
 			Class<?> objectType, String objectName) {
 		super();
 		this.description = description;
-		this.catalogURL = catalogURL;
+		this.sourceURI = sourceURI;
 		this.objectType = objectType;
 		this.objectName = objectName;
 	}
 	public String getDescription() {
 		return description;
 	}
-	public String getCatalogURL() {
-		return catalogURL;
+	public URI getSourceURI() {
+		return sourceURI;
 	}
 	public Class<?> getObjectType() {
 		return objectType;

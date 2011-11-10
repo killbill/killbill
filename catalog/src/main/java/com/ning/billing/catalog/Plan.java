@@ -16,6 +16,7 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -69,8 +70,8 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	}
 
 	@Override
-	public void initialize(Catalog catalog) {
-		super.initialize(catalog);
+	public void initialize(Catalog catalog, URI sourceURI) {
+		super.initialize(catalog, sourceURI);
 		if(finalPhase != null) {
 			finalPhase.setPlan(this);
 		}

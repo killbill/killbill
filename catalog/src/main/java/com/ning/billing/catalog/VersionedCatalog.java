@@ -15,6 +15,7 @@
  */
 package com.ning.billing.catalog;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -27,7 +28,9 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
+import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
@@ -91,17 +94,17 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public PriceList[] getPriceLists() {
+	public PriceListSet getPriceLists() {
 		return currentCatalog.getPriceLists();
 	}
 
 	@Override
-	public PriceList getPriceListFromName(String planSetName) {
+	public IPriceList getPriceListFromName(String planSetName) {
 		return currentCatalog.getPriceListFromName(planSetName);
 	}
 
 	@Override
-	public Plan getPlan(String productName, BillingPeriod term,
+	public IPlan getPlan(String productName, BillingPeriod term,
 			String planSetName) {
 		return currentCatalog.getPlan(productName, term, planSetName);
 	}
@@ -133,9 +136,9 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public void initialize(Catalog catalog) {
+	public void initialize(Catalog catalog, URI sourceURI) {
 		for(Catalog c : versions) {
-			c.initialize(catalog);
+			c.initialize(catalog, sourceURI);
 		}
 	}
 
