@@ -20,10 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -65,6 +62,8 @@ public class Lifecycle {
             }
         });
         this.injector = injector;
+
+        init();
     }
 
     public void init() {
@@ -101,7 +100,7 @@ public class Lifecycle {
             try {
                 Method method = cur.getMethod();
                 IService target = cur.getTarget();
-                log.debug("Killbill lifecycle calling handler {} for service {}", cur.getMethod().getName(), target.getName());
+                log.info("Killbill lifecycle calling handler {} for service {}", cur.getMethod().getName(), target.getName());
                 method.invoke(target);
             } catch (Exception e) {
                 log.warn("Killbill lifecycle failed to invoke lifecycle handler", e);
@@ -112,14 +111,16 @@ public class Lifecycle {
 
     private Set<? extends IService> findServices() {
 
-        Set<IService> result = new TreeSet<IService>();
+        Set<IService> result = new HashSet<IService>();
         Set<Class<? extends IService>> services =  serviceFinder.getServices();
         for (Class<? extends IService> cur : services) {
-            log.debug("Found service {}", cur);
+            log.debug("Found service {}", cur.getName());
             try {
-                result.add(injector.getInstance(cur));
+                IService instance = injector.getInstance(cur);
+                log.debug("got instance {}", instance.getName());
+                result.add(instance);
             } catch (Exception e) {
-                log.warn("Failed to inject {}", cur.getName());
+                log.warn("Failed to inject " + cur.getName(), e);
             }
 
         }

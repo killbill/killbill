@@ -38,7 +38,6 @@ public class AnalyticsListener implements IApiListener
     private final IEntitlementUserApi entitlementApi;
     private final IAccountUserApi accountApi;
 
-    @Inject
     public AnalyticsListener(final EventDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi)
     {
         this.dao = dao;

@@ -81,7 +81,6 @@ public class TestLifecycle {
         s1 = g.getInstance(Service1.class);
         s2 = g.getInstance(Service2.class);
         lifecycle = g.getInstance(Lifecycle.class);
-        lifecycle.init();
     }
 
     @Test

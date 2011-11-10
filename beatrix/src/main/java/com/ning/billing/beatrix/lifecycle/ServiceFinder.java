@@ -41,7 +41,7 @@ import com.ning.billing.lifecycle.IService;
 
 public class ServiceFinder {
 
-    private final Logger log = LoggerFactory.getLogger(ServiceFinder.class);
+    private static final Logger log = LoggerFactory.getLogger(ServiceFinder.class);
 
 	private final ClassLoader loader;
 	private final Set<Class<? extends IService>> servicesTypes;
@@ -92,11 +92,12 @@ public class ServiceFinder {
 	    }
 
 	    for (int h = 0; h < classPaths.length; h++) {
+
+
 	        Enumeration<?> files = null;
 	        JarFile module = null;
 	        File classPath = new File( (URL.class).isInstance(classPaths[h]) ?
 	                ((URL)classPaths[h]).getFile() : classPaths[h].toString());
-
 	        if (classPath.isDirectory()) {
 	            List<String> dirListing = new ArrayList<String>();
 	            recursivelyListDir(dirListing, classPath, new StringBuffer() );
