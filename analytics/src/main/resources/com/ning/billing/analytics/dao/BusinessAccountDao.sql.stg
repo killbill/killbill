@@ -9,6 +9,7 @@ getAccount(account_key) ::= <<
   , tags
   , last_invoice_date
   , total_invoice_balance
+  , last_payment_status
   , payment_method
   , credit_card_type
   , billing_address_country
@@ -27,6 +28,7 @@ createAccount() ::= <<
   , tags
   , last_invoice_date
   , total_invoice_balance
+  , last_payment_status
   , payment_method
   , credit_card_type
   , billing_address_country
@@ -38,6 +40,7 @@ createAccount() ::= <<
   , :tags
   , :last_invoice_date
   , :total_invoice_balance
+  , :last_payment_status
   , :payment_method
   , :credit_card_type
   , :billing_address_country
@@ -51,6 +54,7 @@ saveAccount() ::= <<
   , tags=:tags
   , last_invoice_date=:last_invoice_date
   , total_invoice_balance=:total_invoice_balance
+  , last_payment_status=:last_payment_status
   , payment_method=:payment_method
   , credit_card_type=:credit_card_type
   , billing_address_country=:billing_address_country

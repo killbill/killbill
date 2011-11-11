@@ -33,17 +33,19 @@ public class BusinessAccount
     private List<String> tags;
     private DateTime lastInvoiceDate;
     private BigDecimal totalInvoiceBalance;
+    private String lastPaymentStatus;
     private String paymentMethod;
     private String creditCardType;
     private String billingAddressCountry;
 
-    public BusinessAccount(final String key, final BigDecimal balance, final List<String> tags, final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String paymentMethod, final String creditCardType, final String billingAddressCountry)
+    public BusinessAccount(final String key, final BigDecimal balance, final List<String> tags, final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus, final String paymentMethod, final String creditCardType, final String billingAddressCountry)
     {
         this.key = key;
         this.balance = balance;
         this.billingAddressCountry = billingAddressCountry;
         this.creditCardType = creditCardType;
         this.lastInvoiceDate = lastInvoiceDate;
+        this.lastPaymentStatus = lastPaymentStatus;
         this.paymentMethod = paymentMethod;
         this.tags = tags;
         this.totalInvoiceBalance = totalInvoiceBalance;
@@ -104,14 +106,19 @@ public class BusinessAccount
         return lastInvoiceDate;
     }
 
-    public Double getRoundedTotalInvoiceBalance()
-    {
-        return Rounder.round(totalInvoiceBalance);
-    }
-
     public void setLastInvoiceDate(final DateTime lastInvoiceDate)
     {
         this.lastInvoiceDate = lastInvoiceDate;
+    }
+
+    public String getLastPaymentStatus()
+    {
+        return lastPaymentStatus;
+    }
+
+    public void setLastPaymentStatus(final String lastPaymentStatus)
+    {
+        this.lastPaymentStatus = lastPaymentStatus;
     }
 
     public String getPaymentMethod()
@@ -137,6 +144,11 @@ public class BusinessAccount
     public BigDecimal getTotalInvoiceBalance()
     {
         return totalInvoiceBalance;
+    }
+
+    public Double getRoundedTotalInvoiceBalance()
+    {
+        return Rounder.round(totalInvoiceBalance);
     }
 
     public void setTotalInvoiceBalance(final BigDecimal totalInvoiceBalance)
@@ -166,6 +178,7 @@ public class BusinessAccount
         sb.append(", tags=").append(tags);
         sb.append(", lastInvoiceDate=").append(lastInvoiceDate);
         sb.append(", totalInvoiceBalance=").append(totalInvoiceBalance);
+        sb.append(", lastPaymentStatus='").append(lastPaymentStatus).append('\'');
         sb.append(", paymentMethod='").append(paymentMethod).append('\'');
         sb.append(", creditCardType='").append(creditCardType).append('\'');
         sb.append(", billingAddressCountry='").append(billingAddressCountry).append('\'');
@@ -203,6 +216,9 @@ public class BusinessAccount
         if (lastInvoiceDate != null ? !lastInvoiceDate.equals(that.lastInvoiceDate) : that.lastInvoiceDate != null) {
             return false;
         }
+        if (lastPaymentStatus != null ? !lastPaymentStatus.equals(that.lastPaymentStatus) : that.lastPaymentStatus != null) {
+            return false;
+        }
         if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null) {
             return false;
         }
@@ -229,6 +245,7 @@ public class BusinessAccount
         result = 31 * result + (tags != null ? tags.hashCode() : 0);
         result = 31 * result + (lastInvoiceDate != null ? lastInvoiceDate.hashCode() : 0);
         result = 31 * result + (totalInvoiceBalance != null ? totalInvoiceBalance.hashCode() : 0);
+        result = 31 * result + (lastPaymentStatus != null ? lastPaymentStatus.hashCode() : 0);
         result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
         result = 31 * result + (creditCardType != null ? creditCardType.hashCode() : 0);
         result = 31 * result + (billingAddressCountry != null ? billingAddressCountry.hashCode() : 0);

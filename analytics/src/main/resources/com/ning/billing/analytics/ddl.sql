@@ -39,6 +39,7 @@ create table bac (
 , tags varchar(500) default null
 , last_invoice_date bigint default null
 , total_invoice_balance numeric(10, 4) default 0
+, last_payment_status varchar(100) default null
 , payment_method varchar(100) default null
 , credit_card_type varchar(32) default null
 , billing_address_country varchar(100) default null

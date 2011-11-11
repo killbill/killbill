@@ -31,7 +31,7 @@ public class TestBusinessAccount
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
     {
-        account = new BusinessAccount("pierre", BigDecimal.ONE, Collections.singletonList("batch15"), new DateTime(), BigDecimal.TEN, "CreditCard", "Visa", "");
+        account = new BusinessAccount("pierre", BigDecimal.ONE, Collections.singletonList("batch15"), new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
     }
 
     @Test(groups = "fast")
@@ -41,7 +41,7 @@ public class TestBusinessAccount
         Assert.assertEquals(account, account);
         Assert.assertTrue(account.equals(account));
 
-        final BusinessAccount otherAccount = new BusinessAccount("pierre", BigDecimal.ONE, Collections.singletonList("batch15"), new DateTime(), BigDecimal.TEN, "CreditCard", "Visa", "");
+        final BusinessAccount otherAccount = new BusinessAccount("pierre", BigDecimal.ONE, Collections.singletonList("batch15"), new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
         Assert.assertFalse(account.equals(otherAccount));
     }
 }

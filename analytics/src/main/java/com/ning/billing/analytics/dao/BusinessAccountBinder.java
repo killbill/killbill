@@ -61,6 +61,7 @@ public @interface BusinessAccountBinder
                     q.bind("tags", joiner.join(account.getTags()));
                     q.bind("last_invoice_date", account.getLastInvoiceDate().getMillis());
                     q.bind("total_invoice_balance", account.getRoundedTotalInvoiceBalance());
+                    q.bind("last_payment_status", account.getLastPaymentStatus());
                     q.bind("payment_method", account.getPaymentMethod());
                     q.bind("credit_card_type", account.getCreditCardType());
                     q.bind("billing_address_country", account.getBillingAddressCountry());

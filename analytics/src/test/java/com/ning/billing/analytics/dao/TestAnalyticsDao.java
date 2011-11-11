@@ -103,7 +103,7 @@ public class TestAnalyticsDao
         final List<String> tags = new ArrayList<String>();
         tags.add("batch1");
         tags.add("great,guy");
-        account = new BusinessAccount(ACCOUNT_KEY, BigDecimal.ONE, tags, new DateTime(DateTimeZone.UTC), BigDecimal.TEN, "CreditCard", "Visa", "FRANCE");
+        account = new BusinessAccount(ACCOUNT_KEY, BigDecimal.ONE, tags, new DateTime(DateTimeZone.UTC), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE");
 
         final IDBI dbi = helper.getDBI();
         businessAccountDao = dbi.onDemand(BusinessAccountDao.class);
