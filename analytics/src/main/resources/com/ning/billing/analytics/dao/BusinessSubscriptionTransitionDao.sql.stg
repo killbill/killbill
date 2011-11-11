@@ -1,4 +1,4 @@
-group EventDao;
+group BusinessSubscriptionTransition;
 
 getTransitions(event_key) ::= <<
   select

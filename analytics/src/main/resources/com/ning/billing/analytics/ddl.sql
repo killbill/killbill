@@ -28,5 +28,19 @@ create table bst (
 , next_subscription_id varchar(100) default null
 , next_bundle_id varchar(100) default null
 ) engine=innodb;
-
 create index bst_key_index on bst (event_key, requested_timestamp asc);
+
+drop table if exists bac;
+create table bac (
+  account_key varchar(50) not null
+, created_dt bigint not null
+, updated_dt bigint not null
+, balance numeric(10, 4) default 0
+, tags varchar(500) default null
+, last_invoice_date bigint default null
+, total_invoice_balance numeric(10, 4) default 0
+, payment_method varchar(100) default null
+, credit_card_type varchar(32) default null
+, billing_address_country varchar(100) default null
+) engine=innodb;
+create unique index bac_key_index on bac (account_key);
