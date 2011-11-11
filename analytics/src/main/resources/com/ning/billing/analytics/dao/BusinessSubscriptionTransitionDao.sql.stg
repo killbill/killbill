@@ -10,6 +10,7 @@ getTransitions(event_key) ::= <<
   , prev_product_category
   , prev_slug
   , prev_phase
+  , prev_billing_period
   , prev_price
   , prev_mrr
   , prev_currency
@@ -22,6 +23,7 @@ getTransitions(event_key) ::= <<
   , next_product_category
   , next_slug
   , next_phase
+  , next_billing_period
   , next_price
   , next_mrr
   , next_currency
@@ -45,6 +47,7 @@ createTransition() ::= <<
   , prev_product_category
   , prev_slug
   , prev_phase
+  , prev_billing_period
   , prev_price
   , prev_mrr
   , prev_currency
@@ -57,6 +60,7 @@ createTransition() ::= <<
   , next_product_category
   , next_slug
   , next_phase
+  , next_billing_period
   , next_price
   , next_mrr
   , next_currency
@@ -73,6 +77,7 @@ createTransition() ::= <<
   , :prev_product_category
   , :prev_slug
   , :prev_phase
+  , :prev_billing_period
   , :prev_price
   , :prev_mrr
   , :prev_currency
@@ -85,6 +90,7 @@ createTransition() ::= <<
   , :next_product_category
   , :next_slug
   , :next_phase
+  , :next_billing_period
   , :next_price
   , :next_mrr
   , :next_currency

@@ -8,6 +8,7 @@ create table bst (
 , prev_product_category varchar(32) default null
 , prev_slug varchar(50) default null
 , prev_phase varchar(32) default null
+, prev_billing_period varchar(32) default null
 , prev_price numeric(10, 4) default 0
 , prev_mrr numeric(10, 4) default 0
 , prev_currency varchar(32) default null
@@ -20,6 +21,7 @@ create table bst (
 , next_product_category varchar(32) default null
 , next_slug varchar(50) default null
 , next_phase varchar(32) default null
+, next_billing_period varchar(32) default null
 , next_price numeric(10, 4) default 0
 , next_mrr numeric(10, 4) default 0
 , next_currency varchar(32) default null
