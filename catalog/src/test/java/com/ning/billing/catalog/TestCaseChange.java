@@ -64,10 +64,10 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists()[0];
+		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
 
 		Product product2 = cat.getProducts()[2];
-		PriceList priceList2 = cat.getPriceLists()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
 		CaseChangeResult cr = new CaseChangeResult(
@@ -154,10 +154,10 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists()[0];
+		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
 
 		Product product2 = cat.getProducts()[2];
-		PriceList priceList2 = cat.getPriceLists()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
 		CaseChangeResult cr = new CaseChangeResult(
@@ -237,10 +237,10 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists()[0];
+		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
 
 		Product product2 = cat.getProducts()[2];
-		PriceList priceList2 = cat.getPriceLists()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
 		CaseChangeResult cr = new CaseChangeResult(
@@ -327,10 +327,10 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists()[0];
+		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
 
 		Product product2 = cat.getProducts()[2];
-		PriceList priceList2 = cat.getPriceLists()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
 		CaseChangeResult cr = new CaseChangeResult(
@@ -417,10 +417,10 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists()[0];
+		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
 
 		Product product2 = cat.getProducts()[2];
-		PriceList priceList2 = cat.getPriceLists()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
 		CaseChangeResult cr = new CaseChangeResult(
@@ -507,10 +507,10 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists()[0];
+		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
 
 		Product product2 = cat.getProducts()[2];
-		PriceList priceList2 = cat.getPriceLists()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
 		CaseChangeResult cr = new CaseChangeResult(
@@ -598,10 +598,10 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists()[0];
+		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
 
 		Product product2 = cat.getProducts()[2];
-		PriceList priceList2 = cat.getPriceLists()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
 		CaseChangeResult cr = new CaseChangeResult(
@@ -688,10 +688,10 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists()[0];
+		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
 
 		Product product2 = cat.getProducts()[2];
-		PriceList priceList2 = cat.getPriceLists()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
 		CaseChangeResult cr = new CaseChangeResult(
@@ -778,10 +778,10 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists()[0];
+		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
 
 		Product product2 = cat.getProducts()[2];
-		PriceList priceList2 = cat.getPriceLists()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
 		CaseChangeResult cr = new CaseChangeResult(
@@ -868,10 +868,10 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists()[0];
+		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
 
 		Product product2 = cat.getProducts()[2];
-		PriceList priceList2 = cat.getPriceLists()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
 		CaseChangeResult cr = new CaseChangeResult(

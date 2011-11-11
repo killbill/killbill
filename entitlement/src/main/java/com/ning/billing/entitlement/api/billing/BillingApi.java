@@ -38,7 +38,6 @@ public class BillingApi implements IEntitlementBillingApi {
     private final IClock clock;
     private final IEntitlementDao dao;
 
-    @Inject
     public BillingApi(Engine engine, IClock clock, IEntitlementDao dao) {
         super();
         this.engine = engine;

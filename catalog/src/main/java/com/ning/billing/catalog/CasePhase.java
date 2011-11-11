@@ -23,6 +23,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.util.config.ValidationErrors;
 
 public abstract class CasePhase<T> extends Case<T> {
 

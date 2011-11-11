@@ -14,15 +14,26 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement;
+package com.ning.billing.config;
 
-import java.io.InputStream;
+import org.skife.config.Config;
+import org.skife.config.Default;
 
-public interface IEntitlementSystem {
+public interface IEntitlementConfig {
 
-    public void initialize();
+    @Config("killbill.entitlement.dao.claim.time")
+    @Default("60000")
+    public long getDaoClaimTimeMs();
 
-    public void start();
+    @Config("killbill.entitlement.dao.ready.max")
+    @Default("1")
+    public int getDaoMaxReadyEvents();
 
-    public void stop();
+    @Config("killbill.entitlement.catalog.config.file")
+    @Default("hum, not sure")
+    public String getCatalogConfigFileName();
+
+    @Config("killbill.entitlement.engine.notifications.sleep")
+    @Default("500")
+    public long getNotificationSleepTimeMs();
 }

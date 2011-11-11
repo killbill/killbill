@@ -19,15 +19,12 @@ package com.ning.billing.entitlement.glue;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.catalog.CatalogUserApi;
-import com.ning.billing.catalog.api.ICatalogUserApi;
-import com.ning.billing.entitlement.IEntitlementSystem;
+import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
-import com.ning.billing.entitlement.api.billing.BillingApi;
-import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
-import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
+import com.ning.billing.entitlement.api.IEntitlementService;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.engine.core.ApiEventProcessor;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.core.IApiEventProcessor;
@@ -40,13 +37,6 @@ import com.ning.billing.util.clock.IClock;
 
 public class EntitlementModule extends AbstractModule {
 
-    protected void installCatalog() {
-        bind(ICatalogUserApi.class).to(CatalogUserApi.class).asEagerSingleton();
-    }
-
-    protected void installAccount() {
-//        bind(IAccount.class).to(CatalogUserApi.class);
-    }
 
     protected void installClock() {
         bind(IClock.class).to(Clock.class).asEagerSingleton();
@@ -66,29 +56,22 @@ public class EntitlementModule extends AbstractModule {
     }
 
     protected void installEntitlementCore() {
-        bind(IEntitlementSystem.class).to(Engine.class).asEagerSingleton();
+        bind(IEntitlementService.class).to(Engine.class).asEagerSingleton();
         bind(Engine.class).asEagerSingleton();
         bind(IPlanAligner.class).to(PlanAligner.class).asEagerSingleton();
     }
 
-    protected void installUserApi() {
-        bind(IEntitlementUserApi.class).to(EntitlementUserApi.class).asEagerSingleton();
+    protected void installInjectorMagic() {
+        bind(InjectorMagic.class).asEagerSingleton();
     }
-
-    protected void installBillingApi() {
-        bind(IEntitlementBillingApi.class).to(BillingApi.class).asEagerSingleton();
-    }
-
 
     @Override
     protected void configure() {
+        installInjectorMagic();
         installConfig();
         installClock();
-        installCatalog();
         installApiEventProcessor();
         installEntitlementDao();
         installEntitlementCore();
-        installUserApi();
-        installBillingApi();
     }
 }

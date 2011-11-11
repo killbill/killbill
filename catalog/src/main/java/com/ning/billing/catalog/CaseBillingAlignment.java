@@ -25,13 +25,14 @@ import com.ning.billing.catalog.api.ProductCategory;
 
 public class CaseBillingAlignment extends CasePhase<BillingAlignment> {
 
+
 	@XmlElement(required=true)
 	private BillingAlignment alignment;
 
 	public CaseBillingAlignment() {}
 
 	public CaseBillingAlignment(Product product, ProductCategory productCategory, BillingPeriod billingPeriod,
-			PriceList priceList, PhaseType phaseType, BillingAlignment alignment) {
+			PriceListChild priceList, PhaseType phaseType, BillingAlignment alignment) {
 		super(product, productCategory, billingPeriod, priceList, phaseType, alignment);
 		this.alignment = alignment;
 	}

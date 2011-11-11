@@ -17,21 +17,12 @@
 package com.ning.billing.entitlement.glue;
 
 
-import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
-
-import com.ning.billing.dbi.DBIProvider;
-import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.entitlement.engine.core.ApiEventProcessorMemoryMock;
 import com.ning.billing.entitlement.engine.core.IApiEventProcessor;
 import com.ning.billing.entitlement.engine.dao.EntitlementDaoMemoryMock;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.entitlement.glue.EntitlementModule;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.clock.IClock;
 
-
-public class EngineModuleMemoryMock extends EntitlementModule {
+public class EngineModuleMemoryMock extends EngineModuleMock {
     @Override
     protected void installApiEventProcessor() {
         bind(IApiEventProcessor.class).to(ApiEventProcessorMemoryMock.class).asEagerSingleton();
@@ -42,20 +33,9 @@ public class EngineModuleMemoryMock extends EntitlementModule {
         bind(IEntitlementDao.class).to(EntitlementDaoMemoryMock.class).asEagerSingleton();
     }
 
-    @Override
-    protected void installClock() {
-        bind(IClock.class).to(ClockMock.class).asEagerSingleton();
-    }
-
-    protected void installDBI() {
-        bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-        final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-        bind(DbiConfig.class).toInstance(config);
-    }
 
     @Override
     protected void configure() {
         super.configure();
-        installDBI();
     }
 }

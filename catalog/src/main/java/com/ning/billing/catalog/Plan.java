@@ -16,6 +16,7 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -31,9 +32,11 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Plan extends ValidatingConfig implements IPlan {
+public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 
 
 	@XmlAttribute(required=true)
@@ -67,8 +70,8 @@ public class Plan extends ValidatingConfig implements IPlan {
 	}
 
 	@Override
-	public void initialize(Catalog catalog) {
-		super.initialize(catalog);
+	public void initialize(Catalog catalog, URI sourceURI) {
+		super.initialize(catalog, sourceURI);
 		if(finalPhase != null) {
 			finalPhase.setPlan(this);
 		}

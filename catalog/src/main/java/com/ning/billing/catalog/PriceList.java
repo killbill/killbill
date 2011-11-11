@@ -18,82 +18,21 @@ package com.ning.billing.catalog;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlIDREF;
 
+import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPriceList;
+import com.ning.billing.util.config.ValidatingConfig;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PriceList extends ValidatingConfig implements IPriceList {
+public abstract class PriceList extends ValidatingConfig<Catalog> implements IPriceList {
 
-	@XmlAttribute(required=true)
 	@XmlID
-	private String name;
+	public abstract String getName();
 
-	@XmlElement(required=false) 
-	private Boolean isDefault = false;
+	public abstract Plan[] getPlans();
 
-	@XmlElementWrapper(name="plans", required=true)
-	@XmlElement(name="plan", required=true)
-	@XmlIDREF
-    private Plan[] plans;
+	public abstract IPlan findPlanByProductName(String productName);
 
-    /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPlanSet#getName()
-	 */
-    @Override
-	public String getName() {
-        return name;
-    }
-
-    /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPlanSet#getPlans()
-	 */
-    @Override
-	public Plan[] getPlans() {
-        return plans;
-    }
-
-    /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPlanSet#findPlanByProductName(java.lang.String)
-	 */
-    @Override
-	public Plan findPlanByProductName(String productName) {
-        for (Plan cur : plans) {
-            if (cur.getProduct().getName().equals(productName)) {
-                return cur;
-            }
-        }
-        return null;
-    }
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setPlans(Plan[] plans) {
-		this.plans = plans;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPlanSet#getProductType()
-	 */
-	@Override
-	public boolean isDefault() {
-		return isDefault;
-	}
-
-	public void setProductType(boolean isDefault) {
-		this.isDefault = isDefault;
-	}
-
-	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		return errors;
-
-	}
-
+	public abstract boolean isDefault();
 }

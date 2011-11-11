@@ -14,26 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.glue;
+package com.ning.billing.catalog.api;
 
-import org.skife.config.Config;
-import org.skife.config.Default;
+import com.ning.billing.lifecycle.IService;
 
-public interface IEntitlementConfig {
+public interface ICatalogService extends IService {
 
-    @Config("killbill.entitlement.dao.claim.time")
-    @Default("60000")
-    public long getDaoClaimTimeMs();
+	public abstract ICatalog getCatalog();
 
-    @Config("killbill.entitlement.dao.ready.max")
-    @Default("1")
-    public int getDaoMaxReadyEvents();
-
-    @Config("killbill.entitlement.catalog.config.file")
-    @Default("hum, not sure")
-    public String getCatalogConfigFileName();
-
-    @Config("killbill.entitlement.engine.notifications.sleep")
-    @Default("500")
-    public long getNotificationSleepTimeMs();
 }

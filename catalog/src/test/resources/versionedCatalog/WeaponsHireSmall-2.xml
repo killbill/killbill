@@ -153,13 +153,12 @@
 		</plan>
 	</plans>
 	<priceLists>
-		<priceList name="standardBase"> 
-			<isDefault>true</isDefault>			
+		<defaultPriceList>			
 				<plans>	
 				<plan>pistol-monthly</plan>
 				<plan>shotgun-monthly</plan>
 				<plan>shotgun-annual</plan>
 			</plans>
-		</priceList>
+		</defaultPriceList>
 	</priceLists>
 </catalog>

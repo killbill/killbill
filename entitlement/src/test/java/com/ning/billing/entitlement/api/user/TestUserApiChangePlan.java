@@ -31,6 +31,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.IAccount;
+import com.ning.billing.catalog.PriceListSet;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IDuration;
@@ -66,14 +67,14 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
 
     protected void testChangePlanBundleAlignEOTWithNoChargeThroughDateReal() {
-        tChangePlanBundleAlignEOTWithNoChargeThroughDate("Shotgun", BillingPeriod.MONTHLY, "standard", "Pistol", BillingPeriod.MONTHLY, "standard");
+        tChangePlanBundleAlignEOTWithNoChargeThroughDate("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
 
     private void tChangePlanBundleAlignEOTWithNoChargeThroughDate(String fromProd, BillingPeriod fromTerm, String fromPlanSet,
         String toProd, BillingPeriod toTerm, String toPlanSet) {
 
-        log.info("Starting testChangeSubscriptionEOTWithNoChargeThroughDate");
+        log.info("Starting testChangePlanBundleAlignEOTWithNoChargeThroughDateReal");
 
         try {
 
@@ -170,7 +171,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
 
     protected void testChangePlanBundleAlignIMMReal() {
-        tChangePlanBundleAlignIMM("Shotgun", BillingPeriod.MONTHLY, "standard", "Assault-Rifle", BillingPeriod.MONTHLY, "standard");
+        tChangePlanBundleAlignIMM("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
 
@@ -212,7 +213,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
 
     protected void testChangePlanChangePlanAlignEOTWithChargeThroughDateReal() {
-        tChangePlanChangePlanAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, "standard", "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
+        tChangePlanChangePlanAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
     }
 
     private void tChangePlanChangePlanAlignEOTWithChargeThroughDate(String fromProd, BillingPeriod fromTerm, String fromPlanSet,

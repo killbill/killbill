@@ -17,10 +17,10 @@
     <groupId>com.ning.billing</groupId>
     <artifactId>killbill</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.6-SNAPSHOT</version>
+    <version>0.0.10-SNAPSHOT</version>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
-    <url>http://github.com/sbrossie/killbill</url>
+    <url>http://github.com/ning/killbill</url>
     <licenses>
         <license>
             <name>Apache License 2.0</name>
@@ -30,17 +30,18 @@
     </licenses>
     <scm>
         <connection>scm:git:git://github.com/stephane/killbill.git</connection>
-        <developerConnection>scm:git:git@github.com:sbrossie/killbill.git</developerConnection>
-        <url>http://github.com/sbrossie/killbill/tree/master</url>
+        <developerConnection>scm:git:git@github.com:ning/killbill.git</developerConnection>
+        <url>http://github.com/ning/killbill/tree/master</url>
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <modules>
+        <module>account</module>
         <module>analytics</module>
         <module>api</module>
+        <module>beatrix</module>
         <module>catalog</module>
-        <module>account</module>
         <module>entitlement</module>
         <module>invoice</module>
         <module>payment</module>
@@ -51,6 +52,11 @@
             <dependency>
                 <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-entitlement</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -315,6 +321,7 @@
                                 <exclude>**/*.properties</exclude>
                                 <exclude>**/*.dont-let-git-remove-this-directory</exclude>
                                 <exclude>**/test-output/**</exclude>
+                                <exclude>**/bin/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -471,6 +478,6 @@
     </reporting>
     <issueManagement>
         <system>Github</system>
-        <url>http://github.com/sbrossie/killbill</url>
+        <url>http://github.com/ning/killbill</url>
     </issueManagement>
 </project>

@@ -15,6 +15,7 @@
  */
 package com.ning.billing.catalog;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -27,14 +28,18 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
+import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
-public class VersionedCatalog extends ValidatingConfig implements ICatalog {
+public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICatalog {
 	
 	private Catalog currentCatalog;
 	
@@ -89,17 +94,17 @@ public class VersionedCatalog extends ValidatingConfig implements ICatalog {
 	}
 
 	@Override
-	public PriceList[] getPriceLists() {
+	public PriceListSet getPriceLists() {
 		return currentCatalog.getPriceLists();
 	}
 
 	@Override
-	public PriceList getPriceListFromName(String planSetName) {
+	public IPriceList getPriceListFromName(String planSetName) {
 		return currentCatalog.getPriceListFromName(planSetName);
 	}
 
 	@Override
-	public Plan getPlan(String productName, BillingPeriod term,
+	public IPlan getPlan(String productName, BillingPeriod term,
 			String planSetName) {
 		return currentCatalog.getPlan(productName, term, planSetName);
 	}
@@ -131,16 +136,16 @@ public class VersionedCatalog extends ValidatingConfig implements ICatalog {
 	}
 
 	@Override
-	public void initialize(Catalog catalog) {
+	public void initialize(Catalog catalog, URI sourceURI) {
 		for(Catalog c : versions) {
-			c.initialize(catalog);
+			c.initialize(catalog, sourceURI);
 		}
 	}
 
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
 		for(Catalog c : versions) {
-			errors.addAll(c.validate());
+			errors.addAll(c.validate(c, errors));
 		}
 		return errors;
 	}

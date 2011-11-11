@@ -16,7 +16,8 @@
 
 package com.ning.billing.catalog;
 
-import java.net.URL;
+import java.net.URI;
+import java.util.Collection;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -30,30 +31,27 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
+import com.ning.billing.catalog.api.IPlan;
+import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationError;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
-public class Catalog extends ValidatingConfig implements ICatalog {
-	public PlanRules getPlanRules() {
-		return planRules;
-	}
-
-	public void setPlanRules(PlanRules planRules) {
-		this.planRules = planRules;
-	}
-
+public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	@XmlElement(required=true)
 	private Date effectiveDate;
 
 	@XmlElement(required=true)
 	private String catalogName;
 
-	private String catalogURL;
+	private URI catalogURI;
 
 	@XmlElementWrapper(name="currencies", required=true)
 	@XmlElement(name="currency", required=true)
@@ -70,9 +68,8 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 	@XmlElement(name="plan", required=true)
 	private Plan[] plans;
 
-	@XmlElementWrapper(name="priceLists", required=true)
-	@XmlElement(name="priceList", required=true)
-	private PriceList[] priceLists;
+	@XmlElement(name="priceLists", required=true)
+	private PriceListSet priceLists;
 
 	public Catalog() {}
 
@@ -81,19 +78,17 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 	}
 
 	@Override
-	public void initialize(Catalog catalog) {
-		super.initialize(catalog);
-		planRules.initialize(catalog);
+	public void initialize(Catalog catalog, URI sourceURI) {
+		catalogURI = sourceURI;
+		super.initialize(catalog, sourceURI);
+		planRules.initialize(catalog, sourceURI);
+		priceLists.initialize(catalog, sourceURI);
 		for(Product p : products) {
-			p.initialize(catalog);
+			p.initialize(catalog, sourceURI);
 		}
 		for(Plan p : plans) {
-			p.initialize(catalog);
+			p.initialize(catalog, sourceURI);
 		}
-		for(PriceList p : priceLists) {
-			p.initialize(catalog);
-		}
-
 	}
 
     /* (non-Javadoc)
@@ -120,25 +115,16 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 	 * @see com.ning.billing.catalog.ICatalog#getPlanSets()
 	 */
 	@Override
-	public PriceList[] getPriceLists() {
+	public PriceListSet getPriceLists() {
 		return priceLists;
 	}
  
-	public void setPlanSets(PriceList[] planSets) {
-		this.priceLists = planSets;
-	}
-
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.ICatalog#getPriceListFromName(java.lang.String)
 	 */
 	@Override
 	public PriceList getPriceListFromName(String priceListName) {
-		for(PriceList set : priceLists) {
-			if(set.getName().equals(priceListName)) {
-				return set;
-			}
-		}
-        return null;
+		return priceLists.getPriceListFromName(priceListName);
     }
 
     /* (non-Javadoc)
@@ -147,7 +133,7 @@ public class Catalog extends ValidatingConfig implements ICatalog {
     @Override
 	public Plan getPlan(String productName, BillingPeriod term, String planSetName) {
 
-        PriceList planSet = getPriceListFromName(planSetName);
+    	PriceList planSet = getPriceListFromName(planSetName);
         if (planSet == null) {
             return null;
         }
@@ -185,14 +171,22 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		errors.addAll(validate(catalog,errors, products));
-		errors.addAll(validate(catalog,errors, priceLists));
-		errors.addAll(validate(catalog,errors, plans));
-		errors.addAll(planRules.validate(catalog, errors));
+		validate(catalog,errors, products);
+		validate(catalog,errors, plans);
+		priceLists.validate(catalog,errors);
+		planRules.validate(catalog, errors);
 		return errors;
 	}
 
-    @Override
+    private Collection<? extends ValidationError> validate(Catalog catalog,
+			ValidationErrors errors, ValidatingConfig<Catalog>[] configs) {
+		for(ValidatingConfig<Catalog> config: configs) {
+			
+		}
+		return null;
+	}
+
+	@Override
     public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from, PlanSpecifier to) {
         return planRules.getPlanChangePolicy(from, to, this);
     }
@@ -274,12 +268,16 @@ public class Catalog extends ValidatingConfig implements ICatalog {
 		this.effectiveDate = effectiveDate;
 	}
 
-	public String getCatalogURL() {
-		return catalogURL;
+	public URI getCatalogURI() {
+		return catalogURI;
+	}
+	
+	public PlanRules getPlanRules() { 
+		return planRules;
 	}
 
-	public void setCatalogURL(String catalogURL) {
-		this.catalogURL = catalogURL;
+	public void setPlanRules(PlanRules planRules) {
+		this.planRules = planRules;
 	}
 
 	@Override
@@ -290,7 +288,7 @@ public class Catalog extends ValidatingConfig implements ICatalog {
     	return null;
     }
 
-	public void setPriceLists(PriceList[] priceLists) {
+	public void setPriceLists(PriceListSet priceLists) {
 		this.priceLists = priceLists;
 	}
 

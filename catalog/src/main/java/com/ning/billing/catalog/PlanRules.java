@@ -29,9 +29,11 @@ import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PlanRules extends ValidatingConfig  {
+public class PlanRules extends ValidatingConfig<Catalog>  {
 
 	@XmlElementWrapper(name="tiers", required=true)
 	@XmlElement(name="tier", required=false) // may not have tiers in some catalogs

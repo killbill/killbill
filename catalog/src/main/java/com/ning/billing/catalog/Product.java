@@ -16,6 +16,8 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -26,9 +28,11 @@ import javax.xml.bind.annotation.XmlIDREF;
 
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Product extends ValidatingConfig implements IProduct {
+public class Product extends ValidatingConfig<Catalog> implements IProduct {
 	
 	@XmlAttribute (required=true)
 	@XmlID
@@ -114,7 +118,7 @@ public class Product extends ValidatingConfig implements IProduct {
 	}
 	
 	@Override
-	public void initialize(Catalog catalog) {
+	public void initialize(Catalog catalog, URI sourceURI) {
 		catalogName = catalog.getCalalogName();
 	}
 

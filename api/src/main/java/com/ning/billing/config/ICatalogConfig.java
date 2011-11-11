@@ -14,22 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.io;
+package com.ning.billing.config;
 
-import java.io.IOException;
-import java.net.URL;
+import org.skife.config.Config;
+import org.skife.config.Default;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
+public interface ICatalogConfig {
 
-import org.xml.sax.SAXException;
-
-import com.ning.billing.catalog.VersionedCatalog;
-import com.ning.billing.catalog.api.InvalidConfigException;
-
-public interface ICatalogLoader {
-
-	public abstract VersionedCatalog load(URL url) throws IOException,
-			SAXException, InvalidConfigException, JAXBException, TransformerException;
+    @Config("killbill.catalog.uri")
+    @Default("jar:///com/ning/billing/irs/catalog/NingCatalog.xml")
+    String getCatalogURI();
 
 }

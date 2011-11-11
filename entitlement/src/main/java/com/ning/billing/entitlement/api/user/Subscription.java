@@ -49,6 +49,7 @@ import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.events.user.IUserEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.entitlement.glue.InjectorMagic;
 import com.ning.billing.util.clock.IClock;
 
 public class Subscription extends PrivateFields  implements ISubscription {
@@ -146,12 +147,10 @@ public class Subscription extends PrivateFields  implements ISubscription {
     public Subscription(UUID id, UUID bundleId, ProductCategory category, DateTime bundleStartDate, DateTime startDate, DateTime ctd, DateTime ptd, long activeVersion) {
 
         super();
-
-        Engine engine = Engine.getInstance();
-        this.clock = engine.getClock();
-        this.dao = engine.getDao();
-        this.catalog = engine.getCatalog();
-        this.planAligner = engine.getPlanAligner();
+        this.clock = InjectorMagic.getClock();
+        this.dao = InjectorMagic.getEntitlementDao();
+        this.catalog = InjectorMagic.getCatlog();
+        this.planAligner = InjectorMagic.getPlanAligner();
         this.id = id;
         this.bundleId = bundleId;
         this.startDate = startDate;

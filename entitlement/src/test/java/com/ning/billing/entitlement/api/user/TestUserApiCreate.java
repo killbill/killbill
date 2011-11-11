@@ -28,6 +28,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.PriceListSet;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
@@ -51,7 +52,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             String productName = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSetName = "standard";
+            String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
@@ -163,7 +164,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             String productName = "Shotgun";
             BillingPeriod term = BillingPeriod.ANNUAL;
-            String planSetName = "standard";
+            String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 

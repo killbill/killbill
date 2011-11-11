@@ -36,21 +36,26 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.BeforeTest;
 
 import com.google.inject.Injector;
 import com.ning.billing.account.api.IAccount;
+import com.ning.billing.catalog.CatalogService;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.ICatalogUserApi;
+import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.entitlement.IEntitlementSystem;
+import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.entitlement.api.IEntitlementService;
 import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
@@ -59,7 +64,8 @@ import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IUserEvent;
-import com.ning.billing.entitlement.glue.IEntitlementConfig;
+import com.ning.billing.entitlement.glue.InjectorMagic;
+import com.ning.billing.lifecycle.IService.ServiceException;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
 
@@ -69,11 +75,10 @@ public abstract class TestUserApiBase {
 
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
 
-    protected IEntitlementSystem service;
-    protected Engine engine;
+    protected IEntitlementService entitlementService;
     protected IEntitlementUserApi entitlementApi;
     protected IEntitlementBillingApi billingApi;
-    protected ICatalogUserApi catalogApi;
+    protected ICatalogService catalogService;
     protected IEntitlementConfig config;
     protected IEntitlementDao dao;
     protected ClockMock clock;
@@ -83,6 +88,7 @@ public abstract class TestUserApiBase {
     protected ApiTestListener testListener;
     protected ISubscriptionBundle bundle;
 
+    private InjectorMagic injectorMagic;
 
     public static void loadSystemPropertiesFromClasspath( final String resource )
     {
@@ -96,33 +102,33 @@ public abstract class TestUserApiBase {
         }
     }
 
+    @AfterClass(groups={"setup"})
+    public void tearDown() {
+        InjectorMagic.instance = null;
+    }
 
     @BeforeClass(groups={"setup"})
     public void setup() {
 
-        // Does not see to work ...
-        /*
-        TimeZone tz  = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
-        tz  = TimeZone.getDefault();
-         */
-
         loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = getInjector();
 
-        service = g.getInstance(IEntitlementSystem.class);
-        engine = g.getInstance(Engine.class);
-        entitlementApi = g.getInstance(IEntitlementUserApi.class);
-        catalogApi = g.getInstance(ICatalogUserApi.class);
-        billingApi = g.getInstance(IEntitlementBillingApi.class);
+        injectorMagic = g.getInstance(InjectorMagic.class);
+
+
+        entitlementService = g.getInstance(IEntitlementService.class);
+        catalogService = g.getInstance(ICatalogService.class);
         config = g.getInstance(IEntitlementConfig.class);
         dao = g.getInstance(IEntitlementDao.class);
         clock = (ClockMock) g.getInstance(IClock.class);
         try {
 
-            service.initialize();
+            ((CatalogService) catalogService).loadCatalog();
+            ((Engine)entitlementService).initialize();
             init();
         } catch (EntitlementUserApiException e) {
+            Assert.fail(e.getMessage());
+        } catch (ServiceException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -133,18 +139,20 @@ public abstract class TestUserApiBase {
         account = getAccount();
         assertNotNull(account);
 
-        catalog = catalogApi.getCatalog(config.getCatalogConfigFileName());
+        catalog = catalogService.getCatalog();
         assertNotNull(catalog);
 
         testListener = new ApiTestListener();
         List<IApiListener> listeners =  new ArrayList<IApiListener>();
         listeners.add(testListener);
-        entitlementApi.initialize(listeners);
+        entitlementApi = entitlementService.getUserApi(listeners);
+        billingApi = entitlementService.getBillingApi();
 
     }
 
     @BeforeMethod(groups={"setup"})
     public void setupTest() {
+
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
 
@@ -157,12 +165,15 @@ public abstract class TestUserApiBase {
             Assert.fail(e.getMessage());
         }
         assertNotNull(bundle);
-        service.start();
+
+        ((Engine)entitlementService).start();
     }
 
     @AfterMethod(groups={"setup"})
     public void cleanupTest() {
-        service.stop();
+
+
+        ((Engine)entitlementService).stop();
         log.warn("DONE WITH TEST\n");
     }
 

@@ -24,9 +24,11 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.IPrice;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Price extends ValidatingConfig implements IPrice {
+public class Price extends ValidatingConfig<Catalog> implements IPrice {
 	@XmlElement(required=true)
 	private Currency currency;
 

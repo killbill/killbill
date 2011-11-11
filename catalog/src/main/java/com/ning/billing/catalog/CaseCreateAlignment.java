@@ -19,6 +19,7 @@ package com.ning.billing.catalog;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.ProductCategory;
 

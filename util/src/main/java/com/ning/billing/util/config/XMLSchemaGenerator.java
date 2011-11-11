@@ -14,12 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.io;
+package com.ning.billing.util.config;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,15 +40,20 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Document;
 
-import com.ning.billing.catalog.Catalog;
-
 public class XMLSchemaGenerator {
 	final private static  int MAX_SCHEMA_SIZE_IN_BYTES = 100000;
 
+
 	//Note: this main method is called by the maven build to generate the schema for the jar
-	public static void main(String[] args) throws IOException, TransformerException, JAXBException {
-		JAXBContext context =JAXBContext.newInstance(Catalog.class);
-		String xsdFileName = "CatalogSchema.xsd";
+	public static void main(String[] args) throws IOException, TransformerException, JAXBException, ClassNotFoundException {
+		if (args.length != 2) {
+			printUsage();
+			System.exit(0);
+		}
+		Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(args[1]);
+		
+		JAXBContext context =JAXBContext.newInstance(clazz);
+		String xsdFileName = "Schema.xsd";
 		if(args.length != 0) {
 			xsdFileName = args[0] + "/" + xsdFileName;
 		}
@@ -55,12 +61,23 @@ public class XMLSchemaGenerator {
 		pojoToXSD(context, s);
 	}
 
-	public static StreamSource xmlSchema() throws IOException, TransformerException, JAXBException {
+	private static void printUsage() {
+		System.out.println(XMLSchemaGenerator.class.getName() + " <file> <class1>");
+		
+	}
+	
+	public static String xmlSchemaAsString(Class<?> clazz) throws IOException, TransformerException, JAXBException {
 		ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_SCHEMA_SIZE_IN_BYTES);
-		JAXBContext context =JAXBContext.newInstance(Catalog.class);
+		JAXBContext context =JAXBContext.newInstance(clazz);
 		pojoToXSD(context, output);
-		StreamSource source = new StreamSource(new ByteArrayInputStream(output.toByteArray()));
-		return source;
+		return new String(output.toByteArray());
+	}
+
+	public static InputStream xmlSchema(Class<?> clazz) throws IOException, TransformerException, JAXBException {
+		ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_SCHEMA_SIZE_IN_BYTES);
+		JAXBContext context =JAXBContext.newInstance(clazz);
+		pojoToXSD(context, output);
+		return new ByteArrayInputStream(output.toByteArray());
 	}
 
 	public static void pojoToXSD(JAXBContext context, OutputStream out)

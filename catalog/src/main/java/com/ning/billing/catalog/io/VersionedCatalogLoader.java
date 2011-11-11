@@ -19,6 +19,7 @@ package com.ning.billing.catalog.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -33,23 +34,23 @@ import org.xml.sax.SAXException;
 import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
+import com.ning.billing.util.config.XMLLoader;
 
-public class VersionedCatalogLoader implements ICatalogLoader {
+public class VersionedCatalogLoader  {
 	private  final String XML_EXTENSION = ".xml";
 	private  final String HREF_LOW_START = "href=\""; 
 	private  final String HREF_CAPS_START = "HREF=\""; 
 	private  final String HREF_SEARCH_END = "\"";
-		
+			
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.io.ICatalogLoader#load(java.net.URL)
 	 */
-	@Override
-	public  VersionedCatalog load(URL url) throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException {
+	public  VersionedCatalog load(URL url) throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
 		String directoryContents = pullContentsFrom(url);
 		List<URL> xmlURLs = findXmlReferences(directoryContents, url);
 		VersionedCatalog result = new VersionedCatalog();
 		for(URL u : xmlURLs) {
-			Catalog catalog = XMLReader.getCatalogFromName(u);
+			Catalog catalog = XMLLoader.getObjectFromURL(u, Catalog.class);
 			result.add(catalog);
 		}
 		return result;
