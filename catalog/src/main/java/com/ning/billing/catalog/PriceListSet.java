@@ -20,7 +20,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;

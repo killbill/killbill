@@ -31,8 +31,6 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
