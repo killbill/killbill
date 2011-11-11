@@ -27,6 +27,7 @@ public class XMLWriter<T> {
 	public static <T> String writeXML(T object, Class<T> type) throws Exception {
    	 	JAXBContext context =JAXBContext.newInstance(type);
         Marshaller marshaller = context.createMarshaller();
+        marshaller.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
         ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_XML_SIZE_IN_BYTES);
         
         marshaller.marshal(object, output);
