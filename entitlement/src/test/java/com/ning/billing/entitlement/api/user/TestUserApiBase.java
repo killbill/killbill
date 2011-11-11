@@ -68,6 +68,8 @@ import com.ning.billing.entitlement.glue.InjectorMagic;
 import com.ning.billing.lifecycle.IService.ServiceException;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
+import com.ning.billing.util.eventbus.EventBusService;
+import com.ning.billing.util.eventbus.IEventBusService;
 
 public abstract class TestUserApiBase {
 
@@ -82,13 +84,12 @@ public abstract class TestUserApiBase {
     protected IEntitlementConfig config;
     protected IEntitlementDao dao;
     protected ClockMock clock;
+    protected IEventBusService busService;
 
     protected IAccount account;
     protected ICatalog catalog;
     protected ApiTestListener testListener;
     protected ISubscriptionBundle bundle;
-
-    private InjectorMagic injectorMagic;
 
     public static void loadSystemPropertiesFromClasspath( final String resource )
     {
@@ -105,6 +106,7 @@ public abstract class TestUserApiBase {
     @AfterClass(groups={"setup"})
     public void tearDown() {
         InjectorMagic.instance = null;
+        ((EventBusService) busService).stopBus();
     }
 
     @BeforeClass(groups={"setup"})
@@ -113,18 +115,17 @@ public abstract class TestUserApiBase {
         loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = getInjector();
 
-        injectorMagic = g.getInstance(InjectorMagic.class);
-
-
         entitlementService = g.getInstance(IEntitlementService.class);
         catalogService = g.getInstance(ICatalogService.class);
+        busService = g.getInstance(IEventBusService.class);
         config = g.getInstance(IEntitlementConfig.class);
         dao = g.getInstance(IEntitlementDao.class);
         clock = (ClockMock) g.getInstance(IClock.class);
         try {
 
             ((CatalogService) catalogService).loadCatalog();
-            ((Engine)entitlementService).initialize();
+            ((EventBusService) busService).startBus();
+            ((Engine) entitlementService).initialize();
             init();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
@@ -142,10 +143,9 @@ public abstract class TestUserApiBase {
         catalog = catalogService.getCatalog();
         assertNotNull(catalog);
 
-        testListener = new ApiTestListener();
-        List<IApiListener> listeners =  new ArrayList<IApiListener>();
-        listeners.add(testListener);
-        entitlementApi = entitlementService.getUserApi(listeners);
+
+        testListener = new ApiTestListener(busService.getEventBus());
+        entitlementApi = entitlementService.getUserApi();
         billingApi = entitlementService.getBillingApi();
 
     }

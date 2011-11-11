@@ -21,7 +21,6 @@ import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.analytics.dao.EventDao;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.user.IApiListener;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
@@ -31,7 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class AnalyticsListener implements IApiListener
+// STEPH fid with Pierre
+public class AnalyticsListener /* implements IApiListener */
 {
     private static final Logger log = LoggerFactory.getLogger(AnalyticsListener.class);
     private final EventDao dao;
@@ -45,42 +45,40 @@ public class AnalyticsListener implements IApiListener
         this.accountApi = accountApi;
     }
 
-    @Override
+
     public void subscriptionCreated(ISubscriptionTransition created)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan());
         recordTransition(event, created);
     }
 
-    @Override
+
     public void subscriptionCancelled(ISubscriptionTransition cancelled)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getNextPlan());
         recordTransition(event, cancelled);
     }
 
-    @Override
+
     public void subscriptionChanged(ISubscriptionTransition changed)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan());
         recordTransition(event, changed);
     }
 
-    @Override
+
     public void subscriptionPaused(ISubscriptionTransition paused)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPaused(paused.getNextPlan());
         recordTransition(event, paused);
     }
 
-    @Override
     public void subscriptionResumed(ISubscriptionTransition resumed)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionResumed(resumed.getNextPlan());
         recordTransition(event, resumed);
     }
 
-    @Override
     public void subscriptionPhaseChanged(ISubscriptionTransition phaseChanged)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState());

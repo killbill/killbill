@@ -22,15 +22,15 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.ICatalog;
+import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
-import com.ning.billing.entitlement.api.user.IApiListener;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
@@ -41,37 +41,23 @@ import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventCreate;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.entitlement.glue.InjectorMagic;
 import com.ning.billing.util.clock.IClock;
 
 public class EntitlementUserApi implements IEntitlementUserApi {
 
-    private final Engine engine;
     private final IClock clock;
     private final IEntitlementDao dao;
     private final IPlanAligner planAligner;
+    private final ICatalogService catalogService;
 
-    private boolean initialized;
-
-    private ICatalog catalog;
-
-    public EntitlementUserApi(Engine engine, IClock clock, IPlanAligner planAligner, IEntitlementDao dao) {
+    @Inject
+    public EntitlementUserApi(IClock clock, IPlanAligner planAligner,
+            IEntitlementDao dao, ICatalogService catalogService) {
         super();
-        this.engine = engine;
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
-        this.initialized = false;
-
-    }
-
-    @Override
-    public synchronized void initialize(List<IApiListener> listeners) {
-        if (!initialized) {
-            this.catalog = InjectorMagic.getCatlog();
-            engine.registerApiObservers(listeners);
-            initialized = true;
-        }
+        this.catalogService = catalogService;
     }
 
     @Override
@@ -110,7 +96,7 @@ public class EntitlementUserApi implements IEntitlementUserApi {
 
         DateTime now = clock.getUTCNow();
 
-        IPlan plan = catalog.getPlan(productName, term, realPriceList);
+        IPlan plan = catalogService.getCatalog().getPlan(productName, term, realPriceList);
         if (plan == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BAD_CATALOG, productName, term, realPriceList);
         }

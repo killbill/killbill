@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.glue;
 
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
+import com.ning.billing.util.glue.EventBusModule;
 
 public class EngineModuleMock extends EntitlementModule {
 
@@ -29,6 +30,7 @@ public class EngineModuleMock extends EntitlementModule {
     @Override
     protected void configure() {
         super.configure();
+        install(new EventBusModule());
     }
 
 }

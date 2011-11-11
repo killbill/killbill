@@ -25,6 +25,7 @@ import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.entitlement.exceptions.EntitlementError;
 
 public class SubscriptionTransition implements ISubscriptionTransition {
 
@@ -117,6 +118,18 @@ public class SubscriptionTransition implements ISubscriptionTransition {
         return nextPriceList;
     }
 
+    @Override
+    public SubscriptionTransitionTypeType getTransitionType() {
+        switch(eventType) {
+        case API_USER:
+            return apiEventType.getSubscriptionTransitionType();
+        case PHASE:
+            return SubscriptionTransitionTypeType.PHASE;
+        default:
+            throw new EntitlementError("Unexpected event type " + eventType);
+        }
+    }
+
     public ApiEventType getApiEventType() {
         return apiEventType;
     }
@@ -151,5 +164,4 @@ public class SubscriptionTransition implements ISubscriptionTransition {
                 + ", nextPriceList " + nextPriceList
                 + ", nextPhase=" + ((nextPhase != null) ? nextPhase.getName() : null) + "]";
     }
-
 }

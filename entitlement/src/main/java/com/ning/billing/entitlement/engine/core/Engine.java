@@ -16,25 +16,19 @@
 
 package com.ning.billing.entitlement.engine.core;
 
-import java.util.List;
-
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.config.IEntitlementConfig;
 
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
-import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.IEntitlementService;
-import com.ning.billing.entitlement.api.billing.BillingApi;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.IApiListener;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
@@ -59,20 +53,19 @@ public class Engine implements IEventListener, IEntitlementService {
     private final IPlanAligner planAligner;
     private final IEntitlementUserApi userApi;
     private final IEntitlementBillingApi billingApi;
-    private List<IApiListener> observers;
 
 
     @Inject
     public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor,
-            IPlanAligner planAligner, IEntitlementConfig config) {
+            IPlanAligner planAligner, IEntitlementConfig config, EntitlementUserApi userApi,
+            EntitlementBillingApi billingApi) {
         super();
         this.clock = clock;
         this.dao = dao;
         this.apiEventProcessor = apiEventProcessor;
         this.planAligner = planAligner;
-        this.observers = null;
-        this.userApi = new EntitlementUserApi(this, clock, planAligner, dao);
-        this.billingApi = new BillingApi(this, clock, dao);
+        this.userApi = userApi;
+        this.billingApi = billingApi;
     }
 
     @Override
@@ -96,8 +89,7 @@ public class Engine implements IEventListener, IEntitlementService {
     }
 
     @Override
-    public IEntitlementUserApi getUserApi(List<IApiListener> listeners) {
-        userApi.initialize(listeners);
+    public IEntitlementUserApi getUserApi() {
         return userApi;
     }
 
@@ -107,16 +99,8 @@ public class Engine implements IEventListener, IEntitlementService {
     }
 
 
-    public void registerApiObservers(List<IApiListener> observers) {
-        this.observers = observers;
-    }
-
-
     @Override
     public void processEventReady(IEvent event) {
-        if (observers == null) {
-            return;
-        }
         Subscription subscription = (Subscription) dao.getSubscriptionFromId(event.getSubscriptionId());
         if (subscription == null) {
             log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
@@ -131,6 +115,7 @@ public class Engine implements IEventListener, IEntitlementService {
     }
 
     private void dispatchApiEvent(IUserEvent event, Subscription subscription) {
+/*
         for (IApiListener listener : observers) {
             switch(event.getEventType()) {
             case CREATE:
@@ -146,12 +131,16 @@ public class Engine implements IEventListener, IEntitlementService {
                 break;
             }
         }
+        */
     }
+// STEPH observers
 
     private void dispatchPhaseEvent(IPhaseEvent event, Subscription subscription) {
+/*
         for (IApiListener listener : observers) {
             listener.subscriptionPhaseChanged(subscription.getLatestTranstion());
         }
+*/
     }
 
     private void insertNextPhaseEvent(Subscription subscription) {

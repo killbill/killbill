@@ -26,7 +26,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.lifecycle.IService;
-import com.ning.billing.lifecycle.Lifecycled;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
 import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
 
@@ -58,7 +57,6 @@ public class TestLifecycle {
         }
     }
 
-    @Lifecycled
     public static class Service2 implements IService {
 
         @LyfecycleHandlerType(LyfecycleLevel.LOAD_CATALOG)

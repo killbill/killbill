@@ -23,6 +23,8 @@ import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.IEntitlementService;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.engine.core.ApiEventProcessor;
@@ -59,6 +61,8 @@ public class EntitlementModule extends AbstractModule {
         bind(IEntitlementService.class).to(Engine.class).asEagerSingleton();
         bind(Engine.class).asEagerSingleton();
         bind(IPlanAligner.class).to(PlanAligner.class).asEagerSingleton();
+        bind(IEntitlementUserApi.class).to(EntitlementUserApi.class).asEagerSingleton();
+        bind(IEntitlementBillingApi.class).to(EntitlementBillingApi.class).asEagerSingleton();
     }
 
     protected void installInjectorMagic() {

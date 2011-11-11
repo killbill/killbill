@@ -16,16 +16,38 @@
 
 package com.ning.billing.entitlement.events.user;
 
+import com.ning.billing.entitlement.api.user.ISubscriptionTransition.SubscriptionTransitionTypeType;
+
 
 public enum ApiEventType {
     /*
-     * STEPH should be changed
      * Ordering is important for unit tests today.
      */
-    CREATE,
-    CHANGE,
-    PAUSE,
-    RESUME,
-    CANCEL,
-    UNCANCEL
+    CREATE {
+        @Override
+        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.CREATE; }
+    },
+    CHANGE {
+        @Override
+        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.CHANGE; }
+    },
+    PAUSE {
+        @Override
+        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.PAUSE; }
+    },
+    RESUME {
+        @Override
+        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.RESUME; }
+    },
+    CANCEL {
+        @Override
+        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.CANCEL; }
+    },
+    UNCANCEL {
+        @Override
+        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.UNCANCEL; }
+    };
+
+    // STEPH Really, is that necessary?
+    public abstract SubscriptionTransitionTypeType getSubscriptionTransitionType();
 }

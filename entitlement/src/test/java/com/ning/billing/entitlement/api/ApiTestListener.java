@@ -22,10 +22,11 @@ import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.entitlement.api.user.IApiListener;
+import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
+import com.ning.billing.util.eventbus.IEventBus;
 
-public class ApiTestListener implements IApiListener {
+public class ApiTestListener {
 
     private static final Logger log = LoggerFactory.getLogger(ApiTestListener.class);
 
@@ -42,9 +43,35 @@ public class ApiTestListener implements IApiListener {
         PHASE
     }
 
-    public ApiTestListener() {
+    public ApiTestListener(IEventBus eventBus) {
         this.nextExpectedEvent = new Stack<NextEvent>();
         this.completed = false;
+    }
+
+    @Subscribe
+    public void handleEntitlementEvent(ISubscriptionTransition event) {
+        switch (event.getTransitionType()) {
+        case CREATE:
+            subscriptionCreated(event);
+            break;
+        case CANCEL:
+            subscriptionCancelled(event);
+            break;
+        case CHANGE:
+            subscriptionChanged(event);
+            break;
+        case PAUSE:
+            subscriptionPaused(event);
+            break;
+        case RESUME:
+            subscriptionResumed(event);
+            break;
+        case UNCANCEL:
+            break;
+        default:
+            throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
+        }
+
     }
 
     public void pushExpectedEvent(NextEvent next) {
@@ -98,42 +125,42 @@ public class ApiTestListener implements IApiListener {
         }
     }
 
-    @Override
+
     public void subscriptionCreated(ISubscriptionTransition created) {
         log.debug("-> Got event CREATED");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.CREATE);
         notifyIfStackEmpty();
     }
 
-    @Override
+
     public void subscriptionCancelled(ISubscriptionTransition cancelled) {
         log.debug("-> Got event CANCEL");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.CANCEL);
         notifyIfStackEmpty();
     }
 
-    @Override
+
     public void subscriptionChanged(ISubscriptionTransition changed) {
         log.debug("-> Got event CHANGE");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.CHANGE);
         notifyIfStackEmpty();
     }
 
-    @Override
+
     public void subscriptionPaused(ISubscriptionTransition paused) {
         log.debug("-> Got event PAUSE");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.PAUSE);
         notifyIfStackEmpty();
     }
 
-    @Override
+
     public void subscriptionResumed(ISubscriptionTransition resumed) {
         log.debug("-> Got event RESUME");
         assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.RESUME);
         notifyIfStackEmpty();
     }
 
-    @Override
+
     public void subscriptionPhaseChanged(
             ISubscriptionTransition phaseChanged) {
         log.debug("-> Got event PHASE");

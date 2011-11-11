@@ -23,9 +23,21 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
+import com.ning.billing.util.eventbus.IEventBusType;
 
-public interface ISubscriptionTransition {
+public interface ISubscriptionTransition extends IEventBusType {
 
+    public enum SubscriptionTransitionTypeType {
+        CREATE,
+        CHANGE,
+        PAUSE,
+        RESUME,
+        CANCEL,
+        UNCANCEL,
+        PHASE
+    }
+
+    SubscriptionTransitionTypeType getTransitionType();
 
     UUID getBundleId();
 
