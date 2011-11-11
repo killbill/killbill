@@ -185,7 +185,7 @@ public class BusinessAccount
 
         final BusinessAccount that = (BusinessAccount) o;
 
-        if (balance != null ? !(Rounder.round(balance) == Rounder.round(balance)) : that.balance != null) {
+        if (balance != null ? !(Rounder.round(balance) == Rounder.round(that.balance)) : that.balance != null) {
             return false;
         }
         if (billingAddressCountry != null ? !billingAddressCountry.equals(that.billingAddressCountry) : that.billingAddressCountry != null) {
