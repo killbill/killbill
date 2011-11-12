@@ -14,26 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.config;
+package com.ning.billing.entitlement.api.test;
 
-import org.skife.config.Config;
-import org.skife.config.Default;
+public interface IEntitlementTestApi {
 
-public interface IEntitlementConfig {
+    public void doProcessReadyEvents();
 
-    @Config("killbill.entitlement.dao.claim.time")
-    @Default("60000")
-    public long getDaoClaimTimeMs();
-
-    @Config("killbill.entitlement.dao.ready.max")
-    @Default("10")
-    public int getDaoMaxReadyEvents();
-
-    @Config("killbill.entitlement.engine.notifications.sleep")
-    @Default("500")
-    public long getNotificationSleepTimeMs();
-
-    @Config("killbill.entitlement.engine.events.off")
-    @Default("false")
-    public boolean isEventProcessingOff();
 }

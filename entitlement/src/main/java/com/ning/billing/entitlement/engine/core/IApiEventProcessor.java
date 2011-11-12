@@ -19,4 +19,6 @@ package com.ning.billing.entitlement.engine.core;
 
 public interface IApiEventProcessor extends IEventNotifier {
 
+    public void processAllReadyEvents();
+
 }

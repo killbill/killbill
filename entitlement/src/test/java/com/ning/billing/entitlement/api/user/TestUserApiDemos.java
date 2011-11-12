@@ -80,7 +80,7 @@ public class TestUserApiDemos extends TestUserApiBase {
 
             /* STEP 2. CHANGE PLAN WHILE IN TRIAL */
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount");
+            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
             assertTrue(testListener.isCompleted(3000));
 
             displayState(subscription.getId(), "STEP 2. CHANGED PLAN WHILE IN TRIAL");
@@ -103,7 +103,7 @@ public class TestUserApiDemos extends TestUserApiBase {
             subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount");
+            subscription.changePlan("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
@@ -111,7 +111,7 @@ public class TestUserApiDemos extends TestUserApiBase {
 
             /* STEP 5. CHANGE AGAIN */
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount");
+            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
@@ -154,7 +154,7 @@ public class TestUserApiDemos extends TestUserApiBase {
 
             /* STEP 8. CANCEL IMM (NO CTD) */
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel();
+            subscription.cancel(clock.getUTCNow(), false);
 
             displayState(subscription.getId(), "STEP 8.  CANCELLATION");
 

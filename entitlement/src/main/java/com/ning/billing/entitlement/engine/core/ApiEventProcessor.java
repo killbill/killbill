@@ -33,11 +33,11 @@ public class ApiEventProcessor extends ApiEventProcessorBase {
 
 
     @Override
-    protected void doProcessEvents(int sequenceId) {
+    protected boolean doProcessEvents(int sequenceId) {
         long prev = nbProcessedEvents;
         List<IEvent> claimedEvents = dao.getEventsReady(apiProcessorId, sequenceId);
         if (claimedEvents.size() == 0) {
-            return;
+            return false;
         }
         log.debug(String.format("ApiEventProcessor got %d events", claimedEvents.size()));
 
@@ -51,6 +51,7 @@ public class ApiEventProcessor extends ApiEventProcessorBase {
         dao.clearEventsReady(apiProcessorId, claimedEvents);
         log.debug(String.format("ApiEventProcessor cleared events %d", nbProcessedEvents - prev));
         //log.debug(String.format("ApiEventProcessor seq = %d cleared events %s", sequenceId, claimedEvents.get(0).getId()));
+        return true;
     }
 
 }

@@ -206,7 +206,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
 
     @Override
-    public void cancel() throws EntitlementUserApiException  {
+    public void cancel(DateTime requestedDate, boolean eot) throws EntitlementUserApiException  {
 
         SubscriptionState currentState = getState();
         if (currentState != SubscriptionState.ACTIVE) {
@@ -214,6 +214,9 @@ public class Subscription extends PrivateFields  implements ISubscription {
         }
 
         DateTime now = clock.getUTCNow();
+        if (requestedDate != null && requestedDate.isAfter(now)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
+        }
 
         IPlan currentPlan = getCurrentPlan();
         PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
@@ -251,7 +254,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
     @Override
     public void changePlan(String productName, BillingPeriod term,
-            String priceList) throws EntitlementUserApiException {
+            String priceList, DateTime requestedDate) throws EntitlementUserApiException {
 
         String currentPriceList = getCurrentPriceList();
         String realPriceList = (priceList == null) ? currentPriceList : priceList;
@@ -399,22 +402,6 @@ public class Subscription extends PrivateFields  implements ISubscription {
         return false;
     }
 
-    // STEPH do we need that? forgot?
-    private boolean isSubscriptionFutureChanged() {
-        if (transitions == null) {
-            return false;
-        }
-
-        for (SubscriptionTransition cur : transitions) {
-            if (cur.getEffectiveTransitionTime().isBefore(clock.getUTCNow()) ||
-                    cur.getEventType() == EventType.PHASE ||
-                    cur.getApiEventType() != ApiEventType.CHANGE) {
-                continue;
-            }
-            return true;
-        }
-        return false;
-    }
 
     private DateTime getPlanChangeEffectiveDate(ActionPolicy policy, DateTime now) {
 

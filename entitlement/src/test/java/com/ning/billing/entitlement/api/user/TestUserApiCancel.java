@@ -62,7 +62,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL in trial period to get IMM policy
-            subscription.cancel();
+            subscription.cancel(clock.getUTCNow(), false);
             currentPhase = subscription.getCurrentPhase();
 
             testListener.isCompleted(1000);
@@ -113,7 +113,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
-            subscription.cancel();
+            subscription.cancel(clock.getUTCNow(), false);
             assertFalse(testListener.isCompleted(2000));
 
             // MOVE TO EOT + RECHECK
@@ -160,7 +160,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
-            subscription.cancel();
+            subscription.cancel(clock.getUTCNow(), false);
             assertTrue(testListener.isCompleted(2000));
 
             IPlanPhase currentPhase = subscription.getCurrentPhase();
@@ -210,7 +210,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
-            subscription.cancel();
+            subscription.cancel(clock.getUTCNow(), false);
             assertFalse(testListener.isCompleted(2000));
 
             subscription.uncancel();

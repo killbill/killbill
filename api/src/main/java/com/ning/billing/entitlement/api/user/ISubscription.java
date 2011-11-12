@@ -29,13 +29,13 @@ import com.ning.billing.catalog.api.ActionPolicy;
 
 public interface ISubscription extends IPrivateFields {
 
-    public void cancel()
+    public void cancel(DateTime requestedDate, boolean eot)
     throws EntitlementUserApiException;
 
     public void uncancel()
     throws EntitlementUserApiException;
 
-    public void changePlan(String productName, BillingPeriod term, String planSet)
+    public void changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate)
         throws EntitlementUserApiException ;
 
     public void pause()

@@ -33,6 +33,8 @@ import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.IEntitlementService;
 import com.ning.billing.entitlement.api.billing.BillingApi;
 import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
+import com.ning.billing.entitlement.api.test.EntitlementTestApi;
+import com.ning.billing.entitlement.api.test.IEntitlementTestApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.IApiListener;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
@@ -43,6 +45,7 @@ import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.lifecycle.IService;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
 import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
 import com.ning.billing.util.clock.IClock;
@@ -59,6 +62,8 @@ public class Engine implements IEventListener, IEntitlementService {
     private final IPlanAligner planAligner;
     private final IEntitlementUserApi userApi;
     private final IEntitlementBillingApi billingApi;
+    private final IEntitlementTestApi testApi;
+    private final IEntitlementConfig config;
     private List<IApiListener> observers;
 
 
@@ -70,9 +75,12 @@ public class Engine implements IEventListener, IEntitlementService {
         this.dao = dao;
         this.apiEventProcessor = apiEventProcessor;
         this.planAligner = planAligner;
+        this.config = config;
         this.observers = null;
         this.userApi = new EntitlementUserApi(this, clock, planAligner, dao);
         this.billingApi = new BillingApi(this, clock, dao);
+        this.testApi = new EntitlementTestApi(apiEventProcessor, config);
+
     }
 
     @Override
@@ -87,6 +95,10 @@ public class Engine implements IEventListener, IEntitlementService {
 
     @LyfecycleHandlerType(LyfecycleLevel.START_SERVICE)
     public void start() {
+        if (config.isEventProcessingOff()) {
+            log.warn("KILLBILL ENTITLEMENT EVENT PROCESSING IS OFF !!!");
+            return;
+        }
         apiEventProcessor.startNotifications(this);
     }
 
@@ -106,6 +118,11 @@ public class Engine implements IEventListener, IEntitlementService {
         return billingApi;
     }
 
+
+    @Override
+    public IEntitlementTestApi getTestApi() {
+        return testApi;
+    }
 
     public void registerApiObservers(List<IApiListener> observers) {
         this.observers = observers;
@@ -165,4 +182,5 @@ public class Engine implements IEventListener, IEntitlementService {
             dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent);
         }
     }
+
 }
