@@ -29,6 +29,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.PriceListSet;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlanPhase;
@@ -113,7 +114,7 @@ public class TestUserApiError extends TestUserApiBase {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), false);
             try {
-                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
+                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_NON_ACTIVE.getCode());
                 try {
@@ -144,7 +145,7 @@ public class TestUserApiError extends TestUserApiBase {
 
             subscription.cancel(clock.getUTCNow(), false);
             try {
-                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
+                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_FUTURE_CANCELLED.getCode());
                 try {
