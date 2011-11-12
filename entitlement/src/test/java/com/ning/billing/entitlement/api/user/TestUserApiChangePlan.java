@@ -26,23 +26,16 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.catalog.PriceListSet;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.user.IUserEvent;
 import com.ning.billing.util.clock.Clock;
 
@@ -67,7 +60,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
 
     protected void testChangePlanBundleAlignEOTWithNoChargeThroughDateReal() {
-        tChangePlanBundleAlignEOTWithNoChargeThroughDate("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        tChangePlanBundleAlignEOTWithNoChargeThroughDate("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME, "Pistol", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
 
@@ -171,7 +164,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
 
     protected void testChangePlanBundleAlignIMMReal() {
-        tChangePlanBundleAlignIMM("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        tChangePlanBundleAlignIMM("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
 
@@ -213,7 +206,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
 
     protected void testChangePlanChangePlanAlignEOTWithChargeThroughDateReal() {
-        tChangePlanChangePlanAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
+        tChangePlanChangePlanAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
     }
 
     private void tChangePlanChangePlanAlignEOTWithChargeThroughDate(String fromProd, BillingPeriod fromTerm, String fromPlanSet,

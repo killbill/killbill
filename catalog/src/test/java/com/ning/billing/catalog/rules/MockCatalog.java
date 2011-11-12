@@ -14,8 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.Plan;
+import com.ning.billing.catalog.PlanPhase;
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.PriceListDefault;
+import com.ning.billing.catalog.PriceListSet;
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -72,24 +79,20 @@ public class MockCatalog extends Catalog {
 
 	public void populatePriceLists() {
 		Plan[] plans = getPlans();
-		PriceListSet set = new PriceListSet();
 		
-		set.setDefaultPricelist(new PriceListDefault());
-		set.getDefaultPricelist().setPlans(new Plan[]{plans[0]});
-		
-		PriceListChild[] priceList = new PriceListChild[plans.length - 1];
+		PriceList[] priceList = new PriceList[plans.length - 1];
 		for(int i = 1; i < plans.length; i++) {
-			priceList[i-1] = new PriceListChild();
-			priceList[i-1].setName(plans[i].getName()+ "-pl");
-			priceList[i-1].setPlans(new Plan[]{plans[i]});
+			priceList[i-1] = new PriceList(new Plan[]{plans[i]},plans[i].getName()+ "-pl");
 		}
-		set.setChildPriceLists(priceList);
+		
+		PriceListSet set = new PriceListSet(new PriceListDefault(new Plan[]{plans[0]}),priceList);
 		setPriceLists(set);
 	}
 	
 	public String[] getProductNames() {
 		return PRODUCT_NAMES;
 	}
+
 
 	
 }

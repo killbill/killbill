@@ -13,8 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.Plan;
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 
 
@@ -66,9 +70,8 @@ public class TestPlanRules {
 	}
 	
 
-	protected PriceListChild createPriceList(String name) {
-		PriceListChild result = new PriceListChild();
-		result.setName(name);
+	protected PriceList createPriceList(String name) {
+		PriceList result = new PriceList(new Plan[]{},name);
 		return result;
 	}
 

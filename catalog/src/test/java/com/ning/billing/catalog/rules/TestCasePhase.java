@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
@@ -23,10 +23,14 @@ import javax.xml.bind.annotation.XmlElement;
 
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.catalog.rules.CasePhase;
 
 public class TestCasePhase {
 	protected enum Result {

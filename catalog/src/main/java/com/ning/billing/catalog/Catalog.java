@@ -31,13 +31,12 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.rules.PlanRules;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
@@ -111,40 +110,14 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 		this.products = products;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.ICatalog#getPlanSets()
-	 */
-	@Override
-	public PriceListSet getPriceLists() {
-		return priceLists;
-	}
  
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.ICatalog#getPriceListFromName(java.lang.String)
-	 */
-	@Override
-	public PriceList getPriceListFromName(String priceListName) {
-		return priceLists.getPriceListFromName(priceListName);
-    }
-
     /* (non-Javadoc)
 	 * @see com.ning.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
 	 */
     @Override
-	public Plan getPlan(String productName, BillingPeriod term, String planSetName) {
-
-    	PriceList planSet = getPriceListFromName(planSetName);
-        if (planSet == null) {
-            return null;
-        }
-
-        for (Plan cur : planSet.getPlans()) {
-            if (cur.getProduct().getName().equals(productName) &&
-                    cur.getBillingPeriod() == term) {
-                return cur;
-            }
-        }
-        return null;
+	public Plan getPlan(String productName, BillingPeriod period, String priceListName) {
+    	IProduct product = getProductFromName(productName);
+    	return priceLists.getPlanListFrom(priceListName, product, period);
     }
 
 	@Override
@@ -292,10 +265,18 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 		this.priceLists = priceLists;
 	}
 
+	public PriceListSet getPriceLists() {
+		return this.priceLists;
+	}
+
 	@Override
 	public void configureEffectiveDate(Date date) {
 		// Nothing to do here this is a method that is only inplemented on VersionedCatalog
 		
+	}
+
+	public PriceList getPriceListFromName(String priceListName) {
+		return priceLists.findPriceListFrom(priceListName);
 	}
 	
 	//TODO: MDW validation - only allow one default pricelist

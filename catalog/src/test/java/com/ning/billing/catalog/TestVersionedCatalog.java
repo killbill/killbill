@@ -30,6 +30,8 @@ import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 

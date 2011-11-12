@@ -29,10 +29,10 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.PriceListSet;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.glue.EngineModuleMemoryMock;
 import com.ning.billing.util.clock.Clock;
@@ -58,10 +58,10 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testCreateSubscriptionBadCatalog() {
         // WRONG PRODUTCS
-        tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BAD_CATALOG);
-        tCreateSubscriptionInternal(bundle.getId(), "Whatever", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BAD_CATALOG);
+        tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BAD_CATALOG);
+        tCreateSubscriptionInternal(bundle.getId(), "Whatever", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BAD_CATALOG);
         // WRONG BILLING PERIOD
-        tCreateSubscriptionInternal(bundle.getId(), "Shotgun", null, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BAD_CATALOG);
+        tCreateSubscriptionInternal(bundle.getId(), "Shotgun", null, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BAD_CATALOG);
         // WRONG PLAN SET
         tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, null, ErrorCode.ENT_CREATE_BAD_CATALOG);
         tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, "Whatever", ErrorCode.ENT_CREATE_BAD_CATALOG);
@@ -70,19 +70,19 @@ public class TestUserApiError extends TestUserApiBase {
 
     @Test(enabled=true)
     public void testCreateSubscriptionNoBundle() {
-        tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BUNDLE);
+        tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BUNDLE);
     }
 
     @Test(enabled=false)
     public void testCreateSubscriptionNoBP() {
-        //tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BP);
+        //tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BP);
     }
 
     @Test(enabled=true)
     public void testCreateSubscriptionBPExists() {
         try {
-            createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
-            tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BP_EXISTS);
+            createSubscription("Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME);
+            tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BP_EXISTS);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.assertFalse(true);
@@ -108,7 +108,7 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testChangeSubscriptionNonActive() {
         try {
-            ISubscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
+            ISubscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME);
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), false);
@@ -132,7 +132,7 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testChangeSubscriptionFutureCancelled() {
         try {
-            ISubscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            ISubscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
 
             // SET CTD TO CANCEL IN FUTURE
             IPlanPhase trialPhase = subscription.getCurrentPhase();
@@ -167,7 +167,7 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testUncancelBadState() {
         try {
-            ISubscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            ISubscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
 
             try {
                 subscription.uncancel();

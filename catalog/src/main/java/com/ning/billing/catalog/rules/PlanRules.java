@@ -14,13 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
+import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -56,6 +57,9 @@ public class PlanRules extends ValidatingConfig<Catalog>  {
 	
 	@XmlElement(name="billingAlignmentCase", required=false)
 	private CaseBillingAlignment[] billingAlignmentCase;
+
+	@XmlElement(name="priceListCase", required=false)
+	private CasePriceList[] priceListCase;
 
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {

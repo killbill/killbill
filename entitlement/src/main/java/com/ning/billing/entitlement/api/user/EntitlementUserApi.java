@@ -28,12 +28,9 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
-import com.ning.billing.entitlement.api.user.IApiListener;
-import com.ning.billing.entitlement.api.user.ISubscription;
-import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
-import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
@@ -106,7 +103,7 @@ public class EntitlementUserApi implements IEntitlementUserApi {
             BillingPeriod term, String priceList, DateTime requestedDate) throws EntitlementUserApiException {
 
         // STEPH Should really get 'standard' from catalog
-        String realPriceList = (priceList == null) ? "standard" : priceList;
+        String realPriceList = (priceList == null) ? IPriceListSet.DEFAULT_PRICELIST_NAME : priceList;
 
         DateTime now = clock.getUTCNow();
         if (requestedDate != null && requestedDate.isAfter(now)) {

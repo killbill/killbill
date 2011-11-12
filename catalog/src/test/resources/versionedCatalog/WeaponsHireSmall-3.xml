@@ -16,7 +16,7 @@
   -->
 
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:noNamespaceSchemaLocation="../../../main/resources/CatalogSchema.xsd ">
+	xsi:noNamespaceSchemaLocation="../CatalogSchema.xsd ">
 
 	<effectiveDate>2011-03-03T00:00:00+00:00</effectiveDate>
 	<catalogName>WeaponsHireSmall</catalogName>
@@ -153,7 +153,7 @@
 		</plan>
 	</plans>
 	<priceLists>
-		<defaultPriceList>			
+		<defaultPriceList name="DEFAULT">			
 				<plans>	
 				<plan>pistol-monthly</plan>
 				<plan>shotgun-monthly</plan>

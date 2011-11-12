@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
@@ -23,9 +23,14 @@ import javax.xml.bind.annotation.XmlElement;
 
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.catalog.rules.Case;
 
 public class TestCase {
 	protected enum Result {
@@ -53,7 +58,7 @@ public class TestCase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 
 		CaseResult cr = new CaseResult(
@@ -75,7 +80,7 @@ public class TestCase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 
 		CaseResult cr = new CaseResult(
@@ -98,7 +103,7 @@ public class TestCase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 
 		CaseResult cr = new CaseResult(
@@ -121,7 +126,7 @@ public class TestCase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 
 		CaseResult cr = new CaseResult(
@@ -144,7 +149,7 @@ public class TestCase {
 		MockCatalog cat = new MockCatalog();
 
 		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 
 		CaseResult cr = new CaseResult(

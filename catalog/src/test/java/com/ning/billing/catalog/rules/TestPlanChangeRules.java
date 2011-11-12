@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import static com.ning.billing.catalog.api.ActionPolicy.END_OF_TERM;
 import static com.ning.billing.catalog.api.ActionPolicy.IMMEDIATE;
@@ -27,11 +27,15 @@ import static org.testng.AssertJUnit.assertNull;
 
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.PlanPolicyChangeRule.Qualifier;
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.rules.CaseChangePlanPolicy;
+import com.ning.billing.catalog.rules.PlanPolicyChangeRule;
+import com.ning.billing.catalog.rules.PlanPolicyChangeRule.Qualifier;
 
 public class TestPlanChangeRules extends TestPlanRules {
 

@@ -63,7 +63,7 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	
 	public Plan(){}
 	
-	protected Plan(String name, Product product, PlanPhase finalPhase) {
+	public Plan(String name, Product product, PlanPhase finalPhase) {
 		this.name = name;
 		this.product = product;
 		this.finalPhase = finalPhase;

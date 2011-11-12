@@ -45,7 +45,7 @@ public class TestXMLWriter {
 		String output = XMLWriter.writeXML(test, XmlTestClass.class);
 		
 		System.out.println(output);
-		assertEquals(output, TEST_XML);
+		assertEquals(output.replaceAll("\\s", ""), TEST_XML.replaceAll("\\s", ""));
 		 
 	}
 

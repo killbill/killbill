@@ -14,11 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
 
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -27,18 +30,10 @@ import com.ning.billing.util.config.ValidationErrors;
 
 public abstract class Case<T> extends ValidatingConfig<Catalog> {
 
-	@XmlElement(required=false)
-	@XmlIDREF
-	private Product product;
-
-	@XmlElement(required=false)
-	private ProductCategory productCategory;
-
-	@XmlElement(required=false)
-	private BillingPeriod billingPeriod;
-	
-	@XmlElement(required=false)
-	private PriceList priceList;
+	protected Product product;
+	protected ProductCategory productCategory;
+	protected BillingPeriod billingPeriod;
+	protected PriceList priceList;
 
 	protected abstract T getResult();
 	

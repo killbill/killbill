@@ -14,33 +14,33 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.Product;
+import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 
-public class CaseCancelPolicy extends CasePhase<ActionPolicy>{
+public class CaseBillingAlignment extends CasePhase<BillingAlignment> {
+
 
 	@XmlElement(required=true)
-	private ActionPolicy policy;
+	private BillingAlignment alignment;
 
-	public CaseCancelPolicy() {}
+	public CaseBillingAlignment() {}
 
-	public CaseCancelPolicy(Product product, ProductCategory productCategory, BillingPeriod billingPeriod, PriceListChild priceList,
-			PhaseType phaseType, ActionPolicy policy) {
-		super(product, productCategory, billingPeriod, priceList, phaseType, policy);
-		this.policy = policy;
+	public CaseBillingAlignment(Product product, ProductCategory productCategory, BillingPeriod billingPeriod,
+			PriceList priceList, PhaseType phaseType, BillingAlignment alignment) {
+		super(product, productCategory, billingPeriod, priceList, phaseType, alignment);
+		this.alignment = alignment;
 	}
-
-
 
 	@Override
-	protected ActionPolicy getResult() {
-		return policy;
+	protected BillingAlignment getResult() {
+		return alignment;
 	}
-
 }

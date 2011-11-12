@@ -18,21 +18,57 @@ package com.ning.billing.catalog;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
 
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPriceList;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public abstract class PriceList extends ValidatingConfig<Catalog> implements IPriceList {
+public class PriceList extends ValidatingConfig<Catalog>  {
 
+	@XmlAttribute(required=true)
 	@XmlID
-	public abstract String getName();
+	private String name;
 
-	public abstract Plan[] getPlans();
+	@XmlElementWrapper(name="plans", required=true)
+	@XmlElement(name="plan", required=true)
+	@XmlIDREF
+    private Plan[] plans;
+	
+	public PriceList(){}
 
-	public abstract IPlan findPlanByProductName(String productName);
+	public PriceList(Plan[] plans, String name) {
+		this.plans = plans;
+		this.name = name;
+	}
 
-	public abstract boolean isDefault();
+	protected Plan[] getPlans() {
+		return plans;
+	}
+	
+	public String getName() {
+        return name;
+    }
+
+	public Plan findPlan(IProduct product, BillingPeriod period) {
+        for (Plan cur : getPlans()) {
+            if (cur.getProduct().equals(product) && cur.getBillingPeriod().equals(period)) {
+                return cur;
+            }
+        }
+        return null;
+    }
+
+	@Override
+	public ValidationErrors validate(Catalog root, ValidationErrors errors) {
+		return errors;
+	}
+
+
 }

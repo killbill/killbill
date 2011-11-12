@@ -17,13 +17,9 @@
 package com.ning.billing.catalog.api;
 
 public interface IPriceListSet {
-	
-	public static final String DEFAULT_PRICELIST_NAME = "DEFAULT";
 
-	public abstract IPriceList getDefaultPricelist();
+	public static final String DEFAULT_PRICELIST_NAME="DEFAULT";
 
-	public abstract IPriceList[] getChildPriceLists();
-
-	public abstract IPriceList getPriceListFromName(String priceListName);
+	public abstract IPlan getPlanListFrom(String priceListName, IProduct product, BillingPeriod period);
 
 }
