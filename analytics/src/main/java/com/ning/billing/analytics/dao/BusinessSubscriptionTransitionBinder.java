@@ -54,6 +54,7 @@ public @interface BusinessSubscriptionTransitionBinder
                         q.bindNull("prev_product_category", Types.VARCHAR);
                         q.bindNull("prev_slug", Types.VARCHAR);
                         q.bindNull("prev_phase", Types.VARCHAR);
+                        q.bindNull("prev_billing_period", Types.VARCHAR);
                         q.bindNull("prev_price", Types.NUMERIC);
                         q.bindNull("prev_mrr", Types.NUMERIC);
                         q.bindNull("prev_currency", Types.VARCHAR);
@@ -73,6 +74,7 @@ public @interface BusinessSubscriptionTransitionBinder
                         }
                         q.bind("prev_slug", previousSubscription.getSlug());
                         q.bind("prev_phase", previousSubscription.getPhase());
+                        q.bind("prev_billing_period", previousSubscription.getBillingPeriod());
                         q.bind("prev_price", previousSubscription.getRoundedPrice());
                         q.bind("prev_mrr", previousSubscription.getRoundedMrr());
                         q.bind("prev_currency", previousSubscription.getCurrency());
@@ -109,6 +111,7 @@ public @interface BusinessSubscriptionTransitionBinder
                         q.bindNull("next_product_category", Types.VARCHAR);
                         q.bindNull("next_slug", Types.VARCHAR);
                         q.bindNull("next_phase", Types.VARCHAR);
+                        q.bindNull("next_billing_period", Types.VARCHAR);
                         q.bindNull("next_price", Types.NUMERIC);
                         q.bindNull("next_mrr", Types.NUMERIC);
                         q.bindNull("next_currency", Types.VARCHAR);
@@ -128,6 +131,7 @@ public @interface BusinessSubscriptionTransitionBinder
                         }
                         q.bind("next_slug", nextSubscription.getSlug());
                         q.bind("next_phase", nextSubscription.getPhase());
+                        q.bind("next_billing_period", nextSubscription.getBillingPeriod());
                         q.bind("next_price", nextSubscription.getRoundedPrice());
                         q.bind("next_mrr", nextSubscription.getRoundedMrr());
                         q.bind("next_currency", nextSubscription.getCurrency());

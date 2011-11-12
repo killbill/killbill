@@ -83,7 +83,7 @@ public class MockPhase implements IPlanPhase
     @Override
     public BillingPeriod getBillingPeriod()
     {
-        throw new UnsupportedOperationException();
+        return BillingPeriod.MONTHLY;
     }
 
     @Override
