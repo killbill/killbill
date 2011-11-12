@@ -26,13 +26,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 
 public class CasePriceList extends Case<PriceList> {
 
-	@XmlElement(required=true)
 	private PriceList toPriceList;
-
-	@Override
-	protected PriceList getResult() {
-		return toPriceList;
-	}
 
 	@XmlElement(required=false, name="fromProduct")
 	@XmlIDREF
@@ -54,5 +48,12 @@ public class CasePriceList extends Case<PriceList> {
 	@XmlIDREF
 	public PriceList getPriceList() {
 		return priceList;
+	}
+
+	@Override
+	@XmlElement(required=true, name="toPriceList")
+	@XmlIDREF
+	protected PriceList getResult() {
+		return toPriceList;
 	}
 }
