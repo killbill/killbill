@@ -92,7 +92,7 @@ public class TestUserApiError extends TestUserApiBase {
     private void tCreateSubscriptionInternal(UUID bundleId, String productName,
             BillingPeriod term, String planSet, ErrorCode expected)  {
         try {
-            entitlementApi.createSubscription(bundleId, productName, term, planSet);
+            entitlementApi.createSubscription(bundleId, productName, term, planSet,clock.getUTCNow());
             assertFalse(true);
         } catch (EntitlementUserApiException e) {
             assertEquals(e.getCode(), expected.getCode());
@@ -111,9 +111,9 @@ public class TestUserApiError extends TestUserApiBase {
             ISubscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel();
+            subscription.cancel(clock.getUTCNow(), false);
             try {
-                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_NON_ACTIVE.getCode());
                 try {
@@ -142,9 +142,9 @@ public class TestUserApiError extends TestUserApiBase {
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId());
 
-            subscription.cancel();
+            subscription.cancel(clock.getUTCNow(), false);
             try {
-                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_FUTURE_CANCELLED.getCode());
                 try {

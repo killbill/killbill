@@ -44,13 +44,13 @@ public class MockSubscription implements ISubscription
     }
 
     @Override
-    public void cancel()
+    public void cancel(DateTime requestedDate, boolean eot)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void changePlan(final String productName, final BillingPeriod term, final String planSet)
+    public void changePlan(final String productName, final BillingPeriod term, final String planSet, DateTime requestedDate)
     {
         throw new UnsupportedOperationException();
     }

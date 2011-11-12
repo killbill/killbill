@@ -166,5 +166,21 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
         }
     }
 
-    protected abstract void doProcessEvents(int sequenceId);
+
+    // Used for system test purpose only when event processing has been disabled.
+    @Override
+    public void processAllReadyEvents() {
+
+
+        boolean keepProcessing = false;
+        /*
+        do {
+         */
+        keepProcessing = doProcessEvents(sequenceId.incrementAndGet());
+        /*
+         } while (keepProcessing);
+         */
+    }
+
+    protected abstract boolean doProcessEvents(int sequenceId);
 }

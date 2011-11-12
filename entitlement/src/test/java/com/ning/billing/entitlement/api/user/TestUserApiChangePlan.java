@@ -92,7 +92,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
             // CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan(toProd, toTerm, toPlanSet);
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
             assertTrue(testListener.isCompleted(2000));
 
             // CHECK CHANGE PLAN
@@ -138,7 +138,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             // RE READ SUBSCRIPTION + CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
-            subscription.changePlan(toProd, toTerm, toPlanSet);
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
@@ -190,7 +190,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             clock.setDeltaFromReality(moveALittleInTime, 0);
 
             // CHANGE PLAN IMM
-            subscription.changePlan(toProd, toTerm, toPlanSet);
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.TRIAL);
 
             assertTrue(testListener.isCompleted(2000));
@@ -252,7 +252,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             currentTime = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan(toProd, toTerm, toPlanSet);
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
 
             checkChangePlan(subscription, fromProd, ProductCategory.BASE, fromTerm, PhaseType.EVERGREEN);
 
@@ -317,12 +317,12 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount");
+            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
 
             // CHANGE
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount");
+            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
 
             IPlan currentPlan = subscription.getCurrentPlan();
@@ -364,13 +364,13 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount");
+            subscription.changePlan("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount");
+            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 

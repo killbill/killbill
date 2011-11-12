@@ -53,7 +53,7 @@ public class TestUserApiScenarios extends TestUserApiBase {
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount");
+            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
             testListener.isCompleted(3000);
 
             // MOVE TO NEXT PHASE
@@ -70,7 +70,7 @@ public class TestUserApiScenarios extends TestUserApiBase {
 
             // CANCEL EOT
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel();
+            subscription.cancel(clock.getUTCNow(), false);
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
@@ -79,7 +79,7 @@ public class TestUserApiScenarios extends TestUserApiBase {
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount");
+            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
 
             clock.addDeltaFromReality(ctd);

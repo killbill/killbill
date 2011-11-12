@@ -34,9 +34,12 @@ public class ApiEventProcessorMemoryMock extends ApiEventProcessorBase {
 
 
     @Override
-    protected void doProcessEvents(int sequenceId) {
+    protected boolean doProcessEvents(int sequenceId) {
 
         List<IEvent> events =  dao.getEventsReady(apiProcessorId, sequenceId);
+        if (events.size() == 0) {
+            return false;
+        }
         log.info(String.format("doProcessEvents : Got %d event(s)", events.size() ));
         for (IEvent cur : events) {
             log.info(String.format("doProcessEvents :  (clock = %s) CALLING Engine with event %s", clock.getUTCNow(), cur));
@@ -46,5 +49,6 @@ public class ApiEventProcessorMemoryMock extends ApiEventProcessorBase {
         }
         dao.clearEventsReady(apiProcessorId, events);
         log.info(String.format("doProcessEvents : clearEvents"));
+        return true;
     }
 }

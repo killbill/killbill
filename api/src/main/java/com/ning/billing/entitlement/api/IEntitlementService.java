@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api;
 import java.util.List;
 
 import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
+import com.ning.billing.entitlement.api.test.IEntitlementTestApi;
 import com.ning.billing.entitlement.api.user.IApiListener;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.lifecycle.IService;
@@ -32,5 +33,8 @@ public interface IEntitlementService extends IService {
     public IEntitlementUserApi getUserApi(List<IApiListener> listeners);
 
     public IEntitlementBillingApi getBillingApi();
+
+    public IEntitlementTestApi getTestApi();
+
 
 }
