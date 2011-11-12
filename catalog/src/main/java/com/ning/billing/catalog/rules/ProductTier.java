@@ -14,13 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
 
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.IProductTier;
 

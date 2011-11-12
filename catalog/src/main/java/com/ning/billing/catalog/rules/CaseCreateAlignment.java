@@ -14,31 +14,32 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.api.BillingAlignment;
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.ProductCategory;
 
-public class CaseBillingAlignment extends CasePhase<BillingAlignment> {
-
+public class CaseCreateAlignment extends CaseStandardNaming<PlanAlignmentCreate>{
 
 	@XmlElement(required=true)
-	private BillingAlignment alignment;
+	private PlanAlignmentCreate alignment;
 
-	public CaseBillingAlignment() {}
+	public CaseCreateAlignment() {}
 
-	public CaseBillingAlignment(Product product, ProductCategory productCategory, BillingPeriod billingPeriod,
-			PriceListChild priceList, PhaseType phaseType, BillingAlignment alignment) {
-		super(product, productCategory, billingPeriod, priceList, phaseType, alignment);
+	public CaseCreateAlignment(Product product, ProductCategory productCategory,  BillingPeriod billingPeriod,
+			PriceList priceList, PlanAlignmentCreate alignment) {
+		super(product, productCategory, billingPeriod, priceList, alignment);
 		this.alignment = alignment;
 	}
 
 	@Override
-	protected BillingAlignment getResult() {
+	protected PlanAlignmentCreate getResult() {
 		return alignment;
 	}
+
 }

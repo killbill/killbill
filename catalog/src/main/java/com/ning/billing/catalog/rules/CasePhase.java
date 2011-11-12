@@ -14,10 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -25,7 +28,7 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.ValidationErrors;
 
-public abstract class CasePhase<T> extends Case<T> {
+public abstract class CasePhase<T> extends CaseStandardNaming<T> {
 
 	@XmlElement(required=false)
 	private PhaseType phaseType;

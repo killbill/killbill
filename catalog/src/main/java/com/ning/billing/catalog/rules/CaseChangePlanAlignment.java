@@ -14,33 +14,43 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.ProductCategory;
 
-public class CaseCancelPolicy extends CasePhase<ActionPolicy>{
+public class CaseChangePlanAlignment extends CaseChange<PlanAlignmentChange> {
 
 	@XmlElement(required=true)
-	private ActionPolicy policy;
+	private PlanAlignmentChange alignment;
+	
+	public CaseChangePlanAlignment() {}
 
-	public CaseCancelPolicy() {}
-
-	public CaseCancelPolicy(Product product, ProductCategory productCategory, BillingPeriod billingPeriod, PriceListChild priceList,
-			PhaseType phaseType, ActionPolicy policy) {
-		super(product, productCategory, billingPeriod, priceList, phaseType, policy);
-		this.policy = policy;
+	protected CaseChangePlanAlignment(
+			Product from, Product to, 
+			ProductCategory fromProductCategory, ProductCategory toProductCategory, 
+			BillingPeriod fromBP,BillingPeriod toBP, 
+			PriceList fromPriceList, PriceList toPriceList,
+			PhaseType fromType, 
+			PlanAlignmentChange result) {
+		super(from, to, 
+				fromProductCategory, toProductCategory, 
+				fromBP, toBP, 
+				fromPriceList, toPriceList,  
+				fromType,
+				result);
+		alignment = result;
 	}
 
-
-
 	@Override
-	protected ActionPolicy getResult() {
-		return policy;
+	protected PlanAlignmentChange getResult() {
+		return alignment;
 	}
 
 }

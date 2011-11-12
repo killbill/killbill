@@ -56,7 +56,7 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 	
 	public PlanPhase(){}
 
-    protected PlanPhase(BillingPeriod period, PhaseType type) {
+    public PlanPhase(BillingPeriod period, PhaseType type) {
 		this.billingPeriod = period;
 		this.type = type;
 	}

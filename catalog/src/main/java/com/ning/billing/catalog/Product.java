@@ -76,7 +76,7 @@ public class Product extends ValidatingConfig<Catalog> implements IProduct {
 	public Product() {
     }
 
-	protected Product(String name, ProductCategory category) {
+	public Product(String name, ProductCategory category) {
 		this.category = category;
 		this.name = name;
     }

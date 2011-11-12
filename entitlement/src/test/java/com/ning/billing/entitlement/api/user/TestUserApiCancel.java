@@ -17,26 +17,21 @@
 package com.ning.billing.entitlement.api.user;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertFalse;
 
 import java.util.List;
 
 import org.joda.time.DateTime;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.PriceListSet;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.util.clock.Clock;
 
@@ -52,7 +47,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             String prod = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
+            String planSet = IPriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
             Subscription subscription = createSubscription(prod, term, planSet);
@@ -91,7 +86,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             String prod = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
+            String planSet = IPriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
             Subscription subscription = createSubscription(prod, term, planSet);
@@ -144,7 +139,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             String prod = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
+            String planSet = IPriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
             Subscription subscription = createSubscription(prod, term, planSet);
@@ -188,7 +183,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             String prod = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
+            String planSet = IPriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
             Subscription subscription = createSubscription(prod, term, planSet);

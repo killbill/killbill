@@ -20,75 +20,77 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPriceListSet;
+import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PriceListSet extends ValidatingConfig<Catalog> implements IPriceListSet {
+public class PriceListSet extends ValidatingConfig<Catalog> {
 	@XmlElement(required=true, name="defaultPriceList")
 	private PriceListDefault defaultPricelist;
 	
 	@XmlElement(required=false, name="childPriceList")
-	private PriceListChild[] childPriceLists;
+	private PriceList[] childPriceLists;
 	
 	public PriceListSet() {
 		if(childPriceLists == null) {
-			childPriceLists = new PriceListChild[0];
+			childPriceLists = new PriceList[0];
 		}
-	}
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPriceListSet#getDefaultPricelist()
-	 */
-	@Override
-	public PriceListDefault getDefaultPricelist() {
-		return defaultPricelist;
-	}
-	
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPriceListSet#getChildPriceLists()
-	 */
-	@Override
-	public PriceListChild[] getChildPriceLists() {
-		return childPriceLists;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPriceListSet#getPriceListFromName(String priceListName)
-	 */
-	@Override
-	public PriceList getPriceListFromName(String priceListName) {
-		if(priceListName.equals(DEFAULT_PRICELIST_NAME)) {
-			return getDefaultPricelist();
+	public PriceListSet(PriceListDefault defaultPricelist, PriceList[] childPriceLists) {
+		this.defaultPricelist = defaultPricelist;
+		this.childPriceLists = childPriceLists;
+	}
+
+	public Plan getPlanListFrom(String priceListName, IProduct product,
+			BillingPeriod period) {
+		Plan result = null;
+		PriceList pl = findPriceListFrom(priceListName);
+		if(pl != null) {
+			result = pl.findPlan(product, period);
 		}
-		for(PriceListChild set : childPriceLists) {
-			if(set.getName().equals(priceListName)) {
-				return set;
+		if(result != null) {
+			return result;
+		}
+		
+		return defaultPricelist.findPlan(product, period);
+	}
+
+	public PriceList findPriceListFrom (String priceListName) {
+		if (defaultPricelist.getName().equals(priceListName)) {
+			return defaultPricelist;
+		} 
+		for(PriceList pl : childPriceLists) {
+			if(pl.getName().equals(priceListName)) {
+				return pl;
 			}
 		}
-        return null;
-	}
-	
-	
-
-	public void setDefaultPricelist(PriceListDefault defaultPricelist) {
-		this.defaultPricelist = defaultPricelist;
-	}
-
-	public void setChildPriceLists(PriceListChild[] childPriceLists) {
-		this.childPriceLists = childPriceLists;
+		return null;
 	}
 
 	@Override
 	public ValidationErrors validate(Catalog root, ValidationErrors errors) {
 		//Check that the default pricelist name is not in use in the children
-		for(PriceListChild pl : childPriceLists) {
-			if(pl.getName().equals(DEFAULT_PRICELIST_NAME)){
-				errors.add(new ValidationError("Pricelists cannot use the reserved name '" + DEFAULT_PRICELIST_NAME + "'", root.getCatalogURI(), PriceListSet.class, pl.getName()));
+		for(PriceList pl : childPriceLists) {
+			if(pl.getName().equals(IPriceListSet.DEFAULT_PRICELIST_NAME)){
+				errors.add(new ValidationError("Pricelists cannot use the reserved name '" + IPriceListSet.DEFAULT_PRICELIST_NAME + "'", root.getCatalogURI(), PriceListSet.class, pl.getName()));
 			}
 		}
 		return errors;
 	}
+
+	public PriceList getDefaultPricelist() {
+		return defaultPricelist;
+	}
+
+	public PriceList[] getChildPriceLists() {
+		return childPriceLists;
+	}
+
+
 	
 }

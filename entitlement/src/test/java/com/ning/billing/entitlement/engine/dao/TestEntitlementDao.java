@@ -30,6 +30,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
+import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.TestUserApiBase;
@@ -102,7 +103,7 @@ public class TestEntitlementDao extends TestUserApiBase {
 
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;
-        String planSetName = "standard";
+        String planSetName = IPriceListSet.DEFAULT_PRICELIST_NAME;
 
         IPlan plan = catalog.getPlan(productName, term, planSetName);
         final IEvent event = new ApiEventCreate(UUID.randomUUID(), now, now, plan.getName(), "evergreen", planSetName, now, now, 1);

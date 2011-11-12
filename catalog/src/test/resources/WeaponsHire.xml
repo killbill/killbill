@@ -152,6 +152,10 @@ Use Cases to do:
 			<productCategory>ADD_ON</productCategory>
 			<alignment>BUNDLE</alignment>
 		</billingAlignmentCase>
+		<priceListCase>
+			<fromPriceList></fromPriceList>
+			<priceList>DEFAULT</priceList>
+		</priceListCase>
 	</rules>
 
 	<plans>

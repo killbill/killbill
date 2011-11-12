@@ -18,61 +18,33 @@ package com.ning.billing.catalog;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlIDREF;
 
-import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.IPriceListSet;
+import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PriceListDefault extends PriceList implements IPriceList {
-
-	@XmlElementWrapper(name="plans", required=true)
-	@XmlElement(name="plan", required=true)
-	@XmlIDREF
-    private Plan[] plans;
-  
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPriceListDefault#getPlans()
-	 */
-	@Override
-	public Plan[] getPlans() {
-        return plans;
-    }
-
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPriceListDefault#findPlanByProductName(java.lang.String)
-	 */
-	@Override
-	public Plan findPlanByProductName(String productName) {
-        for (Plan cur : plans) {
-            if (cur.getProduct().getName().equals(productName)) {
-                return cur;
-            }
-        }
-        return null;
-    }
-
-	public void setPlans(Plan[] plans) {
-		this.plans = plans;
+public class PriceListDefault extends PriceList {
+	
+	public PriceListDefault(){}
+	
+	public PriceListDefault(Plan[] defaultPlans) {
+		super(defaultPlans, IPriceListSet.DEFAULT_PRICELIST_NAME);
 	}
 
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+		if(getName().equals(IPriceListSet.DEFAULT_PRICELIST_NAME)) {
+			errors.add(new ValidationError("The name of the default pricelist must be 'DEFAULT'", 
+					catalog.getCatalogURI(), PriceList.class, getName()));
+			
+		}
 		return errors;
-
 	}
 
 	@Override
 	public String getName() {
 		return IPriceListSet.DEFAULT_PRICELIST_NAME;
-	}
-
-	@Override
-	public boolean isDefault() {
-		return true;
 	}
 
 }

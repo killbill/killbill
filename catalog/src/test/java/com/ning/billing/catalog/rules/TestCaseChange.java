@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.rules;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
@@ -23,7 +23,11 @@ import javax.xml.bind.annotation.XmlElement;
 
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
@@ -64,7 +68,7 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 		Product product2 = cat.getProducts()[2];
 		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -154,7 +158,7 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 		Product product2 = cat.getProducts()[2];
 		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -237,7 +241,7 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 		Product product2 = cat.getProducts()[2];
 		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -327,7 +331,7 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 		Product product2 = cat.getProducts()[2];
 		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -417,7 +421,7 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 		Product product2 = cat.getProducts()[2];
 		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -507,7 +511,7 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 		Product product2 = cat.getProducts()[2];
 		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -598,7 +602,7 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 		Product product2 = cat.getProducts()[2];
 		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -688,7 +692,7 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 		Product product2 = cat.getProducts()[2];
 		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -778,7 +782,7 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 		Product product2 = cat.getProducts()[2];
 		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -868,7 +872,7 @@ public class TestCaseChange {
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
-		PriceList priceList1 = cat.getPriceLists().getDefaultPricelist();
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
 
 		Product product2 = cat.getProducts()[2];
 		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
