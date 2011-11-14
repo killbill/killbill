@@ -70,7 +70,7 @@ public interface IEventBus {
      *
      *  @throws EventBusException if bus not been started yet
      */
-    public void register(IEventBusType handlerInstance) throws EventBusException;
+    public void register(Object handlerInstance) throws EventBusException;
 
 
     /**

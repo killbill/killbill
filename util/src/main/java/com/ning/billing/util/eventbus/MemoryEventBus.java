@@ -29,6 +29,9 @@ import com.google.common.eventbus.AsyncEventBus;
 
 public class MemoryEventBus implements IEventBus {
 
+    // STEPH config ?
+    private final static int MAX_EVENT_THREADS = 13;
+
     private final static String EVENT_BUS_IDENTIFIER = "eventbus-service";
     private final static String EVENT_BUS_GROUP_NAME = "eventbus-grp";
     private final static String EVENT_BUS_TH_NAME = "eventbus-th";
@@ -54,14 +57,14 @@ public class MemoryEventBus implements IEventBus {
         }
 
         public void stop() {
-            // STEPH TBD
+            // STEPH hum..
         }
     }
 
     public MemoryEventBus() {
 
         final ThreadGroup group = new ThreadGroup(EVENT_BUS_GROUP_NAME);
-        Executor executor = Executors.newCachedThreadPool(new ThreadFactory() {
+        Executor executor = Executors.newFixedThreadPool(MAX_EVENT_THREADS, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
                 return new Thread(group, r, EVENT_BUS_TH_NAME);
@@ -73,9 +76,9 @@ public class MemoryEventBus implements IEventBus {
     }
 
     @Override
-    public void register(IEventBusType handlerInstance) throws EventBusException {
+    public void register(Object handlerInstnace) throws EventBusException {
         checkInitialized("register");
-        delegate.register(handlerInstance);
+        delegate.register(handlerInstnace);
     }
 
     @Override
@@ -94,6 +97,7 @@ public class MemoryEventBus implements IEventBus {
     public void start() {
         if (isInitialized.compareAndSet(false, true)) {
             log.info("MemoryEventBus started...");
+
         }
     }
 
