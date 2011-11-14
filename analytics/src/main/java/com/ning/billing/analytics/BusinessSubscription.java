@@ -16,6 +16,7 @@
 
 package com.ning.billing.analytics;
 
+import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlan;
@@ -44,13 +45,13 @@ public class BusinessSubscription
     private static final BigDecimal DAYS_IN_MONTH = BigDecimal.valueOf(30);
     private static final BigDecimal MONTHS_IN_YEAR = BigDecimal.valueOf(12);
     private static final Currency USD = Currency.valueOf("USD");
-    private static final int SCALE = 4;
 
     private final String productName;
     private final String productType;
     private final ProductCategory productCategory;
     private final String slug;
     private final String phase;
+    private final String billingPeriod;
     private final BigDecimal price;
     private final BigDecimal mrr;
     private final String currency;
@@ -59,13 +60,14 @@ public class BusinessSubscription
     private final UUID subscriptionId;
     private final UUID bundleId;
 
-    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory, final String slug, final String phase, final BigDecimal price, final BigDecimal mrr, final String currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
+    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory, final String slug, final String phase, final String billingPeriod, final BigDecimal price, final BigDecimal mrr, final String currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
     {
         this.productName = productName;
         this.productType = productType;
         this.productCategory = productCategory;
         this.slug = slug;
         this.phase = phase;
+        this.billingPeriod = billingPeriod;
         this.price = price;
         this.mrr = mrr;
         this.currency = currency;
@@ -111,9 +113,11 @@ public class BusinessSubscription
 
             if (currentPhase.getPhaseType() != null) {
                 phase = currentPhase.getPhaseType().toString();
+                billingPeriod = currentPhase.getBillingPeriod().toString();
             }
             else {
                 phase = null;
+                billingPeriod = null;
             }
 
             if (currentPhase.getRecurringPrice() != null) {
@@ -128,6 +132,7 @@ public class BusinessSubscription
         else {
             slug = null;
             phase = null;
+            billingPeriod = null;
             price = null;
             mrr = null;
         }
@@ -143,6 +148,11 @@ public class BusinessSubscription
         this.state = state;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
+    }
+
+    public String getBillingPeriod()
+    {
+        return billingPeriod;
     }
 
     public UUID getBundleId()
@@ -162,7 +172,7 @@ public class BusinessSubscription
 
     public double getRoundedMrr()
     {
-        return round(mrr);
+        return Rounder.round(mrr);
     }
 
     public String getPhase()
@@ -177,7 +187,7 @@ public class BusinessSubscription
 
     public double getRoundedPrice()
     {
-        return round(price);
+        return Rounder.round(price);
     }
 
     public ProductCategory getProductCategory()
@@ -228,24 +238,14 @@ public class BusinessSubscription
             return price.multiply(DAYS_IN_MONTH).multiply(BigDecimal.valueOf(duration.getLength()));
         }
         else if (duration.getUnit().equals(TimeUnit.MONTHS)) {
-            return price.divide(BigDecimal.valueOf(duration.getLength()), SCALE, BigDecimal.ROUND_HALF_UP);
+            return price.divide(BigDecimal.valueOf(duration.getLength()), Rounder.SCALE, BigDecimal.ROUND_HALF_UP);
         }
         else if (duration.getUnit().equals(TimeUnit.YEARS)) {
-            return price.divide(BigDecimal.valueOf(duration.getLength()), SCALE, RoundingMode.HALF_UP).divide(MONTHS_IN_YEAR, SCALE, RoundingMode.HALF_UP);
+            return price.divide(BigDecimal.valueOf(duration.getLength()), Rounder.SCALE, RoundingMode.HALF_UP).divide(MONTHS_IN_YEAR, Rounder.SCALE, RoundingMode.HALF_UP);
         }
         else {
             log.error("Unknown duration [" + duration + "], can't compute mrr");
             return null;
-        }
-    }
-
-    public static double round(final BigDecimal decimal)
-    {
-        if (decimal == null) {
-            return 0;
-        }
-        else {
-            return decimal.setScale(SCALE, BigDecimal.ROUND_HALF_UP).doubleValue();
         }
     }
 
@@ -254,10 +254,10 @@ public class BusinessSubscription
     {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessSubscription");
-        sb.append("{bundleId=").append(bundleId);
+        sb.append("{billingPeriod='").append(billingPeriod).append('\'');
         sb.append(", productName='").append(productName).append('\'');
         sb.append(", productType='").append(productType).append('\'');
-        sb.append(", productCategory='").append(productCategory).append('\'');
+        sb.append(", productCategory=").append(productCategory);
         sb.append(", slug='").append(slug).append('\'');
         sb.append(", phase='").append(phase).append('\'');
         sb.append(", price=").append(price);
@@ -266,6 +266,7 @@ public class BusinessSubscription
         sb.append(", startDate=").append(startDate);
         sb.append(", state=").append(state);
         sb.append(", subscriptionId=").append(subscriptionId);
+        sb.append(", bundleId=").append(bundleId);
         sb.append('}');
         return sb.toString();
     }
@@ -282,19 +283,22 @@ public class BusinessSubscription
 
         final BusinessSubscription that = (BusinessSubscription) o;
 
+        if (billingPeriod != null ? !billingPeriod.equals(that.billingPeriod) : that.billingPeriod != null) {
+            return false;
+        }
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
-        if (mrr != null ? !(round(mrr) == round(that.mrr)) : that.mrr != null) {
+        if (mrr != null ? !(Rounder.round(mrr) == Rounder.round(that.mrr)) : that.mrr != null) {
             return false;
         }
         if (phase != null ? !phase.equals(that.phase) : that.phase != null) {
             return false;
         }
-        if (price != null ? !(round(price) == round(that.price)) : that.price != null) {
+        if (price != null ? !(Rounder.round(price) == Rounder.round(that.price)) : that.price != null) {
             return false;
         }
         if (productCategory != null ? !productCategory.equals(that.productCategory) : that.productCategory != null) {
@@ -337,6 +341,7 @@ public class BusinessSubscription
         result = 31 * result + (state != null ? state.hashCode() : 0);
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         return result;
     }
 }

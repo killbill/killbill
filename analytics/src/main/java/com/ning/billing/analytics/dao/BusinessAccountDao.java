@@ -16,24 +16,25 @@
 
 package com.ning.billing.analytics.dao;
 
-import com.ning.billing.analytics.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.BusinessAccount;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import java.util.List;
-
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(BusinessSubscriptionTransitionMapper.class)
-public interface EventDao
+@RegisterMapper(BusinessAccountMapper.class)
+public interface BusinessAccountDao
 {
     @SqlQuery
-    List<BusinessSubscriptionTransition> getTransitions(@Bind("event_key") final String key);
+    BusinessAccount getAccount(@Bind("account_key") final String key);
 
     @SqlUpdate
-    int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition);
+    int createAccount(@BusinessAccountBinder final BusinessAccount account);
+
+    @SqlUpdate
+    int saveAccount(@BusinessAccountBinder final BusinessAccount account);
 
     @SqlUpdate
     void test();

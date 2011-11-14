@@ -1,7 +1,3 @@
-CREATE DATABASE IF NOT EXISTS killbill;
-
-USE killbill;
-
 DROP TABLE IF EXISTS accounts;
 CREATE TABLE accounts (
     id char(36) NOT NULL,
