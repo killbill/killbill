@@ -26,12 +26,13 @@ CREATE TABLE events (
 
 DROP TABLE IF EXISTS claimed_events;
 CREATE TABLE claimed_events (
+    id int(11) unsigned NOT NULL AUTO_INCREMENT,    
     sequence_id int(11) unsigned NOT NULL,    
     owner_id char(36) NOT NULL,
     hostname varchar(64) NOT NULL,
     claimed_dt datetime NOT NULL,
     event_id char(36) NOT NULL,
-    PRIMARY KEY(sequence_id)
+    PRIMARY KEY(id)
 ) ENGINE=innodb;
   
 
