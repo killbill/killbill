@@ -50,4 +50,30 @@ public class TestPriceListSet {
 		Assert.assertEquals(set.getPlanListFrom("child", foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.DISCOUNT);
 		Assert.assertEquals(set.getPlanListFrom("child", foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
 	}
+	
+	public void testForNullBillingPeriod() {
+		Product foo = new Product("Foo", ProductCategory.BASE);
+		Product bar = new Product("Bar", ProductCategory.BASE);
+		Plan[] defaultPlans = new Plan[]{ 
+				new Plan("plan-foo-monthly", foo, new PlanPhase(BillingPeriod.MONTHLY, PhaseType.EVERGREEN)),
+				new Plan("plan-bar-monthly", bar, new PlanPhase(BillingPeriod.MONTHLY, PhaseType.EVERGREEN)),
+				new Plan("plan-foo-annual", foo, new PlanPhase(null, PhaseType.EVERGREEN)),
+				new Plan("plan-bar-annual", bar, new PlanPhase(null, PhaseType.EVERGREEN))
+				};
+		Plan[] childPlans = new Plan[]{ 
+				new Plan("plan-foo", foo, new PlanPhase(BillingPeriod.ANNUAL, PhaseType.DISCOUNT)),
+				new Plan("plan-bar", bar, new PlanPhase(BillingPeriod.ANNUAL, PhaseType.DISCOUNT))
+				};
+		PriceListDefault defaultPriceList = new PriceListDefault(defaultPlans);
+		PriceList[] childPriceLists = new PriceList[] {
+				new PriceList(childPlans, "child")
+		};
+		PriceListSet set = new PriceListSet(defaultPriceList, childPriceLists);
+		
+		Assert.assertEquals(set.getPlanListFrom("child", foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.DISCOUNT);
+		Assert.assertEquals(set.getPlanListFrom("child", foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+		Assert.assertEquals(set.getPlanListFrom(IPriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+		Assert.assertEquals(set.getPlanListFrom(IPriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+	}
+
 }

@@ -58,7 +58,8 @@ public class PriceList extends ValidatingConfig<Catalog>  {
 
 	public Plan findPlan(IProduct product, BillingPeriod period) {
         for (Plan cur : getPlans()) {
-            if (cur.getProduct().equals(product) && cur.getBillingPeriod().equals(period)) {
+            if (cur.getProduct().equals(product) && 
+            		(cur.getBillingPeriod() == null || cur.getBillingPeriod().equals(period))) {
                 return cur;
             }
         }
