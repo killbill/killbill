@@ -227,7 +227,7 @@ public class BusinessSubscription
 
     static BigDecimal getMrrFromISubscription(final IDuration duration, final BigDecimal price)
     {
-        if (duration == null || duration.getUnit() == null || duration.getLength() == 0) {
+        if (duration == null || duration.getUnit() == null || duration.getNumber() == 0) {
             return null;
         }
 
@@ -235,13 +235,13 @@ public class BusinessSubscription
             return BigDecimal.ZERO;
         }
         else if (duration.getUnit().equals(TimeUnit.DAYS)) {
-            return price.multiply(DAYS_IN_MONTH).multiply(BigDecimal.valueOf(duration.getLength()));
+            return price.multiply(DAYS_IN_MONTH).multiply(BigDecimal.valueOf(duration.getNumber()));
         }
         else if (duration.getUnit().equals(TimeUnit.MONTHS)) {
-            return price.divide(BigDecimal.valueOf(duration.getLength()), Rounder.SCALE, BigDecimal.ROUND_HALF_UP);
+            return price.divide(BigDecimal.valueOf(duration.getNumber()), Rounder.SCALE, BigDecimal.ROUND_HALF_UP);
         }
         else if (duration.getUnit().equals(TimeUnit.YEARS)) {
-            return price.divide(BigDecimal.valueOf(duration.getLength()), Rounder.SCALE, RoundingMode.HALF_UP).divide(MONTHS_IN_YEAR, Rounder.SCALE, RoundingMode.HALF_UP);
+            return price.divide(BigDecimal.valueOf(duration.getNumber()), Rounder.SCALE, RoundingMode.HALF_UP).divide(MONTHS_IN_YEAR, Rounder.SCALE, RoundingMode.HALF_UP);
         }
         else {
             log.error("Unknown duration [" + duration + "], can't compute mrr");

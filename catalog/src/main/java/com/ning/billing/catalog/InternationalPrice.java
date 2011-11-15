@@ -49,8 +49,12 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		return prices;
 	}
 
-	public void setPrices(Price[] prices) {
-		this.prices = prices;
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.IInternationalPrice#getEffectiveDateForExistingSubscriptons()
+	 */
+	@Override
+	public Date getEffectiveDateForExistingSubscriptons() {
+		return effectiveDateForExistingSubscriptons;
 	}
 
 	/* (non-Javadoc)
@@ -88,13 +92,15 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		}
 		return false;
 	}
-
-	public Date getEffectiveDateForExistingSubscriptons() {
-		return effectiveDateForExistingSubscriptons;
-	}
-
-	public void setEffectiveDateForExistingSubscriptons(
+	
+	protected void setEffectiveDateForExistingSubscriptons(
 			Date effectiveDateForExistingSubscriptons) {
 		this.effectiveDateForExistingSubscriptons = effectiveDateForExistingSubscriptons;
 	}
+
+	protected InternationalPrice setPrices(Price[] prices) {
+		this.prices = prices;
+		return this;
+	}
+
 }

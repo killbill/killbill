@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.rules;
+package com.ning.billing.catalog;
 
 import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.Duration;
 import com.ning.billing.catalog.Plan;
 import com.ning.billing.catalog.PlanPhase;
 import com.ning.billing.catalog.PriceList;
@@ -26,6 +27,14 @@ import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.catalog.api.TimeUnit;
+import com.ning.billing.catalog.rules.CaseCancelPolicy;
+import com.ning.billing.catalog.rules.CaseChangePlanAlignment;
+import com.ning.billing.catalog.rules.CaseChangePlanPolicy;
+import com.ning.billing.catalog.rules.CaseCreateAlignment;
+import com.ning.billing.catalog.rules.PlanPolicyChangeRule;
+import com.ning.billing.catalog.rules.PlanRules;
+import com.ning.billing.catalog.rules.ProductTier;
 
 public class MockCatalog extends Catalog {
 	private static final String[] PRODUCT_NAMES = new String[]{ "TestProduct1", "TestProduct2", "TestProduct3"};
@@ -71,8 +80,7 @@ public class MockCatalog extends Catalog {
 		Product[] products = getProducts();
 		Plan[] plans = new Plan[products.length];
 		for(int i = 0; i < products.length; i++) {
-			plans[i] = new Plan(products[i].getName().toLowerCase() + "-plan",products[i],
-					new PlanPhase(BillingPeriod.MONTHLY, PhaseType.EVERGREEN));
+			plans[i] = new MockPlan().setName(products[i].getName().toLowerCase() + "-plan").setProduct(products[i]);
 		}
 		setPlans(plans);
 	}

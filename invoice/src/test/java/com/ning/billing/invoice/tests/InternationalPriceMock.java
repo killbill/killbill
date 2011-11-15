@@ -21,6 +21,7 @@ import com.ning.billing.catalog.api.IInternationalPrice;
 import com.ning.billing.catalog.api.IPrice;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 import static org.testng.Assert.fail;
 
@@ -42,4 +43,9 @@ public class InternationalPriceMock implements IInternationalPrice {
     public BigDecimal getPrice(Currency currency) {
         return rate;
     }
+
+	@Override
+	public Date getEffectiveDateForExistingSubscriptons() {
+		return new Date();
+	}
 }

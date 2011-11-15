@@ -19,6 +19,8 @@ package com.ning.billing.util.config;
 import java.net.URI;
 import java.util.ArrayList;
 
+import org.slf4j.Logger;
+
 public class ValidationErrors extends ArrayList<ValidationError>{
 	private static final long serialVersionUID = 1L;
 
@@ -26,6 +28,12 @@ public class ValidationErrors extends ArrayList<ValidationError>{
 			Class<?> objectType, String objectName) {
 		add(new ValidationError(description, catalogURI, objectType, objectName));
 		
+	}
+
+	public void log(Logger log) {
+		for(ValidationError error : this) {
+			error.log(log);
+		}	
 	}
 
 }

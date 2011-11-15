@@ -32,7 +32,7 @@ public class MockDuration
             }
 
             @Override
-            public int getLength()
+            public int getNumber()
             {
                 return 1;
             }
@@ -50,7 +50,7 @@ public class MockDuration
             }
 
             @Override
-            public int getLength()
+            public int getNumber()
             {
                 return 1;
             }
@@ -68,7 +68,7 @@ public class MockDuration
             }
 
             @Override
-            public int getLength()
+            public int getNumber()
             {
                 return 1;
             }

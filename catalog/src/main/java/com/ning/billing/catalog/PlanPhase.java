@@ -28,6 +28,7 @@ import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -39,7 +40,7 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
     @XmlElement(required=true)
     private Duration duration;
     
-    @XmlElement(required=false)
+    @XmlElement(required=true)
     private BillingPeriod billingPeriod = BillingPeriod.NO_BILLING_PERIOD;
 
 	@XmlElement(required=false)
@@ -48,18 +49,12 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 	@XmlElement(required=false)
 	private InternationalPrice fixedPrice;
 
+//  Not supported: variable pricing
 //	@XmlElement(required=false)
 //	private InternationalPrice unitPrice;
 
 	//Not exposed in XML
 	private IPlan plan;
-	
-	public PlanPhase(){}
-
-    public PlanPhase(BillingPeriod period, PhaseType type) {
-		this.billingPeriod = period;
-		this.type = type;
-	}
 
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPlanPhase#getRecurringPrice()
@@ -69,10 +64,6 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
         return recurringPrice;
     }
 
-	public void setReccuringPrice(InternationalPrice price) {
-		this.recurringPrice = price;
-	}
-
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPlanPhase#getInternationalPrice()
 	 */
@@ -81,21 +72,21 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
         return fixedPrice;
     }
 
-	public void setFixedPrice(InternationalPrice price) {
-		this.fixedPrice = price;
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.IPlanPhase#getCohort()
+	 */
+	@Override
+	public PhaseType getPhaseType() {
+		return type;
 	}
 
-    /* (non-Javadoc)
+	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPlanPhase#getBillCycleDuration()
 	 */
     @Override
 	public BillingPeriod getBillingPeriod() {
     	return billingPeriod;
     }
-
-	public void setBillCycleDuration(BillingPeriod billingPeriod) {
-		this.billingPeriod = billingPeriod;
-	}
 
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPlanPhase#getName()
@@ -113,10 +104,6 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 		return plan;
 	}
 
-	public void setPlan(IPlan plan) {
-		this.plan = plan;
-	}
-
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPlanPhase#getDuration()
 	 */
@@ -125,34 +112,66 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
  		return duration;
 	}
 
-	public void setDuration(Duration duration) {
-		this.duration = duration;
-	}
-
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+		//Validation: check for nulls
+		if(billingPeriod == null) {
+			errors.add(new ValidationError(String.format("Phase %s of plan %s has a reccurring price but no billing period", type.toString(), plan.getName()), 
+					catalog.getCatalogURI(), PlanPhase.class, type.toString()));
+		}
+		
+		
+		
+		
+		//Validation: if there is a recurring price there must be a billing period
+		if(recurringPrice != null && (billingPeriod == null || billingPeriod ==BillingPeriod.NO_BILLING_PERIOD)) {
+			errors.add(new ValidationError(String.format("Phase %s of plan %s has a reccurring price but no billing period", type.toString(), plan.getName()), 
+					catalog.getCatalogURI(), PlanPhase.class, type.toString()));
+		}
+		//Validation: if there is no reccuring price there should be no billing period
+		if(recurringPrice == null && billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
+			errors.add(new ValidationError(String.format("Phase %s of plan %s has no reccurring price but does have a billing period. The billing period shoudl be set to '%s'", 
+					type.toString(), plan.getName(), BillingPeriod.NO_BILLING_PERIOD), 
+					catalog.getCatalogURI(), PlanPhase.class, type.toString()));
+		}
+		
 		return errors;
 
 	}
 
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPlanPhase#getCohort()
-	 */
-	@Override
-	public PhaseType getPhaseType() {
-		return type;
+	protected PlanPhase setFixedPrice(InternationalPrice price) {
+		this.fixedPrice = price;
+		return this;
 	}
 
-	public void setCohort(PhaseType cohort) {
+	protected PlanPhase setReccuringPrice(InternationalPrice price) {
+		this.recurringPrice = price;
+		return this;
+	}
+
+	protected PlanPhase setPhaseType(PhaseType cohort) {
 		this.type = cohort;
+		return this;
 	}
 
-	public void setBillingPeriod(BillingPeriod billingPeriod) {
+	protected PlanPhase setBillingPeriod(BillingPeriod billingPeriod) {
 		this.billingPeriod = billingPeriod;
+		return this;
+	}
+
+	protected PlanPhase setDuration(Duration duration) {
+		this.duration = duration;
+		return this;
+	}
+
+	protected PlanPhase setPlan(IPlan plan) {
+		this.plan = plan;
+		return this;
 	}
 	
-	//TODO MDW - validation: if there is a recurring price there must be a billing period
-	//TODO MDW - validation: if there is no reccuring price there should be no billing period
-	
+	protected PlanPhase setBillCycleDuration(BillingPeriod billingPeriod) {
+		this.billingPeriod = billingPeriod;
+		return this;
+	}
 
 }

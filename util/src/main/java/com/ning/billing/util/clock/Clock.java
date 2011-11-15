@@ -44,15 +44,15 @@ public class Clock implements IClock {
         for (IDuration cur : durations) {
             switch (cur.getUnit()) {
             case DAYS:
-                result = result.plusDays(cur.getLength());
+                result = result.plusDays(cur.getNumber());
                 break;
 
             case MONTHS:
-                result = result.plusMonths(cur.getLength());
+                result = result.plusMonths(cur.getNumber());
                 break;
 
             case YEARS:
-                result = result.plusYears(cur.getLength());
+                result = result.plusYears(cur.getNumber());
                 break;
             case UNLIMITED:
             default:

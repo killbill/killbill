@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlElement;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.PriceList;
 import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;

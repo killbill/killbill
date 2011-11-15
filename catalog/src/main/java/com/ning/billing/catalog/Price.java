@@ -42,9 +42,7 @@ public class Price extends ValidatingConfig<Catalog> implements IPrice {
 	public Currency getCurrency() {
 		return currency;
 	}
-	public void setCurrency(Currency currency) {
-		this.currency = currency;
-	}
+
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPrice#getValue()
 	 */
@@ -52,9 +50,17 @@ public class Price extends ValidatingConfig<Catalog> implements IPrice {
 	public BigDecimal getValue() {
 		return value;
 	}
-	public void setValue(BigDecimal value) {
-		this.value = value;
+	
+	public Price setCurrency(Currency currency) {
+		this.currency = currency;
+		return this;
 	}
+
+	protected Price setValue(BigDecimal value) {
+		this.value = value;
+		return this;
+	}
+	
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
 		return errors;

@@ -16,6 +16,9 @@
 
 package com.ning.billing.analytics;
 
+import java.math.BigDecimal;
+import java.util.Date;
+
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.IDuration;
@@ -24,8 +27,6 @@ import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IPrice;
 import com.ning.billing.catalog.api.PhaseType;
-
-import java.math.BigDecimal;
 
 public class MockPhase implements IPlanPhase
 {
@@ -58,6 +59,11 @@ public class MockPhase implements IPlanPhase
             {
                 return BigDecimal.valueOf(price);
             }
+
+			@Override
+			public Date getEffectiveDateForExistingSubscriptons() {
+				return new Date();
+			}
         };
     }
 
@@ -77,6 +83,11 @@ public class MockPhase implements IPlanPhase
             {
                 return BigDecimal.valueOf(price);
             }
+            
+			@Override
+			public Date getEffectiveDateForExistingSubscriptons() {
+				return new Date();
+			}
         };
     }
 

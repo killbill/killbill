@@ -20,6 +20,6 @@ public interface IDuration {
 
 	public abstract TimeUnit getUnit();
 
-	public abstract int getLength();
+	public abstract int getNumber();
 
 }
