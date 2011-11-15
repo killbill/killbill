@@ -35,7 +35,6 @@ import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
-import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
@@ -92,7 +91,6 @@ public class EntitlementUserApi implements IEntitlementUserApi {
     public ISubscription createSubscription(UUID bundleId, String productName,
             BillingPeriod term, String priceList, DateTime requestedDate) throws EntitlementUserApiException {
 
-        // STEPH Should really get 'standard' from catalog
         String realPriceList = (priceList == null) ? IPriceListSet.DEFAULT_PRICELIST_NAME : priceList;
 
         DateTime now = clock.getUTCNow();

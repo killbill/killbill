@@ -63,7 +63,7 @@ import com.ning.billing.entitlement.engine.dao.IEntitlementDaoMock;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.glue.InjectorMagic;
 import com.ning.billing.lifecycle.IService.ServiceException;
 import com.ning.billing.util.clock.ClockMock;
@@ -105,8 +105,14 @@ public abstract class TestUserApiBase {
 
     @AfterClass(groups={"setup"})
     public void tearDown() {
-        InjectorMagic.instance = null;
-        ((EventBusService) busService).stopBus();
+        try {
+            InjectorMagic.instance = null;
+            busService.getEventBus().register(testListener);
+            ((EventBusService) busService).stopBus();
+        } catch (Exception e) {
+            log.warn("Failed to tearDown test properly ", e);
+        }
+
     }
 
     @BeforeClass(groups={"setup"})
@@ -157,11 +163,13 @@ public abstract class TestUserApiBase {
         log.warn("RESET TEST FRAMEWORK\n\n");
 
         testListener.reset();
+
         clock.resetDeltaFromReality();
         ((IEntitlementDaoMock) dao).reset();
         try {
+            busService.getEventBus().register(testListener);
             bundle = entitlementApi.createBundleForAccount(account, "myDefaultBundle");
-        } catch (EntitlementUserApiException e) {
+        } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
         assertNotNull(bundle);
@@ -222,8 +230,8 @@ public abstract class TestUserApiBase {
                     assertEquals(foundPhase, false);
                     foundPhase = true;
                     assertEquals(cur.getEffectiveDate(), expPhaseChange);
-                } else if (cur instanceof IUserEvent) {
-                    IUserEvent uEvent = (IUserEvent) cur;
+                } else if (cur instanceof IApiEvent) {
+                    IApiEvent uEvent = (IApiEvent) cur;
                     assertEquals(ApiEventType.CHANGE, uEvent.getEventType());
                     assertEquals(foundChange, false);
                     foundChange = true;

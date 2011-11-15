@@ -19,7 +19,7 @@ package com.ning.billing.entitlement.events.user;
 import com.ning.billing.entitlement.events.IEvent;
 
 
-public interface IUserEvent extends IEvent {
+public interface IApiEvent extends IEvent {
 
     public String getEventPlan();
 

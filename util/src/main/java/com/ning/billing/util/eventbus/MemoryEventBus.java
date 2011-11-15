@@ -30,7 +30,7 @@ import com.google.common.eventbus.AsyncEventBus;
 public class MemoryEventBus implements IEventBus {
 
     // STEPH config ?
-    private final static int MAX_EVENT_THREADS = 13;
+    private final static int MAX_EVENT_THREADS = 1;
 
     private final static String EVENT_BUS_IDENTIFIER = "eventbus-service";
     private final static String EVENT_BUS_GROUP_NAME = "eventbus-grp";
@@ -56,8 +56,13 @@ public class MemoryEventBus implements IEventBus {
             dispatchQueuedEvents();
         }
 
+        // No way to really 'stop' an executor; what we do is:
+        // i) disallow any new events into the queue
+        // ii) empty the queue
+        //
+        // That will only work if the event submitter handles EventBusException correctly when posting.
+        //
         public void stop() {
-            // STEPH hum..
         }
     }
 
@@ -113,7 +118,6 @@ public class MemoryEventBus implements IEventBus {
         if (isInitialized.compareAndSet(true, false)) {
             log.info("MemoryEventBus stopping...");
             delegate.completeDispatch();
-            log.info("MemoryEventBus completed dispatching events...");
             delegate.stop();
             log.info("MemoryEventBus stoped...");
         }

@@ -68,6 +68,9 @@ public class ApiTestListener {
             break;
         case UNCANCEL:
             break;
+        case PHASE:
+            subscriptionPhaseChanged(event);
+            break;
         default:
             throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
         }

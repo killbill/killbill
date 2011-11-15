@@ -16,38 +16,35 @@
 
 package com.ning.billing.entitlement.events.user;
 
-import com.ning.billing.entitlement.api.user.ISubscriptionTransition.SubscriptionTransitionTypeType;
+import com.ning.billing.entitlement.api.user.ISubscriptionTransition.SubscriptionTransitionType;
 
 
 public enum ApiEventType {
-    /*
-     * Ordering is important for unit tests today.
-     */
     CREATE {
         @Override
-        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.CREATE; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CREATE; }
     },
     CHANGE {
         @Override
-        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.CHANGE; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CHANGE; }
     },
     PAUSE {
         @Override
-        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.PAUSE; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.PAUSE; }
     },
     RESUME {
         @Override
-        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.RESUME; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.RESUME; }
     },
     CANCEL {
         @Override
-        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.CANCEL; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CANCEL; }
     },
     UNCANCEL {
         @Override
-        public SubscriptionTransitionTypeType getSubscriptionTransitionType() { return SubscriptionTransitionTypeType.UNCANCEL; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.UNCANCEL; }
     };
 
-    // STEPH Really, is that necessary?
-    public abstract SubscriptionTransitionTypeType getSubscriptionTransitionType();
+    // Used to map from internal events to User visible events (both user and phase)
+    public abstract SubscriptionTransitionType getSubscriptionTransitionType();
 }

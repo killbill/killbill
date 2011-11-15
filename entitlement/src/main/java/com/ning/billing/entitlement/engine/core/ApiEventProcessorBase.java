@@ -141,8 +141,8 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
                             Thread.currentThread().getId()));
                 } catch (Throwable e) {
                     log.error(API_EVENT_THREAD_NAME + " got an exception exiting...", e);
-                    // STEPH let's review that later...
-                    System.exit(1);
+                    // Just to make it really obvious in the log
+                    e.printStackTrace();
                 }
             }
 

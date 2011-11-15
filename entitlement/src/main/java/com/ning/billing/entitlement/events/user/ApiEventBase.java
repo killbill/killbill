@@ -27,7 +27,7 @@ import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.events.EventBase;
 import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 
-public class ApiEventBase extends EventBase implements IUserEvent {
+public class ApiEventBase extends EventBase implements IApiEvent {
 
     private final ApiEventType eventType;
     // Only valid for CREATE/CHANGE

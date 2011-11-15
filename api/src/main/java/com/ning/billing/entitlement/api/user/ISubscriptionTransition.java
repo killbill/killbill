@@ -27,7 +27,7 @@ import com.ning.billing.util.eventbus.IEventBusType;
 
 public interface ISubscriptionTransition extends IEventBusType {
 
-    public enum SubscriptionTransitionTypeType {
+    public enum SubscriptionTransitionType {
         CREATE,
         CHANGE,
         PAUSE,
@@ -37,7 +37,7 @@ public interface ISubscriptionTransition extends IEventBusType {
         PHASE
     }
 
-    SubscriptionTransitionTypeType getTransitionType();
+    SubscriptionTransitionType getTransitionType();
 
     UUID getBundleId();
 

@@ -119,12 +119,12 @@ public class SubscriptionTransition implements ISubscriptionTransition {
     }
 
     @Override
-    public SubscriptionTransitionTypeType getTransitionType() {
+    public SubscriptionTransitionType getTransitionType() {
         switch(eventType) {
         case API_USER:
             return apiEventType.getSubscriptionTransitionType();
         case PHASE:
-            return SubscriptionTransitionTypeType.PHASE;
+            return SubscriptionTransitionType.PHASE;
         default:
             throw new EntitlementError("Unexpected event type " + eventType);
         }

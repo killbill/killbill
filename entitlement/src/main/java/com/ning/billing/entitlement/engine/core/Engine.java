@@ -38,11 +38,13 @@ import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
-import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.lifecycle.IService;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
 import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
 import com.ning.billing.util.clock.IClock;
+import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.util.eventbus.IEventBus.EventBusException;
 
 public class Engine implements IEventListener, IEntitlementService {
 
@@ -57,21 +59,21 @@ public class Engine implements IEventListener, IEntitlementService {
     private final IEntitlementUserApi userApi;
     private final IEntitlementBillingApi billingApi;
     private final IEntitlementTestApi testApi;
-    private final IEntitlementConfig config;
-    private List<IApiListener> observers;
-
+    private final IEventBus eventBus;
 
     @Inject
     public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor,
             IPlanAligner planAligner, IEntitlementConfig config, EntitlementUserApi userApi,
-            EntitlementBillingApi billingApi) {
+            EntitlementBillingApi billingApi, EntitlementTestApi testApi, IEventBus eventBus) {
         super();
         this.clock = clock;
         this.dao = dao;
         this.apiEventProcessor = apiEventProcessor;
         this.planAligner = planAligner;
         this.userApi = userApi;
+        this.testApi = testApi;
         this.billingApi = billingApi;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -117,41 +119,15 @@ public class Engine implements IEventListener, IEntitlementService {
             log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
             return;
         }
-        if (event.getType() == EventType.API_USER) {
-            dispatchApiEvent((IUserEvent) event, subscription);
-        } else {
-            dispatchPhaseEvent((IPhaseEvent) event, subscription);
+        if (event.getType() == EventType.PHASE) {
             insertNextPhaseEvent(subscription);
         }
-    }
-
-    private void dispatchApiEvent(IUserEvent event, Subscription subscription) {
-/*
-        for (IApiListener listener : observers) {
-            switch(event.getEventType()) {
-            case CREATE:
-                listener.subscriptionCreated(subscription.getLatestTranstion());
-                break;
-            case CHANGE:
-                listener.subscriptionChanged(subscription.getLatestTranstion());
-                break;
-            case CANCEL:
-                listener.subscriptionCancelled(subscription.getLatestTranstion());
-                break;
-            default:
-                break;
-            }
+        try {
+            eventBus.post(subscription.getLatestTranstion());
+        } catch (EventBusException e) {
+            log.warn("Failed to post entitlement event " + event, e);
         }
-        */
-    }
-// STEPH observers
 
-    private void dispatchPhaseEvent(IPhaseEvent event, Subscription subscription) {
-/*
-        for (IApiListener listener : observers) {
-            listener.subscriptionPhaseChanged(subscription.getLatestTranstion());
-        }
-*/
     }
 
     private void insertNextPhaseEvent(Subscription subscription) {
@@ -161,7 +137,6 @@ public class Engine implements IEventListener, IEntitlementService {
         TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, subscription.getCurrentPlan(), now, subscription.getCurrentPlanStart());
         IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, subscription, now);
         if (nextPhaseEvent != null) {
-            // STEPH Harden since event could be processed twice
             dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent);
         }
     }

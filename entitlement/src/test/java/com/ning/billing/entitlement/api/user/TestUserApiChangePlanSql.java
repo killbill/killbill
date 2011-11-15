@@ -79,7 +79,7 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
         invokeRealMethod(this);
     }
 
-    // STEPH rescue not implemented
+    // rescue not implemented yet
     @Test(enabled=false, groups={"sql"})
     public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() {
         invokeRealMethod(this);

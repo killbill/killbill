@@ -16,6 +16,7 @@
 
 package com.ning.billing.analytics;
 
+import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountUserApi;
@@ -24,14 +25,15 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
+import com.ning.billing.util.eventbus.IEventBus;
+
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-// STEPH fid with Pierre
-public class AnalyticsListener /* implements IApiListener */
+public class AnalyticsListener
 {
     private static final Logger log = LoggerFactory.getLogger(AnalyticsListener.class);
 
@@ -40,49 +42,72 @@ public class AnalyticsListener /* implements IApiListener */
     private final IAccountUserApi accountApi;
 
     @Inject
-    public AnalyticsListener(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi)
+    public AnalyticsListener(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi, final IEventBus eventBus)
     {
         this.dao = dao;
         this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
     }
 
-    @Override
+    @Subscribe
+    public void handleNotificationChange(ISubscriptionTransition event) {
+        switch (event.getTransitionType()) {
+        case CREATE:
+            subscriptionCreated(event);
+            break;
+        case CANCEL:
+            subscriptionCancelled(event);
+            break;
+        case CHANGE:
+            subscriptionChanged(event);
+            break;
+        case PAUSE:
+            subscriptionPaused(event);
+            break;
+        case RESUME:
+            subscriptionResumed(event);
+            break;
+        case UNCANCEL:
+            break;
+        case PHASE:
+            subscriptionPhaseChanged(event);
+            break;
+        default:
+            throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
+        }
+    }
+
+
     public void subscriptionCreated(final ISubscriptionTransition created)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan());
         recordTransition(event, created);
     }
 
-    @Override
     public void subscriptionCancelled(final ISubscriptionTransition cancelled)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getNextPlan());
         recordTransition(event, cancelled);
     }
 
-    @Override
     public void subscriptionChanged(final ISubscriptionTransition changed)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan());
         recordTransition(event, changed);
     }
 
-    @Override
     public void subscriptionPaused(final ISubscriptionTransition paused)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPaused(paused.getNextPlan());
         recordTransition(event, paused);
     }
 
-    @Override
     public void subscriptionResumed(final ISubscriptionTransition resumed)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionResumed(resumed.getNextPlan());
         recordTransition(event, resumed);
     }
 
-    @Override
     public void subscriptionPhaseChanged(final ISubscriptionTransition phaseChanged)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState());
