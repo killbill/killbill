@@ -77,6 +77,11 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
         this.isProcessingEvents = true;
         this.nbProcessedEvents = 0;
 
+
+        if (config.isEventProcessingOff()) {
+            log.warn("KILLBILL ENTITLEMENT EVENT PROCESSING IS OFF !!!");
+            return;
+        }
         final ApiEventProcessorBase apiEventProcessor = this;
 
         synchronized (this) {

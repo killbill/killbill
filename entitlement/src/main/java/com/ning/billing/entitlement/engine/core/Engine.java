@@ -95,10 +95,6 @@ public class Engine implements IEventListener, IEntitlementService {
 
     @LyfecycleHandlerType(LyfecycleLevel.START_SERVICE)
     public void start() {
-        if (config.isEventProcessingOff()) {
-            log.warn("KILLBILL ENTITLEMENT EVENT PROCESSING IS OFF !!!");
-            return;
-        }
         apiEventProcessor.startNotifications(this);
     }
 

@@ -167,6 +167,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice> <!-- empty price implies $0 -->
 					</fixedPrice>
 				</phase>
@@ -191,6 +192,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice></fixedPrice>
 				    <!-- no price implies $0 -->
 				</phase>
@@ -216,6 +218,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice>
 					</fixedPrice>
 				</phase>
@@ -240,6 +243,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice>
 					</fixedPrice>
 				</phase>
@@ -264,6 +268,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice>
 					</fixedPrice>
 				</phase>
@@ -288,6 +293,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice>
 					</fixedPrice>
 				</phase>
@@ -312,6 +318,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice>
 					</fixedPrice>
 				</phase>
@@ -348,6 +355,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice>
 					</fixedPrice>
 				</phase>
@@ -384,6 +392,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice>
 					</fixedPrice>
 				</phase>
@@ -463,6 +472,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice>
 					</fixedPrice>
 				</phase>
@@ -487,6 +497,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice>
 					</fixedPrice>
 				</phase>

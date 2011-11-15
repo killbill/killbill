@@ -41,7 +41,16 @@ public class MockPlanPhase extends PlanPhase {
 		setDuration(new Duration().setNumber(-1).setUnit(TimeUnit.UNLIMITED));
 		setReccuringPrice(new MockInternationalPrice());
 		setFixedPrice(null);
-		setPlan(new MockPlan());
+		setPlan(new MockPlan(this));
+	}
+
+	public MockPlanPhase(MockPlan mockPlan) {
+		setBillingPeriod(BillingPeriod.MONTHLY);
+		setPhaseType(PhaseType.EVERGREEN);
+		setDuration(new Duration().setNumber(-1).setUnit(TimeUnit.UNLIMITED));
+		setReccuringPrice(new MockInternationalPrice());
+		setFixedPrice(null);
+		setPlan(mockPlan);
 	}
 
 	

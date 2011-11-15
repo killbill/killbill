@@ -29,7 +29,15 @@ public class MockPlan extends Plan {
 	public MockPlan() {
 		setName("test-plan");
 		setProduct(new MockProduct());
-		setFinalPhase(new MockPlanPhase());
+		setFinalPhase(new MockPlanPhase(this));
+		setInitialPhases(null);
+		setPlansAllowedInBundle(1);
+	}
+
+	public MockPlan(MockPlanPhase mockPlanPhase) {
+		setName("test-plan");
+		setProduct(new MockProduct());
+		setFinalPhase(mockPlanPhase);
 		setInitialPhases(null);
 		setPlansAllowedInBundle(1);
 	}

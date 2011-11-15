@@ -19,7 +19,7 @@ package com.ning.billing.analytics;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountUserApi;
-import com.ning.billing.analytics.dao.EventDao;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.IApiListener;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
@@ -34,11 +34,13 @@ import java.util.List;
 public class AnalyticsListener implements IApiListener
 {
     private static final Logger log = LoggerFactory.getLogger(AnalyticsListener.class);
-    private final EventDao dao;
+
+    private final BusinessSubscriptionTransitionDao dao;
     private final IEntitlementUserApi entitlementApi;
     private final IAccountUserApi accountApi;
 
-    public AnalyticsListener(final EventDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi)
+    @Inject
+    public AnalyticsListener(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi)
     {
         this.dao = dao;
         this.entitlementApi = entitlementApi;
@@ -46,42 +48,42 @@ public class AnalyticsListener implements IApiListener
     }
 
     @Override
-    public void subscriptionCreated(ISubscriptionTransition created)
+    public void subscriptionCreated(final ISubscriptionTransition created)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan());
         recordTransition(event, created);
     }
 
     @Override
-    public void subscriptionCancelled(ISubscriptionTransition cancelled)
+    public void subscriptionCancelled(final ISubscriptionTransition cancelled)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getNextPlan());
         recordTransition(event, cancelled);
     }
 
     @Override
-    public void subscriptionChanged(ISubscriptionTransition changed)
+    public void subscriptionChanged(final ISubscriptionTransition changed)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan());
         recordTransition(event, changed);
     }
 
     @Override
-    public void subscriptionPaused(ISubscriptionTransition paused)
+    public void subscriptionPaused(final ISubscriptionTransition paused)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPaused(paused.getNextPlan());
         recordTransition(event, paused);
     }
 
     @Override
-    public void subscriptionResumed(ISubscriptionTransition resumed)
+    public void subscriptionResumed(final ISubscriptionTransition resumed)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionResumed(resumed.getNextPlan());
         recordTransition(event, resumed);
     }
 
     @Override
-    public void subscriptionPhaseChanged(ISubscriptionTransition phaseChanged)
+    public void subscriptionPhaseChanged(final ISubscriptionTransition phaseChanged)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState());
         recordTransition(event, phaseChanged);
