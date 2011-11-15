@@ -106,6 +106,37 @@ Use Cases to do:
 			<policy>IMMEDIATE</policy>
 		</changePolicyRule>
 		<changePolicyCase> 
+			<policy>END_OF_TERM</policy>
+		</changePolicyCase>
+		<changePolicyCase> 
+			<toProduct>Assault-Rifle</toProduct>
+			<policy>IMMEDIATE</policy>
+		</changePolicyCase>
+		<changePolicyCase> 
+			<toProduct>Pistol</toProduct>
+			<policy>END_OF_TERM</policy>
+		</changePolicyCase>
+		<changePolicyCase> 
+			<fromProduct>Pistol</fromProduct>
+			<toProduct>Shotgun</toProduct>
+			<policy>IMMEDIATE</policy>
+		</changePolicyCase>
+		<changePolicyCase> 
+			<fromProduct>Assault-Rifle</fromProduct>
+			<toProduct>Shotgun</toProduct>
+			<policy>END_OF_TERM</policy>
+		</changePolicyCase>
+		<changePolicyCase> 
+			<fromBillingPeriod>MONTHLY</fromBillingPeriod>
+			<toBillingPeriod>ANNUAL</toBillingPeriod>
+			<policy>IMMEDIATE</policy>
+		</changePolicyCase>
+		<changePolicyCase> 
+			<fromBillingPeriod>ANNUAL</fromBillingPeriod>
+			<toBillingPeriod>MONTHLY</toBillingPeriod>
+			<policy>END_OF_TERM</policy>
+		</changePolicyCase>
+		<changePolicyCase> 
 			<fromBillingPeriod>MONTHLY</fromBillingPeriod>
 			<toProduct>Assault-Rifle</toProduct>
 			<toBillingPeriod>MONTHLY</toBillingPeriod>

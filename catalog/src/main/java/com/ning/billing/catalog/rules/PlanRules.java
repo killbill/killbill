@@ -28,6 +28,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
+import com.ning.billing.catalog.api.PlanChangeResult;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.util.config.ValidatingConfig;
@@ -83,6 +84,38 @@ public class PlanRules extends ValidatingConfig<Catalog>  {
 		this.createAlignmentCase = createAlignmentCase;
 	}
 
+
+	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier, Catalog catalog) {
+		return Case.getResult(createAlignmentCase, specifier, catalog);      
+    }
+	
+	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase, Catalog catalog) {
+		return CasePhase.getResult(cancelCase, planPhase, catalog);      
+	}
+
+	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase, Catalog catalog) {
+		return CasePhase.getResult(billingAlignmentCase, planPhase, catalog);      
+	}
+
+	private int getBillingPeriodIndex(BillingPeriod src) {
+		return src.ordinal();
+	}
+
+
+	public void setProductTiers(ProductTier[] productTiers) {
+		this.productTiers = productTiers;
+	}
+
+	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to) {
+		//TODO disallow transitions to the same thing you came from
+		return null;
+	}
+	
+	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
+			PlanSpecifier to, Catalog catalog) {
+		return CaseChange.getResult(changeAlignmentCase, from, to, catalog);      
+    }
+
 	public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from,
 			PlanSpecifier to, Catalog catalog) {
 		
@@ -118,34 +151,6 @@ public class PlanRules extends ValidatingConfig<Catalog>  {
 		}
 		return 0;
 	}
-	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to, Catalog catalog) {
-		return CaseChange.getResult(changeAlignmentCase, from, to, catalog);      
-    }
-
-	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier, Catalog catalog) {
-		return Case.getResult(createAlignmentCase, specifier, catalog);      
-    }
-	
-	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase, Catalog catalog) {
-		return CasePhase.getResult(cancelCase, planPhase, catalog);      
-	}
-
-	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase, Catalog catalog) {
-		return CasePhase.getResult(billingAlignmentCase, planPhase, catalog);      
-	}
-
-	private int getBillingPeriodIndex(BillingPeriod src) {
-		return src.ordinal();
-	}
-
-
-	public void setProductTiers(ProductTier[] productTiers) {
-		this.productTiers = productTiers;
-	}
-
-
-
 	
     //TODO: MDW - Validation: check that the plan change special case pairs are unique!
     //TODO: MDW - Validation: check that the each product appears in at most one tier.

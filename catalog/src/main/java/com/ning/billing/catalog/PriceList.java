@@ -25,12 +25,13 @@ import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PriceList extends ValidatingConfig<Catalog>  {
+public class PriceList extends ValidatingConfig<Catalog> implements IPriceList  {
 
 	@XmlAttribute(required=true)
 	@XmlID
@@ -52,10 +53,18 @@ public class PriceList extends ValidatingConfig<Catalog>  {
 		return plans;
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.IPriceList#getName()
+	 */
+	@Override
 	public String getName() {
         return name;
     }
 
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.IPriceList#findPlan(com.ning.billing.catalog.api.IProduct, com.ning.billing.catalog.api.BillingPeriod)
+	 */
+	@Override
 	public Plan findPlan(IProduct product, BillingPeriod period) {
         for (Plan cur : getPlans()) {
             if (cur.getProduct().equals(product) && 
