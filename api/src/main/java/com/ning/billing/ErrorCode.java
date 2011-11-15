@@ -28,7 +28,8 @@ public enum ErrorCode {
      * Range 1000 : ENTITLEMENTS
      *
      */
-    /* Not yet */
+    /* Generic through APIs */
+    ENT_INVALID_REQUESTED_DATE(1001, "Requested in the future is not allowed : %s"),
 
     /* Creation */
     ENT_CREATE_BAD_CATALOG(1011, "Plan for product %s, term %s and set %s does not exist in the catalog"),

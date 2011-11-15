@@ -26,23 +26,16 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.catalog.PriceListSet;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.user.IUserEvent;
 import com.ning.billing.util.clock.Clock;
 
@@ -67,7 +60,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
 
     protected void testChangePlanBundleAlignEOTWithNoChargeThroughDateReal() {
-        tChangePlanBundleAlignEOTWithNoChargeThroughDate("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        tChangePlanBundleAlignEOTWithNoChargeThroughDate("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME, "Pistol", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
 
@@ -92,7 +85,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
             // CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan(toProd, toTerm, toPlanSet);
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
             assertTrue(testListener.isCompleted(2000));
 
             // CHECK CHANGE PLAN
@@ -138,7 +131,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             // RE READ SUBSCRIPTION + CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
-            subscription.changePlan(toProd, toTerm, toPlanSet);
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
@@ -171,7 +164,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
 
     protected void testChangePlanBundleAlignIMMReal() {
-        tChangePlanBundleAlignIMM("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        tChangePlanBundleAlignIMM("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
 
@@ -190,7 +183,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             clock.setDeltaFromReality(moveALittleInTime, 0);
 
             // CHANGE PLAN IMM
-            subscription.changePlan(toProd, toTerm, toPlanSet);
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.TRIAL);
 
             assertTrue(testListener.isCompleted(2000));
@@ -213,7 +206,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
 
     protected void testChangePlanChangePlanAlignEOTWithChargeThroughDateReal() {
-        tChangePlanChangePlanAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
+        tChangePlanChangePlanAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
     }
 
     private void tChangePlanChangePlanAlignEOTWithChargeThroughDate(String fromProd, BillingPeriod fromTerm, String fromPlanSet,
@@ -252,7 +245,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             currentTime = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan(toProd, toTerm, toPlanSet);
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
 
             checkChangePlan(subscription, fromProd, ProductCategory.BASE, fromTerm, PhaseType.EVERGREEN);
 
@@ -317,12 +310,12 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount");
+            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
 
             // CHANGE
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount");
+            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
 
             IPlan currentPlan = subscription.getCurrentPlan();
@@ -364,13 +357,13 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount");
+            subscription.changePlan("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount");
+            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 

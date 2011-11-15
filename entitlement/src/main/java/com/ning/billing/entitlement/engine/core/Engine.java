@@ -28,6 +28,8 @@ import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.api.IEntitlementService;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
+import com.ning.billing.entitlement.api.test.EntitlementTestApi;
+import com.ning.billing.entitlement.api.test.IEntitlementTestApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -37,6 +39,7 @@ import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.lifecycle.IService;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
 import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
 import com.ning.billing.util.clock.IClock;
@@ -53,6 +56,9 @@ public class Engine implements IEventListener, IEntitlementService {
     private final IPlanAligner planAligner;
     private final IEntitlementUserApi userApi;
     private final IEntitlementBillingApi billingApi;
+    private final IEntitlementTestApi testApi;
+    private final IEntitlementConfig config;
+    private List<IApiListener> observers;
 
 
     @Inject
@@ -98,6 +104,11 @@ public class Engine implements IEventListener, IEntitlementService {
         return billingApi;
     }
 
+
+    @Override
+    public IEntitlementTestApi getTestApi() {
+        return testApi;
+    }
 
     @Override
     public void processEventReady(IEvent event) {
@@ -154,4 +165,5 @@ public class Engine implements IEventListener, IEntitlementService {
             dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent);
         }
     }
+
 }

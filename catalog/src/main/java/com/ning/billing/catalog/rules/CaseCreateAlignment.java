@@ -1,0 +1,45 @@
+/*
+ * Copyright 2010-2011 Ning, Inc.
+ *
+ * Ning licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.ning.billing.catalog.rules;
+
+import javax.xml.bind.annotation.XmlElement;
+
+import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.Product;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PlanAlignmentCreate;
+import com.ning.billing.catalog.api.ProductCategory;
+
+public class CaseCreateAlignment extends CaseStandardNaming<PlanAlignmentCreate>{
+
+	@XmlElement(required=true)
+	private PlanAlignmentCreate alignment;
+
+	public CaseCreateAlignment() {}
+
+	public CaseCreateAlignment(Product product, ProductCategory productCategory,  BillingPeriod billingPeriod,
+			PriceList priceList, PlanAlignmentCreate alignment) {
+		super(product, productCategory, billingPeriod, priceList, alignment);
+		this.alignment = alignment;
+	}
+
+	@Override
+	protected PlanAlignmentCreate getResult() {
+		return alignment;
+	}
+
+}

@@ -30,7 +30,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
@@ -91,16 +90,6 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	@Override
 	public Product[] getProducts() {
 		return currentCatalog.getProducts();
-	}
-
-	@Override
-	public PriceListSet getPriceLists() {
-		return currentCatalog.getPriceLists();
-	}
-
-	@Override
-	public IPriceList getPriceListFromName(String planSetName) {
-		return currentCatalog.getPriceListFromName(planSetName);
 	}
 
 	@Override

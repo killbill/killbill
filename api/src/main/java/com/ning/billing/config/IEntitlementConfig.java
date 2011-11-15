@@ -26,14 +26,14 @@ public interface IEntitlementConfig {
     public long getDaoClaimTimeMs();
 
     @Config("killbill.entitlement.dao.ready.max")
-    @Default("1")
+    @Default("10")
     public int getDaoMaxReadyEvents();
-
-    @Config("killbill.entitlement.catalog.config.file")
-    @Default("hum, not sure")
-    public String getCatalogConfigFileName();
 
     @Config("killbill.entitlement.engine.notifications.sleep")
     @Default("500")
     public long getNotificationSleepTimeMs();
+
+    @Config("killbill.entitlement.engine.events.off")
+    @Default("false")
+    public boolean isEventProcessingOff();
 }

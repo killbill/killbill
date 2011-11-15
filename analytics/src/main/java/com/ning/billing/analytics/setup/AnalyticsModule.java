@@ -18,14 +18,17 @@ package com.ning.billing.analytics.setup;
 
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.analytics.dao.EventDao;
-import com.ning.billing.analytics.dao.EventDaoProvider;
+import com.ning.billing.analytics.dao.BusinessAccountDao;
+import com.ning.billing.analytics.dao.BusinessAccountDaoProvider;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDaoProvider;
 
 public class AnalyticsModule extends AbstractModule
 {
     @Override
     protected void configure()
     {
-        bind(EventDao.class).toProvider(EventDaoProvider.class).asEagerSingleton();
+        bind(BusinessSubscriptionTransitionDao.class).toProvider(BusinessSubscriptionTransitionDaoProvider.class).asEagerSingleton();
+        bind(BusinessAccountDao.class).toProvider(BusinessAccountDaoProvider.class).asEagerSingleton();
     }
 }

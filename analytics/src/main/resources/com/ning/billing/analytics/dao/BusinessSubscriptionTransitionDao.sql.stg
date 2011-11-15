@@ -1,0 +1,106 @@
+group BusinessSubscriptionTransition;
+
+getTransitions(event_key) ::= <<
+  select
+    event_key
+  , requested_timestamp
+  , event
+  , prev_product_name
+  , prev_product_type
+  , prev_product_category
+  , prev_slug
+  , prev_phase
+  , prev_billing_period
+  , prev_price
+  , prev_mrr
+  , prev_currency
+  , prev_start_date
+  , prev_state
+  , prev_subscription_id
+  , prev_bundle_id
+  , next_product_name
+  , next_product_type
+  , next_product_category
+  , next_slug
+  , next_phase
+  , next_billing_period
+  , next_price
+  , next_mrr
+  , next_currency
+  , next_start_date
+  , next_state
+  , next_subscription_id
+  , next_bundle_id
+  from bst
+  where event_key=:event_key
+  order by requested_timestamp asc
+  ;
+>>
+
+createTransition() ::= <<
+  insert into bst(
+    event_key
+  , requested_timestamp
+  , event
+  , prev_product_name
+  , prev_product_type
+  , prev_product_category
+  , prev_slug
+  , prev_phase
+  , prev_billing_period
+  , prev_price
+  , prev_mrr
+  , prev_currency
+  , prev_start_date
+  , prev_state
+  , prev_subscription_id
+  , prev_bundle_id
+  , next_product_name
+  , next_product_type
+  , next_product_category
+  , next_slug
+  , next_phase
+  , next_billing_period
+  , next_price
+  , next_mrr
+  , next_currency
+  , next_start_date
+  , next_state
+  , next_subscription_id
+  , next_bundle_id
+  ) values (
+    :event_key
+  , :requested_timestamp
+  , :event
+  , :prev_product_name
+  , :prev_product_type
+  , :prev_product_category
+  , :prev_slug
+  , :prev_phase
+  , :prev_billing_period
+  , :prev_price
+  , :prev_mrr
+  , :prev_currency
+  , :prev_start_date
+  , :prev_state
+  , :prev_subscription_id
+  , :prev_bundle_id
+  , :next_product_name
+  , :next_product_type
+  , :next_product_category
+  , :next_slug
+  , :next_phase
+  , :next_billing_period
+  , :next_price
+  , :next_mrr
+  , :next_currency
+  , :next_start_date
+  , :next_state
+  , :next_subscription_id
+  , :next_bundle_id
+  );
+>>
+
+test() ::= <<
+  select 1 from bst;
+>>

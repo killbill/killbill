@@ -152,6 +152,10 @@ Use Cases to do:
 			<productCategory>ADD_ON</productCategory>
 			<alignment>BUNDLE</alignment>
 		</billingAlignmentCase>
+		<priceListCase>
+			<fromPriceList>rescue</fromPriceList>
+			<toPriceList>DEFAULT</toPriceList>
+		</priceListCase>
 	</rules>
 
 	<plans>
@@ -549,7 +553,7 @@ Use Cases to do:
 		</plan>
 	</plans>
 	<priceLists>
-		<defaultPriceList> 
+		<defaultPriceList name="DEFAULT"> 
 			<plans>
 				<plan>pistol-monthly</plan>
 				<plan>shotgun-monthly</plan>

@@ -29,6 +29,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.api.user.ISubscription;
@@ -89,12 +90,17 @@ public class EntitlementUserApi implements IEntitlementUserApi {
 
     @Override
     public ISubscription createSubscription(UUID bundleId, String productName,
-            BillingPeriod term, String priceList) throws EntitlementUserApiException {
+            BillingPeriod term, String priceList, DateTime requestedDate) throws EntitlementUserApiException {
 
         // STEPH Should really get 'standard' from catalog
-        String realPriceList = (priceList == null) ? "standard" : priceList;
+        String realPriceList = (priceList == null) ? IPriceListSet.DEFAULT_PRICELIST_NAME : priceList;
 
         DateTime now = clock.getUTCNow();
+        if (requestedDate != null && requestedDate.isAfter(now)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
+        }
+
+        requestedDate = (requestedDate == null) ? now : requestedDate;
 
         IPlan plan = catalogService.getCatalog().getPlan(productName, term, realPriceList);
         if (plan == null) {
@@ -121,7 +127,7 @@ public class EntitlementUserApi implements IEntitlementUserApi {
             if (baseSubscription != null) {
                 throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
             }
-            bundleStartDate = now;
+            bundleStartDate = requestedDate;
             break;
         case ADD_ON:
             if (baseSubscription == null) {
@@ -134,14 +140,14 @@ public class EntitlementUserApi implements IEntitlementUserApi {
                      plan.getProduct().getCategory().toString()));
         }
 
-        DateTime effectiveDate = now;
-
+        DateTime effectiveDate = requestedDate;
         Subscription subscription = new Subscription(bundleId, plan.getProduct().getCategory(), bundleStartDate, effectiveDate);
 
         TimedPhase currentTimedPhase =  planAligner.getCurrentTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
         ApiEventCreate creationEvent =
             new ApiEventCreate(subscription.getId(), bundleStartDate, now, plan.getName(), currentTimedPhase.getPhase().getName(), realPriceList,
-                    now, effectiveDate, subscription.getActiveVersion());
+                    requestedDate, effectiveDate, subscription.getActiveVersion());
+
 
         TimedPhase nextTimedPhase =  planAligner.getNextTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
         IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, subscription, now);

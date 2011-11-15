@@ -40,7 +40,7 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
     private Duration duration;
     
     @XmlElement(required=false)
-    private BillingPeriod billingPeriod;
+    private BillingPeriod billingPeriod = BillingPeriod.NO_BILLING_PERIOD;
 
 	@XmlElement(required=false)
 	private InternationalPrice recurringPrice;
@@ -56,7 +56,7 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 	
 	public PlanPhase(){}
 
-    protected PlanPhase(BillingPeriod period, PhaseType type) {
+    public PlanPhase(BillingPeriod period, PhaseType type) {
 		this.billingPeriod = period;
 		this.type = type;
 	}

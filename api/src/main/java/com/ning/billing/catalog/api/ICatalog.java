@@ -22,11 +22,7 @@ import java.util.List;
 public interface ICatalog {
 
 	public abstract IProduct[] getProducts();
-
-	public abstract IPriceListSet getPriceLists();
-
-	public abstract IPriceList getPriceListFromName(String priceListName);
-
+	
 	public abstract IPlan getPlan(String productName, BillingPeriod term, String priceList);
 
 	public abstract Currency[] getSupportedCurrencies();
