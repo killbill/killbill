@@ -17,6 +17,8 @@ package com.ning.billing.util.config;
 
 import java.net.URI;
 
+import org.slf4j.Logger;
+
 
 public class ValidationError {
 	private final String description;
@@ -44,5 +46,7 @@ public class ValidationError {
 		return objectName;
 	}
 	
-	
+	public void log(Logger log) {
+		log.error(String.format("%s [%s] (%s:%s)", description, sourceURI, objectType, objectName));
+	}
 }

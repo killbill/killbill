@@ -140,7 +140,7 @@ public class PlanRules extends ValidatingConfig<Catalog>  {
 	}
 
 
-	protected void setProductTiers(ProductTier[] productTiers) {
+	public void setProductTiers(ProductTier[] productTiers) {
 		this.productTiers = productTiers;
 	}
 

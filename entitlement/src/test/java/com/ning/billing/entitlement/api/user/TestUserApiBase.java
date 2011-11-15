@@ -247,7 +247,7 @@ public abstract class TestUserApiBase {
                 return TimeUnit.DAYS;
             }
             @Override
-            public int getLength() {
+            public int getNumber() {
                 return days;
             }
         };
@@ -261,7 +261,7 @@ public abstract class TestUserApiBase {
                 return TimeUnit.MONTHS;
             }
             @Override
-            public int getLength() {
+            public int getNumber() {
                 return months;
             }
         };
@@ -276,7 +276,7 @@ public abstract class TestUserApiBase {
                 return TimeUnit.YEARS;
             }
             @Override
-            public int getLength() {
+            public int getNumber() {
                 return years;
             }
         };

@@ -14,18 +14,31 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.api;
+package com.ning.billing.catalog;
 
-import java.math.BigDecimal;
-import java.util.Date;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.util.config.XMLSchemaGenerator;
 
-public interface IInternationalPrice {
+public class CreateCatalogSchema {
 
-	public abstract IPrice[] getPrices();
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) throws Exception {
+		if(args.length != 1) {
+			System.err.println("Usage: <filepath>");
+			System.exit(0);
+		}
+		
+		File f = new File(args[0]);
+		Writer w = new FileWriter(f);
+		w.write(XMLSchemaGenerator.xmlSchemaAsString(Catalog.class));
+		w.close();
 
-	public abstract BigDecimal getPrice(Currency currency);
-
-	public abstract Date getEffectiveDateForExistingSubscriptons();
+	}
 
 }

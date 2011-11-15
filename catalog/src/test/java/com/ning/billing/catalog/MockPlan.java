@@ -14,18 +14,25 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.api;
+package com.ning.billing.catalog;
 
-import java.math.BigDecimal;
-import java.util.Date;
+public class MockPlan extends Plan {
 
+	public MockPlan(String name, Product product, PlanPhase[] planPhases, PlanPhase finalPhase, int plansAllowedInBundle) {
+		setName(name);
+		setProduct(product);
+		setFinalPhase(finalPhase);
+		setInitialPhases(planPhases);
+		setPlansAllowedInBundle(plansAllowedInBundle);
+	}
+	
+	public MockPlan() {
+		setName("test-plan");
+		setProduct(new MockProduct());
+		setFinalPhase(new MockPlanPhase());
+		setInitialPhases(null);
+		setPlansAllowedInBundle(1);
+	}
 
-public interface IInternationalPrice {
-
-	public abstract IPrice[] getPrices();
-
-	public abstract BigDecimal getPrice(Currency currency);
-
-	public abstract Date getEffectiveDateForExistingSubscriptons();
 
 }

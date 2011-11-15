@@ -14,31 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.rules;
+package com.ning.billing.catalog;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.Writer;
+import com.ning.billing.catalog.api.ProductCategory;
 
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.util.config.XMLSchemaGenerator;
+public class MockProduct extends Product {
 
-public class CreateCatalogSchema {
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-		if(args.length != 1) {
-			System.err.println("Usage: <filepath>");
-			System.exit(0);
-		}
-		
-		File f = new File(args[0]);
-		Writer w = new FileWriter(f);
-		w.write(XMLSchemaGenerator.xmlSchemaAsString(Catalog.class));
-		w.close();
-
+	public MockProduct() {
+		setName("TestProduct");
+		setCatagory(ProductCategory.BASE);
+		setCatalogName("Ning");
 	}
-
 }

@@ -16,6 +16,9 @@
 
 package com.ning.billing.catalog;
 
+import static com.ning.billing.catalog.api.BillingPeriod.*;
+import static com.ning.billing.catalog.api.PhaseType.*;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -30,14 +33,14 @@ public class TestPriceListSet {
 		Product foo = new Product("Foo", ProductCategory.BASE);
 		Product bar = new Product("Bar", ProductCategory.BASE);
 		Plan[] defaultPlans = new Plan[]{ 
-				new Plan("plan-foo-monthly", foo, new PlanPhase(BillingPeriod.MONTHLY, PhaseType.EVERGREEN)),
-				new Plan("plan-bar-monthly", bar, new PlanPhase(BillingPeriod.MONTHLY, PhaseType.EVERGREEN)),
-				new Plan("plan-foo-annual", foo, new PlanPhase(BillingPeriod.ANNUAL, PhaseType.EVERGREEN)),
-				new Plan("plan-bar-annual", bar, new PlanPhase(BillingPeriod.ANNUAL, PhaseType.EVERGREEN))
+				new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
+				new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
+				new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(EVERGREEN)),
+				new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(EVERGREEN))
 				};
 		Plan[] childPlans = new Plan[]{ 
-				new Plan("plan-foo", foo, new PlanPhase(BillingPeriod.ANNUAL, PhaseType.DISCOUNT)),
-				new Plan("plan-bar", bar, new PlanPhase(BillingPeriod.ANNUAL, PhaseType.DISCOUNT))
+				new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT)),
+				new MockPlan().setName("plan-bar").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT))
 				};
 		PriceListDefault defaultPriceList = new PriceListDefault(defaultPlans);
 		PriceList[] childPriceLists = new PriceList[] {
@@ -55,15 +58,16 @@ public class TestPriceListSet {
 		Product foo = new Product("Foo", ProductCategory.BASE);
 		Product bar = new Product("Bar", ProductCategory.BASE);
 		Plan[] defaultPlans = new Plan[]{ 
-				new Plan("plan-foo-monthly", foo, new PlanPhase(BillingPeriod.MONTHLY, PhaseType.EVERGREEN)),
-				new Plan("plan-bar-monthly", bar, new PlanPhase(BillingPeriod.MONTHLY, PhaseType.EVERGREEN)),
-				new Plan("plan-foo-annual", foo, new PlanPhase(null, PhaseType.EVERGREEN)),
-				new Plan("plan-bar-annual", bar, new PlanPhase(null, PhaseType.EVERGREEN))
+				new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
+				new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
+				new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(null).setPhaseType(EVERGREEN)),
+				new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(null).setPhaseType(EVERGREEN))
 				};
 		Plan[] childPlans = new Plan[]{ 
-				new Plan("plan-foo", foo, new PlanPhase(BillingPeriod.ANNUAL, PhaseType.DISCOUNT)),
-				new Plan("plan-bar", bar, new PlanPhase(BillingPeriod.ANNUAL, PhaseType.DISCOUNT))
+				new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT)),
+				new MockPlan().setName("plan-bar").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT))
 				};
+
 		PriceListDefault defaultPriceList = new PriceListDefault(defaultPlans);
 		PriceList[] childPriceLists = new PriceList[] {
 				new PriceList(childPlans, "child")

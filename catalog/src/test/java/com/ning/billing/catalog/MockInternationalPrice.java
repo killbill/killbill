@@ -14,18 +14,30 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.api;
+package com.ning.billing.catalog;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
+import com.ning.billing.catalog.api.Currency;
 
-public interface IInternationalPrice {
+public class MockInternationalPrice extends InternationalPrice {
+	
+	MockInternationalPrice() {
+		setEffectiveDateForExistingSubscriptons(new Date());
+		setPrices(new Price[] {
+			new Price().setCurrency(Currency.USD).setValue(new BigDecimal(1))	
+		});
+	}
+	
+	MockInternationalPrice(Date effectiveDateForExistingSubscriptions, Price[] price) {
+		setEffectiveDateForExistingSubscriptons(effectiveDateForExistingSubscriptions);
+		setPrices(price);
+	}
 
-	public abstract IPrice[] getPrices();
-
-	public abstract BigDecimal getPrice(Currency currency);
-
-	public abstract Date getEffectiveDateForExistingSubscriptons();
+	MockInternationalPrice(Price... price) {
+		setEffectiveDateForExistingSubscriptons(new Date());
+		setPrices(price);
+	}
 
 }

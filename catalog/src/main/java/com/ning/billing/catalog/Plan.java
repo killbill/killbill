@@ -60,27 +60,6 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	//A value of -1 means unlimited
 	@XmlElement(required=false)
 	private Integer plansAllowedInBundle = 1;
-	
-	public Plan(){}
-	
-	public Plan(String name, Product product, PlanPhase finalPhase) {
-		this.name = name;
-		this.product = product;
-		this.finalPhase = finalPhase;
-	}
-
-	@Override
-	public void initialize(Catalog catalog, URI sourceURI) {
-		super.initialize(catalog, sourceURI);
-		if(finalPhase != null) {
-			finalPhase.setPlan(this);
-		}
-		if(initialPhases != null) {
-			for(PlanPhase p : initialPhases) {
-				p.setPlan(this);
-			}
-		}
-	}
 
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPlan#getPhases()
@@ -98,15 +77,6 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
         return product;
     }
 
-	public void setInitialPhases(PlanPhase[] phases) {
-		this.initialPhases = phases;
-		
-	}
-
-	public void setProduct(Product product) {
-		this.product = product;
-	}
-
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPlan#getName()
 	 */
@@ -114,35 +84,9 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	public String getName() {
 		return name;
 	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPlan#getPhaseIterator()
-	 */
-	@Override
-	public Iterator<IPlanPhase> getInitialPhaseIterator() {
-		ArrayList<IPlanPhase> list = new ArrayList<IPlanPhase>();
-		for(PlanPhase p : initialPhases) {
-			list.add(p);
-		}
-		return list.iterator();
-	}
-	
-	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		return errors;
-	}
-	
 	@Override
 	public PlanPhase getFinalPhase() {
 		return finalPhase;
-	}
-
-	public void setFinalPhase(PlanPhase finalPhase) {
-		this.finalPhase = finalPhase;
 	}
 	
 	@Override
@@ -157,8 +101,62 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	public int getPlansAllowedInBundle() {
 		return plansAllowedInBundle;
 	}
-
-	public void setPlansAllowedInBundle(int plansAllowedInBundle) {
-		this.plansAllowedInBundle = plansAllowedInBundle;
+	
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.IPlan#getPhaseIterator()
+	 */
+	@Override
+	public Iterator<IPlanPhase> getInitialPhaseIterator() {
+		ArrayList<IPlanPhase> list = new ArrayList<IPlanPhase>();
+		for(PlanPhase p : initialPhases) {
+			list.add(p);
+		}
+		return list.iterator();
 	}
+	
+	@Override
+	public void initialize(Catalog catalog, URI sourceURI) {
+		super.initialize(catalog, sourceURI);
+		if(finalPhase != null) {
+			finalPhase.setPlan(this);
+		}
+		if(initialPhases != null) {
+			for(PlanPhase p : initialPhases) {
+				p.setPlan(this);
+			}
+		}
+	}
+
+	@Override
+	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+		return errors;
+	}
+	
+
+	protected Plan setName(String name) {
+		this.name = name;
+		return this;
+	}
+	
+	protected Plan setPlansAllowedInBundle(int plansAllowedInBundle) {
+		this.plansAllowedInBundle = plansAllowedInBundle;
+		return this;		
+	}
+
+	protected Plan setFinalPhase(PlanPhase finalPhase) {
+		this.finalPhase = finalPhase;
+		return this;		
+	}
+	
+	protected Plan setProduct(Product product) {
+		this.product = product;
+		return this;		
+	}
+
+	protected Plan setInitialPhases(PlanPhase[] phases) {
+		this.initialPhases = phases;
+		return this;		
+	}
+
+
 }
