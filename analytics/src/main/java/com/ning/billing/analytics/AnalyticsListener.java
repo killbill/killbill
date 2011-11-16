@@ -41,6 +41,7 @@ public class AnalyticsListener
     private final IEntitlementUserApi entitlementApi;
     private final IAccountUserApi accountApi;
     private final IEventBus eventBus;
+    private final BusinessSubscriptionTransitionRecorder bstRecorder;
 
     @Inject
     public AnalyticsListener(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi, final IEventBus eventBus)
@@ -49,6 +50,7 @@ public class AnalyticsListener
         this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
         this.eventBus = eventBus;
+        this.bstRecorder = new BusinessSubscriptionTransitionRecorder(dao);
     }
 
     @Subscribe
@@ -158,21 +160,6 @@ public class AnalyticsListener
         final BusinessSubscription prevSubscription = new BusinessSubscription(transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId());
         final BusinessSubscription nextSubscription = new BusinessSubscription(transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId());
 
-        recordTransition(transitionKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
-    }
-
-    // Public for now for internal reasons
-    public void recordTransition(final String key, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription)
-    {
-        final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
-            key,
-            requestedDateTime,
-            event,
-            prevSubscription,
-            nextSubscription
-        );
-
-        log.info(transition.getEvent() + " " + transition);
-        dao.createTransition(transition);
+        bstRecorder.record(transitionKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
     }
 }
