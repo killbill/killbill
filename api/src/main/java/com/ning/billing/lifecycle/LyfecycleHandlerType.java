@@ -65,13 +65,13 @@ public @interface LyfecycleHandlerType {
          */
         STOP_SERVICE(Sequence.SHUTOWN_PRE_EVENT_UNREGISTRATION),
         /**
-         * Stop bus
-         */
-        STOP_BUS(Sequence.SHUTOWN_PRE_EVENT_UNREGISTRATION),
-        /**
          * Unregister interest in events
          */
         UNREGISTER_EVENTS(Sequence.SHUTOWN_PRE_EVENT_UNREGISTRATION),
+        /**
+         * Stop bus
+         */
+        STOP_BUS(Sequence.SHUTOWN_POST_EVENT_UNREGISTRATION),
         /**
          * Any service specific shutdown action before the end
          */

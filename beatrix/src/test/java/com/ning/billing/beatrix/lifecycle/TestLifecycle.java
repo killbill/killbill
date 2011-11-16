@@ -130,7 +130,7 @@ public class TestLifecycle {
         lifecycle = g.getInstance(Lifecycle.class);
     }
 
-    @Test(enabled=false, groups={"fast"})
+    @Test(enabled=true, groups={"fast"})
     public void testLifecycle() {
         s1.reset();
         s2.reset();
