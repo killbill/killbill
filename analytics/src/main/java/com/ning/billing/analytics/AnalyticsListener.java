@@ -25,7 +25,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
-import com.ning.billing.util.eventbus.IEventBus;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -42,14 +41,17 @@ public class AnalyticsListener
     private final IAccountUserApi accountApi;
 
     @Inject
-    public AnalyticsListener(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi, final IEventBus eventBus)
+    public AnalyticsListener(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi)
     {
         this.dao = dao;
         this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
     }
 
-    @Subscribe
+    /*
+     * Disable until we fix IRS to allow for two instances (One for bilr proxy, or for killbill)
+     * @Subscribe
+     */
     public void handleNotificationChange(ISubscriptionTransition event) {
         switch (event.getTransitionType()) {
         case CREATE:
@@ -76,7 +78,6 @@ public class AnalyticsListener
             throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
         }
     }
-
 
     public void subscriptionCreated(final ISubscriptionTransition created)
     {

@@ -87,6 +87,12 @@ public class MemoryEventBus implements IEventBus {
     }
 
     @Override
+    public void unregister(Object handlerInstance) throws EventBusException {
+        checkInitialized("unregister");
+        delegate.unregister(handlerInstance);
+    }
+
+    @Override
     public void post(IEventBusType event) throws EventBusException {
         checkInitialized("post");
         delegate.post(event);

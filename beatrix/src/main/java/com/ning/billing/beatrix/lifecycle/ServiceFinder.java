@@ -91,6 +91,8 @@ public class ServiceFinder {
 	        classPaths = System.getProperty("java.class.path", "").split(File.pathSeparator);
 	    }
 
+	    log.info("Start SERVICE_FINDER");
+
 	    for (int h = 0; h < classPaths.length; h++) {
 
 
@@ -99,10 +101,16 @@ public class ServiceFinder {
 	        File classPath = new File( (URL.class).isInstance(classPaths[h]) ?
 	                ((URL)classPaths[h]).getFile() : classPaths[h].toString());
 	        if (classPath.isDirectory()) {
+
+                log.info("DIR : " + classPath);
+
 	            List<String> dirListing = new ArrayList<String>();
 	            recursivelyListDir(dirListing, classPath, new StringBuffer() );
 	            files = Collections.enumeration( dirListing );
 	        } else if (classPath.getName().endsWith(".jar")) {
+
+	            log.info("JAR : " + classPath);
+
 	            String [] jarParts = classPath.getName().split("/");
 	            String jarName = jarParts[jarParts.length - 1];
 	            if (jarFilter != null && jarName != null && ! jarName.startsWith(jarFilter)) {

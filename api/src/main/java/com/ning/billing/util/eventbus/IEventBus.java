@@ -74,6 +74,15 @@ public interface IEventBus {
 
 
     /**
+     * Unregister the handler for a particular type of event
+     *
+     * @param handlerInstance
+     * @throws EventBusException
+     */
+    public void unregister(Object handlerInstance) throws EventBusException;
+
+
+    /**
      * Post an event asynchronously
      *
      * @param event to be posted
