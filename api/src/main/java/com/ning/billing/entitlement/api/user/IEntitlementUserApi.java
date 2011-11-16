@@ -27,8 +27,6 @@ import com.ning.billing.catalog.api.BillingPeriod;
 
 public interface IEntitlementUserApi {
 
-    public void initialize(List<IApiListener> listeners);
-
     public ISubscriptionBundle getBundleFromId(UUID id);
 
     public ISubscription getSubscriptionFromId(UUID id);

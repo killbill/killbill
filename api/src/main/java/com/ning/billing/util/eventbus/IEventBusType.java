@@ -14,19 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.events.user;
+package com.ning.billing.util.eventbus;
 
-import com.ning.billing.entitlement.events.IEvent;
-
-
-public interface IUserEvent extends IEvent {
-
-    public String getEventPlan();
-
-    public String getEventPlanPhase();
-
-    public ApiEventType getEventType();
-
-    public String getPriceList();
+public interface IEventBusType {
 
 }

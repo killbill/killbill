@@ -17,7 +17,7 @@
     <groupId>com.ning.billing</groupId>
     <artifactId>killbill</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.13-SNAPSHOT</version>
+    <version>0.0.14-SNAPSHOT</version>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
     <url>http://github.com/ning/killbill</url>
@@ -373,6 +373,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.6</version>
                 <configuration>
+                    <useManifestOnlyJar>false</useManifestOnlyJar>
                     <systemPropertyVariables>
                         <log4j.configuration>file:${project.basedir}/src/test/resources/log4j.xml</log4j.configuration>
                     </systemPropertyVariables>

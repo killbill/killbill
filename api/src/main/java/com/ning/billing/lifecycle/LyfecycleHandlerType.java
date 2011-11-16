@@ -20,6 +20,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collections;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
@@ -29,51 +33,55 @@ public @interface LyfecycleHandlerType {
     //
     // The level themselves are still work in progress depending on what we really need
     //
+    // Ordering is important in that enum
+    //
     public enum LyfecycleLevel {
 
         /**
          * Load and validate catalog (only for catalog subsytem)
          */
-        LOAD_CATALOG(Sequence.STARTUP),
+        LOAD_CATALOG(Sequence.STARTUP_PRE_EVENT_REGISTRATION),
         /**
          * Initialize event bus (only for the event bus)
          */
-        INIT_BUS(Sequence.STARTUP),
+        INIT_BUS(Sequence.STARTUP_PRE_EVENT_REGISTRATION),
         /**
-         * Service specific initalization
+         * Service specific initalization-- service does not start yet
          */
-        INIT_SERVICE(Sequence.STARTUP),
+        INIT_SERVICE(Sequence.STARTUP_PRE_EVENT_REGISTRATION),
         /**
          * Service register their interest in events
          */
-        REGISTER_EVENTS(Sequence.STARTUP),
+        REGISTER_EVENTS(Sequence.STARTUP_PRE_EVENT_REGISTRATION),
         /**
          * Service start
          * - API call should not work
          * - Events might be triggered
          * - Batch processing jobs started
          */
-        START_SERVICE(Sequence.STARTUP),
+        START_SERVICE(Sequence.STARTUP_POST_EVENT_REGISTRATION),
         /**
          * Stop service
          */
-        STOP_SERVICE(Sequence.SHUTOWN),
+        STOP_SERVICE(Sequence.SHUTOWN_PRE_EVENT_UNREGISTRATION),
         /**
          * Unregister interest in events
          */
-        UNREGISTER_EVENTS(Sequence.SHUTOWN),
+        UNREGISTER_EVENTS(Sequence.SHUTOWN_PRE_EVENT_UNREGISTRATION),
         /**
          * Stop bus
          */
-        STOP_BUS(Sequence.SHUTOWN),
+        STOP_BUS(Sequence.SHUTOWN_POST_EVENT_UNREGISTRATION),
         /**
          * Any service specific shutdown action before the end
          */
-        SHUTDOWN(Sequence.SHUTOWN);
+        SHUTDOWN(Sequence.SHUTOWN_POST_EVENT_UNREGISTRATION);
 
         public enum Sequence {
-            STARTUP,
-            SHUTOWN
+            STARTUP_PRE_EVENT_REGISTRATION,
+            STARTUP_POST_EVENT_REGISTRATION,
+            SHUTOWN_PRE_EVENT_UNREGISTRATION,
+            SHUTOWN_POST_EVENT_UNREGISTRATION
         };
 
         private Sequence seq;
@@ -84,6 +92,19 @@ public @interface LyfecycleHandlerType {
 
         public Sequence getSequence() {
             return seq;
+        }
+
+        //
+        // Returns an ordered list of level for a particular sequence
+        //
+        public static List<LyfecycleLevel> getLevelsForSequence(Sequence seq) {
+            List<LyfecycleLevel> result = Lists.newLinkedList();
+            for (LyfecycleLevel level : LyfecycleLevel.values()) {
+                if (level.getSequence() == seq) {
+                    result.add(level);
+                }
+            }
+            return result;
         }
     }
 
