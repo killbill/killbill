@@ -25,7 +25,8 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
-
+import com.ning.billing.lifecycle.LyfecycleHandlerType;
+import com.ning.billing.util.eventbus.IEventBus;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,77 +40,88 @@ public class AnalyticsListener
     private final BusinessSubscriptionTransitionDao dao;
     private final IEntitlementUserApi entitlementApi;
     private final IAccountUserApi accountApi;
+    private final IEventBus eventBus;
 
     @Inject
-    public AnalyticsListener(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi)
+    public AnalyticsListener(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi, final IEventBus eventBus)
     {
         this.dao = dao;
         this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
+        this.eventBus = eventBus;
     }
 
-    /*
-     * Disable until we fix IRS to allow for two instances (One for bilr proxy, or for killbill)
-     * @Subscribe
-     */
-    public void handleNotificationChange(ISubscriptionTransition event) {
+    @Subscribe
+    public void handleNotificationChange(final ISubscriptionTransition event)
+    {
         switch (event.getTransitionType()) {
-        case CREATE:
-            subscriptionCreated(event);
-            break;
-        case CANCEL:
-            subscriptionCancelled(event);
-            break;
-        case CHANGE:
-            subscriptionChanged(event);
-            break;
-        case PAUSE:
-            subscriptionPaused(event);
-            break;
-        case RESUME:
-            subscriptionResumed(event);
-            break;
-        case UNCANCEL:
-            break;
-        case PHASE:
-            subscriptionPhaseChanged(event);
-            break;
-        default:
-            throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
+            case CREATE:
+                subscriptionCreated(event);
+                break;
+            case CANCEL:
+                subscriptionCancelled(event);
+                break;
+            case CHANGE:
+                subscriptionChanged(event);
+                break;
+            case PAUSE:
+                subscriptionPaused(event);
+                break;
+            case RESUME:
+                subscriptionResumed(event);
+                break;
+            case UNCANCEL:
+                break;
+            case PHASE:
+                subscriptionPhaseChanged(event);
+                break;
+            default:
+                throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
         }
     }
 
-    public void subscriptionCreated(final ISubscriptionTransition created)
+    @LyfecycleHandlerType(LyfecycleHandlerType.LyfecycleLevel.REGISTER_EVENTS)
+    public void registerForNotifications()
+    {
+        try {
+            eventBus.register(this);
+        }
+        catch (IEventBus.EventBusException e) {
+            log.error("Unable to register to the EventBus!", e);
+        }
+    }
+
+    private void subscriptionCreated(final ISubscriptionTransition created)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan());
         recordTransition(event, created);
     }
 
-    public void subscriptionCancelled(final ISubscriptionTransition cancelled)
+    private void subscriptionCancelled(final ISubscriptionTransition cancelled)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getNextPlan());
         recordTransition(event, cancelled);
     }
 
-    public void subscriptionChanged(final ISubscriptionTransition changed)
+    private void subscriptionChanged(final ISubscriptionTransition changed)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan());
         recordTransition(event, changed);
     }
 
-    public void subscriptionPaused(final ISubscriptionTransition paused)
+    private void subscriptionPaused(final ISubscriptionTransition paused)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPaused(paused.getNextPlan());
         recordTransition(event, paused);
     }
 
-    public void subscriptionResumed(final ISubscriptionTransition resumed)
+    private void subscriptionResumed(final ISubscriptionTransition resumed)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionResumed(resumed.getNextPlan());
         recordTransition(event, resumed);
     }
 
-    public void subscriptionPhaseChanged(final ISubscriptionTransition phaseChanged)
+    private void subscriptionPhaseChanged(final ISubscriptionTransition phaseChanged)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState());
         recordTransition(event, phaseChanged);
