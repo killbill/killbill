@@ -22,59 +22,52 @@ import com.google.inject.Stage;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.glue.AccountModuleMock;
-
+import com.ning.billing.account.glue.InjectorMagic;
+import org.apache.commons.io.IOUtils;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
+import java.util.UUID;
 
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
+@Test(groups = {"Account", "Account-DAO"})
 public class TestSimpleAccountDao {
-
-
     private IAccountDao dao;
+    private InjectorMagic injectorMagic;
 
-    public static void loadSystemPropertiesFromClasspath( final String resource) {
-        final URL url = TestSimpleAccountDao.class.getResource(resource);
-        assertNotNull(url);
+    @BeforeClass(alwaysRun = true)
+    private void setup() throws IOException {
+        AccountModuleMock module = new AccountModuleMock();
+        final String ddl = IOUtils.toString(IAccountDaoSql.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+        module.createDb(ddl);
 
+        // Healthcheck test to make sure MySQL is setup properly
         try {
-            System.getProperties().load( url.openStream() );
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
+
+            injectorMagic = injector.getInstance(InjectorMagic.class);
+            dao = injector.getInstance(IAccountDao.class);
+            dao.test();
+        }
+        catch (Throwable t) {
+            fail(t.toString());
         }
     }
 
-
-    private  Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new AccountModuleMock());
-    }
-
-
-    @BeforeClass(groups={"setup"})
-    public void setup() {
-        //loadSystemPropertiesFromClasspath("/account.properties");
-        final Injector g = getInjector();
-
-        dao = g.getInstance(IAccountDao.class);
-    }
-
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"Account-DAO"})
     public void testBasic() {
 
-        IAccount a = new Account("foo");
+        IAccount a = new Account().withKey("foo");
         dao.createAccount(a);
 
         IAccount r = dao.getAccountByKey("foo");
         assertNotNull(r);
         assertEquals(r.getKey(), a.getKey());
 
-        r = dao.getAccountFromId(r.getId());
+        r = dao.getAccountById(r.getId());
         assertNotNull(r);
         assertEquals(r.getKey(), a.getKey());
 
@@ -83,5 +76,35 @@ public class TestSimpleAccountDao {
         assertTrue(all.size() >= 1);
     }
 
+    @Test
+    public void testGetById() {
+        String key = "test1234";
 
+        IAccount account = Account.create().withKey(key);
+        UUID id = account.getId();
+
+        account.save();
+
+        account = Account.loadAccount(id);
+        assertNotNull(account);
+        assertEquals(account.getId(), id);
+        assertEquals(account.getKey(), key);
+    }
+
+    @Test
+    public void testCustomFields() {
+        String key = "test45678";
+        IAccount account = Account.create().withKey(key);
+
+        String fieldName = "testField1";
+        String fieldValue = "testField1_value";
+        account.setFieldValue(fieldName, fieldValue);
+
+        account.save();
+
+        account = Account.loadAccount(key);
+        assertNotNull(account);
+        assertEquals(account.getKey(), key);
+        assertEquals(account.getFieldValue(fieldName), fieldValue);
+    }
 }

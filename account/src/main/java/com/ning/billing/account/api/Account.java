@@ -16,27 +16,35 @@
 
 package com.ning.billing.account.api;
 
-import java.util.UUID;
-
+import com.ning.billing.account.dao.IAccountDao;
+import com.ning.billing.account.glue.InjectorMagic;
 import com.ning.billing.catalog.api.Currency;
 
+import java.util.UUID;
+
 public class Account implements IAccount {
+    private final FieldStore fields;
+    private static IAccountDao dao;
 
     private final UUID id;
-    private final String key;
+    private String key;
+    private String email;
+    private String name;
+    private String phone;
+    private Currency currency;
+    private int billCycleDay;
 
-    public Account(String key) {
-        this(UUID.randomUUID(), key);
+    public Account() {
+        this(UUID.randomUUID());
     }
 
-
-    public Account(UUID id, String key) {
-        super();
+    public Account(UUID id) {
         this.id = id;
-        this.key = key;
+        fields = FieldStore.create(getId(), getObjectName());
+        dao = InjectorMagic.getAccountDao();
     }
 
-    @Override
+   @Override
     public UUID getId() {
         return id;
     }
@@ -46,38 +54,130 @@ public class Account implements IAccount {
         return key;
     }
 
+    public Account withKey(String key) {
+        this.key = key;
+        return this;
+    }
+
     @Override
     public String getName() {
-        return null;
+        return name;
+    }
+
+    public Account withName(String name) {
+        this.name = name;
+        return this;
     }
 
     @Override
     public String getEmail() {
-        return null;
+        return email;
+    }
+
+    public Account withEmail(String email) {
+        this.email = email;
+        return this;
     }
 
     @Override
     public String getPhone() {
-        return null;
+        return phone;
     }
 
+    public Account withPhone(String phone) {
+        this.phone = phone;
+        return this;
+    }
 
     @Override
     public int getBillCycleDay() {
-        return 0;
+        return billCycleDay;
+    }
+
+    public Account withBillCycleDay(int billCycleDay) {
+        this.billCycleDay = billCycleDay;
+        return this;
     }
 
     @Override
     public Currency getCurrency() {
-        return null;
+        return currency;
+    }
+
+    public Account withCurrency(Currency currency) {
+        this.currency = currency;
+        return this;
+    }
+
+    public static Account create() {
+        return new Account();
+    }
+
+    public static Account create(UUID id) {
+        return new Account(id);
+    }
+
+    public static Account loadAccount(UUID id) {
+        Account account = (Account) dao.getAccountById(id);
+        if (account != null) {
+            account.loadCustomFields();
+        }
+        return account;
+    }
+
+    public static Account loadAccount(String key) {
+        Account account = (Account) dao.getAccountByKey(key);
+        if (account != null) {
+            account.loadCustomFields();
+        }
+        return account;
     }
 
     @Override
-    public void setPrivate(String name, String value) {
+    public String getFieldValue(String fieldName) {
+        return fields.getValue(fieldName);
     }
 
     @Override
-    public String getPrivate(String name) {
-        return null;
+    public void setFieldValue(String fieldName, String fieldValue) {
+        fields.setValue(fieldName, fieldValue);
+    }
+
+    @Override
+    public void save() {
+        saveObject();
+        saveCustomFields();
+    }
+
+    @Override
+    public void load() {
+        loadObject();
+        loadCustomFields();
+    }
+
+    private void saveCustomFields() {
+        fields.save();
+    }
+
+    protected void loadCustomFields() {
+        fields.load();
+    }
+
+    public String getObjectName() {
+        return "Account";
+    }
+
+    private void saveObject() {
+        dao.save(this);
+    }
+
+    private void loadObject() {
+        IAccount that = dao.getAccountById(id);
+        this.key = that.getKey();
+        this.email = that.getEmail();
+        this.name = that.getName();
+        this.phone = that.getPhone();
+        this.currency = that.getCurrency();
+        this.billCycleDay = that.getBillCycleDay();
     }
 }

@@ -16,29 +16,27 @@
 
 package com.ning.billing.account.dao;
 
-import java.util.List;
-import java.util.UUID;
-
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Transaction;
-
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountData;
+import org.skife.jdbi.v2.IDBI;
+
+import java.util.List;
+import java.util.UUID;
 
 public class AccountDao implements IAccountDao {
 
     private final IAccountDaoSql dao;
 
     @Inject
-    public AccountDao(DBI dbi) {
+    public AccountDao(IDBI dbi) {
         this.dao = dbi.onDemand(IAccountDaoSql.class);
     }
 
     @Override
     public IAccount createAccount(IAccountData input) {
-        IAccount result = new Account(input.getKey());
+        IAccount result = new Account().withKey(input.getKey());
         dao.insertAccount(result);
         return result;
     }
@@ -49,12 +47,22 @@ public class AccountDao implements IAccountDao {
     }
 
     @Override
-    public IAccount getAccountFromId(UUID uid) {
+    public IAccount getAccountById(UUID uid) {
         return dao.getAccountFromId(uid.toString());
     }
 
     @Override
     public List<IAccount> getAccounts() {
         return dao.getAccounts();
+    }
+
+    @Override
+    public void test() {
+        dao.test();
+    }
+
+    @Override
+    public void save(IAccount account) {
+        dao.insertAccount(account);
     }
 }

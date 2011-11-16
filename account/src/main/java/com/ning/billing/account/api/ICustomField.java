@@ -18,14 +18,16 @@ package com.ning.billing.account.api;
 
 import java.util.UUID;
 
-public interface IAccount extends IAccountData {
+public interface ICustomField {
     public UUID getId();
 
-    public void load();
+    public String getName();
 
-    public void save();
+    public String getValue();
 
-    public String getFieldValue(String fieldName);
+    public void setValue(String value);
 
-    public void setFieldValue(String fieldName, String fieldValue);
+    public boolean isNew();
+
+    public void setAsSaved();
 }

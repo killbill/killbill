@@ -16,6 +16,8 @@
 
 package com.ning.billing.account.api;
 
+import com.ning.billing.catalog.api.Currency;
+
 public interface IAccountData {
 
     public String getKey();
@@ -25,4 +27,8 @@ public interface IAccountData {
     public String getEmail();
 
     public String getPhone();
+
+    public int getBillCycleDay();
+
+    public Currency getCurrency();
 }

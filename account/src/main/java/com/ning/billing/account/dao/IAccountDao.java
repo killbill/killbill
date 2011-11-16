@@ -16,20 +16,23 @@
 
 package com.ning.billing.account.dao;
 
-import java.util.List;
-import java.util.UUID;
-
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountData;
+
+import java.util.List;
+import java.util.UUID;
 
 public interface IAccountDao {
 
     public IAccount createAccount(IAccountData account);
 
-    public IAccount getAccountByKey(String key);
+    public IAccount getAccountById(UUID uid);
 
-    public IAccount getAccountFromId(UUID uid);
+    public IAccount getAccountByKey(String key);
 
     public List<IAccount> getAccounts();
 
+    public void test();
+
+    public void save(IAccount account);
 }
