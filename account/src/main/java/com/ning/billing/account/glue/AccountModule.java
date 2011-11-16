@@ -16,15 +16,16 @@
 
 package com.ning.billing.account.glue;
 
-import org.skife.config.ConfigurationObjectFactory;
-
 import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.IAccountService;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.FieldStoreDao;
 import com.ning.billing.account.dao.IAccountDao;
+import com.ning.billing.account.dao.IFieldStoreDao;
+import org.skife.config.ConfigurationObjectFactory;
 
 public class AccountModule extends AbstractModule {
 
@@ -35,14 +36,19 @@ public class AccountModule extends AbstractModule {
 
     protected void installAccountDao() {
         bind(IAccountDao.class).to(AccountDao.class).asEagerSingleton();
+//        bind(IAccountDaoSql.class).to(IAccountDaoSql.class).asEagerSingleton();
     }
 
     protected void installAccountUserApi() {
         bind(IAccountUserApi.class).to(AccountUserApi.class).asEagerSingleton();
     }
 
-    protected void installAcountService() {
+    protected void installAccountService() {
         bind(IAccountService.class).to(AccountService.class).asEagerSingleton();
+    }
+
+    protected void installFieldStore() {
+        bind(IFieldStoreDao.class).to(FieldStoreDao.class).asEagerSingleton();
     }
 
     @Override
@@ -50,7 +56,8 @@ public class AccountModule extends AbstractModule {
         installConfig();
         installAccountDao();
         installAccountUserApi();
-        installAcountService();
+        installAccountService();
+        installFieldStore();
     }
 
 }

@@ -16,11 +16,8 @@
 
 package com.ning.billing.account.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.UUID;
-
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.IAccount;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -33,8 +30,10 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.IAccount;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
@@ -54,11 +53,13 @@ public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
     @Mapper(IAccountSqlMapper.class)
     public List<IAccount> getAccounts();
 
+    @SqlUpdate
+    public void test();
 
     public static class IAccountSqlBinder implements Binder<Bind, IAccount> {
 
         @Override
-        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, IAccount account) {
+        public void bind(SQLStatement stmt, Bind bind, IAccount account) {
             stmt.bind("id", account.getId().toString());
             stmt.bind("key_name", account.getKey());
         }
@@ -71,7 +72,7 @@ public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
                 throws SQLException {
             UUID id = UUID.fromString(r.getString("id"));
             String key = r.getString("key_name");
-            return new Account(id, key);
+            return new Account(id).withKey(key);
         }
     }
 }

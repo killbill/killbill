@@ -14,41 +14,39 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.account.dao;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.dao.IAccountDao;
+import com.ning.billing.account.api.ICustomField;
+import org.skife.jdbi.v2.IDBI;
 
 import java.util.List;
-import java.util.UUID;
 
-public class AccountUserApi implements IAccountUserApi {
-
-    private final IAccountDao dao;
+public class FieldStoreDao implements IFieldStoreDao {
+    private final IFieldStoreDao dao;
 
     @Inject
-    public AccountUserApi(IAccountDao dao) {
-        this.dao = dao;
+    public FieldStoreDao(IDBI dbi) {
+        dao = dbi.onDemand(IFieldStoreDao.class);
     }
 
     @Override
-    public IAccount createAccount(IAccountData data) {
-        return dao.createAccount(data);
+    public void saveFields(String objectId, String objectType, List<ICustomField> fields) {
+        dao.saveFields(objectId, objectType, fields);
     }
 
     @Override
-    public IAccount getAccountByKey(String key) {
-        return dao.getAccountByKey(key);
+    public void createFields(String objectId, String objectType,  List<ICustomField> fields) {
+        dao.createFields(objectId, objectType, fields);
     }
 
     @Override
-    public IAccount getAccountFromId(UUID uid) {
-        return dao.getAccountById(uid);
+    public List<ICustomField> getFields(String objectId, String objectType) {
+        return dao.getFields(objectId, objectType);
     }
 
     @Override
-    public List<IAccount> getAccounts() {
-        return dao.getAccounts();
+    public void test() {
+        dao.test();
     }
-
 }

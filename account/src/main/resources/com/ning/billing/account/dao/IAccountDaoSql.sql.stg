@@ -30,6 +30,9 @@ getAccountFromId(id) ::= <<
     ;
 >>
 
+test() ::= <<
+    select 1 from accounts;
+>>
 
 getAccounts() ::= <<
     select
@@ -38,3 +41,4 @@ getAccounts() ::= <<
     from accounts
     ;
 >>
+;

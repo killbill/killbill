@@ -16,24 +16,22 @@
 
 package com.ning.billing.account.glue;
 
-import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
+import com.ning.billing.dbi.MysqlTestingHelper;
+import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.dbi.DBIProvider;
-import com.ning.billing.dbi.DbiConfig;
+import java.io.IOException;
 
 public class AccountModuleMock extends AccountModule {
+    private final MysqlTestingHelper helper = new MysqlTestingHelper();
 
-    protected void installDBI() {
-        bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-        final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-        bind(DbiConfig.class).toInstance(config);
+    public void createDb(String ddl) throws IOException {
+        helper.startMysql();
+        helper.initDb(ddl);
     }
 
     @Override
     protected void configure() {
-        installDBI();
+        bind(IDBI.class).toInstance(helper.getDBI());
         super.configure();
-
     }
 }
