@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
+import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.config.ICatalogConfig;
 import com.ning.billing.lifecycle.IService;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
@@ -35,19 +36,24 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
     private final ICatalogConfig config;
     private boolean isInitialized;
 
+	private VersionedCatalogLoader loader;
+
 
     @Inject
-    public CatalogService(ICatalogConfig config) {
+    public CatalogService(ICatalogConfig config, VersionedCatalogLoader loader) {
         this.config = config;
         System.out.println(config.getCatalogURI());
         this.isInitialized = false;
+        this.loader = loader;
     }
 
     @LyfecycleHandlerType(LyfecycleLevel.LOAD_CATALOG)
     public synchronized void loadCatalog() throws ServiceException {
         if (!isInitialized) {
             try {
-                catalog = XMLLoader.getObjectFromProperty(config.getCatalogURI(), Catalog.class);
+            	catalog = loader.load(config.getCatalogURI());
+            	
+                //catalog = XMLLoader.getObjectFromProperty(config.getCatalogURI(), Catalog.class);
                 isInitialized = true;
             } catch (Exception e) {
                 throw new ServiceException(e);

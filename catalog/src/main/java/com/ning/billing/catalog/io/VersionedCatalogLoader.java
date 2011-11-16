@@ -34,6 +34,7 @@ import org.xml.sax.SAXException;
 import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
+import com.ning.billing.lifecycle.IService.ServiceException;
 import com.ning.billing.util.config.XMLLoader;
 
 public class VersionedCatalogLoader  {
@@ -42,9 +43,15 @@ public class VersionedCatalogLoader  {
 	private  final String HREF_CAPS_START = "HREF=\""; 
 	private  final String HREF_SEARCH_END = "\"";
 			
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.io.ICatalogLoader#load(java.net.URL)
-	 */
+	
+	public  VersionedCatalog load(String urlString) throws ServiceException{
+		try {
+			return load(new URL(urlString));
+		} catch (Exception e) {
+			throw new ServiceException("Problem encountered loading catalog", e);
+		}
+	}
+
 	public  VersionedCatalog load(URL url) throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
 		String directoryContents = pullContentsFrom(url);
 		List<URL> xmlURLs = findXmlReferences(directoryContents, url);

@@ -16,11 +16,25 @@
 
 package com.ning.billing.catalog;
 
-import org.skife.config.Config;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
-public interface ICatalogConfiguration {
-	
-    @Config("killbill.catalog.config.directory")
-    public String getCatalogDirectoryURL();
+import com.ning.billing.catalog.io.VersionedCatalogLoader;
+import com.ning.billing.config.ICatalogConfig;
+import com.ning.billing.lifecycle.IService.ServiceException;
 
+public class TestCatlogService {
+
+	@Test
+	public void testCatalogService() throws ServiceException {
+		CatalogService service = new CatalogService(new ICatalogConfig() {
+			@Override
+			public String getCatalogURI() {
+				return "file:src/test/resources/";
+			}
+			
+		}, new VersionedCatalogLoader());
+		service.loadCatalog();
+		Assert.assertNotNull(service.getCatalog());
+	}
 }
