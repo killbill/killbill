@@ -31,17 +31,7 @@ import com.ning.billing.util.config.ValidationErrors;
 public abstract class CasePhase<T> extends CaseStandardNaming<T> {
 
 	@XmlElement(required=false)
-	private PhaseType phaseType;
-
-	public CasePhase() {}
-
-	public CasePhase(Product product, ProductCategory productCategory,
-			BillingPeriod billingPeriod, PriceList priceList,
-			PhaseType phaseType, T result) {
-		super(product, productCategory, billingPeriod, priceList, result);
-		this.phaseType = phaseType;
-	}
-	
+	private PhaseType phaseType;	
 	
 	public T getResult(PlanPhaseSpecifier specifier, Catalog c) {
 		if (	
@@ -55,8 +45,8 @@ public abstract class CasePhase<T> extends CaseStandardNaming<T> {
 	
 	public static <K> K getResult(CasePhase<K>[] cases, PlanPhaseSpecifier planSpec, Catalog catalog) {
     	if(cases != null) {
-    		for(int i = cases.length - 1; i >=0; i --) {
-    			K result = cases[i].getResult(planSpec, catalog);
+    		for(CasePhase<K> cp : cases) {
+    			K result = cp.getResult(planSpec, catalog);
     			if(result != null) { 
     				return result; 
     			}        					
@@ -68,7 +58,13 @@ public abstract class CasePhase<T> extends CaseStandardNaming<T> {
 
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		// TODO Auto-generated method stub
-		return null;
+		return errors;
 	}
+
+	protected CasePhase<T> setPhaseType(PhaseType phaseType) {
+		this.phaseType = phaseType;
+		return this;
+	}
+	
+	
 }

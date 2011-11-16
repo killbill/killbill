@@ -16,18 +16,6 @@
 
 package com.ning.billing.catalog.rules;
 
-public class MockPlanRules extends PlanRules {
-
-	//For test
-	public MockPlanRules(
-			CaseChangePlanPolicy[] changeCase, CaseCancelPolicy[] cancelCase,
-			CaseChangePlanAlignment[] changeAlignmentCase,
-			CaseCreateAlignment[] createAlignmentCase) {
-		super();
-		setChangeCase(changeCase);
-		setCancelCase(cancelCase);
-		setChangeAlignmentCase(changeAlignmentCase);
-		setCreateAlignmentCase(createAlignmentCase);
-	}
-
+enum Result {
+	FOO, BAR, TINKYWINKY,DIPSY,LALA, PO
 }

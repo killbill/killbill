@@ -22,12 +22,12 @@ import com.ning.billing.ErrorCode;
 public class CatalogApiException extends BillingExceptionBase {
 	private static final long serialVersionUID = 1L;
 
-	public CatalogApiException(Throwable cause, Object... args) {
-		super(cause, ErrorCode.CAT_ILLEGAL_CHANGE_REQUEST, args);
+	public CatalogApiException(Throwable cause, ErrorCode code, Object... args) {
+		super(cause, code, args);
 	}
 
-	public CatalogApiException(Object... args) {
-		super(ErrorCode.CAT_ILLEGAL_CHANGE_REQUEST, args);
+	public CatalogApiException(ErrorCode code, Object... args) {
+		super(code, args);
 	}
 
 }

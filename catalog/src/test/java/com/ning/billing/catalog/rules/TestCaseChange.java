@@ -35,11 +35,7 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 
 public class TestCaseChange {
-	protected enum Result {
-		FOO, BAR, WIBBLE
-	}
-	
-	protected class CaseChangeResult extends CaseChange<Result>  {
+	protected static class CaseChangeResult extends CaseChange<Result>  {
 
 		@XmlElement(required=true)
 		private Result result;
@@ -50,12 +46,16 @@ public class TestCaseChange {
 				PriceList fromPriceList, PriceList toPriceList,
 				PhaseType fromType, 
 				Result result) {
-			super(from, to, 
-					fromProductCategory, toProductCategory,
-					fromBP, toBP, 
-					fromPriceList, toPriceList,
-					fromType, 
-					result);
+			setFromProduct(from);
+			setToProduct(to);
+			setFromProductCategory(fromProductCategory);
+			setToProductCategory(toProductCategory);
+			setFromPriceList(fromPriceList);
+			setToPriceList(toPriceList);
+			setFromBillingPeriod(fromBP);
+			setToBillingPeriod(toBP);
+			setPhaseType(fromType);
+			
 			this.result = result;
 		}
 
@@ -956,6 +956,72 @@ public class TestCaseChange {
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.TRIAL, cat);	
+	}
+	
+	
+	@Test(enabled=true)
+	public void testOrder(){
+		MockCatalog cat = new MockCatalog();
+
+		Product product1 = cat.getProducts()[0];
+		PriceList priceList1 = cat.getPriceListFromName(IPriceListSet.DEFAULT_PRICELIST_NAME);
+
+		Product product2 = cat.getProducts()[2];
+		PriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
+
+
+		CaseChangeResult cr0 = new CaseChangeResult(
+				product1, product2,
+				ProductCategory.BASE, ProductCategory.BASE,
+				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
+				priceList1,priceList2,
+				PhaseType.EVERGREEN,
+				Result.FOO);
+
+		CaseChangeResult cr1 = new CaseChangeResult(
+				product1, product2,
+				ProductCategory.BASE, ProductCategory.BASE,
+				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
+				priceList1,priceList2,
+				PhaseType.EVERGREEN,
+				Result.BAR);
+
+		CaseChangeResult cr2 = new CaseChangeResult(
+				product1, product2,
+				ProductCategory.BASE, ProductCategory.BASE,
+				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
+				priceList1,priceList2,
+				PhaseType.EVERGREEN,
+				Result.TINKYWINKY);
+
+		CaseChangeResult cr3 = new CaseChangeResult(
+				product1, product2,
+				ProductCategory.BASE, ProductCategory.BASE,
+				BillingPeriod.MONTHLY, BillingPeriod.ANNUAL, 
+				priceList1,priceList2,
+				PhaseType.EVERGREEN,
+				Result.DIPSY);
+
+		CaseChangeResult cr4 = new CaseChangeResult(
+				product1, product2,
+				ProductCategory.BASE, ProductCategory.BASE,
+				BillingPeriod.MONTHLY, BillingPeriod.ANNUAL, 
+				priceList1,priceList2,
+				PhaseType.EVERGREEN,
+				Result.LALA);
+		
+		Result r1 = CaseChange.getResult(new CaseChangeResult[]{ cr0, cr1, cr2, cr3, cr4 }, 
+				new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN), 
+				new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.MONTHLY, priceList2.getName()), cat);
+
+		assertEquals(Result.FOO,r1);
+		
+		Result r2 = CaseChange.getResult(new CaseChangeResult[]{ cr0, cr1, cr2, cr3, cr4 }, 
+				new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN), 
+				new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.ANNUAL, priceList2.getName()), cat);
+
+		assertEquals(Result.DIPSY,r2);
+		
 	}
 	
 	

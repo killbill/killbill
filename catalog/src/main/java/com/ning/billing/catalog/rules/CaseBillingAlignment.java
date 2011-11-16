@@ -18,29 +18,22 @@ package com.ning.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingAlignment;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
 
 public class CaseBillingAlignment extends CasePhase<BillingAlignment> {
 
-
 	@XmlElement(required=true)
 	private BillingAlignment alignment;
-
-	public CaseBillingAlignment() {}
-
-	public CaseBillingAlignment(Product product, ProductCategory productCategory, BillingPeriod billingPeriod,
-			PriceList priceList, PhaseType phaseType, BillingAlignment alignment) {
-		super(product, productCategory, billingPeriod, priceList, phaseType, alignment);
-		this.alignment = alignment;
-	}
 
 	@Override
 	protected BillingAlignment getResult() {
 		return alignment;
 	}
+
+	protected CaseBillingAlignment setAlignment(BillingAlignment alignment) {
+		this.alignment = alignment;
+		return this;
+	}
+	
+	
 }

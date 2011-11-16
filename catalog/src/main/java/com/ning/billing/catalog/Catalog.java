@@ -284,7 +284,7 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	@Override
 	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to)
 			throws IllegalPlanChange {
-		return planRules.planChange(from, to);
+		return planRules.planChange(from, to, this);
 	}
 	
 	//TODO: MDW validation - only allow one default pricelist
