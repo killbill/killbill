@@ -55,7 +55,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.testng.Assert.*;
->>>>>>> master
+
 
 public abstract class TestUserApiBase {
 
