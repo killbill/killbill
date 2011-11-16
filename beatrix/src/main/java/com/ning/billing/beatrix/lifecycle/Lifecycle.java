@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -74,21 +75,27 @@ public class Lifecycle {
         }
     }
 
-    public void fireStartupSequence() {
-        for (LyfecycleLevel level : LyfecycleLevel.values()) {
-            if (level.getSequence() == Sequence.SHUTOWN) {
-                break;
-            }
-            doFireStage(level);
-        }
+
+    public void fireStartupSequencePriorEventRegistration() {
+        fireSequence(Sequence.STARTUP_PRE_EVENT_REGISTRATION);
     }
 
-    public void fireShutdownSequence() {
-        for (LyfecycleLevel level : LyfecycleLevel.values()) {
-            if (level.getSequence() == Sequence.STARTUP) {
-                continue;
-            }
-            doFireStage(level);
+    public void fireStartupSequencePostEventRegistration() {
+        fireSequence(Sequence.STARTUP_POST_EVENT_REGISTRATION);
+    }
+
+    public void fireShutdownSequencePriorEventUnRegistration() {
+        fireSequence(Sequence.SHUTOWN_PRE_EVENT_UNREGISTRATION);
+    }
+
+    public void fireShutdownSequencePostEventUnRegistration() {
+        fireSequence(Sequence.SHUTOWN_POST_EVENT_UNREGISTRATION);
+    }
+
+    private void fireSequence(Sequence seq) {
+        List<LyfecycleLevel> levels = LyfecycleLevel.getLevelsForSequence(seq);
+        for (LyfecycleLevel cur : levels) {
+            doFireStage(cur);
         }
     }
 
@@ -103,11 +110,12 @@ public class Lifecycle {
                 log.info("Killbill lifecycle calling handler {} for service {}", cur.getMethod().getName(), target.getName());
                 method.invoke(target);
             } catch (Exception e) {
-                log.warn("Killbill lifecycle failed to invoke lifecycle handler", e);
+                logWarn("Killbill lifecycle failed to invoke lifecycle handler", e);
             }
         }
 
     }
+
 
     private Set<? extends IService> findServices() {
 
@@ -120,7 +128,7 @@ public class Lifecycle {
                 log.debug("got instance {}", instance.getName());
                 result.add(instance);
             } catch (Exception e) {
-                log.warn("Failed to inject " + cur.getName(), e);
+                logWarn("Failed to inject " + cur.getName(), e);
             }
 
         }
@@ -128,9 +136,13 @@ public class Lifecycle {
     }
 
 
+    // Used to disable valid injection failure from unit tests
+    protected void logWarn(String msg, Exception e) {
+        log.warn(msg, e);
+    }
+
     public Multimap<LyfecycleLevel, LifecycleHandler<? extends IService>> findAllHandlers(IService service) {
-        Multimap<LyfecycleLevel, LifecycleHandler<? extends IService>> methodsInService =
-            HashMultimap.create();
+        Multimap<LyfecycleLevel, LifecycleHandler<? extends IService>> methodsInService = HashMultimap.create();
         Class<? extends IService> clazz = service.getClass();
         for (Method method : clazz.getMethods()) {
             LyfecycleHandlerType annotation = method.getAnnotation(LyfecycleHandlerType.class);

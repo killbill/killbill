@@ -14,24 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api;
+package com.ning.billing.util.glue;
 
-import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
-import com.ning.billing.entitlement.api.test.IEntitlementTestApi;
-import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
-import com.ning.billing.lifecycle.IService;
+import com.google.inject.AbstractModule;
+import com.ning.billing.util.eventbus.EventBusService;
+import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.util.eventbus.IEventBusService;
+import com.ning.billing.util.eventbus.MemoryEventBus;
 
-public interface IEntitlementService extends IService {
-
+public class EventBusModule extends AbstractModule {
 
     @Override
-    public String getName();
+    protected void configure() {
+        bind(IEventBusService.class).to(EventBusService.class);
+        bind(IEventBus.class).to(MemoryEventBus.class).asEagerSingleton();
 
-    public IEntitlementUserApi getUserApi();
-
-    public IEntitlementBillingApi getBillingApi();
-
-    public IEntitlementTestApi getTestApi();
-
+    }
 
 }

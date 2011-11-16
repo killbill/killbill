@@ -16,16 +16,35 @@
 
 package com.ning.billing.entitlement.events.user;
 
+import com.ning.billing.entitlement.api.user.ISubscriptionTransition.SubscriptionTransitionType;
+
 
 public enum ApiEventType {
-    /*
-     * STEPH should be changed
-     * Ordering is important for unit tests today.
-     */
-    CREATE,
-    CHANGE,
-    PAUSE,
-    RESUME,
-    CANCEL,
-    UNCANCEL
+    CREATE {
+        @Override
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CREATE; }
+    },
+    CHANGE {
+        @Override
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CHANGE; }
+    },
+    PAUSE {
+        @Override
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.PAUSE; }
+    },
+    RESUME {
+        @Override
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.RESUME; }
+    },
+    CANCEL {
+        @Override
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CANCEL; }
+    },
+    UNCANCEL {
+        @Override
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.UNCANCEL; }
+    };
+
+    // Used to map from internal events to User visible events (both user and phase)
+    public abstract SubscriptionTransitionType getSubscriptionTransitionType();
 }

@@ -50,7 +50,7 @@ import com.ning.billing.entitlement.events.user.ApiEventPause;
 import com.ning.billing.entitlement.events.user.ApiEventResume;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.ApiEventUncancel;
-import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 
 @ExternalizedSqlViaStringTemplate3()
@@ -99,15 +99,15 @@ public interface IEventSqlDao extends Transactional<IEventSqlDao>, CloseMe, Tran
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, IEvent evt) {
             stmt.bind("event_id", evt.getId().toString());
             stmt.bind("event_type", evt.getType().toString());
-            stmt.bind("user_type", (evt.getType() == EventType.API_USER) ? ((IUserEvent) evt).getEventType().toString() : null);
+            stmt.bind("user_type", (evt.getType() == EventType.API_USER) ? ((IApiEvent) evt).getEventType().toString() : null);
             stmt.bind("created_dt", getDate(evt.getProcessedDate()));
             stmt.bind("updated_dt", getDate(evt.getProcessedDate()));
             stmt.bind("requested_dt", getDate(evt.getRequestedDate()));
             stmt.bind("effective_dt", getDate(evt.getEffectiveDate()));
             stmt.bind("subscription_id", evt.getSubscriptionId().toString());
-            stmt.bind("plan_name", (evt.getType() == EventType.API_USER) ? ((IUserEvent) evt).getEventPlan() : null);
-            stmt.bind("phase_name", (evt.getType() == EventType.API_USER) ? ((IUserEvent) evt).getEventPlanPhase() : ((IPhaseEvent) evt).getPhase());
-            stmt.bind("plist_name", (evt.getType() == EventType.API_USER) ? ((IUserEvent) evt).getPriceList() : null);
+            stmt.bind("plan_name", (evt.getType() == EventType.API_USER) ? ((IApiEvent) evt).getEventPlan() : null);
+            stmt.bind("phase_name", (evt.getType() == EventType.API_USER) ? ((IApiEvent) evt).getEventPlanPhase() : ((IPhaseEvent) evt).getPhase());
+            stmt.bind("plist_name", (evt.getType() == EventType.API_USER) ? ((IApiEvent) evt).getPriceList() : null);
             stmt.bind("current_version", evt.getActiveVersion());
             stmt.bind("is_active", evt.isActive());
             stmt.bind("processing_available_dt", getDate(evt.getNextAvailableDate()));

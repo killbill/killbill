@@ -40,7 +40,7 @@ import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.util.clock.IClock;
 
 public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDaoMock {
@@ -294,7 +294,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
                     continue;
                 }
                 if (cur.getType() == EventType.API_USER &&
-                        ApiEventType.CHANGE == ((IUserEvent) cur).getEventType() &&
+                        ApiEventType.CHANGE == ((IApiEvent) cur).getEventType() &&
                         cur.getProcessingState() == IEventLyfecycleState.AVAILABLE) {
                     cur.deactivate();
                     break;
@@ -315,7 +315,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
                     continue;
                 }
                 if (cur.getType() == EventType.API_USER &&
-                        ((IUserEvent) cur).getEventType() == ApiEventType.CANCEL) {
+                        ((IApiEvent) cur).getEventType() == ApiEventType.CANCEL) {
                     cur.deactivate();
                     foundCancel = true;
                     break;

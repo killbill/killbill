@@ -47,7 +47,7 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.ApiEventUncancel;
-import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.entitlement.glue.InjectorMagic;
 import com.ning.billing.util.clock.IClock;
@@ -295,8 +295,8 @@ public class Subscription extends PrivateFields  implements ISubscription {
         TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(this, newPlan, realPriceList, effectiveDate);
         IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, this, now);
         List<IEvent> changeEvents = new ArrayList<IEvent>();
-        // Add phase event first so we expect to see PHASE event first-- mostly for test expectation
-        if (nextPhaseEvent != null) {
+        // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.
+        if (nextPhaseEvent != null && ! nextPhaseEvent.getEffectiveDate().equals(changeEvent.getEffectiveDate())) {
             changeEvents.add(nextPhaseEvent);
         }
         changeEvents.add(changeEvent);
@@ -479,7 +479,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
                 break;
 
             case API_USER:
-                IUserEvent userEV = (IUserEvent) cur;
+                IApiEvent userEV = (IApiEvent) cur;
                 apiEventType = userEV.getEventType();
                 switch(apiEventType) {
                 case CREATE:

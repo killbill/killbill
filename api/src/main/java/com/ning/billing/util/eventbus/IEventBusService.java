@@ -14,20 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing.util.eventbus;
 
+import com.ning.billing.lifecycle.IService;
 
-public interface IApiListener {
+public interface IEventBusService extends IService {
 
-    public void subscriptionCreated(ISubscriptionTransition created);
-
-    public void subscriptionCancelled(ISubscriptionTransition cancelled);
-
-    public void subscriptionChanged(ISubscriptionTransition changed);
-
-    public void subscriptionPaused(ISubscriptionTransition paused);
-
-    public void subscriptionResumed(ISubscriptionTransition resumed);
-
-    public void subscriptionPhaseChanged(ISubscriptionTransition phaseChanged);
+    public IEventBus getEventBus();
 }

@@ -14,14 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.lifecycle;
+package com.ning.billing.entitlement.events.user;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.ning.billing.entitlement.events.IEvent;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Lifecycled {
+
+public interface IApiEvent extends IEvent {
+
+    public String getEventPlan();
+
+    public String getEventPlanPhase();
+
+    public ApiEventType getEventType();
+
+    public String getPriceList();
+
 }
