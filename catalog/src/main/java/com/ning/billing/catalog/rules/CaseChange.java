@@ -65,26 +65,6 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
 	@XmlElement(required=false)
 	@XmlIDREF
 	private PriceList toPriceList;
-	
-	public CaseChange(){}
-	
-	protected CaseChange (
-			Product from, Product to, 
-			ProductCategory fromProductCategory, ProductCategory toProductCategory, 
-			BillingPeriod fromBP, BillingPeriod toBP, 
-			PriceList fromPriceList, PriceList toPriceList,
-			PhaseType fromType,
-			T result) {
-		this.fromProduct = from;
-		this.toProduct = to;
-		this.fromProductCategory = fromProductCategory;
-		this.toProductCategory = toProductCategory;
-		this.fromBillingPeriod = fromBP;
-		this.toBillingPeriod = toBP;
-		this.phaseType = fromType;
-		this.fromPriceList = fromPriceList;
-		this.toPriceList = toPriceList;
-	}
 
 	protected abstract T getResult();
 	
@@ -109,8 +89,8 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
 	static public <K> K getResult(CaseChange<K>[] cases, PlanPhaseSpecifier from,
 			PlanSpecifier to, Catalog catalog) {
     	if(cases != null) {
-    		for(int i = cases.length - 1; i >=0; i --) {
-    			K result = cases[i].getResult(from, to, catalog);
+    		for(CaseChange<K> cc : cases) {
+    			K result = cc.getResult(from, to, catalog);
     			if(result != null) { 
     				return result; 
     			}        					
@@ -119,12 +99,55 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
         return null;
         
     }
+	
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		// TODO Auto-generated method stub
 		return errors;
 	}
 
+	protected CaseChange<T> setPhaseType(PhaseType phaseType) {
+		this.phaseType = phaseType;
+		return this;
+	}
 
+	protected CaseChange<T> setFromProduct(Product fromProduct) {
+		this.fromProduct = fromProduct;
+		return this;
+	}
+
+	protected CaseChange<T> setFromProductCategory(ProductCategory fromProductCategory) {
+		this.fromProductCategory = fromProductCategory;
+		return this;
+	}
+
+	protected CaseChange<T> setFromBillingPeriod(BillingPeriod fromBillingPeriod) {
+		this.fromBillingPeriod = fromBillingPeriod;
+		return this;
+	}
+
+	protected CaseChange<T> setFromPriceList(PriceList fromPriceList) {
+		this.fromPriceList = fromPriceList;
+		return this;
+	}
+
+	protected CaseChange<T> setToProduct(Product toProduct) {
+		this.toProduct = toProduct;
+		return this;
+	}
+
+	protected CaseChange<T> setToProductCategory(ProductCategory toProductCategory) {
+		this.toProductCategory = toProductCategory;
+		return this;
+	}
+
+	protected CaseChange<T> setToBillingPeriod(BillingPeriod toBillingPeriod) {
+		this.toBillingPeriod = toBillingPeriod;
+		return this;
+	}
+
+	protected CaseChange<T> setToPriceList(PriceList toPriceList) {
+		this.toPriceList = toPriceList;
+		return this;
+	}
 
 }

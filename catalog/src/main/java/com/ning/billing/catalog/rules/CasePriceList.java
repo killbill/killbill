@@ -56,4 +56,11 @@ public class CasePriceList extends Case<PriceList> {
 	protected PriceList getResult() {
 		return toPriceList;
 	}
+
+	protected CasePriceList setToPriceList(PriceList toPriceList) {
+		this.toPriceList = toPriceList;
+		return this;
+	}
+	
+	
 }

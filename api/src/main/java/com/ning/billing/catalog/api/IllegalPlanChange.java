@@ -21,14 +21,14 @@ import com.ning.billing.ErrorCode;
 public class IllegalPlanChange extends CatalogApiException {
 	private static final long serialVersionUID = 1L;
 
-	public IllegalPlanChange(Throwable cause, ErrorCode code, PlanPhaseSpecifier from,
+	public IllegalPlanChange(Throwable cause, PlanPhaseSpecifier from,
 			PlanSpecifier to) {
-		super(cause, code, from.getProductName(), from.getBillingPeriod(), from.getPriceListName(), to.getProductName(), to.getBillingPeriod(), to.getPriceListName());
+		super(cause, ErrorCode.CAT_ILLEGAL_CHANGE_REQUEST, from.getProductName(), from.getBillingPeriod(), from.getPriceListName(), to.getProductName(), to.getBillingPeriod(), to.getPriceListName());
 	}
 
-	public IllegalPlanChange(ErrorCode code, PlanPhaseSpecifier from,
+	public IllegalPlanChange(PlanPhaseSpecifier from,
 			PlanSpecifier to) {
-		super(code, from.getProductName(), from.getBillingPeriod(), from.getPriceListName(), to.getProductName(), to.getBillingPeriod(), to.getPriceListName());
+		super(ErrorCode.CAT_ILLEGAL_CHANGE_REQUEST, from.getProductName(), from.getBillingPeriod(), from.getPriceListName(), to.getProductName(), to.getBillingPeriod(), to.getPriceListName());
 	}
 
 

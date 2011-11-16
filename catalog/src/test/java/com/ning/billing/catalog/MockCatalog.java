@@ -16,25 +16,12 @@
 
 package com.ning.billing.catalog;
 
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.Duration;
-import com.ning.billing.catalog.Plan;
-import com.ning.billing.catalog.PlanPhase;
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.PriceListDefault;
-import com.ning.billing.catalog.PriceListSet;
-import com.ning.billing.catalog.Product;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.catalog.rules.CaseCancelPolicy;
 import com.ning.billing.catalog.rules.CaseChangePlanAlignment;
 import com.ning.billing.catalog.rules.CaseChangePlanPolicy;
 import com.ning.billing.catalog.rules.CaseCreateAlignment;
-import com.ning.billing.catalog.rules.PlanPolicyChangeRule;
 import com.ning.billing.catalog.rules.PlanRules;
-import com.ning.billing.catalog.rules.ProductTier;
 
 public class MockCatalog extends Catalog {
 	private static final String[] PRODUCT_NAMES = new String[]{ "TestProduct1", "TestProduct2", "TestProduct3"};
@@ -42,7 +29,6 @@ public class MockCatalog extends Catalog {
 	public MockCatalog() {
 		populateProducts();
 		populateRules();
-		populateProductTiers();
 		populatePlans();
 		populatePriceLists();
 	}
@@ -51,7 +37,7 @@ public class MockCatalog extends Catalog {
 		setPlanRules(new PlanRules());
 	}
 
-	public void setRules(PlanPolicyChangeRule[] rules,
+	public void setRules( 
 			CaseChangePlanPolicy[] caseChangePlanPolicy,
 			CaseChangePlanAlignment[] caseChangePlanAlignment,
 			CaseCancelPolicy[] caseCancelPolicy,
@@ -67,13 +53,6 @@ public class MockCatalog extends Catalog {
 			products[i] = new Product(names[i], ProductCategory.BASE);
 		}
 		setProducts(products);
-	}
-
-	public void populateProductTiers() {
-		//default to having a single tier with all products in it
-		ProductTier tier = new ProductTier();
-		tier.setProducts(getProducts());
-		getPlanRules().setProductTiers(new ProductTier[]{tier});
 	}
 	
 	public void populatePlans() {

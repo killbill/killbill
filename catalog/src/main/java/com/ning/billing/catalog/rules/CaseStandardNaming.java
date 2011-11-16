@@ -26,13 +26,6 @@ import com.ning.billing.catalog.api.ProductCategory;
 
 public abstract class CaseStandardNaming<T> extends Case<T> {
 
-	public CaseStandardNaming() {}
-	
-	public CaseStandardNaming(Product product, ProductCategory productCategory,
-			BillingPeriod billingPeriod, PriceList priceList, T result) {
-		super(product, productCategory, billingPeriod, priceList, result);
-	}
-	
 	@XmlElement(required=false, name="product")
 	@XmlIDREF
 	public Product getProduct(){

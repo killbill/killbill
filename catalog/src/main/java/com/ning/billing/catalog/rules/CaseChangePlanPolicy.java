@@ -19,42 +19,22 @@ package com.ning.billing.catalog.rules;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.ActionPolicy;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
 
 @XmlSeeAlso(CaseChange.class)
 public class CaseChangePlanPolicy extends CaseChange<ActionPolicy> {
 	
 	@XmlElement(required=true)
 	private ActionPolicy policy;
-	
-	public CaseChangePlanPolicy() {}
-
-	protected CaseChangePlanPolicy(
-			Product from, Product to, 
-			ProductCategory fromProductCategory, ProductCategory toProductCategory, 
-			BillingPeriod fromBP,BillingPeriod toBP, 
-			PriceList fromPriceList, PriceList toPriceList,
-			PhaseType fromType,
-			ActionPolicy result) {
-		super(from, to, 
-				fromProductCategory, toProductCategory,
-				fromBP, toBP, 
-				fromPriceList, toPriceList, 
-				fromType, 
-				result);
-		policy = result;
-	}
-
-
 
 	@Override
 	protected ActionPolicy getResult() {
 		return policy;
 	}
 
+	protected CaseChangePlanPolicy setPolicy(ActionPolicy policy) {
+		this.policy = policy;
+		return this;
+	}
+	
 }

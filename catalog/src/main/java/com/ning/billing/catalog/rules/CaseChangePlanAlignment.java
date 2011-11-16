@@ -18,39 +18,21 @@ package com.ning.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
-import com.ning.billing.catalog.api.ProductCategory;
 
 public class CaseChangePlanAlignment extends CaseChange<PlanAlignmentChange> {
 
 	@XmlElement(required=true)
 	private PlanAlignmentChange alignment;
-	
-	public CaseChangePlanAlignment() {}
-
-	protected CaseChangePlanAlignment(
-			Product from, Product to, 
-			ProductCategory fromProductCategory, ProductCategory toProductCategory, 
-			BillingPeriod fromBP,BillingPeriod toBP, 
-			PriceList fromPriceList, PriceList toPriceList,
-			PhaseType fromType, 
-			PlanAlignmentChange result) {
-		super(from, to, 
-				fromProductCategory, toProductCategory, 
-				fromBP, toBP, 
-				fromPriceList, toPriceList,  
-				fromType,
-				result);
-		alignment = result;
-	}
 
 	@Override
 	protected PlanAlignmentChange getResult() {
 		return alignment;
 	}
 
+	protected CaseChangePlanAlignment setAlignment(PlanAlignmentChange alignment) {
+		this.alignment = alignment;
+		return this;
+	}
+	
 }

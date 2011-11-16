@@ -35,6 +35,11 @@ public class PlanChangeResult {
 
 	public ActionPolicy getPolicy() {
 		return policy;
+	}
+
+	public PlanAlignmentChange getAlignment() {
+		return alignment;
 	}	
+	 
 	
 }

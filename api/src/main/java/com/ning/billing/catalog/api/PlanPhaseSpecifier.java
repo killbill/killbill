@@ -50,4 +50,7 @@ public class PlanPhaseSpecifier  {
 		return phaseType;
 	}
 
+	public PlanSpecifier toPlanSpecifier() {
+		return new PlanSpecifier(productName, productCategory, billingPeriod, priceListName);
+	}
 }
