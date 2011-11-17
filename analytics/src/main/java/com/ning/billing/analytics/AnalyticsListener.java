@@ -40,16 +40,14 @@ public class AnalyticsListener
     private final BusinessSubscriptionTransitionDao dao;
     private final IEntitlementUserApi entitlementApi;
     private final IAccountUserApi accountApi;
-    private final IEventBus eventBus;
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
 
     @Inject
-    public AnalyticsListener(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi, final IEventBus eventBus)
+    public AnalyticsListener(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi)
     {
         this.dao = dao;
         this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
-        this.eventBus = eventBus;
         this.bstRecorder = new BusinessSubscriptionTransitionRecorder(dao);
     }
 
@@ -79,17 +77,6 @@ public class AnalyticsListener
                 break;
             default:
                 throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
-        }
-    }
-
-    @LyfecycleHandlerType(LyfecycleHandlerType.LyfecycleLevel.REGISTER_EVENTS)
-    public void registerForNotifications()
-    {
-        try {
-            eventBus.register(this);
-        }
-        catch (IEventBus.EventBusException e) {
-            log.error("Unable to register to the EventBus!", e);
         }
     }
 

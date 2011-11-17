@@ -14,23 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.setup;
+package com.ning.billing.analytics.api;
 
 import com.ning.billing.lifecycle.IService;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
 
-public class IAnalyticsService implements IService
-{
-    private static final String ANALYTICS_SERVICE = "Analytics subsystem";
-
-    @Override
-    public String getName()
-    {
-        return ANALYTICS_SERVICE;
-    }
-
-    @LyfecycleHandlerType(LyfecycleHandlerType.LyfecycleLevel.REGISTER_EVENTS)
-    public void initialize()
-    {
-    }
+public interface IAnalyticsService extends IService {
 }
