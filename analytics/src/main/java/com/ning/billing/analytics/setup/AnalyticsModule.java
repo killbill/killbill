@@ -32,5 +32,6 @@ public class AnalyticsModule extends AbstractModule
         bind(BusinessSubscriptionTransitionDao.class).toProvider(BusinessSubscriptionTransitionDaoProvider.class).asEagerSingleton();
         bind(BusinessAccountDao.class).toProvider(BusinessAccountDaoProvider.class).asEagerSingleton();
         bind(AnalyticsListener.class).asEagerSingleton();
+        bind(IAnalyticsService.class).asEagerSingleton();
     }
 }
