@@ -276,6 +276,11 @@ public class Subscription extends PrivateFields  implements ISubscription {
         try {
 
             IProduct destProduct = catalog.getProductFromName(productName);
+            // STEPH really catalog exception
+            if (destProduct == null) {
+                throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BAD_CATALOG,
+                        productName, term.toString(), "");
+            }
 
             IPlan currentPlan = getCurrentPlan();
             PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
