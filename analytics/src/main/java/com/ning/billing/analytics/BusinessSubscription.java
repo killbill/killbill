@@ -125,16 +125,16 @@ public class BusinessSubscription
                 mrr = getMrrFromISubscription(currentPhase.getDuration(), price);
             }
             else {
-                price = null;
-                mrr = null;
+                price = BigDecimal.ZERO;
+                mrr = BigDecimal.ZERO;
             }
         }
         else {
             slug = null;
             phase = null;
             billingPeriod = null;
-            price = null;
-            mrr = null;
+            price = BigDecimal.ZERO;
+            mrr = BigDecimal.ZERO;
         }
 
         if (currency != null) {
@@ -228,7 +228,7 @@ public class BusinessSubscription
     static BigDecimal getMrrFromISubscription(final IDuration duration, final BigDecimal price)
     {
         if (duration == null || duration.getUnit() == null || duration.getNumber() == 0) {
-            return null;
+            return BigDecimal.ZERO;
         }
 
         if (duration.getUnit().equals(TimeUnit.UNLIMITED)) {
