@@ -25,18 +25,12 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
-import com.ning.billing.util.eventbus.IEventBus;
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class AnalyticsListener
 {
-    private static final Logger log = LoggerFactory.getLogger(AnalyticsListener.class);
-
     private final BusinessSubscriptionTransitionDao dao;
     private final IEntitlementUserApi entitlementApi;
     private final IAccountUserApi accountApi;
@@ -136,7 +130,7 @@ public class AnalyticsListener
         // of the previous plan. We need to retrieve it from our own transitions table
         DateTime previousEffectiveTransitionTime = null;
         final List<BusinessSubscriptionTransition> transitions = dao.getTransitions(transitionKey);
-        if (transitions != null) {
+        if (transitions != null && transitions.size() > 0) {
             final BusinessSubscriptionTransition lastTransition = transitions.get(transitions.size() - 1);
             if (lastTransition != null && lastTransition.getNextSubscription() != null) {
                 previousEffectiveTransitionTime = lastTransition.getNextSubscription().getStartDate();
