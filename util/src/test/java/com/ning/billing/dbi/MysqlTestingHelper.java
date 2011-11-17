@@ -76,7 +76,7 @@ public class MysqlTestingHelper
 
     public void cleanupTable(final String table)
     {
-        if (mysqldResource == null || mysqldResource.isRunning()) {
+        if (mysqldResource == null || !mysqldResource.isRunning()) {
             log.error("Asked to cleanup table " + table + " but MySQL is not running!");
             return;
         }
@@ -88,7 +88,7 @@ public class MysqlTestingHelper
             @Override
             public Void withHandle(final Handle handle) throws Exception
             {
-                handle.createQuery("delete * from " + table);
+                handle.execute("truncate " + table);
                 return null;
             }
         });
