@@ -18,9 +18,15 @@ package com.ning.billing.entitlement.api.user;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.CatalogApiException;
 
 public class EntitlementUserApiException extends BillingExceptionBase {
 
+    private static final long serialVersionUID = 19083233L;
+
+    public EntitlementUserApiException(CatalogApiException e) {
+        super(e, e.getCode(), e.getMessage());
+    }
     public EntitlementUserApiException(Throwable e, ErrorCode code, Object...args) {
         super(e, code, args);
     }
