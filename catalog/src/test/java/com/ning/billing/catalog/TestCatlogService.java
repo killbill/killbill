@@ -30,7 +30,7 @@ public class TestCatlogService {
 		CatalogService service = new CatalogService(new ICatalogConfig() {
 			@Override
 			public String getCatalogURI() {
-				return "file:src/test/resources/";
+				return "file:src/test/resources/versionedCatalog";
 			}
 			
 		}, new VersionedCatalogLoader());
