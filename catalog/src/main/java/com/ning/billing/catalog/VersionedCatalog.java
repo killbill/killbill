@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -37,6 +38,7 @@ import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanChangeResult;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.util.clock.IClock;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
@@ -46,10 +48,11 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	
 	private final List<Catalog> versions = new ArrayList<Catalog>();
 	
+	@Inject
 	public VersionedCatalog() {
 		Catalog baseline = new Catalog(new Date(0)); // init with an empty catalog may need to 
 													 // populate some empty pieces here to make validation work
-		add(baseline);
+		add(baseline); 
 	}
 	
 	private Catalog versionForDate(Date date) {

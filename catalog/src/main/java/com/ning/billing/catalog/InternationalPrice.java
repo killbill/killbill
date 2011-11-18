@@ -70,20 +70,7 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		}
 		return new BigDecimal(0);
 	}
-
-	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors)  {
-		if(prices.length == 0) return errors;
-		Currency[] supportedCurrencies = catalog.getSupportedCurrencies();
-		for (IPrice p : prices) {
-			Currency currency = p.getCurrency();
-			if(!currencyIsSupported(currency, supportedCurrencies)) {
-				errors.add("Unsupported currency: " + currency, catalog.getCatalogURI(), this.getClass(), "");
-			}
-		}
-		return errors;
-	}
-
+	
 	private boolean currencyIsSupported(Currency currency, Currency[] supportedCurrencies) {
 		for (Currency c : supportedCurrencies) {
 			if(c == currency) {
@@ -102,5 +89,21 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		this.prices = prices;
 		return this;
 	}
+	
+	@Override
+	public ValidationErrors validate(Catalog catalog, ValidationErrors errors)  {
+		if(prices.length == 0) return errors;
+		Currency[] supportedCurrencies = catalog.getSupportedCurrencies();
+		for (IPrice p : prices) {
+			Currency currency = p.getCurrency();
+			if(!currencyIsSupported(currency, supportedCurrencies)) {
+				errors.add("Unsupported currency: " + currency, catalog.getCatalogURI(), this.getClass(), "");
+			}
+		}
+		return errors;
+	}
+	
+	
+
 
 }

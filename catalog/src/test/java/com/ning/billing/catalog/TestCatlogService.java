@@ -19,22 +19,39 @@ package com.ning.billing.catalog;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.config.ICatalogConfig;
 import com.ning.billing.lifecycle.IService.ServiceException;
+import com.ning.billing.util.clock.Clock;
 
 public class TestCatlogService {
 
 	@Test
-	public void testCatalogService() throws ServiceException {
+	public void testCatalogServiceDirectory() throws ServiceException {
 		CatalogService service = new CatalogService(new ICatalogConfig() {
 			@Override
 			public String getCatalogURI() {
 				return "file:src/test/resources/versionedCatalog";
 			}
 			
-		}, new VersionedCatalogLoader());
+		}, new VersionedCatalogLoader(new Clock()));
 		service.loadCatalog();
 		Assert.assertNotNull(service.getCatalog());
+		Assert.assertEquals(service.getCatalog().getCalalogName(), "WeaponsHireSmall");
+	}
+	
+	@Test
+	public void testCatalogServiceFile() throws ServiceException {
+		CatalogService service = new CatalogService(new ICatalogConfig() {
+			@Override
+			public String getCatalogURI() {
+				return "file:src/test/resources/WeaponsHire.xml";
+			}
+			
+		}, new VersionedCatalogLoader(new Clock()));
+		service.loadCatalog();
+		Assert.assertNotNull(service.getCatalog());
+		Assert.assertEquals(service.getCatalog().getCalalogName(), "Firearms");
 	}
 }

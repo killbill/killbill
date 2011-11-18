@@ -16,6 +16,7 @@
 
 package com.ning.billing.catalog.io;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -23,6 +24,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
@@ -31,18 +33,26 @@ import javax.xml.transform.TransformerException;
 
 import org.xml.sax.SAXException;
 
+import com.google.inject.Inject;
 import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.lifecycle.IService.ServiceException;
+import com.ning.billing.util.clock.IClock;
 import com.ning.billing.util.config.XMLLoader;
 
 public class VersionedCatalogLoader  {
+	private static final Object PROTOCOL_FOR_FILE = "file";
 	private  final String XML_EXTENSION = ".xml";
 	private  final String HREF_LOW_START = "href=\""; 
 	private  final String HREF_CAPS_START = "HREF=\""; 
 	private  final String HREF_SEARCH_END = "\"";
+	private IClock clock;
 			
+	@Inject 
+	public VersionedCatalogLoader(IClock clock) {
+		this.clock = clock;
+	}
 	
 	public  VersionedCatalog load(String urlString) throws ServiceException{
 		try {
@@ -53,13 +63,23 @@ public class VersionedCatalogLoader  {
 	}
 
 	public  VersionedCatalog load(URL url) throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
-		String directoryContents = pullContentsFrom(url);
-		List<URL> xmlURLs = findXmlReferences(directoryContents, url);
+		List<URL> xmlURLs = null;
+		
+		if(url.getPath().endsWith(XML_EXTENSION)) { //assume its an xml file
+			xmlURLs = new ArrayList<URL>();
+        	xmlURLs.add(url);
+		} else { //assume its a directory
+			String directoryContents = pullContentsFrom(url);
+			xmlURLs = findXmlReferences(directoryContents, url);
+		}
+		
 		VersionedCatalog result = new VersionedCatalog();
 		for(URL u : xmlURLs) {
 			Catalog catalog = XMLLoader.getObjectFromURL(u, Catalog.class);
 			result.add(catalog);
 		}
+		Date now = clock.getUTCNow().toDate();
+		result.configureEffectiveDate(now);
 		return result;
 	}
 	

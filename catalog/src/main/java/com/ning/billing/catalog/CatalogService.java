@@ -51,7 +51,9 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
     public synchronized void loadCatalog() throws ServiceException {
         if (!isInitialized) {
             try {
-            	catalog = loader.load(config.getCatalogURI());
+            	System.out.println("Really really::" + config.getCatalogURI());
+            	String url = config.getCatalogURI();
+            	catalog = loader.load(url);
             	
                 //catalog = XMLLoader.getObjectFromProperty(config.getCatalogURI(), Catalog.class);
                 isInitialized = true;

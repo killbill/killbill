@@ -30,13 +30,12 @@ import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
+import com.ning.billing.util.clock.Clock;
 
 public class TestVersionedCatalog {
-	private final VersionedCatalogLoader loader = new VersionedCatalogLoader();
+	private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new Clock());
 
 	@Test(enabled=true)
 	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
