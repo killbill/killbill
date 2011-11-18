@@ -41,7 +41,7 @@ import com.ning.billing.lifecycle.IService.ServiceException;
 import com.ning.billing.util.clock.IClock;
 import com.ning.billing.util.config.XMLLoader;
 
-public class VersionedCatalogLoader  {
+public class VersionedCatalogLoader implements ICatalogLoader  {
 	private static final Object PROTOCOL_FOR_FILE = "file";
 	private  final String XML_EXTENSION = ".xml";
 	private  final String HREF_LOW_START = "href=\""; 
@@ -54,6 +54,10 @@ public class VersionedCatalogLoader  {
 		this.clock = clock;
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.io.ICatalogLoader#load(java.lang.String)
+	 */
+	@Override
 	public  VersionedCatalog load(String urlString) throws ServiceException{
 		try {
 			return load(new URL(urlString));
