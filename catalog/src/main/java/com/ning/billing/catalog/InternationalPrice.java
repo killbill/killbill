@@ -17,6 +17,7 @@
 package com.ning.billing.catalog;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -71,6 +72,17 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		return new BigDecimal(0);
 	}
 
+
+	protected void setEffectiveDateForExistingSubscriptons(
+			Date effectiveDateForExistingSubscriptons) {
+		this.effectiveDateForExistingSubscriptons = effectiveDateForExistingSubscriptons;
+	}
+
+	protected InternationalPrice setPrices(Price[] prices) {
+		this.prices = prices;
+		return this;
+	}
+	
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors)  {
 		if(prices.length == 0) return errors;
@@ -83,7 +95,7 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		}
 		return errors;
 	}
-
+	
 	private boolean currencyIsSupported(Currency currency, Currency[] supportedCurrencies) {
 		for (Currency c : supportedCurrencies) {
 			if(c == currency) {
@@ -93,14 +105,21 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		return false;
 	}
 	
-	protected void setEffectiveDateForExistingSubscriptons(
-			Date effectiveDateForExistingSubscriptons) {
-		this.effectiveDateForExistingSubscriptons = effectiveDateForExistingSubscriptons;
+
+
+	@Override
+	public void initialize(Catalog root, URI uri) {
+		if(prices == null) {
+			Currency[] currencies = root.getSupportedCurrencies();
+			prices = new Price[currencies.length];
+			for(int i = 0; i < currencies.length; i++) {
+				prices[i] = new Price();
+				prices[i].setCurrency(currencies[i]);
+				prices[i].setValue(new BigDecimal(0));
+			}
+		}
+		super.initialize(root, uri);
 	}
 
-	protected InternationalPrice setPrices(Price[] prices) {
-		this.prices = prices;
-		return this;
-	}
 
 }
