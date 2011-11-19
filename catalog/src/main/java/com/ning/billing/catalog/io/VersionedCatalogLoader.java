@@ -23,10 +23,16 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
@@ -60,35 +66,32 @@ public class VersionedCatalogLoader implements ICatalogLoader  {
 	@Override
 	public  VersionedCatalog load(String urlString) throws ServiceException{
 		try {
-			return load(new URL(urlString));
+			List<URL> xmlURLs = null;
+			
+			if(urlString.endsWith(XML_EXTENSION)) { //assume its an xml file
+				xmlURLs = new ArrayList<URL>();
+	        	xmlURLs.add(new URL(urlString));
+			} else { //assume its a directory
+				String[] directoryContents = getResourceListing(urlString);
+				xmlURLs = findXmlReferences(directoryContents, url);
+			}
+			
+			VersionedCatalog result = new VersionedCatalog();
+			for(URL u : xmlURLs) {
+				Catalog catalog = XMLLoader.getObjectFromURL(u, Catalog.class);
+				result.add(catalog);
+			}
+			Date now = clock.getUTCNow().toDate();
+			result.configureEffectiveDate(now);
+			return result;
 		} catch (Exception e) {
 			throw new ServiceException("Problem encountered loading catalog", e);
 		}
 	}
 
-	public  VersionedCatalog load(URL url) throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
-		List<URL> xmlURLs = null;
-		
-		if(url.getPath().endsWith(XML_EXTENSION)) { //assume its an xml file
-			xmlURLs = new ArrayList<URL>();
-        	xmlURLs.add(url);
-		} else { //assume its a directory
-			String directoryContents = pullContentsFrom(url);
-			xmlURLs = findXmlReferences(directoryContents, url);
-		}
-		
-		VersionedCatalog result = new VersionedCatalog();
-		for(URL u : xmlURLs) {
-			Catalog catalog = XMLLoader.getObjectFromURL(u, Catalog.class);
-			result.add(catalog);
-		}
-		Date now = clock.getUTCNow().toDate();
-		result.configureEffectiveDate(now);
-		return result;
-	}
 	
 	protected  List<URL> findXmlReferences(String directoryContents, URL url) throws MalformedURLException {
-		if(url.getProtocol().equals("file")) {
+		if(url.getProtocol().equals(PROTOCOL_FOR_FILE)) {
 			return findXmlFileReferences(directoryContents, url);
 		} 
 		return findXmlUrlReferences(directoryContents, url);
@@ -163,4 +166,46 @@ public class VersionedCatalogLoader implements ICatalogLoader  {
 		InputStream content = connection.getInputStream();
 		return new Scanner(content).useDelimiter("\\A").next();
 	}
+//	
+//	private String[] getResourceListing(String path) throws URISyntaxException, IOException {
+//	      URL dirURL = this.getClass().getClassLoader().getResource(path);
+//	      if (dirURL != null && dirURL.getProtocol().equals("file")) {
+//	        /* A file path: easy enough */
+//	        return new File(dirURL.toURI()).list();
+//	      } 
+//
+//	      if (dirURL == null) {
+//	        /* 
+//	         * In case of a jar file, we can't actually find a directory.
+//	         * Have to assume the same jar as clazz.
+//	         */
+//	        String me = clazz.getName().replace(".", "/")+".class";
+//	        dirURL = clazz.getClassLoader().getResource(me);
+//	      }
+//	      
+//	      if (dirURL.getProtocol().equals("jar")) {
+//	        /* A JAR path */
+//	        String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!")); //strip out only the JAR file
+//	        JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
+//	        Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
+//	        Set<String> result = new HashSet<String>(); //avoid duplicates in case it is a subdirectory
+//	        while(entries.hasMoreElements()) {
+//	          String name = entries.nextElement().getName();
+//	          if (name.startsWith(path)) { //filter according to the path
+//	            String entry = name.substring(path.length());
+//	            int checkSubdir = entry.indexOf("/");
+//	            if (checkSubdir >= 0) {
+//	              // if it is a subdirectory, we just return the directory name
+//	              entry = entry.substring(0, checkSubdir);
+//	            }
+//	            result.add(entry);
+//	          }
+//	        }
+//	        return result.toArray(new String[result.size()]);
+//	      } 
+//	        
+//	      throw new UnsupportedOperationException("Cannot list files for URL "+dirURL);
+//	  }
+
+	
 }

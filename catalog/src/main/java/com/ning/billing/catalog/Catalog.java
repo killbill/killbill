@@ -63,7 +63,7 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	private Product[] products;
 
 	@XmlElement(name="rules", required=true)
-    private PlanRules planRules;
+	private PlanRules planRules;
 
 	@XmlElementWrapper(name="plans", required=true)
 	@XmlElement(name="plan", required=true)
@@ -77,6 +77,184 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	protected Catalog (Date effectiveDate) {
 		this.effectiveDate = effectiveDate;
 	}
+
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.ICatalog#getCalalogName()
+	 */
+	@Override
+	public String getCalalogName() {
+		return catalogName;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.ICatalog#getProducts()
+	 */
+	@Override
+	public Product[] getProducts() {
+		return products;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
+	 */
+	@Override
+	public Plan getPlan(String productName, BillingPeriod period, String priceListName) {
+		IProduct product = getProductFromName(productName);
+		return priceLists.getPlanListFrom(priceListName, product, period);
+	}
+
+	@Override
+	public Currency[] getSupportedCurrencies() {
+		return supportedCurrencies;
+	}
+
+	@Override
+	public Plan[] getPlans() {
+		return plans;
+	}
+	@Override
+	public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from, PlanSpecifier to) {
+		return planRules.getPlanChangePolicy(from, to, this);
+	}
+
+	@Override
+	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from, PlanSpecifier to) {
+		return planRules.getPlanChangeAlignment(from, to, this);
+	}
+
+	@Override
+	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase) {
+		return planRules.getPlanCancelPolicy(planPhase, this);
+	}
+
+	@Override
+	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier) {
+		return planRules.getPlanCreateAlignment(specifier, this);
+	}
+
+	@Override
+	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase) {
+		return planRules.getBillingAlignment(planPhase, this);
+	}
+
+
+	@Override
+	public Plan getPlanFromName(String name) {
+		if (name == null) {
+			return null;
+		}
+		for(Plan p : plans) {
+			if(p.getName().equals(name)) {
+				return p;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public IProduct getProductFromName(String name) {
+		for(Product p : products) {
+			if (p.getName().equals(name)) {
+				return p;
+			}
+		}
+		return null;
+	}
+
+
+	@Override
+	public PlanPhase getPhaseFromName(String name) {
+
+		if (name == null) {
+			return null;
+		}
+		for(Plan p : plans) {
+
+			if(p.getFinalPhase().getName().equals(name)) {
+				return p.getFinalPhase();
+			}
+			if (p.getInitialPhases() != null) {
+				for(PlanPhase pp : p.getInitialPhases()) {
+					if(pp.getName().equals(name)) {
+						return pp;
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
+	@Override
+	public Date getEffectiveDate() {
+		return effectiveDate;
+	}
+
+	public void setEffectiveDate(Date effectiveDate) {
+		this.effectiveDate = effectiveDate;
+	}
+
+	public URI getCatalogURI() {
+		return catalogURI;
+	}
+
+	public PlanRules getPlanRules() { 
+		return planRules;
+	}
+
+	public void setPlanRules(PlanRules planRules) {
+		this.planRules = planRules;
+	}
+
+	@Override
+	public PlanPhase getPhaseFor(String name, Date date) {
+		if(getEffectiveDate().getTime() >= date.getTime()){
+			return getPhaseFromName(name);
+		}
+		return null;
+	}
+
+	public void setPriceLists(PriceListSet priceLists) {
+		this.priceLists = priceLists;
+	}
+
+	public PriceListSet getPriceLists() {
+		return this.priceLists;
+	}
+
+	@Override
+	public void configureEffectiveDate(Date date) {
+		// Nothing to do here this is a method that is only inplemented on VersionedCatalog
+
+	}
+
+	public PriceList getPriceListFromName(String priceListName) {
+		return priceLists.findPriceListFrom(priceListName);
+	}
+
+	@Override
+	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to)
+			throws IllegalPlanChange {
+		return planRules.planChange(from, to, this);
+	}
+
+	@Override
+	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+		validate(catalog,errors, products);
+		validate(catalog,errors, plans);
+		priceLists.validate(catalog,errors);
+		planRules.validate(catalog, errors);
+		return errors;
+	}
+
+	private Collection<? extends ValidationError> validate(Catalog catalog,
+			ValidationErrors errors, ValidatingConfig<Catalog>[] configs) {
+		for(ValidatingConfig<Catalog> config: configs) {
+
+		}
+		return null;
+	}
+	
 
 	@Override
 	public void initialize(Catalog catalog, URI sourceURI) {
@@ -92,201 +270,25 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 		}
 	}
 
-    /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.ICatalog#getCalalogName()
-	 */
-    @Override
-	public String getCalalogName() {
-		return catalogName;
-	}
 
-    /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.ICatalog#getProducts()
-	 */
-    @Override
-	public Product[] getProducts() {
-		return products;
-	}
-
-	public void setProducts(Product[] products) {
+	protected Catalog setProducts(Product[] products) {
 		this.products = products;
+		return this;
 	}
-
- 
-    /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
-	 */
-    @Override
-	public Plan getPlan(String productName, BillingPeriod period, String priceListName) {
-    	IProduct product = getProductFromName(productName);
-    	return priceLists.getPlanListFrom(priceListName, product, period);
-    }
-
-	@Override
-	public Currency[] getSupportedCurrencies() {
-		return supportedCurrencies;
-	}
-
-	public void setSupportedCurrencies(Currency[] supportedCurrencies) {
+	protected Catalog setSupportedCurrencies(Currency[] supportedCurrencies) {
 		this.supportedCurrencies = supportedCurrencies;
+		return this;
 	}
 
-	public void setPlanChangeRules(PlanRules planChangeRules) {
+	protected Catalog setPlanChangeRules(PlanRules planChangeRules) {
 		this.planRules = planChangeRules;
+		return this;
 	}
 
-	@Override
-	public Plan[] getPlans() {
-		return plans;
-	}
-
-	public void setPlans(Plan[] plans) {
+	protected Catalog setPlans(Plan[] plans) {
 		this.plans = plans;
+		return this;
 	}
 
-	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		validate(catalog,errors, products);
-		validate(catalog,errors, plans);
-		priceLists.validate(catalog,errors);
-		planRules.validate(catalog, errors);
-		return errors;
-	}
-
-    private Collection<? extends ValidationError> validate(Catalog catalog,
-			ValidationErrors errors, ValidatingConfig<Catalog>[] configs) {
-		for(ValidatingConfig<Catalog> config: configs) {
-			
-		}
-		return null;
-	}
-
-	@Override
-    public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from, PlanSpecifier to) {
-        return planRules.getPlanChangePolicy(from, to, this);
-    }
-    
-    @Override
-    public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from, PlanSpecifier to) {
-        return planRules.getPlanChangeAlignment(from, to, this);
-    }
-
-    @Override
-    public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase) {
-        return planRules.getPlanCancelPolicy(planPhase, this);
-    }
-    
-    @Override
-    public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier) {
-        return planRules.getPlanCreateAlignment(specifier, this);
-    }
-    
-    @Override
-    public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase) {
-        return planRules.getBillingAlignment(planPhase, this);
-    }
-
-
-    @Override
-    public Plan getPlanFromName(String name) {
-        if (name == null) {
-            return null;
-        }
-        for(Plan p : plans) {
-        	if(p.getName().equals(name)) {
-        		return p;
-        	}
-        }
-        return null;
-    }
-    
-    @Override
-    public IProduct getProductFromName(String name) {
-        for(Product p : products) {
-        	if (p.getName().equals(name)) {
-        		return p;
-        	}
-        }
-        return null;
-    }
-
-
-    @Override
-    public PlanPhase getPhaseFromName(String name) {
-
-        if (name == null) {
-            return null;
-        }
-        for(Plan p : plans) {
-
-            if(p.getFinalPhase().getName().equals(name)) {
-                return p.getFinalPhase();
-            }
-            if (p.getInitialPhases() != null) {
-                for(PlanPhase pp : p.getInitialPhases()) {
-                    if(pp.getName().equals(name)) {
-                        return pp;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    @Override
-	public Date getEffectiveDate() {
-		return effectiveDate;
-	}
-
-	public void setEffectiveDate(Date effectiveDate) {
-		this.effectiveDate = effectiveDate;
-	}
-
-	public URI getCatalogURI() {
-		return catalogURI;
-	}
-	
-	public PlanRules getPlanRules() { 
-		return planRules;
-	}
-
-	public void setPlanRules(PlanRules planRules) {
-		this.planRules = planRules;
-	}
-
-	@Override
-    public PlanPhase getPhaseFor(String name, Date date) {
-    	if(getEffectiveDate().getTime() >= date.getTime()){
-    		return getPhaseFromName(name);
-    	}
-    	return null;
-    }
-
-	public void setPriceLists(PriceListSet priceLists) {
-		this.priceLists = priceLists;
-	}
-
-	public PriceListSet getPriceLists() {
-		return this.priceLists;
-	}
-
-	@Override
-	public void configureEffectiveDate(Date date) {
-		// Nothing to do here this is a method that is only inplemented on VersionedCatalog
-		
-	}
-
-	public PriceList getPriceListFromName(String priceListName) {
-		return priceLists.findPriceListFrom(priceListName);
-	}
-
-	@Override
-	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to)
-			throws IllegalPlanChange {
-		return planRules.planChange(from, to, this);
-	}
-	
-	//TODO: MDW validation - only allow one default pricelist
 
 }

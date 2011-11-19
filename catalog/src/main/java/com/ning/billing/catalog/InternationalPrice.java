@@ -32,13 +32,12 @@ import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class InternationalPrice extends ValidatingConfig<Catalog> implements IInternationalPrice {
-
 	private static Price[] zeroPrice;
 
 	//TODO MDW Validation - effectiveDateForExistingSubscriptons > catalog effectiveDate 
 	@XmlElement(required=false)
 	private Date effectiveDateForExistingSubscriptons;
-	
+
 	//TODO: Must have a price point for every configured currency
 	//TODO: No prices is a zero cost plan
 	@XmlElement(name="price")
@@ -64,7 +63,7 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IInternationalPrice#getPrice(com.ning.billing.catalog.api.Currency)
 	 */
-	@Override
+	@Override 
 	public BigDecimal getPrice(Currency currency) {
 		// Note if there are no prices specified we default to 0 for any currency
 		for(IPrice p : prices) {
@@ -85,29 +84,7 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		this.prices = prices;
 		return this;
 	}
-	
 
-
-	@Override
-	public void initialize(Catalog root, URI uri) {
-		if(prices == null) {
-			prices = getZeroPrice(root);
-		}
-		super.initialize(root, uri);
-	}
-	
-	private synchronized Price[] getZeroPrice(Catalog root) {
-		if(zeroPrice == null) {
-			Currency[] currencies = root.getSupportedCurrencies();
-			zeroPrice = new Price[currencies.length];
-			for(int i = 0; i < currencies.length; i++) {
-				prices[i] = new Price();
-				prices[i].setCurrency(currencies[i]);
-				prices[i].setValue(new BigDecimal(0));
-			}
-		}
-		return zeroPrice;
-	}
 
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors)  {
@@ -130,8 +107,27 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		}
 		return false;
 	}
-	
 
 
+	@Override
+	public void initialize(Catalog root, URI uri) {
+		if(prices == null) {
+			prices = getZeroPrice(root);
+		}
+		super.initialize(root, uri);
+	}
+
+	private synchronized Price[] getZeroPrice(Catalog root) {
+		if(zeroPrice == null) {
+			Currency[] currencies = root.getSupportedCurrencies();
+			zeroPrice = new Price[currencies.length];
+			for(int i = 0; i < currencies.length; i++) {
+				zeroPrice[i] = new Price();
+				zeroPrice[i].setCurrency(currencies[i]);
+				zeroPrice[i].setValue(new BigDecimal(0));
+			}
+		}
+		return zeroPrice;
+	}
 
 }
