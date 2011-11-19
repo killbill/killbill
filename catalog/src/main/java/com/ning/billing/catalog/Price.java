@@ -51,7 +51,7 @@ public class Price extends ValidatingConfig<Catalog> implements IPrice {
 		return value;
 	}
 	
-	public Price setCurrency(Currency currency) {
+	protected Price setCurrency(Currency currency) {
 		this.currency = currency;
 		return this;
 	}
