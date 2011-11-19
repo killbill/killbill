@@ -50,7 +50,8 @@ public class TestAnalyticsListener
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
     {
-        listener = new AnalyticsListener(dao, new MockIEntitlementUserApi(bundleUUID, KEY), new MockIAccountUserApi());
+        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, new MockIEntitlementUserApi(bundleUUID, KEY), new MockIAccountUserApi());
+        listener = new AnalyticsListener(recorder, null);
     }
 
     @Test(groups = "fast")
@@ -61,7 +62,7 @@ public class TestAnalyticsListener
         final DateTime requestedTransitionTime = new DateTime(DateTimeZone.UTC);
         final SubscriptionTransition firstTransition = createFirstSubscriptionTransition(requestedTransitionTime, effectiveTransitionTime);
         final BusinessSubscriptionTransition firstBST = createExpectedFirstBST(requestedTransitionTime, effectiveTransitionTime);
-        listener.handleNotificationChange(firstTransition);
+        listener.handleSubscriptionTransitionChange(firstTransition);
         Assert.assertEquals(dao.getTransitions(KEY).size(), 1);
         Assert.assertEquals(dao.getTransitions(KEY).get(0), firstBST);
 
@@ -70,7 +71,7 @@ public class TestAnalyticsListener
         final DateTime requestedPauseTransitionTime = new DateTime(DateTimeZone.UTC);
         final SubscriptionTransition pausedSubscriptionTransition = createPauseSubscriptionTransition(effectivePauseTransitionTime, requestedPauseTransitionTime, firstTransition.getNextState());
         final BusinessSubscriptionTransition pausedBST = createExpectedPausedBST(requestedPauseTransitionTime, effectivePauseTransitionTime, firstBST.getNextSubscription());
-        listener.handleNotificationChange(pausedSubscriptionTransition);
+        listener.handleSubscriptionTransitionChange(pausedSubscriptionTransition);
         Assert.assertEquals(dao.getTransitions(KEY).size(), 2);
         Assert.assertEquals(dao.getTransitions(KEY).get(1), pausedBST);
 
@@ -79,14 +80,14 @@ public class TestAnalyticsListener
         final DateTime requestedResumeTransitionTime = new DateTime(DateTimeZone.UTC);
         final SubscriptionTransition resumedSubscriptionTransition = createResumeSubscriptionTransition(requestedResumeTransitionTime, effectiveResumeTransitionTime, pausedSubscriptionTransition.getNextState());
         final BusinessSubscriptionTransition resumedBST = createExpectedResumedBST(requestedResumeTransitionTime, effectiveResumeTransitionTime, pausedBST.getNextSubscription());
-        listener.handleNotificationChange(resumedSubscriptionTransition);
+        listener.handleSubscriptionTransitionChange(resumedSubscriptionTransition);
         Assert.assertEquals(dao.getTransitions(KEY).size(), 3);
         Assert.assertEquals(dao.getTransitions(KEY).get(2), resumedBST);
 
         // Cancel it
         final DateTime effectiveCancelTransitionTime = new DateTime(DateTimeZone.UTC);
         final DateTime requestedCancelTransitionTime = new DateTime(DateTimeZone.UTC);
-        listener.handleNotificationChange(createCancelSubscriptionTransition(requestedCancelTransitionTime, effectiveCancelTransitionTime, resumedSubscriptionTransition.getNextState()));
+        listener.handleSubscriptionTransitionChange(createCancelSubscriptionTransition(requestedCancelTransitionTime, effectiveCancelTransitionTime, resumedSubscriptionTransition.getNextState()));
         final BusinessSubscriptionTransition cancelledBST = createExpectedCancelledBST(requestedCancelTransitionTime, effectiveCancelTransitionTime, resumedBST.getNextSubscription());
         Assert.assertEquals(dao.getTransitions(KEY).size(), 4);
         Assert.assertEquals(dao.getTransitions(KEY).get(3), cancelledBST);

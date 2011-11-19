@@ -148,7 +148,7 @@ public class TestAnalyticsService
             service.registerForNotifications();
         }
         catch (Throwable t) {
-            Assert.fail("Unable to start the bus or service!");
+            Assert.fail("Unable to start the bus or service! " + t);
         }
 
         // Send an event to the bus and make sure our Dao got it
