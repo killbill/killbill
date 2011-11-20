@@ -34,13 +34,14 @@ public class UriAccessor {
 	
 	public static InputStream accessUri(URI uri) throws IOException {
 		String scheme = uri.getScheme();
-        URL url = uri.toURL();
+        URL url = null;
         if (scheme.equals(URI_SCHEME_FOR_CLASSPATH)) {
         	return UriAccessor.class.getResourceAsStream(uri.getPath());
         } else if (scheme.equals(URI_SCHEME_FOR_FILE) &&
         	!uri.getSchemeSpecificPart().startsWith("/")) { // interpret URIs of this form as relative path uris
         	url = new File(uri.getSchemeSpecificPart()).toURI().toURL();
         }
+        url = uri.toURL();
     	return url.openConnection().getInputStream();
 	}
 	
