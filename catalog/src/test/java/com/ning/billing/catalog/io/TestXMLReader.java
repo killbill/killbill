@@ -16,26 +16,18 @@
 
 package com.ning.billing.catalog.io;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
-
 import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
 import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.api.InvalidConfigException; 
 import com.ning.billing.util.config.XMLLoader;
 
 public class TestXMLReader {
 
 	@Test(enabled=true)
-	public void testCatalogLoad() throws IOException, TransformerException, JAXBException, SAXException, InvalidConfigException, URISyntaxException {
-		XMLLoader.getObjectFromURL(Resources.getResource("WeaponsHire.xml"), Catalog.class);
-		XMLLoader.getObjectFromURL(Resources.getResource("WeaponsHireSmall.xml"), Catalog.class);
+	public void testCatalogLoad() throws Exception {
+		XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), Catalog.class);
+		XMLLoader.getObjectFromString(Resources.getResource("WeaponsHireSmall.xml").toExternalForm(), Catalog.class);
 	}
 	
 }
