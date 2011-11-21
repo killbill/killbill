@@ -16,6 +16,8 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -137,6 +139,13 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 		
 		return errors;
 
+	}
+	
+
+	@Override
+	public void initialize(Catalog root, URI uri) {
+		if (fixedPrice != null) { fixedPrice.initialize(root, uri);  }	
+		if (recurringPrice != null) { recurringPrice.initialize(root, uri); }
 	}
 
 	protected PlanPhase setFixedPrice(InternationalPrice price) {
