@@ -119,10 +119,12 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 		super.initialize(catalog, sourceURI);
 		if(finalPhase != null) {
 			finalPhase.setPlan(this);
+			finalPhase.initialize(catalog, sourceURI);
 		}
 		if(initialPhases != null) {
 			for(PlanPhase p : initialPhases) {
 				p.setPlan(this);
+				p.initialize(catalog, sourceURI);
 			}
 		}
 	}

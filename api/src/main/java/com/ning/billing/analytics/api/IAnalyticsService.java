@@ -14,26 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.utils;
+package com.ning.billing.analytics.api;
 
-import java.math.BigDecimal;
+import com.ning.billing.lifecycle.IService;
 
-public class Rounder
-{
-    public static final int SCALE = 4;
-
-    // Static only
-    private Rounder()
-    {
-    }
-
-    public static double round(final BigDecimal decimal)
-    {
-        if (decimal == null) {
-            return 0;
-        }
-        else {
-            return decimal.setScale(SCALE, BigDecimal.ROUND_HALF_UP).doubleValue();
-        }
-    }
+public interface IAnalyticsService extends IService {
 }

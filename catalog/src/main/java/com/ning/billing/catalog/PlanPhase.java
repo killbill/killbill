@@ -138,15 +138,11 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 
 	}
 	
-
 	@Override
 	public void initialize(Catalog root, URI uri) {
-		fixedPrice.initialize(root, uri);
-		recurringPrice.initialize(root, uri);
+		if (fixedPrice != null) { fixedPrice.initialize(root, uri);  }	
+		if (recurringPrice != null) { recurringPrice.initialize(root, uri); }
 	}
-
-	
-	
 	
 	protected PlanPhase setFixedPrice(InternationalPrice price) {
 		this.fixedPrice = price;

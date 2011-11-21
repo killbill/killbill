@@ -25,6 +25,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,13 +48,22 @@ public class MysqlTestingHelper
     private MysqldResource mysqldResource;
     private int port = 0;
 
-    public void startMysql() throws IOException
+    public MysqlTestingHelper()
     {
         // New socket on any free port
-        final ServerSocket socket = new ServerSocket(0);
-        port = socket.getLocalPort();
-        socket.close();
+        final ServerSocket socket;
+        try {
+            socket = new ServerSocket(0);
+            port = socket.getLocalPort();
+            socket.close();
+        }
+        catch (IOException e) {
+            Assert.fail();
+        }
+    }
 
+    public void startMysql() throws IOException
+    {
         dbDir = File.createTempFile("mysql", "");
         dbDir.delete();
         dbDir.mkdir();
@@ -76,7 +86,7 @@ public class MysqlTestingHelper
 
     public void cleanupTable(final String table)
     {
-        if (mysqldResource == null || mysqldResource.isRunning()) {
+        if (mysqldResource == null || !mysqldResource.isRunning()) {
             log.error("Asked to cleanup table " + table + " but MySQL is not running!");
             return;
         }
@@ -88,7 +98,7 @@ public class MysqlTestingHelper
             @Override
             public Void withHandle(final Handle handle) throws Exception
             {
-                handle.createQuery("delete * from " + table);
+                handle.execute("truncate " + table);
                 return null;
             }
         });
@@ -103,7 +113,7 @@ public class MysqlTestingHelper
         }
     }
 
-    public IDBI getDBI()
+    public DBI getDBI()
     {
         final String dbiString = "jdbc:mysql://localhost:" + port + "/" + DB_NAME + "?createDatabaseIfNotExist=true";
         return new DBI(dbiString, USERNAME, PASSWORD);
