@@ -73,7 +73,11 @@ public class VersionedCatalogLoader implements ICatalogLoader  {
 	        	xmlURLs.add(new URL(urlString));
 			} else { //assume its a directory
 				String[] directoryContents = getResourceListing(urlString);
+<<<<<<< Updated upstream
 				xmlURLs = findXmlReferences(directoryContents, url);
+=======
+				xmlURLs = findXmlReferences(directoryContents, new URL(urlString));
+>>>>>>> Stashed changes
 			}
 			
 			VersionedCatalog result = new VersionedCatalog();

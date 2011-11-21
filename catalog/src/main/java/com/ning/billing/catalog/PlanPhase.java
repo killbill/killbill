@@ -16,6 +16,8 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -120,9 +122,6 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 					catalog.getCatalogURI(), PlanPhase.class, type.toString()));
 		}
 		
-		
-		
-		
 		//Validation: if there is a recurring price there must be a billing period
 		if(recurringPrice != null && (billingPeriod == null || billingPeriod ==BillingPeriod.NO_BILLING_PERIOD)) {
 			errors.add(new ValidationError(String.format("Phase %s of plan %s has a reccurring price but no billing period", type.toString(), plan.getName()), 
@@ -138,7 +137,17 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 		return errors;
 
 	}
+	
 
+	@Override
+	public void initialize(Catalog root, URI uri) {
+		fixedPrice.initialize(root, uri);
+		recurringPrice.initialize(root, uri);
+	}
+
+	
+	
+	
 	protected PlanPhase setFixedPrice(InternationalPrice price) {
 		this.fixedPrice = price;
 		return this;
