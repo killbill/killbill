@@ -20,7 +20,7 @@ import com.ning.billing.catalog.api.Currency;
 
 public interface IAccountData {
 
-    public String getKey();
+    public String getExternalKey();
 
     public String getName();
 

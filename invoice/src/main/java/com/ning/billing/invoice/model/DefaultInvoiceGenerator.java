@@ -21,6 +21,8 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingMode;
 import com.ning.billing.entitlement.api.billing.IBillingEvent;
 import com.ning.billing.invoice.api.BillingEventSet;
+import com.ning.billing.invoice.api.IInvoice;
+import com.ning.billing.invoice.api.IInvoiceItem;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -31,13 +33,13 @@ import java.util.UUID;
 
 public class DefaultInvoiceGenerator implements IInvoiceGenerator {
     @Override
-    public Invoice generateInvoice(final UUID accountId, final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
-        if (events == null) {return new Invoice(accountId, targetCurrency);}
-        if (events.size() == 0) {return new Invoice(accountId, targetCurrency);}
+    public IInvoice generateInvoice(final UUID accountId, final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
+        if (events == null) {return new Invoice(accountId, targetDate, targetCurrency);}
+        if (events.size() == 0) {return new Invoice(accountId, targetDate, targetCurrency);}
 
-        Invoice invoice = new Invoice(accountId, targetCurrency);
-        InvoiceItemList currentItems = generateInvoiceItems(events, invoice.getInvoiceId(), targetDate, targetCurrency);
-        InvoiceItemList itemsToPost = reconcileInvoiceItems(invoice.getInvoiceId(), currentItems, existingItems);
+        Invoice invoice = new Invoice(accountId, targetDate, targetCurrency);
+        InvoiceItemList currentItems = generateInvoiceItems(events, invoice.getId(), targetDate, targetCurrency);
+        InvoiceItemList itemsToPost = reconcileInvoiceItems(invoice.getId(), currentItems, existingItems);
         invoice.add(itemsToPost);
 
         return invoice;
@@ -45,7 +47,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
 
     private InvoiceItemList reconcileInvoiceItems(final UUID invoiceId, final InvoiceItemList currentInvoiceItems, final InvoiceItemList existingInvoiceItems) {
         InvoiceItemList currentItems = new InvoiceItemList();
-        for (InvoiceItem item : currentInvoiceItems) {
+        for (IInvoiceItem item : currentInvoiceItems) {
             currentItems.add(new InvoiceItem(item, invoiceId));
         }
 
@@ -54,11 +56,11 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         Collections.sort(currentItems);
         Collections.sort(existingItems);
 
-        List<InvoiceItem> existingItemsToRemove = new ArrayList<InvoiceItem>();
+        List<IInvoiceItem> existingItemsToRemove = new ArrayList<IInvoiceItem>();
 
-        for (InvoiceItem currentItem : currentItems) {
+        for (IInvoiceItem currentItem : currentItems) {
             // see if there are any existing items that are covered by the current item
-            for (InvoiceItem existingItem : existingItems) {
+            for (IInvoiceItem existingItem : existingItems) {
                 if (currentItem.duplicates(existingItem)) {
                     currentItem.subtract(existingItem);
                     existingItemsToRemove.add(existingItem);
@@ -75,7 +77,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         currentItems.removeZeroDollarItems();
 
         // add existing items that aren't covered by current items as credit items
-        for (InvoiceItem existingItem : existingItems) {
+        for (IInvoiceItem existingItem : existingItems) {
             currentItems.add(existingItem.asCredit(invoiceId));
         }
 
@@ -109,7 +111,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         return items;
     }
 
-    private void processEvent(UUID invoiceId, IBillingEvent event, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
+    private void processEvent(UUID invoiceId, IBillingEvent event, List<IInvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
         BigDecimal rate = event.getPrice(targetCurrency);
         BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(event, targetDate, rate);
         IBillingMode billingMode = getBillingMode(event.getBillingMode());
@@ -118,7 +120,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         addInvoiceItem(invoiceId, items, event, billThroughDate, invoiceItemAmount, rate, targetCurrency);
     }
 
-    private void processEvents(UUID invoiceId, IBillingEvent firstEvent, IBillingEvent secondEvent, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
+    private void processEvents(UUID invoiceId, IBillingEvent firstEvent, IBillingEvent secondEvent, List<IInvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
         BigDecimal rate = firstEvent.getPrice(targetCurrency);
         BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
         IBillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
@@ -127,9 +129,9 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
     }
 
-    private void addInvoiceItem(UUID invoiceId, List<InvoiceItem> items, IBillingEvent event, DateTime billThroughDate, BigDecimal amount, BigDecimal rate, Currency currency) {
+    private void addInvoiceItem(UUID invoiceId, List<IInvoiceItem> items, IBillingEvent event, DateTime billThroughDate, BigDecimal amount, BigDecimal rate, Currency currency) {
         if (!(amount.compareTo(BigDecimal.ZERO) == 0)) {
-            InvoiceItem item = new InvoiceItem(invoiceId, event.getSubscriptionId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
+            IInvoiceItem item = new InvoiceItem(invoiceId, event.getSubscriptionId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
             items.add(item);
         }
     }

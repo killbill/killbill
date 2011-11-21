@@ -18,18 +18,17 @@ package com.ning.billing.account.dao;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
+import com.ning.billing.catalog.api.Currency;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.*;
 import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import java.lang.annotation.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -37,42 +36,58 @@ import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
+    @SqlUpdate
+    public void insertAccount(@AccountBinder IAccount account);
 
     @SqlUpdate
-    public void insertAccount(@Bind(binder = IAccountSqlBinder.class) IAccount account);
+    public void updateAccount(@AccountBinder IAccount account);
 
     @SqlQuery
-    @Mapper(IAccountSqlMapper.class)
-    public IAccount getAccountByKey(@Bind("key_name") String key);
+    @Mapper(AccountMapper.class)
+    public IAccount getAccountByKey(@Bind("externalKey") String externalKey);
 
     @SqlQuery
-    @Mapper(IAccountSqlMapper.class)
-    public IAccount getAccountFromId(@Bind("id") String id);
+    @Mapper(AccountMapper.class)
+    public IAccount getAccountById(@Bind("id") String id);
 
     @SqlQuery
-    @Mapper(IAccountSqlMapper.class)
+    @Mapper(AccountMapper.class)
     public List<IAccount> getAccounts();
 
     @SqlUpdate
     public void test();
 
-    public static class IAccountSqlBinder implements Binder<Bind, IAccount> {
-
+    public static class AccountMapper implements ResultSetMapper<IAccount> {
         @Override
-        public void bind(SQLStatement stmt, Bind bind, IAccount account) {
-            stmt.bind("id", account.getId().toString());
-            stmt.bind("key_name", account.getKey());
+        public IAccount map(int index, ResultSet result, StatementContext context) throws SQLException {
+            UUID id = UUID.fromString(result.getString("id"));
+            String externalKey = result.getString("external_key");
+            String email = result.getString("email");
+            String name = result.getString("name");
+            String phone = result.getString("phone");
+            Currency currency = Currency.valueOf(result.getString("currency"));
+
+            return new Account(id).externalKey(externalKey).email(email).name(name).phone(phone).currency(currency);
         }
     }
 
-    public static class IAccountSqlMapper implements ResultSetMapper<IAccount> {
-
-        @Override
-        public IAccount map(int index, ResultSet r, StatementContext ctx)
-                throws SQLException {
-            UUID id = UUID.fromString(r.getString("id"));
-            String key = r.getString("key_name");
-            return new Account(id).withKey(key);
+    @BindingAnnotation(AccountBinder.AccountBinderFactory.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER})
+    public @interface AccountBinder {
+        public static class AccountBinderFactory implements BinderFactory {
+            public Binder build(Annotation annotation) {
+                return new Binder<AccountBinder, Account>() {
+                    public void bind(SQLStatement q, AccountBinder bind, Account account) {
+                        q.bind("id", account.getId().toString());
+                        q.bind("externalKey", account.getExternalKey());
+                        q.bind("email", account.getEmail());
+                        q.bind("name", account.getName());
+                        q.bind("phone", account.getPhone());
+                        q.bind("currency", account.getCurrency().toString());
+                    }
+                };
+            }
         }
     }
 }

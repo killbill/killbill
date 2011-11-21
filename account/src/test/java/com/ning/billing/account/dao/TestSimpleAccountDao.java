@@ -23,6 +23,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.glue.AccountModuleMock;
 import com.ning.billing.account.glue.InjectorMagic;
+import com.ning.billing.catalog.api.Currency;
 import org.apache.commons.io.IOUtils;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -36,7 +37,7 @@ import static org.testng.Assert.*;
 @Test(groups = {"Account", "Account-DAO"})
 public class TestSimpleAccountDao {
     private IAccountDao dao;
-    private InjectorMagic injectorMagic;
+    //private InjectorMagic injectorMagic;
 
     @BeforeClass(alwaysRun = true)
     private void setup() throws IOException {
@@ -48,7 +49,7 @@ public class TestSimpleAccountDao {
         try {
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
-            injectorMagic = injector.getInstance(InjectorMagic.class);
+            InjectorMagic injectorMagic = injector.getInstance(InjectorMagic.class);
             dao = injector.getInstance(IAccountDao.class);
             dao.test();
         }
@@ -57,19 +58,32 @@ public class TestSimpleAccountDao {
         }
     }
 
+    private final String key = "test1234";
+    private final String name = "Wesley";
+    private final String email = "dreadpirateroberts@therevenge.com";
+
+    private Account createTestAccount() {
+        Account account = Account.create();
+        String thisKey = key + UUID.randomUUID().toString();
+        String thisName = name + UUID.randomUUID().toString();
+        account.externalKey(thisKey).name(thisName).email(email).currency(Currency.USD);
+        return account;
+    }
+
     @Test(enabled=true, groups={"Account-DAO"})
     public void testBasic() {
 
-        IAccount a = new Account().withKey("foo");
-        dao.createAccount(a);
+        IAccount a = createTestAccount();
+        dao.saveAccount(a);
+        String key = a.getExternalKey();
 
-        IAccount r = dao.getAccountByKey("foo");
+        IAccount r = dao.getAccountByKey(key);
         assertNotNull(r);
-        assertEquals(r.getKey(), a.getKey());
+        assertEquals(r.getExternalKey(), a.getExternalKey());
 
         r = dao.getAccountById(r.getId());
         assertNotNull(r);
-        assertEquals(r.getKey(), a.getKey());
+        assertEquals(r.getExternalKey(), a.getExternalKey());
 
         List<IAccount> all = dao.getAccounts();
         assertNotNull(all);
@@ -78,33 +92,34 @@ public class TestSimpleAccountDao {
 
     @Test
     public void testGetById() {
-        String key = "test1234";
-
-        IAccount account = Account.create().withKey(key);
+        Account account = createTestAccount();
         UUID id = account.getId();
-
+        String key = account.getExternalKey();
+        String name = account.getName();
         account.save();
 
         account = Account.loadAccount(id);
         assertNotNull(account);
         assertEquals(account.getId(), id);
-        assertEquals(account.getKey(), key);
+        assertEquals(account.getExternalKey(), key);
+        assertEquals(account.getName(), name);
+
     }
 
     @Test
     public void testCustomFields() {
-        String key = "test45678";
-        IAccount account = Account.create().withKey(key);
-
+        Account account = createTestAccount();
         String fieldName = "testField1";
         String fieldValue = "testField1_value";
         account.setFieldValue(fieldName, fieldValue);
 
         account.save();
 
-        account = Account.loadAccount(key);
-        assertNotNull(account);
-        assertEquals(account.getKey(), key);
-        assertEquals(account.getFieldValue(fieldName), fieldValue);
+        Account thisAccount = Account.loadAccount(account.getExternalKey());
+        assertNotNull(thisAccount);
+        assertEquals(thisAccount.getExternalKey(), account.getExternalKey());
+        assertEquals(thisAccount.getFieldValue(fieldName), fieldValue);
     }
+
+
 }

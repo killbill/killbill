@@ -22,12 +22,10 @@ import com.ning.billing.catalog.api.Currency;
 
 import java.util.UUID;
 
-public class Account implements IAccount {
-    private final FieldStore fields;
+public class Account extends CustomizableEntityBase implements IAccount {
     private static IAccountDao dao;
 
-    private final UUID id;
-    private String key;
+    private String externalKey;
     private String email;
     private String name;
     private String phone;
@@ -39,23 +37,32 @@ public class Account implements IAccount {
     }
 
     public Account(UUID id) {
-        this.id = id;
-        fields = FieldStore.create(getId(), getObjectName());
+        super(id);
         dao = InjectorMagic.getAccountDao();
     }
 
-   @Override
-    public UUID getId() {
-        return id;
+    public Account(IAccountData data) {
+        this();
+        this.externalKey = data.getExternalKey();
+        this.email = data.getEmail();
+        this.name = data.getName();
+        this.phone = data.getPhone();
+        this.currency = data.getCurrency();
+        this.billCycleDay = data.getBillCycleDay();
     }
 
     @Override
-    public String getKey() {
-        return key;
+    public String getObjectName() {
+        return "Account";
     }
 
-    public Account withKey(String key) {
-        this.key = key;
+    @Override
+    public String getExternalKey() {
+        return externalKey;
+    }
+
+    public Account externalKey(String externalKey) {
+        this.externalKey = externalKey;
         return this;
     }
 
@@ -64,7 +71,7 @@ public class Account implements IAccount {
         return name;
     }
 
-    public Account withName(String name) {
+    public Account name(String name) {
         this.name = name;
         return this;
     }
@@ -74,7 +81,7 @@ public class Account implements IAccount {
         return email;
     }
 
-    public Account withEmail(String email) {
+    public Account email(String email) {
         this.email = email;
         return this;
     }
@@ -84,7 +91,7 @@ public class Account implements IAccount {
         return phone;
     }
 
-    public Account withPhone(String phone) {
+    public Account phone(String phone) {
         this.phone = phone;
         return this;
     }
@@ -94,7 +101,7 @@ public class Account implements IAccount {
         return billCycleDay;
     }
 
-    public Account withBillCycleDay(int billCycleDay) {
+    public Account billCycleDay(int billCycleDay) {
         this.billCycleDay = billCycleDay;
         return this;
     }
@@ -104,7 +111,7 @@ public class Account implements IAccount {
         return currency;
     }
 
-    public Account withCurrency(Currency currency) {
+    public Account currency(Currency currency) {
         this.currency = currency;
         return this;
     }
@@ -134,46 +141,19 @@ public class Account implements IAccount {
     }
 
     @Override
-    public String getFieldValue(String fieldName) {
-        return fields.getValue(fieldName);
+    protected void saveObject() {
+        dao.saveAccount(this);
     }
 
     @Override
-    public void setFieldValue(String fieldName, String fieldValue) {
-        fields.setValue(fieldName, fieldValue);
+    protected void updateObject() {
+        dao.updateAccount(this);
     }
 
     @Override
-    public void save() {
-        saveObject();
-        saveCustomFields();
-    }
-
-    @Override
-    public void load() {
-        loadObject();
-        loadCustomFields();
-    }
-
-    private void saveCustomFields() {
-        fields.save();
-    }
-
-    protected void loadCustomFields() {
-        fields.load();
-    }
-
-    public String getObjectName() {
-        return "Account";
-    }
-
-    private void saveObject() {
-        dao.save(this);
-    }
-
-    private void loadObject() {
+    protected void loadObject() {
         IAccount that = dao.getAccountById(id);
-        this.key = that.getKey();
+        this.externalKey = that.getExternalKey();
         this.email = that.getEmail();
         this.name = that.getName();
         this.phone = that.getPhone();

@@ -25,7 +25,7 @@ public interface IAccountUserApi {
 
     public IAccount getAccountByKey(String key);
 
-    public IAccount getAccountFromId(UUID uid);
+    public IAccount getAccountById(UUID uid);
 
     public List<IAccount> getAccounts();
 }

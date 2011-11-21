@@ -16,24 +16,31 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.invoice.model.InvoiceItem;
+import com.google.inject.Inject;
+import com.ning.billing.invoice.api.IInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceItemList;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.IDBI;
 
-@ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(InvoiceItemMapper.class)
-public interface InvoiceItemDao {
-    @SqlQuery
-    InvoiceItemList getInvoiceItemsByInvoice(@Bind final String invoiceId);
+public class InvoiceItemDao implements IInvoiceItemDao {
+    private final IInvoiceItemDao dao;
 
-    @SqlQuery
-    InvoiceItemList getInvoiceItemsByAccount(@Bind final String accountId);
+    @Inject
+    public InvoiceItemDao(IDBI dbi) {
+        dao = dbi.onDemand(IInvoiceItemDao.class);
+    }
 
-    @SqlUpdate
-    void createInvoiceItem(@BindBean final InvoiceItem invoiceItem);
+    @Override
+    public InvoiceItemList getInvoiceItemsByInvoice(String invoiceId) {
+        return dao.getInvoiceItemsByInvoice(invoiceId);
+    }
+
+    @Override
+    public InvoiceItemList getInvoiceItemsByAccount(String accountId) {
+        return dao.getInvoiceItemsByAccount(accountId);
+    }
+
+    @Override
+    public void createInvoiceItem(IInvoiceItem invoiceItem) {
+        dao.createInvoiceItem(invoiceItem);
+    }
 }

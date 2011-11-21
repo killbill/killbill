@@ -1,0 +1,23 @@
+group TagDescriptionDao;
+
+create() ::= <<
+  INSERT INTO tag_descriptions(id, name, added_by, created, description, generate_invoice, process_payment)
+  VALUES(:id, :name, :addedBy, :created, :description, :generateInvoice, :processPayment)
+>>
+
+update() ::= <<
+  UPDATE tag_descriptions
+  SET name = :name, added_by = :addedBy, created :=created,
+      description := description, generateInvoice = :generateInvoice,
+      processPayment = :processPayment
+  WHERE id = :id;
+>>
+
+load() ::= <<
+  SELECT id, name, added_by, created, description, generate_invoice, process_payment
+  FROM tag_descriptions
+  WHERE id = :id;
+>>
+;
+
+

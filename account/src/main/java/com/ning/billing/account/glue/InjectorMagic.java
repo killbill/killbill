@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.ning.billing.account.dao.IAccountDao;
 import com.ning.billing.account.dao.IFieldStoreDao;
+import com.ning.billing.account.dao.ITagStoreDao;
 
 public class InjectorMagic {
     public static InjectorMagic instance;
@@ -53,5 +54,9 @@ public class InjectorMagic {
 
     public static IAccountDao getAccountDao() {
         return InjectorMagic.get().getInstance(IAccountDao.class);
+    }
+
+    public static ITagStoreDao getTagStoreDao() {
+        return InjectorMagic.get().getInstance(ITagStoreDao.class);
     }
 }

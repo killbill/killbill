@@ -283,7 +283,7 @@ public abstract class TestUserApiBase {
                 return "4152876341";
             }
             @Override
-            public String getKey() {
+            public String getExternalKey() {
                 return "k123456";
             }
             @Override
@@ -294,25 +294,25 @@ public abstract class TestUserApiBase {
             public Currency getCurrency() {
                 return Currency.USD;
             }
-
             @Override
             public UUID getId() {
                 return UUID.randomUUID();
             }
 
             @Override
-            public void load() {}
-
-            @Override
-            public void save() {}
-
-            @Override
-            public String getFieldValue(String fieldName) {
-                return null;
+            public String getIdAsString() {
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
 
             @Override
-            public void setFieldValue(String fieldName, String fieldValue) {}
+            public boolean isNew() {
+                return false;  //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void setAsSaved() {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
         };
         return account;
     }

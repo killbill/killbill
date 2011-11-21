@@ -31,18 +31,18 @@ public class FieldStoreDao implements IFieldStoreDao {
     }
 
     @Override
-    public void saveFields(String objectId, String objectType, List<ICustomField> fields) {
-        dao.saveFields(objectId, objectType, fields);
+    public void update(String objectId, String objectType, List<ICustomField> fields) {
+        dao.update(objectId, objectType, fields);
     }
 
     @Override
-    public void createFields(String objectId, String objectType,  List<ICustomField> fields) {
-        dao.createFields(objectId, objectType, fields);
+    public void create(String objectId, String objectType,  List<ICustomField> fields) {
+        dao.create(objectId, objectType, fields);
     }
 
     @Override
-    public List<ICustomField> getFields(String objectId, String objectType) {
-        return dao.getFields(objectId, objectType);
+    public List<ICustomField> load(String objectId, String objectType) {
+        return dao.load(objectId, objectType);
     }
 
     @Override

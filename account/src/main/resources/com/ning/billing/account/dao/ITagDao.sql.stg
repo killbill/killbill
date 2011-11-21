@@ -1,0 +1,17 @@
+group TagDao;
+
+create() ::= <<
+
+>>
+
+update() ::= <<
+
+>>
+
+load() ::= <<
+
+>>
+;
+
+
+  id, tag_description_id, object_id, date_added, added_by

@@ -19,6 +19,5 @@ package com.ning.billing.account.api;
 import com.ning.billing.lifecycle.IService;
 
 public interface IAccountService extends IService {
-
     public IAccountUserApi getAccountUserApi();
 }

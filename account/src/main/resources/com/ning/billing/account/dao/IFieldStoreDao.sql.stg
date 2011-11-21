@@ -1,17 +1,17 @@
 group IFieldStoreDao;
 
-createFields() ::= <<
+create() ::= <<
   INSERT INTO custom_fields(id, object_id, object_type, field_name, field_value)
   VALUES (:idAsString, :objectId, :objectType, :name, :value);
 >>
 
-saveFields() ::= <<
+update() ::= <<
     UPDATE custom_fields
     SET object_type = :objectType, object_id = :objectId, field_name = :name, field_value = :value
     WHERE id = :id;
 >>
 
-getFields() ::= <<
+load() ::= <<
     SELECT id, field_name, field_value
     FROM custom_fields
     WHERE object_id = :objectId AND object_type = :objectType;

@@ -16,18 +16,10 @@
 
 package com.ning.billing.account.api;
 
-import java.util.UUID;
-
-public interface ICustomField {
-    public UUID getId();
-
+public interface ICustomField extends IEntity {
     public String getName();
 
     public String getValue();
 
     public void setValue(String value);
-
-    public boolean isNew();
-
-    public void setAsSaved();
 }

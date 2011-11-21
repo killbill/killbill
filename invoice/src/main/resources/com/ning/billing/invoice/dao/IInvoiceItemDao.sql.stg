@@ -1,0 +1,13 @@
+group InvoiceItemDao;
+
+getInvoiceItemsByInvoice() ::= <<
+>>
+
+getInvoiceItemsByAccount() ::= <<
+>>
+
+createInvoiceItem() ::= <<
+  INSERT INTO invoice_items(id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency)
+  VALUES(:id, :invoiceId, :subscriptionId, :startDate, :endDate, :description, :amount, :rate, :currency)
+>>
+;

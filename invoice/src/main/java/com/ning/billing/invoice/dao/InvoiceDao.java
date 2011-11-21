@@ -16,32 +16,60 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.invoice.model.Invoice;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import com.google.inject.Inject;
+import com.ning.billing.invoice.api.IInvoice;
+import org.skife.jdbi.v2.IDBI;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
-@ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(InvoiceMapper.class)
-public interface InvoiceDao {
-    @SqlQuery
-    List<Invoice> getInvoicesByAccount(@Bind final String accountId);
+public class InvoiceDao implements IInvoiceDao {
+    private final IInvoiceDao dao;
 
-    @SqlQuery
-    Invoice getInvoice(@Bind final String invoiceId);
+    @Inject
+    public InvoiceDao(IDBI dbi) {
+        this.dao = dbi.onDemand(IInvoiceDao.class);
+    }
 
-    @SqlUpdate
-    void createInvoice(@BindBean final Invoice invoice);
+    @Override
+    public List<IInvoice> getInvoicesByAccount(final String accountId) {
+        return dao.getInvoicesByAccount(accountId);
+    }
 
-    @SqlUpdate
-    void addPayment(@Bind final String invoiceId, @Bind final BigDecimal paymentAmount);
+    @Override
+    public IInvoice getInvoice(final String invoiceId) {
+        return dao.getInvoice(invoiceId);
+    }
 
-    @SqlQuery
-    int test();
+    @Override
+    public void createInvoice(final IInvoice invoice) {
+        dao.createInvoice(invoice);
+    }
+
+    @Override
+    public List<IInvoice> getInvoicesBySubscription(String subscriptionId) {
+        return dao.getInvoicesBySubscription(subscriptionId);
+    }
+
+    @Override
+    public List<UUID> getInvoicesForPayment(Date targetDate, int numberOfDays) {
+        return dao.getInvoicesForPayment(targetDate, numberOfDays);
+    }
+
+    @Override
+    public void notifySuccessfulPayment(String invoiceId, Date paymentDate, BigDecimal paymentAmount) {
+        dao.notifySuccessfulPayment(invoiceId, paymentDate, paymentAmount);
+    }
+
+    @Override
+    public void notifyFailedPayment(String invoiceId, Date paymentAttemptDate) {
+        dao.notifyFailedPayment(invoiceId, paymentAttemptDate);
+    }
+
+    @Override
+    public void test() {
+        dao.test();
+    }
 }

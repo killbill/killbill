@@ -17,13 +17,14 @@
 package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.IInvoiceItem;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public class InvoiceItem implements Comparable<InvoiceItem> {
-    private final UUID invoiceItemId;
+public class InvoiceItem implements IInvoiceItem {
+    private final UUID id;
     private final UUID invoiceId;
     private final UUID subscriptionId;
     private DateTime startDate;
@@ -34,7 +35,7 @@ public class InvoiceItem implements Comparable<InvoiceItem> {
     private final Currency currency;
 
     public InvoiceItem(UUID invoiceId, UUID subscriptionId, DateTime startDate, DateTime endDate, String description, BigDecimal amount, BigDecimal rate, Currency currency) {
-        this.invoiceItemId = UUID.randomUUID();
+        this.id = UUID.randomUUID();
         this.invoiceId = invoiceId;
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;
@@ -45,48 +46,70 @@ public class InvoiceItem implements Comparable<InvoiceItem> {
         this.currency = currency;
     }
 
-    public InvoiceItem(InvoiceItem that, UUID invoiceId) {
-        this.invoiceItemId = UUID.randomUUID();
+    public InvoiceItem(IInvoiceItem that, UUID invoiceId) {
+        this.id = UUID.randomUUID();
         this.invoiceId = invoiceId;
-        this.subscriptionId = that.subscriptionId;
-        this.startDate = that.startDate;
-        this.endDate = that.endDate;
-        this.description = that.description;
-        this.amount = that.amount;
-        this.rate = that.rate;
-        this.currency = that.currency;
+        this.subscriptionId = that.getSubscriptionId();
+        this.startDate = that.getStartDate();
+        this.endDate = that.getEndDate();
+        this.description = that.getDescription();
+        this.amount = that.getAmount();
+        this.rate = that.getRate();
+        this.currency = that.getCurrency();
     }
 
-    public InvoiceItem asCredit(UUID invoiceId) {
+    @Override
+    public IInvoiceItem asCredit(UUID invoiceId) {
         return new InvoiceItem(invoiceId, subscriptionId, startDate, endDate, description, amount.negate(), rate, currency);
     }
 
+    @Override
+    public UUID getId() {
+        return id;
+    }
+
+    @Override
+    public UUID getInvoiceId() {
+        return invoiceId;
+    }
+
+    @Override
     public UUID getSubscriptionId() {
         return subscriptionId;
     }
 
+    @Override
     public DateTime getStartDate() {
         return startDate;
     }
 
+    @Override
     public DateTime getEndDate() {
         return endDate;
     }
 
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
     public BigDecimal getAmount() {
         return amount;
     }
 
+    @Override
     public BigDecimal getRate() {
         return rate;
     }
 
+    @Override
     public Currency getCurrency() {
         return currency;
     }
 
     @Override
-    public int compareTo(InvoiceItem invoiceItem) {
+    public int compareTo(IInvoiceItem invoiceItem) {
         int compareSubscriptions = getSubscriptionId().compareTo(invoiceItem.getSubscriptionId());
 
         if (compareSubscriptions == 0) {
@@ -97,24 +120,26 @@ public class InvoiceItem implements Comparable<InvoiceItem> {
     }
 
     // TODO: deal with error cases
-    public void subtract(InvoiceItem that) {
-        if (this.startDate.equals(that.startDate) && this.endDate.equals(that.endDate)) {
+    @Override
+    public void subtract(IInvoiceItem that) {
+        if (this.startDate.equals(that.getStartDate()) && this.endDate.equals(that.getEndDate())) {
             this.startDate = this.endDate;
-            this.amount = this.amount.subtract(that.amount);
+            this.amount = this.amount.subtract(that.getAmount());
         } else {
-            if (this.startDate.equals(that.startDate)) {
-                this.startDate = that.endDate;
-                this.amount = this.amount.subtract(that.amount);
+            if (this.startDate.equals(that.getStartDate())) {
+                this.startDate = that.getEndDate();
+                this.amount = this.amount.subtract(that.getAmount());
             }
 
-            if (this.endDate.equals(that.endDate)) {
-                this.endDate = that.startDate;
-                this.amount = this.amount.subtract(that.amount);
+            if (this.endDate.equals(that.getEndDate())) {
+                this.endDate = that.getStartDate();
+                this.amount = this.amount.subtract(that.getAmount());
             }
         }
     }
 
-    public boolean duplicates(InvoiceItem that) {
+    @Override
+    public boolean duplicates(IInvoiceItem that) {
         if(!this.getSubscriptionId().equals(that.getSubscriptionId())) {return false;}
         if(!this.getRate().equals(that.getRate())) {return false;}
         if(!this.getCurrency().equals(that.getCurrency())) {return false;}
@@ -128,7 +153,8 @@ public class InvoiceItem implements Comparable<InvoiceItem> {
      * @param that
      * @return
      */
-    public boolean cancels(InvoiceItem that) {
+    @Override
+    public boolean cancels(IInvoiceItem that) {
         if(!this.getSubscriptionId().equals(that.getSubscriptionId())) {return false;}
         if(!this.getEndDate().equals(that.getEndDate())) {return false;}
         if(!this.getStartDate().equals(that.getStartDate())) {return false;}

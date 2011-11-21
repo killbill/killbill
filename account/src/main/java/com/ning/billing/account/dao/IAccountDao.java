@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IAccountDao {
-
     public IAccount createAccount(IAccountData account);
 
     public IAccount getAccountById(UUID uid);
@@ -34,5 +33,7 @@ public interface IAccountDao {
 
     public void test();
 
-    public void save(IAccount account);
+    public void saveAccount(IAccount account);
+
+    public void updateAccount(IAccount account);
 }

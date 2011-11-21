@@ -17,73 +17,111 @@
 package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.IInvoice;
+import com.ning.billing.invoice.api.IInvoiceItem;
+import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class Invoice {
+public class Invoice implements IInvoice {
     private final InvoiceItemList items = new InvoiceItemList();
-    private final UUID invoiceId;
+    private final UUID id;
     private UUID accountId;
     private final DateTime invoiceDate;
+    private final DateTime targetDate;
     private Currency currency;
+    private BigDecimal amountPaid;
+    private DateTime lastPaymentAttempt;
 
-    public Invoice() {
-        this.invoiceId = UUID.randomUUID();
-        this.invoiceDate = new DateTime();
+    public Invoice(UUID accountId, DateTime targetDate, Currency currency) {
+        this(UUID.randomUUID(), accountId, new Clock().getUTCNow(), targetDate, currency, null, BigDecimal.ZERO, new ArrayList<IInvoiceItem>());
     }
 
-    public Invoice(UUID accountId, Currency currency) {
-        this.invoiceId = UUID.randomUUID();
+    public Invoice(UUID invoiceId, UUID accountId, DateTime invoiceDate, DateTime targetDate,
+                   Currency currency, DateTime lastPaymentAttempt, BigDecimal amountPaid) {
+        this(invoiceId, accountId, invoiceDate, targetDate, currency, lastPaymentAttempt, amountPaid, new ArrayList<IInvoiceItem>());
+    }
+
+    public Invoice(UUID invoiceId, UUID accountId, DateTime invoiceDate, DateTime targetDate,
+                   Currency currency, DateTime lastPaymentAttempt, BigDecimal amountPaid,
+                   List<IInvoiceItem> invoiceItems) {
+        this.id = invoiceId;
         this.accountId = accountId;
-        this.invoiceDate = new DateTime();
+        this.invoiceDate = invoiceDate;
+        this.targetDate = targetDate;
         this.currency = currency;
+        this.lastPaymentAttempt= lastPaymentAttempt;
+        this.amountPaid = amountPaid;
+        this.items.addAll(invoiceItems);
     }
 
-    public Invoice(UUID accountId, List<InvoiceItem> items, Currency currency) {
-        this.invoiceId = UUID.randomUUID();
-        this.accountId = accountId;
-        this.invoiceDate = new DateTime();
-        this.currency = currency;
-        this.items.addAll(items);
-    }
-
-    public boolean add(InvoiceItem item) {
+    @Override
+    public boolean add(IInvoiceItem item) {
         return items.add(item);
     }
 
-    public boolean add(List<InvoiceItem> items) {
+    @Override
+    public boolean add(List<IInvoiceItem> items) {
         return this.items.addAll(items);
     }
 
-    public List<InvoiceItem> getItems() {
+    @Override
+    public List<IInvoiceItem> getItems() {
         return items;
     }
 
+    @Override
     public int getNumberOfItems() {
         return items.size();
     }
 
-    public UUID getInvoiceId() {
-        return invoiceId;
+    @Override
+    public UUID getId() {
+        return id;
     }
 
+    @Override
     public UUID getAccountId() {
         return accountId;
     }
 
+    @Override
     public DateTime getInvoiceDate() {
         return invoiceDate;
     }
 
+    @Override
+    public DateTime getTargetDate() {
+        return targetDate;
+    }
+
+    @Override
     public Currency getCurrency() {
         return currency;
     }
 
+    @Override
+    public DateTime getLastPaymentAttempt() {
+        return lastPaymentAttempt;
+    }
+
+    @Override
+    public BigDecimal getAmountPaid() {
+        return amountPaid;
+    }
+
+    @Override
     public BigDecimal getTotalAmount() {
         return items.getTotalAmount();
+    }
+
+    @Override
+    public BigDecimal getAmountOutstanding() {
+        return getTotalAmount().subtract(getAmountPaid());
     }
 }
 

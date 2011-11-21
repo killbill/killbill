@@ -18,11 +18,12 @@ package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.BillingEventSet;
+import com.ning.billing.invoice.api.IInvoice;
 import org.joda.time.DateTime;
 
 import java.util.UUID;
 
 // TODO: Jeff -- Determine what the consequence of account-level currency changes are on repair scenarios
 public interface IInvoiceGenerator {
-    public Invoice generateInvoice(UUID accountId, BillingEventSet events, InvoiceItemList items, DateTime targetDate, Currency targetCurrency);
+    public IInvoice generateInvoice(UUID accountId, BillingEventSet events, InvoiceItemList items, DateTime targetDate, Currency targetCurrency);
 }

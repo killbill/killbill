@@ -14,13 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.dao;
+package com.ning.billing.account.api;
 
-import com.ning.billing.invoice.model.Invoice;
-import org.skife.jdbi.v2.BeanMapper;
+import java.util.UUID;
 
-public class InvoiceMapper extends BeanMapper<Invoice> {
-    public InvoiceMapper() {
-        super(Invoice.class);
-    }
+public interface IEntity {
+    public UUID getId();
+
+    public String getIdAsString();
+
+    public boolean isNew();
+
+    public void setAsSaved();
 }

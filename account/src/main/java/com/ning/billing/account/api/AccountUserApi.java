@@ -42,7 +42,7 @@ public class AccountUserApi implements IAccountUserApi {
     }
 
     @Override
-    public IAccount getAccountFromId(UUID uid) {
+    public IAccount getAccountById(UUID uid) {
         return dao.getAccountById(uid);
     }
 

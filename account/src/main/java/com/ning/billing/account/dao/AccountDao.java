@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.UUID;
 
 public class AccountDao implements IAccountDao {
-
     private final IAccountDaoSql dao;
 
     @Inject
@@ -36,7 +35,7 @@ public class AccountDao implements IAccountDao {
 
     @Override
     public IAccount createAccount(IAccountData input) {
-        IAccount result = new Account().withKey(input.getKey());
+        IAccount result = new Account(input);
         dao.insertAccount(result);
         return result;
     }
@@ -48,7 +47,7 @@ public class AccountDao implements IAccountDao {
 
     @Override
     public IAccount getAccountById(UUID uid) {
-        return dao.getAccountFromId(uid.toString());
+        return dao.getAccountById(uid.toString());
     }
 
     @Override
@@ -62,7 +61,12 @@ public class AccountDao implements IAccountDao {
     }
 
     @Override
-    public void save(IAccount account) {
+    public void saveAccount(IAccount account) {
         dao.insertAccount(account);
+    }
+
+    @Override
+    public void updateAccount(IAccount account) {
+        dao.updateAccount(account);
     }
 }

@@ -99,7 +99,7 @@ public class AnalyticsListener implements IApiListener
         if (bundle != null) {
             transitionKey = bundle.getKey();
 
-            final IAccount account = accountApi.getAccountFromId(bundle.getAccountId());
+            final IAccount account = accountApi.getAccountById(bundle.getAccountId());
             if (account != null) {
                 currency = account.getCurrency();
             }
