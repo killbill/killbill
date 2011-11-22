@@ -44,9 +44,45 @@ public enum ErrorCode {
     /* Un-cancellation */
     ENT_UNCANCEL_BAD_STATE(1070, "Subscription %s was not in a cancelled state"),
     
-    CAT_ILLEGAL_CHANGE_REQUEST(2001, "Attempting to change plan from (product: '%s', billing period: '%s', " +
-    		"pricelist '%s') to (product: '%s', billing period: '%s', pricelist '%s'). This transition is not allowed by catalog rules")
+    /*
+    *
+    * Range 2000 : CATALOG
+    *
+    */
     
+    /*
+    * Rules exceptions 
+    */
+    
+    /* Plan change is disallowed by the catalog */
+    CAT_ILLEGAL_CHANGE_REQUEST(2001, "Attempting to change plan from (product: '%s', billing period: '%s', " +
+    		"pricelist '%s') to (product: '%s', billing period: '%s', pricelist '%s'). This transition is not allowed by catalog rules"),
+
+	/*
+	 * Price list 
+	 */
+
+	/*Attempt to reference a price that is not present - should only happen if it is a currency not available in the catalog */
+    CAT_NO_PRICE_FOR_CURRENCY(2010, "This price does not have a value for the currency '%s'."),
+    
+    /* Price value explicitly set to NULL meaning there is no price available in that currency */
+    CAT_PRICE_VALUE_NULL_FOR_CURRENCY(2011, "The value for the currency '%s' is NULL. This plan cannot be bought in this currnency."),
+    
+    /*
+     * Plans
+     */
+    CAT_PLAN_NOT_FOUND(2020,"Could not find a plan matching: (product: '%s', billing period: '%s', pricelist '%s')"),
+    CAT_NO_SUCH_PLAN(2021,"Could not find any plans named '%s'"),
+    
+    /*
+     * Products
+     */
+    CAT_NO_SUCH_PRODUCT(2030,"Could not find any plans named '%s'"),
+    
+    /*
+     * Phases
+     */
+    CAT_NO_SUCH_PHASE(2040,"Could not find any phases named '%s'")
     ;
 
     private int code;

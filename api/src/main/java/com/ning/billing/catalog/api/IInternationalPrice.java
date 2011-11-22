@@ -24,7 +24,7 @@ public interface IInternationalPrice {
 
 	public abstract IPrice[] getPrices();
 
-	public abstract BigDecimal getPrice(Currency currency);
+	public abstract BigDecimal getPrice(Currency currency) throws CatalogApiException;
 
 	public abstract Date getEffectiveDateForExistingSubscriptons();
 

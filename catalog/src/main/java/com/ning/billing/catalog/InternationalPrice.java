@@ -24,10 +24,14 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.CurrencyValueNull;
 import com.ning.billing.catalog.api.IInternationalPrice;
 import com.ning.billing.catalog.api.IPrice;
 import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -64,14 +68,13 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 	 * @see com.ning.billing.catalog.IInternationalPrice#getPrice(com.ning.billing.catalog.api.Currency)
 	 */
 	@Override 
-	public BigDecimal getPrice(Currency currency) {
-		// Note if there are no prices specified we default to 0 for any currency
+	public BigDecimal getPrice(Currency currency) throws CatalogApiException {
 		for(IPrice p : prices) {
 			if(p.getCurrency() == currency) {
 				return p.getValue();
 			}
 		}
-		return new BigDecimal(0);
+		throw new CatalogApiException(ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency);
 	}
 
 
@@ -88,14 +91,28 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors)  {
-		if(prices.length == 0) return errors;
 		Currency[] supportedCurrencies = catalog.getSupportedCurrencies();
 		for (IPrice p : prices) {
 			Currency currency = p.getCurrency();
 			if(!currencyIsSupported(currency, supportedCurrencies)) {
 				errors.add("Unsupported currency: " + currency, catalog.getCatalogURI(), this.getClass(), "");
 			}
+			try {
+				if(p.getValue().doubleValue() < 0.0) {
+					errors.add("Negative value for price in currency: " + currency, catalog.getCatalogURI(), this.getClass(), "");
+				}
+			} catch (CurrencyValueNull e) {
+				// No currency => nothing to check, ignore exception
+			}
 		}
+		if(effectiveDateForExistingSubscriptons != null &&
+				catalog.getEffectiveDate().getTime() > effectiveDateForExistingSubscriptons.getTime()) {
+			errors.add(new ValidationError(String.format("Price effective date %s is before catalog effective date '%s'",
+					effectiveDateForExistingSubscriptons,
+					catalog.getEffectiveDate().getTime()), 
+					catalog.getCatalogURI(), InternationalPrice.class, ""));
+		}
+		
 		return errors;
 	}
 	
