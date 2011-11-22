@@ -110,8 +110,8 @@ public class BusinessSubscriptionTransitionRecorder
         }
 
         // TODO Support currency changes
-        final BusinessSubscription prevSubscription = new BusinessSubscription(transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId());
-        final BusinessSubscription nextSubscription = new BusinessSubscription(transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId());
+        final BusinessSubscription prevSubscription = new BusinessSubscription(transition.getPreviousPriceList(),transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId());
+        final BusinessSubscription nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId());
 
         record(transitionKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
     }

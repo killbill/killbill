@@ -45,6 +45,7 @@ public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<Bus
             r.getString(8),  // phase
             r.getString(9),  // billing period
             BigDecimal.valueOf(r.getDouble(10)), // price
+            null,
             BigDecimal.valueOf(r.getDouble(11)), // mrr
             r.getString(12), // currency
             r.getLong(13) == 0 ? null : new DateTime(r.getLong(13), DateTimeZone.UTC), // startDate
@@ -66,6 +67,7 @@ public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<Bus
             r.getString(21),  // phase
             r.getString(22),  // billing period
             BigDecimal.valueOf(r.getDouble(23)), // price
+            null,
             BigDecimal.valueOf(r.getDouble(24)), // mrr
             r.getString(25), // currency
             r.getLong(26) == 0 ? null : new DateTime(r.getLong(26), DateTimeZone.UTC), // startDate

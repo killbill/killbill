@@ -79,8 +79,8 @@ public class TestAnalyticsDao
 
     private void setupBusinessSubscriptionTransition()
     {
-        final BusinessSubscription prevSubscription = new BusinessSubscription(plan, phase, Currency.USD, new DateTime(DateTimeZone.UTC), ISubscription.SubscriptionState.ACTIVE, UUID.randomUUID(), UUID.randomUUID());
-        final BusinessSubscription nextSubscription = new BusinessSubscription(plan, phase, Currency.USD, new DateTime(DateTimeZone.UTC), ISubscription.SubscriptionState.CANCELLED, UUID.randomUUID(), UUID.randomUUID());
+        final BusinessSubscription prevSubscription = new BusinessSubscription(null, plan, phase, Currency.USD, new DateTime(DateTimeZone.UTC), ISubscription.SubscriptionState.ACTIVE, UUID.randomUUID(), UUID.randomUUID());
+        final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan, phase, Currency.USD, new DateTime(DateTimeZone.UTC), ISubscription.SubscriptionState.CANCELLED, UUID.randomUUID(), UUID.randomUUID());
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan);
         final DateTime requestedTimestamp = new DateTime(DateTimeZone.UTC);
 
@@ -166,7 +166,7 @@ public class TestAnalyticsDao
     @Test(groups = "slow")
     public void testTransitionsWithNullFieldsInSubscription()
     {
-        final BusinessSubscription subscriptionWithNullFields = new BusinessSubscription(plan, phase, Currency.USD, null, null, null, null);
+        final BusinessSubscription subscriptionWithNullFields = new BusinessSubscription(null, plan, phase, Currency.USD, null, null, null, null);
         final BusinessSubscriptionTransition transitionWithNullFields = new BusinessSubscriptionTransition(
             transition.getKey(),
             transition.getRequestedTimestamp(),
@@ -184,7 +184,7 @@ public class TestAnalyticsDao
     @Test(groups = "slow")
     public void testTransitionsWithNullPlanAndPhase() throws Exception
     {
-        final BusinessSubscription subscriptionWithNullPlanAndPhase = new BusinessSubscription(null, null, Currency.USD, null, null, null, null);
+        final BusinessSubscription subscriptionWithNullPlanAndPhase = new BusinessSubscription(null, null, null, Currency.USD, null, null, null, null);
         final BusinessSubscriptionTransition transitionWithNullPlanAndPhase = new BusinessSubscriptionTransition(
             transition.getKey(),
             transition.getRequestedTimestamp(),
@@ -207,7 +207,7 @@ public class TestAnalyticsDao
     @Test(groups = "slow")
     public void testTransitionsWithNullPlan() throws Exception
     {
-        final BusinessSubscription subscriptionWithNullPlan = new BusinessSubscription(null, phase, Currency.USD, null, null, null, null);
+        final BusinessSubscription subscriptionWithNullPlan = new BusinessSubscription(null, null, phase, Currency.USD, null, null, null, null);
         final BusinessSubscriptionTransition transitionWithNullPlan = new BusinessSubscriptionTransition(
             transition.getKey(),
             transition.getRequestedTimestamp(),
@@ -226,7 +226,7 @@ public class TestAnalyticsDao
     @Test(groups = "slow")
     public void testTransitionsWithNullPhase() throws Exception
     {
-        final BusinessSubscription subscriptionWithNullPhase = new BusinessSubscription(plan, null, Currency.USD, null, null, null, null);
+        final BusinessSubscription subscriptionWithNullPhase = new BusinessSubscription(null, plan, null, Currency.USD, null, null, null, null);
         final BusinessSubscriptionTransition transitionWithNullPhase = new BusinessSubscriptionTransition(
             transition.getKey(),
             transition.getRequestedTimestamp(),
@@ -243,7 +243,7 @@ public class TestAnalyticsDao
         Assert.assertEquals(transitions.get(0).getEvent(), transition.getEvent());
 
         // Null Phase but Plan - we don't turn the subscription into a null, however price and mrr are both set to 0 (not null)
-        final BusinessSubscription blankSubscription = new BusinessSubscription(plan, new MockPhase(null, null, null, 0.0), Currency.USD, null, null, null, null);
+        final BusinessSubscription blankSubscription = new BusinessSubscription(null, plan, new MockPhase(null, null, null, 0.0), Currency.USD, null, null, null, null);
         Assert.assertEquals(transitions.get(0).getPreviousSubscription(), blankSubscription);
         Assert.assertEquals(transitions.get(0).getNextSubscription(), blankSubscription);
     }

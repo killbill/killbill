@@ -53,6 +53,8 @@ public class BusinessSubscription
     private final String phase;
     private final String billingPeriod;
     private final BigDecimal price;
+    // For convenience, not exposed
+    private final String priceList;
     private final BigDecimal mrr;
     private final String currency;
     private final DateTime startDate;
@@ -60,7 +62,7 @@ public class BusinessSubscription
     private final UUID subscriptionId;
     private final UUID bundleId;
 
-    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory, final String slug, final String phase, final String billingPeriod, final BigDecimal price, final BigDecimal mrr, final String currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
+    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory, final String slug, final String phase, final String billingPeriod, final BigDecimal price, final String priceList, final BigDecimal mrr, final String currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
     {
         this.productName = productName;
         this.productType = productType;
@@ -69,6 +71,7 @@ public class BusinessSubscription
         this.phase = phase;
         this.billingPeriod = billingPeriod;
         this.price = price;
+        this.priceList = priceList;
         this.mrr = mrr;
         this.currency = currency;
         this.startDate = startDate;
@@ -88,11 +91,13 @@ public class BusinessSubscription
      */
     BusinessSubscription(final ISubscription subscription, final Currency currency)
     {
-        this(subscription.getCurrentPlan(), subscription.getCurrentPhase(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId());
+        this(subscription.getCurrentPriceList(), subscription.getCurrentPlan(), subscription.getCurrentPhase(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId());
     }
 
-    public BusinessSubscription(final IPlan currentPlan, final IPlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
+    public BusinessSubscription(final String priceList, final IPlan currentPlan, final IPlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
     {
+        this.priceList = priceList;
+
         // Record plan information
         if (currentPlan != null && currentPlan.getProduct() != null) {
             final IProduct product = currentPlan.getProduct();
@@ -185,6 +190,11 @@ public class BusinessSubscription
         return price;
     }
 
+    public String getPriceList()
+    {
+        return priceList;
+    }
+
     public double getRoundedPrice()
     {
         return Rounder.round(price);
@@ -261,6 +271,7 @@ public class BusinessSubscription
         sb.append(", slug='").append(slug).append('\'');
         sb.append(", phase='").append(phase).append('\'');
         sb.append(", price=").append(price);
+        sb.append(", priceList=").append(priceList);
         sb.append(", mrr=").append(mrr);
         sb.append(", currency='").append(currency).append('\'');
         sb.append(", startDate=").append(startDate);
@@ -301,6 +312,9 @@ public class BusinessSubscription
         if (price != null ? !(Rounder.round(price) == Rounder.round(that.price)) : that.price != null) {
             return false;
         }
+        if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
+            return false;
+        }
         if (productCategory != null ? !productCategory.equals(that.productCategory) : that.productCategory != null) {
             return false;
         }
@@ -335,6 +349,7 @@ public class BusinessSubscription
         result = 31 * result + (slug != null ? slug.hashCode() : 0);
         result = 31 * result + (phase != null ? phase.hashCode() : 0);
         result = 31 * result + (price != null ? price.hashCode() : 0);
+        result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
         result = 31 * result + (mrr != null ? mrr.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);

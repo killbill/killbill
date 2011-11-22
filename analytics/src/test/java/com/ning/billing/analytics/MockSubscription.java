@@ -124,6 +124,6 @@ public class MockSubscription implements ISubscription
     @Override
     public String getCurrentPriceList()
     {
-        throw new UnsupportedOperationException();
+        return null;
     }
 }

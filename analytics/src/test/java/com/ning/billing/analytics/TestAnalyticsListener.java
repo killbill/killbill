@@ -43,7 +43,7 @@ public class TestAnalyticsListener
     private final IProduct product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
     private final IPlan plan = new MockPlan("platinum-monthly", product);
     private final IPlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-    private final String priceList = "something";
+    private final String priceList = null;
 
     private AnalyticsListener listener;
 
@@ -97,7 +97,7 @@ public class TestAnalyticsListener
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(plan);
         final ISubscription.SubscriptionState subscriptionState = ISubscription.SubscriptionState.ACTIVE;
-        final BusinessSubscription emptyBST = new BusinessSubscription(null, null, null, null, null, subscriptionId, bundleUUID);
+        final BusinessSubscription emptyBST = new BusinessSubscription(null, null, null, null, null, null, subscriptionId, bundleUUID);
         return createExpectedBST(event, requestedTransitionTime, effectiveTransitionTime, emptyBST, subscriptionState);
     }
 
@@ -136,6 +136,7 @@ public class TestAnalyticsListener
             eventType,
             previousSubscription,
             new BusinessSubscription(
+                null,
                 plan,
                 phase,
                 null,

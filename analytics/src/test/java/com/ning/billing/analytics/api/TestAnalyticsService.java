@@ -126,7 +126,7 @@ public class TestAnalyticsService
             requestedTransitionTime,
             BusinessSubscriptionEvent.subscriptionCreated(plan),
             null,
-            new BusinessSubscription(plan, phase, null, effectiveTransitionTime, ISubscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
+            new BusinessSubscription(null, plan, phase, null, effectiveTransitionTime, ISubscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
         );
     }
 
