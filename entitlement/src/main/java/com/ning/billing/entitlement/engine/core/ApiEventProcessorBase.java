@@ -207,9 +207,6 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
                 break;
             }
             claimedEvents.addAll(tmpEvents);
-            if (oneEventOnly) {
-                break;
-            }
         } while(true);
         if (claimedEvents.size() == 0) {
             return false;
@@ -217,7 +214,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
         // Filter for specific subscriptions if needed
         Collection<IEvent> claimedEventsFiltered = null;
-        if (subscriptionsIds == null) {
+        if (subscriptionsIds.length == 0) {
             claimedEventsFiltered = claimedEvents;
         } else {
 
@@ -225,7 +222,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
                 @Override
                 public boolean apply(IEvent input) {
                     for (UUID cur : subscriptionsIds) {
-                        if (cur.equals(input.getId())) {
+                        if (cur.equals(input.getSubscriptionId())) {
                             return true;
                         }
                     }
@@ -233,6 +230,10 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
                 }
             });
         }
+        if (claimedEventsFiltered.size() == 0) {
+            return false;
+        }
+
         // If only one event is requested extract it
         if (oneEventOnly) {
             List<IEvent> oneEventList = new ArrayList<IEvent>(1);
