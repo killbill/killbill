@@ -118,10 +118,15 @@ public class BusinessSubscription
 
             if (currentPhase.getPhaseType() != null) {
                 phase = currentPhase.getPhaseType().toString();
-                billingPeriod = currentPhase.getBillingPeriod().toString();
             }
             else {
                 phase = null;
+            }
+
+            if (currentPhase.getBillingPeriod() != null) {
+                billingPeriod = currentPhase.getBillingPeriod().toString();
+            }
+            else {
                 billingPeriod = null;
             }
 
