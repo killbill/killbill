@@ -50,15 +50,15 @@ public class MockProduct implements IProduct
         return category;
     }
 
-	@Override
-	public IProduct[] getAvailable() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public IProduct[] getAvailable()
+    {
+        return null;
+    }
 
-	@Override
-	public IProduct[] getIncluded() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public IProduct[] getIncluded()
+    {
+        return null;
+    }
 }

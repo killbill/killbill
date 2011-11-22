@@ -84,7 +84,7 @@ public class TestBusinessSubscription
         Assert.assertEquals(subscription.getRoundedMrr(), 0.0);
         Assert.assertEquals(subscription.getSlug(), phase.getName());
         Assert.assertEquals(subscription.getPhase(), phase.getPhaseType().toString());
-        Assert.assertEquals(subscription.getBillingPeriod(), phase.getBillingPeriod().toString());
+        Assert.assertEquals(subscription.getBillingPeriod(), phase.getBillingPeriod());
         Assert.assertEquals(subscription.getPrice(), phase.getRecurringPrice().getPrice(null));
         Assert.assertEquals(subscription.getProductCategory(), product.getCategory());
         Assert.assertEquals(subscription.getProductName(), product.getName());
