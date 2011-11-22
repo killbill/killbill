@@ -107,6 +107,15 @@ public class EntitlementDao implements IEntitlementDao {
     }
 
     @Override
+    public List<ISubscription> getSubscriptionsForKey(String bundleKey) {
+        ISubscriptionBundle bundle =  bundlesDao.getBundleFromKey(bundleKey);
+        if (bundle == null) {
+            return Collections.emptyList();
+        }
+        return subscriptionsDao.getSubscriptionsFromBundleId(bundle.getId().toString());
+    }
+
+    @Override
     public void updateSubscription(Subscription subscription) {
         Date ctd = (subscription.getChargedThroughDate() != null)  ? subscription.getChargedThroughDate().toDate() : null;
         Date ptd = (subscription.getPaidThroughDate() != null)  ? subscription.getPaidThroughDate().toDate() : null;
@@ -178,7 +187,7 @@ public class EntitlementDao implements IEntitlementDao {
     }
 
     @Override
-    public void clearEventsReady(final UUID ownerId, final List<IEvent> cleared) {
+    public void clearEventsReady(final UUID ownerId, final Collection<IEvent> cleared) {
 
         log.debug(String.format("EntitlementDao clearEventsReady START cleared size = %d", cleared.size()));
 

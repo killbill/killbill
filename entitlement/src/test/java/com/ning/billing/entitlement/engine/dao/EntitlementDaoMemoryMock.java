@@ -17,6 +17,7 @@
 package com.ning.billing.entitlement.engine.dao;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -52,6 +53,8 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     private final TreeSet<IEvent> events;
     private final IClock clock;
     private final IEntitlementConfig config;
+
+
 
     @Inject
     public EntitlementDaoMemoryMock(IClock clock, IEntitlementConfig config) {
@@ -106,6 +109,18 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
         }
         return null;
     }
+
+    @Override
+    public List<ISubscription> getSubscriptionsForKey(String bundleKey) {
+
+        for (ISubscriptionBundle cur : bundles) {
+            if (cur.getKey().equals(bundleKey)) {
+                return getSubscriptions(cur.getId());
+            }
+        }
+        return Collections.emptyList();
+    }
+
 
     @Override
     public ISubscription createSubscription(Subscription subscription, List<IEvent> initalEvents) {
@@ -199,7 +214,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     @Override
-    public void clearEventsReady(UUID ownerId, List<IEvent> cleared) {
+    public void clearEventsReady(UUID ownerId, Collection<IEvent> cleared) {
         synchronized(events) {
             for (IEvent cur : cleared) {
                 if (cur.getOwner().equals(ownerId)) {
@@ -328,4 +343,5 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
             }
         }
     }
+
 }

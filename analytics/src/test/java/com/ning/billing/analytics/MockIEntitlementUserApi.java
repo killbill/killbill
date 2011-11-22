@@ -115,4 +115,9 @@ public class MockIEntitlementUserApi implements IEntitlementUserApi
     {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public List<ISubscription> getSubscriptionsForKey(String bundleKey) {
+        throw new UnsupportedOperationException();
+    }
 }

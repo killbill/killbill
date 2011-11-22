@@ -76,6 +76,12 @@ public class EntitlementUserApi implements IEntitlementUserApi {
     }
 
     @Override
+    public List<ISubscription> getSubscriptionsForKey(String bundleKey) {
+        return dao.getSubscriptionsForKey(bundleKey);
+    }
+
+
+    @Override
     public List<ISubscription> getSubscriptionsForBundle(UUID bundleId) {
         return dao.getSubscriptions(bundleId);
     }
@@ -158,6 +164,4 @@ public class EntitlementUserApi implements IEntitlementUserApi {
         // STEPH Also update startDate for bundle ?
         return dao.createSubscription(subscription, events);
     }
-
-
 }

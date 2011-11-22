@@ -16,8 +16,11 @@
 
 package com.ning.billing.entitlement.api.test;
 
+import java.util.UUID;
+
+
 public interface IEntitlementTestApi {
 
-    public void doProcessReadyEvents();
+    public void doProcessReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly);
 
 }

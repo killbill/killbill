@@ -16,11 +16,15 @@
 
 package com.ning.billing.entitlement.api.test;
 
+import java.util.List;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.IEntitlementConfig;
+import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.engine.core.IApiEventProcessor;
 
 public class EntitlementTestApi implements IEntitlementTestApi {
@@ -37,10 +41,10 @@ public class EntitlementTestApi implements IEntitlementTestApi {
     }
 
     @Override
-    public void doProcessReadyEvents() {
+    public void doProcessReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly) {
         if (config.isEventProcessingOff()) {
             log.warn("Running event processing loop");
-            apiEventProcessor.processAllReadyEvents();
+            apiEventProcessor.processAllReadyEvents(subscriptionsIds, recursive, oneEventOnly);
         }
     }
 }
