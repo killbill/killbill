@@ -29,6 +29,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -61,7 +62,15 @@ public class TestEntitlementDao extends TestUserApiBase {
         String planSetName = "standard";
 
         DateTime now = new DateTime();
-        IPlan plan = catalog.getPlan(productName, term, planSetName);
+
+        //TODO: Correctly handle exception
+        IPlan plan = null;
+		try {
+			plan = catalog.findPlan(productName, term, planSetName);
+		} catch (CatalogApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         IEvent event = new ApiEventCreate(UUID.randomUUID(), now, now, plan.getName(), "evergreen", planSetName, now, now, 1);
         dao.insertEvent(event);
 
@@ -105,7 +114,15 @@ public class TestEntitlementDao extends TestUserApiBase {
         BillingPeriod term = BillingPeriod.MONTHLY;
         String planSetName = IPriceListSet.DEFAULT_PRICELIST_NAME;
 
-        IPlan plan = catalog.getPlan(productName, term, planSetName);
+        //TODO: Correctly handle exception
+        IPlan plan = null;
+		try {
+			plan = catalog.findPlan(productName, term, planSetName);
+		} catch (CatalogApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
         final IEvent event = new ApiEventCreate(UUID.randomUUID(), now, now, plan.getName(), "evergreen", planSetName, now, now, 1);
 
         dao.inTransaction(new Transaction<Void, ISubscriptionSqlDao>() {

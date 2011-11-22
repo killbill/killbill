@@ -229,7 +229,15 @@ public class Subscription extends PrivateFields  implements ISubscription {
         		getCurrentPriceList(),
         		getCurrentPhase().getPhaseType());
 
-        ActionPolicy policy = catalog.getPlanCancelPolicy(planPhase);
+        //TODO: Correctly handle exception
+        ActionPolicy policy = null;
+		try {
+			policy = catalog.planCancelPolicy(planPhase);
+		} catch (CatalogApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
         DateTime effectiveDate = getPlanChangeEffectiveDate(policy, now);
         IEvent cancelEvent = new ApiEventCancel(id, bundleStartDate, now, now, effectiveDate, activeVersion);
         dao.cancelSubscription(id, cancelEvent);
@@ -275,7 +283,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         PlanChangeResult planChangeResult = null;
         try {
 
-            IProduct destProduct = catalog.getProductFromName(productName);
+            IProduct destProduct = catalog.findProduct(productName);
             // STEPH really catalog exception
             if (destProduct == null) {
                 throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BAD_CATALOG,
@@ -300,8 +308,16 @@ public class Subscription extends PrivateFields  implements ISubscription {
         ActionPolicy policy = planChangeResult.getPolicy();
         IPriceList newPriceList = planChangeResult.getNewPriceList();
 
-        IPlan newPlan = catalog.getPlan(productName, term, newPriceList.getName());
-        if (newPlan == null) {
+        //TODO: Correctly handle exception
+        IPlan newPlan = null;
+		try {
+			newPlan = catalog.findPlan(productName, term, newPriceList.getName());
+		} catch (CatalogApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		if (newPlan == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BAD_CATALOG,
                     productName, term.toString(), newPriceList.getName());
         }
@@ -536,12 +552,22 @@ public class Subscription extends PrivateFields  implements ISubscription {
                 throw new EntitlementError(String.format("Unexpected Event type = %s",
                         cur.getType()));
             }
-
-            IPlan previousPlan = catalog.getPlanFromName(previousPlanName);
-            IPlanPhase previousPhase = catalog.getPhaseFromName(previousPhaseName);
-            IPlan nextPlan = catalog.getPlanFromName(nextPlanName);
-            IPlanPhase nextPhase = catalog.getPhaseFromName(nextPhaseName);
-
+            
+            //TODO: Correctly handle exception
+            IPlan previousPlan = null;
+            IPlanPhase previousPhase = null;
+            IPlan nextPlan = null;
+            IPlanPhase nextPhase = null;
+            try {
+            	previousPlan = catalog.findPlan(previousPlanName);
+            	previousPhase = catalog.findPhase(previousPhaseName);
+            	nextPlan = catalog.findPlan(nextPlanName);
+            	nextPhase = catalog.findPhase(nextPhaseName);
+            } catch (CatalogApiException e) {
+            	// TODO Auto-generated catch block
+            	e.printStackTrace();
+            }
+ 
             SubscriptionTransition transition =
                 new SubscriptionTransition(id, bundleId, cur.getType(), apiEventType,
                         cur.getRequestedDate(), cur.getEffectiveDate(),

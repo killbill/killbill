@@ -21,6 +21,7 @@ import static org.testng.AssertJUnit.assertNull;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.Catalog;
@@ -28,6 +29,7 @@ import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.PriceList;
 import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -960,7 +962,7 @@ public class TestCaseChange {
 	
 	
 	@Test(enabled=true)
-	public void testOrder(){
+	public void testOrder() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
 		Product product1 = cat.getProducts()[0];
@@ -1031,8 +1033,12 @@ public class TestCaseChange {
 			BillingPeriod fromBp, BillingPeriod toBp,
 			String fromPriceListName, String toPriceListName,
 			PhaseType phaseType, Catalog cat){
-		assertNull(cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory, fromBp, fromPriceListName, phaseType), 
-								new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName),cat));
+		try {
+			assertNull(cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory, fromBp, fromPriceListName, phaseType), 
+									new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName),cat));
+		} catch (CatalogApiException e) {
+			Assert.fail("", e);
+		}
 	}
 
 	protected void assertion(Result result, CaseChangeResult cr, 
@@ -1041,8 +1047,12 @@ public class TestCaseChange {
 			BillingPeriod fromBp, BillingPeriod toBp,
 			String fromPriceListName, String toPriceListName,
 			PhaseType phaseType, Catalog cat){
-		assertEquals(result, cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory,fromBp, fromPriceListName, phaseType), 
-								new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName),cat));
+		try {
+			assertEquals(result, cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory,fromBp, fromPriceListName, phaseType), 
+					new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName),cat));
+		} catch (CatalogApiException e) {
+			Assert.fail("", e);
+		}
 	}
 
 }

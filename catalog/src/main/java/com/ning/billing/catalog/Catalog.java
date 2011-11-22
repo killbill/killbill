@@ -26,22 +26,24 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.IllegalPlanChange;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
+import com.ning.billing.catalog.api.PlanChangeResult;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.rules.PlanRules;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
-import com.ning.billing.catalog.api.PlanChangeResult;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
@@ -86,6 +88,11 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 		return catalogName;
 	}
 
+	@Override
+	public Date getEffectiveDate() {
+		return effectiveDate;
+	}
+
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.ICatalog#getProducts()
 	 */
@@ -94,14 +101,6 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 		return products;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
-	 */
-	@Override
-	public Plan getPlan(String productName, BillingPeriod period, String priceListName) {
-		IProduct product = getProductFromName(productName);
-		return priceLists.getPlanListFrom(priceListName, product, period);
-	}
 
 	@Override
 	public Currency[] getSupportedCurrencies() {
@@ -112,34 +111,44 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	public Plan[] getPlans() {
 		return plans;
 	}
-	@Override
-	public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from, PlanSpecifier to) {
-		return planRules.getPlanChangePolicy(from, to, this);
+
+	public URI getCatalogURI() {
+		return catalogURI;
+	}
+
+	public PlanRules getPlanRules() { 
+		return planRules;
+	}
+	
+	public PriceList getPriceListFromName(String priceListName) {
+		return priceLists.findPriceListFrom(priceListName);
+	}
+	
+	public PriceListSet getPriceLists() {
+		return this.priceLists;
 	}
 
 	@Override
-	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from, PlanSpecifier to) {
-		return planRules.getPlanChangeAlignment(from, to, this);
-	}
-
-	@Override
-	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase) {
-		return planRules.getPlanCancelPolicy(planPhase, this);
-	}
-
-	@Override
-	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier) {
-		return planRules.getPlanCreateAlignment(specifier, this);
-	}
-
-	@Override
-	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase) {
-		return planRules.getBillingAlignment(planPhase, this);
+	public void configureEffectiveDate(Date date) {
+		// Nothing to do here this is a method that is only implemented on VersionedCatalog
 	}
 
 
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
+	 */
 	@Override
-	public Plan getPlanFromName(String name) {
+	public Plan findPlan(String productName, BillingPeriod period, String priceListName) throws CatalogApiException {
+		IProduct product = findProduct(productName);
+		Plan result = priceLists.getPlanListFrom(priceListName, product, period);
+		if ( result == null) {
+			throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, productName, period.toString(), priceListName);
+		}
+		return result;
+	}
+	
+	@Override
+	public Plan findPlan(String name) throws CatalogApiException {
 		if (name == null) {
 			return null;
 		}
@@ -148,26 +157,21 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 				return p;
 			}
 		}
-		return null;
+		throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PLAN, name);
 	}
-
+	
 	@Override
-	public IProduct getProductFromName(String name) {
+	public IProduct findProduct(String name) throws CatalogApiException {
 		for(Product p : products) {
 			if (p.getName().equals(name)) {
 				return p;
 			}
 		}
-		return null;
+		throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PRODUCT, name);
 	}
 
-
 	@Override
-	public PlanPhase getPhaseFromName(String name) {
-
-		if (name == null) {
-			return null;
-		}
+	public PlanPhase findPhase(String name) throws CatalogApiException {
 		for(Plan p : plans) {
 
 			if(p.getFinalPhase().getName().equals(name)) {
@@ -182,59 +186,42 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 			}
 		}
 
-		return null;
+		throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PHASE, name);
+	}
+
+	//////////////////////////////////////////////////////////////////////////////
+	//
+	// RULES
+	//
+	//////////////////////////////////////////////////////////////////////////////
+	@Override
+	public ActionPolicy planChangePolicy(PlanPhaseSpecifier from, PlanSpecifier to) throws CatalogApiException {
+		return planRules.getPlanChangePolicy(from, to, this);
 	}
 
 	@Override
-	public Date getEffectiveDate() {
-		return effectiveDate;
-	}
-
-	public void setEffectiveDate(Date effectiveDate) {
-		this.effectiveDate = effectiveDate;
-	}
-
-	public URI getCatalogURI() {
-		return catalogURI;
-	}
-
-	public PlanRules getPlanRules() { 
-		return planRules;
-	}
-
-	public void setPlanRules(PlanRules planRules) {
-		this.planRules = planRules;
+	public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from, PlanSpecifier to) throws CatalogApiException {
+		return planRules.getPlanChangeAlignment(from, to, this);
 	}
 
 	@Override
-	public PlanPhase getPhaseFor(String name, Date date) {
-		if(getEffectiveDate().getTime() >= date.getTime()){
-			return getPhaseFromName(name);
-		}
-		return null;
-	}
-
-	public void setPriceLists(PriceListSet priceLists) {
-		this.priceLists = priceLists;
-	}
-
-	public PriceListSet getPriceLists() {
-		return this.priceLists;
+	public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException {
+		return planRules.getPlanCancelPolicy(planPhase, this);
 	}
 
 	@Override
-	public void configureEffectiveDate(Date date) {
-		// Nothing to do here this is a method that is only inplemented on VersionedCatalog
-
+	public PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier) throws CatalogApiException {
+		return planRules.getPlanCreateAlignment(specifier, this);
 	}
 
-	public PriceList getPriceListFromName(String priceListName) {
-		return priceLists.findPriceListFrom(priceListName);
+	@Override
+	public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException {
+		return planRules.getBillingAlignment(planPhase, this);
 	}
 
 	@Override
 	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to)
-			throws IllegalPlanChange {
+			throws CatalogApiException {
 		return planRules.planChange(from, to, this);
 	}
 
@@ -289,6 +276,22 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 		this.plans = plans;
 		return this;
 	}
+
+	protected Catalog setEffectiveDate(Date effectiveDate) {
+		this.effectiveDate = effectiveDate;
+		return this;
+	}
+
+	protected Catalog setPlanRules(PlanRules planRules) {
+		this.planRules = planRules;
+		return this;
+	}
+
+	protected Catalog setPriceLists(PriceListSet priceLists) {
+		this.priceLists = priceLists;
+		return this;
+	}
+
 
 
 }

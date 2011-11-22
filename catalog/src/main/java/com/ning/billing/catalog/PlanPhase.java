@@ -134,6 +134,12 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 					catalog.getCatalogURI(), PlanPhase.class, type.toString()));
 		}
 		
+		//Validation: there must be at least one of reccuringPrice or fixedPrice
+		if(recurringPrice == null && fixedPrice == null) {
+			errors.add(new ValidationError(String.format("Phase %s of plan %s has neither a reccurring price or a fixed price.", 
+					type.toString(), plan.getName()), 
+					catalog.getCatalogURI(), PlanPhase.class, type.toString()));
+		}
 		return errors;
 
 	}
