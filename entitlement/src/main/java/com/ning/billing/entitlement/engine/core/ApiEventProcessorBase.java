@@ -78,7 +78,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
 
     @Override
-    public void startNotifications(IEventListener listener) {
+    public void startNotifications(final IEventListener listener) {
 
         this.listener = listener;
         this.isProcessingEvents = true;
@@ -87,6 +87,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
         if (config.isEventProcessingOff()) {
             log.warn("KILLBILL ENTITLEMENT EVENT PROCESSING IS OFF !!!");
+            listener.completedNotificationStart();
             return;
         }
         final ApiEventProcessorBase apiEventProcessor = this;
@@ -95,6 +96,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
             if (executor != null) {
                 log.warn("There is already an executor thread running, return");
+                listener.completedNotificationStart();
                 return;
             }
 
@@ -122,6 +124,10 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
                 log.info(String.format("ApiEventProcessor thread %s  [%d] started", API_EVENT_THREAD_NAME,
                         Thread.currentThread().getId()));
+
+                // Thread is now started, notify the listener
+                listener.completedNotificationStart();
+
                 try {
                     while (true) {
                         synchronized (apiEventProcessor) {

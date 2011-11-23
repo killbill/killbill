@@ -54,6 +54,7 @@ import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.entitlement.glue.InjectorMagic;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.IClock;
 
 public class Subscription extends PrivateFields  implements ISubscription {
@@ -218,6 +219,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         }
 
         DateTime now = clock.getUTCNow();
+        requestedDate = (requestedDate != null) ? Clock.truncateMs(requestedDate) : null;
         if (requestedDate != null && requestedDate.isAfter(now)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
         }
@@ -260,6 +262,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
     public void changePlan(String productName, BillingPeriod term,
             String priceList, DateTime requestedDate) throws EntitlementUserApiException {
 
+        requestedDate = (requestedDate != null) ? Clock.truncateMs(requestedDate) : null;
         String currentPriceList = getCurrentPriceList();
 
         SubscriptionState currentState = getState();
