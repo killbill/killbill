@@ -29,7 +29,7 @@ public class Clock implements IClock {
     @Override
     public DateTime getNow(DateTimeZone tz) {
        DateTime result = new DateTime(tz);
-       return result.minus(result.getMillisOfSecond());
+       return truncateMs(result);
     }
 
     @Override
@@ -37,6 +37,10 @@ public class Clock implements IClock {
         return getNow(DateTimeZone.UTC);
     }
 
+
+    public static DateTime truncateMs(DateTime input) {
+        return input.minus(input.getMillisOfSecond());
+    }
 
     public static DateTime addDuration(DateTime input, List<IDuration> durations) {
 

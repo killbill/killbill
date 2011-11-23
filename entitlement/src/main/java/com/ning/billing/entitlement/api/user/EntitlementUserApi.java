@@ -41,6 +41,7 @@ import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventCreate;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.IClock;
 
 public class EntitlementUserApi implements IEntitlementUserApi {
@@ -98,8 +99,8 @@ public class EntitlementUserApi implements IEntitlementUserApi {
             BillingPeriod term, String priceList, DateTime requestedDate) throws EntitlementUserApiException {
 
         String realPriceList = (priceList == null) ? IPriceListSet.DEFAULT_PRICELIST_NAME : priceList;
-
         DateTime now = clock.getUTCNow();
+        requestedDate = (requestedDate != null) ? Clock.truncateMs(requestedDate) : null;
         if (requestedDate != null && requestedDate.isAfter(now)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
         }
