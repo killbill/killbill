@@ -211,6 +211,16 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
 
     @Override
+    public DateTime getEndDate() {
+        ISubscriptionTransition latestTransition = getLatestTranstion();
+        if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
+            return latestTransition.getEffectiveTransitionTime();
+        }
+        return null;
+    }
+
+
+    @Override
     public void cancel(DateTime requestedDate, boolean eot) throws EntitlementUserApiException  {
 
         SubscriptionState currentState = getState();

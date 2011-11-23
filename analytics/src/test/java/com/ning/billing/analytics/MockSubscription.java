@@ -126,4 +126,9 @@ public class MockSubscription implements ISubscription
     {
         return null;
     }
+
+    @Override
+    public DateTime getEndDate() {
+        return null;
+    }
 }
