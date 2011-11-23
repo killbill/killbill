@@ -18,8 +18,9 @@ package com.ning.billing.invoice.dao;
 
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.IInvoiceItem;
-import com.ning.billing.invoice.model.InvoiceItemList;
 import org.skife.jdbi.v2.IDBI;
+
+import java.util.List;
 
 public class InvoiceItemDao implements IInvoiceItemDao {
     private final IInvoiceItemDao dao;
@@ -30,17 +31,32 @@ public class InvoiceItemDao implements IInvoiceItemDao {
     }
 
     @Override
-    public InvoiceItemList getInvoiceItemsByInvoice(String invoiceId) {
+    public IInvoiceItem getInvoiceItem(String invoiceItemId) {
+        return dao.getInvoiceItem(invoiceItemId);
+    }
+
+    @Override
+    public List<IInvoiceItem> getInvoiceItemsByInvoice(String invoiceId) {
         return dao.getInvoiceItemsByInvoice(invoiceId);
     }
 
     @Override
-    public InvoiceItemList getInvoiceItemsByAccount(String accountId) {
+    public List<IInvoiceItem> getInvoiceItemsByAccount(String accountId) {
         return dao.getInvoiceItemsByAccount(accountId);
+    }
+
+    @Override
+    public List<IInvoiceItem> getInvoiceItemsBySubscription(String subscriptionId) {
+        return dao.getInvoiceItemsBySubscription(subscriptionId);
     }
 
     @Override
     public void createInvoiceItem(IInvoiceItem invoiceItem) {
         dao.createInvoiceItem(invoiceItem);
+    }
+
+    @Override
+    public void test() {
+        dao.test();
     }
 }

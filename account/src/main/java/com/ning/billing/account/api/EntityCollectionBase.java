@@ -56,9 +56,8 @@ public abstract class EntityCollectionBase<T extends IEntity> {
         IEntityCollectionDao<T> dao = getCollectionDao();
 
         dao.create(objectId.toString(), objectType, getNewEntities());
-        setEntitiesAsSaved();
-
         dao.update(objectId.toString(), objectType, getUpdatedEntities());
+        setEntitiesAsSaved();
     }
 
     private void setEntitiesAsSaved() {

@@ -35,7 +35,11 @@ public class InvoiceItem implements IInvoiceItem {
     private final Currency currency;
 
     public InvoiceItem(UUID invoiceId, UUID subscriptionId, DateTime startDate, DateTime endDate, String description, BigDecimal amount, BigDecimal rate, Currency currency) {
-        this.id = UUID.randomUUID();
+        this(UUID.randomUUID(), invoiceId, subscriptionId, startDate, endDate, description, amount, rate, currency);
+    }
+
+    public InvoiceItem(UUID id, UUID invoiceId, UUID subscriptionId, DateTime startDate, DateTime endDate, String description, BigDecimal amount, BigDecimal rate, Currency currency) {
+        this.id = id;
         this.invoiceId = invoiceId;
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;

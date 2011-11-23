@@ -16,25 +16,21 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.account.dao.IEntityCollectionDao;
-import com.ning.billing.account.glue.InjectorMagic;
+import com.ning.billing.util.clock.Clock;
+import org.joda.time.DateTime;
 
-import java.util.UUID;
+public class ChangedField {
+    private final String fieldName;
+    private final String oldValue;
+    private final String newValue;
+    private final DateTime changeDate;
 
-public class TagStore extends EntityCollectionBase<Tag> {
-    public TagStore(UUID objectId, String objectType) {
-        super(objectId, objectType);
+    private final Clock clock = new Clock();
+
+    public ChangedField(String fieldName, String oldValue, String newValue) {
+        this.changeDate = clock.getUTCNow();
+        this.fieldName = fieldName;
+        this.oldValue = oldValue;
+        this.newValue = newValue;
     }
-
-    @Override
-    protected String getEntityKey(Tag entity) {
-        return entity.getDescription();
-    }
-
-    @Override
-    protected IEntityCollectionDao<Tag> getCollectionDao() {
-        return InjectorMagic.getTagStoreDao();
-    }
-
-
 }

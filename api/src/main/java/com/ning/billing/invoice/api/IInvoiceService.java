@@ -20,4 +20,5 @@ import com.ning.billing.lifecycle.IService;
 
 public interface IInvoiceService extends IService {
     public IInvoiceUserApi getInvoiceUserApi();
+    public IInvoicePaymentApi getPaymentApi();
 }

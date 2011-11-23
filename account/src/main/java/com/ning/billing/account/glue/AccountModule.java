@@ -36,7 +36,6 @@ public class AccountModule extends AbstractModule {
 
     protected void installAccountDao() {
         bind(IAccountDao.class).to(AccountDao.class).asEagerSingleton();
-//        bind(IAccountDaoSql.class).to(IAccountDaoSql.class).asEagerSingleton();
     }
 
     protected void installAccountUserApi() {
@@ -59,5 +58,4 @@ public class AccountModule extends AbstractModule {
         installAccountService();
         installFieldStore();
     }
-
 }

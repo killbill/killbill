@@ -17,6 +17,7 @@
 package com.ning.billing.account.api;
 
 import com.ning.billing.account.dao.ITagDao;
+import org.joda.time.DateTime;
 
 import java.util.UUID;
 
@@ -27,6 +28,8 @@ public class Tag extends EntityBase {
     private String description;
     private UUID objectId;
     private String objectType;
+    private String addedBy;
+    private DateTime dateAdded;
 
     public Tag() {
         super();
@@ -34,6 +37,15 @@ public class Tag extends EntityBase {
 
     public Tag(UUID id) {
         super(id);
+    }
+
+    public Tag(UUID id, String description, UUID objectId, String objectType, String addedBy, DateTime dateAdded) {
+        super(id);
+        this.description = description;
+        this.objectId = objectId;
+        this.objectType = objectType;
+        this.addedBy = addedBy;
+        this.dateAdded = dateAdded;
     }
 
     public UUID getTagDescriptionId() {

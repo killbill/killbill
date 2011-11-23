@@ -16,45 +16,15 @@
 
 package com.ning.billing.account.dao;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.account.api.FieldStore;
-import com.ning.billing.account.glue.AccountModuleMock;
-import com.ning.billing.account.glue.InjectorMagic;
-import org.apache.commons.io.IOUtils;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
-@Test(groups={"Account-DAO"})
-public class TestFieldStore {
-    private InjectorMagic injectorMagic;
-
-    @BeforeClass(alwaysRun = true)
-    private void setup() throws IOException {
-        AccountModuleMock module = new AccountModuleMock();
-        final String ddl = IOUtils.toString(IAccountDaoSql.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-        module.createDb(ddl);
-
-        // Healthcheck test to make sure MySQL is setup properly
-        try {
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
-            injectorMagic = injector.getInstance(InjectorMagic.class);
-
-            IFieldStoreDao dao = injector.getInstance(IFieldStoreDao.class);
-            dao.test();
-        }
-        catch (Throwable t) {
-            fail(t.toString());
-        }
-    }
-
+@Test(groups={"account-dao"})
+public class TestFieldStore extends AccountDaoTestBase {
     @Test
     public void testFieldStore() {
         UUID id = UUID.randomUUID();
@@ -69,6 +39,17 @@ public class TestFieldStore {
         fieldStore.save();
 
         fieldStore = FieldStore.create(id, objectType);
+        fieldStore.load();
+
+        assertEquals(fieldStore.getValue(fieldName), fieldValue);
+
+        fieldValue = "Cape Canaveral";
+        fieldStore.setValue(fieldName, fieldValue);
+        assertEquals(fieldStore.getValue(fieldName), fieldValue);
+        fieldStore.save();
+
+        fieldStore = FieldStore.create(id, objectType);
+        assertEquals(fieldStore.getValue(fieldName), null);
         fieldStore.load();
 
         assertEquals(fieldStore.getValue(fieldName), fieldValue);

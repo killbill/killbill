@@ -7,8 +7,8 @@ create() ::= <<
 
 update() ::= <<
     UPDATE custom_fields
-    SET object_type = :objectType, object_id = :objectId, field_name = :name, field_value = :value
-    WHERE id = :id;
+    SET field_value = :value
+    WHERE object_type = :objectType AND object_id = :objectId AND field_name = :name;
 >>
 
 load() ::= <<

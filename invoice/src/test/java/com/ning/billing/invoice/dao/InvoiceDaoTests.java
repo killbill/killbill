@@ -47,14 +47,14 @@ public class InvoiceDaoTests {
     private IInvoiceDao dao;
     private IInvoiceItemDao invoiceItemDao;
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass()
     private void setup() throws IOException {
-        InvoiceModuleMock module = new InvoiceModuleMock();
-        final String ddl = IOUtils.toString(InvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-        module.createDb(ddl);
-
-        // Healthcheck test to make sure MySQL is setup properly
+        // Health check test to make sure MySQL is setup properly
         try {
+            InvoiceModuleMock module = new InvoiceModuleMock();
+            final String ddl = IOUtils.toString(InvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+            module.createDb(ddl);
+
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
             InjectorMagic injectorMagic = injector.getInstance(InjectorMagic.class);
@@ -62,6 +62,7 @@ public class InvoiceDaoTests {
             dao.test();
 
             invoiceItemDao = injector.getInstance(IInvoiceItemDao.class);
+            invoiceItemDao.test();
         }
         catch (Throwable t) {
             fail(t.toString());

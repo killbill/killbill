@@ -16,48 +16,18 @@
 
 package com.ning.billing.account.dao;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.glue.AccountModuleMock;
-import com.ning.billing.account.glue.InjectorMagic;
 import com.ning.billing.catalog.api.Currency;
-import org.apache.commons.io.IOUtils;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
 import static org.testng.Assert.*;
 
-@Test(groups = {"Account", "Account-DAO"})
-public class TestSimpleAccountDao {
-    private IAccountDao dao;
-    //private InjectorMagic injectorMagic;
-
-    @BeforeClass(alwaysRun = true)
-    private void setup() throws IOException {
-        AccountModuleMock module = new AccountModuleMock();
-        final String ddl = IOUtils.toString(IAccountDaoSql.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-        module.createDb(ddl);
-
-        // Healthcheck test to make sure MySQL is setup properly
-        try {
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
-
-            InjectorMagic injectorMagic = injector.getInstance(InjectorMagic.class);
-            dao = injector.getInstance(IAccountDao.class);
-            dao.test();
-        }
-        catch (Throwable t) {
-            fail(t.toString());
-        }
-    }
-
+@Test(groups = {"account-dao"})
+public class TestSimpleAccountDao extends AccountDaoTestBase {
     private final String key = "test1234";
     private final String name = "Wesley";
     private final String email = "dreadpirateroberts@therevenge.com";
@@ -70,22 +40,21 @@ public class TestSimpleAccountDao {
         return account;
     }
 
-    @Test(enabled=true, groups={"Account-DAO"})
     public void testBasic() {
 
         IAccount a = createTestAccount();
-        dao.saveAccount(a);
+        accountDao.saveAccount(a);
         String key = a.getExternalKey();
 
-        IAccount r = dao.getAccountByKey(key);
+        IAccount r = accountDao.getAccountByKey(key);
         assertNotNull(r);
         assertEquals(r.getExternalKey(), a.getExternalKey());
 
-        r = dao.getAccountById(r.getId());
+        r = accountDao.getAccountById(r.getId());
         assertNotNull(r);
         assertEquals(r.getExternalKey(), a.getExternalKey());
 
-        List<IAccount> all = dao.getAccounts();
+        List<IAccount> all = accountDao.getAccounts();
         assertNotNull(all);
         assertTrue(all.size() >= 1);
     }

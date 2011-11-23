@@ -14,13 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.dao;
+package com.ning.billing.invoice.api;
 
-import com.ning.billing.invoice.model.InvoiceItem;
-import org.skife.jdbi.v2.BeanMapper;
+import com.ning.billing.catalog.api.Currency;
 
-public class InvoiceItemMapper extends BeanMapper<InvoiceItem> {
-    public InvoiceItemMapper() {
-        super(InvoiceItem.class);
-    }
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+public interface IInvoicePaymentApi {
+    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId);
+
+    public List<IInvoice> getInvoicesByAccount(UUID accountId);
+
+    public IInvoice getInvoice(UUID invoiceId);
 }

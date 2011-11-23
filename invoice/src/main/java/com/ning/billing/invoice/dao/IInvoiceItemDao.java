@@ -16,26 +16,44 @@
 
 package com.ning.billing.invoice.dao;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.IInvoiceItem;
-import com.ning.billing.invoice.model.InvoiceItemList;
+import com.ning.billing.invoice.model.InvoiceItem;
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.*;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import java.lang.annotation.*;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(InvoiceItemMapper.class)
+@RegisterMapper(IInvoiceItemDao.InvoiceItemMapper.class)
 public interface IInvoiceItemDao {
     @SqlQuery
-    InvoiceItemList getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
+    IInvoiceItem getInvoiceItem(@Bind("id") final String invoiceItemId);
 
     @SqlQuery
-    InvoiceItemList getInvoiceItemsByAccount(@Bind("accountId") final String accountId);
+    List<IInvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
+
+    @SqlQuery
+    List<IInvoiceItem> getInvoiceItemsByAccount(@Bind("accountId") final String accountId);
+
+    @SqlQuery
+    List<IInvoiceItem> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId);
 
     @SqlUpdate
     void createInvoiceItem(@InvoiceItemBinder final IInvoiceItem invoiceItem);
+
+    @SqlUpdate
+    void test();
 
     @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
@@ -57,6 +75,23 @@ public interface IInvoiceItemDao {
                     }
                 };
             }
+        }
+    }
+
+    public static class InvoiceItemMapper implements ResultSetMapper<IInvoiceItem> {
+        @Override
+        public IInvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
+            UUID id = UUID.fromString(result.getString("id"));
+            UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
+            UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
+            DateTime startDate = new DateTime(result.getTimestamp("start_date"));
+            DateTime endDate = new DateTime(result.getTimestamp("end_date"));
+            String description = result.getString("description");
+            BigDecimal amount = result.getBigDecimal("amount");
+            BigDecimal rate = result.getBigDecimal("rate");
+            Currency currency = Currency.valueOf(result.getString("currency"));
+
+            return new InvoiceItem(id, invoiceId, subscriptionId, startDate, endDate, description, amount, rate , currency);
         }
     }
 }
