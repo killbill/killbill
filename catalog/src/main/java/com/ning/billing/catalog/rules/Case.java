@@ -16,9 +16,6 @@
 
 package com.ning.billing.catalog.rules;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlIDREF;
-
 import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.PriceList;
 import com.ning.billing.catalog.Product;
@@ -36,22 +33,6 @@ public abstract class Case<T> extends ValidatingConfig<Catalog> {
 	protected PriceList priceList;
 
 	protected abstract T getResult();
-	
-	public Case() {}
-	
-	protected Case (
-			Product product, 
-			ProductCategory productCategory, 
-			BillingPeriod billingPeriod, 
-			PriceList priceList, 
-			T result
-			) {
-		this.product = product;
-		this.productCategory = productCategory;
-		this.billingPeriod = billingPeriod;
-		this.priceList = priceList;
-	}
-
 
 	public T getResult(PlanSpecifier planPhase, Catalog c) {
 		if (satisfiesCase(planPhase, c)	) {
@@ -69,8 +50,8 @@ public abstract class Case<T> extends ValidatingConfig<Catalog> {
 
 	public static <K> K getResult(Case<K>[] cases, PlanSpecifier planSpec, Catalog catalog) {
     	if(cases != null) {
-    		for(int i = cases.length - 1; i >=0; i --) {
-    			K result = cases[i].getResult(planSpec, catalog);
+    		for(Case<K> c : cases) {
+    			K result = c.getResult(planSpec, catalog);
     			if(result != null) { 
     				return result; 
     			}        					
@@ -82,8 +63,29 @@ public abstract class Case<T> extends ValidatingConfig<Catalog> {
 	
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		// TODO Auto-generated method stub
-		return null;
+		return errors;
 	}
 
+	protected Case<T> setProduct(Product product) {
+		this.product = product;
+		return this;
+	}
+
+	protected Case<T> setProductCategory(ProductCategory productCategory) {
+		this.productCategory = productCategory;
+		return this;
+	}
+
+	protected Case<T> setBillingPeriod(BillingPeriod billingPeriod) {
+		this.billingPeriod = billingPeriod;
+		return this;
+	}
+
+	protected Case<T> setPriceList(PriceList priceList) {
+		this.priceList = priceList;
+		return this;
+	}
+
+	
+	
 }

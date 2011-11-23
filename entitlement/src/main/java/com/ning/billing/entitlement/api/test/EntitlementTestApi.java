@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api.test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Inject;
 import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.engine.core.IApiEventProcessor;
 
@@ -29,6 +30,7 @@ public class EntitlementTestApi implements IEntitlementTestApi {
     private final IApiEventProcessor apiEventProcessor;
     private final IEntitlementConfig config;
 
+    @Inject
     public EntitlementTestApi(IApiEventProcessor apiEventProcessor, IEntitlementConfig config) {
         this.apiEventProcessor = apiEventProcessor;
         this.config = config;

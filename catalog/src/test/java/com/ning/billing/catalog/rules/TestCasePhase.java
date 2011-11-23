@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlElement;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.PriceList;
 import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -33,9 +34,6 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.rules.CasePhase;
 
 public class TestCasePhase {
-	protected enum Result {
-		FOO, BAR, WIBBLE
-	}
 	protected class CaseResult extends CasePhase<Result>  {
 
 		@XmlElement(required=true)
@@ -43,7 +41,12 @@ public class TestCasePhase {
 
 		public CaseResult(Product product, ProductCategory productCategory, BillingPeriod billingPeriod, PriceList priceList,
 				PhaseType phaseType, Result policy) {
-			super(product, productCategory, billingPeriod, priceList, phaseType, policy);
+			setProduct(product);
+			setProductCategory(productCategory);
+			setBillingPeriod(billingPeriod);
+			setPriceList(priceList);
+			setPhaseType(phaseType);
+			
 			this.policy = policy;
 		}
 
@@ -196,6 +199,67 @@ public class TestCasePhase {
 		assertionNull(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, "dipsy", PhaseType.EVERGREEN, cat);
 		assertion(Result.FOO,cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.TRIAL, cat);
 	}
+	
+	@Test(enabled=true)
+	public void testOrder(){
+		MockCatalog cat = new MockCatalog();
+
+		Product product = cat.getProducts()[0];
+		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+
+
+		CaseResult cr0 = new CaseResult(
+				product, 
+				ProductCategory.BASE,
+				BillingPeriod.MONTHLY, 
+				priceList,
+				PhaseType.EVERGREEN, 
+				Result.FOO);
+
+		CaseResult cr1 = new CaseResult(
+				product, 
+				ProductCategory.BASE,
+				BillingPeriod.MONTHLY, 
+				priceList,
+				PhaseType.EVERGREEN, 
+				Result.BAR);
+
+		CaseResult cr2 = new CaseResult(
+				product, 
+				ProductCategory.BASE,
+				BillingPeriod.MONTHLY, 
+				priceList,
+				PhaseType.EVERGREEN, 
+				Result.TINKYWINKY);
+
+		CaseResult cr3 = new CaseResult(
+				product, 
+				ProductCategory.BASE,
+				BillingPeriod.ANNUAL, 
+				priceList,
+				PhaseType.EVERGREEN, 
+				Result.DIPSY);
+
+		CaseResult cr4 = new CaseResult(
+				product, 
+				ProductCategory.BASE,
+				BillingPeriod.ANNUAL, 
+				priceList,
+				PhaseType.EVERGREEN, 
+				Result.LALA);
+		
+		Result r1 = CasePhase.getResult(new CaseResult[]{cr0, cr1, cr2,cr3,cr4}, 
+				new PlanPhaseSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN), cat);
+		
+		assertEquals(Result.FOO, r1);
+
+		Result r2 = CasePhase.getResult(new CaseResult[]{cr0, cr1, cr2,cr3,cr4}, 
+				new PlanPhaseSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName(), PhaseType.EVERGREEN), cat);
+		
+		assertEquals(Result.DIPSY, r2);
+
+	}
+
 
 	protected void assertionNull(CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, PhaseType phaseType, Catalog cat){
 		assertNull(cr.getResult(new PlanPhaseSpecifier(productName, productCategory, bp, priceListName, phaseType), cat));

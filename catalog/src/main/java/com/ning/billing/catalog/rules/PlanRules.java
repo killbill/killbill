@@ -22,106 +22,45 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.PriceList;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.IllegalPlanChange;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
+import com.ning.billing.catalog.api.PlanChangeResult;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class PlanRules extends ValidatingConfig<Catalog>  {
 
-	@XmlElementWrapper(name="tiers", required=true)
-	@XmlElement(name="tier", required=false) // may not have tiers in some catalogs
-	private ProductTier[] productTiers;
-
-	@XmlElement(name="changePolicyRule", required=true)
-	private PlanPolicyChangeRule[] rules;
-
+	@XmlElementWrapper(name="changePolicy")
 	@XmlElement(name="changePolicyCase", required=false)
 	private CaseChangePlanPolicy[] changeCase;
 	
+	@XmlElementWrapper(name="changeAlignment")
 	@XmlElement(name="changeAlignmentCase", required=false)
 	private CaseChangePlanAlignment[] changeAlignmentCase;
 
+	@XmlElementWrapper(name="cancelPolicy")
 	@XmlElement(name="cancelPolicyCase", required=false)
 	private CaseCancelPolicy[] cancelCase;
 
+	@XmlElementWrapper(name="createAlignment")
 	@XmlElement(name="createAlignmentCase", required=false)
 	private CaseCreateAlignment[] createAlignmentCase;
 	
+	@XmlElementWrapper(name="billingAlignment")
 	@XmlElement(name="billingAlignmentCase", required=false)
 	private CaseBillingAlignment[] billingAlignmentCase;
 
+	@XmlElementWrapper(name="priceList")
 	@XmlElement(name="priceListCase", required=false)
 	private CasePriceList[] priceListCase;
-
-	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		return errors;
-
-	}
-	
-	public PlanRules(){}
-
-	//For test
-	protected PlanRules(ProductTier[] productTiers, PlanPolicyChangeRule[] rules,
-			CaseChangePlanPolicy[] changeCase, CaseCancelPolicy[] cancelCase,
-			CaseChangePlanAlignment[] changeAlignmentCase,
-			CaseCreateAlignment[] createAlignmentCase) {
-		super();
-		this.productTiers = productTiers;
-		this.rules = rules;
-		this.changeCase = changeCase;
-		this.cancelCase = cancelCase;
-		this.changeAlignmentCase = changeAlignmentCase;
-		this.createAlignmentCase = createAlignmentCase;
-	}
-
-	public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from,
-			PlanSpecifier to, Catalog catalog) {
-		
-		ActionPolicy policy = CaseChange.getResult(changeCase, from, to, catalog); 
-		if (policy != null) {
-			return policy;
-		}
-
-    	
-        for(int i = rules.length - 1; i >=0; i --) {
-        	int fromProductIndex       = getProductIndex(catalog.getProductFromName(from.getProductName()));
-        	int fromBillingPeriodIndex = getBillingPeriodIndex(from.getBillingPeriod());
-			int toProductIndex         = getProductIndex(catalog.getProductFromName(to.getProductName()));
-			int toBillingPeriodIndex   = getBillingPeriodIndex(to.getBillingPeriod());
-			
-			policy = rules[i].getPlanChangePolicy(
-        		fromProductIndex, fromBillingPeriodIndex,
-        		toProductIndex, toBillingPeriodIndex,
-        		from.getPhaseType());
-        	if (policy != null) { return policy; }        
-        }
-        return null;
-        
-    }
-	
-	private int getProductIndex(IProduct src) {
-		for(ProductTier tier : productTiers) {
-			for(int i = 0; i < tier.getProducts().length; i++ ){
-				if (src.equals(tier.getProducts()[i])) {
-					return i;
-				}
-			}
-		}
-		return 0;
-	}
-	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to, Catalog catalog) {
-		return CaseChange.getResult(changeAlignmentCase, from, to, catalog);      
-    }
 
 	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier, Catalog catalog) {
 		return Case.getResult(createAlignmentCase, specifier, catalog);      
@@ -135,21 +74,93 @@ public class PlanRules extends ValidatingConfig<Catalog>  {
 		return CasePhase.getResult(billingAlignmentCase, planPhase, catalog);      
 	}
 
-	private int getBillingPeriodIndex(BillingPeriod src) {
-		return src.ordinal();
+	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to, Catalog catalog) throws IllegalPlanChange {
+		PriceList priceList = catalog.getPriceListFromName(to.getPriceListName());
+		if( priceList== null ) {
+			priceList = findPriceList(from.toPlanSpecifier(), catalog);
+			to = new PlanSpecifier(to.getProductName(), to.getProductCategory(), to.getBillingPeriod(), priceList.getName());
+		} 
+		
+		ActionPolicy policy = getPlanChangePolicy(from, to, catalog);
+		if(policy == ActionPolicy.ILLEGAL) {
+			throw new IllegalPlanChange(from, to);
+		}
+		
+		PlanAlignmentChange alignment = getPlanChangeAlignment(from, to, catalog);
+		
+		return new PlanChangeResult(priceList, policy, alignment);
 	}
+	
+	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
+			PlanSpecifier to, Catalog catalog) {
+		return CaseChange.getResult(changeAlignmentCase, from, to, catalog);      
+    }
 
-
-	protected void setProductTiers(ProductTier[] productTiers) {
-		this.productTiers = productTiers;
+	public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from,
+			PlanSpecifier to, Catalog catalog) {
+		if(from.getProductName().equals(to.getProductName()) &&
+				from.getBillingPeriod() == to.getBillingPeriod() &&
+				from.getPriceListName().equals(to.getPriceListName())) {
+			return ActionPolicy.ILLEGAL;
+		}
+		
+		return CaseChange.getResult(changeCase, from, to, catalog); 
 	}
+	
+	private PriceList findPriceList(PlanSpecifier specifier, Catalog catalog) {
+		PriceList result = Case.getResult(priceListCase, specifier, catalog);
+		if (result == null) {
+			result = catalog.getPriceListFromName(specifier.getPriceListName());
+		}
+		return result;
+	}
+	
+	
+	@Override
+	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+	    //TODO: MDW - Validation: check that the plan change special case pairs are unique!
+	    //TODO: MDW - Validation: check that the each product appears in at most one tier.
+		//TODO: MDW - Unit tests for rules
+		//TODO: MDW - validate that there is a default policy for change AND cancel
 
-
+		return errors;
+	}
 
 	
-    //TODO: MDW - Validation: check that the plan change special case pairs are unique!
-    //TODO: MDW - Validation: check that the each product appears in at most one tier.
-	//TODO: MDW - Unit tests for rules
-	//TODO: MDW - validate that there is a default policy for change AND cancel
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Setters for testing
+	/////////////////////////////////////////////////////////////////////////////////////
+	
+	protected PlanRules setChangeCase(CaseChangePlanPolicy[] changeCase) {
+		this.changeCase = changeCase;
+		return this;
+	}
+
+	protected PlanRules setChangeAlignmentCase(
+			CaseChangePlanAlignment[] changeAlignmentCase) {
+		this.changeAlignmentCase = changeAlignmentCase;
+		return this;
+	}
+
+	protected PlanRules setCancelCase(CaseCancelPolicy[] cancelCase) {
+		this.cancelCase = cancelCase;
+		return this;
+	}
+
+	protected PlanRules setCreateAlignmentCase(CaseCreateAlignment[] createAlignmentCase) {
+		this.createAlignmentCase = createAlignmentCase;
+		return this;
+	}
+
+	protected PlanRules setBillingAlignmentCase(
+			CaseBillingAlignment[] billingAlignmentCase) {
+		this.billingAlignmentCase = billingAlignmentCase;
+		return this;
+	}
+
+	protected PlanRules setPriceListCase(CasePriceList[] priceListCase) {
+		this.priceListCase = priceListCase;
+		return this;
+	}
 
 }

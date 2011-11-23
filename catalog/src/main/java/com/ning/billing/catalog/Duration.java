@@ -32,7 +32,7 @@ public class Duration extends ValidatingConfig<Catalog> implements IDuration {
 
 	@XmlElement(required=false)
     private Integer number = -1;
-
+	
     /* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IDuration#getUnit()
 	 */
@@ -45,23 +45,25 @@ public class Duration extends ValidatingConfig<Catalog> implements IDuration {
 	 * @see com.ning.billing.catalog.IDuration#getLength()
 	 */
     @Override
-	public int getLength() {
+	public int getNumber() {
         return number;
     }
 
-    public void setUnit(TimeUnit unit) {
-		this.unit = unit;
-	}
-
-	public void setLength(int length) {
-		this.number = length;
-	}
-
-
-
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+		//TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
 		return errors;
-
 	}
+
+	protected Duration setUnit(TimeUnit unit) {
+		this.unit = unit;
+		return this;
+	}
+
+	protected Duration setNumber(Integer number) {
+		this.number = number;
+		return this;
+	}
+	
+	
 }

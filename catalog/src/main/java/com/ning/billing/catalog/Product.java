@@ -86,19 +86,6 @@ public class Product extends ValidatingConfig<Catalog> implements IProduct {
         return name;
     }
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setCatagory(ProductCategory category) {
-		this.category = category;
-	}
-
-	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		return errors;
-	}
-
 	public boolean isIncluded(Product addon) {
 		for(Product p : included) {
 			if (addon == p) {
@@ -122,7 +109,41 @@ public class Product extends ValidatingConfig<Catalog> implements IProduct {
 		catalogName = catalog.getCalalogName();
 	}
 
+	@Override
+	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+		//TODO: MDW validation: inclusion and exclusion lists can only contain addon products
+		//TODO: MDW validation: a given product can only be in, at most, one of inclusion and exclusion lists
+		return errors;
+	}
 
-	//TODO: MDW validation: inclusion and exclusion lists can only contain addon products
-	//TODO: MDW validation: a given product can only be in, at most, one of inclusion and exclusion lists
+	protected Product setName(String name) {
+		this.name = name;
+		return this;
+	}
+
+	protected Product setCatagory(ProductCategory category) {
+		this.category = category;
+		return this;
+	}
+
+	protected Product setCategory(ProductCategory category) {
+		this.category = category;
+		return this;
+	}
+
+	protected Product setIncluded(Product[] included) {
+		this.included = included;
+		return this;
+	}
+
+	protected Product setAvailable(Product[] available) {
+		this.available = available;
+		return this;
+	}
+
+	protected Product setCatalogName(String catalogName) {
+		this.catalogName = catalogName;
+		return this;
+	}
+
 }

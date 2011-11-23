@@ -32,6 +32,9 @@ public interface ICatalog {
 	public abstract ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from,
 			PlanSpecifier to);
 
+	public abstract PlanChangeResult planChange(PlanPhaseSpecifier from,
+			PlanSpecifier to) throws IllegalPlanChange;
+	
     public abstract IPlan getPlanFromName(String name);
 
     public abstract IPlanPhase getPhaseFromName(String name);

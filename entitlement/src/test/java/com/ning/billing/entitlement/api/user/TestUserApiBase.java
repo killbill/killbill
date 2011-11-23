@@ -31,11 +31,13 @@ import com.ning.billing.entitlement.engine.dao.IEntitlementDaoMock;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.glue.InjectorMagic;
 import com.ning.billing.lifecycle.IService.ServiceException;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
+import com.ning.billing.util.eventbus.EventBusService;
+import com.ning.billing.util.eventbus.IEventBusService;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +56,7 @@ import java.util.UUID;
 
 import static org.testng.Assert.*;
 
+
 public abstract class TestUserApiBase {
 
     protected static final Logger log = LoggerFactory.getLogger(TestUserApiBase.class);
@@ -67,13 +70,12 @@ public abstract class TestUserApiBase {
     protected IEntitlementConfig config;
     protected IEntitlementDao dao;
     protected ClockMock clock;
+    protected IEventBusService busService;
 
     protected IAccount account;
     protected ICatalog catalog;
     protected ApiTestListener testListener;
     protected ISubscriptionBundle bundle;
-
-    private InjectorMagic injectorMagic;
 
     public static void loadSystemPropertiesFromClasspath( final String resource )
     {
@@ -89,7 +91,14 @@ public abstract class TestUserApiBase {
 
     @AfterClass(groups={"setup"})
     public void tearDown() {
-        InjectorMagic.instance = null;
+        try {
+            InjectorMagic.instance = null;
+            busService.getEventBus().register(testListener);
+            ((EventBusService) busService).stopBus();
+        } catch (Exception e) {
+            log.warn("Failed to tearDown test properly ", e);
+        }
+
     }
 
     @BeforeClass(groups={"setup"})
@@ -98,18 +107,17 @@ public abstract class TestUserApiBase {
         loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = getInjector();
 
-        injectorMagic = g.getInstance(InjectorMagic.class);
-
-
         entitlementService = g.getInstance(IEntitlementService.class);
         catalogService = g.getInstance(ICatalogService.class);
+        busService = g.getInstance(IEventBusService.class);
         config = g.getInstance(IEntitlementConfig.class);
         dao = g.getInstance(IEntitlementDao.class);
         clock = (ClockMock) g.getInstance(IClock.class);
         try {
 
             ((CatalogService) catalogService).loadCatalog();
-            ((Engine)entitlementService).initialize();
+            ((EventBusService) busService).startBus();
+            ((Engine) entitlementService).initialize();
             init();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
@@ -127,10 +135,9 @@ public abstract class TestUserApiBase {
         catalog = catalogService.getCatalog();
         assertNotNull(catalog);
 
-        testListener = new ApiTestListener();
-        List<IApiListener> listeners =  new ArrayList<IApiListener>();
-        listeners.add(testListener);
-        entitlementApi = entitlementService.getUserApi(listeners);
+
+        testListener = new ApiTestListener(busService.getEventBus());
+        entitlementApi = entitlementService.getUserApi();
         billingApi = entitlementService.getBillingApi();
 
     }
@@ -142,11 +149,13 @@ public abstract class TestUserApiBase {
         log.warn("RESET TEST FRAMEWORK\n\n");
 
         testListener.reset();
+
         clock.resetDeltaFromReality();
         ((IEntitlementDaoMock) dao).reset();
         try {
+            busService.getEventBus().register(testListener);
             bundle = entitlementApi.createBundleForAccount(account, "myDefaultBundle");
-        } catch (EntitlementUserApiException e) {
+        } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
         assertNotNull(bundle);
@@ -207,8 +216,8 @@ public abstract class TestUserApiBase {
                     assertEquals(foundPhase, false);
                     foundPhase = true;
                     assertEquals(cur.getEffectiveDate(), expPhaseChange);
-                } else if (cur instanceof IUserEvent) {
-                    IUserEvent uEvent = (IUserEvent) cur;
+                } else if (cur instanceof IApiEvent) {
+                    IApiEvent uEvent = (IApiEvent) cur;
                     assertEquals(ApiEventType.CHANGE, uEvent.getEventType());
                     assertEquals(foundChange, false);
                     foundChange = true;
@@ -232,7 +241,7 @@ public abstract class TestUserApiBase {
                 return TimeUnit.DAYS;
             }
             @Override
-            public int getLength() {
+            public int getNumber() {
                 return days;
             }
         };
@@ -246,7 +255,7 @@ public abstract class TestUserApiBase {
                 return TimeUnit.MONTHS;
             }
             @Override
-            public int getLength() {
+            public int getNumber() {
                 return months;
             }
         };
@@ -261,7 +270,7 @@ public abstract class TestUserApiBase {
                 return TimeUnit.YEARS;
             }
             @Override
-            public int getLength() {
+            public int getNumber() {
                 return years;
             }
         };

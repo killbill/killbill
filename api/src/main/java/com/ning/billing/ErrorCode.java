@@ -42,7 +42,11 @@ public enum ErrorCode {
     /* Cancellation */
     ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s"),
     /* Un-cancellation */
-    ENT_UNCANCEL_BAD_STATE(1070, "Subscription %s was not in a cancelled state")
+    ENT_UNCANCEL_BAD_STATE(1070, "Subscription %s was not in a cancelled state"),
+    
+    CAT_ILLEGAL_CHANGE_REQUEST(2001, "Attempting to change plan from (product: '%s', billing period: '%s', " +
+    		"pricelist '%s') to (product: '%s', billing period: '%s', pricelist '%s'). This transition is not allowed by catalog rules")
+    
     ;
 
     private int code;

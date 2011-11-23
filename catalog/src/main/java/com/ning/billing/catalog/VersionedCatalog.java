@@ -31,8 +31,10 @@ import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.IllegalPlanChange;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
+import com.ning.billing.catalog.api.PlanChangeResult;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.util.config.ValidatingConfig;
@@ -180,6 +182,12 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	@Override
 	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase) {
 		return currentCatalog.getBillingAlignment(planPhase);
+	}
+
+	@Override
+	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to)
+			throws IllegalPlanChange {
+		return currentCatalog.planChange(from, to);
 	}
 	
 	//TODO MDW validation - ensure all catalog versions have a single name

@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
-import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 
 public abstract class EventBase implements IEvent {
@@ -213,7 +213,7 @@ public abstract class EventBase implements IEvent {
         } else if (getType() != other.getType()) {
             return (getType() == EventType.PHASE) ? -1 : 1;
         } else if (getType() == EventType.API_USER) {
-            return ((IUserEvent) this).getEventType().compareTo(((IUserEvent) other).getEventType());
+            return ((IApiEvent) this).getEventType().compareTo(((IApiEvent) other).getEventType());
         } else {
             return uuid.compareTo(other.getId());
         }

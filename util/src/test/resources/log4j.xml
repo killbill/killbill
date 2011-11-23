@@ -25,7 +25,7 @@
     </appender>
 
 
-    <logger name="com.ning.billing.entitlement">
+    <logger name="com.ning.billing.util">
         <level value="info"/>
     </logger>
 

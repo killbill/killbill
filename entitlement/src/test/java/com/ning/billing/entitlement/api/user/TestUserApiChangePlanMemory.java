@@ -57,7 +57,7 @@ public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
         invokeRealMethod(this);
     }
 
-    // STEPH set to false until we implement rescue example.
+    // Set to false until we implement rescue example.
     @Test(enabled=false, groups={"fast"})
     public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() {
         invokeRealMethod(this);

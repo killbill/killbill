@@ -18,31 +18,21 @@ package com.ning.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.ActionPolicy;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
 
 public class CaseCancelPolicy extends CasePhase<ActionPolicy>{
 
 	@XmlElement(required=true)
 	private ActionPolicy policy;
 
-	public CaseCancelPolicy() {}
-
-	public CaseCancelPolicy(Product product, ProductCategory productCategory, BillingPeriod billingPeriod, PriceList priceList,
-			PhaseType phaseType, ActionPolicy policy) {
-		super(product, productCategory, billingPeriod, priceList, phaseType, policy);
-		this.policy = policy;
-	}
-
-
-
 	@Override
 	protected ActionPolicy getResult() {
 		return policy;
+	}
+
+	protected CaseCancelPolicy setPolicy(ActionPolicy policy) {
+		this.policy = policy;
+		return this;
 	}
 
 }

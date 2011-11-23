@@ -14,14 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.lifecycle;
+package com.ning.billing.catalog.api;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.ning.billing.BillingExceptionBase;
+import com.ning.billing.ErrorCode;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Lifecycled {
+public class CatalogApiException extends BillingExceptionBase {
+	private static final long serialVersionUID = 1L;
+
+	public CatalogApiException(Throwable cause, ErrorCode code, Object... args) {
+		super(cause, code, args);
+	}
+
+	public CatalogApiException(ErrorCode code, Object... args) {
+		super(code, args);
+	}
+
 }

@@ -17,6 +17,7 @@
 package com.ning.billing.catalog.api;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 
 public interface IInternationalPrice {
@@ -24,5 +25,7 @@ public interface IInternationalPrice {
 	public abstract IPrice[] getPrices();
 
 	public abstract BigDecimal getPrice(Currency currency);
+
+	public abstract Date getEffectiveDateForExistingSubscriptons();
 
 }

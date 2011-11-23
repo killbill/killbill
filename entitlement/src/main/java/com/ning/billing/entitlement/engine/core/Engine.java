@@ -16,27 +16,21 @@
 
 package com.ning.billing.entitlement.engine.core;
 
-import java.util.List;
-
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.config.IEntitlementConfig;
 
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
-import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.IEntitlementService;
-import com.ning.billing.entitlement.api.billing.BillingApi;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
 import com.ning.billing.entitlement.api.test.EntitlementTestApi;
 import com.ning.billing.entitlement.api.test.IEntitlementTestApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.IApiListener;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
@@ -44,11 +38,13 @@ import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
-import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.lifecycle.IService;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
 import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
 import com.ning.billing.util.clock.IClock;
+import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.util.eventbus.IEventBus.EventBusException;
 
 public class Engine implements IEventListener, IEntitlementService {
 
@@ -63,24 +59,21 @@ public class Engine implements IEventListener, IEntitlementService {
     private final IEntitlementUserApi userApi;
     private final IEntitlementBillingApi billingApi;
     private final IEntitlementTestApi testApi;
-    private final IEntitlementConfig config;
-    private List<IApiListener> observers;
-
+    private final IEventBus eventBus;
 
     @Inject
     public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor,
-            IPlanAligner planAligner, IEntitlementConfig config) {
+            IPlanAligner planAligner, IEntitlementConfig config, EntitlementUserApi userApi,
+            EntitlementBillingApi billingApi, EntitlementTestApi testApi, IEventBus eventBus) {
         super();
         this.clock = clock;
         this.dao = dao;
         this.apiEventProcessor = apiEventProcessor;
         this.planAligner = planAligner;
-        this.config = config;
-        this.observers = null;
-        this.userApi = new EntitlementUserApi(this, clock, planAligner, dao);
-        this.billingApi = new BillingApi(this, clock, dao);
-        this.testApi = new EntitlementTestApi(apiEventProcessor, config);
-
+        this.userApi = userApi;
+        this.testApi = testApi;
+        this.billingApi = billingApi;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -104,8 +97,7 @@ public class Engine implements IEventListener, IEntitlementService {
     }
 
     @Override
-    public IEntitlementUserApi getUserApi(List<IApiListener> listeners) {
-        userApi.initialize(listeners);
+    public IEntitlementUserApi getUserApi() {
         return userApi;
     }
 
@@ -120,51 +112,22 @@ public class Engine implements IEventListener, IEntitlementService {
         return testApi;
     }
 
-    public void registerApiObservers(List<IApiListener> observers) {
-        this.observers = observers;
-    }
-
-
     @Override
     public void processEventReady(IEvent event) {
-        if (observers == null) {
-            return;
-        }
         Subscription subscription = (Subscription) dao.getSubscriptionFromId(event.getSubscriptionId());
         if (subscription == null) {
             log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
             return;
         }
-        if (event.getType() == EventType.API_USER) {
-            dispatchApiEvent((IUserEvent) event, subscription);
-        } else {
-            dispatchPhaseEvent((IPhaseEvent) event, subscription);
+        if (event.getType() == EventType.PHASE) {
             insertNextPhaseEvent(subscription);
         }
-    }
-
-    private void dispatchApiEvent(IUserEvent event, Subscription subscription) {
-        for (IApiListener listener : observers) {
-            switch(event.getEventType()) {
-            case CREATE:
-                listener.subscriptionCreated(subscription.getLatestTranstion());
-                break;
-            case CHANGE:
-                listener.subscriptionChanged(subscription.getLatestTranstion());
-                break;
-            case CANCEL:
-                listener.subscriptionCancelled(subscription.getLatestTranstion());
-                break;
-            default:
-                break;
-            }
+        try {
+            eventBus.post(subscription.getLatestTranstion());
+        } catch (EventBusException e) {
+            log.warn("Failed to post entitlement event " + event, e);
         }
-    }
 
-    private void dispatchPhaseEvent(IPhaseEvent event, Subscription subscription) {
-        for (IApiListener listener : observers) {
-            listener.subscriptionPhaseChanged(subscription.getLatestTranstion());
-        }
     }
 
     private void insertNextPhaseEvent(Subscription subscription) {
@@ -174,7 +137,6 @@ public class Engine implements IEventListener, IEntitlementService {
         TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, subscription.getCurrentPlan(), now, subscription.getCurrentPlanStart());
         IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, subscription, now);
         if (nextPhaseEvent != null) {
-            // STEPH Harden since event could be processed twice
             dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent);
         }
     }

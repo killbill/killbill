@@ -14,20 +14,31 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing.catalog;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 
-public interface IApiListener {
+import com.ning.billing.catalog.Catalog;
+import com.ning.billing.util.config.XMLSchemaGenerator;
 
-    public void subscriptionCreated(ISubscriptionTransition created);
+public class CreateCatalogSchema {
 
-    public void subscriptionCancelled(ISubscriptionTransition cancelled);
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) throws Exception {
+		if(args.length != 1) {
+			System.err.println("Usage: <filepath>");
+			System.exit(0);
+		}
+		
+		File f = new File(args[0]);
+		Writer w = new FileWriter(f);
+		w.write(XMLSchemaGenerator.xmlSchemaAsString(Catalog.class));
+		w.close();
 
-    public void subscriptionChanged(ISubscriptionTransition changed);
+	}
 
-    public void subscriptionPaused(ISubscriptionTransition paused);
-
-    public void subscriptionResumed(ISubscriptionTransition resumed);
-
-    public void subscriptionPhaseChanged(ISubscriptionTransition phaseChanged);
 }

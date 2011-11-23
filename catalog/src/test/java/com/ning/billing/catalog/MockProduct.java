@@ -14,19 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.events.user;
+package com.ning.billing.catalog;
 
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.catalog.api.ProductCategory;
 
+public class MockProduct extends Product {
 
-public interface IUserEvent extends IEvent {
-
-    public String getEventPlan();
-
-    public String getEventPlanPhase();
-
-    public ApiEventType getEventType();
-
-    public String getPriceList();
-
+	public MockProduct() {
+		setName("TestProduct");
+		setCatagory(ProductCategory.BASE);
+		setCatalogName("Ning");
+	}
 }

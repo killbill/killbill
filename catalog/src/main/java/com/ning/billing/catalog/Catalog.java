@@ -32,6 +32,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.IllegalPlanChange;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -40,6 +41,7 @@ import com.ning.billing.catalog.rules.PlanRules;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.catalog.api.PlanChangeResult;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
@@ -277,6 +279,12 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 
 	public PriceList getPriceListFromName(String priceListName) {
 		return priceLists.findPriceListFrom(priceListName);
+	}
+
+	@Override
+	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to)
+			throws IllegalPlanChange {
+		return planRules.planChange(from, to, this);
 	}
 	
 	//TODO: MDW validation - only allow one default pricelist

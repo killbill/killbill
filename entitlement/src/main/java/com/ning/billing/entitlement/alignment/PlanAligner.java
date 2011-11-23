@@ -139,13 +139,9 @@ public class PlanAligner implements IPlanAligner {
             planStartDate = subscription.getBundleStartDate();
             break;
         case CHANGE_OF_PLAN:
-            // STEPH
             throw new EntitlementError(String.format("Not implemented yet %s", alignment));
-            //break;
         case CHANGE_OF_PRICELIST:
-            // STEPH
             throw new EntitlementError(String.format("Not implemented yet %s", alignment));
-            //break;
         default:
             throw new EntitlementError(String.format("Unknwon PlanAlignmentChange %s", alignment));
         }

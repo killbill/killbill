@@ -41,7 +41,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.clock.IClock;
@@ -249,7 +249,7 @@ public class EntitlementDao implements IEntitlementDao {
                 List<IEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
 
                 for (IEvent cur : events) {
-                    if (cur.getType() == EventType.API_USER && ((IUserEvent) cur).getEventType() == ApiEventType.CANCEL) {
+                    if (cur.getType() == EventType.API_USER && ((IApiEvent) cur).getEventType() == ApiEventType.CANCEL) {
                         if (existingCancelId != null) {
                             throw new EntitlementError(String.format("Found multiple cancel active events for subscriptions %s", subscriptionId.toString()));
                         }
@@ -299,7 +299,7 @@ public class EntitlementDao implements IEntitlementDao {
         List<IEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
         for (IEvent cur : events) {
             if (cur.getType() == type &&
-                    (apiType == null || apiType == ((IUserEvent) cur).getEventType() )) {
+                    (apiType == null || apiType == ((IApiEvent) cur).getEventType() )) {
                 if (futureEventId != null) {
                     throw new EntitlementError(
                             String.format("Found multiple future events for type %s for subscriptions %s",

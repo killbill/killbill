@@ -36,7 +36,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.events.user.IUserEvent;
+import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.util.clock.Clock;
 
 public abstract class TestUserApiChangePlan extends TestUserApiBase {
@@ -145,7 +145,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
             // ALSO VERIFY PENDING CHANGE EVENT
             List<IEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
-            assertTrue(events.get(0) instanceof IUserEvent);
+            assertTrue(events.get(0) instanceof IApiEvent);
 
 
             // MOVE TO EOT
@@ -341,7 +341,6 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             IPlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
-            // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
             assertTrue(testListener.isCompleted(2000));
@@ -378,9 +377,25 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
+            // ACTIVATE CHNAGE BY MOVING AFTER CTD
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            clock.addDeltaFromReality(ctd);
+            assertTrue(testListener.isCompleted(3000));
+
+            currentPlan = subscription.getCurrentPlan();
+            assertNotNull(currentPlan);
+            assertEquals(currentPlan.getProduct().getName(), "Pistol");
+            assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
+            assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
+
+            currentPhase = subscription.getCurrentPhase();
+            assertNotNull(currentPhase);
+            assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
+
+
+
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            testListener.pushExpectedEvent(NextEvent.CHANGE);
             clock.addDeltaFromReality(currentPhase.getDuration());
             assertTrue(testListener.isCompleted(3000));
             subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
