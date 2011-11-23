@@ -17,6 +17,8 @@
 package com.ning.billing.analytics.api;
 
 import com.google.inject.Inject;
+import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.analytics.AnalyticsTestModule;
 import com.ning.billing.analytics.BusinessSubscription;
 import com.ning.billing.analytics.BusinessSubscriptionEvent;
@@ -27,6 +29,7 @@ import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
@@ -59,6 +62,10 @@ import java.util.UUID;
 public class TestAnalyticsService
 {
     private static final String KEY = "1234";
+    private static final String ACCOUNT_KEY = "pierre-1234";
+
+    @Inject
+    private IAccountUserApi accountApi;
 
     @Inject
     private IEntitlementUserApi entitlementApi;
@@ -92,7 +99,9 @@ public class TestAnalyticsService
         helper.initDb(entitlementDdl);
 
         // We need a bundle to retrieve the event key
-        final ISubscriptionBundle bundle = entitlementApi.createBundleForAccount(new MockAccount(KEY), KEY);
+        final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
+        final IAccount storedAccount = accountApi.createAccount(account);
+        final ISubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount, KEY);
 
         // Verify we correctly initialized the account subsystem
         Assert.assertNotNull(bundle);
@@ -105,6 +114,7 @@ public class TestAnalyticsService
         final UUID subscriptionId = UUID.randomUUID();
         final DateTime effectiveTransitionTime = new DateTime(DateTimeZone.UTC);
         final DateTime requestedTransitionTime = new DateTime(DateTimeZone.UTC);
+        final String priceList = "something";
         transition = new SubscriptionTransition(
             subscriptionId,
             bundle.getId(),
@@ -119,14 +129,15 @@ public class TestAnalyticsService
             ISubscription.SubscriptionState.ACTIVE,
             plan,
             phase,
-            "something"
+            priceList
         );
         expectedTransition = new BusinessSubscriptionTransition(
             KEY,
+            ACCOUNT_KEY,
             requestedTransitionTime,
             BusinessSubscriptionEvent.subscriptionCreated(plan),
             null,
-            new BusinessSubscription(null, plan, phase, null, effectiveTransitionTime, ISubscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
+            new BusinessSubscription(priceList, plan, phase, null, effectiveTransitionTime, ISubscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
         );
     }
 

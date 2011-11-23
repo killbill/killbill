@@ -26,15 +26,19 @@ import org.joda.time.DateTime;
 public class BusinessSubscriptionTransition
 {
     private final String key;
+    private final String accountKey;
     private final DateTime requestedTimestamp;
     private final BusinessSubscriptionEvent event;
     private final BusinessSubscription previousSubscription;
     private final BusinessSubscription nextSubscription;
 
-    public BusinessSubscriptionTransition(final String key, final DateTime requestedTimestamp, final BusinessSubscriptionEvent event, final BusinessSubscription previousSubscription, final BusinessSubscription nextsubscription)
+    public BusinessSubscriptionTransition(final String key, final String accountKey, final DateTime requestedTimestamp, final BusinessSubscriptionEvent event, final BusinessSubscription previousSubscription, final BusinessSubscription nextsubscription)
     {
         if (key == null) {
             throw new IllegalArgumentException("An event must have an key");
+        }
+        if (accountKey == null) {
+            throw new IllegalArgumentException("An event must have an account key");
         }
         if (requestedTimestamp == null) {
             throw new IllegalArgumentException("An event must have a requestedTimestamp");
@@ -44,6 +48,7 @@ public class BusinessSubscriptionTransition
         }
 
         this.key = key;
+        this.accountKey = accountKey;
         this.requestedTimestamp = requestedTimestamp;
         this.event = event;
         this.previousSubscription = previousSubscription;
@@ -58,6 +63,11 @@ public class BusinessSubscriptionTransition
     public String getKey()
     {
         return key;
+    }
+
+    public String getAccountKey()
+    {
+        return accountKey;
     }
 
     public BusinessSubscription getNextSubscription()
@@ -82,6 +92,7 @@ public class BusinessSubscriptionTransition
         sb.append("BusinessSubscriptionTransition");
         sb.append("{event=").append(event);
         sb.append(", key='").append(key).append('\'');
+        sb.append(", accountKey='").append(accountKey).append('\'');
         sb.append(", requestedTimestamp=").append(requestedTimestamp);
         sb.append(", previousSubscription=").append(previousSubscription);
         sb.append(", nextSubscription=").append(nextSubscription);
@@ -107,6 +118,9 @@ public class BusinessSubscriptionTransition
         if (key != null ? !key.equals(that.key) : that.key != null) {
             return false;
         }
+        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
+            return false;
+        }
         if (nextSubscription != null ? !nextSubscription.equals(that.nextSubscription) : that.nextSubscription != null) {
             return false;
         }
@@ -124,6 +138,7 @@ public class BusinessSubscriptionTransition
     public int hashCode()
     {
         int result = key != null ? key.hashCode() : 0;
+        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (requestedTimestamp != null ? requestedTimestamp.hashCode() : 0);
         result = 31 * result + (event != null ? event.hashCode() : 0);
         result = 31 * result + (previousSubscription != null ? previousSubscription.hashCode() : 0);

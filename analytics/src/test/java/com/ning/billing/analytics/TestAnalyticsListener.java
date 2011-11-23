@@ -16,6 +16,7 @@
 
 package com.ning.billing.analytics;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
@@ -36,6 +37,8 @@ import java.util.UUID;
 public class TestAnalyticsListener
 {
     private static final String KEY = "1234";
+    private static final String ACCOUNT_KEY = "pierre-1234";
+    private final Currency CURRENCY = Currency.BRL;
 
     private final MockBusinessSubscriptionTransitionDao dao = new MockBusinessSubscriptionTransitionDao();
     private final UUID subscriptionId = UUID.randomUUID();
@@ -50,7 +53,7 @@ public class TestAnalyticsListener
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
     {
-        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, new MockIEntitlementUserApi(bundleUUID, KEY), new MockIAccountUserApi());
+        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, new MockIEntitlementUserApi(bundleUUID, KEY), new MockIAccountUserApi(ACCOUNT_KEY, CURRENCY));
         listener = new AnalyticsListener(recorder, null);
     }
 
@@ -97,8 +100,7 @@ public class TestAnalyticsListener
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(plan);
         final ISubscription.SubscriptionState subscriptionState = ISubscription.SubscriptionState.ACTIVE;
-        final BusinessSubscription emptyBST = new BusinessSubscription(null, null, null, null, null, null, subscriptionId, bundleUUID);
-        return createExpectedBST(event, requestedTransitionTime, effectiveTransitionTime, emptyBST, subscriptionState);
+        return createExpectedBST(event, requestedTransitionTime, effectiveTransitionTime, null, subscriptionState);
     }
 
     private BusinessSubscriptionTransition createExpectedPausedBST(final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription)
@@ -132,6 +134,7 @@ public class TestAnalyticsListener
     {
         return new BusinessSubscriptionTransition(
             KEY,
+            ACCOUNT_KEY,
             requestedTransitionTime,
             eventType,
             previousSubscription,
@@ -139,7 +142,7 @@ public class TestAnalyticsListener
                 null,
                 plan,
                 phase,
-                null,
+                CURRENCY,
                 effectiveTransitionTime,
                 nextState,
                 subscriptionId,

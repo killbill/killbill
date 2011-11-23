@@ -3,6 +3,7 @@ group BusinessSubscriptionTransition;
 getTransitions(event_key) ::= <<
   select
     event_key
+  , account_key
   , requested_timestamp
   , event
   , prev_product_name
@@ -12,6 +13,7 @@ getTransitions(event_key) ::= <<
   , prev_phase
   , prev_billing_period
   , prev_price
+  , prev_price_list
   , prev_mrr
   , prev_currency
   , prev_start_date
@@ -25,6 +27,7 @@ getTransitions(event_key) ::= <<
   , next_phase
   , next_billing_period
   , next_price
+  , next_price_list
   , next_mrr
   , next_currency
   , next_start_date
@@ -40,6 +43,7 @@ getTransitions(event_key) ::= <<
 createTransition() ::= <<
   insert into bst(
     event_key
+  , account_key
   , requested_timestamp
   , event
   , prev_product_name
@@ -49,6 +53,7 @@ createTransition() ::= <<
   , prev_phase
   , prev_billing_period
   , prev_price
+  , prev_price_list
   , prev_mrr
   , prev_currency
   , prev_start_date
@@ -62,6 +67,7 @@ createTransition() ::= <<
   , next_phase
   , next_billing_period
   , next_price
+  , next_price_list
   , next_mrr
   , next_currency
   , next_start_date
@@ -70,6 +76,7 @@ createTransition() ::= <<
   , next_bundle_id
   ) values (
     :event_key
+  , :account_key
   , :requested_timestamp
   , :event
   , :prev_product_name
@@ -79,6 +86,7 @@ createTransition() ::= <<
   , :prev_phase
   , :prev_billing_period
   , :prev_price
+  , :prev_price_list
   , :prev_mrr
   , :prev_currency
   , :prev_start_date
@@ -92,6 +100,7 @@ createTransition() ::= <<
   , :next_phase
   , :next_billing_period
   , :next_price
+  , :next_price_list
   , :next_mrr
   , :next_currency
   , :next_start_date

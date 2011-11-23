@@ -53,7 +53,6 @@ public class BusinessSubscription
     private final String phase;
     private final String billingPeriod;
     private final BigDecimal price;
-    // For convenience, not exposed
     private final String priceList;
     private final BigDecimal mrr;
     private final String currency;
