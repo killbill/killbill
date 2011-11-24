@@ -16,21 +16,9 @@
 
 package com.ning.billing.entitlement.events.user;
 
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-
 public class ApiEventUncancel extends ApiEventBase {
 
-    public ApiEventUncancel(UUID subscriptionId, DateTime bundleStartDate, DateTime now, DateTime requestedDate, DateTime effectiveDate, long version) {
-        super(subscriptionId, bundleStartDate, now, requestedDate, ApiEventType.UNCANCEL, effectiveDate, version);
-    }
-
-    public ApiEventUncancel(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,
-            String priceList, DateTime requestedDate, DateTime effectiveDate, long activeVersion,
-            boolean isActive, UUID processingOwner, DateTime nextAvailableProcessingTime,IEventLyfecycleState processingState) {
-        super(id, subscriptionId, processed, eventPlan, eventPhase, priceList, requestedDate, ApiEventType.UNCANCEL, effectiveDate,
-                activeVersion, isActive, processingOwner, nextAvailableProcessingTime, processingState);
+    public ApiEventUncancel(ApiEventBuilder builder) {
+        super(builder.setEventType(ApiEventType.UNCANCEL));
     }
 }

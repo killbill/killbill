@@ -40,6 +40,20 @@ public abstract class EventBase implements IEvent {
     private DateTime nextAvailableProcessingTime;
     private IEventLyfecycleState processingState;
 
+    public EventBase(EventBaseBuilder builder) {
+        this.uuid = builder.getUuid();
+        this.subscriptionId = builder.getSubscriptionId();
+        this.requestedDate = builder.getRequestedDate();
+        this.effectiveDate = builder.getEffectiveDate();
+        this.processedDate = builder.getProcessedDate();
+
+        this.activeVersion = builder.getActiveVersion();
+        this.isActive = builder.isActive();
+        this.processingOwner = builder.getProcessingOwner();
+        this.nextAvailableProcessingTime = builder.getNextAvailableProcessingTime();
+        this.processingState = builder.getProcessingState();
+    }
+
     public EventBase(UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive) {

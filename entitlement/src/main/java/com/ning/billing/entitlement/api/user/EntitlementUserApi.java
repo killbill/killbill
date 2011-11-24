@@ -40,6 +40,7 @@ import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventCreate;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
@@ -154,10 +155,15 @@ public class EntitlementUserApi implements IEntitlementUserApi {
                 false);
 
         TimedPhase currentTimedPhase =  planAligner.getCurrentTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
-        ApiEventCreate creationEvent =
-            new ApiEventCreate(subscription.getId(), bundleStartDate, now, plan.getName(), currentTimedPhase.getPhase().getName(), realPriceList,
-                    requestedDate, effectiveDate, subscription.getActiveVersion());
-
+        ApiEventCreate creationEvent = new ApiEventCreate(new ApiEventBuilder()
+            .setSubscriptionId(subscription.getId())
+            .setEventPlan(plan.getName())
+            .setEventPlanPhase(currentTimedPhase.getPhase().getName())
+            .setEventPriceList(realPriceList)
+            .setActiveVersion(subscription.getActiveVersion())
+            .setProcessedDate(now)
+            .setEffectiveDate(effectiveDate)
+            .setRequestedDate(requestedDate));
 
         TimedPhase nextTimedPhase =  planAligner.getNextTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
         IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, subscription, now);
