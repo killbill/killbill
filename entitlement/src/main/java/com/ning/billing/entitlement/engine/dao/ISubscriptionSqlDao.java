@@ -41,6 +41,8 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
+
 
 @ExternalizedSqlViaStringTemplate3()
 public interface ISubscriptionSqlDao extends Transactional<ISubscriptionSqlDao>, CloseMe, Transmogrifier {
@@ -98,10 +100,17 @@ public interface ISubscriptionSqlDao extends Transactional<ISubscriptionSqlDao>,
             DateTime ptd = getDate(r, "ptd_dt");
             long activeVersion = r.getLong("active_version");
 
-            Subscription subscription = new Subscription(id, bundleId, category, bundleStartDate, startDate, ctd, ptd, activeVersion);
+            Subscription subscription = new Subscription(new SubscriptionBuilder()
+            .setId(id)
+            .setBundleId(bundleId)
+            .setCategory(category)
+            .setBundleStartDate(bundleStartDate)
+            .setStartDate(startDate)
+            .setActiveVersion(activeVersion)
+            .setChargedThroughDate(ctd)
+            .setPaidThroughDate(ptd),
+                true);
             return subscription;
         }
     }
-
-
 }
