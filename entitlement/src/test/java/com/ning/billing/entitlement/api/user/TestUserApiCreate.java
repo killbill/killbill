@@ -39,6 +39,38 @@ import com.ning.billing.util.clock.Clock;
 public abstract class TestUserApiCreate extends TestUserApiBase {
 
 
+
+    protected void testCreateWithRequestedDateReal() {
+        log.info("Starting testCreateWithRequestedDate");
+        try {
+
+            DateTime init = clock.getUTCNow();
+            DateTime requestedDate = init.minusYears(1);
+
+            String productName = "Shotgun";
+            BillingPeriod term = BillingPeriod.MONTHLY;
+            String planSetName = IPriceListSet.DEFAULT_PRICELIST_NAME;
+
+
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.CREATE);
+
+
+            Subscription subscription = (Subscription) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, requestedDate);
+            assertNotNull(subscription);
+
+            assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
+            //assertEquals(subscription.getAccount(), account.getId());
+            assertEquals(subscription.getBundleId(), bundle.getId());
+            assertEquals(subscription.getStartDate(), requestedDate);
+
+            assertTrue(testListener.isCompleted(5000));
+
+        } catch (EntitlementUserApiException e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
     protected void testSimpleCreateSubscriptionReal() {
 
         log.info("Starting testSimpleCreateSubscription");

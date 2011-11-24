@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.api.user;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -363,6 +364,19 @@ public class Subscription extends PrivateFields  implements ISubscription {
         return latestSubscription;
     }
 
+    public ISubscriptionTransition getTransitionFromEvent(IEvent event) {
+        if (transitions == null || event == null) {
+            return null;
+        }
+
+        for (ISubscriptionTransition cur : transitions) {
+            if (cur.getId().equals(event.getId())) {
+                return cur;
+            }
+        }
+        return null;
+    }
+
     public long getActiveVersion() {
         return activeVersion;
     }
@@ -407,7 +421,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
     public List<ISubscriptionTransition> getActiveTransitions() {
         if (transitions == null) {
-            return null;
+            return Collections.emptyList();
         }
 
         List<ISubscriptionTransition> activeTransitions = new ArrayList<ISubscriptionTransition>();
@@ -556,7 +570,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
             IPlanPhase nextPhase = catalog.getPhaseFromName(nextPhaseName);
 
             SubscriptionTransition transition =
-                new SubscriptionTransition(id, bundleId, cur.getType(), apiEventType,
+                new SubscriptionTransition(cur.getId(), id, bundleId, cur.getType(), apiEventType,
                         cur.getRequestedDate(), cur.getEffectiveDate(),
                         previousState, previousPlan, previousPhase, previousPriceList,
                         nextState, nextPlan, nextPhase, nextPriceList);
