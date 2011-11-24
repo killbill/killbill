@@ -53,6 +53,16 @@ public class TestEventBus {
         }
     }
 
+    public static final class MyOtherEvent implements IEventBusType {
+        String name;
+        Long value;
+
+        public MyOtherEvent(String name, Long value) {
+            this.name = name;
+            this.value = value;
+        }
+    }
+
     public static class MyEventHandler {
 
         private final int expectedEvents;
@@ -88,8 +98,8 @@ public class TestEventBus {
         }
     }
 
-    @Test()
-    public void test() {
+    @Test
+    public void testSimple() {
         try {
 
             int nbEvents = 127;
@@ -99,6 +109,25 @@ public class TestEventBus {
             for (int i = 0; i < nbEvents; i++) {
                 eventBus.post(new MyEvent("my-event", (long) i));
             }
+
+            boolean completed = handler.waitForCompletion(3000);
+            Assert.assertEquals(completed, true);
+        } catch (Exception e) {
+            Assert.fail("",e);
+        }
+    }
+
+    @Test
+    public void testDifferentType() {
+        try {
+
+            MyEventHandler handler = new MyEventHandler(1);
+            eventBus.register(handler);
+
+            for (int i = 0; i < 10; i++) {
+                eventBus.post(new MyOtherEvent("my-other-event", (long) i));
+            }
+            eventBus.post(new MyEvent("my-event", 11l));
 
             boolean completed = handler.waitForCompletion(3000);
             Assert.assertEquals(completed, true);
