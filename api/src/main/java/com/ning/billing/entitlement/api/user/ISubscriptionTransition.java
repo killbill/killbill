@@ -37,6 +37,8 @@ public interface ISubscriptionTransition extends IEventBusType {
         PHASE
     }
 
+    UUID getId();
+
     SubscriptionTransitionType getTransitionType();
 
     UUID getBundleId();
