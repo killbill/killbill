@@ -132,7 +132,7 @@ public class Engine implements IEventListener, IEntitlementService {
             insertNextPhaseEvent(subscription);
         }
         try {
-            eventBus.post(subscription.getLatestTranstion());
+            eventBus.post(subscription.getTransitionFromEvent(event));
         } catch (EventBusException e) {
             log.warn("Failed to post entitlement event " + event, e);
         }

@@ -32,6 +32,7 @@ public class SubscriptionTransition implements ISubscriptionTransition {
 
     private final UUID subscriptionId;
     private final UUID bundleId;
+    private final UUID eventId;
     private final EventType eventType;
     private final ApiEventType apiEventType;
     private final DateTime requestedTransitionTime;
@@ -45,11 +46,12 @@ public class SubscriptionTransition implements ISubscriptionTransition {
     private final IPlan nextPlan;
     private final IPlanPhase nextPhase;
 
-    public SubscriptionTransition(UUID subscriptionId, UUID bundleId, EventType eventType,
+    public SubscriptionTransition(UUID eventId, UUID subscriptionId, UUID bundleId, EventType eventType,
             ApiEventType apiEventType, DateTime requestedTransitionTime, DateTime effectiveTransitionTime,
             SubscriptionState previousState, IPlan previousPlan, IPlanPhase previousPhase, String previousPriceList,
             SubscriptionState nextState, IPlan nextPlan, IPlanPhase nextPhase, String nextPriceList) {
         super();
+        this.eventId = eventId;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
         this.eventType = eventType;
@@ -64,6 +66,11 @@ public class SubscriptionTransition implements ISubscriptionTransition {
         this.nextPlan = nextPlan;
         this.nextPriceList = nextPriceList;
         this.nextPhase = nextPhase;
+    }
+
+    @Override
+    public UUID getId() {
+        return eventId;
     }
 
     @Override
@@ -151,17 +158,19 @@ public class SubscriptionTransition implements ISubscriptionTransition {
 
     @Override
     public String toString() {
-        return "SubscriptionTransition [subscriptionId=" + subscriptionId
-                + ", eventType=" + eventType + ", apiEventType="
-                + apiEventType + ", requestedTransitionTime=" + requestedTransitionTime
-                + ", effectiveTransitionTime=" + effectiveTransitionTime
-                + ", previousState=" + previousState + ", previousPlan="
-                + ((previousPlan != null) ? previousPlan.getName()  : null)
-                + ", previousPhase=" + ((previousPhase != null) ? previousPhase.getName() : null)
-                + ", previousPriceList " + previousPriceList
-                + ", nextState=" + nextState
-                + ", nextPlan=" + ((nextPlan != null) ? nextPlan.getName() : null)
-                + ", nextPriceList " + nextPriceList
-                + ", nextPhase=" + ((nextPhase != null) ? nextPhase.getName() : null) + "]";
+        return "SubscriptionTransition [eventId=" + eventId
+            + ", subscriptionId=" + subscriptionId
+            + ", eventType=" + eventType + ", apiEventType="
+            + apiEventType + ", requestedTransitionTime=" + requestedTransitionTime
+            + ", effectiveTransitionTime=" + effectiveTransitionTime
+            + ", previousState=" + previousState + ", previousPlan="
+            + ((previousPlan != null) ? previousPlan.getName()  : null)
+            + ", previousPhase=" + ((previousPhase != null) ? previousPhase.getName() : null)
+            + ", previousPriceList " + previousPriceList
+            + ", nextState=" + nextState
+            + ", nextPlan=" + ((nextPlan != null) ? nextPlan.getName() : null)
+            + ", nextPriceList " + nextPriceList
+            + ", nextPhase=" + ((nextPhase != null) ? nextPhase.getName() : null) + "]";
     }
+
 }
