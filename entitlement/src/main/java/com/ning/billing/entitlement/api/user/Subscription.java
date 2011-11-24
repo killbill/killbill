@@ -47,8 +47,10 @@ import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
+import com.ning.billing.entitlement.events.user.ApiEventCreate;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.events.user.IApiEvent;
@@ -180,7 +182,14 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
         ActionPolicy policy = catalog.getPlanCancelPolicy(planPhase);
         DateTime effectiveDate = getPlanChangeEffectiveDate(policy, now);
-        IEvent cancelEvent = new ApiEventCancel(id, bundleStartDate, now, now, effectiveDate, activeVersion);
+
+        IEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+        .setSubscriptionId(id)
+        .setActiveVersion(activeVersion)
+        .setProcessedDate(now)
+        .setEffectiveDate(effectiveDate)
+        .setRequestedDate(now));
+
         dao.cancelSubscription(id, cancelEvent);
         rebuildTransitions();
     }
@@ -191,7 +200,13 @@ public class Subscription extends PrivateFields  implements ISubscription {
             throw new EntitlementUserApiException(ErrorCode.ENT_UNCANCEL_BAD_STATE, id.toString());
         }
         DateTime now = clock.getUTCNow();
-        IEvent uncancelEvent = new ApiEventUncancel(id, bundleStartDate, now, now, now, activeVersion);
+        IEvent uncancelEvent = new ApiEventUncancel(new ApiEventBuilder()
+            .setSubscriptionId(id)
+            .setActiveVersion(activeVersion)
+            .setProcessedDate(now)
+            .setRequestedDate(now)
+            .setEffectiveDate(now));
+
         List<IEvent> uncancelEvents = new ArrayList<IEvent>();
         uncancelEvents.add(uncancelEvent);
 
@@ -259,8 +274,16 @@ public class Subscription extends PrivateFields  implements ISubscription {
         DateTime effectiveDate = getPlanChangeEffectiveDate(policy, now);
 
         TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(this, newPlan, newPriceList.getName(), effectiveDate);
-        IEvent changeEvent = new ApiEventChange(id, bundleStartDate, now, newPlan.getName(), currentTimedPhase.getPhase().getName(),
-                newPriceList.getName(), now, effectiveDate, activeVersion);
+
+        IEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
+        .setSubscriptionId(id)
+        .setEventPlan(newPlan.getName())
+        .setEventPlanPhase(currentTimedPhase.getPhase().getName())
+        .setEventPriceList(newPriceList.getName())
+        .setActiveVersion(activeVersion)
+        .setProcessedDate(now)
+        .setEffectiveDate(effectiveDate)
+        .setRequestedDate(now));
 
         TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(this, newPlan, newPriceList.getName(), effectiveDate);
         IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, this, now);

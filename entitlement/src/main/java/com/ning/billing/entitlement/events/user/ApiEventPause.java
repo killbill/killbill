@@ -17,23 +17,11 @@
 package com.ning.billing.entitlement.events.user;
 
 
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 
 public class ApiEventPause extends ApiEventBase {
 
-    public ApiEventPause(UUID subscriptionId, DateTime now, DateTime requestedDate, DateTime effectiveDate, long version) {
-        super(subscriptionId, null, now, requestedDate, ApiEventType.PAUSE, effectiveDate, version);
-    }
 
-    public ApiEventPause(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,
-            String priceList, DateTime requestedDate, DateTime effectiveDate, long activeVersion,
-            boolean isActive, UUID processingOwner, DateTime nextAvailableProcessingTime,IEventLyfecycleState processingState) {
-        super(id, subscriptionId, processed, eventPlan, eventPhase, priceList, requestedDate, ApiEventType.PAUSE, effectiveDate,
-                activeVersion, isActive, processingOwner, nextAvailableProcessingTime, processingState);
+    public ApiEventPause(ApiEventBuilder builder) {
+        super(builder.setEventType(ApiEventType.PAUSE));
     }
 }
