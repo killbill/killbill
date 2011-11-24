@@ -16,7 +16,6 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -24,9 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.IAccount;
 import org.joda.time.DateTime;
+
+import com.ning.billing.ErrorCode;
 
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -60,117 +59,54 @@ import com.ning.billing.util.clock.IClock;
 
 public class Subscription extends PrivateFields  implements ISubscription {
 
-    private final UUID id;
-    private final UUID bundleId;
-    private final DateTime startDate;
-    private final DateTime bundleStartDate;
-    private final long activeVersion;
-    private final ProductCategory category;
-
+    //
+    // Singletons used to perform API changes
     private final IClock clock;
     private final IEntitlementDao dao;
     private final ICatalog catalog;
     private final IPlanAligner planAligner;
 
-    // STEPH interaction with billing /payment system
+    //
+    // Final subscription fields
+    //
+    private final UUID id;
+    private final UUID bundleId;
+    private final DateTime startDate;
+    private final DateTime bundleStartDate;
+    private final ProductCategory category;
+
+    //
+    // Those can be modified through non User APIs, and a new Subscription object would be created
+    //
+    private final long activeVersion;
     private final DateTime chargedThroughDate;
     private final DateTime paidThroughDate;
 
-    // STEPH non final because of change/ cancel API at the object level
+    //
+    // User APIs (createm chnage, cancel,...) will recompute those each time,
+    // so the user holding that subscription object get the correct state when
+    // the call completes
+    //
     private List<SubscriptionTransition> transitions;
 
-
-    public static class SubscriptionBuilder {
-        private  UUID id;
-        private  UUID bundleId;
-        private  DateTime startDate;
-        private  DateTime bundleStartDate;
-        private  Long activeVersion;
-        private  ProductCategory category;
-        private  DateTime chargedThroughDate;
-        private  DateTime paidThroughDate;
-
-        public SubscriptionBuilder setId(UUID id) {
-            this.id = id;
-            return this;
-        }
-        public SubscriptionBuilder setBundleId(UUID bundleId) {
-            this.bundleId = bundleId;
-            return this;
-        }
-        public SubscriptionBuilder setStartDate(DateTime startDate) {
-            this.startDate = startDate;
-            return this;
-        }
-        public SubscriptionBuilder setBundleStartDate(DateTime bundleStartDate) {
-            this.bundleStartDate = bundleStartDate;
-            return this;
-            }
-        public SubscriptionBuilder setActiveVersion(long activeVersion) {
-            this.activeVersion = activeVersion;
-            return this;
-        }
-        public SubscriptionBuilder setChargedThroughDate(DateTime chargedThroughDate) {
-            this.chargedThroughDate = chargedThroughDate;
-            return this;
-        }
-        public SubscriptionBuilder setPaidThroughDate(DateTime paidThroughDate) {
-            this.paidThroughDate = paidThroughDate;
-            return this;
-        }
-        public SubscriptionBuilder setCategory(ProductCategory category) {
-            this.category = category;
-            return this;
-        }
-
-        private void checkAllFieldsSet() {
-            for (Field cur : SubscriptionBuilder.class.getDeclaredFields()) {
-                try {
-                    Object value = cur.get(this);
-                    if (value == null) {
-                        throw new EntitlementError(String.format("Field %s has not been set for Subscription",
-                                cur.getName()));
-                    }
-                } catch (IllegalAccessException e) {
-                    throw new EntitlementError(String.format("Failed to access value for field %s for Subscription",
-                            cur.getName()), e);
-                }
-            }
-        }
-
-        public Subscription build() {
-            //checkAllFieldsSet();
-            return new Subscription(id, bundleId, category, bundleStartDate, startDate, chargedThroughDate, paidThroughDate, activeVersion);
-        }
-
-    }
-
-    public Subscription(UUID bundleId, ProductCategory category, DateTime bundleStartDate, DateTime startDate) {
-        this(UUID.randomUUID(), bundleId, category, bundleStartDate, startDate, null, null, SubscriptionEvents.INITIAL_VERSION);
-    }
-
-
-    public Subscription(UUID id, UUID bundleId, ProductCategory category, DateTime bundleStartDate, DateTime startDate, DateTime ctd, DateTime ptd, long activeVersion) {
-
+    public Subscription(SubscriptionBuilder builder, boolean rebuildTransition) {
         super();
         this.clock = InjectorMagic.getClock();
         this.dao = InjectorMagic.getEntitlementDao();
         this.catalog = InjectorMagic.getCatlog();
         this.planAligner = InjectorMagic.getPlanAligner();
-        this.id = id;
-        this.bundleId = bundleId;
-        this.startDate = startDate;
-        this.bundleStartDate = bundleStartDate;
-        this.category = category;
-
-        this.activeVersion = activeVersion;
-
-        this.chargedThroughDate = ctd;
-        this.paidThroughDate = ptd;
-
-        rebuildTransitions();
+        this.id = builder.getId();
+        this.bundleId = builder.getBundleId();
+        this.startDate = builder.getStartDate();
+        this.bundleStartDate = builder.getBundleStartDate();
+        this.category = builder.getCategory();
+        this.activeVersion = builder.getActiveVersion();
+        this.chargedThroughDate = builder.getChargedThroughDate();
+        this.paidThroughDate = builder.getPaidThroughDate();
+        if (rebuildTransition) {
+            rebuildTransitions();
+        }
     }
-
 
     @Override
     public UUID getId() {

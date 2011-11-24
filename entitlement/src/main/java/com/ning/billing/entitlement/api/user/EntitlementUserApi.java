@@ -30,6 +30,7 @@ import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IPriceListSet;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.api.user.ISubscription;
@@ -100,12 +101,10 @@ public class EntitlementUserApi implements IEntitlementUserApi {
 
         String realPriceList = (priceList == null) ? IPriceListSet.DEFAULT_PRICELIST_NAME : priceList;
         DateTime now = clock.getUTCNow();
-        requestedDate = (requestedDate != null) ? Clock.truncateMs(requestedDate) : null;
+        requestedDate = (requestedDate != null) ? Clock.truncateMs(requestedDate) : now;
         if (requestedDate != null && requestedDate.isAfter(now)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
         }
-
-        requestedDate = (requestedDate == null) ? now : requestedDate;
 
         IPlan plan = catalogService.getCatalog().getPlan(productName, term, realPriceList);
         if (plan == null) {
@@ -146,7 +145,13 @@ public class EntitlementUserApi implements IEntitlementUserApi {
         }
 
         DateTime effectiveDate = requestedDate;
-        Subscription subscription = new Subscription(bundleId, plan.getProduct().getCategory(), bundleStartDate, effectiveDate);
+        Subscription subscription = new Subscription(new SubscriptionBuilder()
+            .setId(UUID.randomUUID())
+            .setBundleId(bundleId)
+            .setCategory(plan.getProduct().getCategory())
+            .setBundleStartDate(bundleStartDate)
+            .setStartDate(effectiveDate),
+                false);
 
         TimedPhase currentTimedPhase =  planAligner.getCurrentTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
         ApiEventCreate creationEvent =
