@@ -26,11 +26,14 @@ import com.ning.billing.util.eventbus.IEventBus;
 import com.ning.billing.util.eventbus.IEventBus.EventBusException;
 
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
+    public static final String PLUGIN_NAME = "mock";
+
     private final IEventBus eventBus;
 
     @Inject
-    public MockPaymentProviderPlugin(IEventBus eventBus) {
+    public MockPaymentProviderPlugin(PaymentProviderPluginRegistry registry, IEventBus eventBus) {
         this.eventBus = eventBus;
+        registry.register(this, PLUGIN_NAME);
     }
 
     @Override

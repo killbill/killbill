@@ -20,22 +20,24 @@ import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.model.Invoice;
-import com.ning.billing.payment.provider.PaymentProviderPlugin;
+import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.eventbus.IEventBus.EventBusException;
 
 public class InvoiceProcessor {
-    private final PaymentProviderPlugin provider;
+    private final PaymentProviderPluginRegistry pluginRegistry;
 
     @Inject
-    public InvoiceProcessor(PaymentProviderPlugin provider) {
-        this.provider = provider;
+    public InvoiceProcessor(PaymentProviderPluginRegistry pluginRegistry) {
+        this.pluginRegistry = pluginRegistry;
     }
 
     @Subscribe
     public void receiveInvoice(Invoice invoice) throws EventBusException {
         // TODO: retrieve account
         final Account account = null;
+        // TODO: get provider name from account
+        final String paymentProviderName = null;
 
-        provider.processInvoice(account, invoice);
+        pluginRegistry.getPlugin(paymentProviderName).processInvoice(account, invoice);
     }
 }

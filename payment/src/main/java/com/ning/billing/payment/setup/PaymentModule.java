@@ -21,8 +21,7 @@ import java.util.Properties;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Key;
-import com.ning.billing.payment.provider.PaymentProviderPlugin;
+import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 
 public class PaymentModule extends AbstractModule {
     private final Properties props;
@@ -35,28 +34,15 @@ public class PaymentModule extends AbstractModule {
         this.props = props;
     }
 
-    @SuppressWarnings("unchecked")
-    protected void installPaymentProviderPlugin(PaymentConfig config) {
-        String pluginClassName = config.getProviderPluginClass();
-
-        if (pluginClassName == null) {
-            throw new IllegalArgumentException("No payment provider plugin class configured");
-        }
-        Class<? extends PaymentProviderPlugin> pluginClass = null;
-
-        try {
-            pluginClass = (Class<? extends PaymentProviderPlugin>)Class.forName(pluginClassName);
-        }
-        catch (Exception ex) {
-            throw new IllegalArgumentException("Illegal payment provider plugin class configured", ex);
-        }
-        bind(PaymentProviderPlugin.class).to(Key.get(pluginClass));
+    protected void installPaymentProviderPlugins(PaymentConfig config) {
     }
 
     @Override
     protected void configure() {
         final PaymentConfig config = new ConfigurationObjectFactory(props).build(PaymentConfig.class);
 
-        installPaymentProviderPlugin(config);
+        bind(PaymentConfig.class).toInstance(config);
+        bind(PaymentProviderPluginRegistry.class).asEagerSingleton();
+        installPaymentProviderPlugins(config);
     }
 }

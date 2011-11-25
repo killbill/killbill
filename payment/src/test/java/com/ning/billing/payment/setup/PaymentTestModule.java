@@ -16,15 +16,20 @@
 
 package com.ning.billing.payment.setup;
 
+import org.apache.commons.collections.MapUtils;
+
+import com.google.common.collect.ImmutableMap;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
-import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.util.eventbus.IEventBus;
 import com.ning.billing.util.eventbus.MemoryEventBus;
 
 public class PaymentTestModule extends PaymentModule {
+    public PaymentTestModule() {
+        super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.defaultPlugin", "mock")));
+    }
+
     @Override
-    protected void installPaymentProviderPlugin(PaymentConfig config) {
-        bind(PaymentProviderPlugin.class).to(MockPaymentProviderPlugin.class);
+    protected void installPaymentProviderPlugins(PaymentConfig config) {
         bind(MockPaymentProviderPlugin.class).asEagerSingleton();
     }
 

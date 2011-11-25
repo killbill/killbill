@@ -19,9 +19,8 @@ package com.ning.billing.payment.setup;
 import org.skife.config.Config;
 import org.skife.config.DefaultNull;
 
-public interface PaymentConfig
-{
-    @Config("killbill.payment.providerPluginClass")
+public interface PaymentConfig {
+    @Config("killbill.payment.provider.defaultPlugin")
     @DefaultNull
-    public String getProviderPluginClass();
+    public String getDefaultPaymentProviderPlugin();
 }
