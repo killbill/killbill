@@ -2,6 +2,8 @@ package com.ning.billing.payment;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -30,14 +32,24 @@ import com.ning.billing.util.eventbus.IEventBus.EventBusException;
 public class TestPaymentProvider {
     private static class MockPaymentProcessor {
         private final List<PaymentInfo> processedPayments = Collections.synchronizedList(new ArrayList<PaymentInfo>());
+        private final List<PaymentError> errors = Collections.synchronizedList(new ArrayList<PaymentError>());
 
         @Subscribe
         public void processedPayment(PaymentInfo paymentInfo) {
             processedPayments.add(paymentInfo);
         }
 
+        @Subscribe
+        public void processedPaymentError(PaymentError paymentError) {
+            errors.add(paymentError);
+        }
+
         public List<PaymentInfo> getProcessedPayments() {
             return new ArrayList<PaymentInfo>(processedPayments);
+        }
+
+        public List<PaymentError> getErrors() {
+            return new ArrayList<PaymentError>(errors);
         }
     }
 
@@ -82,8 +94,13 @@ public class TestPaymentProvider {
             @Override
             public Boolean call() throws Exception {
                 List<PaymentInfo> processedPayments = mockPaymentProcessor.getProcessedPayments();
-                return processedPayments.size() == 1;
+                List<PaymentError> errors = mockPaymentProcessor.getErrors();
+
+                return processedPayments.size() == 1 || errors.size() == 1;
             }
         });
+
+        assertFalse(mockPaymentProcessor.getProcessedPayments().isEmpty());
+        assertTrue(mockPaymentProcessor.getErrors().isEmpty());
     }
 }
