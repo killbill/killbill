@@ -1,7 +1,7 @@
 package com.ning.billing.payment;
 
 import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -14,17 +14,20 @@ import java.util.concurrent.Callable;
 import org.joda.time.DateTime;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.model.Invoice;
 import com.ning.billing.invoice.model.InvoiceItem;
+import com.ning.billing.payment.setup.PaymentTestModule;
 import com.ning.billing.util.eventbus.IEventBus;
 import com.ning.billing.util.eventbus.IEventBus.EventBusException;
-import com.ning.billing.util.eventbus.MemoryEventBus;
 
-public class TestInvoiceEvent {
+@Guice(modules = PaymentTestModule.class)
+public class TestPaymentProvider {
     private static class MockPaymentProcessor {
         private final List<PaymentInfo> processedPayments = Collections.synchronizedList(new ArrayList<PaymentInfo>());
 
@@ -38,17 +41,17 @@ public class TestInvoiceEvent {
         }
     }
 
+    @Inject
     private IEventBus eventBus;
-    private InvoiceProcessor invoiceProcessor;
     private MockPaymentProcessor mockPaymentProcessor;
+    @Inject
+    private InvoiceProcessor invoiceProcessor;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws EventBusException {
-        eventBus = new MemoryEventBus();
-        eventBus.start();
-
-        invoiceProcessor = new MockInvoiceProcessor(eventBus);
         mockPaymentProcessor = new MockPaymentProcessor();
+
+        eventBus.start();
         eventBus.register(invoiceProcessor);
         eventBus.register(mockPaymentProcessor);
     }
@@ -75,7 +78,7 @@ public class TestInvoiceEvent {
         final Invoice invoice = new Invoice(invoiceUuid, lineItems, Currency.USD);
 
         eventBus.post(invoice);
-        await().atMost(1, SECONDS).until(new Callable<Boolean>() {
+        await().atMost(1, MINUTES).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 List<PaymentInfo> processedPayments = mockPaymentProcessor.getProcessedPayments();
