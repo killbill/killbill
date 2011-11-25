@@ -16,14 +16,16 @@
 
 package com.ning.billing.invoice.model;
 
-import com.ning.billing.catalog.api.Currency;
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-public class Invoice {
+import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.eventbus.IEventBusType;
+
+public class Invoice implements IEventBusType {
     private final InvoiceItemList items = new InvoiceItemList();
     private final UUID invoiceId;
     private UUID accountId;
