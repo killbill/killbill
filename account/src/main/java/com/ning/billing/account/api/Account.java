@@ -16,15 +16,13 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.account.dao.IAccountDao;
-import com.ning.billing.account.glue.InjectorMagic;
-import com.ning.billing.catalog.api.Currency;
-
 import java.util.UUID;
 
+import com.ning.billing.catalog.api.Currency;
+
 public class Account implements IAccount {
-    private final FieldStore fields;
-    private static IAccountDao dao;
+    public static final String OBJECT_TYPE = "Account";
+    private final IFieldStore fields;
 
     private final UUID id;
     private String key;
@@ -40,8 +38,7 @@ public class Account implements IAccount {
 
     public Account(UUID id) {
         this.id = id;
-        fields = FieldStore.create(getId(), getObjectName());
-        dao = InjectorMagic.getAccountDao();
+        fields = new FieldStore();
     }
 
    @Override
@@ -117,20 +114,9 @@ public class Account implements IAccount {
         return new Account(id);
     }
 
-    public static Account loadAccount(UUID id) {
-        Account account = (Account) dao.getAccountById(id);
-        if (account != null) {
-            account.loadCustomFields();
-        }
-        return account;
-    }
-
-    public static Account loadAccount(String key) {
-        Account account = (Account) dao.getAccountByKey(key);
-        if (account != null) {
-            account.loadCustomFields();
-        }
-        return account;
+    @Override
+    public IFieldStore getFields() {
+        return fields;
     }
 
     @Override
@@ -141,43 +127,5 @@ public class Account implements IAccount {
     @Override
     public void setFieldValue(String fieldName, String fieldValue) {
         fields.setValue(fieldName, fieldValue);
-    }
-
-    @Override
-    public void save() {
-        saveObject();
-        saveCustomFields();
-    }
-
-    @Override
-    public void load() {
-        loadObject();
-        loadCustomFields();
-    }
-
-    private void saveCustomFields() {
-        fields.save();
-    }
-
-    protected void loadCustomFields() {
-        fields.load();
-    }
-
-    public String getObjectName() {
-        return "Account";
-    }
-
-    private void saveObject() {
-        dao.save(this);
-    }
-
-    private void loadObject() {
-        IAccount that = dao.getAccountById(id);
-        this.key = that.getKey();
-        this.email = that.getEmail();
-        this.name = that.getName();
-        this.phone = that.getPhone();
-        this.currency = that.getCurrency();
-        this.billCycleDay = that.getBillCycleDay();
     }
 }

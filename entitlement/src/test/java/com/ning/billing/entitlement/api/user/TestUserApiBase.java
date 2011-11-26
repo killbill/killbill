@@ -16,10 +16,35 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.List;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+
 import com.google.inject.Injector;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.CatalogService;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.ICatalog;
+import com.ning.billing.catalog.api.ICatalogService;
+import com.ning.billing.catalog.api.IDuration;
+import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
@@ -38,23 +63,6 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.IClock;
 import com.ning.billing.util.eventbus.EventBusService;
 import com.ning.billing.util.eventbus.IEventBusService;
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import static org.testng.Assert.*;
 
 
 public abstract class TestUserApiBase {
@@ -278,52 +286,12 @@ public abstract class TestUserApiBase {
     }
 
     protected IAccount getAccount() {
-        IAccount account = new IAccount() {
-            @Override
-            public String getName() {
-                return "accountName";
-            }
-            @Override
-            public String getEmail() {
-                return "accountName@yahoo.com";
-            }
-            @Override
-            public String getPhone() {
-                return "4152876341";
-            }
-            @Override
-            public String getKey() {
-                return "k123456";
-            }
-            @Override
-            public int getBillCycleDay() {
-                return 1;
-            }
-            @Override
-            public Currency getCurrency() {
-                return Currency.USD;
-            }
-
-            @Override
-            public UUID getId() {
-                return UUID.randomUUID();
-            }
-
-            @Override
-            public void load() {}
-
-            @Override
-            public void save() {}
-
-            @Override
-            public String getFieldValue(String fieldName) {
-                return null;
-            }
-
-            @Override
-            public void setFieldValue(String fieldName, String fieldValue) {}
-        };
-        return account;
+        return new Account().withName("accountName")
+                            .withEmail("accountName@yahoo.com")
+                            .withPhone("4152876341")
+                            .withKey("k123456")
+                            .withBillCycleDay(1)
+                            .withCurrency(Currency.USD);
     }
 
 

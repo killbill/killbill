@@ -16,11 +16,11 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountData;
-
 import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IAccountData;
 
 public interface IAccountDao {
 

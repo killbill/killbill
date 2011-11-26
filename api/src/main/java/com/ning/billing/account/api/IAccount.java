@@ -21,9 +21,7 @@ import java.util.UUID;
 public interface IAccount extends IAccountData {
     public UUID getId();
 
-    public void load();
-
-    public void save();
+    public IFieldStore getFields();
 
     public String getFieldValue(String fieldName);
 

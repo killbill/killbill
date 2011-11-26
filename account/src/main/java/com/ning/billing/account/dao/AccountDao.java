@@ -16,14 +16,16 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.skife.jdbi.v2.IDBI;
+
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountData;
-import org.skife.jdbi.v2.IDBI;
-
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.account.api.ICustomField;
 
 public class AccountDao implements IAccountDao {
 
@@ -43,12 +45,30 @@ public class AccountDao implements IAccountDao {
 
     @Override
     public IAccount getAccountByKey(String key) {
-        return dao.getAccountByKey(key);
+        IAccount account = dao.getAccountByKey(key);
+        if (account != null) {
+            loadFields(account);
+        }
+        return account;
     }
 
     @Override
     public IAccount getAccountById(UUID uid) {
-        return dao.getAccountFromId(uid.toString());
+        IAccount account = dao.getAccountFromId(uid.toString());
+        if (account != null) {
+            loadFields(account);
+        }
+        return account;
+    }
+
+    private void loadFields(IAccount account) {
+        List<ICustomField> fields = dao.getFields(account.getId().toString(), Account.OBJECT_TYPE);
+        account.getFields().clear();
+        if (fields != null) {
+            for (ICustomField field : fields) {
+                account.getFields().setValue(field.getName(), field.getValue());
+            }
+        }
     }
 
     @Override
@@ -63,6 +83,24 @@ public class AccountDao implements IAccountDao {
 
     @Override
     public void save(IAccount account) {
-        dao.insertAccount(account);
+        final String objectId = account.getId().toString();
+        final String objectType = Account.OBJECT_TYPE;
+
+        dao.begin();
+        try {
+            dao.insertAccount(account);
+            List<ICustomField> newFields = account.getFields().getNewFields();
+            dao.createFields(objectId, objectType, newFields);
+            for (ICustomField field : newFields) {
+                field.setAsSaved();
+            }
+
+            dao.saveFields(objectId, objectType, account.getFields().getUpdatedFields());
+            dao.commit();
+        }
+        catch (RuntimeException ex) {
+            dao.rollback();
+            throw ex;
+        }
     }
 }

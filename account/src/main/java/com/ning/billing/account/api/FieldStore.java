@@ -16,25 +16,15 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.account.dao.IFieldStoreDao;
-import com.ning.billing.account.glue.InjectorMagic;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class FieldStore implements IFieldStore {
-    private Map<String, ICustomField> fields = new HashMap<String, ICustomField>();
-    private final UUID objectId;
-    private final String objectType;
+    private final Map<String, ICustomField> fields = new HashMap<String, ICustomField>();
 
-    public FieldStore(UUID objectId, String objectType) {
-        this.objectId = objectId;
-        this.objectType = objectType;
-    }
-
-    public static FieldStore create(UUID objectId, String objectType) {
-        return new FieldStore(objectId, objectType);
-    }
-
+    @Override
     public void setValue(String fieldName, String fieldValue) {
         if (fields.containsKey(fieldName)) {
             fields.get(fieldName).setValue(fieldValue);
@@ -43,6 +33,7 @@ public class FieldStore implements IFieldStore {
         }
     }
 
+    @Override
     public String getValue(String fieldName) {
         if (fields.containsKey(fieldName)) {
             return fields.get(fieldName).getValue();
@@ -75,26 +66,8 @@ public class FieldStore implements IFieldStore {
         return updatedFields;
     }
 
-    public void save() {
-        IFieldStoreDao dao = InjectorMagic.getFieldStoreDao();
-
-        List<ICustomField> newFields = getNewFields();
-        dao.createFields(objectId.toString(), objectType, newFields);
-        for (ICustomField field : newFields) {
-            field.setAsSaved();
-        }
-
-        dao.saveFields(objectId.toString(), objectType, getUpdatedFields());
-    }
-
-    public void load() {
-        IFieldStoreDao dao = InjectorMagic.getFieldStoreDao();
-        List<ICustomField> fields = dao.getFields(objectId.toString(), objectType);
+    @Override
+    public void clear() {
         this.fields.clear();
-        if (fields != null) {
-            for (ICustomField field : fields) {
-                this.fields.put(field.getName(), field);
-            }
-        }
     }
 }

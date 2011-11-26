@@ -16,27 +16,29 @@
 
 package com.ning.billing.account.dao;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
+
+import org.apache.commons.io.IOUtils;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.glue.AccountModuleMock;
-import com.ning.billing.account.glue.InjectorMagic;
-import org.apache.commons.io.IOUtils;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
-
-import static org.testng.Assert.*;
 
 @Test(groups = {"Account", "Account-DAO"})
 public class TestSimpleAccountDao {
     private IAccountDao dao;
-    private InjectorMagic injectorMagic;
 
     @BeforeClass(alwaysRun = true)
     private void setup() throws IOException {
@@ -48,7 +50,6 @@ public class TestSimpleAccountDao {
         try {
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
-            injectorMagic = injector.getInstance(InjectorMagic.class);
             dao = injector.getInstance(IAccountDao.class);
             dao.test();
         }
@@ -83,9 +84,9 @@ public class TestSimpleAccountDao {
         IAccount account = Account.create().withKey(key);
         UUID id = account.getId();
 
-        account.save();
+        dao.save(account);
 
-        account = Account.loadAccount(id);
+        account = dao.getAccountById(id);
         assertNotNull(account);
         assertEquals(account.getId(), id);
         assertEquals(account.getKey(), key);
@@ -100,9 +101,9 @@ public class TestSimpleAccountDao {
         String fieldValue = "testField1_value";
         account.setFieldValue(fieldName, fieldValue);
 
-        account.save();
+        dao.save(account);
 
-        account = Account.loadAccount(key);
+        account = dao.getAccountByKey(key);
         assertNotNull(account);
         assertEquals(account.getKey(), key);
         assertEquals(account.getFieldValue(fieldName), fieldValue);

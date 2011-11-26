@@ -16,14 +16,27 @@
 
 package com.ning.billing.analytics.api;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.UUID;
+
+import org.apache.commons.io.IOUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
+
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.analytics.AnalyticsTestModule;
 import com.ning.billing.analytics.BusinessSubscription;
 import com.ning.billing.analytics.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.BusinessSubscriptionTransition;
-import com.ning.billing.analytics.MockAccount;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockPlan;
@@ -45,18 +58,6 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.eventbus.IEventBus;
-import org.apache.commons.io.IOUtils;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
-
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.UUID;
 
 @Guice(modules = AnalyticsTestModule.class)
 public class TestAnalyticsService
@@ -99,7 +100,7 @@ public class TestAnalyticsService
         helper.initDb(entitlementDdl);
 
         // We need a bundle to retrieve the event key
-        final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
+        final Account account = new Account(UUID.randomUUID()).withKey(ACCOUNT_KEY).withCurrency(Currency.USD);
         final IAccount storedAccount = accountApi.createAccount(account);
         final ISubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount, KEY);
 

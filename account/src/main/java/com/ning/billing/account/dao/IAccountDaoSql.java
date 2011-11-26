@@ -16,8 +16,11 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.IAccount;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
+
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -30,13 +33,11 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.IAccount;
 
 @ExternalizedSqlViaStringTemplate3()
-public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
+public interface IAccountDaoSql extends IFieldStoreDao, Transactional<IAccountDaoSql>, CloseMe {
 
     @SqlUpdate
     public void insertAccount(@Bind(binder = IAccountSqlBinder.class) IAccount account);
@@ -53,6 +54,7 @@ public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
     @Mapper(IAccountSqlMapper.class)
     public List<IAccount> getAccounts();
 
+    @Override
     @SqlUpdate
     public void test();
 
