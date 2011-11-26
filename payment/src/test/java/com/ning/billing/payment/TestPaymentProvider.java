@@ -37,6 +37,9 @@ import org.testng.annotations.Test;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.model.Invoice;
 import com.ning.billing.invoice.model.InvoiceItem;
@@ -71,9 +74,11 @@ public class TestPaymentProvider {
 
     @Inject
     private IEventBus eventBus;
-    private MockPaymentProcessor mockPaymentProcessor;
     @Inject
     private InvoiceProcessor invoiceProcessor;
+    @Inject
+    private IAccountUserApi accountUserApi;
+    private MockPaymentProcessor mockPaymentProcessor;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws EventBusException {
@@ -89,8 +94,13 @@ public class TestPaymentProvider {
         eventBus.stop();
     }
 
+    protected IAccount getTestAccount() {
+        return accountUserApi.createAccount(new Account());
+    }
+
     @Test
     public void testSimpleInvoice() throws Exception {
+        final IAccount account = getTestAccount();
         final UUID subscriptionUuid = UUID.randomUUID();
         final UUID invoiceUuid = UUID.randomUUID();
         final DateTime now = new DateTime();
@@ -103,7 +113,7 @@ public class TestPaymentProvider {
                                                      new BigDecimal("1"),
                                                      Currency.USD);
         final List<InvoiceItem> lineItems = Arrays.asList(lineItem);
-        final Invoice invoice = new Invoice(invoiceUuid, lineItems, Currency.USD);
+        final Invoice invoice = new Invoice(account.getId(), lineItems, Currency.USD);
 
         eventBus.post(invoice);
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {

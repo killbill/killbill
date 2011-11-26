@@ -372,4 +372,10 @@ public class PaymentInfo implements IEventBusType {
             return false;
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "PaymentInfo [id=" + id + ", amount=" + amount + ", appliedCreditBalanceAmount=" + appliedCreditBalanceAmount + ", bankIdentificationNumber=" + bankIdentificationNumber + ", createdDate=" + createdDate + ", effectiveDate=" + effectiveDate + ", paymentNumber=" + paymentNumber + ", referenceId=" + referenceId + ", refundAmount=" + refundAmount + ", secondPaymentReferenceId=" + secondPaymentReferenceId + ", status=" + status + ", type=" + type + ", updatedDate=" + updatedDate + "]";
+    }
+
 }

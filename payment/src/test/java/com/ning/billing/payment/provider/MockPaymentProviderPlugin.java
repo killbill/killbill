@@ -19,7 +19,7 @@ package com.ning.billing.payment.provider;
 import java.util.UUID;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.IAccount;
 import com.ning.billing.invoice.model.Invoice;
 import com.ning.billing.payment.PaymentInfo;
 import com.ning.billing.util.eventbus.IEventBus;
@@ -37,7 +37,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public void processInvoice(Account account, Invoice invoice) {
+    public void processInvoice(IAccount account, Invoice invoice) {
         try {
             eventBus.post(new PaymentInfo.Builder().setId(UUID.randomUUID()).build());
         }

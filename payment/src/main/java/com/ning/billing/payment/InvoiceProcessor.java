@@ -18,25 +18,27 @@ package com.ning.billing.payment;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
-import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.invoice.model.Invoice;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.eventbus.IEventBus.EventBusException;
 
 public class InvoiceProcessor {
+    public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
+    private final IAccountUserApi accountUserApi;
     private final PaymentProviderPluginRegistry pluginRegistry;
 
     @Inject
-    public InvoiceProcessor(PaymentProviderPluginRegistry pluginRegistry) {
+    public InvoiceProcessor(IAccountUserApi accountUserApi, PaymentProviderPluginRegistry pluginRegistry) {
+        this.accountUserApi = accountUserApi;
         this.pluginRegistry = pluginRegistry;
     }
 
     @Subscribe
     public void receiveInvoice(Invoice invoice) throws EventBusException {
-        // TODO: retrieve account
-        final Account account = null;
-        // TODO: get provider name from account
-        final String paymentProviderName = null;
+        final IAccount account = accountUserApi.getAccountFromId(invoice.getAccountId());
+        final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
 
         pluginRegistry.getPlugin(paymentProviderName).processInvoice(account, invoice);
     }

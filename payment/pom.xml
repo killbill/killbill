@@ -70,6 +70,12 @@
             <artifactId>killbill-util</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-account</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
     </build>
