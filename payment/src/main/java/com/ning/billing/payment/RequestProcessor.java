@@ -21,25 +21,46 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.invoice.model.Invoice;
+import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.util.Either;
+import com.ning.billing.util.eventbus.IEventBus;
 import com.ning.billing.util.eventbus.IEventBus.EventBusException;
 
-public class InvoiceProcessor {
+public class RequestProcessor {
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
     private final IAccountUserApi accountUserApi;
     private final PaymentProviderPluginRegistry pluginRegistry;
+    private final IEventBus eventBus;
 
     @Inject
-    public InvoiceProcessor(IAccountUserApi accountUserApi, PaymentProviderPluginRegistry pluginRegistry) {
+    public RequestProcessor(IAccountUserApi accountUserApi,
+                            PaymentProviderPluginRegistry pluginRegistry,
+                            IEventBus eventBus) {
         this.accountUserApi = accountUserApi;
         this.pluginRegistry = pluginRegistry;
+        this.eventBus = eventBus;
     }
 
     @Subscribe
     public void receiveInvoice(Invoice invoice) throws EventBusException {
         final IAccount account = accountUserApi.getAccountFromId(invoice.getAccountId());
         final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
+        final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
 
-        pluginRegistry.getPlugin(paymentProviderName).processInvoice(account, invoice);
+        Either<PaymentError, PaymentInfo> result = plugin.processInvoice(account, invoice);
+
+        eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
+    }
+
+    @Subscribe
+    public void receiveRequest(PaymentInfoRequest request) throws EventBusException {
+        final IAccount account = accountUserApi.getAccountFromId(request.getAccountId());
+        final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
+        final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
+
+        Either<PaymentError, PaymentInfo> result = plugin.getPaymentInfo(request.getPaymentId());
+
+        eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
     }
 }

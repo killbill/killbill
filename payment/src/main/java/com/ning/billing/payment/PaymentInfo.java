@@ -17,7 +17,6 @@
 package com.ning.billing.payment;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 
@@ -25,7 +24,7 @@ import com.ning.billing.util.eventbus.IEventBusType;
 
 public class PaymentInfo implements IEventBusType {
     public static class Builder {
-        private UUID id;
+        private String id;
         private BigDecimal amount;
         private BigDecimal appliedCreditBalanceAmount;
         private String bankIdentificationNumber;
@@ -58,7 +57,7 @@ public class PaymentInfo implements IEventBusType {
             this.updatedDate = src.updatedDate;
         }
 
-        public Builder setId(UUID id) {
+        public Builder setId(String id) {
             this.id = id;
             return this;
         }
@@ -140,7 +139,7 @@ public class PaymentInfo implements IEventBusType {
         }
     }
 
-    private final UUID id;
+    private final String id;
     private final BigDecimal amount;
     private final BigDecimal appliedCreditBalanceAmount;
     private final String bankIdentificationNumber;
@@ -170,7 +169,7 @@ public class PaymentInfo implements IEventBusType {
         this.updatedDate = src.updatedDate;
     }
 
-    public PaymentInfo(UUID id,
+    public PaymentInfo(String id,
                        BigDecimal amount,
                        BigDecimal appliedCreditBalanceAmount,
                        String bankIdentificationNumber,
@@ -202,7 +201,7 @@ public class PaymentInfo implements IEventBusType {
         return new Builder(this);
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 

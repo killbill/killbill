@@ -18,13 +18,12 @@ package com.ning.billing.payment;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -35,7 +34,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
@@ -49,44 +47,21 @@ import com.ning.billing.util.eventbus.IEventBus.EventBusException;
 
 @Guice(modules = PaymentTestModule.class)
 public class TestPaymentProvider {
-    private static class MockPaymentProcessor {
-        private final List<PaymentInfo> processedPayments = Collections.synchronizedList(new ArrayList<PaymentInfo>());
-        private final List<PaymentError> errors = Collections.synchronizedList(new ArrayList<PaymentError>());
-
-        @Subscribe
-        public void processedPayment(PaymentInfo paymentInfo) {
-            processedPayments.add(paymentInfo);
-        }
-
-        @Subscribe
-        public void processedPaymentError(PaymentError paymentError) {
-            errors.add(paymentError);
-        }
-
-        public List<PaymentInfo> getProcessedPayments() {
-            return new ArrayList<PaymentInfo>(processedPayments);
-        }
-
-        public List<PaymentError> getErrors() {
-            return new ArrayList<PaymentError>(errors);
-        }
-    }
-
     @Inject
     private IEventBus eventBus;
     @Inject
-    private InvoiceProcessor invoiceProcessor;
+    private RequestProcessor invoiceProcessor;
     @Inject
     private IAccountUserApi accountUserApi;
-    private MockPaymentProcessor mockPaymentProcessor;
+    private MockPaymentInfoReceiver paymentInfoReceiver;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws EventBusException {
-        mockPaymentProcessor = new MockPaymentProcessor();
+        paymentInfoReceiver = new MockPaymentInfoReceiver();
 
         eventBus.start();
         eventBus.register(invoiceProcessor);
-        eventBus.register(mockPaymentProcessor);
+        eventBus.register(paymentInfoReceiver);
     }
 
     @AfterMethod(alwaysRun = true)
@@ -119,14 +94,33 @@ public class TestPaymentProvider {
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                List<PaymentInfo> processedPayments = mockPaymentProcessor.getProcessedPayments();
-                List<PaymentError> errors = mockPaymentProcessor.getErrors();
+                List<PaymentInfo> processedPayments = paymentInfoReceiver.getProcessedPayments();
+                List<PaymentError> errors = paymentInfoReceiver.getErrors();
 
                 return processedPayments.size() == 1 || errors.size() == 1;
             }
         });
 
-        assertFalse(mockPaymentProcessor.getProcessedPayments().isEmpty());
-        assertTrue(mockPaymentProcessor.getErrors().isEmpty());
+        assertFalse(paymentInfoReceiver.getProcessedPayments().isEmpty());
+        assertTrue(paymentInfoReceiver.getErrors().isEmpty());
+
+        final PaymentInfo paymentInfo = paymentInfoReceiver.getProcessedPayments().get(0);
+        final PaymentInfoRequest infoRequest = new PaymentInfoRequest(account.getId(), paymentInfo.getId());
+
+        paymentInfoReceiver.clear();
+        eventBus.post(infoRequest);
+        await().atMost(1, MINUTES).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                List<PaymentInfo> processedPayments = paymentInfoReceiver.getProcessedPayments();
+                List<PaymentError> errors = paymentInfoReceiver.getErrors();
+
+                return processedPayments.size() == 1 || errors.size() == 1;
+            }
+        });
+
+        assertFalse(paymentInfoReceiver.getProcessedPayments().isEmpty());
+        assertTrue(paymentInfoReceiver.getErrors().isEmpty());
+        assertEquals(paymentInfoReceiver.getProcessedPayments().get(0), paymentInfo);
     }
 }

@@ -18,7 +18,11 @@ package com.ning.billing.payment.provider;
 
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.invoice.model.Invoice;
+import com.ning.billing.payment.PaymentError;
+import com.ning.billing.payment.PaymentInfo;
+import com.ning.billing.util.Either;
 
 public interface PaymentProviderPlugin {
-    public void processInvoice(IAccount account, Invoice invoice);
+    Either<PaymentError, PaymentInfo> processInvoice(IAccount account, Invoice invoice);
+    Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId);
 }
