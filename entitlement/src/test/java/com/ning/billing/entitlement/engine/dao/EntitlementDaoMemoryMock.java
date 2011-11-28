@@ -16,18 +16,6 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.TreeSet;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
@@ -42,6 +30,10 @@ import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.util.clock.IClock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDaoMock {
 
@@ -52,6 +44,8 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     private final TreeSet<IEvent> events;
     private final IClock clock;
     private final IEntitlementConfig config;
+
+
 
     @Inject
     public EntitlementDaoMemoryMock(IClock clock, IEntitlementConfig config) {
@@ -106,6 +100,18 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
         }
         return null;
     }
+
+    @Override
+    public List<ISubscription> getSubscriptionsForKey(String bundleKey) {
+
+        for (ISubscriptionBundle cur : bundles) {
+            if (cur.getKey().equals(bundleKey)) {
+                return getSubscriptions(cur.getId());
+            }
+        }
+        return Collections.emptyList();
+    }
+
 
     @Override
     public ISubscription createSubscription(Subscription subscription, List<IEvent> initalEvents) {
@@ -199,7 +205,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     @Override
-    public void clearEventsReady(UUID ownerId, List<IEvent> cleared) {
+    public void clearEventsReady(UUID ownerId, Collection<IEvent> cleared) {
         synchronized(events) {
             for (IEvent cur : cleared) {
                 if (cur.getOwner().equals(ownerId)) {
@@ -328,4 +334,5 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
             }
         }
     }
+
 }

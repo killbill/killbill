@@ -22,6 +22,11 @@ public class Rounder
 {
     public static final int SCALE = 4;
 
+    // Static only
+    private Rounder()
+    {
+    }
+
     public static double round(final BigDecimal decimal)
     {
         if (decimal == null) {

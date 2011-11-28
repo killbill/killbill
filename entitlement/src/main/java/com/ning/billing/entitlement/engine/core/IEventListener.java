@@ -21,5 +21,8 @@ import com.ning.billing.entitlement.events.IEvent;
 
 
 public interface IEventListener {
+
     public void processEventReady(IEvent event);
+
+    public void completedNotificationStart();
 }

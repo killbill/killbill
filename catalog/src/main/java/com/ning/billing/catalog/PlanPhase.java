@@ -16,20 +16,16 @@
 
 package com.ning.billing.catalog;
 
+import com.ning.billing.catalog.api.*;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationError;
+import com.ning.billing.util.config.ValidationErrors;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IInternationalPrice;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationError;
-import com.ning.billing.util.config.ValidationErrors;
+import java.net.URI;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
@@ -137,6 +133,13 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 		
 		return errors;
 
+	}
+	
+
+	@Override
+	public void initialize(Catalog root, URI uri) {
+		if (fixedPrice != null) { fixedPrice.initialize(root, uri);  }	
+		if (recurringPrice != null) { recurringPrice.initialize(root, uri); }
 	}
 
 	protected PlanPhase setFixedPrice(InternationalPrice price) {

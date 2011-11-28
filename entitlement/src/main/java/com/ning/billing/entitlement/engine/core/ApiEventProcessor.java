@@ -16,13 +16,14 @@
 
 package com.ning.billing.entitlement.engine.core;
 
-import java.util.List;
-
 import com.google.inject.Inject;
 import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.util.clock.IClock;
+
+import java.util.Collection;
+import java.util.List;
 
 public class ApiEventProcessor extends ApiEventProcessorBase {
 
@@ -34,13 +35,17 @@ public class ApiEventProcessor extends ApiEventProcessorBase {
 
     @Override
     protected boolean doProcessEvents(int sequenceId) {
-        long prev = nbProcessedEvents;
         List<IEvent> claimedEvents = dao.getEventsReady(apiProcessorId, sequenceId);
         if (claimedEvents.size() == 0) {
             return false;
         }
         log.debug(String.format("ApiEventProcessor got %d events", claimedEvents.size()));
+        return doProcessEventsFromList(sequenceId, claimedEvents);
+    }
 
+
+    protected boolean doProcessEventsFromList(int sequenceId, Collection<IEvent> claimedEvents) {
+        long prev = nbProcessedEvents;
         for (IEvent cur : claimedEvents) {
             log.debug(String.format("ApiEventProcessor seq = %d got event %s", sequenceId, cur.getId()));
             listener.processEventReady(cur);
@@ -52,6 +57,6 @@ public class ApiEventProcessor extends ApiEventProcessorBase {
         log.debug(String.format("ApiEventProcessor cleared events %d", nbProcessedEvents - prev));
         //log.debug(String.format("ApiEventProcessor seq = %d cleared events %s", sequenceId, claimedEvents.get(0).getId()));
         return true;
-    }
 
+    }
 }

@@ -16,9 +16,11 @@
 
 package com.ning.billing.entitlement.engine.core;
 
+import java.util.UUID;
+
 
 public interface IApiEventProcessor extends IEventNotifier {
 
-    public void processAllReadyEvents();
+    public void processAllReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly);
 
 }

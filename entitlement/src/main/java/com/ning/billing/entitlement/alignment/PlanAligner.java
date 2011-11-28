@@ -16,24 +16,16 @@
 
 package com.ning.billing.entitlement.alignment;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import org.joda.time.DateTime;
-
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.PlanAlignmentChange;
-import com.ning.billing.catalog.api.PlanAlignmentCreate;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
+import org.joda.time.DateTime;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 public class PlanAligner implements IPlanAligner {
 
@@ -151,6 +143,11 @@ public class PlanAligner implements IPlanAligner {
 
     private List<TimedPhase> getPhaseAlignments(Subscription subscription, IPlan plan,
             DateTime effectiveDate, DateTime planStartDate) {
+
+        // The plan can be null with the nasty endpoint from test API.
+        if (plan == null) {
+            return Collections.emptyList();
+        }
 
         List<TimedPhase> result = new LinkedList<IPlanAligner.TimedPhase>();
 

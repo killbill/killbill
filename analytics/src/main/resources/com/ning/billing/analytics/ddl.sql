@@ -1,6 +1,7 @@
 drop table if exists bst;
 create table bst (
   event_key varchar(50) not null
+, account_key varchar(50) not null
 , requested_timestamp bigint not null
 , event varchar(50) not null
 , prev_product_name varchar(32) default null
@@ -10,6 +11,7 @@ create table bst (
 , prev_phase varchar(32) default null
 , prev_billing_period varchar(32) default null
 , prev_price numeric(10, 4) default 0
+, prev_price_list varchar(32) default null
 , prev_mrr numeric(10, 4) default 0
 , prev_currency varchar(32) default null
 , prev_start_date bigint default null
@@ -23,6 +25,7 @@ create table bst (
 , next_phase varchar(32) default null
 , next_billing_period varchar(32) default null
 , next_price numeric(10, 4) default 0
+, next_price_list varchar(32) default null
 , next_mrr numeric(10, 4) default 0
 , next_currency varchar(32) default null
 , next_start_date bigint default null

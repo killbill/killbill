@@ -16,20 +16,19 @@
 
 package com.ning.billing.util.clock;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.ning.billing.catalog.api.IDuration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.ning.billing.catalog.api.IDuration;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Clock implements IClock {
 
     @Override
     public DateTime getNow(DateTimeZone tz) {
        DateTime result = new DateTime(tz);
-       return result.minus(result.getMillisOfSecond());
+       return truncateMs(result);
     }
 
     @Override
@@ -37,6 +36,10 @@ public class Clock implements IClock {
         return getNow(DateTimeZone.UTC);
     }
 
+
+    public static DateTime truncateMs(DateTime input) {
+        return input.minus(input.getMillisOfSecond());
+    }
 
     public static DateTime addDuration(DateTime input, List<IDuration> durations) {
 

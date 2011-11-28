@@ -16,41 +16,24 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
-
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.IAccount;
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.ActionPolicy;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.PlanSpecifier;
-import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
-import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
-import com.ning.billing.entitlement.events.user.ApiEventCancel;
-import com.ning.billing.entitlement.events.user.ApiEventChange;
-import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.entitlement.events.user.ApiEventUncancel;
-import com.ning.billing.entitlement.events.user.IApiEvent;
+import com.ning.billing.entitlement.events.user.*;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.entitlement.glue.InjectorMagic;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.IClock;
+import org.joda.time.DateTime;
+
+import java.lang.reflect.Field;
+import java.util.*;
 
 public class Subscription extends PrivateFields  implements ISubscription {
 
@@ -206,6 +189,16 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
 
     @Override
+    public DateTime getEndDate() {
+        ISubscriptionTransition latestTransition = getLatestTranstion();
+        if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
+            return latestTransition.getEffectiveTransitionTime();
+        }
+        return null;
+    }
+
+
+    @Override
     public void cancel(DateTime requestedDate, boolean eot) throws EntitlementUserApiException  {
 
         SubscriptionState currentState = getState();
@@ -214,6 +207,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         }
 
         DateTime now = clock.getUTCNow();
+        requestedDate = (requestedDate != null) ? Clock.truncateMs(requestedDate) : null;
         if (requestedDate != null && requestedDate.isAfter(now)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
         }
@@ -256,8 +250,8 @@ public class Subscription extends PrivateFields  implements ISubscription {
     public void changePlan(String productName, BillingPeriod term,
             String priceList, DateTime requestedDate) throws EntitlementUserApiException {
 
+        requestedDate = (requestedDate != null) ? Clock.truncateMs(requestedDate) : null;
         String currentPriceList = getCurrentPriceList();
-        String realPriceList = (priceList == null) ? currentPriceList : priceList;
 
         SubscriptionState currentState = getState();
         if (currentState != SubscriptionState.ACTIVE) {
@@ -269,30 +263,47 @@ public class Subscription extends PrivateFields  implements ISubscription {
         }
 
         DateTime now = clock.getUTCNow();
-        IPlan newPlan = catalog.getPlan(productName, term, realPriceList);
-        if (newPlan == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BAD_CATALOG,
-                    productName, term.toString(), realPriceList);
+        PlanChangeResult planChangeResult = null;
+        try {
+
+            IProduct destProduct = catalog.getProductFromName(productName);
+            // STEPH really catalog exception
+            if (destProduct == null) {
+                throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BAD_CATALOG,
+                        productName, term.toString(), "");
+            }
+
+            IPlan currentPlan = getCurrentPlan();
+            PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
+                    currentPlan.getProduct().getCategory(),
+                    currentPlan.getBillingPeriod(),
+                    currentPriceList, getCurrentPhase().getPhaseType());
+            PlanSpecifier toPlanPhase = new PlanSpecifier(productName,
+                    destProduct.getCategory(),
+                    term,
+                    priceList);
+
+            planChangeResult = catalog.planChange(fromPlanPhase, toPlanPhase);
+        } catch (CatalogApiException e) {
+            throw new EntitlementUserApiException(e);
         }
 
-        IPlan currentPlan = getCurrentPlan();
-        PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-        		currentPlan.getProduct().getCategory(),
-                currentPlan.getBillingPeriod(),
-        		currentPriceList, getCurrentPhase().getPhaseType());
-        PlanSpecifier toPlanPhase = new PlanSpecifier(newPlan.getProduct().getName(),
-                newPlan.getProduct().getCategory(),
-        		newPlan.getBillingPeriod(),
-        		realPriceList);
+        ActionPolicy policy = planChangeResult.getPolicy();
+        IPriceList newPriceList = planChangeResult.getNewPriceList();
 
-        ActionPolicy policy = catalog.getPlanChangePolicy(fromPlanPhase, toPlanPhase);
+        IPlan newPlan = catalog.getPlan(productName, term, newPriceList.getName());
+        if (newPlan == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BAD_CATALOG,
+                    productName, term.toString(), newPriceList.getName());
+        }
+
         DateTime effectiveDate = getPlanChangeEffectiveDate(policy, now);
 
-        TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(this, newPlan, realPriceList, effectiveDate);
+        TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(this, newPlan, newPriceList.getName(), effectiveDate);
         IEvent changeEvent = new ApiEventChange(id, bundleStartDate, now, newPlan.getName(), currentTimedPhase.getPhase().getName(),
-                realPriceList, now, effectiveDate, activeVersion);
+                newPriceList.getName(), now, effectiveDate, activeVersion);
 
-        TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(this, newPlan, realPriceList, effectiveDate);
+        TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(this, newPlan, newPriceList.getName(), effectiveDate);
         IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, this, now);
         List<IEvent> changeEvents = new ArrayList<IEvent>();
         // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.

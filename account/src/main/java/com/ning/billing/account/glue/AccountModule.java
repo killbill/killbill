@@ -17,7 +17,6 @@
 package com.ning.billing.account.glue;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.IAccountService;
 import com.ning.billing.account.api.IAccountUserApi;
@@ -48,12 +47,16 @@ public class AccountModule extends AbstractModule {
         bind(IAccountUserApi.class).to(AccountUserApi.class).asEagerSingleton();
     }
 
-    private void installAccountService() {
-        bind(IAccountService.class).to(AccountService.class).asEagerSingleton();
-    }
+//    private void installAccountService() {
+//        bind(IAccountService.class).to(AccountService.class).asEagerSingleton();
+//    }
 
     private void installFieldStore() {
         bind(IFieldStoreDao.class).to(FieldStoreDao.class).asEagerSingleton();
+    }
+
+    protected void installInjectorMagic() {
+        bind(InjectorMagic.class).asEagerSingleton();
     }
 
     @Override
@@ -62,7 +65,8 @@ public class AccountModule extends AbstractModule {
         installAccountCore();
         installAccountDao();
         installAccountUserApi();
-        installAccountService();
+//        installAccountService();
         installFieldStore();
+        installInjectorMagic();
     }
 }

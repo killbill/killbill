@@ -16,12 +16,7 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -84,7 +79,7 @@ public class TestBusinessSubscription
         Assert.assertEquals(subscription.getRoundedMrr(), 0.0);
         Assert.assertEquals(subscription.getSlug(), phase.getName());
         Assert.assertEquals(subscription.getPhase(), phase.getPhaseType().toString());
-        Assert.assertEquals(subscription.getBillingPeriod(), phase.getBillingPeriod().toString());
+        Assert.assertEquals(subscription.getBillingPeriod(), phase.getBillingPeriod());
         Assert.assertEquals(subscription.getPrice(), phase.getRecurringPrice().getPrice(null));
         Assert.assertEquals(subscription.getProductCategory(), product.getCategory());
         Assert.assertEquals(subscription.getProductName(), product.getName());

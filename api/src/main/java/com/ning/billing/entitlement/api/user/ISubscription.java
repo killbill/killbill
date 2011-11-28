@@ -16,15 +16,12 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.UUID;
-
-import com.ning.billing.account.api.IAccount;
-import org.joda.time.DateTime;
-
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.ActionPolicy;
+import org.joda.time.DateTime;
+
+import java.util.UUID;
 
 
 public interface ISubscription extends IPrivateFields {
@@ -58,6 +55,8 @@ public interface ISubscription extends IPrivateFields {
     public SubscriptionState getState();
 
     public DateTime getStartDate();
+
+    public DateTime getEndDate();
 
     public IPlan getCurrentPlan();
 

@@ -16,13 +16,8 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
+import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
@@ -38,8 +33,12 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface IBundleSqlDao extends Transactional<IEventSqlDao>, CloseMe, Transmogrifier {
@@ -53,7 +52,12 @@ public interface IBundleSqlDao extends Transactional<IEventSqlDao>, CloseMe, Tra
 
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
+    public ISubscriptionBundle getBundleFromKey(@Bind("name") String name);
+
+    @SqlQuery
+    @Mapper(ISubscriptionBundleSqlMapper.class)
     public List<ISubscriptionBundle> getBundleFromAccount(@Bind("account_id") String accountId);
+
 
     public static class SubscriptionBundleBinder implements Binder<Bind, SubscriptionBundle> {
 

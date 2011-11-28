@@ -16,13 +16,8 @@
 
 package com.ning.billing.entitlement.engine.core;
 
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.ning.billing.config.IEntitlementConfig;
-
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.api.IEntitlementService;
@@ -38,17 +33,23 @@ import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
-import com.ning.billing.entitlement.events.user.IApiEvent;
-import com.ning.billing.lifecycle.IService;
+import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
 import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
 import com.ning.billing.util.clock.IClock;
 import com.ning.billing.util.eventbus.IEventBus;
 import com.ning.billing.util.eventbus.IEventBus.EventBusException;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Engine implements IEventListener, IEntitlementService {
 
     private static final String ENTITLEMENT_SERVICE_NAME = "entitlement-service";
+
+    private final long MAX_NOTIFICATION_THREAD_WAIT_MS = 10000; // 10 secs
+    private final long NOTIFICATION_THREAD_WAIT_INCREMENT_MS = 1000; // 1 sec
+    private final long NANO_TO_MS = (1000 * 1000);
 
     private final static Logger log = LoggerFactory.getLogger(Engine.class);
 
@@ -60,6 +61,8 @@ public class Engine implements IEventListener, IEntitlementService {
     private final IEntitlementBillingApi billingApi;
     private final IEntitlementTestApi testApi;
     private final IEventBus eventBus;
+
+    private boolean startedNotificationThread;
 
     @Inject
     public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor,
@@ -74,6 +77,8 @@ public class Engine implements IEventListener, IEntitlementService {
         this.testApi = testApi;
         this.billingApi = billingApi;
         this.eventBus = eventBus;
+
+        this.startedNotificationThread = false;
     }
 
     @Override
@@ -89,11 +94,13 @@ public class Engine implements IEventListener, IEntitlementService {
     @LyfecycleHandlerType(LyfecycleLevel.START_SERVICE)
     public void start() {
         apiEventProcessor.startNotifications(this);
+        waitForNotificationStartCompletion();
     }
 
     @LyfecycleHandlerType(LyfecycleLevel.STOP_SERVICE)
     public void stop() {
         apiEventProcessor.stopNotifications();
+        startedNotificationThread = false;
     }
 
     @Override
@@ -127,7 +134,42 @@ public class Engine implements IEventListener, IEntitlementService {
         } catch (EventBusException e) {
             log.warn("Failed to post entitlement event " + event, e);
         }
+    }
 
+    //
+    // We want to ensure the notification thread is indeed started when we return from start()
+    //
+    @Override
+    public void completedNotificationStart() {
+        synchronized (this) {
+            startedNotificationThread = true;
+            this.notifyAll();
+        }
+    }
+
+    private void waitForNotificationStartCompletion() {
+
+        long ini = System.nanoTime();
+        synchronized(this) {
+            do {
+                if (startedNotificationThread) {
+                    break;
+                }
+                try {
+                    this.wait(NOTIFICATION_THREAD_WAIT_INCREMENT_MS);
+                } catch (InterruptedException e ) {
+                    Thread.currentThread().interrupt();
+                    throw new EntitlementError(e);
+                }
+            } while (!startedNotificationThread &&
+                    (System.nanoTime() - ini) / NANO_TO_MS < MAX_NOTIFICATION_THREAD_WAIT_MS);
+
+            if (!startedNotificationThread) {
+                log.error("Could not start notification thread in {} msec !!!", MAX_NOTIFICATION_THREAD_WAIT_MS);
+                throw new EntitlementError("Failed to start service!!");
+            }
+            log.info("Notification thread has been started in {} ms", (System.nanoTime() - ini) / NANO_TO_MS);
+        }
     }
 
     private void insertNextPhaseEvent(Subscription subscription) {

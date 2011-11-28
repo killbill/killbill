@@ -16,21 +16,6 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
-
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.config.IEntitlementConfig;
@@ -45,6 +30,13 @@ import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.clock.IClock;
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 public class EntitlementDao implements IEntitlementDao {
 
@@ -104,6 +96,15 @@ public class EntitlementDao implements IEntitlementDao {
     @Override
     public List<ISubscription> getSubscriptions(UUID bundleId) {
         return subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
+    }
+
+    @Override
+    public List<ISubscription> getSubscriptionsForKey(String bundleKey) {
+        ISubscriptionBundle bundle =  bundlesDao.getBundleFromKey(bundleKey);
+        if (bundle == null) {
+            return Collections.emptyList();
+        }
+        return subscriptionsDao.getSubscriptionsFromBundleId(bundle.getId().toString());
     }
 
     @Override
@@ -178,7 +179,7 @@ public class EntitlementDao implements IEntitlementDao {
     }
 
     @Override
-    public void clearEventsReady(final UUID ownerId, final List<IEvent> cleared) {
+    public void clearEventsReady(final UUID ownerId, final Collection<IEvent> cleared) {
 
         log.debug(String.format("EntitlementDao clearEventsReady START cleared size = %d", cleared.size()));
 

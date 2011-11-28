@@ -27,6 +27,18 @@ getBundleFromId(id) ::= <<
     ;
 >>
 
+getBundleFromKey(name) ::= <<
+    select
+      id
+      , start_dt
+      , name
+      , account_id
+    from bundles
+    where
+      name = :name
+    ;
+>>
+
 
 getBundleFromAccount(account_id) ::= <<
     select
@@ -39,3 +51,4 @@ getBundleFromAccount(account_id) ::= <<
       account_id = :account_id
     ;
 >>
+

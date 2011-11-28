@@ -14,13 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.test;
+package com.ning.billing.analytics.api;
 
-import java.util.UUID;
+import com.ning.billing.lifecycle.IService;
 
-
-public interface IEntitlementTestApi {
-
-    public void doProcessReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly);
-
+public interface IAnalyticsService extends IService {
 }

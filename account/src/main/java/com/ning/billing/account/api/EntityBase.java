@@ -48,11 +48,6 @@ public abstract class EntityBase implements IEntity, IPersistable {
     }
 
     @Override
-    public String getIdAsString() {
-        return id.toString();
-    }
-
-    @Override
     public boolean isNew() {
         return this.isNew;
     }

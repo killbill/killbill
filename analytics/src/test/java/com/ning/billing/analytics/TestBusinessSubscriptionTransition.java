@@ -16,11 +16,7 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -28,9 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.Currency;
-
-import static com.ning.billing.catalog.api.Currency.*;
+import static com.ning.billing.catalog.api.Currency.USD;
 
 public class TestBusinessSubscriptionTransition
 {
@@ -39,6 +33,7 @@ public class TestBusinessSubscriptionTransition
     private BusinessSubscriptionEvent event;
     private DateTime requestedTimestamp;
     private String key;
+    private String accountKey;
     private BusinessSubscriptionTransition transition;
 
     @BeforeMethod(alwaysRun = true)
@@ -55,7 +50,8 @@ public class TestBusinessSubscriptionTransition
         event = BusinessSubscriptionEvent.subscriptionCancelled(prevISubscription.getCurrentPlan());
         requestedTimestamp = new DateTime(DateTimeZone.UTC);
         key = "1234";
-        transition = new BusinessSubscriptionTransition(key, requestedTimestamp, event, prevSubscription, nextSubscription);
+        accountKey = "pierre-1234";
+        transition = new BusinessSubscriptionTransition(key, accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
     }
 
     @Test(groups = "fast")
@@ -76,22 +72,22 @@ public class TestBusinessSubscriptionTransition
 
         BusinessSubscriptionTransition otherTransition;
 
-        otherTransition = new BusinessSubscriptionTransition(key, new DateTime(), event, prevSubscription, nextSubscription);
+        otherTransition = new BusinessSubscriptionTransition(key, accountKey, new DateTime(), event, prevSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition("12345", requestedTimestamp, event, prevSubscription, nextSubscription);
+        otherTransition = new BusinessSubscriptionTransition("12345", accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(key, requestedTimestamp, BusinessSubscriptionEvent.subscriptionPaused(null), prevSubscription, nextSubscription);
+        otherTransition = new BusinessSubscriptionTransition(key, accountKey, requestedTimestamp, BusinessSubscriptionEvent.subscriptionPaused(null), prevSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(key, requestedTimestamp, event, prevSubscription, prevSubscription);
+        otherTransition = new BusinessSubscriptionTransition(key, accountKey, requestedTimestamp, event, prevSubscription, prevSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(key, requestedTimestamp, event, nextSubscription, nextSubscription);
+        otherTransition = new BusinessSubscriptionTransition(key, accountKey, requestedTimestamp, event, nextSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(key, requestedTimestamp, event, nextSubscription, prevSubscription);
+        otherTransition = new BusinessSubscriptionTransition(key, accountKey, requestedTimestamp, event, nextSubscription, prevSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
     }
 
@@ -99,7 +95,7 @@ public class TestBusinessSubscriptionTransition
     public void testRejectInvalidTransitions() throws Exception
     {
         try {
-            new BusinessSubscriptionTransition(null, requestedTimestamp, event, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransition(null, accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
             Assert.fail();
         }
         catch (IllegalArgumentException e) {
@@ -107,7 +103,7 @@ public class TestBusinessSubscriptionTransition
         }
 
         try {
-            new BusinessSubscriptionTransition(key, null, event, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransition(key, accountKey, null, event, prevSubscription, nextSubscription);
             Assert.fail();
         }
         catch (IllegalArgumentException e) {
@@ -115,7 +111,7 @@ public class TestBusinessSubscriptionTransition
         }
 
         try {
-            new BusinessSubscriptionTransition(key, requestedTimestamp, null, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransition(key, accountKey, requestedTimestamp, null, prevSubscription, nextSubscription);
             Assert.fail();
         }
         catch (IllegalArgumentException e) {

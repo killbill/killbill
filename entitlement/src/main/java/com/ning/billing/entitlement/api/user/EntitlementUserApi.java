@@ -16,32 +16,25 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.IAccount;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IPriceListSet;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
-import com.ning.billing.entitlement.api.user.ISubscription;
-import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
-import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventCreate;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.IClock;
+import org.joda.time.DateTime;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class EntitlementUserApi implements IEntitlementUserApi {
 
@@ -76,6 +69,12 @@ public class EntitlementUserApi implements IEntitlementUserApi {
     }
 
     @Override
+    public List<ISubscription> getSubscriptionsForKey(String bundleKey) {
+        return dao.getSubscriptionsForKey(bundleKey);
+    }
+
+
+    @Override
     public List<ISubscription> getSubscriptionsForBundle(UUID bundleId) {
         return dao.getSubscriptions(bundleId);
     }
@@ -92,8 +91,8 @@ public class EntitlementUserApi implements IEntitlementUserApi {
             BillingPeriod term, String priceList, DateTime requestedDate) throws EntitlementUserApiException {
 
         String realPriceList = (priceList == null) ? IPriceListSet.DEFAULT_PRICELIST_NAME : priceList;
-
         DateTime now = clock.getUTCNow();
+        requestedDate = (requestedDate != null) ? Clock.truncateMs(requestedDate) : null;
         if (requestedDate != null && requestedDate.isAfter(now)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
         }
@@ -158,6 +157,4 @@ public class EntitlementUserApi implements IEntitlementUserApi {
         // STEPH Also update startDate for bundle ?
         return dao.createSubscription(subscription, events);
     }
-
-
 }

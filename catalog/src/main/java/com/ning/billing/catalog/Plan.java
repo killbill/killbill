@@ -16,24 +16,17 @@
 
 package com.ning.billing.catalog;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlIDREF;
-
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
+
+import javax.xml.bind.annotation.*;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class Plan extends ValidatingConfig<Catalog> implements IPlan {
@@ -119,10 +112,12 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 		super.initialize(catalog, sourceURI);
 		if(finalPhase != null) {
 			finalPhase.setPlan(this);
+			finalPhase.initialize(catalog, sourceURI);
 		}
 		if(initialPhases != null) {
 			for(PlanPhase p : initialPhases) {
 				p.setPlan(this);
+				p.initialize(catalog, sourceURI);
 			}
 		}
 	}

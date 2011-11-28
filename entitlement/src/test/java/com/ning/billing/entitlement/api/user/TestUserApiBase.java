@@ -50,7 +50,6 @@ import org.testng.annotations.BeforeMethod;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -306,11 +305,6 @@ public abstract class TestUserApiBase {
             @Override
             public UUID getId() {
                 return UUID.randomUUID();
-            }
-
-            @Override
-            public String getIdAsString() {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
 
             @Override
