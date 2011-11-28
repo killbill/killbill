@@ -14,11 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.account.api;
 
-import com.ning.billing.lifecycle.IService;
+import com.ning.billing.util.eventbus.IEventBusType;
 
-public interface IInvoiceService extends IService {
-    public IInvoiceUserApi getUserApi();
-    public IInvoicePaymentApi getPaymentApi();
+import java.util.List;
+import java.util.UUID;
+
+public interface IAccountChange extends IEventBusType {
+    public UUID getAccountId();
+
+    public List<IChangedField> getChangedFields();
+
+    public boolean hasChanges();
 }

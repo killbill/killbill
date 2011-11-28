@@ -38,7 +38,7 @@ public abstract class CustomizableEntityBase extends EntityBase implements ICust
 
     @Override
     public void save() {
-        saveObject();
+        super.save();
         fields.save();
     }
 

@@ -19,7 +19,7 @@ package com.ning.billing.account.api;
 import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 
-public class ChangedField {
+public class ChangedField implements IChangedField {
     private final String fieldName;
     private final String oldValue;
     private final String newValue;
@@ -32,5 +32,25 @@ public class ChangedField {
         this.fieldName = fieldName;
         this.oldValue = oldValue;
         this.newValue = newValue;
+    }
+
+    @Override
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    @Override
+    public String getOldValue() {
+        return oldValue;
+    }
+
+    @Override
+    public String getNewValue() {
+        return newValue;
+    }
+
+    @Override
+    public DateTime getChangeDate() {
+        return changeDate;
     }
 }

@@ -14,11 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.account.api;
 
-import com.ning.billing.lifecycle.IService;
+import org.joda.time.DateTime;
 
-public interface IInvoiceService extends IService {
-    public IInvoiceUserApi getUserApi();
-    public IInvoicePaymentApi getPaymentApi();
+public interface IChangedField {
+    public DateTime getChangeDate();
+    public String getFieldName();
+    public String getOldValue();
+    public String getNewValue();
 }

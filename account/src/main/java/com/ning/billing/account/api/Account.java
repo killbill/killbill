@@ -19,9 +19,8 @@ package com.ning.billing.account.api;
 import com.ning.billing.account.dao.IAccountDao;
 import com.ning.billing.account.glue.InjectorMagic;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.eventbus.IEventBusType;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 public class Account extends CustomizableEntityBase implements IAccount {
@@ -155,6 +154,16 @@ public class Account extends CustomizableEntityBase implements IAccount {
     }
 
     @Override
+    protected IEventBusType getCreateEvent() {
+        return new AccountCreation(id, this);
+    }
+
+    @Override
+    protected IEventBusType getUpdateEvent() {
+        return new AccountChange(id, originalData, this);
+    }
+
+    @Override
     protected void loadObject() {
         this.originalData = dao.getAccountById(id);
         this.externalKey = originalData.getExternalKey();
@@ -163,31 +172,5 @@ public class Account extends CustomizableEntityBase implements IAccount {
         this.phone = originalData.getPhone();
         this.currency = originalData.getCurrency();
         this.billCycleDay = originalData.getBillCycleDay();
-    }
-
-    private List<ChangedField> getChangedFields() {
-        List<ChangedField> changedFields = new ArrayList<ChangedField>();
-
-        if (!this.externalKey.equals(originalData.getExternalKey())) {
-            changedFields.add(new ChangedField("externalKey", this.externalKey, originalData.getExternalKey()));
-        }
-        if (!this.email.equals(originalData.getEmail())) {
-            changedFields.add(new ChangedField("email", this.email, originalData.getEmail()));
-        }
-        if (!this.name.equals(originalData.getName())) {
-            changedFields.add(new ChangedField("name", this.name, originalData.getName()));
-        }
-        if (!this.phone.equals(originalData.getPhone())) {
-            changedFields.add(new ChangedField("phone", this.phone, originalData.getPhone()));
-        }
-        if (!this.currency.equals(originalData.getCurrency())) {
-            changedFields.add(new ChangedField("currency", this.currency.toString(), originalData.getCurrency().toString()));
-        }
-        if (this.billCycleDay != originalData.getBillCycleDay()) {
-            changedFields.add(new ChangedField("billCycleDay", Integer.toString(this.billCycleDay),
-                                                               Integer.toString(originalData.getBillCycleDay())));
-        }
-
-        return changedFields;
     }
 }

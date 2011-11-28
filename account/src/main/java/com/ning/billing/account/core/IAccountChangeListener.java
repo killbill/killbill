@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.account.core;
 
-import com.ning.billing.lifecycle.IService;
+import com.ning.billing.account.api.IAccountChange;
 
-public interface IInvoiceService extends IService {
-    public IInvoiceUserApi getUserApi();
-    public IInvoicePaymentApi getPaymentApi();
+public interface IAccountChangeListener {
+    public void processAccountChange(IAccountChange change);
 }

@@ -14,11 +14,26 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.account.api;
 
-import com.ning.billing.lifecycle.IService;
+import java.util.UUID;
 
-public interface IInvoiceService extends IService {
-    public IInvoiceUserApi getUserApi();
-    public IInvoicePaymentApi getPaymentApi();
+public class AccountCreation implements IAccountCreation {
+    private final UUID id;
+    private final IAccountData data;
+
+    public AccountCreation(UUID id, IAccountData data) {
+        this.id = id;
+        this.data = data;
+    }
+
+    @Override
+    public UUID getId() {
+        return id;
+    }
+
+    @Override
+    public IAccountData getData() {
+        return data;
+    }
 }

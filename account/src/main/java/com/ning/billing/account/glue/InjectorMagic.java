@@ -21,6 +21,7 @@ import com.google.inject.Injector;
 import com.ning.billing.account.dao.IAccountDao;
 import com.ning.billing.account.dao.IFieldStoreDao;
 import com.ning.billing.account.dao.ITagStoreDao;
+import com.ning.billing.util.eventbus.IEventBus;
 
 public class InjectorMagic {
     public static InjectorMagic instance;
@@ -58,5 +59,9 @@ public class InjectorMagic {
 
     public static ITagStoreDao getTagStoreDao() {
         return InjectorMagic.get().getInstance(ITagStoreDao.class);
+    }
+
+    public static IEventBus getEventBus() {
+        return InjectorMagic.get().getInstance(IEventBus.class);
     }
 }

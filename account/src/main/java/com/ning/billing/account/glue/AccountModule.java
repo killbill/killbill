@@ -21,6 +21,7 @@ import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.IAccountService;
 import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.core.Engine;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.FieldStoreDao;
 import com.ning.billing.account.dao.IAccountDao;
@@ -29,30 +30,36 @@ import org.skife.config.ConfigurationObjectFactory;
 
 public class AccountModule extends AbstractModule {
 
-    protected void installConfig() {
+    private void installConfig() {
         final IAccountConfig config = new ConfigurationObjectFactory(System.getProperties()).build(IAccountConfig.class);
         bind(IAccountConfig.class).toInstance(config);
     }
 
-    protected void installAccountDao() {
+    private void installAccountCore() {
+        bind(IAccountService.class).to(Engine.class).asEagerSingleton();
+        bind(Engine.class).asEagerSingleton();
+    }
+
+    private void installAccountDao() {
         bind(IAccountDao.class).to(AccountDao.class).asEagerSingleton();
     }
 
-    protected void installAccountUserApi() {
+    private void installAccountUserApi() {
         bind(IAccountUserApi.class).to(AccountUserApi.class).asEagerSingleton();
     }
 
-    protected void installAccountService() {
+    private void installAccountService() {
         bind(IAccountService.class).to(AccountService.class).asEagerSingleton();
     }
 
-    protected void installFieldStore() {
+    private void installFieldStore() {
         bind(IFieldStoreDao.class).to(FieldStoreDao.class).asEagerSingleton();
     }
 
     @Override
     protected void configure() {
         installConfig();
+        installAccountCore();
         installAccountDao();
         installAccountUserApi();
         installAccountService();
