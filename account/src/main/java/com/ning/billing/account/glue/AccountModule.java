@@ -47,10 +47,6 @@ public class AccountModule extends AbstractModule {
         bind(IAccountUserApi.class).to(AccountUserApi.class).asEagerSingleton();
     }
 
-//    private void installAccountService() {
-//        bind(IAccountService.class).to(AccountService.class).asEagerSingleton();
-//    }
-
     private void installFieldStore() {
         bind(IFieldStoreDao.class).to(FieldStoreDao.class).asEagerSingleton();
     }
@@ -65,7 +61,6 @@ public class AccountModule extends AbstractModule {
         installAccountCore();
         installAccountDao();
         installAccountUserApi();
-//        installAccountService();
         installFieldStore();
         installInjectorMagic();
     }
