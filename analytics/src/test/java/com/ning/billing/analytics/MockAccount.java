@@ -35,7 +35,13 @@ public class MockAccount implements IAccount
     }
 
     @Override
-    public String getName()
+    public String getFirstName()
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getLastName()
     {
         throw new UnsupportedOperationException();
     }

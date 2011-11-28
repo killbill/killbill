@@ -29,14 +29,14 @@ import static org.testng.Assert.*;
 @Test(groups = {"account-dao"})
 public class TestSimpleAccountDao extends AccountDaoTestBase {
     private final String key = "test1234";
-    private final String name = "Wesley";
+    private final String firstName = "Wesley";
     private final String email = "dreadpirateroberts@therevenge.com";
 
     private Account createTestAccount() {
         Account account = Account.create();
         String thisKey = key + UUID.randomUUID().toString();
-        String thisName = name + UUID.randomUUID().toString();
-        account.externalKey(thisKey).name(thisName).email(email).currency(Currency.USD);
+        String lastName = UUID.randomUUID().toString();
+        account.externalKey(thisKey).firstName(firstName).lastName(lastName).email(email).currency(Currency.USD);
         return account;
     }
 
@@ -64,14 +64,16 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         Account account = createTestAccount();
         UUID id = account.getId();
         String key = account.getExternalKey();
-        String name = account.getName();
+        String firstName = account.getFirstName();
+        String lastName = account.getLastName();
         account.save();
 
         account = Account.loadAccount(id);
         assertNotNull(account);
         assertEquals(account.getId(), id);
         assertEquals(account.getExternalKey(), key);
-        assertEquals(account.getName(), name);
+        assertEquals(account.getFirstName(), firstName);
+        assertEquals(account.getLastName(), lastName);
 
     }
 

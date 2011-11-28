@@ -22,7 +22,9 @@ public interface IAccountData {
 
     public String getExternalKey();
 
-    public String getName();
+    public String getFirstName();
+
+    public String getLastName();
 
     public String getEmail();
 

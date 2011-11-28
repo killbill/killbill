@@ -53,8 +53,11 @@ public class AccountChange implements IAccountChange {
         if (!newData.getEmail().equals(oldData.getEmail())) {
             changedFields.add(new ChangedField("email", newData.getEmail(), oldData.getEmail()));
         }
-        if (!newData.getName().equals(oldData.getName())) {
-            changedFields.add(new ChangedField("name", newData.getName(), oldData.getName()));
+        if (!newData.getFirstName().equals(oldData.getFirstName())) {
+            changedFields.add(new ChangedField("firstName", newData.getFirstName(), oldData.getFirstName()));
+        }
+        if (!newData.getLastName().equals(oldData.getLastName())) {
+            changedFields.add(new ChangedField("lastName", newData.getLastName(), oldData.getLastName()));
         }
         if (!newData.getPhone().equals(oldData.getPhone())) {
             changedFields.add(new ChangedField("phone", newData.getPhone(), oldData.getPhone()));

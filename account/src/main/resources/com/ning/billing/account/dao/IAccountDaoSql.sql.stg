@@ -1,36 +1,32 @@
 group IAccountDaoSql;
 
 insertAccount() ::= <<
-    insert into accounts (id, external_key, email, name, phone, currency)
-    values (:id, :externalKey, :email, :name, :phone, :currency);
+    insert into accounts (id, external_key, email, first_name, last_name, phone, currency)
+    values (:id, :externalKey, :email, :firstName, :lastName, :phone, :currency);
 >>
 
 updateAccount() ::= <<
     update accounts
-    set external_key = :externalKey, email = :email, name = :name, phone = :phone, currency = :currency
+    set external_key = :externalKey, email = :email, first_name = :firstName, last_name = :lastName,
+        phone = :phone, currency = :currency
     where id = :id;
 >>
 
 getAccountByKey() ::= <<
-    select id, external_key, email, name, phone, currency
+    select id, external_key, email, first_name, last_name, phone, currency
     from accounts
-    where
-      external_key = :externalKey
-    ;
+    where external_key = :externalKey;
 >>
 
 getAccountById() ::= <<
-    select id, external_key, email, name, phone, currency
+    select id, external_key, email, first_name, last_name, phone, currency
     from accounts
-    where
-      id = :id
-    ;
+    where id = :id;
 >>
 
 getAccounts() ::= <<
-    select id, external_key, email, name, phone, currency
-    from accounts
-    ;
+    select id, external_key, email, first_name, last_name, phone, currency
+    from accounts;
 >>
 
 test() ::= <<

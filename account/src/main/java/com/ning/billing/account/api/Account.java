@@ -28,7 +28,8 @@ public class Account extends CustomizableEntityBase implements IAccount {
 
     private String externalKey;
     private String email;
-    private String name;
+    private String firstName;
+    private String lastName;
     private String phone;
     private Currency currency;
     private int billCycleDay;
@@ -48,7 +49,8 @@ public class Account extends CustomizableEntityBase implements IAccount {
         this();
         this.externalKey = data.getExternalKey();
         this.email = data.getEmail();
-        this.name = data.getName();
+        this.firstName = data.getFirstName();
+        this.lastName = data.getLastName();
         this.phone = data.getPhone();
         this.currency = data.getCurrency();
         this.billCycleDay = data.getBillCycleDay();
@@ -70,12 +72,22 @@ public class Account extends CustomizableEntityBase implements IAccount {
     }
 
     @Override
-    public String getName() {
-        return name;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public Account name(String name) {
-        this.name = name;
+    public Account firstName(String firstName) {
+        this.firstName = firstName;
+        return this;
+    }
+
+    @Override
+    public String getLastName() {
+        return lastName;
+    }
+
+    public Account lastName(String lastName) {
+        this.lastName = lastName;
         return this;
     }
 
@@ -168,7 +180,8 @@ public class Account extends CustomizableEntityBase implements IAccount {
         this.originalData = dao.getAccountById(id);
         this.externalKey = originalData.getExternalKey();
         this.email = originalData.getEmail();
-        this.name = originalData.getName();
+        this.firstName = originalData.getFirstName();
+        this.lastName = originalData.getLastName();
         this.phone = originalData.getPhone();
         this.currency = originalData.getCurrency();
         this.billCycleDay = originalData.getBillCycleDay();

@@ -3,12 +3,14 @@ CREATE TABLE accounts (
     id char(36) NOT NULL,
     external_key varchar(128) NULL,
     email varchar(50) DEFAULT NULL,
-    name varchar(100) NOT NULL,
+    first_name varchar(100) NOT NULL,
+    last_name varchar(100) NOT NULL,
     phone varchar(13) DEFAULT NULL,
     currency char(3) NOT NULL,
     PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key);
+CREATE UNIQUE INDEX accounts_email ON accounts(email);
 
 DROP TABLE IF EXISTS custom_fields;
 CREATE TABLE custom_fields (

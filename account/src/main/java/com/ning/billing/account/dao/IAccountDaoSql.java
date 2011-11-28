@@ -63,11 +63,14 @@ public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
             UUID id = UUID.fromString(result.getString("id"));
             String externalKey = result.getString("external_key");
             String email = result.getString("email");
-            String name = result.getString("name");
+            String firstName = result.getString("first_name");
+            String lastName = result.getString("last_name");
             String phone = result.getString("phone");
             Currency currency = Currency.valueOf(result.getString("currency"));
 
-            return new Account(id).externalKey(externalKey).email(email).name(name).phone(phone).currency(currency);
+            return new Account(id).externalKey(externalKey).email(email)
+                                  .firstName(firstName).lastName(lastName)
+                                  .phone(phone).currency(currency);
         }
     }
 
@@ -82,7 +85,8 @@ public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
                         q.bind("id", account.getId().toString());
                         q.bind("externalKey", account.getExternalKey());
                         q.bind("email", account.getEmail());
-                        q.bind("name", account.getName());
+                        q.bind("firstName", account.getFirstName());
+                        q.bind("lastName", account.getLastName());
                         q.bind("phone", account.getPhone());
                         q.bind("currency", account.getCurrency().toString());
                     }
