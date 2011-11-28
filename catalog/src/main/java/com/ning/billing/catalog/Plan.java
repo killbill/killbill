@@ -49,7 +49,7 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	
 	@XmlElementWrapper(name="initialPhases", required=false)
 	@XmlElement(name="phase", required=true)
-    private PlanPhase[] initialPhases;
+    private PlanPhase[] initialPhases = new PlanPhase[0];
 	
 	@XmlElement(name="finalPhase", required=true)
     private PlanPhase finalPhase;
