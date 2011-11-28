@@ -16,14 +16,13 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
 import com.ning.billing.util.eventbus.IEventBusType;
+import org.joda.time.DateTime;
+
+import java.util.UUID;
 
 public interface ISubscriptionTransition extends IEventBusType {
 
@@ -36,6 +35,8 @@ public interface ISubscriptionTransition extends IEventBusType {
         UNCANCEL,
         PHASE
     }
+
+    UUID getId();
 
     SubscriptionTransitionType getTransitionType();
 

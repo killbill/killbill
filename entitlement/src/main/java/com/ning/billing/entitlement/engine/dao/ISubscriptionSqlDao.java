@@ -16,13 +16,10 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
+import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.user.ISubscription;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
@@ -38,9 +35,13 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.ISubscription;
-import com.ning.billing.entitlement.api.user.Subscription;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
 
 @ExternalizedSqlViaStringTemplate3()
 public interface ISubscriptionSqlDao extends Transactional<ISubscriptionSqlDao>, CloseMe, Transmogrifier {
@@ -98,10 +99,17 @@ public interface ISubscriptionSqlDao extends Transactional<ISubscriptionSqlDao>,
             DateTime ptd = getDate(r, "ptd_dt");
             long activeVersion = r.getLong("active_version");
 
-            Subscription subscription = new Subscription(id, bundleId, category, bundleStartDate, startDate, ctd, ptd, activeVersion);
+            Subscription subscription = new Subscription(new SubscriptionBuilder()
+            .setId(id)
+            .setBundleId(bundleId)
+            .setCategory(category)
+            .setBundleStartDate(bundleStartDate)
+            .setStartDate(startDate)
+            .setActiveVersion(activeVersion)
+            .setChargedThroughDate(ctd)
+            .setPaidThroughDate(ptd),
+                true);
             return subscription;
         }
     }
-
-
 }

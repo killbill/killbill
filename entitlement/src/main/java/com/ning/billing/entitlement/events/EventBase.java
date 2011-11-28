@@ -16,14 +16,11 @@
 
 package com.ning.billing.entitlement.events;
 
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import org.joda.time.DateTime;
+
+import java.util.UUID;
 
 public abstract class EventBase implements IEvent {
 
@@ -39,6 +36,20 @@ public abstract class EventBase implements IEvent {
     private UUID processingOwner;
     private DateTime nextAvailableProcessingTime;
     private IEventLyfecycleState processingState;
+
+    public EventBase(EventBaseBuilder builder) {
+        this.uuid = builder.getUuid();
+        this.subscriptionId = builder.getSubscriptionId();
+        this.requestedDate = builder.getRequestedDate();
+        this.effectiveDate = builder.getEffectiveDate();
+        this.processedDate = builder.getProcessedDate();
+
+        this.activeVersion = builder.getActiveVersion();
+        this.isActive = builder.isActive();
+        this.processingOwner = builder.getProcessingOwner();
+        this.nextAvailableProcessingTime = builder.getNextAvailableProcessingTime();
+        this.processingState = builder.getProcessingState();
+    }
 
     public EventBase(UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,

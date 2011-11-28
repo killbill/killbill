@@ -16,16 +16,10 @@
 
 package com.ning.billing.entitlement.events.user;
 
-import java.util.UUID;
-
+import com.ning.billing.entitlement.events.EventBase;
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.entitlement.alignment.IPlanAligner;
-import com.ning.billing.entitlement.alignment.PlanAligner;
-import com.ning.billing.entitlement.engine.core.Engine;
-import com.ning.billing.entitlement.events.EventBase;
-import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
+import java.util.UUID;
 
 public class ApiEventBase extends EventBase implements IApiEvent {
 
@@ -34,6 +28,15 @@ public class ApiEventBase extends EventBase implements IApiEvent {
     private final String eventPlan;
     private final String eventPlanPhase;
     private final String eventPriceList;
+
+
+    public ApiEventBase(ApiEventBuilder builder) {
+        super(builder);
+        this.eventType = builder.getEventType();
+        this.eventPriceList = builder.getEventPriceList();
+        this.eventPlan = builder.getEventPlan();
+        this.eventPlanPhase = builder.getEventPlanPhase();
+    }
 
 
     public ApiEventBase(UUID subscriptionId, DateTime bundleStartDate, DateTime processed, String planName, String phaseName,

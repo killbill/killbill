@@ -151,6 +151,7 @@ public class TestAnalyticsListener
         final ApiEventType eventType = ApiEventType.CREATE;
         final ISubscription.SubscriptionState nextState = ISubscription.SubscriptionState.ACTIVE;
         return new SubscriptionTransition(
+            UUID.randomUUID(),
             subscriptionId,
             bundleUUID,
             IEvent.EventType.API_USER,
@@ -198,6 +199,7 @@ public class TestAnalyticsListener
     )
     {
         return new SubscriptionTransition(
+            UUID.randomUUID(),
             subscriptionId,
             bundleUUID,
             IEvent.EventType.API_USER,

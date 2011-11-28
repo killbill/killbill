@@ -16,38 +16,21 @@
 
 package com.ning.billing.entitlement.events.phase;
 
-import java.util.UUID;
 
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.events.EventBase;
-import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
+import org.joda.time.DateTime;
 
 
 public class PhaseEvent extends EventBase implements IPhaseEvent {
 
     private final String phaseName;
 
-    public PhaseEvent(UUID subscriptionId, IPlanPhase phase, DateTime requestedDate,
-            DateTime effectiveDate, DateTime processedDate, long activeVersion) {
-        super(subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, true);
-        this.phaseName = phase.getName();
+    public PhaseEvent(PhaseEventBuilder builder) {
+        super(builder);
+        this.phaseName = builder.getPhaseName();
     }
-
-
-    public PhaseEvent(UUID id, UUID subscriptionId, String phaseName, DateTime requestedDate,
-            DateTime effectiveDate, DateTime processedDate,
-            long activeVersion, boolean isActiveVersion,
-            UUID processingOwner, DateTime nextAvailableProcessingTime,
-            IEventLyfecycleState processingState) {
-        super(id, subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActiveVersion, processingOwner, nextAvailableProcessingTime, processingState);
-        this.phaseName = phaseName;
-    }
-
 
     @Override
     public EventType getType() {
@@ -76,9 +59,12 @@ public class PhaseEvent extends EventBase implements IPhaseEvent {
     public static final IPhaseEvent getNextPhaseEvent(TimedPhase nextTimedPhase, Subscription subscription, DateTime now) {
         return (nextTimedPhase == null) ?
                 null :
-                    new PhaseEvent(subscription.getId(), nextTimedPhase.getPhase(), now, nextTimedPhase.getStartPhase(),
-                            now,  subscription.getActiveVersion());
-
+                    new PhaseEvent(new PhaseEventBuilder()
+                        .setSubscriptionId(subscription.getId())
+                        .setRequestedDate(now)
+                        .setEffectiveDate(nextTimedPhase.getStartPhase())
+                        .setProcessedDate(now)
+                        .setActiveVersion(subscription.getActiveVersion())
+                        .setPhaseName(nextTimedPhase.getPhase().getName()));
     }
-
 }

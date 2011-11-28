@@ -19,10 +19,7 @@ package com.ning.billing.entitlement.engine.dao;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.config.IEntitlementConfig;
-import com.ning.billing.entitlement.api.user.ISubscription;
-import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.*;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -217,8 +214,7 @@ public class EntitlementDao implements IEntitlementDao {
                 return null;
             }
         });
-        return new Subscription(subscription.getId(), subscription.getBundleId(),subscription.getCategory(), subscription.getBundleStartDate(),
-                subscription.getStartDate(), subscription.getChargedThroughDate(), subscription.getPaidThroughDate(), subscription.getActiveVersion());
+        return new Subscription(new SubscriptionBuilder(subscription), true);
     }
 
     @Override

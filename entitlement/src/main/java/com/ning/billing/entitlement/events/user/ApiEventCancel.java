@@ -16,23 +16,10 @@
 
 package com.ning.billing.entitlement.events.user;
 
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
-
 public class ApiEventCancel extends ApiEventBase {
 
-    public ApiEventCancel(UUID subscriptionId, DateTime bundleStartDate, DateTime now, DateTime requestedDate, DateTime effectiveDate, long version) {
-        super(subscriptionId, bundleStartDate, now, requestedDate, ApiEventType.CANCEL, effectiveDate, version);
-    }
 
-    public ApiEventCancel(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,
-            String priceList, DateTime requestedDate, DateTime effectiveDate, long activeVersion,
-            boolean isActive, UUID processingOwner, DateTime nextAvailableProcessingTime,IEventLyfecycleState processingState) {
-        super(id, subscriptionId, processed, eventPlan, eventPhase, priceList, requestedDate, ApiEventType.CANCEL, effectiveDate,
-                activeVersion, isActive, processingOwner, nextAvailableProcessingTime, processingState);
+    public ApiEventCancel(ApiEventBuilder builder) {
+        super(builder.setEventType(ApiEventType.CANCEL));
     }
 }

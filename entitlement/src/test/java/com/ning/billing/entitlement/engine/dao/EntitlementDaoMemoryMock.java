@@ -20,10 +20,7 @@ import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.IEntitlementConfig;
-import com.ning.billing.entitlement.api.user.ISubscription;
-import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.*;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
@@ -218,8 +215,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     private ISubscription buildSubscription(Subscription in) {
-        return new Subscription(in.getId(), in.getBundleId(), in.getCategory(), in.getBundleStartDate(),
-                in.getStartDate(), in.getChargedThroughDate(), in.getPaidThroughDate(), in.getActiveVersion());
+        return new Subscription(new SubscriptionBuilder(in), true);
     }
 
     @Override

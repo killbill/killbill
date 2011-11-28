@@ -98,6 +98,7 @@ public class TestAnalyticsService
         final DateTime requestedTransitionTime = new DateTime(DateTimeZone.UTC);
         final String priceList = "something";
         transition = new SubscriptionTransition(
+            UUID.randomUUID(),
             subscriptionId,
             bundle.getId(),
             IEvent.EventType.API_USER,

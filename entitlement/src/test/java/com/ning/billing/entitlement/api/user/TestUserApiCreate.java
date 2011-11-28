@@ -16,28 +16,52 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
-import java.util.List;
-
-import org.joda.time.DateTime;
-import org.testng.Assert;
-
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IPriceListSet;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.util.clock.Clock;
+import org.joda.time.DateTime;
+import org.testng.Assert;
+
+import java.util.List;
+
+import static org.testng.Assert.*;
 
 public abstract class TestUserApiCreate extends TestUserApiBase {
 
+
+
+    protected void testCreateWithRequestedDateReal() {
+        log.info("Starting testCreateWithRequestedDate");
+        try {
+
+            DateTime init = clock.getUTCNow();
+            DateTime requestedDate = init.minusYears(1);
+
+            String productName = "Shotgun";
+            BillingPeriod term = BillingPeriod.MONTHLY;
+            String planSetName = IPriceListSet.DEFAULT_PRICELIST_NAME;
+
+
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.CREATE);
+
+
+            Subscription subscription = (Subscription) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, requestedDate);
+            assertNotNull(subscription);
+
+            assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
+            //assertEquals(subscription.getAccount(), account.getId());
+            assertEquals(subscription.getBundleId(), bundle.getId());
+            assertEquals(subscription.getStartDate(), requestedDate);
+
+            assertTrue(testListener.isCompleted(5000));
+
+        } catch (EntitlementUserApiException e) {
+            Assert.fail(e.getMessage());
+        }
+    }
 
     protected void testSimpleCreateSubscriptionReal() {
 
