@@ -27,7 +27,7 @@ import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.Subscription.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.util.clock.IClock;
@@ -62,18 +62,10 @@ public class EntitlementBillingApi implements IEntitlementBillingApi {
             new EntitlementBillingApiException(String.format("Unknwon subscription %s", subscriptionId));
         }
 
-        Subscription updatedSubscription = new SubscriptionBuilder()
-            .setId(subscription.getId())
-            .setBundleId(subscription.getBundleId())
-            .setStartDate(subscription.getStartDate())
-            .setBundleStartDate(subscription.getBundleStartDate())
+        SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
             .setChargedThroughDate(ctd)
-            .setPaidThroughDate(subscription.getPaidThroughDate())
-            .setActiveVersion(subscription.getActiveVersion())
-            .setCategory(subscription.getCategory())
-            .build();
-
-        dao.updateSubscription(updatedSubscription);
+            .setPaidThroughDate(subscription.getPaidThroughDate());
+        dao.updateSubscription(new Subscription(builder, false));
     }
 
 }

@@ -14,12 +14,28 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.events.user;
+package com.ning.billing.entitlement.events.phase;
 
+import com.ning.billing.entitlement.events.EventBaseBuilder;
 
-public class ApiEventResume extends ApiEventBase {
+public class PhaseEventBuilder extends EventBaseBuilder<PhaseEventBuilder> {
 
-    public ApiEventResume(ApiEventBuilder builder) {
-        super(builder.setEventType(ApiEventType.RESUME));
+    private String phaseName;
+
+    public PhaseEventBuilder() {
+        super();
+    }
+
+    public PhaseEventBuilder(EventBaseBuilder<PhaseEventBuilder> base) {
+        super(base);
+    }
+
+    public PhaseEventBuilder setPhaseName(String phaseName) {
+        this.phaseName = phaseName;
+        return this;
+    }
+
+    public String getPhaseName() {
+        return phaseName;
     }
 }
