@@ -93,10 +93,17 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
     public Subscription(SubscriptionBuilder builder, boolean rebuildTransition) {
         super();
+        
+        /**
+         * Why are these found via static lookup rather than passed in via DI? 
+         * See http://martinfowler.com/articles/injection.html for explanation of
+         * why DI is your friend. -brianm
+         */
         this.clock = InjectorMagic.getClock();
         this.dao = InjectorMagic.getEntitlementDao();
         this.catalog = InjectorMagic.getCatlog();
         this.planAligner = InjectorMagic.getPlanAligner();
+        
         this.id = builder.getId();
         this.bundleId = builder.getBundleId();
         this.startDate = builder.getStartDate();
