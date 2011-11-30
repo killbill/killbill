@@ -223,6 +223,12 @@ public class Subscription extends PrivateFields  implements ISubscription {
         if (nextPhaseEvent != null) {
             uncancelEvents.add(nextPhaseEvent);
         }
+        
+        /**
+         * I think you might be better of disentangling state storage from business logic. 
+         * This happens in a number of places as well as here (such as the subsequent call to
+         * rebuildTransitions() so assume this comment applies at all such places :-) -brianm
+         */
         dao.uncancelSubscription(id, uncancelEvents);
         rebuildTransitions();
     }
@@ -458,7 +464,6 @@ public class Subscription extends PrivateFields  implements ISubscription {
     }
 
     private void rebuildTransitions() {
-
         List<IEvent> events = dao.getEventsForSubscription(id);
         if (events == null) {
             return;
