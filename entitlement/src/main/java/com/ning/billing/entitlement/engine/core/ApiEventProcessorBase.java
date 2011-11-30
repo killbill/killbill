@@ -38,7 +38,7 @@ import com.google.inject.Inject;
 import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 import com.ning.billing.util.clock.IClock;
 
 public abstract class ApiEventProcessorBase implements IApiEventProcessor {
@@ -206,9 +206,9 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
         int curSequenceId = sequenceId.getAndIncrement();
 
         //Get all current ready events
-        List<IEvent> claimedEvents = new LinkedList<IEvent>();
+        List<IEntitlementEvent> claimedEvents = new LinkedList<IEntitlementEvent>();
         do {
-            List<IEvent> tmpEvents = dao.getEventsReady(apiProcessorId, curSequenceId);
+            List<IEntitlementEvent> tmpEvents = dao.getEventsReady(apiProcessorId, curSequenceId);
             if (tmpEvents.size() == 0) {
                 break;
             }
@@ -219,14 +219,14 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
         }
 
         // Filter for specific subscriptions if needed
-        Collection<IEvent> claimedEventsFiltered = null;
+        Collection<IEntitlementEvent> claimedEventsFiltered = null;
         if (subscriptionsIds.length == 0) {
             claimedEventsFiltered = claimedEvents;
         } else {
 
-            claimedEventsFiltered = Collections2.filter(claimedEvents, new Predicate<IEvent>() {
+            claimedEventsFiltered = Collections2.filter(claimedEvents, new Predicate<IEntitlementEvent>() {
                 @Override
-                public boolean apply(IEvent input) {
+                public boolean apply(IEntitlementEvent input) {
                     for (UUID cur : subscriptionsIds) {
                         if (cur.equals(input.getSubscriptionId())) {
                             return true;
@@ -242,7 +242,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
         // If only one event is requested extract it
         if (oneEventOnly) {
-            List<IEvent> oneEventList = new ArrayList<IEvent>(1);
+            List<IEntitlementEvent> oneEventList = new ArrayList<IEntitlementEvent>(1);
             oneEventList.add(claimedEventsFiltered.iterator().next());
             claimedEventsFiltered = oneEventList;
         }
@@ -257,5 +257,5 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
     }
 
     protected abstract boolean doProcessEvents(int sequenceId);
-    protected abstract boolean doProcessEventsFromList(int sequenceId, Collection<IEvent> events);
+    protected abstract boolean doProcessEventsFromList(int sequenceId, Collection<IEntitlementEvent> events);
 }

@@ -16,13 +16,13 @@
 
 package com.ning.billing.entitlement.engine.core;
 
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 
 
 
 public interface IEventListener {
 
-    public void processEventReady(IEvent event);
+    public void processEventReady(IEntitlementEvent event);
 
     public void completedNotificationStart();
 }

@@ -37,7 +37,7 @@ import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventBuilder;
@@ -167,7 +167,7 @@ public class EntitlementUserApi implements IEntitlementUserApi {
 
         TimedPhase nextTimedPhase =  planAligner.getNextTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
         IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, subscription, now);
-        List<IEvent> events = new ArrayList<IEvent>();
+        List<IEntitlementEvent> events = new ArrayList<IEntitlementEvent>();
         events.add(creationEvent);
         if (nextPhaseEvent != null) {
             events.add(nextPhaseEvent);

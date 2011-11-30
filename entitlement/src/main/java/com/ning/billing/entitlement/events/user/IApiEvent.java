@@ -16,10 +16,10 @@
 
 package com.ning.billing.entitlement.events.user;
 
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 
 
-public interface IApiEvent extends IEvent {
+public interface IApiEvent extends IEntitlementEvent {
 
     public String getEventPlan();
 

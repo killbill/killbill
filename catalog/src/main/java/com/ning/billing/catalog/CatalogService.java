@@ -22,8 +22,8 @@ import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.config.ICatalogConfig;
 import com.ning.billing.lifecycle.IService;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
-import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.config.XMLLoader;
 
 public class CatalogService implements IService, Provider<ICatalog>, ICatalogService {
@@ -43,7 +43,7 @@ public class CatalogService implements IService, Provider<ICatalog>, ICatalogSer
         this.isInitialized = false;
     }
 
-    @LyfecycleHandlerType(LyfecycleLevel.LOAD_CATALOG)
+    @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)
     public synchronized void loadCatalog() throws ServiceException {
         if (!isInitialized) {
             try {

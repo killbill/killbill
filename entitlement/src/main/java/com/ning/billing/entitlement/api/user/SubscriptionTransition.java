@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
-import com.ning.billing.entitlement.events.IEvent.EventType;
+import com.ning.billing.entitlement.events.IEntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 

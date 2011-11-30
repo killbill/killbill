@@ -24,7 +24,7 @@ import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 
 public interface IEntitlementDao {
 
@@ -50,22 +50,22 @@ public interface IEntitlementDao {
     public void updateSubscription(Subscription subscription);
 
     // Event apis
-    public void createNextPhaseEvent(UUID subscriptionId, IEvent nextPhase);
+    public void createNextPhaseEvent(UUID subscriptionId, IEntitlementEvent nextPhase);
 
-    public List<IEvent> getEventsForSubscription(UUID subscriptionId);
+    public List<IEntitlementEvent> getEventsForSubscription(UUID subscriptionId);
 
-    public List<IEvent> getPendingEventsForSubscription(UUID subscriptionId);
+    public List<IEntitlementEvent> getPendingEventsForSubscription(UUID subscriptionId);
 
-    public List<IEvent> getEventsReady(UUID ownerId, int sequenceId);
+    public List<IEntitlementEvent> getEventsReady(UUID ownerId, int sequenceId);
 
-    public void clearEventsReady(UUID ownerId, Collection<IEvent> cleared);
+    public void clearEventsReady(UUID ownerId, Collection<IEntitlementEvent> cleared);
 
     // Subscription creation, cancellation, changePlan apis
-    public ISubscription createSubscription(Subscription subscription, List<IEvent> initialEvents);
+    public ISubscription createSubscription(Subscription subscription, List<IEntitlementEvent> initialEvents);
 
-    public void cancelSubscription(UUID subscriptionId, IEvent cancelEvent);
+    public void cancelSubscription(UUID subscriptionId, IEntitlementEvent cancelEvent);
 
-    public void uncancelSubscription(UUID subscriptionId, List<IEvent> uncancelEvents);
+    public void uncancelSubscription(UUID subscriptionId, List<IEntitlementEvent> uncancelEvents);
 
-    public void changePlan(UUID subscriptionId, List<IEvent> changeEvents);
+    public void changePlan(UUID subscriptionId, List<IEntitlementEvent> changeEvents);
 }

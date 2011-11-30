@@ -28,7 +28,7 @@ import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDaoMock;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IApiEvent;
@@ -203,7 +203,7 @@ public abstract class TestUserApiBase {
 
     protected void checkNextPhaseChange(Subscription subscription, int expPendingEvents, DateTime expPhaseChange) {
 
-        List<IEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
+        List<IEntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
         assertNotNull(events);
         printEvents(events);
         assertEquals(events.size(), expPendingEvents);
@@ -211,7 +211,7 @@ public abstract class TestUserApiBase {
             boolean foundPhase = false;
             boolean foundChange = false;
 
-            for (IEvent cur : events) {
+            for (IEntitlementEvent cur : events) {
                 if (cur instanceof IPhaseEvent) {
                     assertEquals(foundPhase, false);
                     foundPhase = true;
@@ -327,8 +327,8 @@ public abstract class TestUserApiBase {
     }
 
 
-    protected void printEvents(List<IEvent> events) {
-        for (IEvent cur : events) {
+    protected void printEvents(List<IEntitlementEvent> events) {
+        for (IEntitlementEvent cur : events) {
             log.debug("Inspect event " + cur);
         }
     }

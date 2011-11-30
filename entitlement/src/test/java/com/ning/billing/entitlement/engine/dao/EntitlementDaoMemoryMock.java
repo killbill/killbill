@@ -38,9 +38,9 @@ import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.events.IEvent.EventType;
-import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent.EventType;
+import com.ning.billing.entitlement.events.IEventLifecycle.IEventLifecycleState;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.util.clock.IClock;
@@ -51,7 +51,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
 
     private final List<ISubscriptionBundle> bundles;
     private final List<ISubscription> subscriptions;
-    private final TreeSet<IEvent> events;
+    private final TreeSet<IEntitlementEvent> events;
     private final IClock clock;
     private final IEntitlementConfig config;
 
@@ -64,7 +64,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
         this.config = config;
         this.bundles = new ArrayList<ISubscriptionBundle>();
         this.subscriptions = new ArrayList<ISubscription>();
-        this.events = new TreeSet<IEvent>();
+        this.events = new TreeSet<IEntitlementEvent>();
     }
 
     @Override
@@ -124,7 +124,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
 
 
     @Override
-    public ISubscription createSubscription(Subscription subscription, List<IEvent> initalEvents) {
+    public ISubscription createSubscription(Subscription subscription, List<IEntitlementEvent> initalEvents) {
 
         synchronized(events) {
             events.addAll(initalEvents);
@@ -147,10 +147,10 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     @Override
-    public List<IEvent> getEventsForSubscription(UUID subscriptionId) {
+    public List<IEntitlementEvent> getEventsForSubscription(UUID subscriptionId) {
         synchronized(events) {
-            List<IEvent> results = new LinkedList<IEvent>();
-            for (IEvent cur : events) {
+            List<IEntitlementEvent> results = new LinkedList<IEntitlementEvent>();
+            for (IEntitlementEvent cur : events) {
                 if (cur.getSubscriptionId().equals(subscriptionId)) {
                     results.add(cur);
                 }
@@ -160,12 +160,12 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     @Override
-    public List<IEvent> getPendingEventsForSubscription(UUID subscriptionId) {
+    public List<IEntitlementEvent> getPendingEventsForSubscription(UUID subscriptionId) {
         synchronized(events) {
-            List<IEvent> results = new LinkedList<IEvent>();
-            for (IEvent cur : events) {
+            List<IEntitlementEvent> results = new LinkedList<IEntitlementEvent>();
+            for (IEntitlementEvent cur : events) {
                 if (cur.isActive() &&
-                        cur.getProcessingState() == IEventLyfecycleState.AVAILABLE &&
+                        cur.getProcessingState() == IEventLifecycleState.AVAILABLE &&
                             cur.getSubscriptionId().equals(subscriptionId)) {
                     results.add(cur);
                 }
@@ -187,17 +187,17 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     @Override
-    public void createNextPhaseEvent(UUID subscriptionId, IEvent nextPhase) {
+    public void createNextPhaseEvent(UUID subscriptionId, IEntitlementEvent nextPhase) {
         cancelNextPhaseEvent(subscriptionId);
         insertEvent(nextPhase);
     }
 
 
     @Override
-    public List<IEvent> getEventsReady(UUID ownerId, int sequenceId) {
+    public List<IEntitlementEvent> getEventsReady(UUID ownerId, int sequenceId) {
         synchronized(events) {
-            List<IEvent> readyList = new LinkedList<IEvent>();
-            for (IEvent cur : events) {
+            List<IEntitlementEvent> readyList = new LinkedList<IEntitlementEvent>();
+            for (IEntitlementEvent cur : events) {
                 if (cur.isAvailableForProcessing(clock.getUTCNow())) {
 
                     if (cur.getOwner() != null) {
@@ -205,7 +205,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
                     }
                     cur.setOwner(ownerId);
                     cur.setNextAvailableDate(clock.getUTCNow().plus(config.getDaoClaimTimeMs()));
-                    cur.setProcessingState(IEventLyfecycleState.IN_PROCESSING);
+                    cur.setProcessingState(IEventLifecycleState.IN_PROCESSING);
                     readyList.add(cur);
                 }
             }
@@ -215,11 +215,11 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     @Override
-    public void clearEventsReady(UUID ownerId, Collection<IEvent> cleared) {
+    public void clearEventsReady(UUID ownerId, Collection<IEntitlementEvent> cleared) {
         synchronized(events) {
-            for (IEvent cur : cleared) {
+            for (IEntitlementEvent cur : cleared) {
                 if (cur.getOwner().equals(ownerId)) {
-                    cur.setProcessingState(IEventLyfecycleState.PROCESSED);
+                    cur.setProcessingState(IEventLifecycleState.PROCESSED);
                 } else {
                     log.warn(String.format("EventProcessor %s trying to clear event %s that it does not own", ownerId, cur));
                 }
@@ -250,7 +250,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     @Override
-    public void cancelSubscription(UUID subscriptionId, IEvent cancelEvent) {
+    public void cancelSubscription(UUID subscriptionId, IEntitlementEvent cancelEvent) {
         synchronized (cancelEvent) {
             cancelNextPhaseEvent(subscriptionId);
             insertEvent(cancelEvent);
@@ -258,7 +258,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     @Override
-    public void changePlan(UUID subscriptionId, List<IEvent> changeEvents) {
+    public void changePlan(UUID subscriptionId, List<IEntitlementEvent> changeEvents) {
         synchronized(events) {
             cancelNextChangeEvent(subscriptionId);
             cancelNextPhaseEvent(subscriptionId);
@@ -266,7 +266,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
         }
     }
 
-    private void insertEvent(IEvent event) {
+    private void insertEvent(IEntitlementEvent event) {
         synchronized(events) {
             events.add(event);
         }
@@ -282,14 +282,14 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
 
         synchronized(events) {
 
-            Iterator<IEvent> it = events.descendingIterator();
+            Iterator<IEntitlementEvent> it = events.descendingIterator();
             while (it.hasNext()) {
-                IEvent cur = it.next();
+                IEntitlementEvent cur = it.next();
                 if (cur.getSubscriptionId() != subscriptionId) {
                     continue;
                 }
                 if (cur.getType() == EventType.PHASE &&
-                        cur.getProcessingState() == IEventLyfecycleState.AVAILABLE) {
+                        cur.getProcessingState() == IEventLifecycleState.AVAILABLE) {
                     cur.deactivate();
                     break;
                 }
@@ -302,15 +302,15 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
 
         synchronized(events) {
 
-            Iterator<IEvent> it = events.descendingIterator();
+            Iterator<IEntitlementEvent> it = events.descendingIterator();
             while (it.hasNext()) {
-                IEvent cur = it.next();
+                IEntitlementEvent cur = it.next();
                 if (cur.getSubscriptionId() != subscriptionId) {
                     continue;
                 }
                 if (cur.getType() == EventType.API_USER &&
                         ApiEventType.CHANGE == ((IApiEvent) cur).getEventType() &&
-                        cur.getProcessingState() == IEventLyfecycleState.AVAILABLE) {
+                        cur.getProcessingState() == IEventLifecycleState.AVAILABLE) {
                     cur.deactivate();
                     break;
                 }
@@ -319,13 +319,13 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     @Override
-    public void uncancelSubscription(UUID subscriptionId, List<IEvent> uncancelEvents) {
+    public void uncancelSubscription(UUID subscriptionId, List<IEntitlementEvent> uncancelEvents) {
 
         synchronized (events) {
             boolean foundCancel = false;
-            Iterator<IEvent> it = events.descendingIterator();
+            Iterator<IEntitlementEvent> it = events.descendingIterator();
             while (it.hasNext()) {
-                IEvent cur = it.next();
+                IEntitlementEvent cur = it.next();
                 if (cur.getSubscriptionId() != subscriptionId) {
                     continue;
                 }
@@ -337,7 +337,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
                 }
             }
             if (foundCancel) {
-                for (IEvent cur : uncancelEvents) {
+                for (IEntitlementEvent cur : uncancelEvents) {
                     insertEvent(cur);
                 }
             }

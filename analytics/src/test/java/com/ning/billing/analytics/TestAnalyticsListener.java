@@ -24,7 +24,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -159,7 +159,7 @@ public class TestAnalyticsListener
             UUID.randomUUID(),
             subscriptionId,
             bundleUUID,
-            IEvent.EventType.API_USER,
+            IEntitlementEvent.EventType.API_USER,
             eventType,
             requestedTransitionTime,
             effectiveTransitionTime,
@@ -207,7 +207,7 @@ public class TestAnalyticsListener
             UUID.randomUUID(),
             subscriptionId,
             bundleUUID,
-            IEvent.EventType.API_USER,
+            IEntitlementEvent.EventType.API_USER,
             eventType,
             requestedTransitionTime,
             effectiveTransitionTime,

@@ -21,11 +21,11 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
+import com.ning.billing.entitlement.events.IEventLifecycle.IEventLifecycleState;
 import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 
-public abstract class EventBase implements IEvent {
+public abstract class EventBase implements IEntitlementEvent {
 
     private final UUID uuid;
     private final UUID subscriptionId;
@@ -38,7 +38,7 @@ public abstract class EventBase implements IEvent {
     private boolean isActive;
     private UUID processingOwner;
     private DateTime nextAvailableProcessingTime;
-    private IEventLyfecycleState processingState;
+    private IEventLifecycleState processingState;
 
     public EventBase(EventBaseBuilder builder) {
         this.uuid = builder.getUuid();
@@ -57,14 +57,14 @@ public abstract class EventBase implements IEvent {
     public EventBase(UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive) {
-        this(subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive, null, null, IEventLyfecycleState.AVAILABLE);
+        this(subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive, null, null, IEventLifecycleState.AVAILABLE);
     }
 
     private EventBase(UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive,
             UUID processingOwner, DateTime nextAvailableProcessingTime,
-            IEventLyfecycleState processingState) {
+            IEventLifecycleState processingState) {
         this(UUID.randomUUID(), subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive,
                 processingOwner, nextAvailableProcessingTime, processingState);
     }
@@ -73,7 +73,7 @@ public abstract class EventBase implements IEvent {
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive,
             UUID processingOwner, DateTime nextAvailableProcessingTime,
-            IEventLyfecycleState processingState) {
+            IEventLifecycleState processingState) {
         this.uuid = id;
         this.subscriptionId = subscriptionId;
         this.requestedDate = requestedDate;
@@ -163,12 +163,12 @@ public abstract class EventBase implements IEvent {
 
 
     @Override
-    public IEventLyfecycleState getProcessingState() {
+    public IEventLifecycleState getProcessingState() {
         return processingState;
     }
 
     @Override
-    public void setProcessingState(IEventLyfecycleState processingState) {
+    public void setProcessingState(IEventLifecycleState processingState) {
         this.processingState = processingState;
     }
 
@@ -207,7 +207,7 @@ public abstract class EventBase implements IEvent {
     // - If all that is not enough return consistent by random ordering based on UUID
     //
     @Override
-    public int compareTo(IEvent other) {
+    public int compareTo(IEntitlementEvent other) {
         if (other == null) {
             throw new NullPointerException("IEvent is compared to a null instance");
         }
@@ -236,10 +236,10 @@ public abstract class EventBase implements IEvent {
 
     @Override
     public boolean equals(Object other) {
-      if (! (other instanceof IEvent)) {
+      if (! (other instanceof IEntitlementEvent)) {
           return false;
       }
-      return (this.compareTo((IEvent) other) == 0);
+      return (this.compareTo((IEntitlementEvent) other) == 0);
     }
 
     @Override

@@ -39,8 +39,8 @@ import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.events.IEvent.EventType;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.IApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
@@ -124,7 +124,7 @@ public class EntitlementDao implements IEntitlementDao {
     }
 
     @Override
-    public void createNextPhaseEvent(final UUID subscriptionId, final IEvent nextPhase) {
+    public void createNextPhaseEvent(final UUID subscriptionId, final IEntitlementEvent nextPhase) {
         eventsDao.inTransaction(new Transaction<Void, IEventSqlDao>() {
 
             @Override
@@ -139,35 +139,35 @@ public class EntitlementDao implements IEntitlementDao {
 
 
     @Override
-    public List<IEvent> getEventsForSubscription(UUID subscriptionId) {
-        List<IEvent> events = eventsDao.getEventsForSubscription(subscriptionId.toString());
+    public List<IEntitlementEvent> getEventsForSubscription(UUID subscriptionId) {
+        List<IEntitlementEvent> events = eventsDao.getEventsForSubscription(subscriptionId.toString());
         return events;
     }
 
     @Override
-    public List<IEvent> getPendingEventsForSubscription(UUID subscriptionId) {
+    public List<IEntitlementEvent> getPendingEventsForSubscription(UUID subscriptionId) {
         Date now = clock.getUTCNow().toDate();
-        List<IEvent> results = eventsDao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
+        List<IEntitlementEvent> results = eventsDao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
         return results;
     }
 
     @Override
-    public List<IEvent> getEventsReady(final UUID ownerId, final int sequenceId) {
+    public List<IEntitlementEvent> getEventsReady(final UUID ownerId, final int sequenceId) {
 
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(config.getDaoClaimTimeMs()).toDate();
 
         log.debug(String.format("EntitlementDao getEventsReady START effectiveNow =  %s", now));
 
-        List<IEvent> events = eventsDao.inTransaction(new Transaction<List<IEvent>, IEventSqlDao>() {
+        List<IEntitlementEvent> events = eventsDao.inTransaction(new Transaction<List<IEntitlementEvent>, IEventSqlDao>() {
 
             @Override
-            public List<IEvent> inTransaction(IEventSqlDao dao,
+            public List<IEntitlementEvent> inTransaction(IEventSqlDao dao,
                     TransactionStatus status) throws Exception {
 
-                List<IEvent> claimedEvents = new ArrayList<IEvent>();
-                List<IEvent> input = dao.getReadyEvents(now, config.getDaoMaxReadyEvents());
-                for (IEvent cur : input) {
+                List<IEntitlementEvent> claimedEvents = new ArrayList<IEntitlementEvent>();
+                List<IEntitlementEvent> input = dao.getReadyEvents(now, config.getDaoMaxReadyEvents());
+                for (IEntitlementEvent cur : input) {
                     final boolean claimed = (dao.claimEvent(ownerId.toString(), nextAvailable, cur.getId().toString(), now) == 1);
                     if (claimed) {
                         claimedEvents.add(cur);
@@ -178,7 +178,7 @@ public class EntitlementDao implements IEntitlementDao {
             }
         });
 
-        for (IEvent cur : events) {
+        for (IEntitlementEvent cur : events) {
             log.debug(String.format("EntitlementDao %s [host %s] claimed events %s", ownerId, hostname, cur.getId()));
             if (cur.getOwner() != null && !cur.getOwner().equals(ownerId)) {
                 log.warn(String.format("EventProcessor %s stealing event %s from %s", ownerId, cur, cur.getOwner()));
@@ -188,7 +188,7 @@ public class EntitlementDao implements IEntitlementDao {
     }
 
     @Override
-    public void clearEventsReady(final UUID ownerId, final Collection<IEvent> cleared) {
+    public void clearEventsReady(final UUID ownerId, final Collection<IEntitlementEvent> cleared) {
 
         log.debug(String.format("EntitlementDao clearEventsReady START cleared size = %d", cleared.size()));
 
@@ -198,7 +198,7 @@ public class EntitlementDao implements IEntitlementDao {
             public Void inTransaction(IEventSqlDao dao,
                     TransactionStatus status) throws Exception {
                 // STEPH Same here batch would nice
-                for (IEvent cur : cleared) {
+                for (IEntitlementEvent cur : cleared) {
                     dao.clearEvent(cur.getId().toString(), ownerId.toString());
                     log.debug(String.format("EntitlementDao %s [host %s] cleared events %s", ownerId, hostname, cur.getId()));
                 }
@@ -209,7 +209,7 @@ public class EntitlementDao implements IEntitlementDao {
 
     @Override
     public ISubscription createSubscription(final Subscription subscription,
-            final List<IEvent> initialEvents) {
+            final List<IEntitlementEvent> initialEvents) {
 
         subscriptionsDao.inTransaction(new Transaction<Void, ISubscriptionSqlDao>() {
 
@@ -220,7 +220,7 @@ public class EntitlementDao implements IEntitlementDao {
                 dao.insertSubscription(subscription);
                 // STEPH batch as well
                 IEventSqlDao eventsDaoFromSameTranscation = dao.become(IEventSqlDao.class);
-                for (IEvent cur : initialEvents) {
+                for (IEntitlementEvent cur : initialEvents) {
                     eventsDaoFromSameTranscation.insertEvent(cur);
                 }
                 return null;
@@ -230,7 +230,7 @@ public class EntitlementDao implements IEntitlementDao {
     }
 
     @Override
-    public void cancelSubscription(final UUID subscriptionId, final IEvent cancelEvent) {
+    public void cancelSubscription(final UUID subscriptionId, final IEntitlementEvent cancelEvent) {
 
         eventsDao.inTransaction(new Transaction<Void, IEventSqlDao>() {
             @Override
@@ -245,7 +245,7 @@ public class EntitlementDao implements IEntitlementDao {
     }
 
     @Override
-    public void uncancelSubscription(final UUID subscriptionId, final List<IEvent> uncancelEvents) {
+    public void uncancelSubscription(final UUID subscriptionId, final List<IEntitlementEvent> uncancelEvents) {
 
         eventsDao.inTransaction(new Transaction<Void, IEventSqlDao>() {
 
@@ -255,9 +255,9 @@ public class EntitlementDao implements IEntitlementDao {
 
                 UUID existingCancelId = null;
                 Date now = clock.getUTCNow().toDate();
-                List<IEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
+                List<IEntitlementEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
 
-                for (IEvent cur : events) {
+                for (IEntitlementEvent cur : events) {
                     if (cur.getType() == EventType.API_USER && ((IApiEvent) cur).getEventType() == ApiEventType.CANCEL) {
                         if (existingCancelId != null) {
                             throw new EntitlementError(String.format("Found multiple cancel active events for subscriptions %s", subscriptionId.toString()));
@@ -268,7 +268,7 @@ public class EntitlementDao implements IEntitlementDao {
 
                 if (existingCancelId != null) {
                     dao.unactiveEvent(existingCancelId.toString(), now);
-                    for (IEvent cur : uncancelEvents) {
+                    for (IEntitlementEvent cur : uncancelEvents) {
                         dao.insertEvent(cur);
                     }
                 }
@@ -278,14 +278,14 @@ public class EntitlementDao implements IEntitlementDao {
     }
 
     @Override
-    public void changePlan(final UUID subscriptionId, final List<IEvent> changeEvents) {
+    public void changePlan(final UUID subscriptionId, final List<IEntitlementEvent> changeEvents) {
         eventsDao.inTransaction(new Transaction<Void, IEventSqlDao>() {
             @Override
             public Void inTransaction(IEventSqlDao dao,
                     TransactionStatus status) throws Exception {
                 cancelNextChangeEventFromTransaction(subscriptionId, dao);
                 cancelNextPhaseEventFromTransaction(subscriptionId, dao);
-                for (IEvent cur : changeEvents) {
+                for (IEntitlementEvent cur : changeEvents) {
                     dao.insertEvent(cur);
                 }
                 return null;
@@ -305,8 +305,8 @@ public class EntitlementDao implements IEntitlementDao {
 
         UUID futureEventId = null;
         Date now = clock.getUTCNow().toDate();
-        List<IEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
-        for (IEvent cur : events) {
+        List<IEntitlementEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
+        for (IEntitlementEvent cur : events) {
             if (cur.getType() == type &&
                     (apiType == null || apiType == ((IApiEvent) cur).getEventType() )) {
                 if (futureEventId != null) {

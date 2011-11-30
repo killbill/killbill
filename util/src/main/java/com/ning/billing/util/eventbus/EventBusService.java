@@ -17,8 +17,8 @@
 package com.ning.billing.util.eventbus;
 
 import com.google.inject.Inject;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
-import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
 public class EventBusService implements IEventBusService {
 
@@ -36,12 +36,12 @@ public class EventBusService implements IEventBusService {
         return EVENT_BUS_SERVICE;
     }
 
-    @LyfecycleHandlerType(LyfecycleLevel.INIT_BUS)
+    @LifecycleHandlerType(LifecycleLevel.INIT_BUS)
     public void startBus() {
         eventBus.start();
     }
 
-    @LyfecycleHandlerType(LyfecycleLevel.STOP_BUS)
+    @LifecycleHandlerType(LifecycleLevel.STOP_BUS)
     public void stopBus() {
         eventBus.stop();
     }

@@ -20,35 +20,23 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-public interface IEventLyfecycle {
 
-    public enum IEventLyfecycleState {
-        AVAILABLE,
-        IN_PROCESSING,
-        PROCESSED
+public interface IEntitlementEvent extends IEventLifecycle, Comparable<IEntitlementEvent> {
+
+    public enum EventType {
+        API_USER,
+        PHASE
     }
 
-    public long getActiveVersion();
+    public EventType getType();
 
-    public void setActiveVersion(long activeVersion);
+    public UUID getId();
 
-    public boolean isActive();
+    public DateTime getProcessedDate();
 
-    public void deactivate();
+    public DateTime getRequestedDate();
 
-    public void reactivate();
+    public DateTime getEffectiveDate();
 
-    public UUID getOwner();
-
-    public void setOwner(UUID owner);
-
-    public DateTime getNextAvailableDate();
-
-    public void setNextAvailableDate(DateTime dateTime);
-
-    public IEventLyfecycleState getProcessingState();
-
-    public void setProcessingState(IEventLyfecycleState procesingState);
-
-    public boolean isAvailableForProcessing(DateTime now);
+    public UUID getSubscriptionId();
 }

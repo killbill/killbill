@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.util.clock.Clock;
 
@@ -111,7 +111,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             assertTrue(testListener.isCompleted(5000));
 
-            List<IEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
+            List<IEntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
             assertNotNull(events);
             printEvents(events);
             assertTrue(events.size() == 1);

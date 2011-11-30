@@ -22,7 +22,7 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.IClock;
 
@@ -38,12 +38,12 @@ public class ApiEventProcessorMemoryMock extends ApiEventProcessorBase {
     @Override
     protected boolean doProcessEvents(int sequenceId) {
 
-        List<IEvent> events =  dao.getEventsReady(apiProcessorId, sequenceId);
+        List<IEntitlementEvent> events =  dao.getEventsReady(apiProcessorId, sequenceId);
         if (events.size() == 0) {
             return false;
         }
         log.info(String.format("doProcessEvents : Got %d event(s)", events.size() ));
-        for (IEvent cur : events) {
+        for (IEntitlementEvent cur : events) {
             log.info(String.format("doProcessEvents :  (clock = %s) CALLING Engine with event %s", clock.getUTCNow(), cur));
             listener.processEventReady(cur);
             log.info(String.format("doProcessEvents : PROCESSED event %s", cur));
@@ -57,7 +57,7 @@ public class ApiEventProcessorMemoryMock extends ApiEventProcessorBase {
 
     @Override
     protected boolean doProcessEventsFromList(int sequenceId,
-            Collection<IEvent> events) {
+            Collection<IEntitlementEvent> events) {
         throw new EntitlementError("Method not implemented");
     }
 }

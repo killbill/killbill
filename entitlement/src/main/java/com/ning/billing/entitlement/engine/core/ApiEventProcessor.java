@@ -22,7 +22,7 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 import com.ning.billing.util.clock.IClock;
 
 public class ApiEventProcessor extends ApiEventProcessorBase {
@@ -35,7 +35,7 @@ public class ApiEventProcessor extends ApiEventProcessorBase {
 
     @Override
     protected boolean doProcessEvents(int sequenceId) {
-        List<IEvent> claimedEvents = dao.getEventsReady(apiProcessorId, sequenceId);
+        List<IEntitlementEvent> claimedEvents = dao.getEventsReady(apiProcessorId, sequenceId);
         if (claimedEvents.size() == 0) {
             return false;
         }
@@ -44,9 +44,9 @@ public class ApiEventProcessor extends ApiEventProcessorBase {
     }
 
 
-    protected boolean doProcessEventsFromList(int sequenceId, Collection<IEvent> claimedEvents) {
+    protected boolean doProcessEventsFromList(int sequenceId, Collection<IEntitlementEvent> claimedEvents) {
         long prev = nbProcessedEvents;
-        for (IEvent cur : claimedEvents) {
+        for (IEntitlementEvent cur : claimedEvents) {
             log.debug(String.format("ApiEventProcessor seq = %d got event %s", sequenceId, cur.getId()));
             listener.processEventReady(cur);
             nbProcessedEvents++;

@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventCreate;
 
 public class SubscriptionBundle extends PrivateFields implements ISubscriptionBundle {

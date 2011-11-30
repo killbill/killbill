@@ -18,7 +18,7 @@ package com.ning.billing.analytics.api;
 
 import com.google.inject.Inject;
 import com.ning.billing.analytics.AnalyticsListener;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.util.eventbus.IEventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ public class AnalyticsService implements IAnalyticsService
         return ANALYTICS_SERVICE;
     }
 
-    @LyfecycleHandlerType(LyfecycleHandlerType.LyfecycleLevel.REGISTER_EVENTS)
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
     public void registerForNotifications()
     {
         try {

@@ -43,8 +43,8 @@ import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.events.IEvent.EventType;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventBuilder;
@@ -85,7 +85,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
     private final DateTime paidThroughDate;
 
     //
-    // User APIs (createm chnage, cancel,...) will recompute those each time,
+    // User APIs (create, change, cancel,...) will recompute those each time,
     // so the user holding that subscription object get the correct state when
     // the call completes
     //
@@ -183,7 +183,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         ActionPolicy policy = catalog.getPlanCancelPolicy(planPhase);
         DateTime effectiveDate = getPlanChangeEffectiveDate(policy, now);
 
-        IEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+        IEntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
         .setSubscriptionId(id)
         .setActiveVersion(activeVersion)
         .setProcessedDate(now)
@@ -200,14 +200,14 @@ public class Subscription extends PrivateFields  implements ISubscription {
             throw new EntitlementUserApiException(ErrorCode.ENT_UNCANCEL_BAD_STATE, id.toString());
         }
         DateTime now = clock.getUTCNow();
-        IEvent uncancelEvent = new ApiEventUncancel(new ApiEventBuilder()
+        IEntitlementEvent uncancelEvent = new ApiEventUncancel(new ApiEventBuilder()
             .setSubscriptionId(id)
             .setActiveVersion(activeVersion)
             .setProcessedDate(now)
             .setRequestedDate(now)
             .setEffectiveDate(now));
 
-        List<IEvent> uncancelEvents = new ArrayList<IEvent>();
+        List<IEntitlementEvent> uncancelEvents = new ArrayList<IEntitlementEvent>();
         uncancelEvents.add(uncancelEvent);
 
         DateTime planStartDate = getCurrentPlanStart();
@@ -275,7 +275,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
         TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(this, newPlan, newPriceList.getName(), effectiveDate);
 
-        IEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
+        IEntitlementEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
         .setSubscriptionId(id)
         .setEventPlan(newPlan.getName())
         .setEventPlanPhase(currentTimedPhase.getPhase().getName())
@@ -287,7 +287,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
         TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(this, newPlan, newPriceList.getName(), effectiveDate);
         IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, this, now);
-        List<IEvent> changeEvents = new ArrayList<IEvent>();
+        List<IEntitlementEvent> changeEvents = new ArrayList<IEntitlementEvent>();
         // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.
         if (nextPhaseEvent != null && ! nextPhaseEvent.getEffectiveDate().equals(changeEvent.getEffectiveDate())) {
             changeEvents.add(nextPhaseEvent);
@@ -323,7 +323,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
         return latestSubscription;
     }
 
-    public ISubscriptionTransition getTransitionFromEvent(IEvent event) {
+    public ISubscriptionTransition getTransitionFromEvent(IEntitlementEvent event) {
         if (transitions == null || event == null) {
             return null;
         }
@@ -452,7 +452,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
     private void rebuildTransitions() {
 
-        List<IEvent> events = dao.getEventsForSubscription(id);
+        List<IEntitlementEvent> events = dao.getEventsForSubscription(id);
         if (events == null) {
             return;
         }
@@ -469,7 +469,7 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
         this.transitions = new LinkedList<SubscriptionTransition>();
 
-        for (final IEvent cur : events) {
+        for (final IEntitlementEvent cur : events) {
 
             if (!cur.isActive() || cur.getActiveVersion() < activeVersion) {
                 continue;

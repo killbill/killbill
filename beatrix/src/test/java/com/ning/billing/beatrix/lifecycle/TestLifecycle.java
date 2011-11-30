@@ -28,8 +28,8 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.lifecycle.IService;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
-import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
 
 public class TestLifecycle {
@@ -64,19 +64,19 @@ public class TestLifecycle {
 
     public static class Service1 extends ServiceBase implements IService  {
 
-        @LyfecycleHandlerType(LyfecycleLevel.INIT_BUS)
+        @LifecycleHandlerType(LifecycleLevel.INIT_BUS)
         public void initBus() {
             log.info("Service1 : got INIT_BUS");
             incrementCount();
         }
 
-        @LyfecycleHandlerType(LyfecycleLevel.START_SERVICE)
+        @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
         public void startService() {
             log.info("Service1 : got START_SERVICE");
             incrementCount();
         }
 
-        @LyfecycleHandlerType(LyfecycleLevel.SHUTDOWN)
+        @LifecycleHandlerType(LifecycleLevel.SHUTDOWN)
         public void shutdownService() {
             log.info("Service1 : got SHUTDOWN");
             incrementCount();
@@ -90,25 +90,25 @@ public class TestLifecycle {
 
     public static class Service2 extends ServiceBase implements IService {
 
-        @LyfecycleHandlerType(LyfecycleLevel.LOAD_CATALOG)
+        @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)
         public void loadCatalog() {
             log.info("Service2 : got LOAD_CATALOG");
             incrementCount();
         }
 
-        @LyfecycleHandlerType(LyfecycleLevel.REGISTER_EVENTS)
+        @LifecycleHandlerType(LifecycleLevel.REGISTER_EVENTS)
         public void registerEvents() {
             log.info("Service2 : got REGISTER_EVENTS");
             incrementCount();
         }
 
-        @LyfecycleHandlerType(LyfecycleLevel.UNREGISTER_EVENTS)
+        @LifecycleHandlerType(LifecycleLevel.UNREGISTER_EVENTS)
         public void unregisterEvents() {
             log.info("Service2 : got UNREGISTER_EVENTS");
             incrementCount();
         }
 
-        @LyfecycleHandlerType(LyfecycleLevel.START_SERVICE)
+        @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
         public void startService() {
             log.info("Service2 : got START_SERVICE");
             incrementCount();

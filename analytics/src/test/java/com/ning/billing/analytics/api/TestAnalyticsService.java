@@ -42,7 +42,7 @@ import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.eventbus.IEventBus;
 import org.apache.commons.io.IOUtils;
@@ -119,7 +119,7 @@ public class TestAnalyticsService
             UUID.randomUUID(),
             subscriptionId,
             bundle.getId(),
-            IEvent.EventType.API_USER,
+            IEntitlementEvent.EventType.API_USER,
             ApiEventType.CREATE,
             requestedTransitionTime,
             effectiveTransitionTime,

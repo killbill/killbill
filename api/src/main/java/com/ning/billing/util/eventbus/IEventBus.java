@@ -98,7 +98,7 @@ public interface IEventBus {
      *
      *
      * @param event to be posted
-     * @param dao a valid DAO object obtained through the DBI.onDeamand() API.
+     * @param dao a valid DAO object obtained through the DBI.onDemand() API.
      *
      *  @throws EventBusException if bus not been started yet
      */

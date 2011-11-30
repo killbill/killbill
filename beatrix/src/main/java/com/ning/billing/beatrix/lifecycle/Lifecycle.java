@@ -36,15 +36,15 @@ import com.google.common.collect.SetMultimap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.ning.billing.lifecycle.IService;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
-import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
-import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel.Sequence;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel.Sequence;
 
 
 public class Lifecycle {
 
     private final static Logger log = LoggerFactory.getLogger(Lifecycle.class);
-    private final SetMultimap<LyfecycleLevel, LifecycleHandler<? extends IService>> handlersByLevel;
+    private final SetMultimap<LifecycleLevel, LifecycleHandler<? extends IService>> handlersByLevel;
 
     private final ServiceFinder serviceFinder;
 
@@ -54,7 +54,7 @@ public class Lifecycle {
     public Lifecycle(Injector injector) {
 
         this.serviceFinder = new ServiceFinder(Lifecycle.class.getClassLoader());
-        this.handlersByLevel = Multimaps.newSetMultimap(new ConcurrentHashMap<LyfecycleLevel, Collection<LifecycleHandler<? extends IService>>>(),
+        this.handlersByLevel = Multimaps.newSetMultimap(new ConcurrentHashMap<LifecycleLevel, Collection<LifecycleHandler<? extends IService>>>(),
 
                 new Supplier<Set<LifecycleHandler<? extends IService>>>() {
             @Override
@@ -85,21 +85,21 @@ public class Lifecycle {
     }
 
     public void fireShutdownSequencePriorEventUnRegistration() {
-        fireSequence(Sequence.SHUTOWN_PRE_EVENT_UNREGISTRATION);
+        fireSequence(Sequence.SHUTDOWN_PRE_EVENT_UNREGISTRATION);
     }
 
     public void fireShutdownSequencePostEventUnRegistration() {
-        fireSequence(Sequence.SHUTOWN_POST_EVENT_UNREGISTRATION);
+        fireSequence(Sequence.SHUTDOWN_POST_EVENT_UNREGISTRATION);
     }
 
     private void fireSequence(Sequence seq) {
-        List<LyfecycleLevel> levels = LyfecycleLevel.getLevelsForSequence(seq);
-        for (LyfecycleLevel cur : levels) {
+        List<LifecycleLevel> levels = LifecycleLevel.getLevelsForSequence(seq);
+        for (LifecycleLevel cur : levels) {
             doFireStage(cur);
         }
     }
 
-    private void doFireStage(LyfecycleLevel level) {
+    private void doFireStage(LifecycleLevel level) {
         log.info("Killbill lifecycle firing stage {}", level);
         Set<LifecycleHandler<? extends IService>> handlers = handlersByLevel.get(level);
         for (LifecycleHandler<? extends IService> cur : handlers) {
@@ -141,13 +141,13 @@ public class Lifecycle {
         log.warn(msg, e);
     }
 
-    public Multimap<LyfecycleLevel, LifecycleHandler<? extends IService>> findAllHandlers(IService service) {
-        Multimap<LyfecycleLevel, LifecycleHandler<? extends IService>> methodsInService = HashMultimap.create();
+    public Multimap<LifecycleLevel, LifecycleHandler<? extends IService>> findAllHandlers(IService service) {
+        Multimap<LifecycleLevel, LifecycleHandler<? extends IService>> methodsInService = HashMultimap.create();
         Class<? extends IService> clazz = service.getClass();
         for (Method method : clazz.getMethods()) {
-            LyfecycleHandlerType annotation = method.getAnnotation(LyfecycleHandlerType.class);
+            LifecycleHandlerType annotation = method.getAnnotation(LifecycleHandlerType.class);
             if (annotation != null) {
-                LyfecycleLevel level = annotation.value();
+                LifecycleLevel level = annotation.value();
                 LifecycleHandler<? extends IService> handler = new  LifecycleHandler<IService>(service, method);
                 methodsInService.put(level, handler);
             }

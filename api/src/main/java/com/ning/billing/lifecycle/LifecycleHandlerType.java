@@ -20,14 +20,13 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface LyfecycleHandlerType {
+public @interface LifecycleHandlerType {
 
 
     //
@@ -35,7 +34,7 @@ public @interface LyfecycleHandlerType {
     //
     // Ordering is important in that enum
     //
-    public enum LyfecycleLevel {
+    public enum LifecycleLevel {
 
         /**
          * Load and validate catalog (only for catalog subsytem)
@@ -63,30 +62,30 @@ public @interface LyfecycleHandlerType {
         /**
          * Stop service
          */
-        STOP_SERVICE(Sequence.SHUTOWN_PRE_EVENT_UNREGISTRATION),
+        STOP_SERVICE(Sequence.SHUTDOWN_PRE_EVENT_UNREGISTRATION),
         /**
          * Unregister interest in events
          */
-        UNREGISTER_EVENTS(Sequence.SHUTOWN_PRE_EVENT_UNREGISTRATION),
+        UNREGISTER_EVENTS(Sequence.SHUTDOWN_PRE_EVENT_UNREGISTRATION),
         /**
          * Stop bus
          */
-        STOP_BUS(Sequence.SHUTOWN_POST_EVENT_UNREGISTRATION),
+        STOP_BUS(Sequence.SHUTDOWN_POST_EVENT_UNREGISTRATION),
         /**
          * Any service specific shutdown action before the end
          */
-        SHUTDOWN(Sequence.SHUTOWN_POST_EVENT_UNREGISTRATION);
+        SHUTDOWN(Sequence.SHUTDOWN_POST_EVENT_UNREGISTRATION);
 
         public enum Sequence {
             STARTUP_PRE_EVENT_REGISTRATION,
             STARTUP_POST_EVENT_REGISTRATION,
-            SHUTOWN_PRE_EVENT_UNREGISTRATION,
-            SHUTOWN_POST_EVENT_UNREGISTRATION
+            SHUTDOWN_PRE_EVENT_UNREGISTRATION,
+            SHUTDOWN_POST_EVENT_UNREGISTRATION
         };
 
         private Sequence seq;
 
-        LyfecycleLevel(Sequence seq) {
+        LifecycleLevel(Sequence seq) {
             this.seq = seq;
         }
 
@@ -97,9 +96,9 @@ public @interface LyfecycleHandlerType {
         //
         // Returns an ordered list of level for a particular sequence
         //
-        public static List<LyfecycleLevel> getLevelsForSequence(Sequence seq) {
-            List<LyfecycleLevel> result = Lists.newLinkedList();
-            for (LyfecycleLevel level : LyfecycleLevel.values()) {
+        public static List<LifecycleLevel> getLevelsForSequence(Sequence seq) {
+            List<LifecycleLevel> result = Lists.newLinkedList();
+            for (LifecycleLevel level : LifecycleLevel.values()) {
                 if (level.getSequence() == seq) {
                     result.add(level);
                 }
@@ -108,5 +107,5 @@ public @interface LyfecycleHandlerType {
         }
     }
 
-    public LyfecycleLevel value();
+    public LifecycleLevel value();
 }

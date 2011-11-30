@@ -16,9 +16,9 @@
 
 package com.ning.billing.entitlement.events.phase;
 
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
 
-public interface IPhaseEvent extends IEvent {
+public interface IPhaseEvent extends IEntitlementEvent {
 
     public String getPhase();
 }

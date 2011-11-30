@@ -20,26 +20,35 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.IPlan;
+public interface IEventLifecycle {
 
-
-public interface IEvent extends IEventLyfecycle, Comparable<IEvent> {
-
-    public enum EventType {
-        API_USER,
-        PHASE
+    public enum IEventLifecycleState {
+        AVAILABLE,
+        IN_PROCESSING,
+        PROCESSED
     }
 
-    public EventType getType();
+    public long getActiveVersion();
 
-    public UUID getId();
+    public void setActiveVersion(long activeVersion);
 
-    public DateTime getProcessedDate();
+    public boolean isActive();
 
-    public DateTime getRequestedDate();
+    public void deactivate();
 
-    public DateTime getEffectiveDate();
+    public void reactivate();
 
-    public UUID getSubscriptionId();
+    public UUID getOwner();
 
+    public void setOwner(UUID owner);
+
+    public DateTime getNextAvailableDate();
+
+    public void setNextAvailableDate(DateTime dateTime);
+
+    public IEventLifecycleState getProcessingState();
+
+    public void setProcessingState(IEventLifecycleState procesingState);
+
+    public boolean isAvailableForProcessing(DateTime now);
 }

@@ -34,13 +34,13 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.events.IEvent.EventType;
+import com.ning.billing.entitlement.events.IEntitlementEvent;
+import com.ning.billing.entitlement.events.IEntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
-import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.clock.IClock;
 import com.ning.billing.util.eventbus.IEventBus;
 import com.ning.billing.util.eventbus.IEventBus.EventBusException;
@@ -89,17 +89,17 @@ public class Engine implements IEventListener, IEntitlementService {
     }
 
 
-    @LyfecycleHandlerType(LyfecycleLevel.INIT_SERVICE)
+    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void initialize() {
     }
 
-    @LyfecycleHandlerType(LyfecycleLevel.START_SERVICE)
+    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
         apiEventProcessor.startNotifications(this);
         waitForNotificationStartCompletion();
     }
 
-    @LyfecycleHandlerType(LyfecycleLevel.STOP_SERVICE)
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() {
         apiEventProcessor.stopNotifications();
         startedNotificationThread = false;
@@ -122,7 +122,7 @@ public class Engine implements IEventListener, IEntitlementService {
     }
 
     @Override
-    public void processEventReady(IEvent event) {
+    public void processEventReady(IEntitlementEvent event) {
         Subscription subscription = (Subscription) dao.getSubscriptionFromId(event.getSubscriptionId());
         if (subscription == null) {
             log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
