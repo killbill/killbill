@@ -129,7 +129,7 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 		}
 		//Validation: if there is no reccuring price there should be no billing period
 		if(recurringPrice == null && billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-			errors.add(new ValidationError(String.format("Phase %s of plan %s has no reccurring price but does have a billing period. The billing period shoudl be set to '%s'", 
+			errors.add(new ValidationError(String.format("Phase %s of plan %s has no reccurring price but does have a billing period. The billing period should be set to '%s'", 
 					type.toString(), plan.getName(), BillingPeriod.NO_BILLING_PERIOD), 
 					catalog.getCatalogURI(), PlanPhase.class, type.toString()));
 		}

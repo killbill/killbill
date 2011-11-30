@@ -36,7 +36,6 @@ import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class InternationalPrice extends ValidatingConfig<Catalog> implements IInternationalPrice {
-	private static Price[] zeroPrice;
 
 	//TODO MDW Validation - effectiveDateForExistingSubscriptons > catalog effectiveDate 
 	@XmlElement(required=false)
@@ -135,15 +134,14 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 	}
 
 	private synchronized Price[] getZeroPrice(Catalog root) {
-		if(zeroPrice == null) {
-			Currency[] currencies = root.getSupportedCurrencies();
-			zeroPrice = new Price[currencies.length];
-			for(int i = 0; i < currencies.length; i++) {
-				zeroPrice[i] = new Price();
-				zeroPrice[i].setCurrency(currencies[i]);
-				zeroPrice[i].setValue(new BigDecimal(0));
-			}
+		Currency[] currencies = root.getSupportedCurrencies();
+		Price[] zeroPrice = new Price[currencies.length];
+		for(int i = 0; i < currencies.length; i++) {
+			zeroPrice[i] = new Price();
+			zeroPrice[i].setCurrency(currencies[i]);
+			zeroPrice[i].setValue(new BigDecimal(0));
 		}
+
 		return zeroPrice;
 	}
 

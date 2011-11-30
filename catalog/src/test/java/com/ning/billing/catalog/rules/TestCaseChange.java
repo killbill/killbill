@@ -93,14 +93,14 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				"wrong", product2.getName(), 
+				 cat.getProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(), "wrong", 
+				product1.getName(),  cat.getProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -138,14 +138,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				"wrong", priceList2.getName(), 
+				 cat.getProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(), "wrong", 
+				priceList1.getName(),  cat.getProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -183,7 +183,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertion(Result.FOO,cr, 
-				"wrong", product2.getName(), 
+				 cat.getProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -204,7 +204,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 
 		assertionNull(cr, 
-				product1.getName(), "wrong", 
+				product1.getName(),  cat.getProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.ANNUAL, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -221,14 +221,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				"wrong", priceList2.getName(), 
+				 cat.getProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(), "wrong", 
+				priceList1.getName(),  cat.getProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -266,7 +266,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				"wrong", product2.getName(), 
+				 cat.getProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -287,7 +287,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertion(Result.FOO, cr, 
-				product1.getName(), "wrong", 
+				product1.getName(),  cat.getProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -311,14 +311,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				"wrong", priceList2.getName(), 
+				 cat.getProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(), "wrong", 
+				priceList1.getName(),  cat.getProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -356,14 +356,14 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				"wrong", product2.getName(), 
+				 cat.getProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(), "wrong", 
+				product1.getName(),  cat.getProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -401,14 +401,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				"wrong", priceList2.getName(), 
+				 cat.getProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(), "wrong", 
+				priceList1.getName(),  cat.getProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -446,14 +446,14 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				"wrong", product2.getName(), 
+				 cat.getProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(), "wrong", 
+				product1.getName(),  cat.getProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -491,14 +491,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				"wrong", priceList2.getName(), 
+				 cat.getProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(), "wrong", 
+				priceList1.getName(),  cat.getProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -536,7 +536,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				"wrong", product2.getName(), 
+				 cat.getProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -557,7 +557,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(), "wrong", 
+				product1.getName(),  cat.getProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -581,14 +581,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				"wrong", priceList2.getName(), 
+				 cat.getProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(), "wrong", 
+				priceList1.getName(),  cat.getProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -627,7 +627,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				"wrong", product2.getName(), 
+				 cat.getProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -648,7 +648,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(), "wrong", 
+				product1.getName(),  cat.getProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -672,14 +672,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				"wrong", priceList2.getName(), 
+				 cat.getProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(), "wrong", 
+				priceList1.getName(),  cat.getProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -717,7 +717,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				"wrong", product2.getName(), 
+				 cat.getProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -738,7 +738,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(), "wrong", 
+				product1.getName(),  cat.getProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -762,14 +762,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				"wrong", priceList2.getName(), 
+				 cat.getProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(), "wrong", 
+				priceList1.getName(),  cat.getProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -807,7 +807,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				"wrong", product2.getName(), 
+				 cat.getProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -828,7 +828,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(), "wrong", 
+				product1.getName(),  cat.getProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -852,14 +852,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				"wrong", priceList2.getName(), 
+				 cat.getProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertion(Result.FOO,cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(), "wrong", 
+				priceList1.getName(),  cat.getProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -897,7 +897,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				"wrong", product2.getName(), 
+				 cat.getProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -918,7 +918,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(), "wrong", 
+				product1.getName(),  cat.getProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -942,14 +942,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				"wrong", priceList2.getName(), 
+				 cat.getProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(), "wrong", 
+				priceList1.getName(),  cat.getProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertion(Result.FOO,cr, 
