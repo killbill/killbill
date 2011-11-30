@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.CurrencyValueNull;
 import com.ning.billing.catalog.api.IPrice;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
@@ -32,7 +33,7 @@ public class Price extends ValidatingConfig<Catalog> implements IPrice {
 	@XmlElement(required=true)
 	private Currency currency;
 
-	@XmlElement(required=true)
+	@XmlElement(required=true,nillable=true)
 	private BigDecimal value;
 
 	/* (non-Javadoc)
@@ -47,7 +48,10 @@ public class Price extends ValidatingConfig<Catalog> implements IPrice {
 	 * @see com.ning.billing.catalog.IPrice#getValue()
 	 */
 	@Override
-	public BigDecimal getValue() {
+	public BigDecimal getValue() throws CurrencyValueNull {
+		if (value == null) {
+			throw new CurrencyValueNull(currency);
+		}
 		return value;
 	}
 	

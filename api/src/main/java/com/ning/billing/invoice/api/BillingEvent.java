@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.api;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.IInternationalPrice;
 import com.ning.billing.entitlement.api.billing.BillingMode;
@@ -90,9 +91,15 @@ public class BillingEvent implements IBillingEvent {
         return price;
     }
 
+ // TODO handle exception correctly
     @Override
     public BigDecimal getPrice(Currency currency) {
-        return price.getPrice(currency);
+        try {
+			return price.getPrice(currency);
+		} catch (CatalogApiException e)  {		
+			e.printStackTrace();
+			return new BigDecimal(0);
+		}
     }
 
     @Override

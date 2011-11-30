@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
@@ -107,7 +108,17 @@ public class EntitlementUserApi implements IEntitlementUserApi {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
         }
 
-        IPlan plan = catalogService.getCatalog().getPlan(productName, term, realPriceList);
+        requestedDate = (requestedDate == null) ? now : requestedDate;
+
+        //TODO: Correctly handle exception
+        IPlan plan = null;
+		try {
+			plan = catalogService.getCatalog().findPlan(productName, term, realPriceList);
+		} catch (CatalogApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
         if (plan == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BAD_CATALOG, productName, term, realPriceList);
         }

@@ -14,13 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.api;
 
-import org.skife.config.Config;
+import com.ning.billing.ErrorCode;
 
-public interface ICatalogConfiguration {
-	
-    @Config("killbill.catalog.config.directory")
-    public String getCatalogDirectoryURL();
+public class CurrencyValueNull extends CatalogApiException {
+	private static final long serialVersionUID = 1L;
+
+	public CurrencyValueNull(Throwable cause, Object... args) {
+		super(cause, ErrorCode.CAT_PRICE_VALUE_NULL_FOR_CURRENCY, args);
+	}
+
+	public CurrencyValueNull(Object... args) {
+		super(ErrorCode.CAT_PRICE_VALUE_NULL_FOR_CURRENCY, args);
+	}
 
 }

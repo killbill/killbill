@@ -25,6 +25,7 @@ import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.PriceList;
 import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
@@ -69,13 +70,13 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
 	protected abstract T getResult();
 	
 	public T getResult(PlanPhaseSpecifier from,
-			PlanSpecifier to, Catalog catalog) {
+			PlanSpecifier to, Catalog catalog) throws CatalogApiException {
 		if(	
 				(phaseType     	     == null || from.getPhaseType() == phaseType) &&
-				(fromProduct 	     == null || fromProduct.equals(catalog.getProductFromName(from.getProductName()))) &&
+				(fromProduct 	     == null || fromProduct.equals(catalog.findProduct(from.getProductName()))) &&
 				(fromProductCategory == null || fromProductCategory.equals(from.getProductCategory())) &&
 				(fromBillingPeriod   == null || fromBillingPeriod.equals(from.getBillingPeriod())) &&
-				(toProduct           == null || toProduct.equals(catalog.getProductFromName(to.getProductName()))) &&
+				(toProduct           == null || toProduct.equals(catalog.findProduct(to.getProductName()))) &&
 				(toProductCategory   == null || toProductCategory.equals(to.getProductCategory())) &&
 				(toBillingPeriod     == null || toBillingPeriod.equals(to.getBillingPeriod())) &&
 				(fromPriceList       == null || fromPriceList.equals(catalog.getPriceListFromName(from.getPriceListName()))) &&
@@ -87,7 +88,7 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
 	}
 	
 	static public <K> K getResult(CaseChange<K>[] cases, PlanPhaseSpecifier from,
-			PlanSpecifier to, Catalog catalog) {
+			PlanSpecifier to, Catalog catalog) throws CatalogApiException {
     	if(cases != null) {
     		for(CaseChange<K> cc : cases) {
     			K result = cc.getResult(from, to, catalog);

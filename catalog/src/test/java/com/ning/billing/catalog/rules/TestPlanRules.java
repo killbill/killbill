@@ -16,10 +16,9 @@
 
 package com.ning.billing.catalog.rules;
 
-import junit.framework.Assert;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -28,6 +27,7 @@ import com.ning.billing.catalog.PriceList;
 import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.IllegalPlanChange;
 import com.ning.billing.catalog.api.PhaseType;
@@ -70,6 +70,8 @@ public class TestPlanRules {
 			Assert.fail("We did not see an exception when  trying to change plan to the same plan");
 		} catch (IllegalPlanChange e) {
 			log.info("Correct - cannot change to the same plan:", e);
+		} catch (CatalogApiException e) {
+			Assert.fail("", e);
 		}
 
 	}
@@ -88,6 +90,8 @@ public class TestPlanRules {
 		} catch (IllegalPlanChange e) {
 			log.info("Correct - cannot change to the same plan:", e);
 			Assert.fail("We should not have triggered this error");
+		} catch (CatalogApiException e) {
+			Assert.fail("", e);
 		}
 		
 		Assert.assertEquals(result.getPolicy(), ActionPolicy.END_OF_TERM);
@@ -113,6 +117,8 @@ public class TestPlanRules {
 		} catch (IllegalPlanChange e) {
 			log.info("Correct - cannot change to the same plan:", e);
 			Assert.fail("We should not have triggered this error");
+		} catch (CatalogApiException e) {
+			Assert.fail("", e);
 		}
 		
 		Assert.assertEquals(result.getPolicy(), ActionPolicy.END_OF_TERM);

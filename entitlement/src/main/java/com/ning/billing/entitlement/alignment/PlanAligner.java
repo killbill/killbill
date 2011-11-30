@@ -23,6 +23,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.IDuration;
@@ -95,7 +96,16 @@ public class PlanAligner implements IPlanAligner {
                     priceList);
 
             DateTime planStartDate = null;
-            PlanAlignmentCreate alignement =  catalog.getPlanCreateAlignment(planSpecifier);
+            
+            //TODO fix exception handling
+            PlanAlignmentCreate alignement = null;
+			try {
+				alignement = catalog.planCreateAlignment(planSpecifier);
+			} catch (CatalogApiException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
             switch(alignement) {
             case START_OF_SUBSCRIPTION:
                 planStartDate = subscription.getStartDate();
@@ -131,7 +141,15 @@ public class PlanAligner implements IPlanAligner {
                 priceList);
 
         DateTime planStartDate = null;
-        PlanAlignmentChange alignment = catalog.getPlanChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier);
+        
+        //TODO Correctly handle exception
+        PlanAlignmentChange alignment = null;
+		try {
+			alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier);
+		} catch (CatalogApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         switch(alignment) {
         case START_OF_SUBSCRIPTION:
             planStartDate = subscription.getStartDate();

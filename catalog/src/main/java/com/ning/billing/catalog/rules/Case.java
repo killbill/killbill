@@ -20,6 +20,7 @@ import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.PriceList;
 import com.ning.billing.catalog.Product;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.ValidatingConfig;
@@ -34,21 +35,21 @@ public abstract class Case<T> extends ValidatingConfig<Catalog> {
 
 	protected abstract T getResult();
 
-	public T getResult(PlanSpecifier planPhase, Catalog c) {
+	public T getResult(PlanSpecifier planPhase, Catalog c) throws CatalogApiException {
 		if (satisfiesCase(planPhase, c)	) {
 			return getResult(); 
 		}
 		return null;
 	}
 	
-	protected boolean satisfiesCase(PlanSpecifier planPhase, Catalog c) {
-		return (product         == null || product.equals(c.getProductFromName(planPhase.getProductName()))) &&
+	protected boolean satisfiesCase(PlanSpecifier planPhase, Catalog c) throws CatalogApiException {
+		return (product         == null || product.equals(c.findProduct(planPhase.getProductName()))) &&
 		(productCategory == null || productCategory.equals(planPhase.getProductCategory())) &&
 		(billingPeriod   == null || billingPeriod.equals(planPhase.getBillingPeriod())) &&
 		(priceList       == null || priceList.equals(c.getPriceListFromName(planPhase.getPriceListName())));
 	}
 
-	public static <K> K getResult(Case<K>[] cases, PlanSpecifier planSpec, Catalog catalog) {
+	public static <K> K getResult(Case<K>[] cases, PlanSpecifier planSpec, Catalog catalog) throws CatalogApiException {
     	if(cases != null) {
     		for(Case<K> c : cases) {
     			K result = c.getResult(planSpec, catalog);

@@ -23,6 +23,6 @@ public interface IPrice {
 
 	public abstract Currency getCurrency();
 
-	public abstract BigDecimal getValue();
+	public abstract BigDecimal getValue() throws CurrencyValueNull;
 
 }

@@ -17,46 +17,44 @@
 package com.ning.billing.catalog.api;
 
 import java.util.Date;
-import java.util.List;
 
 public interface ICatalog {
 
 	public abstract IProduct[] getProducts();
 	
-	public abstract IPlan getPlan(String productName, BillingPeriod term, String priceList);
+	public abstract IPlan findPlan(String productName, BillingPeriod term, String priceList) throws CatalogApiException;
 
+	public abstract IPlan findPlan(String name) throws CatalogApiException;
+
+    public abstract IProduct findProduct(String name) throws CatalogApiException;
+
+    public abstract IPlanPhase findPhase(String name) throws CatalogApiException;
+
+	
 	public abstract Currency[] getSupportedCurrencies();
 
 	public abstract IPlan[] getPlans();
 
-	public abstract ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from,
-			PlanSpecifier to);
+	public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
+			PlanSpecifier to) throws CatalogApiException;
 
 	public abstract PlanChangeResult planChange(PlanPhaseSpecifier from,
-			PlanSpecifier to) throws IllegalPlanChange;
-	
-    public abstract IPlan getPlanFromName(String name);
-
-    public abstract IPlanPhase getPhaseFromName(String name);
+			PlanSpecifier to) throws IllegalPlanChange, CatalogApiException;
 
     public abstract Date getEffectiveDate();
 
-    public abstract IPlanPhase getPhaseFor(String name, Date date);
-
-    public abstract IProduct getProductFromName(String name);
-
-    public abstract ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase);
+    public abstract ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException;
 
     public abstract void configureEffectiveDate(Date date);
 
     public abstract String getCalalogName();
 
-    public abstract PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier);
+    public abstract PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier) throws CatalogApiException;
 
-    public abstract BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase);
+    public abstract BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException;
 
-    public abstract PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to);
+    public abstract PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
+			PlanSpecifier to) throws CatalogApiException;
 
 	
 }

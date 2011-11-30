@@ -14,25 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.catalog;
+package com.ning.billing.catalog.io;
 
-import java.io.File;
+import com.ning.billing.catalog.VersionedCatalog;
+import com.ning.billing.lifecycle.IService.ServiceException;
 
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.ICatalogUserApi;
-import com.ning.billing.util.config.XMLLoader;
+public interface ICatalogLoader {
 
-public class CatalogUserApi implements ICatalogUserApi {
-
-    @Override
-    public ICatalog getCatalog(final String catalogName) {
-    	String name = catalogName;
-        try {
-            return XMLLoader.getObjectFromURI(new File(name).toURI(), Catalog.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+	public abstract VersionedCatalog load(String urlString)
+			throws ServiceException;
 
 }

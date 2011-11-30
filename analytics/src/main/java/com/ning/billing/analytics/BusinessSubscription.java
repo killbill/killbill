@@ -17,6 +17,7 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.analytics.utils.Rounder;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlan;
@@ -130,7 +131,14 @@ public class BusinessSubscription
             }
 
             if (currentPhase.getRecurringPrice() != null) {
-                price = currentPhase.getRecurringPrice().getPrice(USD);
+            	//TODO check if this is the right way to handle exception
+            	BigDecimal tmpPrice = null;
+                try {
+                	tmpPrice = currentPhase.getRecurringPrice().getPrice(USD);
+				} catch (CatalogApiException e) {
+					tmpPrice = new BigDecimal(0);
+				}
+                price = tmpPrice;
                 mrr = getMrrFromISubscription(currentPhase.getDuration(), price);
             }
             else {

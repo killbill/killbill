@@ -18,15 +18,22 @@ package com.ning.billing.catalog;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.config.ValidationErrors;
 
 public class TestInternationalPrice {
+	private static final Logger log = LoggerFactory.getLogger(TestInternationalPrice.class);
+	
   @Test
-  public void testZeroValue() throws URISyntaxException {
+  public void testZeroValue() throws URISyntaxException, CatalogApiException {
 	  Catalog c = new MockCatalog();
 	  c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
 	  InternationalPrice p0 =  new MockInternationalPrice();
@@ -55,4 +62,44 @@ public class TestInternationalPrice {
 	  Assert.assertEquals(p1.getPrice(Currency.MXN), new BigDecimal(1));
 	  
   }
+  
+  @Test
+  public void testPriceInitialization() throws URISyntaxException, CatalogApiException  {
+	  Catalog c = new MockCatalog();
+	  c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
+	  c.initialize(c, new URI("foo://bar"));
+	  Assert.assertEquals(c.getPlans()[0].getFinalPhase().getRecurringPrice().getPrice(Currency.GBP), new BigDecimal(0));
+  }
+  
+  @Test
+  public void testNegativeValuePrices(){
+	  Catalog c = new MockCatalog();
+	  c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
+	
+	  InternationalPrice p1 =  new MockInternationalPrice();
+	  p1.setPrices(new Price[] {
+			  new Price().setCurrency(Currency.GBP).setValue(new BigDecimal(-1)),
+			  new Price().setCurrency(Currency.EUR).setValue(new BigDecimal(-1)),
+			  new Price().setCurrency(Currency.USD).setValue(new BigDecimal(-1)),
+			  new Price().setCurrency(Currency.BRL).setValue(new BigDecimal(1)),
+			  new Price().setCurrency(Currency.MXN).setValue(new BigDecimal(1)),		  
+	  });
+	  
+	 ValidationErrors errors = p1.validate(c, new ValidationErrors());
+	 errors.log(log);
+	 Assert.assertEquals(errors.size(), 3);
+  }
+  @Test
+  public void testDateValidation(){
+	 Catalog c = new MockCatalog();
+	 c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
+	 InternationalPrice p1 =  new MockInternationalPrice();
+	 p1.setEffectiveDateForExistingSubscriptons(new Date((new Date().getTime()) - (1000 * 60 * 60 * 24)));
+	 ValidationErrors errors = p1.validate(c, new ValidationErrors());
+	 Assert.assertEquals(errors.size(), 1);
+	 errors.log(log);
+  }
+  
+  
+  
 }

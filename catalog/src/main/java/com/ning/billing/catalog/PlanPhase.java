@@ -122,9 +122,6 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 					catalog.getCatalogURI(), PlanPhase.class, type.toString()));
 		}
 		
-		
-		
-		
 		//Validation: if there is a recurring price there must be a billing period
 		if(recurringPrice != null && (billingPeriod == null || billingPeriod ==BillingPeriod.NO_BILLING_PERIOD)) {
 			errors.add(new ValidationError(String.format("Phase %s of plan %s has a reccurring price but no billing period", type.toString(), plan.getName()), 
@@ -132,22 +129,27 @@ public class PlanPhase extends ValidatingConfig<Catalog> implements IPlanPhase {
 		}
 		//Validation: if there is no reccuring price there should be no billing period
 		if(recurringPrice == null && billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-			errors.add(new ValidationError(String.format("Phase %s of plan %s has no reccurring price but does have a billing period. The billing period shoudl be set to '%s'", 
+			errors.add(new ValidationError(String.format("Phase %s of plan %s has no reccurring price but does have a billing period. The billing period should be set to '%s'", 
 					type.toString(), plan.getName(), BillingPeriod.NO_BILLING_PERIOD), 
 					catalog.getCatalogURI(), PlanPhase.class, type.toString()));
 		}
 		
+		//Validation: there must be at least one of reccuringPrice or fixedPrice
+		if(recurringPrice == null && fixedPrice == null) {
+			errors.add(new ValidationError(String.format("Phase %s of plan %s has neither a reccurring price or a fixed price.", 
+					type.toString(), plan.getName()), 
+					catalog.getCatalogURI(), PlanPhase.class, type.toString()));
+		}
 		return errors;
 
 	}
 	
-
 	@Override
 	public void initialize(Catalog root, URI uri) {
 		if (fixedPrice != null) { fixedPrice.initialize(root, uri);  }	
 		if (recurringPrice != null) { recurringPrice.initialize(root, uri); }
 	}
-
+	
 	protected PlanPhase setFixedPrice(InternationalPrice price) {
 		this.fixedPrice = price;
 		return this;

@@ -23,15 +23,16 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.IllegalPlanChange;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanChangeResult;
@@ -46,10 +47,11 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	
 	private final List<Catalog> versions = new ArrayList<Catalog>();
 	
+	@Inject
 	public VersionedCatalog() {
 		Catalog baseline = new Catalog(new Date(0)); // init with an empty catalog may need to 
 													 // populate some empty pieces here to make validation work
-		add(baseline);
+		add(baseline); 
 	}
 	
 	private Catalog versionForDate(Date date) {
@@ -95,12 +97,6 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public IPlan getPlan(String productName, BillingPeriod term,
-			String planSetName) {
-		return currentCatalog.getPlan(productName, term, planSetName);
-	}
-
-	@Override
 	public Currency[] getSupportedCurrencies() {
 		return currentCatalog.getSupportedCurrencies();
 	}
@@ -111,19 +107,29 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public Plan getPlanFromName(String name) {
-		return currentCatalog.getPlanFromName(name);
-	}
-
-
-	@Override
-	public IPlanPhase getPhaseFromName(String name) {
-		return currentCatalog.getPhaseFromName(name);
-	}
-
-	@Override
 	public Date getEffectiveDate() {
 		return currentCatalog.getEffectiveDate();
+	}
+
+	@Override
+	public IPlan findPlan(String productName, BillingPeriod term,
+			String planSetName) throws CatalogApiException {
+		return currentCatalog.findPlan(productName, term, planSetName);
+	}
+
+	@Override
+	public Plan findPlan(String name) throws CatalogApiException {
+		return currentCatalog.findPlan(name);
+	}
+
+	@Override
+	public IPlanPhase findPhase(String name) throws CatalogApiException {
+		return currentCatalog.findPhase(name);
+	}
+
+	@Override
+	public IProduct findProduct(String name) throws CatalogApiException {
+		return currentCatalog.findProduct(name);
 	}
 
 	@Override
@@ -142,36 +148,25 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 	
 	@Override
-    public PlanPhase getPhaseFor(String name, Date date) {
-    	Catalog c = versionForDate(date);
-    	return c.getPhaseFromName(name);
-    }
-
-	@Override
-	public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from,
-			PlanSpecifier to) {
-		return currentCatalog.getPlanChangePolicy(from, to);
+	public ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
+			PlanSpecifier to) throws CatalogApiException {
+		return currentCatalog.planChangePolicy(from, to);
 	}
 
 	@Override
-	public IProduct getProductFromName(String name) {
-		return currentCatalog.getProductFromName(name);
+	public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException {
+		return currentCatalog.planCancelPolicy(planPhase);
 	}
 
 	@Override
-	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase) {
-		return currentCatalog.getPlanCancelPolicy(planPhase);
+	public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
+			PlanSpecifier to) throws CatalogApiException {
+		return currentCatalog.planChangeAlignment(from, to);
 	}
 
 	@Override
-	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to) {
-		return currentCatalog.getPlanChangeAlignment(from, to);
-	}
-
-	@Override
-	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier) {
-		return currentCatalog.getPlanCreateAlignment(specifier);
+	public PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier) throws CatalogApiException {
+		return currentCatalog.planCreateAlignment(specifier);
 	}
 
 	@Override
@@ -180,13 +175,13 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase) {
-		return currentCatalog.getBillingAlignment(planPhase);
+	public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException {
+		return currentCatalog.billingAlignment(planPhase);
 	}
 
 	@Override
 	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to)
-			throws IllegalPlanChange {
+			throws CatalogApiException {
 		return currentCatalog.planChange(from, to);
 	}
 	
