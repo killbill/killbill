@@ -23,73 +23,80 @@ import java.util.UUID;
 
 public class MockAccount implements IAccount
 {
-    private final String key;
+    private final UUID id;
+    private final String accountKey;
+    private final Currency currency;
 
-    public MockAccount(final String key)
+    public MockAccount(final UUID id, final String accountKey, final Currency currency)
     {
-        this.key = key;
+        this.id = id;
+        this.accountKey = accountKey;
+        this.currency = currency;
     }
 
     @Override
     public String getName()
     {
-        return "accountName";
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public String getEmail()
     {
-        return "accountName@yahoo.com";
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public String getPhone()
     {
-        return "4152876341";
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public String getKey()
     {
-        return key;
+        return accountKey;
     }
 
     @Override
     public int getBillCycleDay()
     {
-        return 1;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Currency getCurrency()
     {
-        return Currency.USD;
+        return currency;
     }
 
     @Override
     public UUID getId()
     {
-        return UUID.randomUUID();
+        return id;
     }
 
     @Override
     public void load()
     {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void save()
     {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public String getFieldValue(final String fieldName)
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setFieldValue(final String fieldName, final String fieldValue)
     {
+        throw new UnsupportedOperationException();
     }
 }

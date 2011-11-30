@@ -19,12 +19,20 @@ package com.ning.billing.analytics;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountData;
 import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.catalog.api.Currency;
 
 import java.util.List;
 import java.util.UUID;
 
 public class MockIAccountUserApi implements IAccountUserApi
 {
+    private final MockAccount account;
+
+    public MockIAccountUserApi(final String accountKey, final Currency currency)
+    {
+        account = new MockAccount(UUID.randomUUID(), accountKey, currency);
+    }
+
     @Override
     public IAccount createAccount(final IAccountData data)
     {
@@ -40,7 +48,7 @@ public class MockIAccountUserApi implements IAccountUserApi
     @Override
     public IAccount getAccountFromId(final UUID uid)
     {
-        return null;
+        return account;
     }
 
     @Override

@@ -44,6 +44,7 @@ public @interface BusinessSubscriptionTransitionBinder
                 public void bind(final SQLStatement q, final BusinessSubscriptionTransitionBinder bind, final BusinessSubscriptionTransition arg)
                 {
                     q.bind("event_key", arg.getKey());
+                    q.bind("account_key", arg.getAccountKey());
                     q.bind("requested_timestamp", arg.getRequestedTimestamp().getMillis());
                     q.bind("event", arg.getEvent().toString());
 
@@ -56,6 +57,7 @@ public @interface BusinessSubscriptionTransitionBinder
                         q.bindNull("prev_phase", Types.VARCHAR);
                         q.bindNull("prev_billing_period", Types.VARCHAR);
                         q.bindNull("prev_price", Types.NUMERIC);
+                        q.bindNull("prev_price_list", Types.VARCHAR);
                         q.bindNull("prev_mrr", Types.NUMERIC);
                         q.bindNull("prev_currency", Types.VARCHAR);
                         q.bindNull("prev_start_date", Types.BIGINT);
@@ -76,6 +78,7 @@ public @interface BusinessSubscriptionTransitionBinder
                         q.bind("prev_phase", previousSubscription.getPhase());
                         q.bind("prev_billing_period", previousSubscription.getBillingPeriod());
                         q.bind("prev_price", previousSubscription.getRoundedPrice());
+                        q.bind("prev_price_list", previousSubscription.getPriceList());
                         q.bind("prev_mrr", previousSubscription.getRoundedMrr());
                         q.bind("prev_currency", previousSubscription.getCurrency());
                         if (previousSubscription.getStartDate() == null) {
@@ -113,6 +116,7 @@ public @interface BusinessSubscriptionTransitionBinder
                         q.bindNull("next_phase", Types.VARCHAR);
                         q.bindNull("next_billing_period", Types.VARCHAR);
                         q.bindNull("next_price", Types.NUMERIC);
+                        q.bindNull("next_price_list", Types.VARCHAR);
                         q.bindNull("next_mrr", Types.NUMERIC);
                         q.bindNull("next_currency", Types.VARCHAR);
                         q.bindNull("next_start_date", Types.BIGINT);
@@ -133,6 +137,7 @@ public @interface BusinessSubscriptionTransitionBinder
                         q.bind("next_phase", nextSubscription.getPhase());
                         q.bind("next_billing_period", nextSubscription.getBillingPeriod());
                         q.bind("next_price", nextSubscription.getRoundedPrice());
+                        q.bind("next_price_list", nextSubscription.getPriceList());
                         q.bind("next_mrr", nextSubscription.getRoundedMrr());
                         q.bind("next_currency", nextSubscription.getCurrency());
                         if (nextSubscription.getStartDate() == null) {

@@ -33,6 +33,7 @@ import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class Product extends ValidatingConfig<Catalog> implements IProduct {
+	private static final Product[] EMPTY_PRODUCT_LIST = new Product[0];
 	
 	@XmlAttribute (required=true)
 	@XmlID
@@ -43,11 +44,11 @@ public class Product extends ValidatingConfig<Catalog> implements IProduct {
 	
 	@XmlElementWrapper(name="included", required=false)
 	@XmlIDREF @XmlElement(name="addonProduct", required=true)
-    private Product[] included;
+    private Product[] included = EMPTY_PRODUCT_LIST;
 	
 	@XmlElementWrapper(name="available", required=false)
 	@XmlIDREF @XmlElement(name="addonProduct", required=true)
-    private Product[] available;
+    private Product[] available = EMPTY_PRODUCT_LIST;
 
 	//Not included in XML
 	private String catalogName;

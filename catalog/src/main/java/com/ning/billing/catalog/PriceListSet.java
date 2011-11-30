@@ -33,7 +33,7 @@ public class PriceListSet extends ValidatingConfig<Catalog> {
 	private PriceListDefault defaultPricelist;
 	
 	@XmlElement(required=false, name="childPriceList")
-	private PriceList[] childPriceLists;
+	private PriceList[] childPriceLists = new PriceList[0];
 	
 	public PriceListSet() {
 		if(childPriceLists == null) {

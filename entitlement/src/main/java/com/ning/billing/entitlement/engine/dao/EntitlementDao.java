@@ -37,6 +37,7 @@ import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
@@ -104,6 +105,15 @@ public class EntitlementDao implements IEntitlementDao {
     @Override
     public List<ISubscription> getSubscriptions(UUID bundleId) {
         return subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
+    }
+
+    @Override
+    public List<ISubscription> getSubscriptionsForKey(String bundleKey) {
+        ISubscriptionBundle bundle =  bundlesDao.getBundleFromKey(bundleKey);
+        if (bundle == null) {
+            return Collections.emptyList();
+        }
+        return subscriptionsDao.getSubscriptionsFromBundleId(bundle.getId().toString());
     }
 
     @Override
@@ -178,7 +188,7 @@ public class EntitlementDao implements IEntitlementDao {
     }
 
     @Override
-    public void clearEventsReady(final UUID ownerId, final List<IEvent> cleared) {
+    public void clearEventsReady(final UUID ownerId, final Collection<IEvent> cleared) {
 
         log.debug(String.format("EntitlementDao clearEventsReady START cleared size = %d", cleared.size()));
 
@@ -216,8 +226,7 @@ public class EntitlementDao implements IEntitlementDao {
                 return null;
             }
         });
-        return new Subscription(subscription.getId(), subscription.getBundleId(),subscription.getCategory(), subscription.getBundleStartDate(),
-                subscription.getStartDate(), subscription.getChargedThroughDate(), subscription.getPaidThroughDate(), subscription.getActiveVersion());
+        return new Subscription(new SubscriptionBuilder(subscription), true);
     }
 
     @Override

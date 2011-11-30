@@ -96,7 +96,7 @@ public class MockPhase implements IPlanPhase
     @Override
     public BillingPeriod getBillingPeriod()
     {
-        return BillingPeriod.MONTHLY;
+        return null;
     }
 
     @Override

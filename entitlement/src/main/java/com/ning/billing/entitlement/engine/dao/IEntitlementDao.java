@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,6 +44,8 @@ public interface IEntitlementDao {
 
     public List<ISubscription> getSubscriptions(UUID bundleId);
 
+    public List<ISubscription> getSubscriptionsForKey(String bundleKey);
+
     // Update
     public void updateSubscription(Subscription subscription);
 
@@ -55,7 +58,7 @@ public interface IEntitlementDao {
 
     public List<IEvent> getEventsReady(UUID ownerId, int sequenceId);
 
-    public void clearEventsReady(UUID ownerId, List<IEvent> cleared);
+    public void clearEventsReady(UUID ownerId, Collection<IEvent> cleared);
 
     // Subscription creation, cancellation, changePlan apis
     public ISubscription createSubscription(Subscription subscription, List<IEvent> initialEvents);

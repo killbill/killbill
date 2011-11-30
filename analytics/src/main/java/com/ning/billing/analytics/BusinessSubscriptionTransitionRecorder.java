@@ -86,6 +86,7 @@ public class BusinessSubscriptionTransitionRecorder
     {
         Currency currency = null;
         String transitionKey = null;
+        String accountKey = null;
 
         // Retrieve key and currency via the bundle
         final ISubscriptionBundle bundle = entitlementApi.getBundleFromId(transition.getBundleId());
@@ -94,6 +95,7 @@ public class BusinessSubscriptionTransitionRecorder
 
             final IAccount account = accountApi.getAccountFromId(bundle.getAccountId());
             if (account != null) {
+                accountKey = account.getKey();
                 currency = account.getCurrency();
             }
         }
@@ -110,17 +112,24 @@ public class BusinessSubscriptionTransitionRecorder
         }
 
         // TODO Support currency changes
-        final BusinessSubscription prevSubscription = new BusinessSubscription(transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId());
-        final BusinessSubscription nextSubscription = new BusinessSubscription(transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId());
+        final BusinessSubscription prevSubscription;
+        if (previousEffectiveTransitionTime == null) {
+            prevSubscription = null;
+        }
+        else {
+            prevSubscription = new BusinessSubscription(transition.getPreviousPriceList(), transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId());
+        }
+        final BusinessSubscription nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId());
 
-        record(transitionKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
+        record(transitionKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
     }
 
     // Public for internal reasons
-    public void record(final String key, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription)
+    public void record(final String key, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription)
     {
         final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
             key,
+            accountKey,
             requestedDateTime,
             event,
             prevSubscription,

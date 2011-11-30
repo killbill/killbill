@@ -14,13 +14,28 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.test;
+package com.ning.billing.entitlement.events.phase;
 
-import java.util.UUID;
+import com.ning.billing.entitlement.events.EventBaseBuilder;
 
+public class PhaseEventBuilder extends EventBaseBuilder<PhaseEventBuilder> {
 
-public interface IEntitlementTestApi {
+    private String phaseName;
 
-    public void doProcessReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly);
+    public PhaseEventBuilder() {
+        super();
+    }
 
+    public PhaseEventBuilder(EventBaseBuilder<PhaseEventBuilder> base) {
+        super(base);
+    }
+
+    public PhaseEventBuilder setPhaseName(String phaseName) {
+        this.phaseName = phaseName;
+        return this;
+    }
+
+    public String getPhaseName() {
+        return phaseName;
+    }
 }

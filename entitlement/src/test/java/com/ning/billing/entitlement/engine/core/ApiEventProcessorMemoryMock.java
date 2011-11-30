@@ -16,12 +16,14 @@
 
 package com.ning.billing.entitlement.engine.core;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.IClock;
 
 public class ApiEventProcessorMemoryMock extends ApiEventProcessorBase {
@@ -50,5 +52,12 @@ public class ApiEventProcessorMemoryMock extends ApiEventProcessorBase {
         dao.clearEventsReady(apiProcessorId, events);
         log.info(String.format("doProcessEvents : clearEvents"));
         return true;
+    }
+
+
+    @Override
+    protected boolean doProcessEventsFromList(int sequenceId,
+            Collection<IEvent> events) {
+        throw new EntitlementError("Method not implemented");
     }
 }

@@ -17,25 +17,9 @@
 package com.ning.billing.entitlement.events.user;
 
 
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
-
-
 public class ApiEventResume extends ApiEventBase {
 
-    public ApiEventResume(UUID subscriptionId, DateTime now, DateTime requestedDate, DateTime effectiveDate, long version) {
-        super(subscriptionId, null, now, requestedDate, ApiEventType.RESUME, effectiveDate, version);
+    public ApiEventResume(ApiEventBuilder builder) {
+        super(builder.setEventType(ApiEventType.RESUME));
     }
-
-    public ApiEventResume(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,
-            String priceList, DateTime requestedDate, DateTime effectiveDate, long activeVersion,
-            boolean isActive, UUID processingOwner, DateTime nextAvailableProcessingTime,IEventLyfecycleState processingState) {
-        super(id, subscriptionId, processed, eventPlan, eventPhase, priceList, requestedDate, ApiEventType.RESUME, effectiveDate,
-                activeVersion, isActive, processingOwner, nextAvailableProcessingTime, processingState);
-    }
-
 }

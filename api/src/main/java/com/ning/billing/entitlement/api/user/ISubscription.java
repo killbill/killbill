@@ -59,6 +59,8 @@ public interface ISubscription extends IPrivateFields {
 
     public DateTime getStartDate();
 
+    public DateTime getEndDate();
+
     public IPlan getCurrentPlan();
 
     public String getCurrentPriceList();

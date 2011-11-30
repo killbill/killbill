@@ -53,7 +53,12 @@ public interface IBundleSqlDao extends Transactional<IEventSqlDao>, CloseMe, Tra
 
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
+    public ISubscriptionBundle getBundleFromKey(@Bind("name") String name);
+
+    @SqlQuery
+    @Mapper(ISubscriptionBundleSqlMapper.class)
     public List<ISubscriptionBundle> getBundleFromAccount(@Bind("account_id") String accountId);
+
 
     public static class SubscriptionBundleBinder implements Binder<Bind, SubscriptionBundle> {
 

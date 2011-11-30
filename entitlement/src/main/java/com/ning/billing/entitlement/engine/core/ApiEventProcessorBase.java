@@ -17,6 +17,10 @@
 package com.ning.billing.entitlement.engine.core;
 
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -28,8 +32,11 @@ import org.skife.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.config.IEntitlementConfig;
+import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.util.clock.IClock;
@@ -71,7 +78,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
 
     @Override
-    public void startNotifications(IEventListener listener) {
+    public void startNotifications(final IEventListener listener) {
 
         this.listener = listener;
         this.isProcessingEvents = true;
@@ -80,6 +87,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
         if (config.isEventProcessingOff()) {
             log.warn("KILLBILL ENTITLEMENT EVENT PROCESSING IS OFF !!!");
+            listener.completedNotificationStart();
             return;
         }
         final ApiEventProcessorBase apiEventProcessor = this;
@@ -88,6 +96,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
             if (executor != null) {
                 log.warn("There is already an executor thread running, return");
+                listener.completedNotificationStart();
                 return;
             }
 
@@ -115,6 +124,10 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
                 log.info(String.format("ApiEventProcessor thread %s  [%d] started", API_EVENT_THREAD_NAME,
                         Thread.currentThread().getId()));
+
+                // Thread is now started, notify the listener
+                listener.completedNotificationStart();
+
                 try {
                     while (true) {
                         synchronized (apiEventProcessor) {
@@ -158,6 +171,11 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
     @Override
     public void stopNotifications() {
+
+        if (config.isEventProcessingOff()) {
+            return;
+        }
+
         synchronized(this) {
             isProcessingEvents = false;
             try {
@@ -172,20 +190,72 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
     }
 
 
+    //
     // Used for system test purpose only when event processing has been disabled.
+    // This is not necessarily pretty
+    //
     @Override
-    public void processAllReadyEvents() {
+    public void processAllReadyEvents(final UUID [] subscriptionsIds, final Boolean recursive, final Boolean oneEventOnly) {
+        processAllReadyEventsRecursively(subscriptionsIds, recursive, oneEventOnly);
+    }
 
+    private boolean processAllReadyEventsRecursively(final UUID [] subscriptionsIds,
+            final Boolean recursive,
+            final Boolean oneEventOnly) {
 
-        boolean keepProcessing = false;
-        /*
+        int curSequenceId = sequenceId.getAndIncrement();
+
+        //Get all current ready events
+        List<IEvent> claimedEvents = new LinkedList<IEvent>();
         do {
-         */
-        keepProcessing = doProcessEvents(sequenceId.incrementAndGet());
-        /*
-         } while (keepProcessing);
-         */
+            List<IEvent> tmpEvents = dao.getEventsReady(apiProcessorId, curSequenceId);
+            if (tmpEvents.size() == 0) {
+                break;
+            }
+            claimedEvents.addAll(tmpEvents);
+        } while(true);
+        if (claimedEvents.size() == 0) {
+            return false;
+        }
+
+        // Filter for specific subscriptions if needed
+        Collection<IEvent> claimedEventsFiltered = null;
+        if (subscriptionsIds.length == 0) {
+            claimedEventsFiltered = claimedEvents;
+        } else {
+
+            claimedEventsFiltered = Collections2.filter(claimedEvents, new Predicate<IEvent>() {
+                @Override
+                public boolean apply(IEvent input) {
+                    for (UUID cur : subscriptionsIds) {
+                        if (cur.equals(input.getSubscriptionId())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            });
+        }
+        if (claimedEventsFiltered.size() == 0) {
+            return false;
+        }
+
+        // If only one event is requested extract it
+        if (oneEventOnly) {
+            List<IEvent> oneEventList = new ArrayList<IEvent>(1);
+            oneEventList.add(claimedEventsFiltered.iterator().next());
+            claimedEventsFiltered = oneEventList;
+        }
+
+        // Call processing method
+        doProcessEventsFromList(curSequenceId, claimedEventsFiltered);
+        // Keep going is recursive
+        if (recursive && !oneEventOnly) {
+            processAllReadyEventsRecursively(subscriptionsIds, recursive, oneEventOnly);
+        }
+        return true;
     }
 
     protected abstract boolean doProcessEvents(int sequenceId);
+    protected abstract boolean doProcessEventsFromList(int sequenceId, Collection<IEvent> events);
 }

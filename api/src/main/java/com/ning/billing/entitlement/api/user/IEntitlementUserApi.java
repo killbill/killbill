@@ -35,6 +35,8 @@ public interface IEntitlementUserApi {
 
     public List<ISubscription> getSubscriptionsForBundle(UUID bundleId);
 
+    public List<ISubscription> getSubscriptionsForKey(String bundleKey);
+
     public ISubscriptionBundle createBundleForAccount(IAccount account, String bundleKey)
         throws EntitlementUserApiException;
 

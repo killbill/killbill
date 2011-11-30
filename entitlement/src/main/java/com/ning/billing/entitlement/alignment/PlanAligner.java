@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.alignment;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -169,6 +170,11 @@ public class PlanAligner implements IPlanAligner {
 
     private List<TimedPhase> getPhaseAlignments(Subscription subscription, IPlan plan,
             DateTime effectiveDate, DateTime planStartDate) {
+
+        // The plan can be null with the nasty endpoint from test API.
+        if (plan == null) {
+            return Collections.emptyList();
+        }
 
         List<TimedPhase> result = new LinkedList<IPlanAligner.TimedPhase>();
 
