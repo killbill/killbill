@@ -553,19 +553,30 @@ public class Subscription extends PrivateFields  implements ISubscription {
                         cur.getType()));
             }
             
-            //TODO: Correctly handle exception
+            //TODO: Correctly handle exceptions
             IPlan previousPlan = null;
             IPlanPhase previousPhase = null;
             IPlan nextPlan = null;
             IPlanPhase nextPhase = null;
             try {
             	previousPlan = catalog.findPlan(previousPlanName);
+            } catch (CatalogApiException e) {
+            	// TODO: handle exception
+            }
+            try {
             	previousPhase = catalog.findPhase(previousPhaseName);
+            } catch (CatalogApiException e) {
+                // TODO: handle exception
+			}
+            try {
             	nextPlan = catalog.findPlan(nextPlanName);
+            } catch (CatalogApiException e) {
+            	// TODO: handle exception
+            }
+            try {
             	nextPhase = catalog.findPhase(nextPhaseName);
             } catch (CatalogApiException e) {
-            	// TODO Auto-generated catch block
-            	e.printStackTrace();
+            	// TODO: handle exception
             }
  
             SubscriptionTransition transition =
