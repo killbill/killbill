@@ -37,6 +37,7 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
@@ -65,12 +66,6 @@ public class SubscriptionApiService {
     }
 
 
-
-    public SubscriptionData createFromExisting(SubscriptionBuilder builder, List<EntitlementEvent> events) {
-        SubscriptionData subscription = new SubscriptionData(builder, this, clock);
-        subscription.rebuildTransitions(events, catalogService.getCatalog());
-        return subscription;
-    }
 
     public SubscriptionData create(SubscriptionBuilder builder, IPlan plan, String realPriceList,
             DateTime requestedDate, DateTime effectiveDate, DateTime processedDate) {

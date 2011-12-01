@@ -41,7 +41,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 
 
 @ExternalizedSqlViaStringTemplate3()

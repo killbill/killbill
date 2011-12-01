@@ -34,6 +34,7 @@ import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.DefaultClock;
@@ -43,18 +44,15 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     private final Clock clock;
     private final EntitlementDao dao;
-    private final PlanAligner planAligner;
     private final ICatalogService catalogService;
     private final SubscriptionApiService apiService;
 
     @Inject
-    public DefaultEntitlementUserApi(Clock clock, PlanAligner planAligner,
-            EntitlementDao dao, ICatalogService catalogService, SubscriptionApiService apiService) {
+    public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, ICatalogService catalogService, SubscriptionApiService apiService) {
         super();
         this.clock = clock;
         this.apiService = apiService;
         this.dao = dao;
-        this.planAligner = planAligner;
         this.catalogService = catalogService;
     }
 

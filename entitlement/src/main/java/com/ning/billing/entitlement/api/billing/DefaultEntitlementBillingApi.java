@@ -24,8 +24,8 @@ import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.IAccount;
-import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 

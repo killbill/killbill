@@ -39,8 +39,9 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
@@ -57,16 +58,16 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     private final TreeSet<EntitlementEvent> events;
     private final Clock clock;
     private final EntitlementConfig config;
-    private final SubscriptionApiService apiService;
+    private final SubscriptionFactory factory;
 
 
 
     @Inject
-    public MockEntitlementDaoMemory(Clock clock, EntitlementConfig config, SubscriptionApiService apiService) {
+    public MockEntitlementDaoMemory(Clock clock, EntitlementConfig config, SubscriptionFactory factory) {
         super();
         this.clock = clock;
         this.config = config;
-        this.apiService = apiService;
+        this.factory = factory;
         this.bundles = new ArrayList<SubscriptionBundle>();
         this.subscriptions = new ArrayList<Subscription>();
         this.events = new TreeSet<EntitlementEvent>();
@@ -232,7 +233,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     private Subscription buildSubscription(SubscriptionData in) {
-        return apiService.createFromExisting(new SubscriptionBuilder(in), getEventsForSubscription(in.getId()));
+        return factory.createSubscription(new SubscriptionBuilder(in), getEventsForSubscription(in.getId()));
     }
 
     @Override

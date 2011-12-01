@@ -28,6 +28,7 @@ import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.user.SubscriptionApiService;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.util.clock.Clock;
 
 public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEntitlementDao {
@@ -35,8 +36,8 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
     private final ResetSqlDao resetDao;
 
     @Inject
-    public MockEntitlementDaoSql(DBI dbi, Clock clock, EntitlementConfig config, SubscriptionApiService apiService ) {
-        super(dbi, clock, config, apiService);
+    public MockEntitlementDaoSql(DBI dbi, Clock clock, EntitlementConfig config, SubscriptionFactory factory) {
+        super(dbi, clock, config, factory);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
     }
 

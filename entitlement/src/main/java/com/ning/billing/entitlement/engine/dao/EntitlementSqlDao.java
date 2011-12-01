@@ -30,15 +30,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -51,19 +50,19 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     private final static Logger log = LoggerFactory.getLogger(EntitlementSqlDao.class);
 
-    private final SubscriptionApiService apiService;
     private final Clock clock;
     private final SubscriptionSqlDao subscriptionsDao;
     private final BundleSqlDao bundlesDao;
     private final EventSqlDao eventsDao;
     private final EntitlementConfig config;
     private final String hostname;
+    private final SubscriptionFactory factory;
 
     @Inject
-    public EntitlementSqlDao(DBI dbi, Clock clock, EntitlementConfig config, SubscriptionApiService apiService) {
+    public EntitlementSqlDao(DBI dbi, Clock clock, EntitlementConfig config, SubscriptionFactory factory) {
         this.clock = clock;
         this.config = config;
-        this.apiService = apiService;
+        this.factory = factory;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
         this.eventsDao = dbi.onDemand(EventSqlDao.class);
         this.bundlesDao = dbi.onDemand(BundleSqlDao.class);
@@ -335,7 +334,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         List<Subscription> result = new ArrayList<Subscription>(input.size());
         for (Subscription cur : input) {
             List<EntitlementEvent> events = eventsDao.getEventsForSubscription(cur.getId().toString());
-            Subscription reloaded = apiService.createFromExisting(new SubscriptionBuilder((SubscriptionData) cur), events);
+            Subscription reloaded =   factory.createSubscription(new SubscriptionBuilder((SubscriptionData) cur), events);
             result.add(reloaded);
         }
         return result;
