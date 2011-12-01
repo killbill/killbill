@@ -25,7 +25,7 @@ import org.joda.time.DateTimeZone;
 import com.ning.billing.catalog.api.IDuration;
 
 // STEPH should really be in tests but not accessible from other sub modules
-public class ClockMock extends Clock {
+public class ClockMock extends DefaultClock {
 
     private enum DeltaType {
         DELTA_NONE,

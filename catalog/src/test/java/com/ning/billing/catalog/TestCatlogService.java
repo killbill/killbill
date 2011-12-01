@@ -22,8 +22,8 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.config.ICatalogConfig;
-import com.ning.billing.lifecycle.IService.ServiceException;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestCatlogService {
 
@@ -35,7 +35,7 @@ public class TestCatlogService {
 				return "file:src/test/resources/versionedCatalog";
 			}
 			
-		}, new VersionedCatalogLoader(new Clock()));
+		}, new VersionedCatalogLoader(new DefaultClock()));
 		service.loadCatalog();
 		Assert.assertNotNull(service.getCatalog());
 		Assert.assertEquals(service.getCatalog().getCalalogName(), "WeaponsHireSmall");
@@ -49,7 +49,7 @@ public class TestCatlogService {
 				return "file:src/test/resources/WeaponsHire.xml";
 			}
 			
-		}, new VersionedCatalogLoader(new Clock()));
+		}, new VersionedCatalogLoader(new DefaultClock()));
 		service.loadCatalog();
 		Assert.assertNotNull(service.getCatalog());
 		Assert.assertEquals(service.getCatalog().getCalalogName(), "Firearms");

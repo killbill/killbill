@@ -27,7 +27,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.lifecycle.IService;
+import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
@@ -62,7 +62,7 @@ public class TestLifecycle {
         }
     }
 
-    public static class Service1 extends ServiceBase implements IService  {
+    public static class Service1 extends ServiceBase implements KillbillService  {
 
         @LifecycleHandlerType(LifecycleLevel.INIT_BUS)
         public void initBus() {
@@ -88,7 +88,7 @@ public class TestLifecycle {
         }
     }
 
-    public static class Service2 extends ServiceBase implements IService {
+    public static class Service2 extends ServiceBase implements KillbillService {
 
         @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)
         public void loadCatalog() {

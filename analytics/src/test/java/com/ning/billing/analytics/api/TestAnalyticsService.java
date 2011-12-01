@@ -37,14 +37,14 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
-import com.ning.billing.entitlement.api.user.ISubscription;
-import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
-import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.entitlement.events.IEntitlementEvent;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
+import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.util.eventbus.EventBus;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -68,13 +68,13 @@ public class TestAnalyticsService
     private IAccountUserApi accountApi;
 
     @Inject
-    private IEntitlementUserApi entitlementApi;
+    private EntitlementUserApi entitlementApi;
 
     @Inject
     private AnalyticsService service;
 
     @Inject
-    private IEventBus bus;
+    private EventBus bus;
 
     @Inject
     private BusinessSubscriptionTransitionDao dao;
@@ -82,7 +82,7 @@ public class TestAnalyticsService
     @Inject
     private MysqlTestingHelper helper;
 
-    private ISubscriptionTransition transition;
+    private SubscriptionTransition transition;
     private BusinessSubscriptionTransition expectedTransition;
 
     @BeforeClass(alwaysRun = true)
@@ -101,7 +101,7 @@ public class TestAnalyticsService
         // We need a bundle to retrieve the event key
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
         final IAccount storedAccount = accountApi.createAccount(account);
-        final ISubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount, KEY);
+        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount, KEY);
 
         // Verify we correctly initialized the account subsystem
         Assert.assertNotNull(bundle);
@@ -115,11 +115,11 @@ public class TestAnalyticsService
         final DateTime effectiveTransitionTime = new DateTime(DateTimeZone.UTC);
         final DateTime requestedTransitionTime = new DateTime(DateTimeZone.UTC);
         final String priceList = "something";
-        transition = new SubscriptionTransition(
+        transition = new SubscriptionTransitionData(
             UUID.randomUUID(),
             subscriptionId,
             bundle.getId(),
-            IEntitlementEvent.EventType.API_USER,
+            EntitlementEvent.EventType.API_USER,
             ApiEventType.CREATE,
             requestedTransitionTime,
             effectiveTransitionTime,
@@ -127,7 +127,7 @@ public class TestAnalyticsService
             null,
             null,
             null,
-            ISubscription.SubscriptionState.ACTIVE,
+            Subscription.SubscriptionState.ACTIVE,
             plan,
             phase,
             priceList
@@ -138,7 +138,7 @@ public class TestAnalyticsService
             requestedTransitionTime,
             BusinessSubscriptionEvent.subscriptionCreated(plan),
             null,
-            new BusinessSubscription(priceList, plan, phase, null, effectiveTransitionTime, ISubscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
+            new BusinessSubscription(priceList, plan, phase, null, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
         );
     }
 

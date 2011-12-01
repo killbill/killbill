@@ -17,7 +17,7 @@
 package com.ning.billing.catalog.io;
 
 import com.ning.billing.catalog.VersionedCatalog;
-import com.ning.billing.lifecycle.IService.ServiceException;
+import com.ning.billing.lifecycle.KillbillService.ServiceException;
 
 public interface ICatalogLoader {
 

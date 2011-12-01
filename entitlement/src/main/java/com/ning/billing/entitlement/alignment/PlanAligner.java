@@ -33,11 +33,11 @@ import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
-import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
-public class PlanAligner implements IPlanAligner {
+public class PlanAligner  {
 
     private final ICatalogService catalogService;
 
@@ -52,40 +52,35 @@ public class PlanAligner implements IPlanAligner {
         NEXT
     }
 
-    @Override
-    public TimedPhase getCurrentTimedPhaseOnCreate(Subscription subscription,
+    public TimedPhase getCurrentTimedPhaseOnCreate(SubscriptionData subscription,
             IPlan plan, String priceList, DateTime effectiveDate) {
         return getTimedPhaseOnCreate(subscription, plan, priceList, effectiveDate, WhichPhase.CURRENT);
     }
 
-    @Override
-    public TimedPhase getNextTimedPhaseOnCreate(Subscription subscription,
+    public TimedPhase getNextTimedPhaseOnCreate(SubscriptionData subscription,
             IPlan plan, String priceList, DateTime effectiveDate) {
             return getTimedPhaseOnCreate(subscription, plan, priceList, effectiveDate, WhichPhase.NEXT);
     }
 
-    @Override
-    public TimedPhase getCurrentTimedPhaseOnChange(Subscription subscription,
+    public TimedPhase getCurrentTimedPhaseOnChange(SubscriptionData subscription,
             IPlan plan, String priceList, DateTime effectiveDate) {
         return getTimedPhaseOnChange(subscription, plan, priceList, effectiveDate, WhichPhase.CURRENT);
     }
 
-    @Override
-    public TimedPhase getNextTimedPhaseOnChange(Subscription subscription,
+    public TimedPhase getNextTimedPhaseOnChange(SubscriptionData subscription,
             IPlan plan, String priceList, DateTime effectiveDate) {
         return getTimedPhaseOnChange(subscription, plan, priceList, effectiveDate, WhichPhase.NEXT);
     }
 
 
 
-    @Override
-    public TimedPhase getNextTimedPhase(Subscription subscription,
+    public TimedPhase getNextTimedPhase(SubscriptionData subscription,
             IPlan plan, DateTime effectiveDate, DateTime planStartDate) {
         List<TimedPhase> timedPhases = getPhaseAlignments(subscription, plan, effectiveDate, planStartDate);
         return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
     }
 
-    private TimedPhase getTimedPhaseOnCreate(Subscription subscription,
+    private TimedPhase getTimedPhaseOnCreate(SubscriptionData subscription,
             IPlan plan, String priceList, DateTime effectiveDate, WhichPhase which) {
 
         ICatalog catalog = catalogService.getCatalog();
@@ -96,7 +91,7 @@ public class PlanAligner implements IPlanAligner {
                     priceList);
 
             DateTime planStartDate = null;
-            
+
             //TODO fix exception handling
             PlanAlignmentCreate alignement = null;
 			try {
@@ -105,7 +100,7 @@ public class PlanAligner implements IPlanAligner {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
             switch(alignement) {
             case START_OF_SUBSCRIPTION:
                 planStartDate = subscription.getStartDate();
@@ -120,7 +115,7 @@ public class PlanAligner implements IPlanAligner {
             return getTimedPhase(timedPhases, effectiveDate, which);
     }
 
-    private TimedPhase getTimedPhaseOnChange(Subscription subscription,
+    private TimedPhase getTimedPhaseOnChange(SubscriptionData subscription,
             IPlan plan, String priceList, DateTime effectiveDate, WhichPhase which) {
 
         ICatalog catalog = catalogService.getCatalog();
@@ -141,7 +136,7 @@ public class PlanAligner implements IPlanAligner {
                 priceList);
 
         DateTime planStartDate = null;
-        
+
         //TODO Correctly handle exception
         PlanAlignmentChange alignment = null;
 		try {
@@ -168,7 +163,7 @@ public class PlanAligner implements IPlanAligner {
         return getTimedPhase(timedPhases, effectiveDate, which);
     }
 
-    private List<TimedPhase> getPhaseAlignments(Subscription subscription, IPlan plan,
+    private List<TimedPhase> getPhaseAlignments(SubscriptionData subscription, IPlan plan,
             DateTime effectiveDate, DateTime planStartDate) {
 
         // The plan can be null with the nasty endpoint from test API.
@@ -176,7 +171,7 @@ public class PlanAligner implements IPlanAligner {
             return Collections.emptyList();
         }
 
-        List<TimedPhase> result = new LinkedList<IPlanAligner.TimedPhase>();
+        List<TimedPhase> result = new LinkedList<TimedPhase>();
 
         DateTime curPhaseStart = planStartDate;
         if (plan.getInitialPhases() == null) {
@@ -190,7 +185,7 @@ public class PlanAligner implements IPlanAligner {
             result.add(new TimedPhase(cur, curPhaseStart));
 
             IDuration curPhaseDuration = cur.getDuration();
-            nextPhaseStart = Clock.addDuration(curPhaseStart, curPhaseDuration);
+            nextPhaseStart = DefaultClock.addDuration(curPhaseStart, curPhaseDuration);
             if (nextPhaseStart == null) {
                 throw new EntitlementError(String.format("Unexpected non ending UNLIMITED phase for plan %s",
                         plan.getName()));
@@ -220,4 +215,7 @@ public class PlanAligner implements IPlanAligner {
             throw new EntitlementError(String.format("Unepected %s TimedPhase", which));
         }
     }
+
+
+
 }

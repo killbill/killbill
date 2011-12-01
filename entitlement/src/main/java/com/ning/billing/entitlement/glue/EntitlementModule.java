@@ -19,23 +19,22 @@ package com.ning.billing.entitlement.glue;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.config.IEntitlementConfig;
-import com.ning.billing.entitlement.alignment.IPlanAligner;
+import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.PlanAligner;
-import com.ning.billing.entitlement.api.IEntitlementService;
+import com.ning.billing.entitlement.api.EntitlementService;
+import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
-import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
+import com.ning.billing.entitlement.api.test.DefaultEntitlementTestApi;
 import com.ning.billing.entitlement.api.test.EntitlementTestApi;
-import com.ning.billing.entitlement.api.test.IEntitlementTestApi;
+import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
-import com.ning.billing.entitlement.engine.core.ApiEventProcessor;
+import com.ning.billing.entitlement.engine.core.DefaultApiEventProcessor;
 import com.ning.billing.entitlement.engine.core.Engine;
-import com.ning.billing.entitlement.engine.core.IApiEventProcessor;
+import com.ning.billing.entitlement.engine.core.EventNotifier;
+import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
+import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.IClock;
 
 
 
@@ -43,29 +42,29 @@ public class EntitlementModule extends AbstractModule {
 
 
     protected void installClock() {
-        bind(IClock.class).to(Clock.class).asEagerSingleton();
+        bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
     }
 
     protected void installConfig() {
-        final IEntitlementConfig config = new ConfigurationObjectFactory(System.getProperties()).build(IEntitlementConfig.class);
-        bind(IEntitlementConfig.class).toInstance(config);
+        final EntitlementConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EntitlementConfig.class);
+        bind(EntitlementConfig.class).toInstance(config);
     }
 
     protected void installApiEventProcessor() {
-        bind(IApiEventProcessor.class).to(ApiEventProcessor.class).asEagerSingleton();
+        bind(EventNotifier.class).to(DefaultApiEventProcessor.class).asEagerSingleton();
     }
 
     protected void installEntitlementDao() {
-        bind(IEntitlementDao.class).to(EntitlementDao.class).asEagerSingleton();
+        bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
     }
 
     protected void installEntitlementCore() {
-        bind(IEntitlementService.class).to(Engine.class).asEagerSingleton();
+        bind(EntitlementService.class).to(Engine.class).asEagerSingleton();
         bind(Engine.class).asEagerSingleton();
-        bind(IPlanAligner.class).to(PlanAligner.class).asEagerSingleton();
-        bind(IEntitlementTestApi.class).to(EntitlementTestApi.class).asEagerSingleton();
-        bind(IEntitlementUserApi.class).to(EntitlementUserApi.class).asEagerSingleton();
-        bind(IEntitlementBillingApi.class).to(EntitlementBillingApi.class).asEagerSingleton();
+        bind(PlanAligner.class).asEagerSingleton();
+        bind(EntitlementTestApi.class).to(DefaultEntitlementTestApi.class).asEagerSingleton();
+        bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+        bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
     }
 
     protected void installInjectorMagic() {

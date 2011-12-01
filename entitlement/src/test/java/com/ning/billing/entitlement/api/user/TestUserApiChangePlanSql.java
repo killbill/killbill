@@ -21,8 +21,7 @@ import org.testng.annotations.Test;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.entitlement.glue.CatalogModuleMock;
-import com.ning.billing.entitlement.glue.EngineModuleSqlMock;
+import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 
 public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
 
@@ -30,7 +29,7 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
 
     @Override
     public Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new EngineModuleSqlMock(), new CatalogModuleMock());
+        return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
     @Test(enabled= true, groups={"stress"})

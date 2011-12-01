@@ -39,7 +39,7 @@ public class SubscriptionBuilder {
         this.activeVersion = SubscriptionEvents.INITIAL_VERSION;
     }
 
-    public SubscriptionBuilder(Subscription original) {
+    public SubscriptionBuilder(SubscriptionData original) {
         this.id = original.getId();
         this.bundleId = original.getBundleId();
         this.startDate = original.getStartDate();
@@ -65,7 +65,7 @@ public class SubscriptionBuilder {
     public SubscriptionBuilder setBundleStartDate(DateTime bundleStartDate) {
         this.bundleStartDate = bundleStartDate;
         return this;
-        }
+    }
     public SubscriptionBuilder setActiveVersion(long activeVersion) {
         this.activeVersion = activeVersion;
         return this;

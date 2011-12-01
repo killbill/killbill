@@ -16,59 +16,15 @@
 
 package com.ning.billing.util.clock;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.ning.billing.catalog.api.IDuration;
+public interface Clock {
 
-public class Clock implements IClock {
+    public DateTime getNow(DateTimeZone tz);
 
-    @Override
-    public DateTime getNow(DateTimeZone tz) {
-       DateTime result = new DateTime(tz);
-       return truncateMs(result);
-    }
-
-    @Override
-    public DateTime getUTCNow() {
-        return getNow(DateTimeZone.UTC);
-    }
+    public DateTime getUTCNow();
 
 
-    public static DateTime truncateMs(DateTime input) {
-        return input.minus(input.getMillisOfSecond());
-    }
-
-    public static DateTime addDuration(DateTime input, List<IDuration> durations) {
-
-        DateTime result = input;
-        for (IDuration cur : durations) {
-            switch (cur.getUnit()) {
-            case DAYS:
-                result = result.plusDays(cur.getNumber());
-                break;
-
-            case MONTHS:
-                result = result.plusMonths(cur.getNumber());
-                break;
-
-            case YEARS:
-                result = result.plusYears(cur.getNumber());
-                break;
-            case UNLIMITED:
-            default:
-                throw new RuntimeException("Trying to move to unlimited time period");
-            }
-        }
-        return result;
-    }
-
-    public static DateTime addDuration(DateTime input, IDuration duration) {
-        List<IDuration> list = new ArrayList<IDuration>();
-        list.add(duration);
-        return addDuration(input, list);
-    }
+    //public DateTime addDuration(DateTime input, IDuration duration);
 }

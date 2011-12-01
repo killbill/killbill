@@ -16,9 +16,9 @@
 
 package com.ning.billing.util.eventbus;
 
-import com.ning.billing.lifecycle.IService;
+import com.ning.billing.lifecycle.KillbillService;
 
-public interface IEventBusService extends IService {
+public interface IEventBusService extends KillbillService {
 
     public IEventBus getEventBus();
 }

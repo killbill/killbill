@@ -21,9 +21,9 @@ import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
-import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
-import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,61 +35,61 @@ public class BusinessSubscriptionTransitionRecorder
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionTransitionRecorder.class);
 
     private final BusinessSubscriptionTransitionDao dao;
-    private final IEntitlementUserApi entitlementApi;
+    private final EntitlementUserApi entitlementApi;
     private final IAccountUserApi accountApi;
 
     @Inject
-    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi)
+    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionDao dao, final EntitlementUserApi entitlementApi, final IAccountUserApi accountApi)
     {
         this.dao = dao;
         this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
     }
 
-    public void subscriptionCreated(final ISubscriptionTransition created)
+    public void subscriptionCreated(final SubscriptionTransition created)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan());
         recordTransition(event, created);
     }
 
-    public void subscriptionCancelled(final ISubscriptionTransition cancelled)
+    public void subscriptionCancelled(final SubscriptionTransition cancelled)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getNextPlan());
         recordTransition(event, cancelled);
     }
 
-    public void subscriptionChanged(final ISubscriptionTransition changed)
+    public void subscriptionChanged(final SubscriptionTransition changed)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan());
         recordTransition(event, changed);
     }
 
-    public void subscriptionPaused(final ISubscriptionTransition paused)
+    public void subscriptionPaused(final SubscriptionTransition paused)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPaused(paused.getNextPlan());
         recordTransition(event, paused);
     }
 
-    public void subscriptionResumed(final ISubscriptionTransition resumed)
+    public void subscriptionResumed(final SubscriptionTransition resumed)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionResumed(resumed.getNextPlan());
         recordTransition(event, resumed);
     }
 
-    public void subscriptionPhaseChanged(final ISubscriptionTransition phaseChanged)
+    public void subscriptionPhaseChanged(final SubscriptionTransition phaseChanged)
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState());
         recordTransition(event, phaseChanged);
     }
 
-    public void recordTransition(final BusinessSubscriptionEvent event, final ISubscriptionTransition transition)
+    public void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionTransition transition)
     {
         Currency currency = null;
         String transitionKey = null;
         String accountKey = null;
 
         // Retrieve key and currency via the bundle
-        final ISubscriptionBundle bundle = entitlementApi.getBundleFromId(transition.getBundleId());
+        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(transition.getBundleId());
         if (bundle != null) {
             transitionKey = bundle.getKey();
 

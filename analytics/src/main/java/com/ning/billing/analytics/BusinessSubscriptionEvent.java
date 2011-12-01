@@ -20,7 +20,7 @@ import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.ProductCategory;
 
-import static com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
+import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
 /**
  * Describe an event associated with a transition between two BusinessSubscription

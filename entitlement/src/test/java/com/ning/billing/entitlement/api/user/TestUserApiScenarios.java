@@ -32,14 +32,14 @@ import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.glue.EngineModuleSqlMock;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestUserApiScenarios extends TestUserApiBase {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new EngineModuleSqlMock());
+        return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
     @Test(enabled=true)
@@ -48,7 +48,7 @@ public class TestUserApiScenarios extends TestUserApiBase {
         log.info("Starting testChangeIMMCancelUncancelChangeEOT");
 
         try {
-            Subscription subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
+            SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
             IPlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -63,10 +63,10 @@ public class TestUserApiScenarios extends TestUserApiBase {
 
             // SET CTD
             IDuration ctd = getDurationMonth(1);
-            DateTime expectedPhaseTrialChange = Clock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
-            DateTime newChargedThroughDate = Clock.addDuration(expectedPhaseTrialChange, ctd);
+            DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
-            subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CANCEL EOT
             testListener.pushExpectedEvent(NextEvent.CANCEL);

@@ -22,26 +22,23 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.skife.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
-import com.ning.billing.config.IEntitlementConfig;
-import com.ning.billing.entitlement.api.user.ISubscription;
-import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.entitlement.events.IEntitlementEvent;
-import com.ning.billing.util.clock.IClock;
+import com.ning.billing.config.EntitlementConfig;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.util.clock.Clock;
 
-public abstract class ApiEventProcessorBase implements IApiEventProcessor {
+public abstract class ApiEventProcessorBase implements EventNotifier {
 
     // Wait for max 60 sec when shutting down the EventProcessor
     private final long STOP_WAIT_TIMEOUT_MS = 60000;
@@ -52,20 +49,20 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
     protected final UUID apiProcessorId;
 
     private static final String API_EVENT_THREAD_NAME = "ApiEventNotification";
-    protected final static Logger log = LoggerFactory.getLogger(ApiEventProcessor.class);
+    protected final static Logger log = LoggerFactory.getLogger(DefaultApiEventProcessor.class);
 
-    protected final IEntitlementDao dao;
-    protected final IClock clock;
+    protected final EntitlementDao dao;
+    protected final Clock clock;
 
     private Executor executor;
-    private final IEntitlementConfig config;
-    protected IEventListener listener;
+    private final EntitlementConfig config;
+    protected EventListener listener;
 
     protected long nbProcessedEvents;
     protected volatile boolean isProcessingEvents;
 
     @Inject
-    public ApiEventProcessorBase(IClock clock, IEntitlementDao dao, IEntitlementConfig config) {
+    public ApiEventProcessorBase(Clock clock, EntitlementDao dao, EntitlementConfig config) {
         this.clock = clock;
         this.dao = dao;
         this.config = config;
@@ -78,7 +75,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
 
     @Override
-    public void startNotifications(final IEventListener listener) {
+    public void startNotifications(final EventListener listener) {
 
         this.listener = listener;
         this.isProcessingEvents = true;
@@ -206,9 +203,9 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
         int curSequenceId = sequenceId.getAndIncrement();
 
         //Get all current ready events
-        List<IEntitlementEvent> claimedEvents = new LinkedList<IEntitlementEvent>();
+        List<EntitlementEvent> claimedEvents = new LinkedList<EntitlementEvent>();
         do {
-            List<IEntitlementEvent> tmpEvents = dao.getEventsReady(apiProcessorId, curSequenceId);
+            List<EntitlementEvent> tmpEvents = dao.getEventsReady(apiProcessorId, curSequenceId);
             if (tmpEvents.size() == 0) {
                 break;
             }
@@ -219,14 +216,14 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
         }
 
         // Filter for specific subscriptions if needed
-        Collection<IEntitlementEvent> claimedEventsFiltered = null;
+        Collection<EntitlementEvent> claimedEventsFiltered = null;
         if (subscriptionsIds.length == 0) {
             claimedEventsFiltered = claimedEvents;
         } else {
 
-            claimedEventsFiltered = Collections2.filter(claimedEvents, new Predicate<IEntitlementEvent>() {
+            claimedEventsFiltered = Collections2.filter(claimedEvents, new Predicate<EntitlementEvent>() {
                 @Override
-                public boolean apply(IEntitlementEvent input) {
+                public boolean apply(EntitlementEvent input) {
                     for (UUID cur : subscriptionsIds) {
                         if (cur.equals(input.getSubscriptionId())) {
                             return true;
@@ -242,7 +239,7 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
 
         // If only one event is requested extract it
         if (oneEventOnly) {
-            List<IEntitlementEvent> oneEventList = new ArrayList<IEntitlementEvent>(1);
+            List<EntitlementEvent> oneEventList = new ArrayList<EntitlementEvent>(1);
             oneEventList.add(claimedEventsFiltered.iterator().next());
             claimedEventsFiltered = oneEventList;
         }
@@ -257,5 +254,5 @@ public abstract class ApiEventProcessorBase implements IApiEventProcessor {
     }
 
     protected abstract boolean doProcessEvents(int sequenceId);
-    protected abstract boolean doProcessEventsFromList(int sequenceId, Collection<IEntitlementEvent> events);
+    protected abstract boolean doProcessEventsFromList(int sequenceId, Collection<EntitlementEvent> events);
 }

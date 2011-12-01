@@ -32,9 +32,9 @@ import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.events.IEntitlementEvent;
-import com.ning.billing.entitlement.events.phase.IPhaseEvent;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.util.clock.DefaultClock;
 
 public abstract class TestUserApiCreate extends TestUserApiBase {
 
@@ -56,7 +56,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
 
-            Subscription subscription = (Subscription) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, requestedDate);
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, requestedDate);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -84,7 +84,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            Subscription subscription = (Subscription) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, clock.getUTCNow());
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, clock.getUTCNow());
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -105,19 +105,19 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
 
-            List<ISubscriptionTransition> transitions = subscription.getActiveTransitions();
+            List<SubscriptionTransition> transitions = subscription.getActiveTransitions();
             assertNotNull(transitions);
             assertEquals(transitions.size(), 1);
 
             assertTrue(testListener.isCompleted(5000));
 
-            List<IEntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
+            List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
             assertNotNull(events);
             printEvents(events);
             assertTrue(events.size() == 1);
-            assertTrue(events.get(0) instanceof IPhaseEvent);
-            DateTime nextPhaseChange = ((IPhaseEvent ) events.get(0)).getEffectiveDate();
-            DateTime nextExpectedPhaseChange = Clock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
+            assertTrue(events.get(0) instanceof PhaseEvent);
+            DateTime nextPhaseChange = ((PhaseEvent ) events.get(0)).getEffectiveDate();
+            DateTime nextExpectedPhaseChange = DefaultClock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
             assertEquals(nextPhaseChange, nextExpectedPhaseChange);
 
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -149,7 +149,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             // CREATE SUBSCRIPTION
-            Subscription subscription = (Subscription) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, clock.getUTCNow());
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, clock.getUTCNow());
             assertNotNull(subscription);
 
             IPlanPhase currentPhase = subscription.getCurrentPhase();
@@ -173,7 +173,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
             clock.addDeltaFromReality(currentPhase.getDuration());
             assertTrue(testListener.isCompleted(2000));
 
-            subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
             curTime = clock.getUTCNow();
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
@@ -196,7 +196,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            Subscription subscription = (Subscription) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, clock.getUTCNow());
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, clock.getUTCNow());
             assertNotNull(subscription);
 
         } catch (EntitlementUserApiException e) {

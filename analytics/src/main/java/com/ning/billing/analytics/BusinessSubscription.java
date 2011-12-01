@@ -25,7 +25,7 @@ import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.entitlement.api.user.ISubscription;
+import com.ning.billing.entitlement.api.user.Subscription;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.UUID;
 
-import static com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
+import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
 /**
  * Describe a subscription for Analytics purposes
@@ -89,7 +89,7 @@ public class BusinessSubscription
      * @param subscription Subscription to use as a model
      * @param currency     Account currency
      */
-    BusinessSubscription(final ISubscription subscription, final Currency currency)
+    BusinessSubscription(final Subscription subscription, final Currency currency)
     {
         this(subscription.getCurrentPriceList(), subscription.getCurrentPlan(), subscription.getCurrentPhase(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId());
     }

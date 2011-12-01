@@ -20,13 +20,13 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.ISubscription;
+import com.ning.billing.entitlement.api.user.Subscription;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.util.UUID;
 
-public class MockSubscription implements ISubscription
+public class MockSubscription implements Subscription
 {
     private static final UUID ID = UUID.randomUUID();
     private static final UUID BUNDLE_ID = UUID.randomUUID();
@@ -103,17 +103,6 @@ public class MockSubscription implements ISubscription
         return phase;
     }
 
-    @Override
-    public void setPrivate(final String name, final String value)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getPrivate(final String name)
-    {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public void uncancel() throws EntitlementUserApiException

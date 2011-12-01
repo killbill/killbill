@@ -20,9 +20,9 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.entitlement.alignment.IPlanAligner;
-import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.util.clock.IClock;
+import com.ning.billing.entitlement.alignment.PlanAligner;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.util.clock.Clock;
 
 //
 // Allows to return Guice injected singleton in a non guice context
@@ -45,8 +45,8 @@ public class InjectorMagic {
     }
 
 
-    public static IClock getClock() {
-        return InjectorMagic.get().getInstance(IClock.class);
+    public static Clock getClock() {
+        return InjectorMagic.get().getInstance(Clock.class);
     }
 
     public static ICatalog getCatlog() {
@@ -54,12 +54,12 @@ public class InjectorMagic {
         return catalogService.getCatalog();
     }
 
-    public static IEntitlementDao getEntitlementDao() {
-        return InjectorMagic.get().getInstance(IEntitlementDao.class);
+    public static EntitlementDao getEntitlementDao() {
+        return InjectorMagic.get().getInstance(EntitlementDao.class);
     }
 
-    public static IPlanAligner getPlanAligner() {
-        return InjectorMagic.get().getInstance(IPlanAligner.class);
+    public static PlanAligner getPlanAligner() {
+        return InjectorMagic.get().getInstance(PlanAligner.class);
     }
 
 

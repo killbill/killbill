@@ -35,15 +35,15 @@ import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.events.IEntitlementEvent;
-import com.ning.billing.entitlement.events.user.IApiEvent;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.user.ApiEvent;
+import com.ning.billing.util.clock.DefaultClock;
 
 public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
 
 
-    private void checkChangePlan(Subscription subscription, String expProduct, ProductCategory expCategory,
+    private void checkChangePlan(SubscriptionData subscription, String expProduct, ProductCategory expCategory,
             BillingPeriod expBillingPeriod, PhaseType expPhase) {
 
         IPlan currentPlan = subscription.getCurrentPlan();
@@ -72,14 +72,14 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
         try {
 
             // CREATE
-            Subscription subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
+            SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
 
             // MOVE TO NEXT PHASE
             IPlanPhase currentPhase = subscription.getCurrentPhase();
             testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
             DateTime futureNow = clock.getUTCNow();
-            DateTime nextExpectedPhaseChange = Clock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
+            DateTime nextExpectedPhaseChange = DefaultClock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
             assertTrue(futureNow.isAfter(nextExpectedPhaseChange));
             assertTrue(testListener.isCompleted(3000));
 
@@ -109,9 +109,9 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
         try {
 
             // CREATE
-            Subscription subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
+            SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
             IPlanPhase trialPhase = subscription.getCurrentPhase();
-            DateTime expectedPhaseTrialChange = Clock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
 
@@ -125,12 +125,12 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
             // SET CTD
             IDuration ctd = getDurationMonth(1);
-            DateTime newChargedThroughDate = Clock.addDuration(expectedPhaseTrialChange, ctd);
+            DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
 
             // RE READ SUBSCRIPTION + CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
             subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
@@ -140,12 +140,12 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             checkChangePlan(subscription, fromProd, ProductCategory.BASE, fromTerm, PhaseType.DISCOUNT);
 
             // NEXT PHASE
-            DateTime nextExpectedPhaseChange = Clock.addDuration(expectedPhaseTrialChange, currentPhase.getDuration());
+            DateTime nextExpectedPhaseChange = DefaultClock.addDuration(expectedPhaseTrialChange, currentPhase.getDuration());
             checkNextPhaseChange(subscription, 2, nextExpectedPhaseChange);
 
             // ALSO VERIFY PENDING CHANGE EVENT
-            List<IEntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
-            assertTrue(events.get(0) instanceof IApiEvent);
+            List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
+            assertTrue(events.get(0) instanceof ApiEvent);
 
 
             // MOVE TO EOT
@@ -153,7 +153,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             clock.addDeltaFromReality(ctd);
             assertTrue(testListener.isCompleted(5000));
 
-            subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
             currentPhase = subscription.getCurrentPhase();
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.DISCOUNT);
 
@@ -175,7 +175,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
         try {
 
-            Subscription subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
+            SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
 
@@ -189,7 +189,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             assertTrue(testListener.isCompleted(2000));
 
             IPlanPhase currentPhase = subscription.getCurrentPhase();
-            DateTime nextExpectedPhaseChange = Clock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
+            DateTime nextExpectedPhaseChange = DefaultClock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
             checkNextPhaseChange(subscription, 1, nextExpectedPhaseChange);
 
             // NEXT PHASE
@@ -218,9 +218,9 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
             DateTime currentTime = clock.getUTCNow();
 
-            Subscription subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
+            SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
             IPlanPhase trialPhase = subscription.getCurrentPhase();
-            DateTime expectedPhaseTrialChange = Clock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // MOVE TO NEXT PHASE
@@ -232,11 +232,11 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
             // SET CTD
             IDuration ctd = getDurationMonth(1);
-            DateTime newChargedThroughDate = Clock.addDuration(expectedPhaseTrialChange, ctd);
+            DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
 
             // RE READ SUBSCRIPTION + CHECK CURRENT PHASE
-            subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
             IPlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -273,7 +273,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             currentTime = clock.getUTCNow();
             assertFalse(testListener.isCompleted(2000));
 
-            DateTime nextExpectedPhaseChange = Clock.addDuration(newChargedThroughDate, currentPhase.getDuration());
+            DateTime nextExpectedPhaseChange = DefaultClock.addDuration(newChargedThroughDate, currentPhase.getDuration());
             checkNextPhaseChange(subscription, 1, nextExpectedPhaseChange);
 
             // MOVE TIME RIGHT AFTER NEXT EXPECTED PHASE CHANGE
@@ -289,7 +289,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
     protected void testMultipleChangeLastIMMReal() {
 
         try {
-            Subscription subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
+            SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
             IPlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -302,11 +302,11 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             List<IDuration> durationList = new ArrayList<IDuration>();
             durationList.add(trialPhase.getDuration());
             //durationList.add(subscription.getCurrentPhase().getDuration());
-            DateTime startDiscountPhase = Clock.addDuration(subscription.getStartDate(), durationList);
+            DateTime startDiscountPhase = DefaultClock.addDuration(subscription.getStartDate(), durationList);
             IDuration ctd = getDurationMonth(1);
-            DateTime newChargedThroughDate = Clock.addDuration(startDiscountPhase, ctd);
+            DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
-            subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
@@ -337,7 +337,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
 
         try {
 
-            Subscription subscription = createSubscription("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount");
+            SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount");
             IPlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -348,11 +348,11 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             // SET CTD
             List<IDuration> durationList = new ArrayList<IDuration>();
             durationList.add(trialPhase.getDuration());
-            DateTime startDiscountPhase = Clock.addDuration(subscription.getStartDate(), durationList);
+            DateTime startDiscountPhase = DefaultClock.addDuration(subscription.getStartDate(), durationList);
             IDuration ctd = getDurationMonth(1);
-            DateTime newChargedThroughDate = Clock.addDuration(startDiscountPhase, ctd);
+            DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
-            subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
@@ -398,7 +398,7 @@ public abstract class TestUserApiChangePlan extends TestUserApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.addDeltaFromReality(currentPhase.getDuration());
             assertTrue(testListener.isCompleted(3000));
-            subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);

@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.AsyncEventBus;
 
-public class MemoryEventBus implements IEventBus {
+public class MemoryEventBus implements EventBus {
 
     // STEPH config ?
     private final static int MAX_EVENT_THREADS = 1;
@@ -93,13 +93,13 @@ public class MemoryEventBus implements IEventBus {
     }
 
     @Override
-    public void post(IEventBusType event) throws EventBusException {
+    public void post(EventBusNotification event) throws EventBusException {
         checkInitialized("post");
         delegate.post(event);
     }
 
     @Override
-    public void postFromTransaction(IEventBusType event, Transmogrifier dao) throws EventBusException {
+    public void postFromTransaction(EventBusNotification event, Transmogrifier dao) throws EventBusException {
         checkInitialized("postFromTransaction");
         delegate.post(event);
     }

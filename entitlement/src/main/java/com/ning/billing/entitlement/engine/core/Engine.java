@@ -21,31 +21,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.config.IEntitlementConfig;
+import com.ning.billing.config.EntitlementConfig;
 
-import com.ning.billing.entitlement.alignment.IPlanAligner;
-import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
-import com.ning.billing.entitlement.api.IEntitlementService;
+import com.ning.billing.entitlement.alignment.PlanAligner;
+import com.ning.billing.entitlement.alignment.TimedPhase;
+import com.ning.billing.entitlement.api.EntitlementService;
+import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
-import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
+import com.ning.billing.entitlement.api.test.DefaultEntitlementTestApi;
 import com.ning.billing.entitlement.api.test.EntitlementTestApi;
-import com.ning.billing.entitlement.api.test.IEntitlementTestApi;
+import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.entitlement.events.IEntitlementEvent;
-import com.ning.billing.entitlement.events.IEntitlementEvent.EventType;
-import com.ning.billing.entitlement.events.phase.IPhaseEvent;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.entitlement.events.phase.PhaseEventData;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.util.clock.IClock;
-import com.ning.billing.util.eventbus.IEventBus;
-import com.ning.billing.util.eventbus.IEventBus.EventBusException;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
-public class Engine implements IEventListener, IEntitlementService {
+public class Engine implements EventListener, EntitlementService {
 
     private static final String ENTITLEMENT_SERVICE_NAME = "entitlement-service";
 
@@ -55,21 +55,21 @@ public class Engine implements IEventListener, IEntitlementService {
 
     private final static Logger log = LoggerFactory.getLogger(Engine.class);
 
-    private final IClock clock;
-    private final IEntitlementDao dao;
-    private final IApiEventProcessor apiEventProcessor;
-    private final IPlanAligner planAligner;
-    private final IEntitlementUserApi userApi;
-    private final IEntitlementBillingApi billingApi;
-    private final IEntitlementTestApi testApi;
-    private final IEventBus eventBus;
+    private final Clock clock;
+    private final EntitlementDao dao;
+    private final EventNotifier apiEventProcessor;
+    private final PlanAligner planAligner;
+    private final EntitlementUserApi userApi;
+    private final EntitlementBillingApi billingApi;
+    private final EntitlementTestApi testApi;
+    private final EventBus eventBus;
 
     private boolean startedNotificationThread;
 
     @Inject
-    public Engine(IClock clock, IEntitlementDao dao, IApiEventProcessor apiEventProcessor,
-            IPlanAligner planAligner, IEntitlementConfig config, EntitlementUserApi userApi,
-            EntitlementBillingApi billingApi, EntitlementTestApi testApi, IEventBus eventBus) {
+    public Engine(Clock clock, EntitlementDao dao, EventNotifier apiEventProcessor,
+            PlanAligner planAligner, EntitlementConfig config, DefaultEntitlementUserApi userApi,
+            DefaultEntitlementBillingApi billingApi, DefaultEntitlementTestApi testApi, EventBus eventBus) {
         super();
         this.clock = clock;
         this.dao = dao;
@@ -106,24 +106,24 @@ public class Engine implements IEventListener, IEntitlementService {
     }
 
     @Override
-    public IEntitlementUserApi getUserApi() {
+    public EntitlementUserApi getUserApi() {
         return userApi;
     }
 
     @Override
-    public IEntitlementBillingApi getBillingApi() {
+    public EntitlementBillingApi getBillingApi() {
         return billingApi;
     }
 
 
     @Override
-    public IEntitlementTestApi getTestApi() {
+    public EntitlementTestApi getTestApi() {
         return testApi;
     }
 
     @Override
-    public void processEventReady(IEntitlementEvent event) {
-        Subscription subscription = (Subscription) dao.getSubscriptionFromId(event.getSubscriptionId());
+    public void processEventReady(EntitlementEvent event) {
+        SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(event.getSubscriptionId());
         if (subscription == null) {
             log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
             return;
@@ -174,12 +174,12 @@ public class Engine implements IEventListener, IEntitlementService {
         }
     }
 
-    private void insertNextPhaseEvent(Subscription subscription) {
+    private void insertNextPhaseEvent(SubscriptionData subscription) {
 
         DateTime now = clock.getUTCNow();
 
         TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, subscription.getCurrentPlan(), now, subscription.getCurrentPlanStart());
-        IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, subscription, now);
+        PhaseEvent nextPhaseEvent = PhaseEventData.getNextPhaseEvent(nextTimedPhase, subscription, now);
         if (nextPhaseEvent != null) {
             dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent);
         }

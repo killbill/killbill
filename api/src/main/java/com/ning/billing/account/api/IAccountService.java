@@ -16,9 +16,9 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.lifecycle.IService;
+import com.ning.billing.lifecycle.KillbillService;
 
-public interface IAccountService extends IService {
+public interface IAccountService extends KillbillService {
 
     public IAccountUserApi getAccountUserApi();
 }

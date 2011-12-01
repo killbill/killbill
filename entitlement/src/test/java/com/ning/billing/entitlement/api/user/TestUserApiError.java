@@ -35,8 +35,8 @@ import com.ning.billing.catalog.api.IDuration;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.glue.EngineModuleMemoryMock;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestUserApiError extends TestUserApiBase {
 
@@ -53,7 +53,7 @@ public class TestUserApiError extends TestUserApiBase {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new EngineModuleMemoryMock());
+        return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleMemory());
     }
 
     @Test(enabled=true)
@@ -109,7 +109,7 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testChangeSubscriptionNonActive() {
         try {
-            ISubscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME);
+            Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME);
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), false);
@@ -133,13 +133,13 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testChangeSubscriptionFutureCancelled() {
         try {
-            ISubscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
+            Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
 
             // SET CTD TO CANCEL IN FUTURE
             IPlanPhase trialPhase = subscription.getCurrentPhase();
-            DateTime expectedPhaseTrialChange = Clock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             IDuration ctd = getDurationMonth(1);
-            DateTime newChargedThroughDate = Clock.addDuration(expectedPhaseTrialChange, ctd);
+            DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId());
 
@@ -168,7 +168,7 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testUncancelBadState() {
         try {
-            ISubscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
+            Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
 
             try {
                 subscription.uncancel();

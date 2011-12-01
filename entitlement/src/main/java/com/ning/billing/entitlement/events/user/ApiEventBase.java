@@ -19,15 +19,9 @@ package com.ning.billing.entitlement.events.user;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.entitlement.alignment.IPlanAligner;
-import com.ning.billing.entitlement.alignment.PlanAligner;
-import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.events.EventBase;
-import com.ning.billing.entitlement.events.IEventLifecycle.IEventLifecycleState;
 
-public class ApiEventBase extends EventBase implements IApiEvent {
+public class ApiEventBase extends EventBase implements ApiEvent {
 
     private final ApiEventType eventType;
     // Only valid for CREATE/CHANGE
@@ -66,7 +60,7 @@ public class ApiEventBase extends EventBase implements IApiEvent {
 
     public ApiEventBase(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,
             String priceList, DateTime requestedDate,  ApiEventType eventType, DateTime effectiveDate, long activeVersion,
-            boolean isActive, UUID processingOwner, DateTime nextAvailableProcessingTime,IEventLifecycleState processingState) {
+            boolean isActive, UUID processingOwner, DateTime nextAvailableProcessingTime,EventLifecycleState processingState) {
         super(id, subscriptionId, requestedDate, effectiveDate, processed, activeVersion, isActive, processingOwner, nextAvailableProcessingTime, processingState);
         this.eventType = eventType;
         this.eventPlan = eventPlan;

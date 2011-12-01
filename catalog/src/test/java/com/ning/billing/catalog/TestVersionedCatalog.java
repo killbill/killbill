@@ -32,11 +32,11 @@ import org.xml.sax.SAXException;
 import com.google.common.io.Resources;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
-import com.ning.billing.lifecycle.IService.ServiceException;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestVersionedCatalog {
-	private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new Clock());
+	private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
 
 	@Test(enabled=true)
 	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {

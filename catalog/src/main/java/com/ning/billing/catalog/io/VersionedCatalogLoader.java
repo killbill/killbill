@@ -26,8 +26,8 @@ import java.util.List;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.Catalog;
 import com.ning.billing.catalog.VersionedCatalog;
-import com.ning.billing.lifecycle.IService.ServiceException;
-import com.ning.billing.util.clock.IClock;
+import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.config.UriAccessor;
 import com.ning.billing.util.config.XMLLoader;
 
@@ -37,10 +37,10 @@ public class VersionedCatalogLoader implements ICatalogLoader  {
 	private  final String HREF_LOW_START = "href=\""; 
 	private  final String HREF_CAPS_START = "HREF=\""; 
 	private  final String HREF_SEARCH_END = "\"";
-	private IClock clock;
+	private Clock clock;
 			
 	@Inject 
-	public VersionedCatalogLoader(IClock clock) {
+	public VersionedCatalogLoader(Clock clock) {
 		this.clock = clock;
 	}
 	

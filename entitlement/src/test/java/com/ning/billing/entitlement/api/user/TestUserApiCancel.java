@@ -33,7 +33,7 @@ import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IPriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 public abstract class TestUserApiCancel extends TestUserApiBase {
 
@@ -50,7 +50,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
             String planSet = IPriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            Subscription subscription = createSubscription(prod, term, planSet);
+            SubscriptionData subscription = createSubscription(prod, term, planSet);
             IPlanPhase currentPhase = subscription.getCurrentPhase();
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -67,7 +67,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             testListener.isCompleted(1000);
 
-            List<ISubscriptionTransition> allTransitions = subscription.getActiveTransitions();
+            List<SubscriptionTransition> allTransitions = subscription.getActiveTransitions();
             printSubscriptionTransitions(allTransitions);
 
             assertNull(currentPhase);
@@ -89,12 +89,12 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
             String planSet = IPriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            Subscription subscription = createSubscription(prod, term, planSet);
+            SubscriptionData subscription = createSubscription(prod, term, planSet);
             IPlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // NEXT PHASE
-            DateTime expectedPhaseTrialChange = Clock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
@@ -106,9 +106,9 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             IDuration ctd = getDurationMonth(1);
-            DateTime newChargedThroughDate = Clock.addDuration(expectedPhaseTrialChange, ctd);
+            DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
-            subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
@@ -142,12 +142,12 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
             String planSet = IPriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            Subscription subscription = createSubscription(prod, term, planSet);
+            SubscriptionData subscription = createSubscription(prod, term, planSet);
             IPlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // NEXT PHASE
-            DateTime expectedPhaseTrialChange = Clock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
@@ -186,12 +186,12 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
             String planSet = IPriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE
-            Subscription subscription = createSubscription(prod, term, planSet);
+            SubscriptionData subscription = createSubscription(prod, term, planSet);
             IPlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // NEXT PHASE
-            DateTime expectedPhaseTrialChange = Clock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
@@ -203,9 +203,9 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
 
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             IDuration ctd = getDurationMonth(1);
-            DateTime newChargedThroughDate = Clock.addDuration(expectedPhaseTrialChange, ctd);
+            DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
-            subscription = (Subscription) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 

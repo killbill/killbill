@@ -21,11 +21,11 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.entitlement.events.IEventLifecycle.IEventLifecycleState;
-import com.ning.billing.entitlement.events.user.IApiEvent;
+import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
+import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 
-public abstract class EventBase implements IEntitlementEvent {
+public abstract class EventBase implements EntitlementEvent {
 
     private final UUID uuid;
     private final UUID subscriptionId;
@@ -38,7 +38,7 @@ public abstract class EventBase implements IEntitlementEvent {
     private boolean isActive;
     private UUID processingOwner;
     private DateTime nextAvailableProcessingTime;
-    private IEventLifecycleState processingState;
+    private EventLifecycleState processingState;
 
     public EventBase(EventBaseBuilder builder) {
         this.uuid = builder.getUuid();
@@ -57,14 +57,14 @@ public abstract class EventBase implements IEntitlementEvent {
     public EventBase(UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive) {
-        this(subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive, null, null, IEventLifecycleState.AVAILABLE);
+        this(subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive, null, null, EventLifecycleState.AVAILABLE);
     }
 
     private EventBase(UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive,
             UUID processingOwner, DateTime nextAvailableProcessingTime,
-            IEventLifecycleState processingState) {
+            EventLifecycleState processingState) {
         this(UUID.randomUUID(), subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive,
                 processingOwner, nextAvailableProcessingTime, processingState);
     }
@@ -73,7 +73,7 @@ public abstract class EventBase implements IEntitlementEvent {
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive,
             UUID processingOwner, DateTime nextAvailableProcessingTime,
-            IEventLifecycleState processingState) {
+            EventLifecycleState processingState) {
         this.uuid = id;
         this.subscriptionId = subscriptionId;
         this.requestedDate = requestedDate;
@@ -163,12 +163,12 @@ public abstract class EventBase implements IEntitlementEvent {
 
 
     @Override
-    public IEventLifecycleState getProcessingState() {
+    public EventLifecycleState getProcessingState() {
         return processingState;
     }
 
     @Override
-    public void setProcessingState(IEventLifecycleState processingState) {
+    public void setProcessingState(EventLifecycleState processingState) {
         this.processingState = processingState;
     }
 
@@ -207,7 +207,7 @@ public abstract class EventBase implements IEntitlementEvent {
     // - If all that is not enough return consistent by random ordering based on UUID
     //
     @Override
-    public int compareTo(IEntitlementEvent other) {
+    public int compareTo(EntitlementEvent other) {
         if (other == null) {
             throw new NullPointerException("IEvent is compared to a null instance");
         }
@@ -227,7 +227,7 @@ public abstract class EventBase implements IEntitlementEvent {
         } else if (getType() != other.getType()) {
             return (getType() == EventType.PHASE) ? -1 : 1;
         } else if (getType() == EventType.API_USER) {
-            return ((IApiEvent) this).getEventType().compareTo(((IApiEvent) other).getEventType());
+            return ((ApiEvent) this).getEventType().compareTo(((ApiEvent) other).getEventType());
         } else {
             return uuid.compareTo(other.getId());
         }
@@ -236,10 +236,10 @@ public abstract class EventBase implements IEntitlementEvent {
 
     @Override
     public boolean equals(Object other) {
-      if (! (other instanceof IEntitlementEvent)) {
+      if (! (other instanceof EntitlementEvent)) {
           return false;
       }
-      return (this.compareTo((IEntitlementEvent) other) == 0);
+      return (this.compareTo((EntitlementEvent) other) == 0);
     }
 
     @Override

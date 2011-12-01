@@ -22,12 +22,12 @@ import com.ning.billing.catalog.api.ICatalog;
 import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.config.ICatalogConfig;
-import com.ning.billing.lifecycle.IService;
+import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.config.XMLLoader;
 
-public class CatalogService implements IService, Provider<ICatalog>, ICatalogService {
+public class CatalogService implements KillbillService, Provider<ICatalog>, ICatalogService {
 
     private static final String CATALOG_SERVICE_NAME = "catalog-service";
 
