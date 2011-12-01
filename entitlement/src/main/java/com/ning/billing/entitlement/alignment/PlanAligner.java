@@ -53,70 +53,64 @@ public class PlanAligner  {
     }
 
     public TimedPhase getCurrentTimedPhaseOnCreate(SubscriptionData subscription,
-            IPlan plan, String priceList, DateTime effectiveDate) {
+            IPlan plan, String priceList, DateTime effectiveDate) throws CatalogApiException {
         return getTimedPhaseOnCreate(subscription, plan, priceList, effectiveDate, WhichPhase.CURRENT);
     }
 
     public TimedPhase getNextTimedPhaseOnCreate(SubscriptionData subscription,
-            IPlan plan, String priceList, DateTime effectiveDate) {
+            IPlan plan, String priceList, DateTime effectiveDate) throws CatalogApiException {
             return getTimedPhaseOnCreate(subscription, plan, priceList, effectiveDate, WhichPhase.NEXT);
     }
 
     public TimedPhase getCurrentTimedPhaseOnChange(SubscriptionData subscription,
-            IPlan plan, String priceList, DateTime effectiveDate) {
+            IPlan plan, String priceList, DateTime effectiveDate) throws CatalogApiException {
         return getTimedPhaseOnChange(subscription, plan, priceList, effectiveDate, WhichPhase.CURRENT);
     }
 
     public TimedPhase getNextTimedPhaseOnChange(SubscriptionData subscription,
-            IPlan plan, String priceList, DateTime effectiveDate) {
+            IPlan plan, String priceList, DateTime effectiveDate) throws CatalogApiException {
         return getTimedPhaseOnChange(subscription, plan, priceList, effectiveDate, WhichPhase.NEXT);
     }
 
 
 
     public TimedPhase getNextTimedPhase(SubscriptionData subscription,
-            IPlan plan, DateTime effectiveDate, DateTime planStartDate) {
+            IPlan plan, DateTime effectiveDate, DateTime planStartDate) throws CatalogApiException {
+
         List<TimedPhase> timedPhases = getPhaseAlignments(subscription, plan, effectiveDate, planStartDate);
         return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
     }
 
     private TimedPhase getTimedPhaseOnCreate(SubscriptionData subscription,
-            IPlan plan, String priceList, DateTime effectiveDate, WhichPhase which) {
+            IPlan plan, String priceList, DateTime effectiveDate, WhichPhase which) throws CatalogApiException {
 
         ICatalog catalog = catalogService.getCatalog();
 
-            PlanSpecifier planSpecifier = new PlanSpecifier(plan.getProduct().getName(),
-                    plan.getProduct().getCategory(),
-                    plan.getBillingPeriod(),
-                    priceList);
+        PlanSpecifier planSpecifier = new PlanSpecifier(plan.getProduct().getName(),
+                plan.getProduct().getCategory(),
+                plan.getBillingPeriod(),
+                priceList);
 
-            DateTime planStartDate = null;
+        DateTime planStartDate = null;
+        PlanAlignmentCreate alignement = null;
+        alignement = catalog.planCreateAlignment(planSpecifier);
 
-            //TODO fix exception handling
-            PlanAlignmentCreate alignement = null;
-			try {
-				alignement = catalog.planCreateAlignment(planSpecifier);
-			} catch (CatalogApiException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-            switch(alignement) {
-            case START_OF_SUBSCRIPTION:
-                planStartDate = subscription.getStartDate();
-                break;
-            case START_OF_BUNDLE:
-                planStartDate = subscription.getBundleStartDate();
-                break;
-            default:
-                throw new EntitlementError(String.format("Unknwon PlanAlignmentCreate %s", alignement));
-            }
-            List<TimedPhase> timedPhases = getPhaseAlignments(subscription, plan, effectiveDate, planStartDate);
-            return getTimedPhase(timedPhases, effectiveDate, which);
+        switch(alignement) {
+        case START_OF_SUBSCRIPTION:
+            planStartDate = subscription.getStartDate();
+            break;
+        case START_OF_BUNDLE:
+            planStartDate = subscription.getBundleStartDate();
+            break;
+        default:
+            throw new EntitlementError(String.format("Unknwon PlanAlignmentCreate %s", alignement));
+        }
+        List<TimedPhase> timedPhases = getPhaseAlignments(subscription, plan, effectiveDate, planStartDate);
+        return getTimedPhase(timedPhases, effectiveDate, which);
     }
 
     private TimedPhase getTimedPhaseOnChange(SubscriptionData subscription,
-            IPlan plan, String priceList, DateTime effectiveDate, WhichPhase which) {
+            IPlan plan, String priceList, DateTime effectiveDate, WhichPhase which) throws CatalogApiException {
 
         ICatalog catalog = catalogService.getCatalog();
 
@@ -137,14 +131,8 @@ public class PlanAligner  {
 
         DateTime planStartDate = null;
 
-        //TODO Correctly handle exception
         PlanAlignmentChange alignment = null;
-		try {
-			alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier);
-		} catch (CatalogApiException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier);
         switch(alignment) {
         case START_OF_SUBSCRIPTION:
             planStartDate = subscription.getStartDate();

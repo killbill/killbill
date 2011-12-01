@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 
@@ -45,6 +47,7 @@ import com.ning.billing.util.clock.Clock;
 
 public class SubscriptionData implements Subscription {
 
+    private final static Logger log = LoggerFactory.getLogger(SubscriptionData.class);
 
     private final Clock clock;
     private final SubscriptionApiService apiService;
@@ -379,32 +382,18 @@ public class SubscriptionData implements Subscription {
                         cur.getType()));
             }
 
-            //TODO: Correctly handle exceptions
             IPlan previousPlan = null;
             IPlanPhase previousPhase = null;
             IPlan nextPlan = null;
             IPlanPhase nextPhase = null;
             try {
-                previousPlan = catalog.findPlan(previousPlanName);
+                previousPlan = (previousPlanName != null) ? catalog.findPlan(previousPlanName) : null;
+                previousPhase = (previousPhase != null) ? catalog.findPhase(previousPhaseName) : null;
+                nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName) : null;
+                nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName) : null;
             } catch (CatalogApiException e) {
-                // TODO: handle exception
+                log.error(String.format("Failed to build transition for subscription %s", id), e);
             }
-            try {
-                previousPhase = catalog.findPhase(previousPhaseName);
-            } catch (CatalogApiException e) {
-                // TODO: handle exception
-            }
-            try {
-                nextPlan = catalog.findPlan(nextPlanName);
-            } catch (CatalogApiException e) {
-                // TODO: handle exception
-            }
-            try {
-                nextPhase = catalog.findPhase(nextPhaseName);
-            } catch (CatalogApiException e) {
-                // TODO: handle exception
-            }
-
             SubscriptionTransitionData transition =
                 new SubscriptionTransitionData(cur.getId(),
                         id,

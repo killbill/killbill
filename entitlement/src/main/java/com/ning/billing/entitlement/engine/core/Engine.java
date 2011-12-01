@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.config.EntitlementConfig;
 
 import com.ning.billing.entitlement.alignment.PlanAligner;
@@ -44,6 +45,7 @@ import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.eventbus.EventBus.EventBusException;
+import com.sun.org.apache.xml.internal.resolver.CatalogException;
 
 public class Engine implements EventListener, EntitlementService {
 
@@ -167,7 +169,7 @@ public class Engine implements EventListener, EntitlementService {
                     (System.nanoTime() - ini) / NANO_TO_MS < MAX_NOTIFICATION_THREAD_WAIT_MS);
 
             if (!startedNotificationThread) {
-                log.error("Could not start notification thread in {} msec !!!", MAX_NOTIFICATION_THREAD_WAIT_MS);
+                log.error("Could not start notification thread in %d msec !!!", MAX_NOTIFICATION_THREAD_WAIT_MS);
                 throw new EntitlementError("Failed to start service!!");
             }
             log.info("Notification thread has been started in {} ms", (System.nanoTime() - ini) / NANO_TO_MS);
@@ -175,14 +177,15 @@ public class Engine implements EventListener, EntitlementService {
     }
 
     private void insertNextPhaseEvent(SubscriptionData subscription) {
-
-        DateTime now = clock.getUTCNow();
-
-        TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, subscription.getCurrentPlan(), now, subscription.getCurrentPlanStart());
-        PhaseEvent nextPhaseEvent = PhaseEventData.getNextPhaseEvent(nextTimedPhase, subscription, now);
-        if (nextPhaseEvent != null) {
-            dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent);
+        try {
+            DateTime now = clock.getUTCNow();
+            TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, subscription.getCurrentPlan(), now, subscription.getCurrentPlanStart());
+            PhaseEvent nextPhaseEvent = PhaseEventData.getNextPhaseEvent(nextTimedPhase, subscription, now);
+            if (nextPhaseEvent != null) {
+                dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent);
+            }
+        } catch (CatalogApiException e) {
+            log.error(String.format("Failed to insert next phase for subscription %s", subscription.getId()), e);
         }
     }
-
 }
