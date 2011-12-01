@@ -32,7 +32,6 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.ApiEvent;
-import com.ning.billing.entitlement.glue.InjectorMagic;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.Clock;
@@ -50,7 +49,6 @@ import org.testng.annotations.BeforeMethod;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -92,7 +90,6 @@ public abstract class TestUserApiBase {
     @AfterClass(groups={"setup"})
     public void tearDown() {
         try {
-            InjectorMagic.instance = null;
             busService.getEventBus().register(testListener);
             ((DefaultEventBusService) busService).stopBus();
         } catch (Exception e) {

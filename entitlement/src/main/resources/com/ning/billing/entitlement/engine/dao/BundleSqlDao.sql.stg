@@ -1,4 +1,4 @@
-group IBundleSqlDao;
+group BundleSqlDao;
 
 insertBundle() ::= <<
     insert into bundles (

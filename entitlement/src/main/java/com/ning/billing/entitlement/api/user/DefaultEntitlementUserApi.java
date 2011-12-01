@@ -16,7 +16,6 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,18 +30,11 @@ import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IPriceListSet;
-import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.entitlement.alignment.PlanAligner;
-import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.phase.PhaseEvent;
-import com.ning.billing.entitlement.events.phase.PhaseEventData;
-import com.ning.billing.entitlement.events.user.ApiEventBuilder;
-import com.ning.billing.entitlement.events.user.ApiEventCreate;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.clock.Clock;
@@ -53,12 +45,14 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     private final EntitlementDao dao;
     private final PlanAligner planAligner;
     private final ICatalogService catalogService;
+    private final SubscriptionApiService apiService;
 
     @Inject
     public DefaultEntitlementUserApi(Clock clock, PlanAligner planAligner,
-            EntitlementDao dao, ICatalogService catalogService) {
+            EntitlementDao dao, ICatalogService catalogService, SubscriptionApiService apiService) {
         super();
         this.clock = clock;
+        this.apiService = apiService;
         this.dao = dao;
         this.planAligner = planAligner;
         this.catalogService = catalogService;
@@ -157,34 +151,14 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         }
 
         DateTime effectiveDate = requestedDate;
-        SubscriptionData subscription = new SubscriptionData(new SubscriptionBuilder()
+        SubscriptionData subscription = apiService.create(new SubscriptionBuilder()
             .setId(UUID.randomUUID())
             .setBundleId(bundleId)
             .setCategory(plan.getProduct().getCategory())
             .setBundleStartDate(bundleStartDate)
             .setStartDate(effectiveDate),
-                false);
+                plan, realPriceList, requestedDate, effectiveDate, now);
 
-        TimedPhase currentTimedPhase =  planAligner.getCurrentTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
-        ApiEventCreate creationEvent = new ApiEventCreate(new ApiEventBuilder()
-            .setSubscriptionId(subscription.getId())
-            .setEventPlan(plan.getName())
-            .setEventPlanPhase(currentTimedPhase.getPhase().getName())
-            .setEventPriceList(realPriceList)
-            .setActiveVersion(subscription.getActiveVersion())
-            .setProcessedDate(now)
-            .setEffectiveDate(effectiveDate)
-            .setRequestedDate(requestedDate));
-
-        TimedPhase nextTimedPhase =  planAligner.getNextTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
-        PhaseEvent nextPhaseEvent = PhaseEventData.getNextPhaseEvent(nextTimedPhase, subscription, now);
-        List<EntitlementEvent> events = new ArrayList<EntitlementEvent>();
-        events.add(creationEvent);
-        if (nextPhaseEvent != null) {
-            events.add(nextPhaseEvent);
-        }
-
-        // STEPH Also update startDate for bundle ?
-        return dao.createSubscription(subscription, events);
+        return subscription;
     }
 }

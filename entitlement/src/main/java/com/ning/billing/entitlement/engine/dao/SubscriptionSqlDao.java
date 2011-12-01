@@ -108,8 +108,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
             .setStartDate(startDate)
             .setActiveVersion(activeVersion)
             .setChargedThroughDate(ctd)
-            .setPaidThroughDate(ptd),
-                true);
+            .setPaidThroughDate(ptd));
             return subscription;
         }
     }

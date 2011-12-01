@@ -30,10 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.catalog.api.ICatalog;
+import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
@@ -54,14 +57,16 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     private final TreeSet<EntitlementEvent> events;
     private final Clock clock;
     private final EntitlementConfig config;
+    private final SubscriptionApiService apiService;
 
 
 
     @Inject
-    public MockEntitlementDaoMemory(Clock clock, EntitlementConfig config) {
+    public MockEntitlementDaoMemory(Clock clock, EntitlementConfig config, SubscriptionApiService apiService) {
         super();
         this.clock = clock;
         this.config = config;
+        this.apiService = apiService;
         this.bundles = new ArrayList<SubscriptionBundle>();
         this.subscriptions = new ArrayList<Subscription>();
         this.events = new TreeSet<EntitlementEvent>();
@@ -124,14 +129,13 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
 
     @Override
-    public Subscription createSubscription(SubscriptionData subscription, List<EntitlementEvent> initalEvents) {
+    public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initalEvents) {
 
         synchronized(events) {
             events.addAll(initalEvents);
         }
         Subscription updatedSubscription = buildSubscription(subscription);
         subscriptions.add(updatedSubscription);
-        return updatedSubscription;
     }
 
     @Override
@@ -228,7 +232,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     private Subscription buildSubscription(SubscriptionData in) {
-        return new SubscriptionData(new SubscriptionBuilder(in), true);
+        return apiService.createFromExisting(new SubscriptionBuilder(in), getEventsForSubscription(in.getId()));
     }
 
     @Override

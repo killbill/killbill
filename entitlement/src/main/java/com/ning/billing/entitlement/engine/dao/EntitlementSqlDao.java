@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,11 +29,12 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
@@ -51,6 +51,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     private final static Logger log = LoggerFactory.getLogger(EntitlementSqlDao.class);
 
+    private final SubscriptionApiService apiService;
     private final Clock clock;
     private final SubscriptionSqlDao subscriptionsDao;
     private final BundleSqlDao bundlesDao;
@@ -59,9 +60,10 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final String hostname;
 
     @Inject
-    public EntitlementSqlDao(DBI dbi, Clock clock, EntitlementConfig config) {
+    public EntitlementSqlDao(DBI dbi, Clock clock, EntitlementConfig config, SubscriptionApiService apiService) {
         this.clock = clock;
         this.config = config;
+        this.apiService = apiService;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
         this.eventsDao = dbi.onDemand(EventSqlDao.class);
         this.bundlesDao = dbi.onDemand(BundleSqlDao.class);
@@ -87,7 +89,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     @Override
     public Subscription getSubscriptionFromId(UUID subscriptionId) {
-        return subscriptionsDao.getSubscriptionFromId(subscriptionId.toString());
+        return buildSubscription(subscriptionsDao.getSubscriptionFromId(subscriptionId.toString()));
     }
 
     @Override
@@ -96,7 +98,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         List<Subscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
         for (Subscription cur : subscriptions) {
             if (((SubscriptionData)cur).getCategory() == ProductCategory.BASE) {
-                return cur;
+                return  buildSubscription(cur);
             }
         }
         return null;
@@ -104,7 +106,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     @Override
     public List<Subscription> getSubscriptions(UUID bundleId) {
-        return subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
+        return buildSubscription(subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString()));
     }
 
     @Override
@@ -113,7 +115,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         if (bundle == null) {
             return Collections.emptyList();
         }
-        return subscriptionsDao.getSubscriptionsFromBundleId(bundle.getId().toString());
+        return buildSubscription(subscriptionsDao.getSubscriptionsFromBundleId(bundle.getId().toString()));
     }
 
     @Override
@@ -208,7 +210,7 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public Subscription createSubscription(final SubscriptionData subscription,
+    public void createSubscription(final SubscriptionData subscription,
             final List<EntitlementEvent> initialEvents) {
 
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
@@ -226,7 +228,6 @@ public class EntitlementSqlDao implements EntitlementDao {
                 return null;
             }
         });
-        return new SubscriptionData(new SubscriptionBuilder(subscription), true);
     }
 
     @Override
@@ -321,5 +322,22 @@ public class EntitlementSqlDao implements EntitlementDao {
         if (futureEventId != null) {
             dao.unactiveEvent(futureEventId.toString(), now);
         }
+    }
+
+    private Subscription buildSubscription(Subscription input) {
+        if (input == null) {
+            return null;
+        }
+        return buildSubscription(Collections.singletonList(input)).get(0);
+    }
+
+    private List<Subscription> buildSubscription(List<Subscription> input) {
+        List<Subscription> result = new ArrayList<Subscription>(input.size());
+        for (Subscription cur : input) {
+            List<EntitlementEvent> events = eventsDao.getEventsForSubscription(cur.getId().toString());
+            Subscription reloaded = apiService.createFromExisting(new SubscriptionBuilder((SubscriptionData) cur), events);
+            result.add(reloaded);
+        }
+        return result;
     }
 }

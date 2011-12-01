@@ -1,4 +1,4 @@
-group IEventSqlDao;
+group EventSqlDao;
 
 getReadyEvents(now, max) ::= <<
     select

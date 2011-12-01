@@ -28,17 +28,14 @@ import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.util.clock.Clock;
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
-    private final Clock clock;
     private final EntitlementDao dao;
 
     @Inject
-    public DefaultEntitlementBillingApi(Clock clock, EntitlementDao dao) {
+    public DefaultEntitlementBillingApi(EntitlementDao dao) {
         super();
-        this.clock = clock;
         this.dao = dao;
     }
 
@@ -63,7 +60,6 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
             .setChargedThroughDate(ctd)
             .setPaidThroughDate(subscription.getPaidThroughDate());
-        dao.updateSubscription(new SubscriptionData(builder, false));
+        dao.updateSubscription(new SubscriptionData(builder));
     }
-
 }

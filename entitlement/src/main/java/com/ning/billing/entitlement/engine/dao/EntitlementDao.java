@@ -61,7 +61,7 @@ public interface EntitlementDao {
     public void clearEventsReady(UUID ownerId, Collection<EntitlementEvent> cleared);
 
     // Subscription creation, cancellation, changePlan apis
-    public Subscription createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents);
+    public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents);
 
     public void cancelSubscription(UUID subscriptionId, EntitlementEvent cancelEvent);
 

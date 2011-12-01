@@ -1,4 +1,4 @@
-group ISubscriptionSqlDao;
+group SubscriptionSqlDao;
 
 insertSubscription() ::= <<
     insert into subscriptions (

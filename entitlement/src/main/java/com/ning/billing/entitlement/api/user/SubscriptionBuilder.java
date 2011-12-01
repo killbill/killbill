@@ -50,6 +50,7 @@ public class SubscriptionBuilder {
         this.paidThroughDate = original.getPaidThroughDate();
     }
 
+
     public SubscriptionBuilder setId(UUID id) {
         this.id = id;
         return this;
