@@ -48,7 +48,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     }
 
     @Override
-    public SortedSet<IBillingEvent> getBillingEventsForSubscription(
+    public SortedSet<BillingEvent> getBillingEventsForSubscription(
             UUID subscriptionId) {
         return null;
     }
