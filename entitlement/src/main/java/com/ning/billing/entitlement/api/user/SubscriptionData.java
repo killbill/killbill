@@ -388,7 +388,7 @@ public class SubscriptionData implements Subscription {
             IPlanPhase nextPhase = null;
             try {
                 previousPlan = (previousPlanName != null) ? catalog.findPlan(previousPlanName) : null;
-                previousPhase = (previousPhase != null) ? catalog.findPhase(previousPhaseName) : null;
+                previousPhase = (previousPhaseName != null) ? catalog.findPhase(previousPhaseName) : null;
                 nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName) : null;
                 nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName) : null;
             } catch (CatalogApiException e) {
