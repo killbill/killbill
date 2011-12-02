@@ -18,6 +18,11 @@ package com.ning.billing.entitlement.api.user;
 
 public class PrivateFields implements IPrivateFields {
 
+    /**
+     * It seems lots of various classes extend this as a means of tacking random attributes
+     * onto data objects, but it doesn't actually do anything. Why is this super class in use?
+     */
+
     public PrivateFields() {
     }
 
