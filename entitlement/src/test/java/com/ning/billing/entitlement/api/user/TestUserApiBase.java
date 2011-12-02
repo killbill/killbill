@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.api.user;
 
 import com.google.inject.Injector;
 import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IFieldStore;
 import com.ning.billing.catalog.CatalogService;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.config.IEntitlementConfig;
@@ -46,6 +47,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -312,13 +314,28 @@ public abstract class TestUserApiBase {
             }
 
             @Override
-            public boolean isNew() {
-                return false;  //To change body of implemented methods use File | Settings | File Templates.
+            public String getIdAsString() {
+                throw new NotImplementedException();
             }
 
             @Override
-            public void setAsSaved() {
-                //To change body of implemented methods use File | Settings | File Templates.
+            public String getFieldValue(String fieldName) {
+                throw new NotImplementedException();
+            }
+
+            @Override
+            public void setFieldValue(String fieldName, String fieldValue) {
+                throw new NotImplementedException();
+            }
+
+            @Override
+            public IFieldStore getFields() {
+                throw new NotImplementedException();
+            }
+
+            @Override
+            public String getObjectName() {
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
         };
         return account;

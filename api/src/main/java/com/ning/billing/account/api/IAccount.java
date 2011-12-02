@@ -16,6 +16,6 @@
 
 package com.ning.billing.account.api;
 
-public interface IAccount extends IAccountData, IEntity {
+public interface IAccount extends IAccountData, IEntity, ICustomizableEntity {
 
 }

@@ -16,12 +16,16 @@
 
 package com.ning.billing.account.api;
 
-public interface ICustomizableEntity extends IEntity {
-    public String getFieldValue(String fieldName);
+import java.util.List;
 
-    public void setFieldValue(String fieldName, String fieldValue);
+public interface IFieldStore extends IEntityCollection<ICustomField> {
+    public void setValue(String fieldName, String fieldValue);
 
-    public IFieldStore getFields();
+    public String getValue(String fieldName);
 
-    public String getObjectName();
+    public List<ICustomField> getFieldList();
+
+    public void add(ICustomField field);
+
+    public void add(List<ICustomField> fields);
 }

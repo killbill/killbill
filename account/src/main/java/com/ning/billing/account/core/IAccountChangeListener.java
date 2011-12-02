@@ -16,8 +16,8 @@
 
 package com.ning.billing.account.core;
 
-import com.ning.billing.account.api.IAccountChange;
+import com.ning.billing.account.api.IAccountChangeEvent;
 
 public interface IAccountChangeListener {
-    public void processAccountChange(IAccountChange change);
+    public void processAccountChange(IAccountChangeEvent changeEvent);
 }

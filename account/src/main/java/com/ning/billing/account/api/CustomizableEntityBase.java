@@ -19,7 +19,7 @@ package com.ning.billing.account.api;
 import java.util.UUID;
 
 public abstract class CustomizableEntityBase extends EntityBase implements ICustomizableEntity {
-    protected final FieldStore fields;
+    protected final IFieldStore fields;
 
     public CustomizableEntityBase(UUID id) {
         super(id);
@@ -37,24 +37,9 @@ public abstract class CustomizableEntityBase extends EntityBase implements ICust
     }
 
     @Override
-    public void save() {
-        super.save();
-        fields.save();
-    }
-
-    @Override
-    public void load() {
-        loadObject();
-        loadCustomFields();
-    }
-
-    protected void loadCustomFields() {
-        fields.load();
+    public IFieldStore getFields() {
+        return fields;
     }
 
     public abstract String getObjectName();
-
-    protected abstract void saveObject();
-
-    protected abstract void loadObject();
 }

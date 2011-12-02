@@ -17,56 +17,123 @@
 package com.ning.billing.account.dao;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountData;
+import com.ning.billing.account.api.*;
+import com.ning.billing.account.api.user.AccountChangeEvent;
+import com.ning.billing.account.api.user.AccountCreationEvent;
+import com.ning.billing.util.eventbus.IEventBus;
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.TransactionCallback;
+import org.skife.jdbi.v2.TransactionStatus;
 
 import java.util.List;
-import java.util.UUID;
 
 public class AccountDao implements IAccountDao {
-    private final IAccountDaoSql dao;
+    private final IAccountDao accountDao;
+    private final IFieldStoreDao fieldStoreDao;
+    private final IDBI dbi; // needed for transaction support
+    private final IEventBus eventBus;
 
     @Inject
-    public AccountDao(IDBI dbi) {
-        this.dao = dbi.onDemand(IAccountDaoSql.class);
-    }
-
-    @Override
-    public IAccount createAccount(IAccountData input) {
-        IAccount result = new Account(input);
-        dao.insertAccount(result);
-        return result;
+    public AccountDao(IDBI dbi, IEventBus eventBus) {
+        this.dbi = dbi;
+        this.eventBus = eventBus;
+        this.accountDao = dbi.onDemand(IAccountDao.class);
+        this.fieldStoreDao = dbi.onDemand(IFieldStoreDao.class);
     }
 
     @Override
     public IAccount getAccountByKey(String key) {
-        return dao.getAccountByKey(key);
+        IAccount account = accountDao.getAccountByKey(key);
+        if (account != null) {
+            loadFields(account);
+        }
+        return account;
     }
 
     @Override
-    public IAccount getAccountById(UUID uid) {
-        return dao.getAccountById(uid.toString());
+    public IAccount getById(String id) {
+        IAccount account = accountDao.getById(id);
+        if (account != null) {
+            loadFields(account);
+        }
+        return account;
+    }
+
+    private void loadFields(IAccount account) {
+        List<ICustomField> fields = fieldStoreDao.load(account.getId().toString(), Account.OBJECT_TYPE);
+        account.getFields().clear();
+        if (fields != null) {
+            for (ICustomField field : fields) {
+                account.getFields().setValue(field.getName(), field.getValue());
+            }
+        }
     }
 
     @Override
-    public List<IAccount> getAccounts() {
-        return dao.getAccounts();
+    public List<IAccount> get() {
+        return accountDao.get();
     }
 
     @Override
     public void test() {
-        dao.test();
+        accountDao.test();
     }
 
     @Override
-    public void saveAccount(IAccount account) {
-        dao.insertAccount(account);
-    }
+    public void save(final IAccount account) {
+        final String accountId = account.getId().toString();
+        final String objectType = Account.OBJECT_TYPE;
 
-    @Override
-    public void updateAccount(IAccount account) {
-        dao.updateAccount(account);
+        dbi.inTransaction(new TransactionCallback<Void>() {
+            @Override
+            public Void inTransaction(Handle conn, TransactionStatus status) throws Exception {
+                try {
+                    conn.begin();
+
+                    IAccountDao accountDao = conn.attach(IAccountDao.class);
+                    IAccount currentAccount = accountDao.getById(accountId);
+                    accountDao.save(account);
+
+                    IFieldStore fieldStore = account.getFields();
+                    IFieldStoreDao fieldStoreDao = conn.attach(IFieldStoreDao.class);
+                    fieldStoreDao.save(accountId, objectType, fieldStore.getFieldList());
+
+                    if (currentAccount == null) {
+                        IAccountCreationEvent creationEvent = new AccountCreationEvent(account);
+                        eventBus.post(creationEvent);
+                    } else {
+                        IAccountChangeEvent changeEvent = new AccountChangeEvent(account.getId(), currentAccount, account);
+                        if (changeEvent.hasChanges()) {
+                            eventBus.post(changeEvent);
+                        }
+                    }
+
+                    conn.commit();
+                } catch (Exception e) {
+                    conn.rollback();
+                    throw e;
+                }
+
+                return null;
+            }
+        });
+//
+//
+//        //accountDao.begin();
+//        try {
+//            accountDao.save(account);
+//
+//            IFieldStore fieldStore = account.getFields();
+//            fieldStoreDao.save(objectId, objectType, fieldStore.getFieldList());
+//            fieldStore.processSaveEvent();
+//
+//            account.processSaveEvent();
+//            //accountDao.commit();
+//        }
+//        catch (RuntimeException ex) {
+//            //accountDao.rollback();
+//            throw ex;
+//        }
     }
 }

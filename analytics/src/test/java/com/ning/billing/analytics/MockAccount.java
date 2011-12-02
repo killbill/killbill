@@ -16,8 +16,11 @@
 
 package com.ning.billing.analytics;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IFieldStore;
 import com.ning.billing.catalog.api.Currency;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.UUID;
 
@@ -83,12 +86,27 @@ public class MockAccount implements IAccount
     }
 
     @Override
-    public boolean isNew() {
-        throw new UnsupportedOperationException();
+    public String getIdAsString() {
+        return id.toString();
     }
 
     @Override
-    public void setAsSaved() {
-        throw new UnsupportedOperationException();
+    public String getFieldValue(String fieldName) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void setFieldValue(String fieldName, String fieldValue) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public IFieldStore getFields() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public String getObjectName() {
+        return Account.OBJECT_TYPE;
     }
 }

@@ -14,17 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.invoice.api;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.eventbus.IEventBusType;
 
-import java.util.List;
+import java.math.BigDecimal;
 import java.util.UUID;
 
-public interface IAccountChange extends IEventBusType {
+public interface IInvoiceGenerated extends IEventBusType {
+    public UUID getInvoiceId();
     public UUID getAccountId();
-
-    public List<IChangedField> getChangedFields();
-
-    public boolean hasChanges();
+    public BigDecimal getAmount();
+    public Currency getCurrency();
 }

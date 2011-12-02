@@ -20,7 +20,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.account.glue.AccountModuleMock;
-import com.ning.billing.account.glue.InjectorMagic;
+import com.ning.billing.util.eventbus.EventBusService;
+import com.ning.billing.util.eventbus.IEventBusService;
 import org.apache.commons.io.IOUtils;
 import org.testng.annotations.BeforeClass;
 
@@ -29,7 +30,6 @@ import java.io.IOException;
 import static org.testng.Assert.fail;
 
 public abstract class AccountDaoTestBase {
-    private InjectorMagic injectorMagic;
     protected IFieldStoreDao fieldStoreDao;
     protected IAccountDao accountDao;
 
@@ -42,7 +42,6 @@ public abstract class AccountDaoTestBase {
             module.createDb(ddl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
-            injectorMagic = injector.getInstance(InjectorMagic.class);
 
             fieldStoreDao = injector.getInstance(IFieldStoreDao.class);
             fieldStoreDao.test();
@@ -50,7 +49,8 @@ public abstract class AccountDaoTestBase {
             accountDao = injector.getInstance(IAccountDao.class);
             accountDao.test();
 
-
+            IEventBusService busService = injector.getInstance(IEventBusService.class);
+            ((EventBusService) busService).startBus();
         }
         catch (Throwable t) {
             fail(t.toString());

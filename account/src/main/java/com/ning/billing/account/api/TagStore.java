@@ -16,9 +16,6 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.account.dao.IEntityCollectionDao;
-import com.ning.billing.account.glue.InjectorMagic;
-
 import java.util.UUID;
 
 public class TagStore extends EntityCollectionBase<Tag> {
@@ -27,14 +24,12 @@ public class TagStore extends EntityCollectionBase<Tag> {
     }
 
     @Override
-    protected String getEntityKey(Tag entity) {
+    public String getEntityKey(Tag entity) {
         return entity.getDescription();
     }
 
-    @Override
-    protected IEntityCollectionDao<Tag> getCollectionDao() {
-        return InjectorMagic.getTagStoreDao();
-    }
-
-
+//    @Override
+//    protected IEntityCollectionDao<Tag> getCollectionDao() {
+//        return InjectorMagic.getTagStoreDao();
+//    }
 }

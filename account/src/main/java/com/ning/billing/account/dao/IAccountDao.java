@@ -16,24 +16,67 @@
 
 package com.ning.billing.account.dao;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountData;
+import com.ning.billing.account.api.user.AccountBuilder;
+import com.ning.billing.catalog.api.Currency;
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.sqlobject.*;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.util.List;
+import java.lang.annotation.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 
-public interface IAccountDao {
-    public IAccount createAccount(IAccountData account);
+@ExternalizedSqlViaStringTemplate3
+@RegisterMapper(AccountDao.AccountMapper.class)
+public interface IAccountDao extends IEntityDao<IAccount> {
+    @SqlQuery
+    public IAccount getAccountByKey(@Bind("externalKey") final String key);
 
-    public IAccount getAccountById(UUID uid);
+    @Override
+    @SqlUpdate
+    public void save(@AccountBinder IAccount account);
 
-    public IAccount getAccountByKey(String key);
+    public static class AccountMapper implements ResultSetMapper<IAccount> {
+        @Override
+        public IAccount map(int index, ResultSet result, StatementContext context) throws SQLException {
+            UUID id = UUID.fromString(result.getString("id"));
+            String externalKey = result.getString("external_key");
+            String email = result.getString("email");
+            String firstName = result.getString("first_name");
+            String lastName = result.getString("last_name");
+            String phone = result.getString("phone");
+            Currency currency = Currency.valueOf(result.getString("currency"));
 
-    public List<IAccount> getAccounts();
+            return new AccountBuilder(id).externalKey(externalKey).email(email)
+                                         .firstName(firstName).lastName(lastName)
+                                         .phone(phone).currency(currency).build();
+        }
+    }
 
-    public void test();
-
-    public void saveAccount(IAccount account);
-
-    public void updateAccount(IAccount account);
+    @BindingAnnotation(AccountBinder.AccountBinderFactory.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER})
+    public @interface AccountBinder {
+        public static class AccountBinderFactory implements BinderFactory {
+            public Binder build(Annotation annotation) {
+                return new Binder<AccountBinder, Account>() {
+                    public void bind(SQLStatement q, AccountBinder bind, Account account) {
+                        q.bind("id", account.getId().toString());
+                        q.bind("externalKey", account.getExternalKey());
+                        q.bind("email", account.getEmail());
+                        q.bind("firstName", account.getFirstName());
+                        q.bind("lastName", account.getLastName());
+                        q.bind("phone", account.getPhone());
+                        q.bind("currency", account.getCurrency().toString());
+                    }
+                };
+            }
+        }
+    }
 }

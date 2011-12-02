@@ -18,31 +18,18 @@ package com.ning.billing.account.api;
 
 import java.util.UUID;
 
-public class CustomField implements ICustomField {
-    private UUID id;
+public class CustomField extends EntityBase<ICustomField> implements ICustomField {
     private String name;
     private String value;
-    private boolean isNew;
 
     public CustomField(String name, String value) {
         this(UUID.randomUUID(), name, value);
-        this.isNew = true;
     }
 
     public CustomField(UUID id, String name, String value) {
-        this.id = id;
+        super(id);
         this.name = name;
         this.value = value;
-        this.isNew = false;
-    }
-
-    @Override
-    public UUID getId() {
-        return id;
-    }
-
-    public String getIdAsString() {
-        return id.toString();
     }
 
     @Override
@@ -53,16 +40,6 @@ public class CustomField implements ICustomField {
     @Override
     public String getValue() {
         return value;
-    }
-
-    @Override
-    public boolean isNew() {
-        return this.isNew;
-    }
-
-    @Override
-    public void setAsSaved() {
-        this.isNew = false;
     }
 
     @Override

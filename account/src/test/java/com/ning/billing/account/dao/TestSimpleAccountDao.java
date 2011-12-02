@@ -18,6 +18,7 @@ package com.ning.billing.account.dao;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import org.testng.annotations.Test;
 
@@ -30,45 +31,46 @@ import static org.testng.Assert.*;
 public class TestSimpleAccountDao extends AccountDaoTestBase {
     private final String key = "test1234";
     private final String firstName = "Wesley";
-    private final String email = "dreadpirateroberts@therevenge.com";
+    private final String email = "me@me.com";
 
     private Account createTestAccount() {
-        Account account = Account.create();
         String thisKey = key + UUID.randomUUID().toString();
         String lastName = UUID.randomUUID().toString();
-        account.externalKey(thisKey).firstName(firstName).lastName(lastName).email(email).currency(Currency.USD);
-        return account;
+        String thisEmail = email + " " + UUID.randomUUID();
+        return new AccountBuilder().externalKey(thisKey).firstName(firstName).lastName(lastName)
+                                   .email(thisEmail).currency(Currency.USD).build();
     }
 
     public void testBasic() {
 
         IAccount a = createTestAccount();
-        accountDao.saveAccount(a);
+        accountDao.save(a);
         String key = a.getExternalKey();
 
         IAccount r = accountDao.getAccountByKey(key);
         assertNotNull(r);
         assertEquals(r.getExternalKey(), a.getExternalKey());
 
-        r = accountDao.getAccountById(r.getId());
+        r = accountDao.getById(r.getId().toString());
         assertNotNull(r);
         assertEquals(r.getExternalKey(), a.getExternalKey());
 
-        List<IAccount> all = accountDao.getAccounts();
+        List<IAccount> all = accountDao.get();
         assertNotNull(all);
         assertTrue(all.size() >= 1);
     }
 
     @Test
     public void testGetById() {
-        Account account = createTestAccount();
+        IAccount account = createTestAccount();
         UUID id = account.getId();
         String key = account.getExternalKey();
         String firstName = account.getFirstName();
         String lastName = account.getLastName();
-        account.save();
 
-        account = Account.loadAccount(id);
+        accountDao.save(account);
+
+        account = accountDao.getById(id.toString());
         assertNotNull(account);
         assertEquals(account.getId(), id);
         assertEquals(account.getExternalKey(), key);
@@ -79,18 +81,16 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
 
     @Test
     public void testCustomFields() {
-        Account account = createTestAccount();
+        IAccount account = createTestAccount();
         String fieldName = "testField1";
         String fieldValue = "testField1_value";
         account.setFieldValue(fieldName, fieldValue);
 
-        account.save();
+        accountDao.save(account);
 
-        Account thisAccount = Account.loadAccount(account.getExternalKey());
+        IAccount thisAccount = accountDao.getAccountByKey(account.getExternalKey());
         assertNotNull(thisAccount);
         assertEquals(thisAccount.getExternalKey(), account.getExternalKey());
         assertEquals(thisAccount.getFieldValue(fieldName), fieldValue);
     }
-
-
 }

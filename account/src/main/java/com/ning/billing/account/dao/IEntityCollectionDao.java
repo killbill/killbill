@@ -23,14 +23,9 @@ import java.util.List;
 
 public interface IEntityCollectionDao<T extends IEntity> {
     @SqlBatch
-    public void update(@Bind("objectId") final String objectId,
-                       @Bind("objectType") final String objectType,
-                       @BindBean final List<T> entities);
-
-    @SqlBatch
-    public void create(@Bind("objectId") final String objectId,
-                       @Bind("objectType") final String objectType,
-                       @BindBean final List<T> entities);
+    public void save(@Bind("objectId") final String objectId,
+                     @Bind("objectType") final String objectType,
+                     @BindBean final List<T> entities);
 
     @SqlQuery
     public List<T> load(@Bind("objectId") final String objectId,

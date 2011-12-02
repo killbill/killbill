@@ -18,6 +18,7 @@ package com.ning.billing.account.dao;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -35,7 +36,7 @@ import java.util.List;
 import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
-public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
+public interface IAccountDaoSql extends IEntityDao<IAccount>, Transactional<IAccountDaoSql>, CloseMe {
     @SqlUpdate
     public void insertAccount(@AccountBinder IAccount account);
 
@@ -68,9 +69,9 @@ public interface IAccountDaoSql extends Transactional<IAccountDaoSql>, CloseMe {
             String phone = result.getString("phone");
             Currency currency = Currency.valueOf(result.getString("currency"));
 
-            return new Account(id).externalKey(externalKey).email(email)
-                                  .firstName(firstName).lastName(lastName)
-                                  .phone(phone).currency(currency);
+            return new AccountBuilder(id).externalKey(externalKey).email(email)
+                                         .firstName(firstName).lastName(lastName)
+                                         .phone(phone).currency(currency).build();
         }
     }
 

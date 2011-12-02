@@ -14,17 +14,22 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.account.api.user;
+
+import com.ning.billing.account.api.ChangedField;
+import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IAccountChangeEvent;
+import com.ning.billing.account.api.IChangedField;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class AccountChange implements IAccountChange {
+public class AccountChangeEvent implements IAccountChangeEvent {
     private final List<IChangedField> changedFields;
     private final UUID id;
 
-    public AccountChange(UUID id, IAccountData oldData, IAccountData newData) {
+    public AccountChangeEvent(UUID id, IAccount oldData, IAccount newData) {
         this.id = id;
         this.changedFields = calculateChangedFields(oldData, newData);
     }
@@ -44,7 +49,7 @@ public class AccountChange implements IAccountChange {
         return (changedFields.size() > 0);
     }
 
-    private List<IChangedField> calculateChangedFields(IAccountData oldData, IAccountData newData) {
+    private List<IChangedField> calculateChangedFields(IAccount oldData, IAccount newData) {
         List<IChangedField> changedFields = new ArrayList<IChangedField>();
 
         if (!newData.getExternalKey().equals(oldData.getExternalKey())) {

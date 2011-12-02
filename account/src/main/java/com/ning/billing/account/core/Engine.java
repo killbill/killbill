@@ -16,7 +16,7 @@
 
 package com.ning.billing.account.core;
 
-import com.ning.billing.account.api.IAccountChange;
+import com.ning.billing.account.api.IAccountChangeEvent;
 import com.ning.billing.account.api.IAccountService;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
@@ -62,11 +62,11 @@ public class Engine implements IAccountService, IAccountChangeListener {
     }
 
     @Override
-    public void processAccountChange(IAccountChange change) {
+    public void processAccountChange(IAccountChangeEvent changeEvent) {
         try {
-            eventBus.post(change);
+            eventBus.post(changeEvent);
         } catch (IEventBus.EventBusException e) {
-            log.warn("Failed to post account change event.");
+            log.warn("Failed to post account changeEvent event.");
         }
     }
 }

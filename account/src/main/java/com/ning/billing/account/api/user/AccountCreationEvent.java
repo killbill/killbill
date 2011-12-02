@@ -14,20 +14,30 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.account.api.user;
 
-import java.util.List;
+import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IAccountCreationEvent;
+import com.ning.billing.account.api.IAccountData;
 
-public interface IFieldStore {
-    void setValue(String fieldName, String fieldValue);
+import java.util.UUID;
 
-    String getValue(String fieldName);
+public class AccountCreationEvent implements IAccountCreationEvent {
+    private final UUID id;
+    private final IAccountData data;
 
-    List<ICustomField> getNewFields();
+    public AccountCreationEvent(IAccount data) {
+        this.id = data.getId();
+        this.data = data;
+    }
 
-    List<ICustomField> getUpdatedFields();
+    @Override
+    public UUID getId() {
+        return id;
+    }
 
-    void save();
-
-    void load();
+    @Override
+    public IAccountData getData() {
+        return data;
+    }
 }

@@ -20,8 +20,5 @@ import java.util.UUID;
 
 public interface IEntity {
     public UUID getId();
-
-    public boolean isNew();
-
-    public void setAsSaved();
+    public String getIdAsString();
 }

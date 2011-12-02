@@ -16,12 +16,12 @@
 
 package com.ning.billing.account.api;
 
-public interface ICustomizableEntity extends IEntity {
-    public String getFieldValue(String fieldName);
+import com.ning.billing.util.eventbus.IEventBusType;
 
-    public void setFieldValue(String fieldName, String fieldValue);
+import java.util.UUID;
 
-    public IFieldStore getFields();
+public interface IAccountCreationEvent extends IEventBusType {
+    public UUID getId();
 
-    public String getObjectName();
+    public IAccountData getData();
 }

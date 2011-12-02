@@ -20,6 +20,7 @@ import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountData;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.catalog.api.Currency;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,6 +38,11 @@ public class MockIAccountUserApi implements IAccountUserApi
     public IAccount createAccount(final IAccountData data)
     {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveAccount(IAccount account) {
+        throw new NotImplementedException();
     }
 
     @Override

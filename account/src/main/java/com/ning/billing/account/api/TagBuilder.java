@@ -20,7 +20,8 @@ import org.joda.time.DateTime;
 
 import java.util.UUID;
 
-public class Tag extends EntityBase {
+public class TagBuilder {
+    private UUID id = UUID.randomUUID();
     private UUID tagDescriptionId;
     private String description;
     private UUID objectId;
@@ -28,37 +29,42 @@ public class Tag extends EntityBase {
     private String addedBy;
     private DateTime dateAdded;
 
-    public Tag(UUID id, UUID tagDescriptionId, String description, UUID objectId, String objectType, String addedBy, DateTime dateAdded) {
-        super(id);
+    public TagBuilder id(UUID id) {
+        this.id = id;
+        return this;
+    }
+
+    public TagBuilder tagDescriptionId(UUID tagDescriptionId) {
         this.tagDescriptionId = tagDescriptionId;
+        return this;
+    }
+
+    public TagBuilder description(String description) {
         this.description = description;
+        return this;
+    }
+
+    public TagBuilder objectId(UUID objectId) {
         this.objectId = objectId;
+        return this;
+    }
+
+    public TagBuilder objectType(String objectType) {
         this.objectType = objectType;
+        return this;
+    }
+
+    public TagBuilder addedBy(String addedBy) {
         this.addedBy = addedBy;
+        return this;
+    }
+
+    public TagBuilder dateAdded(DateTime dateAdded) {
         this.dateAdded = dateAdded;
+        return this;
     }
 
-    public UUID getTagDescriptionId() {
-        return tagDescriptionId;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public UUID getObjectId() {
-        return objectId;
-    }
-
-    public String getObjectType() {
-        return objectType;
-    }
-
-    public String getAddedBy() {
-        return addedBy;
-    }
-
-    public DateTime getDateAdded() {
-        return dateAdded;
+    public Tag build() {
+        return new Tag(id, tagDescriptionId, description, objectId, objectType, addedBy, dateAdded);
     }
 }

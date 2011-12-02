@@ -16,12 +16,7 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.util.eventbus.IEventBusType;
-
-import java.util.UUID;
-
-public interface IAccountCreation extends IEventBusType {
-    public UUID getId();
-
-    public IAccountData getData();
+public interface IEntityCollection<T extends IEntity> {
+    public String getEntityKey(T entity);
+    public void clear();
 }

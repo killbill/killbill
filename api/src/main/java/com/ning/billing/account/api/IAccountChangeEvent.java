@@ -16,24 +16,15 @@
 
 package com.ning.billing.account.api;
 
+import com.ning.billing.util.eventbus.IEventBusType;
+
+import java.util.List;
 import java.util.UUID;
 
-public class AccountCreation implements IAccountCreation {
-    private final UUID id;
-    private final IAccountData data;
+public interface IAccountChangeEvent extends IEventBusType {
+    public UUID getAccountId();
 
-    public AccountCreation(UUID id, IAccountData data) {
-        this.id = id;
-        this.data = data;
-    }
+    public List<IChangedField> getChangedFields();
 
-    @Override
-    public UUID getId() {
-        return id;
-    }
-
-    @Override
-    public IAccountData getData() {
-        return data;
-    }
+    public boolean hasChanges();
 }

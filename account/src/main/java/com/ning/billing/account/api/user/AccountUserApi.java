@@ -14,16 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.account.api.user;
 
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IAccountData;
+import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.account.dao.IAccountDao;
 
 import java.util.List;
 import java.util.UUID;
 
 public class AccountUserApi implements IAccountUserApi {
-
     private final IAccountDao dao;
 
     @Inject
@@ -33,7 +36,7 @@ public class AccountUserApi implements IAccountUserApi {
 
     @Override
     public IAccount createAccount(IAccountData data) {
-        return dao.createAccount(data);
+        return new Account(data);
     }
 
     @Override
@@ -42,13 +45,17 @@ public class AccountUserApi implements IAccountUserApi {
     }
 
     @Override
-    public IAccount getAccountById(UUID uid) {
-        return dao.getAccountById(uid);
+    public IAccount getAccountById(UUID id) {
+        return dao.getById(id.toString());
     }
 
     @Override
     public List<IAccount> getAccounts() {
-        return dao.getAccounts();
+        return dao.get();
     }
 
+    @Override
+    public void saveAccount(IAccount account) {
+        dao.save(account);
+    }
 }

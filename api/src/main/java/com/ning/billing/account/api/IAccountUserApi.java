@@ -23,6 +23,8 @@ public interface IAccountUserApi {
 
     public IAccount createAccount(IAccountData data);
 
+    public void saveAccount(IAccount account);
+
     public IAccount getAccountByKey(String key);
 
     public IAccount getAccountById(UUID uid);

@@ -16,15 +16,12 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.account.dao.IAccountDao;
-import com.ning.billing.account.glue.InjectorMagic;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.eventbus.IEventBusType;
 
 import java.util.UUID;
 
 public class Account extends CustomizableEntityBase implements IAccount {
-    private static IAccountDao dao;
+    public final static String OBJECT_TYPE = "Account";
 
     private String externalKey;
     private String email;
@@ -34,31 +31,26 @@ public class Account extends CustomizableEntityBase implements IAccount {
     private Currency currency;
     private int billCycleDay;
 
-    private IAccount originalData;
-
-    public Account() {
-        this(UUID.randomUUID());
-    }
-
-    public Account(UUID id) {
-        super(id);
-        dao = InjectorMagic.getAccountDao();
-    }
-
     public Account(IAccountData data) {
-        this();
-        this.externalKey = data.getExternalKey();
-        this.email = data.getEmail();
-        this.firstName = data.getFirstName();
-        this.lastName = data.getLastName();
-        this.phone = data.getPhone();
-        this.currency = data.getCurrency();
-        this.billCycleDay = data.getBillCycleDay();
+        this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getFirstName(), data.getLastName(),
+                data.getPhone(), data.getCurrency(), data.getBillCycleDay());
+    }
+
+    public Account(UUID id, String externalKey, String email, String firstName, String lastName,
+                   String phone, Currency currency, int billCycleDay) {
+        super(id);
+        this.externalKey = externalKey;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phone = phone;
+        this.currency = currency;
+        this.billCycleDay = billCycleDay;
     }
 
     @Override
     public String getObjectName() {
-        return "Account";
+        return OBJECT_TYPE;
     }
 
     @Override
@@ -66,29 +58,8 @@ public class Account extends CustomizableEntityBase implements IAccount {
         return externalKey;
     }
 
-    public Account externalKey(String externalKey) {
+    public void setExternalKey(String externalKey) {
         this.externalKey = externalKey;
-        return this;
-    }
-
-    @Override
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public Account firstName(String firstName) {
-        this.firstName = firstName;
-        return this;
-    }
-
-    @Override
-    public String getLastName() {
-        return lastName;
-    }
-
-    public Account lastName(String lastName) {
-        this.lastName = lastName;
-        return this;
     }
 
     @Override
@@ -96,9 +67,26 @@ public class Account extends CustomizableEntityBase implements IAccount {
         return email;
     }
 
-    public Account email(String email) {
+    public void setEmail(String email) {
         this.email = email;
-        return this;
+    }
+
+    @Override
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    @Override
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     @Override
@@ -106,19 +94,8 @@ public class Account extends CustomizableEntityBase implements IAccount {
         return phone;
     }
 
-    public Account phone(String phone) {
+    public void setPhone(String phone) {
         this.phone = phone;
-        return this;
-    }
-
-    @Override
-    public int getBillCycleDay() {
-        return billCycleDay;
-    }
-
-    public Account billCycleDay(int billCycleDay) {
-        this.billCycleDay = billCycleDay;
-        return this;
     }
 
     @Override
@@ -126,64 +103,16 @@ public class Account extends CustomizableEntityBase implements IAccount {
         return currency;
     }
 
-    public Account currency(Currency currency) {
+    public void setCurrency(Currency currency) {
         this.currency = currency;
-        return this;
-    }
-
-    public static Account create() {
-        return new Account();
-    }
-
-    public static Account create(UUID id) {
-        return new Account(id);
-    }
-
-    public static Account loadAccount(UUID id) {
-        Account account = (Account) dao.getAccountById(id);
-        if (account != null) {
-            account.loadCustomFields();
-        }
-        return account;
-    }
-
-    public static Account loadAccount(String key) {
-        Account account = (Account) dao.getAccountByKey(key);
-        if (account != null) {
-            account.loadCustomFields();
-        }
-        return account;
     }
 
     @Override
-    protected void saveObject() {
-        dao.saveAccount(this);
+    public int getBillCycleDay() {
+        return billCycleDay;
     }
 
-    @Override
-    protected void updateObject() {
-        dao.updateAccount(this);
-    }
-
-    @Override
-    protected IEventBusType getCreateEvent() {
-        return new AccountCreation(id, this);
-    }
-
-    @Override
-    protected IEventBusType getUpdateEvent() {
-        return new AccountChange(id, originalData, this);
-    }
-
-    @Override
-    protected void loadObject() {
-        this.originalData = dao.getAccountById(id);
-        this.externalKey = originalData.getExternalKey();
-        this.email = originalData.getEmail();
-        this.firstName = originalData.getFirstName();
-        this.lastName = originalData.getLastName();
-        this.phone = originalData.getPhone();
-        this.currency = originalData.getCurrency();
-        this.billCycleDay = originalData.getBillCycleDay();
+    public void setBillCycleDay(int billCycleDay) {
+        this.billCycleDay = billCycleDay;
     }
 }

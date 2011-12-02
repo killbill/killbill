@@ -16,11 +16,11 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.account.dao.IEntityCollectionDao;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
-import java.util.*;
-
-public abstract class EntityCollectionBase<T extends IEntity> {
+public abstract class EntityCollectionBase<T extends IEntity> implements IEntityCollection<T> {
     protected Map<String, T> entities = new HashMap<String, T>();
     protected final UUID objectId;
     protected final String objectType;
@@ -30,54 +30,29 @@ public abstract class EntityCollectionBase<T extends IEntity> {
         this.objectType = objectType;
     }
 
-    public List<T> getNewEntities() {
-        List<T> newEntities = new ArrayList<T>();
-        for (T entity : entities.values()) {
-            if (entity.isNew()) {
-                newEntities.add(entity);
-            }
-        }
-
-        return newEntities;
+    @Override
+    public void clear() {
+        entities.clear();
     }
 
-    public List<T> getUpdatedEntities() {
-        List<T> updatedEntities = new ArrayList<T>();
-        for (T entity : entities.values()) {
-            if (!entity.isNew()) {
-                updatedEntities.add(entity);
-            }
-        }
+    @Override
+    public abstract String getEntityKey(T entity);
 
-        return updatedEntities;
-    }
-
-    public void save() {
-        IEntityCollectionDao<T> dao = getCollectionDao();
-
-        dao.create(objectId.toString(), objectType, getNewEntities());
-        dao.update(objectId.toString(), objectType, getUpdatedEntities());
-        setEntitiesAsSaved();
-    }
-
-    private void setEntitiesAsSaved() {
-        for (T entity : entities.values()) {
-            entity.setAsSaved();
-        }
-    }
-
-    public void load() {
-        IEntityCollectionDao<T> dao = getCollectionDao();
-
-        List<T> entities = dao.load(objectId.toString(), objectType);
-        this.entities.clear();
-        if (entities != null) {
-            for (T entity : entities) {
-                this.entities.put(getEntityKey(entity), entity);
-            }
-        }
-    }
-
-    protected abstract String getEntityKey(T entity);
-    protected abstract IEntityCollectionDao<T> getCollectionDao();
+//    public void save() {
+//        IEntityCollectionDao<T> dao = getCollectionDao();
+//
+//        dao.save(objectId.toString(), objectType, new ArrayList(entities.values()));
+//    }
+//
+//    public void load() {
+//        IEntityCollectionDao<T> dao = getCollectionDao();
+//
+//        List<T> entities = dao.load(objectId.toString(), objectType);
+//        this.entities.clear();
+//        if (entities != null) {
+//            for (T entity : entities) {
+//                this.entities.put(getEntityKey(entity), entity);
+//            }
+//        }
+//    }
 }

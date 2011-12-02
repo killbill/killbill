@@ -19,9 +19,21 @@ package com.ning.billing.account.dao;
 import com.ning.billing.account.api.IEntity;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+
+import java.util.List;
 
 public interface IEntityDao<T extends IEntity> {
-    public void create(@BindBean final T entity);
-    public void update(@BindBean final T entity);
-    public T load(@Bind("id") final String id);
+    @SqlUpdate
+    public void save(@BindBean T entity);
+
+    @SqlQuery
+    public T getById(@Bind("id") final String id);
+
+    @SqlQuery
+    public List<T> get();
+
+    @SqlUpdate
+    public void test();
 }
