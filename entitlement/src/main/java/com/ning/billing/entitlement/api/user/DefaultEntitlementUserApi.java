@@ -30,6 +30,7 @@ import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IPriceListSet;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -91,7 +92,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public Subscription createSubscription(UUID bundleId, String productName,
-            BillingPeriod term, String priceList, DateTime requestedDate) throws EntitlementUserApiException {
+            BillingPeriod term, String priceList, PhaseType initialPhase, DateTime requestedDate) throws EntitlementUserApiException {
 
         try {
             String realPriceList = (priceList == null) ? IPriceListSet.DEFAULT_PRICELIST_NAME : priceList;
@@ -100,18 +101,14 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             if (requestedDate != null && requestedDate.isAfter(now)) {
                 throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
             }
-
             requestedDate = (requestedDate == null) ? now : requestedDate;
-
+            DateTime effectiveDate = requestedDate;
 
             IPlan plan = catalogService.getCatalog().findPlan(productName, term, realPriceList);
-            if (plan == null) {
-                throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BAD_CATALOG, productName, term, realPriceList);
-            }
 
-            IPlanPhase planPhase = (plan.getInitialPhases() != null) ? plan.getInitialPhases()[0] : plan.getFinalPhase();
 
-            if (planPhase == null) {
+            IPlanPhase phase = (plan.getInitialPhases() != null) ? plan.getInitialPhases()[0] : plan.getFinalPhase();
+            if (phase == null) {
                 throw new EntitlementError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
                         productName, term.toString(), realPriceList));
             }
@@ -142,14 +139,13 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                         plan.getProduct().getCategory().toString()));
             }
 
-            DateTime effectiveDate = requestedDate;
-            SubscriptionData subscription = apiService.create(new SubscriptionBuilder()
+            SubscriptionData subscription = apiService.createBasePlan(new SubscriptionBuilder()
             .setId(UUID.randomUUID())
             .setBundleId(bundleId)
             .setCategory(plan.getProduct().getCategory())
             .setBundleStartDate(bundleStartDate)
             .setStartDate(effectiveDate),
-            plan, realPriceList, requestedDate, effectiveDate, now);
+            plan, initialPhase, realPriceList, requestedDate, effectiveDate, now);
 
             return subscription;
         } catch (CatalogApiException e) {

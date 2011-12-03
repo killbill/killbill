@@ -34,4 +34,5 @@ public interface IPlan {
 
 	public abstract int getPlansAllowedInBundle();
 
+	public abstract IPlanPhase[] getAllPhases();
 }

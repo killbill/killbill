@@ -32,7 +32,7 @@ public enum ErrorCode {
     ENT_INVALID_REQUESTED_DATE(1001, "Requested in the future is not allowed : %s"),
 
     /* Creation */
-    ENT_CREATE_BAD_CATALOG(1011, "Plan for product %s, term %s and set %s does not exist in the catalog"),
+    ENT_CREATE_BAD_PHASE(1011, "Can't create plan initial phase %s"),
     ENT_CREATE_NO_BUNDLE(1012, "Bundle %s does not exists"),
     ENT_CREATE_NO_BP(1013, "Missing Base Subscription for bundle %s"),
     ENT_CREATE_BP_EXISTS(1015, "Subscription bundle %s already has a base subscription"),
@@ -43,42 +43,42 @@ public enum ErrorCode {
     ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s"),
     /* Un-cancellation */
     ENT_UNCANCEL_BAD_STATE(1070, "Subscription %s was not in a cancelled state"),
-    
+
     /*
     *
     * Range 2000 : CATALOG
     *
     */
-    
+
     /*
-    * Rules exceptions 
+    * Rules exceptions
     */
-    
+
     /* Plan change is disallowed by the catalog */
     CAT_ILLEGAL_CHANGE_REQUEST(2001, "Attempting to change plan from (product: '%s', billing period: '%s', " +
     		"pricelist '%s') to (product: '%s', billing period: '%s', pricelist '%s'). This transition is not allowed by catalog rules"),
 
 	/*
-	 * Price list 
+	 * Price list
 	 */
 
 	/*Attempt to reference a price that is not present - should only happen if it is a currency not available in the catalog */
     CAT_NO_PRICE_FOR_CURRENCY(2010, "This price does not have a value for the currency '%s'."),
-    
+
     /* Price value explicitly set to NULL meaning there is no price available in that currency */
     CAT_PRICE_VALUE_NULL_FOR_CURRENCY(2011, "The value for the currency '%s' is NULL. This plan cannot be bought in this currnency."),
-    
+
     /*
      * Plans
      */
     CAT_PLAN_NOT_FOUND(2020,"Could not find a plan matching: (product: '%s', billing period: '%s', pricelist '%s')"),
     CAT_NO_SUCH_PLAN(2021,"Could not find any plans named '%s'"),
-    
+
     /*
      * Products
      */
     CAT_NO_SUCH_PRODUCT(2030,"Could not find any plans named '%s'"),
-    
+
     /*
      * Phases
      */

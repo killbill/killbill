@@ -179,12 +179,12 @@ public class Engine implements EventListener, EntitlementService {
     private void insertNextPhaseEvent(SubscriptionData subscription) {
         try {
             DateTime now = clock.getUTCNow();
-            TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, subscription.getCurrentPlan(), now, subscription.getCurrentPlanStart());
+            TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription.getCurrentPlan(), subscription.getInitialPhaseOnCurrentPlan().getPhaseType(), now, subscription.getCurrentPlanStart());
             PhaseEvent nextPhaseEvent = PhaseEventData.getNextPhaseEvent(nextTimedPhase, subscription, now);
             if (nextPhaseEvent != null) {
                 dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent);
             }
-        } catch (CatalogApiException e) {
+        } catch (EntitlementError e) {
             log.error(String.format("Failed to insert next phase for subscription %s", subscription.getId()), e);
         }
     }

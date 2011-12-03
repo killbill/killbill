@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PhaseType;
 
 
 public interface EntitlementUserApi {
@@ -40,6 +41,7 @@ public interface EntitlementUserApi {
     public SubscriptionBundle createBundleForAccount(IAccount account, String bundleKey)
         throws EntitlementUserApiException;
 
-    public Subscription createSubscription(UUID bundleId, String productName, BillingPeriod term, String planSet, DateTime requestedDate)
+
+    public Subscription createSubscription(UUID bundleId, String productName, BillingPeriod term, String priceList, PhaseType initialPhase, DateTime requestedDate)
         throws EntitlementUserApiException;
 }

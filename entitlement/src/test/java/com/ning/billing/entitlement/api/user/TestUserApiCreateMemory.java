@@ -37,6 +37,11 @@ public class TestUserApiCreateMemory extends TestUserApiCreate {
     }
 
     @Test(enabled=true, groups={"fast"})
+    public void testCreateWithInitialPhase() {
+        invokeRealMethod(this);
+    }
+
+    @Test(enabled=true, groups={"fast"})
     public void testSimpleCreateSubscription() {
         invokeRealMethod(this);
     }

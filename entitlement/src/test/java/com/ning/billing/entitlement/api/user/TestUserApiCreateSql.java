@@ -36,6 +36,11 @@ public class TestUserApiCreateSql extends TestUserApiCreate {
     }
 
     @Test(enabled=true, groups={"sql"})
+    public void testCreateWithInitialPhase() {
+        invokeRealMethod(this);
+    }
+
+    @Test(enabled=true, groups={"sql"})
     public void testSimpleCreateSubscription() {
         invokeRealMethod(this);
     }

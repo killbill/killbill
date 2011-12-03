@@ -18,13 +18,11 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.UUID;
 
-import com.ning.billing.account.api.IAccount;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.ActionPolicy;
 
 
 public interface Subscription {

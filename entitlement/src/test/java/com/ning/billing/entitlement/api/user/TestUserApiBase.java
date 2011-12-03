@@ -192,7 +192,7 @@ public abstract class TestUserApiBase {
 
     protected SubscriptionData createSubscription(String productName, BillingPeriod term, String planSet) throws EntitlementUserApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSet, clock.getUTCNow());
+        SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSet, null, clock.getUTCNow());
         assertNotNull(subscription);
         assertTrue(testListener.isCompleted(5000));
         return subscription;

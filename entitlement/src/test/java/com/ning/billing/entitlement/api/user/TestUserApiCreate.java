@@ -56,7 +56,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
 
-            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, requestedDate);
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, null, requestedDate);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -65,6 +65,45 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
             assertEquals(subscription.getStartDate(), requestedDate);
 
             assertTrue(testListener.isCompleted(5000));
+
+        } catch (EntitlementUserApiException e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
+    protected void testCreateWithInitialPhaseReal() {
+        log.info("Starting testCreateWithInitialPhase");
+        try {
+
+
+            DateTime init = clock.getUTCNow();
+
+            String productName = "Shotgun";
+            BillingPeriod term = BillingPeriod.MONTHLY;
+            String planSetName = IPriceListSet.DEFAULT_PRICELIST_NAME;
+
+            testListener.pushExpectedEvent(NextEvent.CREATE);
+
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, PhaseType.EVERGREEN, clock.getUTCNow());
+            assertNotNull(subscription);
+
+            assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
+            //assertEquals(subscription.getAccount(), account.getId());
+            assertEquals(subscription.getBundleId(), bundle.getId());
+            assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
+            assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
+
+            printSubscriptionTransitions(subscription.getActiveTransitions());
+
+            IPlan currentPlan = subscription.getCurrentPlan();
+            assertNotNull(currentPlan);
+            assertEquals(currentPlan.getProduct().getName(), productName);
+            assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
+            assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+
+            IPlanPhase currentPhase = subscription.getCurrentPhase();
+            assertNotNull(currentPhase);
+            assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
@@ -84,7 +123,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, clock.getUTCNow());
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, null, clock.getUTCNow());
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -149,7 +188,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             // CREATE SUBSCRIPTION
-            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, clock.getUTCNow());
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, null, clock.getUTCNow());
             assertNotNull(subscription);
 
             IPlanPhase currentPhase = subscription.getCurrentPhase();
@@ -196,7 +235,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, clock.getUTCNow());
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, null, clock.getUTCNow());
             assertNotNull(subscription);
 
         } catch (EntitlementUserApiException e) {

@@ -46,14 +46,14 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	@XmlElement(required=true)
 	@XmlIDREF
     private Product product;
-	
+
 	@XmlElementWrapper(name="initialPhases", required=false)
 	@XmlElement(name="phase", required=true)
     private PlanPhase[] initialPhases = new PlanPhase[0];
-	
+
 	@XmlElement(name="finalPhase", required=true)
     private PlanPhase finalPhase;
-	
+
 	//If this is missing it defaults to 1
 	//No other value is allowed for BASE plans.
 	//No other value is allowed for Tiered ADDONS
@@ -88,7 +88,21 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	public PlanPhase getFinalPhase() {
 		return finalPhase;
 	}
-	
+
+	@Override
+	public IPlanPhase[] getAllPhases() {
+	    int length = (initialPhases == null || initialPhases.length == 0) ? 1 : (initialPhases.length + 1);
+	    IPlanPhase[] allPhases = new PlanPhase[length];
+        int cnt = 0;
+	    if (length > 1) {
+	        for (IPlanPhase cur : initialPhases) {
+	            allPhases[cnt++] = cur;
+	        }
+	    }
+        allPhases[cnt++] = finalPhase;
+	    return allPhases;
+	}
+
 	@Override
 	public BillingPeriod getBillingPeriod(){
 		return finalPhase.getBillingPeriod();
@@ -101,7 +115,7 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	public int getPlansAllowedInBundle() {
 		return plansAllowedInBundle;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPlan#getPhaseIterator()
 	 */
@@ -113,7 +127,7 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 		}
 		return list.iterator();
 	}
-	
+
 	@Override
 	public void initialize(Catalog catalog, URI sourceURI) {
 		super.initialize(catalog, sourceURI);
@@ -133,32 +147,30 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
 		return errors;
 	}
-	
+
 
 	protected Plan setName(String name) {
 		this.name = name;
 		return this;
 	}
-	
+
 	protected Plan setPlansAllowedInBundle(int plansAllowedInBundle) {
 		this.plansAllowedInBundle = plansAllowedInBundle;
-		return this;		
+		return this;
 	}
 
 	protected Plan setFinalPhase(PlanPhase finalPhase) {
 		this.finalPhase = finalPhase;
-		return this;		
+		return this;
 	}
-	
+
 	protected Plan setProduct(Product product) {
 		this.product = product;
-		return this;		
+		return this;
 	}
 
 	protected Plan setInitialPhases(PlanPhase[] phases) {
 		this.initialPhases = phases;
-		return this;		
+		return this;
 	}
-
-
 }

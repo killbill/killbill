@@ -218,7 +218,14 @@ public class SubscriptionData implements Subscription {
     }
 
     public DateTime getCurrentPlanStart() {
+        return getInitialTransitionForCurrentPlan().getEffectiveTransitionTime();
+    }
 
+    public IPlanPhase getInitialPhaseOnCurrentPlan() {
+        return getInitialTransitionForCurrentPlan().getNextPhase();
+    }
+
+    private SubscriptionTransitionData getInitialTransitionForCurrentPlan() {
         if (transitions == null) {
             throw new EntitlementError(String.format("No transitions for subscription %s", getId()));
         }
@@ -232,11 +239,11 @@ public class SubscriptionData implements Subscription {
             }
             if (cur.getEventType() == EventType.API_USER &&
                     cur.getApiEventType() == ApiEventType.CHANGE) {
-                return cur.getEffectiveTransitionTime();
+                return cur;
             }
         }
         // CREATE event
-        return transitions.get(0).getEffectiveTransitionTime();
+        return transitions.get(0);
     }
 
     public List<SubscriptionTransition> getActiveTransitions() {
