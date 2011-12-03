@@ -77,4 +77,9 @@ public class MockPlan implements IPlan
     {
         throw new UnsupportedOperationException();
     }
+
+	@Override
+	public IPlanPhase[] getAllPhases() {
+		 throw new UnsupportedOperationException();
+	}
 }
