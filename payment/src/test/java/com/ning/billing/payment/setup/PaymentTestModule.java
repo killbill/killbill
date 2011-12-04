@@ -21,18 +21,18 @@ import org.apache.commons.collections.MapUtils;
 import com.google.common.collect.ImmutableMap;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.account.api.MockAccountUserApi;
-import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
+import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.eventbus.IEventBus;
 import com.ning.billing.util.eventbus.MemoryEventBus;
 
 public class PaymentTestModule extends PaymentModule {
     public PaymentTestModule() {
-        super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.defaultPlugin", "mock")));
+        super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock")));
     }
 
     @Override
     protected void installPaymentProviderPlugins(PaymentConfig config) {
-        bind(MockPaymentProviderPlugin.class).asEagerSingleton();
+        install(new MockPaymentProviderPluginModule("my-mock"));
     }
 
     @Override
