@@ -36,6 +36,15 @@ public class ApiEventBase extends EventBase implements IApiEvent {
     private final String eventPriceList;
 
 
+    public ApiEventBase(ApiEventBuilder builder) {
+        super(builder);
+        this.eventType = builder.getEventType();
+        this.eventPriceList = builder.getEventPriceList();
+        this.eventPlan = builder.getEventPlan();
+        this.eventPlanPhase = builder.getEventPlanPhase();
+    }
+
+
     public ApiEventBase(UUID subscriptionId, DateTime bundleStartDate, DateTime processed, String planName, String phaseName,
             String priceList, DateTime requestedDate,  ApiEventType eventType, DateTime effectiveDate, long activeVersion) {
         super(subscriptionId, requestedDate, effectiveDate, processed, activeVersion, true);

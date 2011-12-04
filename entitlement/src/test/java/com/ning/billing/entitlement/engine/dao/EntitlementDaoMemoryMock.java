@@ -36,6 +36,7 @@ import com.ning.billing.config.IEntitlementConfig;
 import com.ning.billing.entitlement.api.user.ISubscription;
 import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
@@ -227,8 +228,7 @@ public class EntitlementDaoMemoryMock implements IEntitlementDao, IEntitlementDa
     }
 
     private ISubscription buildSubscription(Subscription in) {
-        return new Subscription(in.getId(), in.getBundleId(), in.getCategory(), in.getBundleStartDate(),
-                in.getStartDate(), in.getChargedThroughDate(), in.getPaidThroughDate(), in.getActiveVersion());
+        return new Subscription(new SubscriptionBuilder(in), true);
     }
 
     @Override

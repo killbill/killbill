@@ -38,11 +38,14 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.entitlement.events.EventBaseBuilder;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.IEvent.EventType;
 import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.entitlement.events.phase.PhaseEventBuilder;
+import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventCreate;
@@ -125,7 +128,7 @@ public interface IEventSqlDao extends Transactional<IEventSqlDao>, CloseMe, Tran
 
         @Override
         public IEvent map(int index, ResultSet r, StatementContext ctx)
-                throws SQLException {
+        throws SQLException {
 
             UUID id = UUID.fromString(r.getString("event_id"));
             EventType eventType = EventType.valueOf(r.getString("event_type"));
@@ -143,28 +146,47 @@ public interface IEventSqlDao extends Transactional<IEventSqlDao>, CloseMe, Tran
             UUID processingOwner = (r.getString("processing_owner") != null) ? UUID.fromString(r.getString("processing_owner")) : null;
             IEventLyfecycleState processingState = IEventLyfecycleState.valueOf(r.getString("processing_state"));
 
+            EventBaseBuilder<?> base = ((eventType == EventType.PHASE) ?
+                    new PhaseEventBuilder() :
+                        new ApiEventBuilder())
+                        .setUuid(id)
+                        .setSubscriptionId(subscriptionId)
+                        .setRequestedDate(requestedDate)
+                        .setEffectiveDate(effectiveDate)
+                        .setProcessedDate(createdDate)
+                        .setActiveVersion(currentVersion)
+                        .setActive(isActive)
+                        .setProcessingOwner(processingOwner)
+                        .setNextAvailableProcessingTime(nextAvailableDate)
+                        .setProcessingState(processingState);
+
+
             IEvent result = null;
             if (eventType == EventType.PHASE) {
-                result = new PhaseEvent(id, subscriptionId, phaseName, requestedDate, effectiveDate, createdDate,
-                        currentVersion, isActive, processingOwner, nextAvailableDate, processingState);
-            } else if (userType == ApiEventType.CREATE) {
-                result = new ApiEventCreate(id, subscriptionId, createdDate, planName, phaseName, priceListName, requestedDate, effectiveDate,
-                        currentVersion, isActive, processingOwner, nextAvailableDate, processingState);
-            } else if (userType == ApiEventType.CHANGE) {
-                result = new ApiEventChange(id, subscriptionId, createdDate, planName, phaseName, priceListName, requestedDate, effectiveDate,
-                        currentVersion, isActive, processingOwner, nextAvailableDate, processingState);
-            } else if (userType == ApiEventType.CANCEL) {
-                result = new ApiEventCancel(id, subscriptionId, createdDate, planName, phaseName, priceListName, requestedDate, effectiveDate,
-                        currentVersion, isActive, processingOwner, nextAvailableDate, processingState);
-            } else if (userType == ApiEventType.PAUSE) {
-                result = new ApiEventPause(id, subscriptionId, createdDate, planName, phaseName, priceListName, requestedDate, effectiveDate,
-                        currentVersion, isActive, processingOwner, nextAvailableDate, processingState);
-            } else if (userType == ApiEventType.RESUME) {
-                result = new ApiEventResume(id, subscriptionId, createdDate, planName, phaseName, priceListName, requestedDate, effectiveDate,
-                        currentVersion, isActive, processingOwner, nextAvailableDate, processingState);
-            } else if (userType == ApiEventType.UNCANCEL) {
-                result = new ApiEventUncancel(id, subscriptionId, createdDate, planName, phaseName, priceListName, requestedDate, effectiveDate,
-                        currentVersion, isActive, processingOwner, nextAvailableDate, processingState);
+                EventBaseBuilder<PhaseEventBuilder> realBase = (EventBaseBuilder<PhaseEventBuilder>) base;
+                result = new PhaseEvent(new PhaseEventBuilder(realBase).setPhaseName(phaseName));
+            } else if (eventType == EventType.API_USER) {
+
+                EventBaseBuilder<ApiEventBuilder> realBase = (EventBaseBuilder<ApiEventBuilder>) base;
+                ApiEventBuilder builder = new ApiEventBuilder(realBase)
+                    .setEventPlan(planName)
+                    .setEventPlanPhase(phaseName)
+                    .setEventPriceList(priceListName)
+                    .setEventType(userType);
+
+                if (userType == ApiEventType.CREATE) {
+                    result = new ApiEventCreate(builder);
+                } else if (userType == ApiEventType.CHANGE) {
+                    result = new ApiEventChange(builder);
+                } else if (userType == ApiEventType.CANCEL) {
+                    result = new ApiEventCancel(builder);
+                } else if (userType == ApiEventType.PAUSE) {
+                    result = new ApiEventPause(builder);
+                } else if (userType == ApiEventType.RESUME) {
+                    result = new ApiEventResume(builder);
+                } else if (userType == ApiEventType.UNCANCEL) {
+                    result = new ApiEventUncancel(builder);
+                }
             } else {
                 throw new EntitlementError(String.format("Can't deserialize event %s", eventType));
             }

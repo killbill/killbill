@@ -17,11 +17,16 @@
 package com.ning.billing.entitlement.api;
 
 import java.util.EmptyStackException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Stack;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
 import com.ning.billing.util.eventbus.IEventBus;
@@ -30,7 +35,7 @@ public class ApiTestListener {
 
     private static final Logger log = LoggerFactory.getLogger(ApiTestListener.class);
 
-    private final Stack<NextEvent> nextExpectedEvent;
+    private final List<NextEvent> nextExpectedEvent;
 
     private volatile boolean completed;
 
@@ -79,7 +84,7 @@ public class ApiTestListener {
 
     public void pushExpectedEvent(NextEvent next) {
         synchronized (this) {
-            nextExpectedEvent.push(next);
+            nextExpectedEvent.add(next);
             completed = false;
         }
     }
@@ -113,17 +118,22 @@ public class ApiTestListener {
         log.debug("notifyIfStackEmpty EXIT");
     }
 
-    private void assertEqualsNicely(NextEvent expected, NextEvent real) {
-        if (expected != real) {
-            System.err.println("Expected event " + expected + " got " + real);
-            try {
-                NextEvent next = nextExpectedEvent.pop();
-                while (next != null) {
-                    System.err.println("Also got event " + next);
-                    next = nextExpectedEvent.pop();
-                }
-            } catch (EmptyStackException ignore) {
+    private void assertEqualsNicely(NextEvent expected) {
+
+        boolean foundIt = false;
+        Iterator<NextEvent> it = nextExpectedEvent.iterator();
+        while (it.hasNext()) {
+            NextEvent ev = it.next();
+            if (ev == expected) {
+                it.remove();
+                foundIt = true;
+                break;
             }
+        }
+
+        if (!foundIt) {
+            Joiner joiner = Joiner.on(" ");
+            System.err.println("Expected event " + expected + " got " + joiner.join(nextExpectedEvent));
             System.exit(1);
         }
     }
@@ -131,35 +141,35 @@ public class ApiTestListener {
 
     public void subscriptionCreated(ISubscriptionTransition created) {
         log.debug("-> Got event CREATED");
-        assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.CREATE);
+        assertEqualsNicely(NextEvent.CREATE);
         notifyIfStackEmpty();
     }
 
 
     public void subscriptionCancelled(ISubscriptionTransition cancelled) {
         log.debug("-> Got event CANCEL");
-        assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.CANCEL);
+        assertEqualsNicely(NextEvent.CANCEL);
         notifyIfStackEmpty();
     }
 
 
     public void subscriptionChanged(ISubscriptionTransition changed) {
         log.debug("-> Got event CHANGE");
-        assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.CHANGE);
+        assertEqualsNicely(NextEvent.CHANGE);
         notifyIfStackEmpty();
     }
 
 
     public void subscriptionPaused(ISubscriptionTransition paused) {
         log.debug("-> Got event PAUSE");
-        assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.PAUSE);
+        assertEqualsNicely(NextEvent.PAUSE);
         notifyIfStackEmpty();
     }
 
 
     public void subscriptionResumed(ISubscriptionTransition resumed) {
         log.debug("-> Got event RESUME");
-        assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.RESUME);
+        assertEqualsNicely(NextEvent.RESUME);
         notifyIfStackEmpty();
     }
 
@@ -167,7 +177,7 @@ public class ApiTestListener {
     public void subscriptionPhaseChanged(
             ISubscriptionTransition phaseChanged) {
         log.debug("-> Got event PHASE");
-        assertEqualsNicely(nextExpectedEvent.pop(), NextEvent.PHASE);
+        assertEqualsNicely(NextEvent.PHASE);
         notifyIfStackEmpty();
     }
 }
