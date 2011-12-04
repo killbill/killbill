@@ -30,6 +30,7 @@ import com.ning.billing.catalog.api.ICatalogService;
 import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.catalog.api.IPriceListSet;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
 import com.ning.billing.entitlement.api.user.ISubscription;
@@ -39,6 +40,7 @@ import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
 import com.ning.billing.entitlement.events.IEvent;
 import com.ning.billing.entitlement.events.phase.IPhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventCreate;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
@@ -100,12 +102,10 @@ public class EntitlementUserApi implements IEntitlementUserApi {
 
         String realPriceList = (priceList == null) ? IPriceListSet.DEFAULT_PRICELIST_NAME : priceList;
         DateTime now = clock.getUTCNow();
-        requestedDate = (requestedDate != null) ? Clock.truncateMs(requestedDate) : null;
+        requestedDate = (requestedDate != null) ? Clock.truncateMs(requestedDate) : now;
         if (requestedDate != null && requestedDate.isAfter(now)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
         }
-
-        requestedDate = (requestedDate == null) ? now : requestedDate;
 
         IPlan plan = catalogService.getCatalog().getPlan(productName, term, realPriceList);
         if (plan == null) {
@@ -146,13 +146,24 @@ public class EntitlementUserApi implements IEntitlementUserApi {
         }
 
         DateTime effectiveDate = requestedDate;
-        Subscription subscription = new Subscription(bundleId, plan.getProduct().getCategory(), bundleStartDate, effectiveDate);
+        Subscription subscription = new Subscription(new SubscriptionBuilder()
+            .setId(UUID.randomUUID())
+            .setBundleId(bundleId)
+            .setCategory(plan.getProduct().getCategory())
+            .setBundleStartDate(bundleStartDate)
+            .setStartDate(effectiveDate),
+                false);
 
         TimedPhase currentTimedPhase =  planAligner.getCurrentTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
-        ApiEventCreate creationEvent =
-            new ApiEventCreate(subscription.getId(), bundleStartDate, now, plan.getName(), currentTimedPhase.getPhase().getName(), realPriceList,
-                    requestedDate, effectiveDate, subscription.getActiveVersion());
-
+        ApiEventCreate creationEvent = new ApiEventCreate(new ApiEventBuilder()
+            .setSubscriptionId(subscription.getId())
+            .setEventPlan(plan.getName())
+            .setEventPlanPhase(currentTimedPhase.getPhase().getName())
+            .setEventPriceList(realPriceList)
+            .setActiveVersion(subscription.getActiveVersion())
+            .setProcessedDate(now)
+            .setEffectiveDate(effectiveDate)
+            .setRequestedDate(requestedDate));
 
         TimedPhase nextTimedPhase =  planAligner.getNextTimedPhaseOnCreate(subscription, plan, realPriceList, effectiveDate);
         IPhaseEvent nextPhaseEvent = PhaseEvent.getNextPhaseEvent(nextTimedPhase, subscription, now);
