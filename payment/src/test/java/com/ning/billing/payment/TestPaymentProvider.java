@@ -105,10 +105,10 @@ public class TestPaymentProvider {
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
 
         final PaymentInfo paymentInfo = paymentInfoReceiver.getProcessedPayments().get(0);
-        final PaymentInfoRequest infoRequest = new PaymentInfoRequest(account.getId(), paymentInfo.getId());
+        final PaymentInfoRequest paymentInfoRequest = new PaymentInfoRequest(account.getId(), paymentInfo.getId());
 
         paymentInfoReceiver.clear();
-        eventBus.post(infoRequest);
+        eventBus.post(paymentInfoRequest);
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
@@ -123,4 +123,5 @@ public class TestPaymentProvider {
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
         assertEquals(paymentInfoReceiver.getProcessedPayments().get(0), paymentInfo);
     }
+
 }

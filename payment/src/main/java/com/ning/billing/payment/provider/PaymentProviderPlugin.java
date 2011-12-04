@@ -20,9 +20,15 @@ import com.ning.billing.account.api.IAccount;
 import com.ning.billing.invoice.model.Invoice;
 import com.ning.billing.payment.PaymentError;
 import com.ning.billing.payment.PaymentInfo;
+import com.ning.billing.payment.PaymentMethodInfo;
+import com.ning.billing.payment.PaymentProviderAccount;
 import com.ning.billing.util.Either;
 
 public interface PaymentProviderPlugin {
     Either<PaymentError, PaymentInfo> processInvoice(IAccount account, Invoice invoice);
     Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId);
+    Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(IAccount account);
+    Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId);
+//    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethodInfo(IAccount account);
+
 }

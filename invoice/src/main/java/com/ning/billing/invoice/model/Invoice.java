@@ -87,5 +87,11 @@ public class Invoice implements IEventBusType {
     public BigDecimal getTotalAmount() {
         return items.getTotalAmount();
     }
+
+    @Override
+    public String toString() {
+        return "Invoice [items=" + items + ", invoiceId=" + invoiceId + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", currency=" + currency + "]";
+    }
+
 }
 
