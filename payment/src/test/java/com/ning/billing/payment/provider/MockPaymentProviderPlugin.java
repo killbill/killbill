@@ -25,6 +25,8 @@ import com.ning.billing.account.api.IAccount;
 import com.ning.billing.invoice.model.Invoice;
 import com.ning.billing.payment.PaymentError;
 import com.ning.billing.payment.PaymentInfo;
+import com.ning.billing.payment.PaymentMethodInfo;
+import com.ning.billing.payment.PaymentProviderAccount;
 import com.ning.billing.util.Either;
 
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
@@ -54,5 +56,17 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         else {
             return Either.right(payment);
         }
+    }
+
+    @Override
+    public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(IAccount account) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
