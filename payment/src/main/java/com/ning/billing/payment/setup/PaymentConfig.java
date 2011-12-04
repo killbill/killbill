@@ -20,7 +20,7 @@ import org.skife.config.Config;
 import org.skife.config.DefaultNull;
 
 public interface PaymentConfig {
-    @Config("killbill.payment.provider.defaultPlugin")
+    @Config("killbill.payment.provider.default")
     @DefaultNull
-    public String getDefaultPaymentProviderPlugin();
+    public String getDefaultPaymentProvider();
 }

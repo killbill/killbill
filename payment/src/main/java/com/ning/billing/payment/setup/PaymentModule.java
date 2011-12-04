@@ -39,7 +39,8 @@ public class PaymentModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        final PaymentConfig config = new ConfigurationObjectFactory(props).build(PaymentConfig.class);
+        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(props);
+        final PaymentConfig config = factory.build(PaymentConfig.class);
 
         bind(PaymentConfig.class).toInstance(config);
         bind(PaymentProviderPluginRegistry.class).asEagerSingleton();
