@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.payment.setup;
+package com.ning.billing.payment.api;
 
-import org.skife.config.Config;
-import org.skife.config.DefaultNull;
+import com.ning.billing.lifecycle.IService;
 
-public interface PaymentConfig {
-    @Config("killbill.payment.provider.default")
-    @DefaultNull
-    public String getDefaultPaymentProvider();
+public interface PaymentService extends IService {
+    @Override
+    String getName();
+
+    PaymentApi getPaymentApi();
 }

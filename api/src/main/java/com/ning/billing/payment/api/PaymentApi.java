@@ -14,13 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.payment.setup;
+package com.ning.billing.payment.api;
 
-import org.skife.config.Config;
-import org.skife.config.DefaultNull;
+import javax.annotation.Nullable;
 
-public interface PaymentConfig {
-    @Config("killbill.payment.provider.default")
-    @DefaultNull
-    public String getDefaultPaymentProvider();
+public interface PaymentApi {
+    Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(@Nullable String accountId, String paymentMethodId);
 }
