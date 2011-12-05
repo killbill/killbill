@@ -1,4 +1,4 @@
-package com.ning.billing.payment;
+package com.ning.billing.payment.util;
 
 import com.ning.billing.util.eventbus.IEventBusType;
 

@@ -41,6 +41,7 @@ import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.model.Invoice;
 import com.ning.billing.invoice.model.InvoiceItem;
+import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.setup.PaymentTestModule;
 import com.ning.billing.util.eventbus.IEventBus;
 import com.ning.billing.util.eventbus.IEventBus.EventBusException;
