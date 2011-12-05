@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.payment.api;
 import com.ning.billing.util.eventbus.IEventBusType;
 
 public class PaymentError implements IEventBusType {

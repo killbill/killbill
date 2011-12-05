@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util;
+package com.ning.billing.payment.api;
 
 public abstract class Either<T, V> {
     public static <T, V> Either<T, V> left(T value) {
