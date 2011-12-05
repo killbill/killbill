@@ -17,8 +17,8 @@
 package com.ning.billing.analytics;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
@@ -36,10 +36,10 @@ public class BusinessSubscriptionTransitionRecorder
 
     private final BusinessSubscriptionTransitionDao dao;
     private final IEntitlementUserApi entitlementApi;
-    private final IAccountUserApi accountApi;
+    private final AccountUserApi accountApi;
 
     @Inject
-    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final IAccountUserApi accountApi)
+    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionDao dao, final IEntitlementUserApi entitlementApi, final AccountUserApi accountApi)
     {
         this.dao = dao;
         this.entitlementApi = entitlementApi;
@@ -93,7 +93,7 @@ public class BusinessSubscriptionTransitionRecorder
         if (bundle != null) {
             transitionKey = bundle.getKey();
 
-            final IAccount account = accountApi.getAccountById(bundle.getAccountId());
+            final Account account = accountApi.getAccountById(bundle.getAccountId());
             if (account != null) {
                 accountKey = account.getExternalKey();
                 currency = account.getCurrency();

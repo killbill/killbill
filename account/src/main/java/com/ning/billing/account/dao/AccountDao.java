@@ -16,124 +16,67 @@
 
 package com.ning.billing.account.dao;
 
-import com.google.inject.Inject;
-import com.ning.billing.account.api.*;
-import com.ning.billing.account.api.user.AccountChangeEvent;
-import com.ning.billing.account.api.user.AccountCreationEvent;
-import com.ning.billing.util.eventbus.IEventBus;
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.TransactionCallback;
-import org.skife.jdbi.v2.TransactionStatus;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountDefault;
+import com.ning.billing.account.api.user.AccountBuilder;
+import com.ning.billing.catalog.api.Currency;
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.sqlobject.*;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.util.List;
+import java.lang.annotation.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.UUID;
 
-public class AccountDao implements IAccountDao {
-    private final IAccountDao accountDao;
-    private final IFieldStoreDao fieldStoreDao;
-    private final IDBI dbi; // needed for transaction support
-    private final IEventBus eventBus;
-
-    @Inject
-    public AccountDao(IDBI dbi, IEventBus eventBus) {
-        this.dbi = dbi;
-        this.eventBus = eventBus;
-        this.accountDao = dbi.onDemand(IAccountDao.class);
-        this.fieldStoreDao = dbi.onDemand(IFieldStoreDao.class);
-    }
+@ExternalizedSqlViaStringTemplate3
+@RegisterMapper(AccountDaoWrapper.AccountMapper.class)
+public interface AccountDao extends EntityDao<Account> {
+    @SqlQuery
+    public Account getAccountByKey(@Bind("externalKey") final String key);
 
     @Override
-    public IAccount getAccountByKey(String key) {
-        IAccount account = accountDao.getAccountByKey(key);
-        if (account != null) {
-            loadFields(account);
-        }
-        return account;
-    }
+    @SqlUpdate
+    public void save(@AccountBinder Account account);
 
-    @Override
-    public IAccount getById(String id) {
-        IAccount account = accountDao.getById(id);
-        if (account != null) {
-            loadFields(account);
-        }
-        return account;
-    }
+    public static class AccountMapper implements ResultSetMapper<Account> {
+        @Override
+        public Account map(int index, ResultSet result, StatementContext context) throws SQLException {
+            UUID id = UUID.fromString(result.getString("id"));
+            String externalKey = result.getString("external_key");
+            String email = result.getString("email");
+            String firstName = result.getString("first_name");
+            String lastName = result.getString("last_name");
+            String phone = result.getString("phone");
+            Currency currency = Currency.valueOf(result.getString("currency"));
 
-    private void loadFields(IAccount account) {
-        List<ICustomField> fields = fieldStoreDao.load(account.getId().toString(), Account.OBJECT_TYPE);
-        account.getFields().clear();
-        if (fields != null) {
-            for (ICustomField field : fields) {
-                account.getFields().setValue(field.getName(), field.getValue());
-            }
+            return new AccountBuilder(id).externalKey(externalKey).email(email)
+                                         .firstName(firstName).lastName(lastName)
+                                         .phone(phone).currency(currency).build();
         }
     }
 
-    @Override
-    public List<IAccount> get() {
-        return accountDao.get();
-    }
-
-    @Override
-    public void test() {
-        accountDao.test();
-    }
-
-    @Override
-    public void save(final IAccount account) {
-        final String accountId = account.getId().toString();
-        final String objectType = Account.OBJECT_TYPE;
-
-        dbi.inTransaction(new TransactionCallback<Void>() {
-            @Override
-            public Void inTransaction(Handle conn, TransactionStatus status) throws Exception {
-                try {
-                    conn.begin();
-
-                    IAccountDao accountDao = conn.attach(IAccountDao.class);
-                    IAccount currentAccount = accountDao.getById(accountId);
-                    accountDao.save(account);
-
-                    IFieldStore fieldStore = account.getFields();
-                    IFieldStoreDao fieldStoreDao = conn.attach(IFieldStoreDao.class);
-                    fieldStoreDao.save(accountId, objectType, fieldStore.getFieldList());
-
-                    if (currentAccount == null) {
-                        IAccountCreationEvent creationEvent = new AccountCreationEvent(account);
-                        eventBus.post(creationEvent);
-                    } else {
-                        IAccountChangeEvent changeEvent = new AccountChangeEvent(account.getId(), currentAccount, account);
-                        if (changeEvent.hasChanges()) {
-                            eventBus.post(changeEvent);
-                        }
+    @BindingAnnotation(AccountBinder.AccountBinderFactory.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER})
+    public @interface AccountBinder {
+        public static class AccountBinderFactory implements BinderFactory {
+            public Binder build(Annotation annotation) {
+                return new Binder<AccountBinder, AccountDefault>() {
+                    public void bind(SQLStatement q, AccountBinder bind, AccountDefault account) {
+                        q.bind("id", account.getId().toString());
+                        q.bind("externalKey", account.getExternalKey());
+                        q.bind("email", account.getEmail());
+                        q.bind("firstName", account.getFirstName());
+                        q.bind("lastName", account.getLastName());
+                        q.bind("phone", account.getPhone());
+                        q.bind("currency", account.getCurrency().toString());
                     }
-
-                    conn.commit();
-                } catch (Exception e) {
-                    conn.rollback();
-                    throw e;
-                }
-
-                return null;
+                };
             }
-        });
-//
-//
-//        //accountDao.begin();
-//        try {
-//            accountDao.save(account);
-//
-//            IFieldStore fieldStore = account.getFields();
-//            fieldStoreDao.save(objectId, objectType, fieldStore.getFieldList());
-//            fieldStore.processSaveEvent();
-//
-//            account.processSaveEvent();
-//            //accountDao.commit();
-//        }
-//        catch (RuntimeException ex) {
-//            //accountDao.rollback();
-//            throw ex;
-//        }
+        }
     }
 }

@@ -17,8 +17,8 @@
 package com.ning.billing.entitlement.api.user;
 
 import com.google.inject.Injector;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IFieldStore;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.FieldStore;
 import com.ning.billing.catalog.CatalogService;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.config.IEntitlementConfig;
@@ -73,7 +73,7 @@ public abstract class TestUserApiBase {
     protected ClockMock clock;
     protected IEventBusService busService;
 
-    protected IAccount account;
+    protected Account account;
     protected ICatalog catalog;
     protected ApiTestListener testListener;
     protected ISubscriptionBundle bundle;
@@ -278,8 +278,8 @@ public abstract class TestUserApiBase {
         return result;
     }
 
-    protected IAccount getAccount() {
-        IAccount account = new IAccount() {
+    protected Account getAccount() {
+        Account account = new Account() {
             @Override
             public String getFirstName() {
                 return "accountFirstName";
@@ -329,7 +329,7 @@ public abstract class TestUserApiBase {
             }
 
             @Override
-            public IFieldStore getFields() {
+            public FieldStore getFields() {
                 throw new NotImplementedException();
             }
 

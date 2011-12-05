@@ -16,32 +16,11 @@
 
 package com.ning.billing.account.dao;
 
-import com.google.inject.Inject;
-import com.ning.billing.account.api.ICustomField;
-import org.skife.jdbi.v2.IDBI;
+import com.ning.billing.account.api.CustomField;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import java.util.List;
-
-public class FieldStoreDao implements IFieldStoreDao {
-    private final IFieldStoreDao dao;
-
-    @Inject
-    public FieldStoreDao(IDBI dbi) {
-        dao = dbi.onDemand(IFieldStoreDao.class);
-    }
-
-    @Override
-    public void save(String objectId, String objectType, List<ICustomField> entities) {
-        dao.save(objectId, objectType, entities);
-    }
-
-    @Override
-    public List<ICustomField> load(String objectId, String objectType) {
-        return dao.load(objectId, objectType);
-    }
-
-    @Override
-    public void test() {
-        dao.test();
-    }
+@ExternalizedSqlViaStringTemplate3
+@RegisterMapper(CustomFieldMapper.class)
+public interface FieldStoreDao extends EntityCollectionDao<CustomField> {
 }

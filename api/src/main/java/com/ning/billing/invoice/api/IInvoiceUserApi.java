@@ -25,9 +25,9 @@ import java.util.UUID;
 public interface IInvoiceUserApi {
     public List<UUID> getInvoicesForPayment(DateTime targetDate, int numberOfDays);
 
-    public List<IInvoice> getInvoicesByAccount();
+    public List<Invoice> getInvoicesByAccount();
 
-    public IInvoice getInvoice(UUID invoiceId);
+    public Invoice getInvoice(UUID invoiceId);
 
     public void paymentAttemptFailed(UUID invoiceId, DateTime paymentAttemptDate);
 

@@ -16,7 +16,7 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.BillingPeriod;
 import org.joda.time.DateTime;
 
@@ -36,7 +36,7 @@ public interface IEntitlementUserApi {
 
     public List<ISubscription> getSubscriptionsForKey(String bundleKey);
 
-    public ISubscriptionBundle createBundleForAccount(IAccount account, String bundleKey)
+    public ISubscriptionBundle createBundleForAccount(Account account, String bundleKey)
         throws EntitlementUserApiException;
 
     public ISubscription createSubscription(UUID bundleId, String productName, BillingPeriod term, String planSet, DateTime requestedDate)

@@ -82,7 +82,7 @@ public class TestConsole {
     }
 
     private static void testScenario(DateTime startDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod, BigDecimal expectedValue) {
-        IBillingMode billingMode = new InAdvanceBillingMode();
+        BillingMode billingMode = new InAdvanceBillingMode();
 
         System.out.println("Start date: " + startDate.toLocalDate());
         System.out.println("Target date: " + targetDate.toLocalDate());
@@ -111,7 +111,7 @@ public class TestConsole {
     }
 
     private static void testScenario(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod, BigDecimal expectedValue) {
-        IBillingMode billingMode = new InAdvanceBillingMode();
+        BillingMode billingMode = new InAdvanceBillingMode();
 
         System.out.println("Start date: " + startDate.toLocalDate());
         System.out.println("End date: " + endDate.toLocalDate());

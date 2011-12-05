@@ -17,19 +17,18 @@
 package com.ning.billing.account.glue;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.account.api.IAccountUserApi;
-import com.ning.billing.account.api.user.AccountUserApi;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.AccountDaoWrapper;
 import com.ning.billing.account.dao.FieldStoreDao;
-import com.ning.billing.account.dao.IAccountDao;
-import com.ning.billing.account.dao.IFieldStoreDao;
+import com.ning.billing.account.dao.FieldStoreDaoWrapper;
 import org.skife.config.ConfigurationObjectFactory;
 
 public class AccountModule extends AbstractModule {
 
     private void installConfig() {
-        final IAccountConfig config = new ConfigurationObjectFactory(System.getProperties()).build(IAccountConfig.class);
-        bind(IAccountConfig.class).toInstance(config);
+        final AccountConfig config = new ConfigurationObjectFactory(System.getProperties()).build(AccountConfig.class);
+        bind(AccountConfig.class).toInstance(config);
     }
 
     private void installAccountCore() {
@@ -38,19 +37,15 @@ public class AccountModule extends AbstractModule {
     }
 
     private void installAccountDao() {
-        bind(IAccountDao.class).to(AccountDao.class).asEagerSingleton();
+        bind(AccountDao.class).to(AccountDaoWrapper.class).asEagerSingleton();
     }
 
     private void installAccountUserApi() {
-        bind(IAccountUserApi.class).to(AccountUserApi.class).asEagerSingleton();
+        bind(AccountUserApi.class).to(com.ning.billing.account.api.user.AccountUserApi.class).asEagerSingleton();
     }
 
     private void installFieldStore() {
-        bind(IFieldStoreDao.class).to(FieldStoreDao.class).asEagerSingleton();
-    }
-
-    protected void installInjectorMagic() {
-        bind(InjectorMagic.class).asEagerSingleton();
+        bind(FieldStoreDao.class).to(FieldStoreDaoWrapper.class).asEagerSingleton();
     }
 
     @Override
@@ -60,6 +55,5 @@ public class AccountModule extends AbstractModule {
         installAccountDao();
         installAccountUserApi();
         installFieldStore();
-        installInjectorMagic();
     }
 }

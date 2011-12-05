@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.api.user;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.alignment.IPlanAligner;
 import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
@@ -81,7 +81,7 @@ public class EntitlementUserApi implements IEntitlementUserApi {
     }
 
     @Override
-    public ISubscriptionBundle createBundleForAccount(IAccount account, String bundleName)
+    public ISubscriptionBundle createBundleForAccount(Account account, String bundleName)
         throws EntitlementUserApiException {
         SubscriptionBundle bundle = new SubscriptionBundle(bundleName, account.getId());
         return dao.createSubscriptionBundle(bundle);

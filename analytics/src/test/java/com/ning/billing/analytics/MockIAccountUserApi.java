@@ -16,16 +16,16 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountData;
-import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
 import java.util.UUID;
 
-public class MockIAccountUserApi implements IAccountUserApi
+public class MockIAccountUserApi implements AccountUserApi
 {
     private final MockAccount account;
 
@@ -35,30 +35,30 @@ public class MockIAccountUserApi implements IAccountUserApi
     }
 
     @Override
-    public IAccount createAccount(final IAccountData data)
+    public Account createAccount(final AccountData data)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void saveAccount(IAccount account) {
+    public void saveAccount(Account account) {
         throw new NotImplementedException();
     }
 
     @Override
-    public IAccount getAccountByKey(final String key)
+    public Account getAccountByKey(final String key)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IAccount getAccountById(final UUID uid)
+    public Account getAccountById(final UUID uid)
     {
         return account;
     }
 
     @Override
-    public List<IAccount> getAccounts()
+    public List<Account> getAccounts()
     {
         throw new UnsupportedOperationException();
     }

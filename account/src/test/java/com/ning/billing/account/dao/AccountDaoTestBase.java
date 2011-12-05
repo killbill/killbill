@@ -30,23 +30,23 @@ import java.io.IOException;
 import static org.testng.Assert.fail;
 
 public abstract class AccountDaoTestBase {
-    protected IFieldStoreDao fieldStoreDao;
-    protected IAccountDao accountDao;
+    protected FieldStoreDao fieldStoreDao;
+    protected AccountDao accountDao;
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
         // Healthcheck test to make sure MySQL is setup properly
         try {
             AccountModuleMock module = new AccountModuleMock();
-            final String ddl = IOUtils.toString(IAccountDaoSql.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+            final String ddl = IOUtils.toString(AccountDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
             module.createDb(ddl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
-            fieldStoreDao = injector.getInstance(IFieldStoreDao.class);
+            fieldStoreDao = injector.getInstance(FieldStoreDao.class);
             fieldStoreDao.test();
 
-            accountDao = injector.getInstance(IAccountDao.class);
+            accountDao = injector.getInstance(AccountDao.class);
             accountDao.test();
 
             IEventBusService busService = injector.getInstance(IEventBusService.class);

@@ -18,7 +18,7 @@ package com.ning.billing.account.api;
 
 import java.util.UUID;
 
-public abstract class EntityBase<T> implements IEntity {
+public abstract class EntityBase<T> implements Entity {
     protected final UUID id;
 
     public EntityBase(UUID id) {

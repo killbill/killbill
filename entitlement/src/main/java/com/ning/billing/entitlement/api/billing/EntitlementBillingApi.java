@@ -17,7 +17,7 @@
 package com.ning.billing.entitlement.api.billing;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
@@ -41,7 +41,7 @@ public class EntitlementBillingApi implements IEntitlementBillingApi {
     }
 
     @Override
-    public List<IAccount> getActiveAccounts() {
+    public List<Account> getActiveAccounts() {
         return null;
     }
 

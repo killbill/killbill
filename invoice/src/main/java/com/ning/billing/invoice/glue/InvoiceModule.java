@@ -19,18 +19,18 @@ package com.ning.billing.invoice.glue;
 import com.google.inject.AbstractModule;
 import com.ning.billing.invoice.api.IInvoiceUserApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.invoice.dao.IInvoiceDao;
-import com.ning.billing.invoice.dao.IInvoiceItemDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceDaoWrapper;
 import com.ning.billing.invoice.dao.InvoiceItemDao;
+import com.ning.billing.invoice.dao.InvoiceItemDaoWrapper;
 
 public class InvoiceModule extends AbstractModule {
     private void installInvoiceDao() {
-        bind(IInvoiceDao.class).to(InvoiceDao.class).asEagerSingleton();
+        bind(InvoiceDao.class).to(InvoiceDaoWrapper.class).asEagerSingleton();
     }
 
     private void installInvoiceItemDao() {
-        bind(IInvoiceItemDao.class).to(InvoiceItemDao.class).asEagerSingleton();
+        bind(InvoiceItemDao.class).to(InvoiceItemDaoWrapper.class).asEagerSingleton();
     }
 
     protected void installInvoiceUserApi() {

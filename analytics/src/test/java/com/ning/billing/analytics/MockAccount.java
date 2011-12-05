@@ -17,14 +17,14 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IFieldStore;
+import com.ning.billing.account.api.AccountDefault;
+import com.ning.billing.account.api.FieldStore;
 import com.ning.billing.catalog.api.Currency;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.UUID;
 
-public class MockAccount implements IAccount
+public class MockAccount implements Account
 {
     private final UUID id;
     private final String accountKey;
@@ -40,25 +40,25 @@ public class MockAccount implements IAccount
     @Override
     public String getFirstName()
     {
-        throw new UnsupportedOperationException();
+        return "firstName";
     }
 
     @Override
     public String getLastName()
     {
-        throw new UnsupportedOperationException();
+        return "lastName";
     }
 
     @Override
     public String getEmail()
     {
-        throw new UnsupportedOperationException();
+        return "test@test.com";
     }
 
     @Override
     public String getPhone()
     {
-        throw new UnsupportedOperationException();
+        return "408-555-6665";
     }
 
     @Override
@@ -70,7 +70,7 @@ public class MockAccount implements IAccount
     @Override
     public int getBillCycleDay()
     {
-        throw new UnsupportedOperationException();
+        return 12;
     }
 
     @Override
@@ -101,12 +101,12 @@ public class MockAccount implements IAccount
     }
 
     @Override
-    public IFieldStore getFields() {
+    public FieldStore getFields() {
         throw new NotImplementedException();
     }
 
     @Override
     public String getObjectName() {
-        return Account.OBJECT_TYPE;
+        return AccountDefault.OBJECT_TYPE;
     }
 }

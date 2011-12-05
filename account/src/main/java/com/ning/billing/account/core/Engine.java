@@ -16,9 +16,8 @@
 
 package com.ning.billing.account.core;
 
-import com.ning.billing.account.api.IAccountChangeEvent;
-import com.ning.billing.account.api.IAccountService;
-import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.api.AccountService;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.lifecycle.LyfecycleHandlerType;
 import com.ning.billing.util.eventbus.IEventBus;
 import org.slf4j.Logger;
@@ -26,15 +25,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
-public class Engine implements IAccountService, IAccountChangeListener {
+public class Engine implements AccountService {
     private final static Logger log = LoggerFactory.getLogger(Engine.class);
 
     private static final String ACCOUNT_SERVICE_NAME = "account-service";
     private final IEventBus eventBus;
-    private final IAccountUserApi userApi;
+    private final AccountUserApi userApi;
 
     @Inject
-    public Engine(IEventBus eventBus, IAccountUserApi userApi) {
+    public Engine(IEventBus eventBus, AccountUserApi userApi) {
         this.eventBus = eventBus;
         this.userApi = userApi;
     }
@@ -52,21 +51,12 @@ public class Engine implements IAccountService, IAccountChangeListener {
     }
 
     @Override
-    public IAccountUserApi getAccountUserApi() {
+    public AccountUserApi getAccountUserApi() {
         return userApi;
     }
 
     @Override
     public String getName() {
         return ACCOUNT_SERVICE_NAME;
-    }
-
-    @Override
-    public void processAccountChange(IAccountChangeEvent changeEvent) {
-        try {
-            eventBus.post(changeEvent);
-        } catch (IEventBus.EventBusException e) {
-            log.warn("Failed to post account changeEvent event.");
-        }
     }
 }

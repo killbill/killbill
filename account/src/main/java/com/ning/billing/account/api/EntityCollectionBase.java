@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public abstract class EntityCollectionBase<T extends IEntity> implements IEntityCollection<T> {
+public abstract class EntityCollectionBase<T extends Entity> implements EntityCollection<T> {
     protected Map<String, T> entities = new HashMap<String, T>();
     protected final UUID objectId;
     protected final String objectType;

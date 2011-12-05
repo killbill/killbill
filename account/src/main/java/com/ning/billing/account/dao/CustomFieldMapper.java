@@ -17,7 +17,7 @@
 package com.ning.billing.account.dao;
 
 import com.ning.billing.account.api.CustomField;
-import com.ning.billing.account.api.ICustomField;
+import com.ning.billing.account.api.StringCustomField;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -25,12 +25,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-public class CustomFieldMapper implements ResultSetMapper<ICustomField> {
+public class CustomFieldMapper implements ResultSetMapper<CustomField> {
         @Override
-        public ICustomField map(int index, ResultSet result, StatementContext context) throws SQLException {
+        public CustomField map(int index, ResultSet result, StatementContext context) throws SQLException {
             UUID id = UUID.fromString(result.getString("id"));
             String fieldName = result.getString("field_name");
             String fieldValue = result.getString("field_value");
-            return new CustomField(id, fieldName, fieldValue);
+            return new StringCustomField(id, fieldName, fieldValue);
         }
 }

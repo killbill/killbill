@@ -21,10 +21,9 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.invoice.api.IInvoice;
-import com.ning.billing.invoice.glue.InjectorMagic;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.glue.InvoiceModuleMock;
-import com.ning.billing.invoice.model.Invoice;
+import com.ning.billing.invoice.model.InvoiceDefault;
 import com.ning.billing.invoice.model.InvoiceItem;
 import com.ning.billing.util.clock.Clock;
 import org.apache.commons.io.IOUtils;
@@ -44,24 +43,23 @@ public class InvoiceDaoTests {
     private final int NUMBER_OF_DAY_BETWEEN_RETRIES = 8;
 
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
-    private IInvoiceDao dao;
-    private IInvoiceItemDao invoiceItemDao;
+    private InvoiceDao dao;
+    private InvoiceItemDao invoiceItemDao;
 
     @BeforeClass()
     private void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
             InvoiceModuleMock module = new InvoiceModuleMock();
-            final String ddl = IOUtils.toString(InvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+            final String ddl = IOUtils.toString(InvoiceDaoWrapper.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             module.createDb(ddl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
-            InjectorMagic injectorMagic = injector.getInstance(InjectorMagic.class);
-            dao = injector.getInstance(InvoiceDao.class);
+            dao = injector.getInstance(InvoiceDaoWrapper.class);
             dao.test();
 
-            invoiceItemDao = injector.getInstance(IInvoiceItemDao.class);
+            invoiceItemDao = injector.getInstance(InvoiceItemDao.class);
             invoiceItemDao.test();
         }
         catch (Throwable t) {
@@ -71,17 +69,16 @@ public class InvoiceDaoTests {
 
     @Test
     public void testCreationAndRetrievalByAccount() {
-        InvoiceDao dao = InjectorMagic.getInvoiceDao();
         UUID accountId = UUID.randomUUID();
-        IInvoice invoice = new Invoice(accountId, new Clock().getUTCNow(), Currency.USD);
+        Invoice invoice = new InvoiceDefault(accountId, new Clock().getUTCNow(), Currency.USD);
         DateTime invoiceDate = invoice.getInvoiceDate();
 
         dao.createInvoice(invoice);
 
-        List<IInvoice> invoices = dao.getInvoicesByAccount(accountId.toString());
+        List<Invoice> invoices = dao.getInvoicesByAccount(accountId.toString());
         assertNotNull(invoices);
         assertEquals(invoices.size(), 1);
-        IInvoice thisInvoice = invoices.get(0);
+        Invoice thisInvoice = invoices.get(0);
         assertEquals(invoice.getAccountId(), accountId);
         assertTrue(thisInvoice.getInvoiceDate().compareTo(invoiceDate) == 0);
         assertEquals(thisInvoice.getCurrency(), Currency.USD);
@@ -91,7 +88,7 @@ public class InvoiceDaoTests {
 
     @Test
     public void testRetrievalForNonExistentInvoiceId() {
-        IInvoice invoice = dao.getInvoice(UUID.randomUUID().toString());
+        Invoice invoice = dao.getInvoice(UUID.randomUUID().toString());
         assertNull(invoice);
     }
 
@@ -99,7 +96,7 @@ public class InvoiceDaoTests {
     public void testAddPayment() {
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
-        IInvoice invoice = new Invoice(accountId, targetDate, Currency.USD);
+        Invoice invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
 
         DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
         BigDecimal paymentAmount = new BigDecimal("14.0");
@@ -116,7 +113,7 @@ public class InvoiceDaoTests {
     public void testAddPaymentAttempt() {
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
-        IInvoice invoice = new Invoice(accountId, targetDate, Currency.USD);
+        Invoice invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
 
         DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
 
@@ -137,7 +134,7 @@ public class InvoiceDaoTests {
         int existingInvoiceCount = invoices.size();
         
         UUID accountId = UUID.randomUUID();
-        IInvoice invoice = new Invoice(accountId, targetDate, Currency.USD);
+        Invoice invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
 
         dao.createInvoice(invoice);
         invoices = dao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
@@ -157,7 +154,7 @@ public class InvoiceDaoTests {
         // create a new invoice with one item
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
-        IInvoice invoice = new Invoice(accountId, targetDate, Currency.USD);
+        Invoice invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
         dao.createInvoice(invoice);
 
         UUID invoiceId = invoice.getId();
@@ -226,7 +223,7 @@ public class InvoiceDaoTests {
 
 
         // create invoice 1 (subscriptions 1-4)
-        IInvoice invoice1 = new Invoice(accountId, targetDate, Currency.USD);
+        Invoice invoice1 = new InvoiceDefault(accountId, targetDate, Currency.USD);
         dao.createInvoice(invoice1);
 
         UUID invoiceId1 = invoice1.getId();
@@ -247,7 +244,7 @@ public class InvoiceDaoTests {
         invoiceItemDao.createInvoiceItem(item4);
 
         // create invoice 2 (subscriptions 1-3)
-        Invoice invoice = new Invoice(accountId, targetDate, Currency.USD);
+        InvoiceDefault invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
         dao.createInvoice(invoice);
 
         UUID invoiceId2 = invoice.getId();
@@ -265,16 +262,16 @@ public class InvoiceDaoTests {
         invoiceItemDao.createInvoiceItem(item7);
 
         // check that each subscription returns the correct number of invoices
-        List<IInvoice> items1 = dao.getInvoicesBySubscription(subscriptionId1.toString());
+        List<Invoice> items1 = dao.getInvoicesBySubscription(subscriptionId1.toString());
         assertEquals(items1.size(), 2);
 
-        List<IInvoice> items2 = dao.getInvoicesBySubscription(subscriptionId2.toString());
+        List<Invoice> items2 = dao.getInvoicesBySubscription(subscriptionId2.toString());
         assertEquals(items2.size(), 2);
 
-        List<IInvoice> items3 = dao.getInvoicesBySubscription(subscriptionId3.toString());
+        List<Invoice> items3 = dao.getInvoicesBySubscription(subscriptionId3.toString());
         assertEquals(items3.size(), 2);
 
-        List<IInvoice> items4 = dao.getInvoicesBySubscription(subscriptionId4.toString());
+        List<Invoice> items4 = dao.getInvoicesBySubscription(subscriptionId4.toString());
         assertEquals(items4.size(), 1);
     }
     

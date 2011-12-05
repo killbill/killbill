@@ -18,11 +18,10 @@ package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.billing.BillingMode;
 import com.ning.billing.entitlement.api.billing.IBillingEvent;
 import com.ning.billing.invoice.api.BillingEventSet;
-import com.ning.billing.invoice.api.IInvoice;
 import com.ning.billing.invoice.api.IInvoiceItem;
+import com.ning.billing.invoice.api.Invoice;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -31,13 +30,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-public class DefaultInvoiceGenerator implements IInvoiceGenerator {
+public class DefaultInvoiceGenerator implements InvoiceGenerator {
     @Override
-    public IInvoice generateInvoice(final UUID accountId, final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
-        if (events == null) {return new Invoice(accountId, targetDate, targetCurrency);}
-        if (events.size() == 0) {return new Invoice(accountId, targetDate, targetCurrency);}
+    public Invoice generateInvoice(final UUID accountId, final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
+        if (events == null) {return new InvoiceDefault(accountId, targetDate, targetCurrency);}
+        if (events.size() == 0) {return new InvoiceDefault(accountId, targetDate, targetCurrency);}
 
-        Invoice invoice = new Invoice(accountId, targetDate, targetCurrency);
+        InvoiceDefault invoice = new InvoiceDefault(accountId, targetDate, targetCurrency);
         InvoiceItemList currentItems = generateInvoiceItems(events, invoice.getId(), targetDate, targetCurrency);
         InvoiceItemList itemsToPost = reconcileInvoiceItems(invoice.getId(), currentItems, existingItems);
         invoice.add(itemsToPost);
@@ -114,7 +113,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
     private void processEvent(UUID invoiceId, IBillingEvent event, List<IInvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
         BigDecimal rate = event.getPrice(targetCurrency);
         BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(event, targetDate, rate);
-        IBillingMode billingMode = getBillingMode(event.getBillingMode());
+        BillingMode billingMode = getBillingMode(event.getBillingMode());
         DateTime billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
 
         addInvoiceItem(invoiceId, items, event, billThroughDate, invoiceItemAmount, rate, targetCurrency);
@@ -123,7 +122,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
     private void processEvents(UUID invoiceId, IBillingEvent firstEvent, IBillingEvent secondEvent, List<IInvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
         BigDecimal rate = firstEvent.getPrice(targetCurrency);
         BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
-        IBillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
+        BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
         DateTime billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
 
         addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
@@ -137,7 +136,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
     }
 
     private BigDecimal calculateInvoiceItemAmount(IBillingEvent event, DateTime targetDate, BigDecimal rate){
-        IBillingMode billingMode = getBillingMode(event.getBillingMode());
+        BillingMode billingMode = getBillingMode(event.getBillingMode());
         DateTime startDate = event.getEffectiveDate();
         int billingCycleDay = event.getBillCycleDay();
         BillingPeriod billingPeriod = event.getBillingPeriod();
@@ -153,7 +152,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
     }
 
     private BigDecimal calculateInvoiceItemAmount(IBillingEvent firstEvent, IBillingEvent secondEvent, DateTime targetDate, BigDecimal rate) {
-        IBillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
+        BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
         DateTime startDate = firstEvent.getEffectiveDate();
         int billingCycleDay = firstEvent.getBillCycleDay();
         BillingPeriod billingPeriod = firstEvent.getBillingPeriod();
@@ -170,7 +169,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         }
     }
 
-    private IBillingMode getBillingMode(BillingMode billingMode) {
+    private BillingMode getBillingMode(com.ning.billing.entitlement.api.billing.BillingMode billingMode) {
         switch (billingMode) {
             case IN_ADVANCE:
                 return new InAdvanceBillingMode();

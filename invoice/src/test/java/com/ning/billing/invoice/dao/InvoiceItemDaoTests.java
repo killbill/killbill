@@ -21,9 +21,8 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.IInvoiceItem;
-import com.ning.billing.invoice.glue.InjectorMagic;
 import com.ning.billing.invoice.glue.InvoiceModuleMock;
-import com.ning.billing.invoice.model.Invoice;
+import com.ning.billing.invoice.model.InvoiceDefault;
 import com.ning.billing.invoice.model.InvoiceItem;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -38,24 +37,23 @@ import java.util.UUID;
 import static org.testng.Assert.*;
 
 public class InvoiceItemDaoTests {
-    private InvoiceItemDao dao;
-    private IInvoiceDao invoiceDao;
+    private InvoiceItemDaoWrapper dao;
+    private InvoiceDao invoiceDao;
 
     @BeforeClass(alwaysRun = true)
     private void setup() throws IOException {
         InvoiceModuleMock module = new InvoiceModuleMock();
-        final String ddl = IOUtils.toString(InvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+        final String ddl = IOUtils.toString(InvoiceDaoWrapper.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         module.createDb(ddl);
 
         // Healthcheck test to make sure MySQL is setup properly
         try {
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
-            InjectorMagic injectorMagic = injector.getInstance(InjectorMagic.class);
-            dao = injector.getInstance(InvoiceItemDao.class);
+            dao = injector.getInstance(InvoiceItemDaoWrapper.class);
             dao.test();
 
-            invoiceDao = injector.getInstance(InvoiceDao.class);
+            invoiceDao = injector.getInstance(InvoiceDaoWrapper.class);
             invoiceDao.test();
         }
         catch (Throwable t) {
@@ -124,7 +122,7 @@ public class InvoiceItemDaoTests {
     public void testGetInvoiceItemsByAccountId() {
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 5, 23, 0, 0, 0, 0);
-        Invoice invoice = new Invoice(accountId, targetDate, Currency.USD);
+        InvoiceDefault invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
 
         invoiceDao.createInvoice(invoice);
 

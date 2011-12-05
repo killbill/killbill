@@ -16,60 +16,95 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.google.inject.Inject;
-import com.ning.billing.invoice.api.IInvoice;
-import org.skife.jdbi.v2.IDBI;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.IInvoiceItem;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.model.InvoiceDefault;
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.sqlobject.*;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import java.lang.annotation.*;
 import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-public class InvoiceDao implements IInvoiceDao {
-    private final IInvoiceDao dao;
+@ExternalizedSqlViaStringTemplate3()
+@RegisterMapper({UuidMapper.class, InvoiceDao.InvoiceMapper.class})
+public interface InvoiceDao {
+    @SqlQuery
+    List<Invoice> getInvoicesByAccount(@Bind("accountId") final String accountId);
 
-    @Inject
-    public InvoiceDao(IDBI dbi) {
-        this.dao = dbi.onDemand(IInvoiceDao.class);
+    @SqlQuery
+    Invoice getInvoice(@Bind("id") final String invoiceId);
+
+    @SqlUpdate
+    void createInvoice(@InvoiceBinder final Invoice invoice);
+
+    @SqlQuery
+    List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId);
+
+    @SqlQuery
+    List<UUID> getInvoicesForPayment(@Bind("targetDate") final Date targetDate,
+                                     @Bind("numberOfDays") final int numberOfDays);
+
+    @SqlUpdate
+    void notifySuccessfulPayment(@Bind("id") final String invoiceId,
+                                 @Bind("paymentDate") final Date paymentDate,
+                                 @Bind("paymentAmount") final BigDecimal paymentAmount);
+
+    @SqlUpdate
+    void notifyFailedPayment(@Bind("id") final String invoiceId,
+                             @Bind("paymentAttemptDate") final Date paymentAttemptDate);
+
+    @SqlUpdate
+    void test();
+
+    @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER})
+    public @interface InvoiceBinder {
+        public static class InvoiceBinderFactory implements BinderFactory {
+            public Binder build(Annotation annotation) {
+                return new Binder<InvoiceBinder, Invoice>() {
+                    public void bind(SQLStatement q, InvoiceBinder bind, Invoice invoice) {
+                        q.bind("id", invoice.getId().toString());
+                        q.bind("accountId", invoice.getAccountId().toString());
+                        q.bind("invoiceDate", invoice.getInvoiceDate().toDate());
+                        q.bind("targetDate", invoice.getTargetDate().toDate());
+                        q.bind("amountPaid", invoice.getAmountPaid());
+                        q.bind("amountOutstanding", invoice.getAmountOutstanding());
+                        DateTime invoiceDate = invoice.getLastPaymentAttempt();
+                        q.bind("lastPaymentAttempt", invoiceDate == null ? null : invoiceDate.toDate());
+                        q.bind("currency", invoice.getCurrency().toString());
+                    }
+                };
+            }
+        }
     }
 
-    @Override
-    public List<IInvoice> getInvoicesByAccount(final String accountId) {
-        return dao.getInvoicesByAccount(accountId);
-    }
+    public static class InvoiceMapper implements ResultSetMapper<Invoice> {
+        @Override
+        public Invoice map(int index, ResultSet result, StatementContext context) throws SQLException {
+            UUID id = UUID.fromString(result.getString("id"));
+            UUID accountId = UUID.fromString(result.getString("account_id"));
+            DateTime invoiceDate = new DateTime(result.getTimestamp("invoice_date"));
+            DateTime targetDate = new DateTime(result.getTimestamp("target_date"));
+            BigDecimal amountPaid = result.getBigDecimal("amount_paid");
+            Timestamp lastPaymentAttemptTimeStamp = result.getTimestamp("last_payment_attempt");
+            DateTime lastPaymentAttempt = lastPaymentAttemptTimeStamp == null ? null : new DateTime(lastPaymentAttemptTimeStamp);
+            Currency currency = Currency.valueOf(result.getString("currency"));
 
-    @Override
-    public IInvoice getInvoice(final String invoiceId) {
-        return dao.getInvoice(invoiceId);
-    }
-
-    @Override
-    public void createInvoice(final IInvoice invoice) {
-        dao.createInvoice(invoice);
-    }
-
-    @Override
-    public List<IInvoice> getInvoicesBySubscription(String subscriptionId) {
-        return dao.getInvoicesBySubscription(subscriptionId);
-    }
-
-    @Override
-    public List<UUID> getInvoicesForPayment(Date targetDate, int numberOfDays) {
-        return dao.getInvoicesForPayment(targetDate, numberOfDays);
-    }
-
-    @Override
-    public void notifySuccessfulPayment(String invoiceId, Date paymentDate, BigDecimal paymentAmount) {
-        dao.notifySuccessfulPayment(invoiceId, paymentDate, paymentAmount);
-    }
-
-    @Override
-    public void notifyFailedPayment(String invoiceId, Date paymentAttemptDate) {
-        dao.notifyFailedPayment(invoiceId, paymentAttemptDate);
-    }
-
-    @Override
-    public void test() {
-        dao.test();
+            return new InvoiceDefault(id, accountId, invoiceDate, targetDate, currency, lastPaymentAttempt, amountPaid, new ArrayList<IInvoiceItem>());
+        }
     }
 }

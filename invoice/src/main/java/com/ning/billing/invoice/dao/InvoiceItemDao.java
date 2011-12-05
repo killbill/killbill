@@ -16,47 +16,82 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.google.inject.Inject;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.IInvoiceItem;
-import org.skife.jdbi.v2.IDBI;
+import com.ning.billing.invoice.model.InvoiceItem;
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.sqlobject.*;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import java.lang.annotation.*;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
-public class InvoiceItemDao implements IInvoiceItemDao {
-    private final IInvoiceItemDao dao;
+@ExternalizedSqlViaStringTemplate3()
+@RegisterMapper(InvoiceItemDao.InvoiceItemMapper.class)
+public interface InvoiceItemDao {
+    @SqlQuery
+    IInvoiceItem getInvoiceItem(@Bind("id") final String invoiceItemId);
 
-    @Inject
-    public InvoiceItemDao(IDBI dbi) {
-        dao = dbi.onDemand(IInvoiceItemDao.class);
+    @SqlQuery
+    List<IInvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
+
+    @SqlQuery
+    List<IInvoiceItem> getInvoiceItemsByAccount(@Bind("accountId") final String accountId);
+
+    @SqlQuery
+    List<IInvoiceItem> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId);
+
+    @SqlUpdate
+    void createInvoiceItem(@InvoiceItemBinder final IInvoiceItem invoiceItem);
+
+    @SqlUpdate
+    void test();
+
+    @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER})
+    public @interface InvoiceItemBinder {
+        public static class InvoiceItemBinderFactory implements BinderFactory {
+            public Binder build(Annotation annotation) {
+                return new Binder<InvoiceItemBinder, IInvoiceItem>() {
+                    public void bind(SQLStatement q, InvoiceItemBinder bind, IInvoiceItem item) {
+                        q.bind("id", item.getId().toString());
+                        q.bind("invoiceId", item.getInvoiceId().toString());
+                        q.bind("subscriptionId", item.getSubscriptionId().toString());
+                        q.bind("startDate", item.getStartDate().toDate());
+                        q.bind("endDate", item.getEndDate().toDate());
+                        q.bind("description", item.getDescription());
+                        q.bind("amount", item.getAmount());
+                        q.bind("rate", item.getRate());
+                        q.bind("currency", item.getCurrency().toString());
+                    }
+                };
+            }
+        }
     }
 
-    @Override
-    public IInvoiceItem getInvoiceItem(String invoiceItemId) {
-        return dao.getInvoiceItem(invoiceItemId);
-    }
+    public static class InvoiceItemMapper implements ResultSetMapper<IInvoiceItem> {
+        @Override
+        public IInvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
+            UUID id = UUID.fromString(result.getString("id"));
+            UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
+            UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
+            DateTime startDate = new DateTime(result.getTimestamp("start_date"));
+            DateTime endDate = new DateTime(result.getTimestamp("end_date"));
+            String description = result.getString("description");
+            BigDecimal amount = result.getBigDecimal("amount");
+            BigDecimal rate = result.getBigDecimal("rate");
+            Currency currency = Currency.valueOf(result.getString("currency"));
 
-    @Override
-    public List<IInvoiceItem> getInvoiceItemsByInvoice(String invoiceId) {
-        return dao.getInvoiceItemsByInvoice(invoiceId);
-    }
-
-    @Override
-    public List<IInvoiceItem> getInvoiceItemsByAccount(String accountId) {
-        return dao.getInvoiceItemsByAccount(accountId);
-    }
-
-    @Override
-    public List<IInvoiceItem> getInvoiceItemsBySubscription(String subscriptionId) {
-        return dao.getInvoiceItemsBySubscription(subscriptionId);
-    }
-
-    @Override
-    public void createInvoiceItem(IInvoiceItem invoiceItem) {
-        dao.createInvoiceItem(invoiceItem);
-    }
-
-    @Override
-    public void test() {
-        dao.test();
+            return new InvoiceItem(id, invoiceId, subscriptionId, startDate, endDate, description, amount, rate , currency);
+        }
     }
 }

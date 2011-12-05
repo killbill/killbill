@@ -18,44 +18,43 @@ package com.ning.billing.account.api.user;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountData;
-import com.ning.billing.account.api.IAccountUserApi;
-import com.ning.billing.account.dao.IAccountDao;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountDefault;
+import com.ning.billing.account.dao.AccountDao;
 
 import java.util.List;
 import java.util.UUID;
 
-public class AccountUserApi implements IAccountUserApi {
-    private final IAccountDao dao;
+public class AccountUserApi implements com.ning.billing.account.api.AccountUserApi {
+    private final AccountDao dao;
 
     @Inject
-    public AccountUserApi(IAccountDao dao) {
+    public AccountUserApi(AccountDao dao) {
         this.dao = dao;
     }
 
     @Override
-    public IAccount createAccount(IAccountData data) {
-        return new Account(data);
+    public Account createAccount(AccountData data) {
+        return new AccountDefault(data);
     }
 
     @Override
-    public IAccount getAccountByKey(String key) {
+    public Account getAccountByKey(String key) {
         return dao.getAccountByKey(key);
     }
 
     @Override
-    public IAccount getAccountById(UUID id) {
+    public Account getAccountById(UUID id) {
         return dao.getById(id.toString());
     }
 
     @Override
-    public List<IAccount> getAccounts() {
+    public List<Account> getAccounts() {
         return dao.get();
     }
 
     @Override
-    public void saveAccount(IAccount account) {
+    public void saveAccount(Account account) {
         dao.save(account);
     }
 }

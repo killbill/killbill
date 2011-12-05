@@ -25,7 +25,7 @@ import java.util.UUID;
 public interface IInvoicePaymentApi {
     public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId);
 
-    public List<IInvoice> getInvoicesByAccount(UUID accountId);
+    public List<Invoice> getInvoicesByAccount(UUID accountId);
 
-    public IInvoice getInvoice(UUID invoiceId);
+    public Invoice getInvoice(UUID invoiceId);
 }

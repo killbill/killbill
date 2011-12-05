@@ -16,13 +16,12 @@
 
 package com.ning.billing.entitlement.api.billing;
 
+import com.ning.billing.account.api.Account;
+import org.joda.time.DateTime;
+
 import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-import com.ning.billing.account.api.IAccount;
 
 public interface IEntitlementBillingApi {
 
@@ -30,7 +29,7 @@ public interface IEntitlementBillingApi {
      *
      * @return the list of accounts which have active subscriptions
      */
-    public List<IAccount> getActiveAccounts();
+    public List<Account> getActiveAccounts();
 
     /**
      *

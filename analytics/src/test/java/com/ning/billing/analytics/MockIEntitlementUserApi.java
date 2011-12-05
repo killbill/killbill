@@ -16,7 +16,7 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
@@ -105,7 +105,7 @@ public class MockIEntitlementUserApi implements IEntitlementUserApi
     }
 
     @Override
-    public ISubscriptionBundle createBundleForAccount(final IAccount account, final String bundleKey) throws EntitlementUserApiException
+    public ISubscriptionBundle createBundleForAccount(final Account account, final String bundleKey) throws EntitlementUserApiException
     {
         throw new UnsupportedOperationException();
     }

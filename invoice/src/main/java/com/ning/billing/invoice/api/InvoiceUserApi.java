@@ -17,7 +17,7 @@
 package com.ning.billing.invoice.api;
 
 import com.google.inject.Inject;
-import com.ning.billing.invoice.dao.IInvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 
@@ -26,11 +26,11 @@ import java.util.List;
 import java.util.UUID;
 
 public class InvoiceUserApi implements IInvoiceUserApi {
-    private final IInvoiceDao dao;
+    private final InvoiceDao dao;
 
     @Inject
     public InvoiceUserApi(IDBI dbi) {
-        dao = dbi.onDemand(IInvoiceDao.class);
+        dao = dbi.onDemand(InvoiceDao.class);
     }
 
     @Override
@@ -39,12 +39,12 @@ public class InvoiceUserApi implements IInvoiceUserApi {
     }
 
     @Override
-    public List<IInvoice> getInvoicesByAccount() {
+    public List<Invoice> getInvoicesByAccount() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    public IInvoice getInvoice(UUID invoiceId) {
+    public Invoice getInvoice(UUID invoiceId) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 

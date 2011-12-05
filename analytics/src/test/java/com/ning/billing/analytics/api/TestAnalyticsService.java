@@ -17,8 +17,8 @@
 package com.ning.billing.analytics.api;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.*;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
 import com.ning.billing.catalog.api.*;
@@ -47,7 +47,7 @@ public class TestAnalyticsService
     private static final String ACCOUNT_KEY = "pierre-1234";
 
     @Inject
-    private IAccountUserApi accountApi;
+    private AccountUserApi accountApi;
 
     @Inject
     private IEntitlementUserApi entitlementApi;
@@ -82,7 +82,7 @@ public class TestAnalyticsService
 
         // We need a bundle to retrieve the event key
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
-        final IAccount storedAccount = accountApi.createAccount(account);
+        final Account storedAccount = accountApi.createAccount(account);
         final ISubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount, KEY);
 
         // Verify we correctly initialized the account subsystem
