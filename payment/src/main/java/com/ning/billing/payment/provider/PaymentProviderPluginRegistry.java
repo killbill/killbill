@@ -14,7 +14,7 @@ public class PaymentProviderPluginRegistry {
 
     @Inject
     public PaymentProviderPluginRegistry(PaymentConfig config) {
-        this.defaultPlugin = config.getDefaultPaymentProviderPlugin();
+        this.defaultPlugin = config.getDefaultPaymentProvider();
     }
 
     public void register(PaymentProviderPlugin plugin, String name) {

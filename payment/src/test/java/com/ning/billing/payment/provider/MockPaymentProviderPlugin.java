@@ -20,23 +20,16 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.invoice.model.Invoice;
-import com.ning.billing.payment.PaymentError;
 import com.ning.billing.payment.PaymentInfo;
-import com.ning.billing.payment.PaymentMethodInfo;
 import com.ning.billing.payment.PaymentProviderAccount;
-import com.ning.billing.util.Either;
+import com.ning.billing.payment.api.Either;
+import com.ning.billing.payment.api.PaymentError;
+import com.ning.billing.payment.api.PaymentMethodInfo;
 
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
-    public static final String PLUGIN_NAME = "mock";
     private final Map<String, PaymentInfo> payments = new ConcurrentHashMap<String, PaymentInfo>();
-
-    @Inject
-    public MockPaymentProviderPlugin(PaymentProviderPluginRegistry registry) {
-        registry.register(this, PLUGIN_NAME);
-    }
 
     @Override
     public Either<PaymentError, PaymentInfo> processInvoice(IAccount account, Invoice invoice) {
