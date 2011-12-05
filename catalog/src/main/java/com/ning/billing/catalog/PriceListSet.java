@@ -73,12 +73,15 @@ public class PriceListSet extends ValidatingConfig<Catalog> {
 	}
 
 	@Override
-	public ValidationErrors validate(Catalog root, ValidationErrors errors) {
+	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+		defaultPricelist.validate(catalog, errors);
 		//Check that the default pricelist name is not in use in the children
 		for(PriceList pl : childPriceLists) {
 			if(pl.getName().equals(IPriceListSet.DEFAULT_PRICELIST_NAME)){
-				errors.add(new ValidationError("Pricelists cannot use the reserved name '" + IPriceListSet.DEFAULT_PRICELIST_NAME + "'", root.getCatalogURI(), PriceListSet.class, pl.getName()));
+				errors.add(new ValidationError("Pricelists cannot use the reserved name '" + IPriceListSet.DEFAULT_PRICELIST_NAME + "'",
+						catalog.getCatalogURI(), PriceListSet.class, pl.getName()));
 			}
+			pl.validate(catalog, errors); // and validate the individual pricelists
 		}
 		return errors;
 	}

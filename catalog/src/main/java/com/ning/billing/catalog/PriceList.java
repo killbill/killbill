@@ -28,6 +28,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.IPriceList;
 import com.ning.billing.catalog.api.IProduct;
 import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -76,9 +77,29 @@ public class PriceList extends ValidatingConfig<Catalog> implements IPriceList  
     }
 
 	@Override
-	public ValidationErrors validate(Catalog root, ValidationErrors errors) {
+	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+		 for (Plan cur : getPlans()) {
+			 int numPlans = findNumberOfPlans(cur.getProduct(), cur.getBillingPeriod());
+			 if ( numPlans > 1 ) {
+				 errors.add(new ValidationError(
+						 String.format("There are %d plans in pricelist %s and have the same product/billingPeriod (%s, %s)", 
+								 numPlans, getName(), cur.getProduct(), cur.getBillingPeriod()), catalog.getCatalogURI(),
+								 PriceListSet.class, getName()));
+			 }
+		 }
 		return errors;
 	}
+	
+	private int findNumberOfPlans(IProduct product, BillingPeriod period) {
+		int count = 0;
+        for (Plan cur : getPlans()) {
+            if (cur.getProduct().equals(product) && 
+            		(cur.getBillingPeriod() == null || cur.getBillingPeriod().equals(period))) {
+                count++;
+            }
+        }
+        return count;
+    }
 
 
 }

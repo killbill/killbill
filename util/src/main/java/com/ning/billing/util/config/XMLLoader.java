@@ -56,22 +56,31 @@ public class XMLLoader {
 		return getObjectFromStream(uri, UriAccessor.accessUri(uri), objectType);
 	}
 	
-	public static <T extends ValidatingConfig<T>> T getObjectFromStream(URI uri, InputStream stream, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
+	public static <T extends ValidatingConfig<T>> T getObjectFromStream(URI uri, InputStream stream, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, ValidationException {
         Object o = unmarshaller(clazz).unmarshal(stream);
         if (clazz.isInstance(o)) {
         	@SuppressWarnings("unchecked")
 			T castObject = (T)o;
-            validate(uri,castObject);
+        	try {
+        		validate(uri,castObject);
+        	} catch (ValidationException e) {
+        		e.getErrors().log(log);
+        		System.err.println(e.getErrors().toString());
+        		throw e;
+        	}
             return castObject;
         } else {
             return null;
         }
     } 
 
-	public static <T extends ValidatingConfig<T>> void validate(URI uri, T c) {
+	public static <T extends ValidatingConfig<T>> void validate(URI uri, T c) throws ValidationException {
             c.initialize(c, uri);
             ValidationErrors errs = c.validate(c, new ValidationErrors());
-            log.info("Errors: " + errs.size() + " for " + uri);       
+            log.info("Errors: " + errs.size() + " for " + uri);  
+            if(errs.size() > 0) {
+            	throw new ValidationException(errs);
+            }
     }
     
     public static Unmarshaller unmarshaller(Class<?> clazz) throws JAXBException, SAXException, IOException, TransformerException {

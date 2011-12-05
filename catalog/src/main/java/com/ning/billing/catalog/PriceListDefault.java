@@ -34,7 +34,8 @@ public class PriceListDefault extends PriceList {
 
 	@Override
 	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		if(getName().equals(IPriceListSet.DEFAULT_PRICELIST_NAME)) {
+		super.validate(catalog, errors);
+		if(!getName().equals(IPriceListSet.DEFAULT_PRICELIST_NAME)) {
 			errors.add(new ValidationError("The name of the default pricelist must be 'DEFAULT'", 
 					catalog.getCatalogURI(), PriceList.class, getName()));
 			

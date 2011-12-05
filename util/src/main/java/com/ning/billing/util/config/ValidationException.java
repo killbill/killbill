@@ -16,32 +16,25 @@
 
 package com.ning.billing.util.config;
 
-import java.net.URI;
-import java.util.ArrayList;
+import java.io.PrintStream;
 
-import org.slf4j.Logger;
-
-public class ValidationErrors extends ArrayList<ValidationError>{
-	private static final long serialVersionUID = 1L;
-
-	public void add(String description, URI catalogURI,
-			Class<?> objectType, String objectName) {
-		add(new ValidationError(description, catalogURI, objectType, objectName));
-		
-	}
-
-	public void log(Logger log) {
-		for(ValidationError error : this) {
-			error.log(log);
-		}	
-	}
+public class ValidationException extends Exception {
+	private final ValidationErrors errors;
 	
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		for(ValidationError error : this) {
-			builder.append(error.toString());
-		}	
-		return builder.toString();
+	ValidationException(ValidationErrors errors) {
+		this.errors = errors;
 	}
 
+	public ValidationErrors getErrors() {
+		return errors;
+	}
+
+	@Override
+	public void printStackTrace(PrintStream arg0) {
+		arg0.print(errors.toString());
+		super.printStackTrace(arg0);
+	}
+
+	
 }
+
