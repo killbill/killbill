@@ -21,9 +21,10 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.invoice.model.Invoice;
+import com.ning.billing.payment.api.Either;
+import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
-import com.ning.billing.util.Either;
 import com.ning.billing.util.eventbus.IEventBus;
 import com.ning.billing.util.eventbus.IEventBus.EventBusException;
 
