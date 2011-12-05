@@ -83,7 +83,7 @@ public class PriceList extends ValidatingConfig<Catalog> implements IPriceList  
 			 if ( numPlans > 1 ) {
 				 errors.add(new ValidationError(
 						 String.format("There are %d plans in pricelist %s and have the same product/billingPeriod (%s, %s)", 
-								 numPlans, getName(), cur.getProduct(), cur.getBillingPeriod()), catalog.getCatalogURI(),
+								 numPlans, getName(), cur.getProduct().getName(), cur.getBillingPeriod()), catalog.getCatalogURI(),
 								 PriceListSet.class, getName()));
 			 }
 		 }
