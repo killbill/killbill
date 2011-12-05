@@ -1,5 +1,7 @@
 package com.ning.billing.payment;
 
+import com.ning.billing.payment.api.PaymentMethodInfo;
+
 public class CreditCardPaymentMethod  extends PaymentMethodInfo {
     private final String cardHolderName;
     private final String cardType; // e.g. MasterCard
