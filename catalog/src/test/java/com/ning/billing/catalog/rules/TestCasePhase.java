@@ -21,10 +21,10 @@ import javax.xml.bind.annotation.XmlElement;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.MockCatalog;
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
+import com.ning.billing.catalog.DefaultPriceList;
+import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
@@ -38,7 +38,7 @@ public class TestCasePhase {
 		@XmlElement(required=true)
 		private Result policy;
 
-		public CaseResult(Product product, ProductCategory productCategory, BillingPeriod billingPeriod, PriceList priceList,
+		public CaseResult(DefaultProduct product, ProductCategory productCategory, BillingPeriod billingPeriod, DefaultPriceList priceList,
 				PhaseType phaseType, Result policy) {
 			setProduct(product);
 			setProductCategory(productCategory);
@@ -59,8 +59,8 @@ public class TestCasePhase {
 	public void testBasic(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -83,8 +83,8 @@ public class TestCasePhase {
 	public void testWildCardProduct(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -107,8 +107,8 @@ public class TestCasePhase {
 	public void testWildCardProductCategory(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -131,8 +131,8 @@ public class TestCasePhase {
 	public void testWildCardBillingPeriod(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -155,8 +155,8 @@ public class TestCasePhase {
 	public void testWildCardPriceList(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -179,8 +179,8 @@ public class TestCasePhase {
 	public void testWildCardPhaseType(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -203,8 +203,8 @@ public class TestCasePhase {
 	public void testOrder() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr0 = new CaseResult(
@@ -260,7 +260,7 @@ public class TestCasePhase {
 	}
 
 
-	protected void assertionNull(CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, PhaseType phaseType, Catalog cat){
+	protected void assertionNull(CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, PhaseType phaseType, StandaloneCatalog cat){
 		try {
 			Assert.assertNull(cr.getResult(new PlanPhaseSpecifier(productName, productCategory, bp, priceListName, phaseType), cat));
 		} catch (CatalogApiException e) {
@@ -268,7 +268,7 @@ public class TestCasePhase {
 		}
 	}
 
-	protected void assertion(Result result, CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, PhaseType phaseType, Catalog cat){
+	protected void assertion(Result result, CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, PhaseType phaseType, StandaloneCatalog cat){
 		try {
 			Assert.assertEquals(result, cr.getResult(new PlanPhaseSpecifier(productName, productCategory, bp, priceListName, phaseType), cat));
 		} catch (CatalogApiException e) {

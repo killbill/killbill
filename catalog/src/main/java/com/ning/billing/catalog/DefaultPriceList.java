@@ -25,14 +25,14 @@ import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IPriceList;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PriceList extends ValidatingConfig<Catalog> implements IPriceList  {
+public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implements PriceList  {
 
 	@XmlAttribute(required=true)
 	@XmlID
@@ -41,16 +41,16 @@ public class PriceList extends ValidatingConfig<Catalog> implements IPriceList  
 	@XmlElementWrapper(name="plans", required=true)
 	@XmlElement(name="plan", required=true)
 	@XmlIDREF
-    private Plan[] plans;
+    private DefaultPlan[] plans;
 	
-	public PriceList(){}
+	public DefaultPriceList(){}
 
-	public PriceList(Plan[] plans, String name) {
+	public DefaultPriceList(DefaultPlan[] plans, String name) {
 		this.plans = plans;
 		this.name = name;
 	}
 
-	protected Plan[] getPlans() {
+	protected DefaultPlan[] getPlans() {
 		return plans;
 	}
 	
@@ -66,8 +66,8 @@ public class PriceList extends ValidatingConfig<Catalog> implements IPriceList  
 	 * @see com.ning.billing.catalog.IPriceList#findPlan(com.ning.billing.catalog.api.IProduct, com.ning.billing.catalog.api.BillingPeriod)
 	 */
 	@Override
-	public Plan findPlan(IProduct product, BillingPeriod period) {
-        for (Plan cur : getPlans()) {
+	public DefaultPlan findPlan(Product product, BillingPeriod period) {
+        for (DefaultPlan cur : getPlans()) {
             if (cur.getProduct().equals(product) && 
             		(cur.getBillingPeriod() == null || cur.getBillingPeriod().equals(period))) {
                 return cur;
@@ -77,22 +77,22 @@ public class PriceList extends ValidatingConfig<Catalog> implements IPriceList  
     }
 
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		 for (Plan cur : getPlans()) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
+		 for (DefaultPlan cur : getPlans()) {
 			 int numPlans = findNumberOfPlans(cur.getProduct(), cur.getBillingPeriod());
 			 if ( numPlans > 1 ) {
 				 errors.add(new ValidationError(
 						 String.format("There are %d plans in pricelist %s and have the same product/billingPeriod (%s, %s)", 
 								 numPlans, getName(), cur.getProduct().getName(), cur.getBillingPeriod()), catalog.getCatalogURI(),
-								 PriceListSet.class, getName()));
+								 DefaultPriceListSet.class, getName()));
 			 }
 		 }
 		return errors;
 	}
 	
-	private int findNumberOfPlans(IProduct product, BillingPeriod period) {
+	private int findNumberOfPlans(Product product, BillingPeriod period) {
 		int count = 0;
-        for (Plan cur : getPlans()) {
+        for (DefaultPlan cur : getPlans()) {
             if (cur.getProduct().equals(product) && 
             		(cur.getBillingPeriod() == null || cur.getBillingPeriod().equals(period))) {
                 count++;

@@ -17,23 +17,16 @@
 package com.ning.billing.catalog.api;
 
 
-public interface IPlanPhase {
-
-	public abstract IInternationalPrice getRecurringPrice();
-
-	public abstract IInternationalPrice getFixedPrice();
-
-	public abstract BillingPeriod getBillingPeriod();
+public interface Product {
 
 	public abstract String getName();
 
-	public abstract IPlan getPlan();
+	public abstract Product[] getAvailable();
 
-	public abstract IDuration getDuration();
+	public abstract Product[] getIncluded();
 
-	public abstract PhaseType getPhaseType();
+	public abstract ProductCategory getCategory();
 
-
-	
+	public abstract String getCatalogName();
 
 }

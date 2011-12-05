@@ -34,9 +34,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
@@ -73,7 +73,7 @@ public class TestUserApiDemos extends TestUserApiBase {
 
             /* STEP 1. CREATE SUBSCRIPTION */
             SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
-            IPlanPhase trialPhase = subscription.getCurrentPhase();
+            PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             displayState(subscription.getId(), "STEP 1. CREATED SUBSCRIPTION");
@@ -93,11 +93,11 @@ public class TestUserApiDemos extends TestUserApiBase {
             displayState(subscription.getId(), "STEP 3. MOVE TO DISCOUNT PHASE");
 
             /* STEP 4. SET CTD AND CHANGE PLAN EOT */
-            List<IDuration> durationList = new ArrayList<IDuration>();
+            List<Duration> durationList = new ArrayList<Duration>();
             durationList.add(trialPhase.getDuration());
             DateTime startDiscountPhase = DefaultClock.addDuration(subscription.getStartDate(), durationList);
 
-            IDuration ctd = getDurationMonth(1);
+            Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
@@ -122,13 +122,13 @@ public class TestUserApiDemos extends TestUserApiBase {
             clock.addDeltaFromReality(ctd);
             assertTrue(testListener.isCompleted(2000));
 
-            IPlan currentPlan = subscription.getCurrentPlan();
+            Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), "Pistol");
             assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
             assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
 
-            IPlanPhase currentPhase = subscription.getCurrentPhase();
+            PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
@@ -173,8 +173,8 @@ public class TestUserApiDemos extends TestUserApiBase {
         SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscriptionId);
 
 
-        IPlan currentPlan = subscription.getCurrentPlan();
-        IPlanPhase currentPhase = subscription.getCurrentPhase();
+        Plan currentPlan = subscription.getCurrentPlan();
+        PlanPhase currentPhase = subscription.getCurrentPhase();
         String priceList = subscription.getCurrentPriceList();
         System.out.println("");
         System.out.println("\t CURRENT TIME = " + clock.getUTCNow());

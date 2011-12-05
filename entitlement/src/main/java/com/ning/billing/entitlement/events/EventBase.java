@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.IPlan;
+import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;

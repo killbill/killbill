@@ -24,7 +24,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
@@ -62,7 +62,7 @@ public class VersionedCatalogLoader implements ICatalogLoader  {
 			
 			VersionedCatalog result = new VersionedCatalog();
 			for(URI u : xmlURIs) {
-				Catalog catalog = XMLLoader.getObjectFromUri(u, Catalog.class);
+				StandaloneCatalog catalog = XMLLoader.getObjectFromUri(u, StandaloneCatalog.class);
 				result.add(catalog);
 			}
 			Date now = clock.getUTCNow().toDate();

@@ -17,8 +17,8 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import org.joda.time.DateTime;
@@ -33,10 +33,10 @@ public class MockSubscription implements Subscription
     private static final DateTime START_DATE = new DateTime(DateTimeZone.UTC);
 
     private final SubscriptionState state;
-    private final IPlan plan;
-    private final IPlanPhase phase;
+    private final Plan plan;
+    private final PlanPhase phase;
 
-    public MockSubscription(final SubscriptionState state, final IPlan plan, final IPlanPhase phase)
+    public MockSubscription(final SubscriptionState state, final Plan plan, final PlanPhase phase)
     {
         this.state = state;
         this.plan = plan;
@@ -92,13 +92,13 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public IPlan getCurrentPlan()
+    public Plan getCurrentPlan()
     {
         return plan;
     }
 
     @Override
-    public IPlanPhase getCurrentPhase()
+    public PlanPhase getCurrentPhase()
     {
         return phase;
     }

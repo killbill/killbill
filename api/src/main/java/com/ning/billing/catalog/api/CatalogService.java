@@ -16,10 +16,10 @@
 
 package com.ning.billing.catalog.api;
 
-public interface IDuration {
+import com.ning.billing.lifecycle.KillbillService;
 
-	public abstract TimeUnit getUnit();
+public interface CatalogService extends KillbillService {
 
-	public abstract int getNumber();
+	public abstract Catalog getCatalog();
 
 }

@@ -18,7 +18,7 @@ package com.ning.billing.catalog;
 
 import com.ning.billing.catalog.api.ProductCategory;
 
-public class MockProduct extends Product {
+public class MockProduct extends DefaultProduct {
 
 	public MockProduct() {
 		setName("TestProduct");

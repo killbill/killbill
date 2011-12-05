@@ -19,7 +19,7 @@ package com.ning.billing.invoice.api;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.IInternationalPrice;
+import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.entitlement.api.billing.BillingMode;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import org.joda.time.DateTime;
@@ -37,13 +37,13 @@ public class DefaultBillingEvent implements BillingEvent {
     private final DateTime startDate;
     private final String planName;
     private final String planPhaseName;
-    private final IInternationalPrice price;
+    private final InternationalPrice price;
     private final BillingPeriod billingPeriod;
     private final int billCycleDay;
     private final BillingMode billingMode;
 
 
-    public DefaultBillingEvent(UUID subscriptionId, DateTime startDate, String planName, String planPhaseName, IInternationalPrice price,
+    public DefaultBillingEvent(UUID subscriptionId, DateTime startDate, String planName, String planPhaseName, InternationalPrice price,
                         BillingPeriod billingPeriod, int billCycleDay, BillingMode billingMode) {
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;
@@ -92,7 +92,7 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public IInternationalPrice getPrice() {
+    public InternationalPrice getPrice() {
         return price;
     }
 

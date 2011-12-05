@@ -20,8 +20,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.util.eventbus.EventBusNotification;
 
@@ -51,15 +51,15 @@ public interface SubscriptionTransition extends EventBusNotification {
 
     SubscriptionState getPreviousState();
 
-    IPlan getPreviousPlan();
+    Plan getPreviousPlan();
 
     String getPreviousPriceList();
 
-    IPlanPhase getPreviousPhase();
+    PlanPhase getPreviousPhase();
 
-    IPlan getNextPlan();
+    Plan getNextPlan();
 
-    IPlanPhase getNextPhase();
+    PlanPhase getNextPhase();
 
     SubscriptionState getNextState();
 

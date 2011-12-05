@@ -33,7 +33,7 @@ import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
-import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
@@ -124,7 +124,7 @@ public class TestVersionedCatalogLoader {
 	public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
 		VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog").toString());
 		assertEquals(4, c.size());
-		Iterator<Catalog> it = c.iterator();
+		Iterator<StandaloneCatalog> it = c.iterator();
 		it.next(); //discard the baseline
 		DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
 		assertEquals(dt.toDate(),it.next().getEffectiveDate());

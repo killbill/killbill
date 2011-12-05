@@ -16,10 +16,10 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -33,8 +33,8 @@ import static com.ning.billing.catalog.api.Currency.USD;
 
 public class TestBusinessSubscription
 {
-    private final IDuration MONTHLY = MockDuration.MONHTLY();
-    private final IDuration YEARLY = MockDuration.YEARLY();
+    private final Duration MONTHLY = MockDuration.MONHTLY();
+    private final Duration YEARLY = MockDuration.YEARLY();
     final Object[][] catalog = {
         {MONTHLY, 229.0000, 229.0000},
         {MONTHLY, 19.9500, 19.9500},
@@ -47,9 +47,9 @@ public class TestBusinessSubscription
         {YEARLY, 18.2900, 1.5242},
         {YEARLY, 49.0000, 4.0833}};
 
-    private IProduct product;
-    private IPlan plan;
-    private IPlanPhase phase;
+    private Product product;
+    private Plan plan;
+    private PlanPhase phase;
     private Subscription isubscription;
     private BusinessSubscription subscription;
 
@@ -68,7 +68,7 @@ public class TestBusinessSubscription
     {
         int i = 0;
         for (final Object[] object : catalog) {
-            final IDuration duration = (IDuration) object[0];
+            final Duration duration = (Duration) object[0];
             final double price = (Double) object[1];
             final double expectedMrr = (Double) object[2];
 

@@ -28,8 +28,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
@@ -49,7 +49,7 @@ public class TestUserApiScenarios extends TestUserApiBase {
 
         try {
             SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
-            IPlanPhase trialPhase = subscription.getCurrentPhase();
+            PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
@@ -62,7 +62,7 @@ public class TestUserApiScenarios extends TestUserApiBase {
             assertTrue(testListener.isCompleted(2000));
 
             // SET CTD
-            IDuration ctd = getDurationMonth(1);
+            Duration ctd = getDurationMonth(1);
             DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);

@@ -18,18 +18,18 @@ package com.ning.billing.catalog.api;
 
 public class PlanChangeResult {
  
-	private final IPriceList newPriceList;
+	private final PriceList newPriceList;
 	private final ActionPolicy policy;
 	private final PlanAlignmentChange alignment;
 	
-	public PlanChangeResult(IPriceList newPriceList, ActionPolicy policy, PlanAlignmentChange alignment) {
+	public PlanChangeResult(PriceList newPriceList, ActionPolicy policy, PlanAlignmentChange alignment) {
 		super();
 		this.newPriceList = newPriceList;
 		this.policy = policy;
 		this.alignment = alignment;
 	}
 
-	public IPriceList getNewPriceList() {
+	public PriceList getNewPriceList() {
 		return newPriceList;
 	}
 

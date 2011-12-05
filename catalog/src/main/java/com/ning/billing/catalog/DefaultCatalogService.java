@@ -18,29 +18,29 @@ package com.ning.billing.catalog;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.ICatalogService;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
-import com.ning.billing.config.ICatalogConfig;
+import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.config.XMLLoader;
 
-public class CatalogService implements KillbillService, Provider<ICatalog>, ICatalogService {
+public class DefaultCatalogService implements KillbillService, Provider<Catalog>, CatalogService {
 
     private static final String CATALOG_SERVICE_NAME = "catalog-service";
 
-    private static ICatalog catalog;
+    private static Catalog catalog;
 
-    private final ICatalogConfig config;
+    private final CatalogConfig config;
     private boolean isInitialized;
 
 	private VersionedCatalogLoader loader;
 
 
     @Inject
-    public CatalogService(ICatalogConfig config, VersionedCatalogLoader loader) {
+    public DefaultCatalogService(CatalogConfig config, VersionedCatalogLoader loader) {
         this.config = config;
         System.out.println(config.getCatalogURI());
         this.isInitialized = false;
@@ -75,14 +75,14 @@ public class CatalogService implements KillbillService, Provider<ICatalog>, ICat
      * @see com.ning.billing.catalog.ICatlogService#getCatalog()
      */
     @Override
-    public ICatalog getCatalog() {
+    public Catalog getCatalog() {
         return catalog;
     }
 
 
     // Should be able to use bind(ICatalog.class).toProvider(CatalogService.class);
     @Override
-    public ICatalog get() {
+    public Catalog get() {
         return catalog;
     }
 

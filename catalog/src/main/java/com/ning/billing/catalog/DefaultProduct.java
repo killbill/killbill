@@ -26,14 +26,14 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Product extends ValidatingConfig<Catalog> implements IProduct {
-	private static final Product[] EMPTY_PRODUCT_LIST = new Product[0];
+public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implements Product {
+	private static final DefaultProduct[] EMPTY_PRODUCT_LIST = new DefaultProduct[0];
 	
 	@XmlAttribute (required=true)
 	@XmlID
@@ -44,11 +44,11 @@ public class Product extends ValidatingConfig<Catalog> implements IProduct {
 	
 	@XmlElementWrapper(name="included", required=false)
 	@XmlIDREF @XmlElement(name="addonProduct", required=true)
-    private Product[] included = EMPTY_PRODUCT_LIST;
+    private DefaultProduct[] included = EMPTY_PRODUCT_LIST;
 	
 	@XmlElementWrapper(name="available", required=false)
 	@XmlIDREF @XmlElement(name="addonProduct", required=true)
-    private Product[] available = EMPTY_PRODUCT_LIST;
+    private DefaultProduct[] available = EMPTY_PRODUCT_LIST;
 
 	//Not included in XML
 	private String catalogName;
@@ -65,19 +65,19 @@ public class Product extends ValidatingConfig<Catalog> implements IProduct {
 	}
 
     @Override
-	public Product[] getIncluded() {
+	public DefaultProduct[] getIncluded() {
 		return included;
 	}
 
     @Override
-	public Product[] getAvailable() {
+	public DefaultProduct[] getAvailable() {
 		return available;
 	}
 
-	public Product() {
+	public DefaultProduct() {
     }
 
-	public Product(String name, ProductCategory category) {
+	public DefaultProduct(String name, ProductCategory category) {
 		this.category = category;
 		this.name = name;
     }
@@ -87,8 +87,8 @@ public class Product extends ValidatingConfig<Catalog> implements IProduct {
         return name;
     }
 
-	public boolean isIncluded(Product addon) {
-		for(Product p : included) {
+	public boolean isIncluded(DefaultProduct addon) {
+		for(DefaultProduct p : included) {
 			if (addon == p) {
 				return true;
 			}
@@ -96,8 +96,8 @@ public class Product extends ValidatingConfig<Catalog> implements IProduct {
 		return false;
 	}
 
-	public boolean isAvailable(Product addon) {
-		for(Product p : included) {
+	public boolean isAvailable(DefaultProduct addon) {
+		for(DefaultProduct p : included) {
 			if (addon == p) {
 				return true;
 			}
@@ -106,43 +106,43 @@ public class Product extends ValidatingConfig<Catalog> implements IProduct {
 	}
 	
 	@Override
-	public void initialize(Catalog catalog, URI sourceURI) {
+	public void initialize(StandaloneCatalog catalog, URI sourceURI) {
 		catalogName = catalog.getCalalogName();
 	}
 
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
 		//TODO: MDW validation: inclusion and exclusion lists can only contain addon products
 		//TODO: MDW validation: a given product can only be in, at most, one of inclusion and exclusion lists
 		return errors;
 	}
 
-	protected Product setName(String name) {
+	protected DefaultProduct setName(String name) {
 		this.name = name;
 		return this;
 	}
 
-	protected Product setCatagory(ProductCategory category) {
+	protected DefaultProduct setCatagory(ProductCategory category) {
 		this.category = category;
 		return this;
 	}
 
-	protected Product setCategory(ProductCategory category) {
+	protected DefaultProduct setCategory(ProductCategory category) {
 		this.category = category;
 		return this;
 	}
 
-	protected Product setIncluded(Product[] included) {
+	protected DefaultProduct setIncluded(DefaultProduct[] included) {
 		this.included = included;
 		return this;
 	}
 
-	protected Product setAvailable(Product[] available) {
+	protected DefaultProduct setAvailable(DefaultProduct[] available) {
 		this.available = available;
 		return this;
 	}
 
-	protected Product setCatalogName(String catalogName) {
+	protected DefaultProduct setCatalogName(String catalogName) {
 		this.catalogName = catalogName;
 		return this;
 	}

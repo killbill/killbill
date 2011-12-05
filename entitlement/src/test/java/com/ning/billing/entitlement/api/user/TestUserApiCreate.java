@@ -26,9 +26,9 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IPriceListSet;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
@@ -49,7 +49,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             String productName = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSetName = IPriceListSet.DEFAULT_PRICELIST_NAME;
+            String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
 
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -80,7 +80,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             String productName = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSetName = IPriceListSet.DEFAULT_PRICELIST_NAME;
+            String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
@@ -95,13 +95,13 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             printSubscriptionTransitions(subscription.getActiveTransitions());
 
-            IPlan currentPlan = subscription.getCurrentPlan();
+            Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), productName);
             assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
             assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
-            IPlanPhase currentPhase = subscription.getCurrentPhase();
+            PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
@@ -119,7 +119,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             String productName = "Shotgun";
             BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSetName = IPriceListSet.DEFAULT_PRICELIST_NAME;
+            String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
@@ -134,13 +134,13 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             printSubscriptionTransitions(subscription.getActiveTransitions());
 
-            IPlan currentPlan = subscription.getCurrentPlan();
+            Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), productName);
             assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
             assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
-            IPlanPhase currentPhase = subscription.getCurrentPhase();
+            PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
 
@@ -191,7 +191,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSetName, null, clock.getUTCNow());
             assertNotNull(subscription);
 
-            IPlanPhase currentPhase = subscription.getCurrentPhase();
+            PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
             assertTrue(testListener.isCompleted(5000));
@@ -231,7 +231,7 @@ public abstract class TestUserApiCreate extends TestUserApiBase {
 
             String productName = "Shotgun";
             BillingPeriod term = BillingPeriod.ANNUAL;
-            String planSetName = IPriceListSet.DEFAULT_PRICELIST_NAME;
+            String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 

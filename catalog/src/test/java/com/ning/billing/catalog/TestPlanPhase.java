@@ -31,7 +31,7 @@ public class TestPlanPhase {
 	public void testValidation() {
 		log.info("Testing Plan Phase Validation");
 		
-		PlanPhase pp = new MockPlanPhase().setBillCycleDuration(BillingPeriod.MONTHLY).setReccuringPrice(null).setFixedPrice(new InternationalPrice());
+		DefaultPlanPhase pp = new MockPlanPhase().setBillCycleDuration(BillingPeriod.MONTHLY).setReccuringPrice(null).setFixedPrice(new DefaultInternationalPrice());
 		ValidationErrors errors = pp.validate(new MockCatalog(), new ValidationErrors());
 		errors.log(log);
 		Assert.assertEquals(errors.size(), 1);

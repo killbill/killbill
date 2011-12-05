@@ -22,7 +22,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.ning.billing.catalog.api.IDuration;
+import com.ning.billing.catalog.api.Duration;
 
 public class DefaultClock implements Clock {
 
@@ -42,10 +42,10 @@ public class DefaultClock implements Clock {
         return input.minus(input.getMillisOfSecond());
     }
 
-    public static DateTime addDuration(DateTime input, List<IDuration> durations) {
+    public static DateTime addDuration(DateTime input, List<Duration> durations) {
 
         DateTime result = input;
-        for (IDuration cur : durations) {
+        for (Duration cur : durations) {
             switch (cur.getUnit()) {
             case DAYS:
                 result = result.plusDays(cur.getNumber());
@@ -66,8 +66,8 @@ public class DefaultClock implements Clock {
         return result;
     }
 
-    public static DateTime addDuration(DateTime input, IDuration duration) {
-        List<IDuration> list = new ArrayList<IDuration>();
+    public static DateTime addDuration(DateTime input, Duration duration) {
+        List<Duration> list = new ArrayList<Duration>();
         list.add(duration);
         return addDuration(input, list);
     }

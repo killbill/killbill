@@ -16,10 +16,10 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 
-public class MockProduct implements IProduct
+public class MockProduct implements Product
 {
     private final String name;
     private final String type;
@@ -51,13 +51,13 @@ public class MockProduct implements IProduct
     }
 
     @Override
-    public IProduct[] getAvailable()
+    public Product[] getAvailable()
     {
         return null;
     }
 
     @Override
-    public IProduct[] getIncluded()
+    public Product[] getIncluded()
     {
         return null;
     }

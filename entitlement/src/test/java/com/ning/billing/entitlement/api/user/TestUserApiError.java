@@ -29,11 +29,11 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.PriceListSet;
+import com.ning.billing.catalog.DefaultPriceListSet;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IPriceListSet;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 import com.ning.billing.util.clock.DefaultClock;
@@ -50,8 +50,8 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testCreateSubscriptionBadCatalog() {
         // WRONG PRODUTCS
-        tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
-        tCreateSubscriptionInternal(bundle.getId(), "Whatever", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
+        tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
+        tCreateSubscriptionInternal(bundle.getId(), "Whatever", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
 
 
         // TODO: MARTIN TO FIX WITH CORRECT ERROR CODE. RIGHT NOW NPE
@@ -66,7 +66,7 @@ public class TestUserApiError extends TestUserApiBase {
 
     @Test(enabled=true)
     public void testCreateSubscriptionNoBundle() {
-        tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BUNDLE);
+        tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BUNDLE);
     }
 
     @Test(enabled=false)
@@ -77,8 +77,8 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testCreateSubscriptionBPExists() {
         try {
-            createSubscription("Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME);
-            tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BP_EXISTS);
+            createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
+            tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BP_EXISTS);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.assertFalse(true);
@@ -104,12 +104,12 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testChangeSubscriptionNonActive() {
         try {
-            Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME);
+            Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), false);
             try {
-                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
+                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_NON_ACTIVE.getCode());
                 try {
@@ -128,19 +128,19 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testChangeSubscriptionFutureCancelled() {
         try {
-            Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
+            Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             // SET CTD TO CANCEL IN FUTURE
-            IPlanPhase trialPhase = subscription.getCurrentPhase();
+            PlanPhase trialPhase = subscription.getCurrentPhase();
             DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
-            IDuration ctd = getDurationMonth(1);
+            Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId());
 
             subscription.cancel(clock.getUTCNow(), false);
             try {
-                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
+                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_FUTURE_CANCELLED.getCode());
                 try {
@@ -163,7 +163,7 @@ public class TestUserApiError extends TestUserApiBase {
     @Test(enabled=true)
     public void testUncancelBadState() {
         try {
-            Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, IPriceListSet.DEFAULT_PRICELIST_NAME);
+            Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             try {
                 subscription.uncancel();

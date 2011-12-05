@@ -28,14 +28,14 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.CurrencyValueNull;
-import com.ning.billing.catalog.api.IInternationalPrice;
-import com.ning.billing.catalog.api.IPrice;
+import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.Price;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class InternationalPrice extends ValidatingConfig<Catalog> implements IInternationalPrice {
+public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalog> implements InternationalPrice {
 
 	//TODO MDW Validation - effectiveDateForExistingSubscriptons > catalog effectiveDate 
 	@XmlElement(required=false)
@@ -44,14 +44,14 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 	//TODO: Must have a price point for every configured currency
 	//TODO: No prices is a zero cost plan
 	@XmlElement(name="price")
-	private Price[] prices;
+	private DefaultPrice[] prices;
 
 
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IInternationalPrice#getPrices()
 	 */
 	@Override
-	public IPrice[] getPrices() {
+	public Price[] getPrices() {
 		return prices;
 	}
 
@@ -68,7 +68,7 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 	 */
 	@Override 
 	public BigDecimal getPrice(Currency currency) throws CatalogApiException {
-		for(IPrice p : prices) {
+		for(Price p : prices) {
 			if(p.getCurrency() == currency) {
 				return p.getValue();
 			}
@@ -82,16 +82,16 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 		this.effectiveDateForExistingSubscriptons = effectiveDateForExistingSubscriptons;
 	}
 
-	protected InternationalPrice setPrices(Price[] prices) {
+	protected DefaultInternationalPrice setPrices(DefaultPrice[] prices) {
 		this.prices = prices;
 		return this;
 	}
 
 
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors)  {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors)  {
 		Currency[] supportedCurrencies = catalog.getSupportedCurrencies();
-		for (IPrice p : prices) {
+		for (Price p : prices) {
 			Currency currency = p.getCurrency();
 			if(!currencyIsSupported(currency, supportedCurrencies)) {
 				errors.add("Unsupported currency: " + currency, catalog.getCatalogURI(), this.getClass(), "");
@@ -109,7 +109,7 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 			errors.add(new ValidationError(String.format("Price effective date %s is before catalog effective date '%s'",
 					effectiveDateForExistingSubscriptons,
 					catalog.getEffectiveDate().getTime()), 
-					catalog.getCatalogURI(), InternationalPrice.class, ""));
+					catalog.getCatalogURI(), DefaultInternationalPrice.class, ""));
 		}
 		
 		return errors;
@@ -126,18 +126,18 @@ public class InternationalPrice extends ValidatingConfig<Catalog> implements IIn
 
 
 	@Override
-	public void initialize(Catalog root, URI uri) {
+	public void initialize(StandaloneCatalog root, URI uri) {
 		if(prices == null) {
 			prices = getZeroPrice(root);
 		}
 		super.initialize(root, uri);
 	}
 
-	private synchronized Price[] getZeroPrice(Catalog root) {
+	private synchronized DefaultPrice[] getZeroPrice(StandaloneCatalog root) {
 		Currency[] currencies = root.getSupportedCurrencies();
-		Price[] zeroPrice = new Price[currencies.length];
+		DefaultPrice[] zeroPrice = new DefaultPrice[currencies.length];
 		for(int i = 0; i < currencies.length; i++) {
-			zeroPrice[i] = new Price();
+			zeroPrice[i] = new DefaultPrice();
 			zeroPrice[i].setCurrency(currencies[i]);
 			zeroPrice[i].setValue(new BigDecimal(0));
 		}

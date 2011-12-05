@@ -24,8 +24,8 @@ import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.ICatalogService;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.user.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory;

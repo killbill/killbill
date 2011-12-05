@@ -22,7 +22,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.ning.billing.catalog.api.IDuration;
+import com.ning.billing.catalog.api.Duration;
 
 // STEPH should really be in tests but not accessible from other sub modules
 public class ClockMock extends DefaultClock {
@@ -34,7 +34,7 @@ public class ClockMock extends DefaultClock {
     }
 
     private long deltaFromRealityMs;
-    private List<IDuration> deltaFromRealityDuration;
+    private List<Duration> deltaFromRealityDuration;
     private long deltaFromRealitDurationEpsilon;
     private DeltaType deltaType;
 
@@ -55,15 +55,15 @@ public class ClockMock extends DefaultClock {
         return getNow(DateTimeZone.UTC);
     }
 
-    public synchronized void setDeltaFromReality(IDuration delta, long epsilon) {
+    public synchronized void setDeltaFromReality(Duration delta, long epsilon) {
         deltaType = DeltaType.DELTA_DURATION;
-        deltaFromRealityDuration = new ArrayList<IDuration>();
+        deltaFromRealityDuration = new ArrayList<Duration>();
         deltaFromRealityDuration.add(delta);
         deltaFromRealitDurationEpsilon = epsilon;
         deltaFromRealityMs = 0;
     }
 
-    public synchronized void addDeltaFromReality(IDuration delta) {
+    public synchronized void addDeltaFromReality(Duration delta) {
         if (deltaType != DeltaType.DELTA_DURATION) {
             throw new RuntimeException("ClockMock should be set with type DELTA_DURATION");
         }
@@ -100,7 +100,7 @@ public class ClockMock extends DefaultClock {
     private DateTime adjustFromDuration(DateTime input) {
 
         DateTime result = input;
-        for (IDuration cur : deltaFromRealityDuration) {
+        for (Duration cur : deltaFromRealityDuration) {
 
             int length = cur.getNumber();
             switch (cur.getUnit()) {

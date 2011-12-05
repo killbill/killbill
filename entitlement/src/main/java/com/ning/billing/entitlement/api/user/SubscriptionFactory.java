@@ -23,7 +23,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.ICatalogService;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
@@ -33,10 +33,10 @@ public class SubscriptionFactory {
 
     private final SubscriptionApiService apiService;
     private final Clock clock;
-    private final ICatalogService catalogService;
+    private final CatalogService catalogService;
 
     @Inject
-    public SubscriptionFactory(SubscriptionApiService apiService, Clock clock, ICatalogService catalogService) {
+    public SubscriptionFactory(SubscriptionApiService apiService, Clock clock, CatalogService catalogService) {
         this.apiService = apiService;
         this.clock = clock;
         this.catalogService = catalogService;

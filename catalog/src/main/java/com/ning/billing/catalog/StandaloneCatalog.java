@@ -32,8 +32,8 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.IllegalPlanChange;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
@@ -45,9 +45,9 @@ import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
-@XmlRootElement
+@XmlRootElement(name="catalog")
 @XmlAccessorType(XmlAccessType.NONE)
-public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
+public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> implements Catalog {
 	@XmlElement(required=true)
 	private Date effectiveDate;
 
@@ -62,21 +62,21 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 
 	@XmlElementWrapper(name="products", required=true)
 	@XmlElement(name="product", required=true)
-	private Product[] products;
+	private DefaultProduct[] products;
 
 	@XmlElement(name="rules", required=true)
 	private PlanRules planRules;
 
 	@XmlElementWrapper(name="plans", required=true)
 	@XmlElement(name="plan", required=true)
-	private Plan[] plans;
+	private DefaultPlan[] plans;
 
 	@XmlElement(name="priceLists", required=true)
-	private PriceListSet priceLists;
+	private DefaultPriceListSet priceLists;
 
-	public Catalog() {}
+	public StandaloneCatalog() {}
 
-	protected Catalog (Date effectiveDate) {
+	protected StandaloneCatalog (Date effectiveDate) {
 		this.effectiveDate = effectiveDate;
 	}
 
@@ -97,7 +97,7 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	 * @see com.ning.billing.catalog.ICatalog#getProducts()
 	 */
 	@Override
-	public Product[] getProducts() {
+	public DefaultProduct[] getProducts() {
 		return products;
 	}
 
@@ -108,7 +108,7 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	}
 
 	@Override
-	public Plan[] getPlans() {
+	public DefaultPlan[] getPlans() {
 		return plans;
 	}
 
@@ -120,11 +120,11 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 		return planRules;
 	}
 	
-	public PriceList getPriceListFromName(String priceListName) {
+	public DefaultPriceList getPriceListFromName(String priceListName) {
 		return priceLists.findPriceListFrom(priceListName);
 	}
 	
-	public PriceListSet getPriceLists() {
+	public DefaultPriceListSet getPriceLists() {
 		return this.priceLists;
 	}
 
@@ -138,9 +138,9 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	 * @see com.ning.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public Plan findPlan(String productName, BillingPeriod period, String priceListName) throws CatalogApiException {
-		IProduct product = findProduct(productName);
-		Plan result = priceLists.getPlanListFrom(priceListName, product, period);
+	public DefaultPlan findPlan(String productName, BillingPeriod period, String priceListName) throws CatalogApiException {
+		Product product = findProduct(productName);
+		DefaultPlan result = priceLists.getPlanListFrom(priceListName, product, period);
 		if ( result == null) {
 			throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, productName, period.toString(), priceListName);
 		}
@@ -148,11 +148,11 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	}
 	
 	@Override
-	public Plan findPlan(String name) throws CatalogApiException {
+	public DefaultPlan findPlan(String name) throws CatalogApiException {
 		if (name == null) {
 			return null;
 		}
-		for(Plan p : plans) {
+		for(DefaultPlan p : plans) {
 			if(p.getName().equals(name)) {
 				return p;
 			}
@@ -161,8 +161,8 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	}
 	
 	@Override
-	public IProduct findProduct(String name) throws CatalogApiException {
-		for(Product p : products) {
+	public Product findProduct(String name) throws CatalogApiException {
+		for(DefaultProduct p : products) {
 			if (p.getName().equals(name)) {
 				return p;
 			}
@@ -171,14 +171,14 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	}
 
 	@Override
-	public PlanPhase findPhase(String name) throws CatalogApiException {
-		for(Plan p : plans) {
+	public DefaultPlanPhase findPhase(String name) throws CatalogApiException {
+		for(DefaultPlan p : plans) {
 
 			if(p.getFinalPhase().getName().equals(name)) {
 				return p.getFinalPhase();
 			}
 			if (p.getInitialPhases() != null) {
-				for(PlanPhase pp : p.getInitialPhases()) {
+				for(DefaultPlanPhase pp : p.getInitialPhases()) {
 					if(pp.getName().equals(name)) {
 						return pp;
 					}
@@ -226,7 +226,7 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	}
 
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
 		validate(catalog,errors, products);
 		validate(catalog,errors, plans);
 		priceLists.validate(catalog,errors);
@@ -234,9 +234,9 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 		return errors;
 	}
 
-	private Collection<? extends ValidationError> validate(Catalog catalog,
-			ValidationErrors errors, ValidatingConfig<Catalog>[] configs) {
-		for(ValidatingConfig<Catalog> config: configs) {
+	private Collection<? extends ValidationError> validate(StandaloneCatalog catalog,
+			ValidationErrors errors, ValidatingConfig<StandaloneCatalog>[] configs) {
+		for(ValidatingConfig<StandaloneCatalog> config: configs) {
 
 		}
 		return null;
@@ -244,50 +244,50 @@ public class Catalog extends ValidatingConfig<Catalog> implements ICatalog {
 	
 
 	@Override
-	public void initialize(Catalog catalog, URI sourceURI) {
+	public void initialize(StandaloneCatalog catalog, URI sourceURI) {
 		catalogURI = sourceURI;
 		super.initialize(catalog, sourceURI);
 		planRules.initialize(catalog, sourceURI);
 		priceLists.initialize(catalog, sourceURI);
-		for(Product p : products) {
+		for(DefaultProduct p : products) {
 			p.initialize(catalog, sourceURI);
 		}
-		for(Plan p : plans) {
+		for(DefaultPlan p : plans) {
 			p.initialize(catalog, sourceURI);
 		}
 	}
 
 
-	protected Catalog setProducts(Product[] products) {
+	protected StandaloneCatalog setProducts(DefaultProduct[] products) {
 		this.products = products;
 		return this;
 	}
-	protected Catalog setSupportedCurrencies(Currency[] supportedCurrencies) {
+	protected StandaloneCatalog setSupportedCurrencies(Currency[] supportedCurrencies) {
 		this.supportedCurrencies = supportedCurrencies;
 		return this;
 	}
 
-	protected Catalog setPlanChangeRules(PlanRules planChangeRules) {
+	protected StandaloneCatalog setPlanChangeRules(PlanRules planChangeRules) {
 		this.planRules = planChangeRules;
 		return this;
 	}
 
-	protected Catalog setPlans(Plan[] plans) {
+	protected StandaloneCatalog setPlans(DefaultPlan[] plans) {
 		this.plans = plans;
 		return this;
 	}
 
-	protected Catalog setEffectiveDate(Date effectiveDate) {
+	protected StandaloneCatalog setEffectiveDate(Date effectiveDate) {
 		this.effectiveDate = effectiveDate;
 		return this;
 	}
 
-	protected Catalog setPlanRules(PlanRules planRules) {
+	protected StandaloneCatalog setPlanRules(PlanRules planRules) {
 		this.planRules = planRules;
 		return this;
 	}
 
-	protected Catalog setPriceLists(PriceListSet priceLists) {
+	protected StandaloneCatalog setPriceLists(DefaultPriceListSet priceLists) {
 		this.priceLists = priceLists;
 		return this;
 	}

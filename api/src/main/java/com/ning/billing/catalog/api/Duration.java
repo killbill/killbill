@@ -16,16 +16,10 @@
 
 package com.ning.billing.catalog.api;
 
-import java.math.BigDecimal;
-import java.util.Date;
+public interface Duration {
 
+	public abstract TimeUnit getUnit();
 
-public interface IInternationalPrice {
-
-	public abstract IPrice[] getPrices();
-
-	public abstract BigDecimal getPrice(Currency currency) throws CatalogApiException;
-
-	public abstract Date getEffectiveDateForExistingSubscriptons();
+	public abstract int getNumber();
 
 }

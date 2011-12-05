@@ -19,10 +19,10 @@ package com.ning.billing.analytics;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -94,13 +94,13 @@ public class BusinessSubscription
         this(subscription.getCurrentPriceList(), subscription.getCurrentPlan(), subscription.getCurrentPhase(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId());
     }
 
-    public BusinessSubscription(final String priceList, final IPlan currentPlan, final IPlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
+    public BusinessSubscription(final String priceList, final Plan currentPlan, final PlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
     {
         this.priceList = priceList;
 
         // Record plan information
         if (currentPlan != null && currentPlan.getProduct() != null) {
-            final IProduct product = currentPlan.getProduct();
+            final Product product = currentPlan.getProduct();
             productName = product.getName();
             productCategory = product.getCategory();
             // TODO - we should keep the product type
@@ -247,7 +247,7 @@ public class BusinessSubscription
         return subscriptionId;
     }
 
-    static BigDecimal getMrrFromISubscription(final IDuration duration, final BigDecimal price)
+    static BigDecimal getMrrFromISubscription(final Duration duration, final BigDecimal price)
     {
         if (duration == null || duration.getUnit() == null || duration.getNumber() == 0) {
             return BigDecimal.ZERO;

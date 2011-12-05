@@ -21,21 +21,21 @@ import java.util.Date;
 
 import com.ning.billing.catalog.api.Currency;
 
-public class MockInternationalPrice extends InternationalPrice {
+public class MockInternationalPrice extends DefaultInternationalPrice {
 	
 	MockInternationalPrice() {
 		setEffectiveDateForExistingSubscriptons(new Date());
-		setPrices(new Price[] {
-			new Price().setCurrency(Currency.USD).setValue(new BigDecimal(1))	
+		setPrices(new DefaultPrice[] {
+			new DefaultPrice().setCurrency(Currency.USD).setValue(new BigDecimal(1))	
 		});
 	}
 	
-	MockInternationalPrice(Date effectiveDateForExistingSubscriptions, Price[] price) {
+	MockInternationalPrice(Date effectiveDateForExistingSubscriptions, DefaultPrice[] price) {
 		setEffectiveDateForExistingSubscriptons(effectiveDateForExistingSubscriptions);
 		setPrices(price);
 	}
 
-	MockInternationalPrice(Price... price) {
+	MockInternationalPrice(DefaultPrice... price) {
 		setEffectiveDateForExistingSubscriptons(new Date());
 		setPrices(price);
 	}

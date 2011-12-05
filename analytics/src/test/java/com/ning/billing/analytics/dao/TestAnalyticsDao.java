@@ -26,9 +26,9 @@ import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -56,9 +56,9 @@ public class TestAnalyticsDao
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
 
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
-    private final IProduct product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
-    private final IPlan plan = new MockPlan("platinum-monthly", product);
-    private final IPlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
+    private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
+    private final Plan plan = new MockPlan("platinum-monthly", product);
+    private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
 
     private BusinessSubscriptionTransitionDao businessSubscriptionTransitionDao;
     private BusinessSubscriptionTransition transition;

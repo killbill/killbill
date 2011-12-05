@@ -34,18 +34,18 @@ public class TestInternationalPrice {
 	
   @Test
   public void testZeroValue() throws URISyntaxException, CatalogApiException {
-	  Catalog c = new MockCatalog();
+	  StandaloneCatalog c = new MockCatalog();
 	  c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
-	  InternationalPrice p0 =  new MockInternationalPrice();
+	  DefaultInternationalPrice p0 =  new MockInternationalPrice();
 	  p0.setPrices(null);
 	  p0.initialize(c, new URI("foo:bar"));
-	  InternationalPrice p1 =  new MockInternationalPrice();
-	  p1.setPrices(new Price[] {
-			  new Price().setCurrency(Currency.GBP).setValue(new BigDecimal(1)),
-			  new Price().setCurrency(Currency.EUR).setValue(new BigDecimal(1)),
-			  new Price().setCurrency(Currency.USD).setValue(new BigDecimal(1)),
-			  new Price().setCurrency(Currency.BRL).setValue(new BigDecimal(1)),
-			  new Price().setCurrency(Currency.MXN).setValue(new BigDecimal(1)),		  
+	  DefaultInternationalPrice p1 =  new MockInternationalPrice();
+	  p1.setPrices(new DefaultPrice[] {
+			  new DefaultPrice().setCurrency(Currency.GBP).setValue(new BigDecimal(1)),
+			  new DefaultPrice().setCurrency(Currency.EUR).setValue(new BigDecimal(1)),
+			  new DefaultPrice().setCurrency(Currency.USD).setValue(new BigDecimal(1)),
+			  new DefaultPrice().setCurrency(Currency.BRL).setValue(new BigDecimal(1)),
+			  new DefaultPrice().setCurrency(Currency.MXN).setValue(new BigDecimal(1)),		  
 	  });
 	  p1.initialize(c, new URI("foo:bar"));
 
@@ -65,7 +65,7 @@ public class TestInternationalPrice {
   
   @Test
   public void testPriceInitialization() throws URISyntaxException, CatalogApiException  {
-	  Catalog c = new MockCatalog();
+	  StandaloneCatalog c = new MockCatalog();
 	  c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
 	  c.initialize(c, new URI("foo://bar"));
 	  Assert.assertEquals(c.getPlans()[0].getFinalPhase().getRecurringPrice().getPrice(Currency.GBP), new BigDecimal(0));
@@ -73,16 +73,16 @@ public class TestInternationalPrice {
   
   @Test
   public void testNegativeValuePrices(){
-	  Catalog c = new MockCatalog();
+	  StandaloneCatalog c = new MockCatalog();
 	  c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
 	
-	  InternationalPrice p1 =  new MockInternationalPrice();
-	  p1.setPrices(new Price[] {
-			  new Price().setCurrency(Currency.GBP).setValue(new BigDecimal(-1)),
-			  new Price().setCurrency(Currency.EUR).setValue(new BigDecimal(-1)),
-			  new Price().setCurrency(Currency.USD).setValue(new BigDecimal(-1)),
-			  new Price().setCurrency(Currency.BRL).setValue(new BigDecimal(1)),
-			  new Price().setCurrency(Currency.MXN).setValue(new BigDecimal(1)),		  
+	  DefaultInternationalPrice p1 =  new MockInternationalPrice();
+	  p1.setPrices(new DefaultPrice[] {
+			  new DefaultPrice().setCurrency(Currency.GBP).setValue(new BigDecimal(-1)),
+			  new DefaultPrice().setCurrency(Currency.EUR).setValue(new BigDecimal(-1)),
+			  new DefaultPrice().setCurrency(Currency.USD).setValue(new BigDecimal(-1)),
+			  new DefaultPrice().setCurrency(Currency.BRL).setValue(new BigDecimal(1)),
+			  new DefaultPrice().setCurrency(Currency.MXN).setValue(new BigDecimal(1)),		  
 	  });
 	  
 	 ValidationErrors errors = p1.validate(c, new ValidationErrors());
@@ -91,9 +91,9 @@ public class TestInternationalPrice {
   }
   @Test
   public void testDateValidation(){
-	 Catalog c = new MockCatalog();
+	 StandaloneCatalog c = new MockCatalog();
 	 c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
-	 InternationalPrice p1 =  new MockInternationalPrice();
+	 DefaultInternationalPrice p1 =  new MockInternationalPrice();
 	 p1.setEffectiveDateForExistingSubscriptons(new Date((new Date().getTime()) - (1000 * 60 * 60 * 24)));
 	 ValidationErrors errors = p1.validate(c, new ValidationErrors());
 	 Assert.assertEquals(errors.size(), 1);
