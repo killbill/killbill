@@ -21,9 +21,12 @@ import com.ning.billing.catalog.api.IPlan;
 import com.ning.billing.catalog.api.IPlanPhase;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import java.util.List;
 import java.util.UUID;
 
 public class MockSubscription implements Subscription
@@ -119,5 +122,10 @@ public class MockSubscription implements Subscription
     @Override
     public DateTime getEndDate() {
         return null;
+    }
+
+    @Override
+    public List<SubscriptionTransition> getActiveTransitions() {
+        throw new UnsupportedOperationException();
     }
 }

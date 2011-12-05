@@ -168,6 +168,21 @@ public class SubscriptionData implements Subscription {
         throw new EntitlementUserApiException(ErrorCode.NOT_IMPLEMENTED);
     }
 
+    @Override
+    public List<SubscriptionTransition> getActiveTransitions() {
+        if (transitions == null) {
+            return Collections.emptyList();
+        }
+
+        List<SubscriptionTransition> activeTransitions = new ArrayList<SubscriptionTransition>();
+        for (SubscriptionTransition cur : transitions) {
+            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
+                activeTransitions.add(cur);
+            }
+        }
+        return activeTransitions;
+    }
+
 
     public SubscriptionTransition getLatestTranstion() {
 
@@ -244,20 +259,6 @@ public class SubscriptionData implements Subscription {
         }
         // CREATE event
         return transitions.get(0);
-    }
-
-    public List<SubscriptionTransition> getActiveTransitions() {
-        if (transitions == null) {
-            return Collections.emptyList();
-        }
-
-        List<SubscriptionTransition> activeTransitions = new ArrayList<SubscriptionTransition>();
-        for (SubscriptionTransition cur : transitions) {
-            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
-                activeTransitions.add(cur);
-            }
-        }
-        return activeTransitions;
     }
 
     public boolean isSubscriptionFutureCancelled() {
