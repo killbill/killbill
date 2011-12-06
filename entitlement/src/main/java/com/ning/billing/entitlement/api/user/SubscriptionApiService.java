@@ -27,11 +27,11 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IPriceList;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanChangeResult;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -56,11 +56,11 @@ public class SubscriptionApiService {
 
     private final Clock clock;
     private final EntitlementDao dao;
-    private final ICatalogService catalogService;
+    private final CatalogService catalogService;
     private final PlanAligner planAligner;
 
     @Inject
-    public SubscriptionApiService(Clock clock, EntitlementDao dao, ICatalogService catalogService, PlanAligner planAligner) {
+    public SubscriptionApiService(Clock clock, EntitlementDao dao, CatalogService catalogService, PlanAligner planAligner) {
         this.clock = clock;
         this.catalogService = catalogService;
         this.planAligner = planAligner;
@@ -69,7 +69,7 @@ public class SubscriptionApiService {
 
 
 
-    public SubscriptionData createBasePlan(SubscriptionBuilder builder, IPlan plan, PhaseType initialPhase,
+    public SubscriptionData createBasePlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
             String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate)
         throws EntitlementUserApiException {
 
@@ -117,7 +117,7 @@ public class SubscriptionApiService {
                 throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
             }
 
-            IPlan currentPlan = subscription.getCurrentPlan();
+            Plan currentPlan = subscription.getCurrentPlan();
             PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                     currentPlan.getProduct().getCategory(),
                     subscription.getCurrentPlan().getBillingPeriod(),
@@ -192,8 +192,8 @@ public class SubscriptionApiService {
         PlanChangeResult planChangeResult = null;
         try {
 
-            IProduct destProduct = catalogService.getCatalog().findProduct(productName);
-            IPlan currentPlan = subscription.getCurrentPlan();
+            Product destProduct = catalogService.getCatalog().findProduct(productName);
+            Plan currentPlan = subscription.getCurrentPlan();
             PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                     currentPlan.getProduct().getCategory(),
                     currentPlan.getBillingPeriod(),
@@ -209,9 +209,9 @@ public class SubscriptionApiService {
         }
 
         ActionPolicy policy = planChangeResult.getPolicy();
-        IPriceList newPriceList = planChangeResult.getNewPriceList();
+        PriceList newPriceList = planChangeResult.getNewPriceList();
 
-        IPlan newPlan = catalogService.getCatalog().findPlan(productName, term, newPriceList.getName());
+        Plan newPlan = catalogService.getCatalog().findPlan(productName, term, newPriceList.getName());
         DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, now);
 
         TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), effectiveDate);

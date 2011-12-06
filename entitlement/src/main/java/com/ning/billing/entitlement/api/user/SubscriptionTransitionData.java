@@ -20,8 +20,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -39,17 +39,17 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     private final DateTime effectiveTransitionTime;
     private final SubscriptionState previousState;
     private final String previousPriceList;
-    private final IPlan previousPlan;
-    private final IPlanPhase previousPhase;
+    private final Plan previousPlan;
+    private final PlanPhase previousPhase;
     private final SubscriptionState nextState;
     private final String nextPriceList;
-    private final IPlan nextPlan;
-    private final IPlanPhase nextPhase;
+    private final Plan nextPlan;
+    private final PlanPhase nextPhase;
 
     public SubscriptionTransitionData(UUID eventId, UUID subscriptionId, UUID bundleId, EventType eventType,
             ApiEventType apiEventType, DateTime requestedTransitionTime, DateTime effectiveTransitionTime,
-            SubscriptionState previousState, IPlan previousPlan, IPlanPhase previousPhase, String previousPriceList,
-            SubscriptionState nextState, IPlan nextPlan, IPlanPhase nextPhase, String nextPriceList) {
+            SubscriptionState previousState, Plan previousPlan, PlanPhase previousPhase, String previousPriceList,
+            SubscriptionState nextState, Plan nextPlan, PlanPhase nextPhase, String nextPriceList) {
         super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
@@ -90,22 +90,22 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     }
 
     @Override
-    public IPlan getPreviousPlan() {
+    public Plan getPreviousPlan() {
         return previousPlan;
     }
 
     @Override
-    public IPlanPhase getPreviousPhase() {
+    public PlanPhase getPreviousPhase() {
         return previousPhase;
     }
 
     @Override
-    public IPlan getNextPlan() {
+    public Plan getNextPlan() {
         return nextPlan;
     }
 
     @Override
-    public IPlanPhase getNextPhase() {
+    public PlanPhase getNextPhase() {
         return nextPhase;
     }
 

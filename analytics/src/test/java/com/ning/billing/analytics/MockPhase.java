@@ -18,24 +18,24 @@ package com.ning.billing.analytics;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IInternationalPrice;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IPrice;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Price;
 import com.ning.billing.catalog.api.PhaseType;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class MockPhase implements IPlanPhase
+public class MockPhase implements PlanPhase
 {
     private final PhaseType cohort;
-    private final IPlan plan;
-    private final IDuration duration;
+    private final Plan plan;
+    private final Duration duration;
     private final double price;
 
-    public MockPhase(final PhaseType cohort, final IPlan plan, final IDuration duration, final double price)
+    public MockPhase(final PhaseType cohort, final Plan plan, final Duration duration, final double price)
     {
         this.cohort = cohort;
         this.plan = plan;
@@ -44,12 +44,12 @@ public class MockPhase implements IPlanPhase
     }
 
     @Override
-    public IInternationalPrice getRecurringPrice()
+    public InternationalPrice getRecurringPrice()
     {
-        return new IInternationalPrice()
+        return new InternationalPrice()
         {
             @Override
-            public IPrice[] getPrices()
+            public Price[] getPrices()
             {
                 throw new UnsupportedOperationException();
             }
@@ -69,12 +69,12 @@ public class MockPhase implements IPlanPhase
     }
 
     @Override
-    public IInternationalPrice getFixedPrice()
+    public InternationalPrice getFixedPrice()
     {
-        return new IInternationalPrice()
+        return new InternationalPrice()
         {
             @Override
-            public IPrice[] getPrices()
+            public Price[] getPrices()
             {
                 throw new UnsupportedOperationException();
             }
@@ -111,13 +111,13 @@ public class MockPhase implements IPlanPhase
     }
 
     @Override
-    public IPlan getPlan()
+    public Plan getPlan()
     {
         return plan;
     }
 
     @Override
-    public IDuration getDuration()
+    public Duration getDuration()
     {
         return duration;
     }

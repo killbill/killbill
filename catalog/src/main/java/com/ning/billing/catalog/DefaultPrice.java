@@ -16,54 +16,58 @@
 
 package com.ning.billing.catalog;
 
+import java.math.BigDecimal;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.TimeUnit;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.CurrencyValueNull;
+import com.ning.billing.catalog.api.Price;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Duration extends ValidatingConfig<Catalog> implements IDuration {
+public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements Price {
 	@XmlElement(required=true)
-    private TimeUnit unit;
+	private Currency currency;
 
-	@XmlElement(required=false)
-    private Integer number = -1;
-	
-    /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IDuration#getUnit()
+	@XmlElement(required=true,nillable=true)
+	private BigDecimal value;
+
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.IPrice#getCurrency()
 	 */
-    @Override
-	public TimeUnit getUnit() {
-        return unit;
-    }
-
-    /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IDuration#getLength()
-	 */
-    @Override
-	public int getNumber() {
-        return number;
-    }
-
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		//TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
+	public Currency getCurrency() {
+		return currency;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.IPrice#getValue()
+	 */
+	@Override
+	public BigDecimal getValue() throws CurrencyValueNull {
+		if (value == null) {
+			throw new CurrencyValueNull(currency);
+		}
+		return value;
+	}
+	
+	protected DefaultPrice setCurrency(Currency currency) {
+		this.currency = currency;
+		return this;
+	}
+
+	protected DefaultPrice setValue(BigDecimal value) {
+		this.value = value;
+		return this;
+	}
+	
+	@Override
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
 		return errors;
-	}
 
-	protected Duration setUnit(TimeUnit unit) {
-		this.unit = unit;
-		return this;
 	}
-
-	protected Duration setNumber(Integer number) {
-		this.number = number;
-		return this;
-	}
-	
-	
 }

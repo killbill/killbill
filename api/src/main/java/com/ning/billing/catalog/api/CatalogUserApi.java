@@ -16,23 +16,7 @@
 
 package com.ning.billing.catalog.api;
 
-import java.util.Iterator;
+public interface CatalogUserApi {
 
-public interface IPlan {
-
-	public abstract IPlanPhase[] getInitialPhases();
-
-	public abstract IProduct getProduct();
-
-	public abstract String getName();
-
-	public abstract Iterator<IPlanPhase> getInitialPhaseIterator();
-
-	public abstract IPlanPhase getFinalPhase();
-
-	public abstract BillingPeriod getBillingPeriod();
-
-	public abstract int getPlansAllowedInBundle();
-
-	public abstract IPlanPhase[] getAllPhases();
+    Catalog getCatalog(String catalogName);
 }

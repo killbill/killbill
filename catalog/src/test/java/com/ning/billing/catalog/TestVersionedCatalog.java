@@ -41,7 +41,7 @@ public class TestVersionedCatalog {
 	@Test(enabled=true)
 	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
 		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog").toString());
-		vc.add(new Catalog(new Date()));
+		vc.add(new StandaloneCatalog(new Date()));
 		assertEquals(5, vc.size());
 	}
 	

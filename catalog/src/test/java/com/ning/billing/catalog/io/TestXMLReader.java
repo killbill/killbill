@@ -19,15 +19,15 @@ package com.ning.billing.catalog.io;
 import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
-import com.ning.billing.catalog.Catalog;
+import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.util.config.XMLLoader;
 
 public class TestXMLReader {
 
 	@Test(enabled=true)
 	public void testCatalogLoad() throws Exception {
-		XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), Catalog.class);
-		XMLLoader.getObjectFromString(Resources.getResource("WeaponsHireSmall.xml").toExternalForm(), Catalog.class);
+		XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), StandaloneCatalog.class);
+		XMLLoader.getObjectFromString(Resources.getResource("WeaponsHireSmall.xml").toExternalForm(), StandaloneCatalog.class);
 	}
 	
 }

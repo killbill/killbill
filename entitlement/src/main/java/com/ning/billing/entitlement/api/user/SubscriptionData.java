@@ -32,9 +32,9 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.events.EntitlementEvent;
@@ -116,13 +116,13 @@ public class SubscriptionData implements Subscription {
     }
 
     @Override
-    public IPlanPhase getCurrentPhase() {
+    public PlanPhase getCurrentPhase() {
         return (transitions == null) ? null : getLatestTranstion().getNextPhase();
     }
 
 
     @Override
-    public IPlan getCurrentPlan() {
+    public Plan getCurrentPlan() {
         return (transitions == null) ? null : getLatestTranstion().getNextPlan();
     }
 
@@ -236,7 +236,7 @@ public class SubscriptionData implements Subscription {
         return getInitialTransitionForCurrentPlan().getEffectiveTransitionTime();
     }
 
-    public IPlanPhase getInitialPhaseOnCurrentPlan() {
+    public PlanPhase getInitialPhaseOnCurrentPlan() {
         return getInitialTransitionForCurrentPlan().getNextPhase();
     }
 
@@ -319,7 +319,7 @@ public class SubscriptionData implements Subscription {
         return transitions.get(0).getEffectiveTransitionTime();
     }
 
-    public void rebuildTransitions(final List<EntitlementEvent> events, final ICatalog catalog) {
+    public void rebuildTransitions(final List<EntitlementEvent> events, final Catalog catalog) {
 
         if (events == null) {
             return;
@@ -390,10 +390,10 @@ public class SubscriptionData implements Subscription {
                         cur.getType()));
             }
 
-            IPlan previousPlan = null;
-            IPlanPhase previousPhase = null;
-            IPlan nextPlan = null;
-            IPlanPhase nextPhase = null;
+            Plan previousPlan = null;
+            PlanPhase previousPhase = null;
+            Plan nextPlan = null;
+            PlanPhase nextPhase = null;
             try {
                 previousPlan = (previousPlanName != null) ? catalog.findPlan(previousPlanName) : null;
                 previousPhase = (previousPhaseName != null) ? catalog.findPhase(previousPhaseName) : null;

@@ -19,9 +19,9 @@ package com.ning.billing.catalog;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.api.ICatalog;
+import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
-import com.ning.billing.config.ICatalogConfig;
+import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -29,7 +29,7 @@ public class TestCatlogService {
 
 	@Test
 	public void testCatalogServiceDirectory() throws ServiceException {
-		CatalogService service = new CatalogService(new ICatalogConfig() {
+		DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
 			@Override
 			public String getCatalogURI() {
 				return "file:src/test/resources/versionedCatalog";
@@ -43,7 +43,7 @@ public class TestCatlogService {
 	
 	@Test
 	public void testCatalogServiceFile() throws ServiceException {
-		CatalogService service = new CatalogService(new ICatalogConfig() {
+		DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
 			@Override
 			public String getCatalogURI() {
 				return "file:src/test/resources/WeaponsHire.xml";

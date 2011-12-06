@@ -16,14 +16,14 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.IDuration;
+import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
 
 public class MockDuration
 {
-    public static IDuration MONHTLY()
+    public static Duration MONHTLY()
     {
-        return new IDuration()
+        return new Duration()
         {
             @Override
             public TimeUnit getUnit()
@@ -39,9 +39,9 @@ public class MockDuration
         };
     }
 
-    public static IDuration YEARLY()
+    public static Duration YEARLY()
     {
-        return new IDuration()
+        return new Duration()
         {
             @Override
             public TimeUnit getUnit()
@@ -57,9 +57,9 @@ public class MockDuration
         };
     }
 
-    public static IDuration UNLIMITED()
+    public static Duration UNLIMITED()
     {
-        return new IDuration()
+        return new Duration()
         {
             @Override
             public TimeUnit getUnit()

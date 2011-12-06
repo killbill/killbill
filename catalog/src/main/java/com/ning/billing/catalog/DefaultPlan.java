@@ -29,14 +29,14 @@ import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Plan extends ValidatingConfig<Catalog> implements IPlan {
+public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements Plan {
 
 
 	@XmlAttribute(required=true)
@@ -45,14 +45,14 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 
 	@XmlElement(required=true)
 	@XmlIDREF
-    private Product product;
+    private DefaultProduct product;
 
 	@XmlElementWrapper(name="initialPhases", required=false)
 	@XmlElement(name="phase", required=true)
-    private PlanPhase[] initialPhases = new PlanPhase[0];
+    private DefaultPlanPhase[] initialPhases = new DefaultPlanPhase[0];
 
 	@XmlElement(name="finalPhase", required=true)
-    private PlanPhase finalPhase;
+    private DefaultPlanPhase finalPhase;
 
 	//If this is missing it defaults to 1
 	//No other value is allowed for BASE plans.
@@ -65,7 +65,7 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	 * @see com.ning.billing.catalog.IPlan#getPhases()
 	 */
     @Override
-	public PlanPhase[] getInitialPhases() {
+	public DefaultPlanPhase[] getInitialPhases() {
         return initialPhases;
     }
 
@@ -73,7 +73,7 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	 * @see com.ning.billing.catalog.IPlan#getProduct()
 	 */
     @Override
-	public IProduct getProduct() {
+	public Product getProduct() {
         return product;
     }
 
@@ -85,17 +85,17 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 		return name;
 	}
 	@Override
-	public PlanPhase getFinalPhase() {
+	public DefaultPlanPhase getFinalPhase() {
 		return finalPhase;
 	}
 
 	@Override
-	public IPlanPhase[] getAllPhases() {
+	public PlanPhase[] getAllPhases() {
 	    int length = (initialPhases == null || initialPhases.length == 0) ? 1 : (initialPhases.length + 1);
-	    IPlanPhase[] allPhases = new PlanPhase[length];
+	    PlanPhase[] allPhases = new DefaultPlanPhase[length];
         int cnt = 0;
 	    if (length > 1) {
-	        for (IPlanPhase cur : initialPhases) {
+	        for (PlanPhase cur : initialPhases) {
 	            allPhases[cnt++] = cur;
 	        }
 	    }
@@ -120,23 +120,23 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	 * @see com.ning.billing.catalog.IPlan#getPhaseIterator()
 	 */
 	@Override
-	public Iterator<IPlanPhase> getInitialPhaseIterator() {
-		ArrayList<IPlanPhase> list = new ArrayList<IPlanPhase>();
-		for(PlanPhase p : initialPhases) {
+	public Iterator<PlanPhase> getInitialPhaseIterator() {
+		ArrayList<PlanPhase> list = new ArrayList<PlanPhase>();
+		for(DefaultPlanPhase p : initialPhases) {
 			list.add(p);
 		}
 		return list.iterator();
 	}
 
 	@Override
-	public void initialize(Catalog catalog, URI sourceURI) {
+	public void initialize(StandaloneCatalog catalog, URI sourceURI) {
 		super.initialize(catalog, sourceURI);
 		if(finalPhase != null) {
 			finalPhase.setPlan(this);
 			finalPhase.initialize(catalog, sourceURI);
 		}
 		if(initialPhases != null) {
-			for(PlanPhase p : initialPhases) {
+			for(DefaultPlanPhase p : initialPhases) {
 				p.setPlan(this);
 				p.initialize(catalog, sourceURI);
 			}
@@ -144,32 +144,32 @@ public class Plan extends ValidatingConfig<Catalog> implements IPlan {
 	}
 
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
 		return errors;
 	}
 
 
-	protected Plan setName(String name) {
+	protected DefaultPlan setName(String name) {
 		this.name = name;
 		return this;
 	}
 
-	protected Plan setPlansAllowedInBundle(int plansAllowedInBundle) {
+	protected DefaultPlan setPlansAllowedInBundle(int plansAllowedInBundle) {
 		this.plansAllowedInBundle = plansAllowedInBundle;
 		return this;
 	}
 
-	protected Plan setFinalPhase(PlanPhase finalPhase) {
+	protected DefaultPlan setFinalPhase(DefaultPlanPhase finalPhase) {
 		this.finalPhase = finalPhase;
 		return this;
 	}
 
-	protected Plan setProduct(Product product) {
+	protected DefaultPlan setProduct(DefaultProduct product) {
 		this.product = product;
 		return this;
 	}
 
-	protected Plan setInitialPhases(PlanPhase[] phases) {
+	protected DefaultPlan setInitialPhases(DefaultPlanPhase[] phases) {
 		this.initialPhases = phases;
 		return this;
 	}

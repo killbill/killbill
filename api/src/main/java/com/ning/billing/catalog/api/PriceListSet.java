@@ -16,8 +16,10 @@
 
 package com.ning.billing.catalog.api;
 
-public interface IProductTier {
+public interface PriceListSet {
 
-	public abstract IProduct[] getProducts();
+	public static final String DEFAULT_PRICELIST_NAME="DEFAULT";
+
+	public abstract Plan getPlanListFrom(String priceListName, Product product, BillingPeriod period);
 
 }

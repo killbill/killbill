@@ -17,9 +17,9 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -43,9 +43,9 @@ public class TestAnalyticsListener
     private final MockBusinessSubscriptionTransitionDao dao = new MockBusinessSubscriptionTransitionDao();
     private final UUID subscriptionId = UUID.randomUUID();
     private final UUID bundleUUID = UUID.randomUUID();
-    private final IProduct product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
-    private final IPlan plan = new MockPlan("platinum-monthly", product);
-    private final IPlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
+    private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
+    private final Plan plan = new MockPlan("platinum-monthly", product);
+    private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
     private final String priceList = null;
 
     private AnalyticsListener listener;

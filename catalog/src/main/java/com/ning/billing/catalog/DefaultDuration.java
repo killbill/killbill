@@ -16,58 +16,54 @@
 
 package com.ning.billing.catalog;
 
-import java.math.BigDecimal;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.CurrencyValueNull;
-import com.ning.billing.catalog.api.IPrice;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Price extends ValidatingConfig<Catalog> implements IPrice {
+public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> implements Duration {
 	@XmlElement(required=true)
-	private Currency currency;
+    private TimeUnit unit;
 
-	@XmlElement(required=true,nillable=true)
-	private BigDecimal value;
-
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPrice#getCurrency()
-	 */
-	@Override
-	public Currency getCurrency() {
-		return currency;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPrice#getValue()
-	 */
-	@Override
-	public BigDecimal getValue() throws CurrencyValueNull {
-		if (value == null) {
-			throw new CurrencyValueNull(currency);
-		}
-		return value;
-	}
+	@XmlElement(required=false)
+    private Integer number = -1;
 	
-	protected Price setCurrency(Currency currency) {
-		this.currency = currency;
-		return this;
-	}
+    /* (non-Javadoc)
+	 * @see com.ning.billing.catalog.IDuration#getUnit()
+	 */
+    @Override
+	public TimeUnit getUnit() {
+        return unit;
+    }
 
-	protected Price setValue(BigDecimal value) {
-		this.value = value;
-		return this;
-	}
-	
+    /* (non-Javadoc)
+	 * @see com.ning.billing.catalog.IDuration#getLength()
+	 */
+    @Override
+	public int getNumber() {
+        return number;
+    }
+
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
+		//TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
 		return errors;
-
 	}
+
+	protected DefaultDuration setUnit(TimeUnit unit) {
+		this.unit = unit;
+		return this;
+	}
+
+	protected DefaultDuration setNumber(Integer number) {
+		this.number = number;
+		return this;
+	}
+	
+	
 }

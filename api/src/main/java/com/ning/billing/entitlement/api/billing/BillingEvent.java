@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.api.billing;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.IInternationalPrice;
+import com.ning.billing.catalog.api.InternationalPrice;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -64,7 +64,7 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      * @return the international price for the event
      *
      */
-    public IInternationalPrice getPrice();
+    public InternationalPrice getPrice();
 
     /**
      *

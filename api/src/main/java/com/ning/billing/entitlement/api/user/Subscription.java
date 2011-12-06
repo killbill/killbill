@@ -22,8 +22,8 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
 
 
 public interface Subscription {
@@ -60,11 +60,11 @@ public interface Subscription {
 
     public DateTime getEndDate();
 
-    public IPlan getCurrentPlan();
+    public Plan getCurrentPlan();
 
     public String getCurrentPriceList();
 
-    public IPlanPhase getCurrentPhase();
+    public PlanPhase getCurrentPhase();
 
     public List<SubscriptionTransition> getActiveTransitions();
 

@@ -16,7 +16,13 @@
 
 package com.ning.billing.catalog.api;
 
-public interface ICatalogUserApi {
+import java.math.BigDecimal;
 
-    ICatalog getCatalog(String catalogName);
+
+public interface Price {
+
+	public abstract Currency getCurrency();
+
+	public abstract BigDecimal getValue() throws CurrencyValueNull;
+
 }

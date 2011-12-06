@@ -25,11 +25,11 @@ import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
@@ -48,10 +48,10 @@ import com.ning.billing.util.clock.DefaultClock;
  */
 public class PlanAligner  {
 
-    private final ICatalogService catalogService;
+    private final CatalogService catalogService;
 
     @Inject
-    public PlanAligner(ICatalogService catalogService) {
+    public PlanAligner(CatalogService catalogService) {
         this.catalogService = catalogService;
     }
 
@@ -73,7 +73,7 @@ public class PlanAligner  {
      * @throws EntitlementUserApiException
      */
     public TimedPhase [] getCurrentAndNextTimedPhaseOnCreate(SubscriptionData subscription,
-            IPlan plan, PhaseType initialPhase, String priceList, DateTime effectiveDate)
+            Plan plan, PhaseType initialPhase, String priceList, DateTime effectiveDate)
         throws CatalogApiException, EntitlementUserApiException {
         List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription, plan, initialPhase, priceList, effectiveDate);
         TimedPhase [] result = new TimedPhase[2];
@@ -95,7 +95,7 @@ public class PlanAligner  {
      * @throws EntitlementUserApiException
      */
     public TimedPhase getCurrentTimedPhaseOnChange(SubscriptionData subscription,
-            IPlan plan, String priceList, DateTime effectiveDate)
+            Plan plan, String priceList, DateTime effectiveDate)
         throws CatalogApiException, EntitlementUserApiException {
         return getTimedPhaseOnChange(subscription, plan, priceList, effectiveDate, WhichPhase.CURRENT);
     }
@@ -112,7 +112,7 @@ public class PlanAligner  {
      * @throws EntitlementUserApiException
      */
     public TimedPhase getNextTimedPhaseOnChange(SubscriptionData subscription,
-            IPlan plan, String priceList, DateTime effectiveDate)
+            Plan plan, String priceList, DateTime effectiveDate)
         throws CatalogApiException, EntitlementUserApiException {
         return getTimedPhaseOnChange(subscription, plan, priceList, effectiveDate, WhichPhase.NEXT);
     }
@@ -127,7 +127,7 @@ public class PlanAligner  {
      * @return
      * @throws EntitlementError
      */
-    public TimedPhase getNextTimedPhase(IPlan plan, PhaseType initialPhase, DateTime effectiveDate, DateTime initialStartPhase)
+    public TimedPhase getNextTimedPhase(Plan plan, PhaseType initialPhase, DateTime effectiveDate, DateTime initialStartPhase)
         throws EntitlementError {
         try {
             List<TimedPhase> timedPhases = getPhaseAlignments(plan, initialPhase, initialStartPhase);
@@ -138,10 +138,10 @@ public class PlanAligner  {
     }
 
     private List<TimedPhase> getTimedPhaseOnCreate(SubscriptionData subscription,
-            IPlan plan, PhaseType initialPhase, String priceList, DateTime effectiveDate)
+            Plan plan, PhaseType initialPhase, String priceList, DateTime effectiveDate)
         throws CatalogApiException, EntitlementUserApiException  {
 
-        ICatalog catalog = catalogService.getCatalog();
+        Catalog catalog = catalogService.getCatalog();
 
         PlanSpecifier planSpecifier = new PlanSpecifier(plan.getProduct().getName(),
                 plan.getProduct().getCategory(),
@@ -166,13 +166,13 @@ public class PlanAligner  {
     }
 
     private TimedPhase getTimedPhaseOnChange(SubscriptionData subscription,
-            IPlan plan, String priceList, DateTime effectiveDate, WhichPhase which)
+            Plan plan, String priceList, DateTime effectiveDate, WhichPhase which)
         throws CatalogApiException, EntitlementUserApiException {
 
-        ICatalog catalog = catalogService.getCatalog();
+        Catalog catalog = catalogService.getCatalog();
 
-        IPlanPhase currentPhase = subscription.getCurrentPhase();
-        IPlan currentPlan = subscription.getCurrentPlan();
+        PlanPhase currentPhase = subscription.getCurrentPhase();
+        Plan currentPlan = subscription.getCurrentPlan();
         String currentPriceList = subscription.getCurrentPriceList();
 
         PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
@@ -209,7 +209,7 @@ public class PlanAligner  {
     }
 
 
-    private List<TimedPhase> getPhaseAlignments(IPlan plan, PhaseType initialPhase, DateTime initialPhaseStartDate)
+    private List<TimedPhase> getPhaseAlignments(Plan plan, PhaseType initialPhase, DateTime initialPhaseStartDate)
         throws EntitlementUserApiException {
         if (plan == null) {
             return Collections.emptyList();
@@ -218,7 +218,7 @@ public class PlanAligner  {
         List<TimedPhase> result = new LinkedList<TimedPhase>();
         DateTime curPhaseStart = (initialPhase == null) ? initialPhaseStartDate : null;
         DateTime nextPhaseStart = null;
-        for (IPlanPhase cur : plan.getAllPhases()) {
+        for (PlanPhase cur : plan.getAllPhases()) {
             if (curPhaseStart == null) {
                 if (initialPhase != cur.getPhaseType()) {
                     continue;
@@ -229,7 +229,7 @@ public class PlanAligner  {
             result.add(new TimedPhase(cur, curPhaseStart));
 
             if (cur.getPhaseType() != PhaseType.EVERGREEN) {
-                IDuration curPhaseDuration = cur.getDuration();
+                Duration curPhaseDuration = cur.getDuration();
                 nextPhaseStart = DefaultClock.addDuration(curPhaseStart, curPhaseDuration);
                 if (nextPhaseStart == null) {
                     throw new EntitlementError(String.format("Unexpected non ending UNLIMITED phase for plan %s",

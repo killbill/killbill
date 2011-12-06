@@ -18,22 +18,22 @@ package com.ning.billing.catalog.api;
 
 import java.util.Date;
 
-public interface ICatalog {
+public interface Catalog {
 
-	public abstract IProduct[] getProducts();
+	public abstract Product[] getProducts();
 	
-	public abstract IPlan findPlan(String productName, BillingPeriod term, String priceList) throws CatalogApiException;
+	public abstract Plan findPlan(String productName, BillingPeriod term, String priceList) throws CatalogApiException;
 
-	public abstract IPlan findPlan(String name) throws CatalogApiException;
+	public abstract Plan findPlan(String name) throws CatalogApiException;
 
-    public abstract IProduct findProduct(String name) throws CatalogApiException;
+    public abstract Product findProduct(String name) throws CatalogApiException;
 
-    public abstract IPlanPhase findPhase(String name) throws CatalogApiException;
+    public abstract PlanPhase findPhase(String name) throws CatalogApiException;
 
 	
 	public abstract Currency[] getSupportedCurrencies();
 
-	public abstract IPlan[] getPlans();
+	public abstract Plan[] getPlans();
 
 	public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
 			PlanSpecifier to) throws CatalogApiException;

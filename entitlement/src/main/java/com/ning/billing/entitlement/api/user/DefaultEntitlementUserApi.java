@@ -26,10 +26,10 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IPriceListSet;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -45,11 +45,11 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     private final Clock clock;
     private final EntitlementDao dao;
-    private final ICatalogService catalogService;
+    private final CatalogService catalogService;
     private final SubscriptionApiService apiService;
 
     @Inject
-    public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, ICatalogService catalogService, SubscriptionApiService apiService) {
+    public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, CatalogService catalogService, SubscriptionApiService apiService) {
         super();
         this.clock = clock;
         this.apiService = apiService;
@@ -95,7 +95,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             BillingPeriod term, String priceList, PhaseType initialPhase, DateTime requestedDate) throws EntitlementUserApiException {
 
         try {
-            String realPriceList = (priceList == null) ? IPriceListSet.DEFAULT_PRICELIST_NAME : priceList;
+            String realPriceList = (priceList == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : priceList;
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
             if (requestedDate != null && requestedDate.isAfter(now)) {
@@ -104,10 +104,10 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             requestedDate = (requestedDate == null) ? now : requestedDate;
             DateTime effectiveDate = requestedDate;
 
-            IPlan plan = catalogService.getCatalog().findPlan(productName, term, realPriceList);
+            Plan plan = catalogService.getCatalog().findPlan(productName, term, realPriceList);
 
 
-            IPlanPhase phase = (plan.getInitialPhases() != null) ? plan.getInitialPhases()[0] : plan.getFinalPhase();
+            PlanPhase phase = (plan.getInitialPhases() != null) ? plan.getInitialPhases()[0] : plan.getFinalPhase();
             if (phase == null) {
                 throw new EntitlementError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
                         productName, term.toString(), realPriceList));

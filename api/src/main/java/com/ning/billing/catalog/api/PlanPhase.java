@@ -16,10 +16,24 @@
 
 package com.ning.billing.catalog.api;
 
-import com.ning.billing.lifecycle.KillbillService;
 
-public interface ICatalogService extends KillbillService {
+public interface PlanPhase {
 
-	public abstract ICatalog getCatalog();
+	public abstract InternationalPrice getRecurringPrice();
+
+	public abstract InternationalPrice getFixedPrice();
+
+	public abstract BillingPeriod getBillingPeriod();
+
+	public abstract String getName();
+
+	public abstract Plan getPlan();
+
+	public abstract Duration getDuration();
+
+	public abstract PhaseType getPhaseType();
+
+
+	
 
 }

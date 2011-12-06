@@ -16,9 +16,9 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -28,9 +28,9 @@ import org.testng.annotations.Test;
 
 public class TestBusinessSubscriptionEvent
 {
-    private IProduct product;
-    private IPlan plan;
-    private IPlanPhase phase;
+    private Product product;
+    private Plan plan;
+    private PlanPhase phase;
     private Subscription isubscription;
 
     @BeforeMethod(alwaysRun = true)

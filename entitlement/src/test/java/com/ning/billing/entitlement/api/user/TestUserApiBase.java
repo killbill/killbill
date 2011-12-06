@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.api.user;
 
 import com.google.inject.Injector;
 import com.ning.billing.account.api.IAccount;
-import com.ning.billing.catalog.CatalogService;
+import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.ApiTestListener;
@@ -64,14 +64,14 @@ public abstract class TestUserApiBase {
     protected EntitlementService entitlementService;
     protected EntitlementUserApi entitlementApi;
     protected EntitlementBillingApi billingApi;
-    protected ICatalogService catalogService;
+    protected CatalogService catalogService;
     protected EntitlementConfig config;
     protected EntitlementDao dao;
     protected ClockMock clock;
     protected EventBusService busService;
 
     protected IAccount account;
-    protected ICatalog catalog;
+    protected Catalog catalog;
     protected ApiTestListener testListener;
     protected SubscriptionBundle bundle;
 
@@ -105,14 +105,14 @@ public abstract class TestUserApiBase {
         final Injector g = getInjector();
 
         entitlementService = g.getInstance(EntitlementService.class);
-        catalogService = g.getInstance(ICatalogService.class);
+        catalogService = g.getInstance(CatalogService.class);
         busService = g.getInstance(EventBusService.class);
         config = g.getInstance(EntitlementConfig.class);
         dao = g.getInstance(EntitlementDao.class);
         clock = (ClockMock) g.getInstance(Clock.class);
         try {
 
-            ((CatalogService) catalogService).loadCatalog();
+            ((DefaultCatalogService) catalogService).loadCatalog();
             ((DefaultEventBusService) busService).startBus();
             ((Engine) entitlementService).initialize();
             init();
@@ -231,8 +231,8 @@ public abstract class TestUserApiBase {
         assertTrue(in.isEqual(upper) || in.isBefore(upper));
     }
 
-    protected IDuration getDurationDay(final int days) {
-        IDuration result = new IDuration() {
+    protected Duration getDurationDay(final int days) {
+        Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
                 return TimeUnit.DAYS;
@@ -245,8 +245,8 @@ public abstract class TestUserApiBase {
         return result;
     }
 
-    protected IDuration getDurationMonth(final int months) {
-        IDuration result = new IDuration() {
+    protected Duration getDurationMonth(final int months) {
+        Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
                 return TimeUnit.MONTHS;
@@ -260,8 +260,8 @@ public abstract class TestUserApiBase {
     }
 
 
-    protected IDuration getDurationYear(final int years) {
-        IDuration result = new IDuration() {
+    protected Duration getDurationYear(final int years) {
+        Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
                 return TimeUnit.YEARS;

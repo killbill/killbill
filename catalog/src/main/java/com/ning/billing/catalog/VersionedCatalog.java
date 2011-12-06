@@ -29,10 +29,10 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanChangeResult;
@@ -41,22 +41,22 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
-public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICatalog {
+public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implements Catalog {
 	
-	private Catalog currentCatalog;
+	private StandaloneCatalog currentCatalog;
 	
-	private final List<Catalog> versions = new ArrayList<Catalog>();
+	private final List<StandaloneCatalog> versions = new ArrayList<StandaloneCatalog>();
 	
 	@Inject
 	public VersionedCatalog() {
-		Catalog baseline = new Catalog(new Date(0)); // init with an empty catalog may need to 
+		StandaloneCatalog baseline = new StandaloneCatalog(new Date(0)); // init with an empty catalog may need to 
 													 // populate some empty pieces here to make validation work
 		add(baseline); 
 	}
 	
-	private Catalog versionForDate(Date date) {
-		Catalog previous = versions.get(0);
-		for(Catalog c : versions) {
+	private StandaloneCatalog versionForDate(Date date) {
+		StandaloneCatalog previous = versions.get(0);
+		for(StandaloneCatalog c : versions) {
 			if(c.getEffectiveDate().getTime() > date.getTime()) {
 				return previous;
 			}
@@ -65,20 +65,20 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 		return versions.get(versions.size() - 1);
 	}
 
-	public void add(Catalog e) {
+	public void add(StandaloneCatalog e) {
 		if(currentCatalog == null) {
 			currentCatalog = e;
 		}
 		versions.add(e);
-		Collections.sort(versions,new Comparator<Catalog>() {
+		Collections.sort(versions,new Comparator<StandaloneCatalog>() {
 			@Override
-			public int compare(Catalog c1, Catalog c2) {
+			public int compare(StandaloneCatalog c1, StandaloneCatalog c2) {
 				return c1.getEffectiveDate().compareTo(c2.getEffectiveDate());
 			}
 		});
 	}
 
-	public Iterator<Catalog> iterator() {
+	public Iterator<StandaloneCatalog> iterator() {
 		return versions.iterator();
 	}
 	
@@ -92,7 +92,7 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public Product[] getProducts() {
+	public DefaultProduct[] getProducts() {
 		return currentCatalog.getProducts();
 	}
 
@@ -102,7 +102,7 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public Plan[] getPlans() {
+	public DefaultPlan[] getPlans() {
 		return currentCatalog.getPlans();
 	}
 
@@ -112,36 +112,36 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public IPlan findPlan(String productName, BillingPeriod term,
+	public Plan findPlan(String productName, BillingPeriod term,
 			String planSetName) throws CatalogApiException {
 		return currentCatalog.findPlan(productName, term, planSetName);
 	}
 
 	@Override
-	public Plan findPlan(String name) throws CatalogApiException {
+	public DefaultPlan findPlan(String name) throws CatalogApiException {
 		return currentCatalog.findPlan(name);
 	}
 
 	@Override
-	public IPlanPhase findPhase(String name) throws CatalogApiException {
+	public PlanPhase findPhase(String name) throws CatalogApiException {
 		return currentCatalog.findPhase(name);
 	}
 
 	@Override
-	public IProduct findProduct(String name) throws CatalogApiException {
+	public Product findProduct(String name) throws CatalogApiException {
 		return currentCatalog.findProduct(name);
 	}
 
 	@Override
-	public void initialize(Catalog catalog, URI sourceURI) {
-		for(Catalog c : versions) {
+	public void initialize(StandaloneCatalog catalog, URI sourceURI) {
+		for(StandaloneCatalog c : versions) {
 			c.initialize(catalog, sourceURI);
 		}
 	}
 
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		for(Catalog c : versions) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
+		for(StandaloneCatalog c : versions) {
 			errors.addAll(c.validate(c, errors));
 		}
 		return errors;
