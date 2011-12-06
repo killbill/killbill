@@ -38,15 +38,8 @@ public class MockAccount implements Account
     }
 
     @Override
-    public String getFirstName()
-    {
-        return "firstName";
-    }
-
-    @Override
-    public String getLastName()
-    {
-        return "lastName";
+    public int getFirstNameLength() {
+        return 0;
     }
 
     @Override
@@ -65,6 +58,11 @@ public class MockAccount implements Account
     public String getExternalKey()
     {
         return accountKey;
+    }
+
+    @Override
+    public String getName() {
+        return "firstName lastName";
     }
 
     @Override

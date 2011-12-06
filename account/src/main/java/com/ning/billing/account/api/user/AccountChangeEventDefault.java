@@ -58,11 +58,8 @@ public class AccountChangeEventDefault implements AccountChangeEvent {
         if (!newData.getEmail().equals(oldData.getEmail())) {
             changedFields.add(new ChangedFieldDefault("email", newData.getEmail(), oldData.getEmail()));
         }
-        if (!newData.getFirstName().equals(oldData.getFirstName())) {
-            changedFields.add(new ChangedFieldDefault("firstName", newData.getFirstName(), oldData.getFirstName()));
-        }
-        if (!newData.getLastName().equals(oldData.getLastName())) {
-            changedFields.add(new ChangedFieldDefault("lastName", newData.getLastName(), oldData.getLastName()));
+        if (!newData.getName().equals(oldData.getName())) {
+            changedFields.add(new ChangedFieldDefault("firstName", newData.getName(), oldData.getName()));
         }
         if (!newData.getPhone().equals(oldData.getPhone())) {
             changedFields.add(new ChangedFieldDefault("phone", newData.getPhone(), oldData.getPhone()));

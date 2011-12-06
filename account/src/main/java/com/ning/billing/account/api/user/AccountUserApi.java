@@ -35,7 +35,9 @@ public class AccountUserApi implements com.ning.billing.account.api.AccountUserA
 
     @Override
     public Account createAccount(AccountData data) {
-        return new AccountDefault(data);
+        Account account = new AccountDefault(data);
+        dao.save(account);
+        return account;
     }
 
     @Override

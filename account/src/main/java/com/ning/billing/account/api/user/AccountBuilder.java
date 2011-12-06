@@ -25,11 +25,11 @@ public class AccountBuilder {
     private UUID id;
     private String externalKey;
     private String email;
-    private String firstName;
-    private String lastName;
+    private String name;
+    private int firstNameLength;
     private String phone;
     private Currency currency;
-    private int billCycleDay;
+    private int billingCycleDay;
 
     public AccountBuilder() {
         this(UUID.randomUUID());
@@ -49,13 +49,13 @@ public class AccountBuilder {
         return this;
     }
 
-    public AccountBuilder firstName(String firstName) {
-        this.firstName = firstName;
+    public AccountBuilder name(String name) {
+        this.name = name;
         return this;
     }
 
-    public AccountBuilder lastName(String lastName) {
-        this.lastName = lastName;
+    public AccountBuilder firstNameLength(int firstNameLength) {
+        this.firstNameLength = firstNameLength;
         return this;
     }
 
@@ -64,8 +64,8 @@ public class AccountBuilder {
         return this;
     }
 
-    public AccountBuilder billCycleDay(int billCycleDay) {
-        this.billCycleDay = billCycleDay;
+    public AccountBuilder billingCycleDay(int billingCycleDay) {
+        this.billingCycleDay = billingCycleDay;
         return this;
     }
 
@@ -75,6 +75,6 @@ public class AccountBuilder {
     }
 
     public AccountDefault build() {
-        return new AccountDefault(id, externalKey, email, firstName, lastName, phone, currency, billCycleDay);
+        return new AccountDefault(id, externalKey, email, name, firstNameLength, phone, currency, billingCycleDay);
     }
 }

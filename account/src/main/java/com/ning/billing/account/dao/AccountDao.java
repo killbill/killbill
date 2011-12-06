@@ -48,14 +48,16 @@ public interface AccountDao extends EntityDao<Account> {
             UUID id = UUID.fromString(result.getString("id"));
             String externalKey = result.getString("external_key");
             String email = result.getString("email");
-            String firstName = result.getString("first_name");
-            String lastName = result.getString("last_name");
+            String name = result.getString("name");
+            int firstNameLength = result.getInt("first_name_length");
             String phone = result.getString("phone");
+            int billingCycleDay = result.getInt("billing_cycle_day");
             Currency currency = Currency.valueOf(result.getString("currency"));
 
             return new AccountBuilder(id).externalKey(externalKey).email(email)
-                                         .firstName(firstName).lastName(lastName)
-                                         .phone(phone).currency(currency).build();
+                                         .name(name).firstNameLength(firstNameLength)
+                                         .phone(phone).currency(currency)
+                                         .billingCycleDay(billingCycleDay).build();
         }
     }
 
@@ -70,10 +72,11 @@ public interface AccountDao extends EntityDao<Account> {
                         q.bind("id", account.getId().toString());
                         q.bind("externalKey", account.getExternalKey());
                         q.bind("email", account.getEmail());
-                        q.bind("firstName", account.getFirstName());
-                        q.bind("lastName", account.getLastName());
+                        q.bind("name", account.getName());
+                        q.bind("firstNameLength", account.getFirstNameLength());
                         q.bind("phone", account.getPhone());
                         q.bind("currency", account.getCurrency().toString());
+                        q.bind("billingCycleDay", account.getBillCycleDay());
                     }
                 };
             }

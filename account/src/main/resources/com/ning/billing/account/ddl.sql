@@ -3,10 +3,11 @@ CREATE TABLE accounts (
     id char(36) NOT NULL,
     external_key varchar(128) NULL,
     email varchar(50) DEFAULT NULL,
-    first_name varchar(100) NOT NULL,
-    last_name varchar(100) NOT NULL,
+    name varchar(100) NOT NULL,
+    first_name_length int NOT NULL,
     phone varchar(13) DEFAULT NULL,
     currency char(3) NOT NULL,
+    billing_cycle_day int NOT NULL,
     PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key);

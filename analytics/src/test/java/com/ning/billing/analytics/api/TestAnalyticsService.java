@@ -68,7 +68,7 @@ public class TestAnalyticsService
     private BusinessSubscriptionTransition expectedTransition;
 
     @BeforeClass(alwaysRun = true)
-    public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException
+    public void Setup() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException
     {
         final String analyticsDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
         // For bundles
@@ -80,7 +80,22 @@ public class TestAnalyticsService
         helper.initDb(accountDdl);
         helper.initDb(entitlementDdl);
 
-        // We need a bundle to retrieve the event key
+        bus.start();
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void stopMysql()
+    {
+        helper.stopMysql();
+    }
+
+    @Test(groups = "slow")
+    public void testRegisterForNotifications() throws Exception
+    {
+        // Make sure the service has been instantiated
+        Assert.assertEquals(service.getName(), "analytics-service");
+
+         // We need a bundle to retrieve the event key
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
         final Account storedAccount = accountApi.createAccount(account);
         final ISubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount, KEY);
@@ -90,7 +105,7 @@ public class TestAnalyticsService
         Assert.assertEquals(bundle.getKey(), KEY);
 
         // Create a subscription transition
-        final IProduct product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
+        final IProduct product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
         final IPlan plan = new MockPlan("platinum-monthly", product);
         final IPlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
         final UUID subscriptionId = UUID.randomUUID();
@@ -120,25 +135,11 @@ public class TestAnalyticsService
             requestedTransitionTime,
             BusinessSubscriptionEvent.subscriptionCreated(plan),
             null,
-            new BusinessSubscription(priceList, plan, phase, null, effectiveTransitionTime, ISubscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
+            new BusinessSubscription(priceList, plan, phase, Currency.USD, effectiveTransitionTime, ISubscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
         );
-    }
 
-    @AfterClass(alwaysRun = true)
-    public void stopMysql()
-    {
-        helper.stopMysql();
-    }
-
-    @Test(groups = "slow")
-    public void testRegisterForNotifications() throws Exception
-    {
-        // Make sure the service has been instantiated
-        Assert.assertEquals(service.getName(), "analytics-service");
-
-        // Test the bus and make sure we can register our service
+        // Make sure we can register our service
         try {
-            bus.start();
             service.registerForNotifications();
         }
         catch (Throwable t) {

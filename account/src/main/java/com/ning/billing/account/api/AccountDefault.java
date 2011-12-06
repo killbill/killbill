@@ -23,26 +23,26 @@ import java.util.UUID;
 public class AccountDefault extends CustomizableEntityBase implements Account {
     public final static String OBJECT_TYPE = "Account";
 
-    private String externalKey;
-    private String email;
-    private String firstName;
-    private String lastName;
-    private String phone;
-    private Currency currency;
-    private int billCycleDay;
+    private final String externalKey;
+    private final String email;
+    private final String name;
+    private final int firstNameLength;
+    private final String phone;
+    private final Currency currency;
+    private final int billCycleDay;
 
     public AccountDefault(AccountData data) {
-        this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getFirstName(), data.getLastName(),
-                data.getPhone(), data.getCurrency(), data.getBillCycleDay());
+        this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
+                data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay());
     }
 
-    public AccountDefault(UUID id, String externalKey, String email, String firstName, String lastName,
+    public AccountDefault(UUID id, String externalKey, String email, String name, int firstNameLength,
                           String phone, Currency currency, int billCycleDay) {
         super(id);
         this.externalKey = externalKey;
         this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.name = name;
+        this.firstNameLength = firstNameLength;
         this.phone = phone;
         this.currency = currency;
         this.billCycleDay = billCycleDay;
@@ -58,8 +58,9 @@ public class AccountDefault extends CustomizableEntityBase implements Account {
         return externalKey;
     }
 
-    public void setExternalKey(String externalKey) {
-        this.externalKey = externalKey;
+    @Override
+    public String getName() {
+        return name;
     }
 
     @Override
@@ -67,26 +68,9 @@ public class AccountDefault extends CustomizableEntityBase implements Account {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     @Override
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    @Override
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public int getFirstNameLength() {
+        return firstNameLength;
     }
 
     @Override
@@ -94,25 +78,13 @@ public class AccountDefault extends CustomizableEntityBase implements Account {
         return phone;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
     @Override
     public Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(Currency currency) {
-        this.currency = currency;
-    }
-
     @Override
     public int getBillCycleDay() {
         return billCycleDay;
-    }
-
-    public void setBillCycleDay(int billCycleDay) {
-        this.billCycleDay = billCycleDay;
     }
 }

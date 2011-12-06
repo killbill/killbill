@@ -281,12 +281,12 @@ public abstract class TestUserApiBase {
     protected Account getAccount() {
         Account account = new Account() {
             @Override
-            public String getFirstName() {
-                return "accountFirstName";
+            public String getName() {
+                return "accountFirstName accountLastName";
             }
             @Override
-            public String getLastName() {
-                return "accountLastName";
+            public int getFirstNameLength() {
+                return "accountFirstName".length();
             }
             @Override
             public String getEmail() {

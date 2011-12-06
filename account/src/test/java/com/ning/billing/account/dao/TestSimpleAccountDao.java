@@ -37,7 +37,10 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         String thisKey = key + UUID.randomUUID().toString();
         String lastName = UUID.randomUUID().toString();
         String thisEmail = email + " " + UUID.randomUUID();
-        return new AccountBuilder().externalKey(thisKey).firstName(firstName).lastName(lastName)
+        String name = firstName + " " + lastName;
+
+        int firstNameLength = firstName.length();
+        return new AccountBuilder().externalKey(thisKey).name(name).firstNameLength(firstNameLength)
                                    .email(thisEmail).currency(Currency.USD).build();
     }
 
@@ -65,8 +68,8 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         Account account = createTestAccount();
         UUID id = account.getId();
         String key = account.getExternalKey();
-        String firstName = account.getFirstName();
-        String lastName = account.getLastName();
+        String name = account.getName();
+        int firstNameLength = account.getFirstNameLength();
 
         accountDao.save(account);
 
@@ -74,8 +77,8 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertNotNull(account);
         assertEquals(account.getId(), id);
         assertEquals(account.getExternalKey(), key);
-        assertEquals(account.getFirstName(), firstName);
-        assertEquals(account.getLastName(), lastName);
+        assertEquals(account.getName(), name);
+        assertEquals(account.getFirstNameLength(), firstNameLength);
 
     }
 
