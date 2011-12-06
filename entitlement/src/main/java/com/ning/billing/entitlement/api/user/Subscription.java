@@ -93,10 +93,17 @@ public class Subscription extends PrivateFields  implements ISubscription {
 
     public Subscription(SubscriptionBuilder builder, boolean rebuildTransition) {
         super();
+        
+        /**
+         * Why are these found via static lookup rather than passed in via DI? 
+         * See http://martinfowler.com/articles/injection.html for explanation of
+         * why DI is your friend. -brianm
+         */
         this.clock = InjectorMagic.getClock();
         this.dao = InjectorMagic.getEntitlementDao();
         this.catalog = InjectorMagic.getCatlog();
         this.planAligner = InjectorMagic.getPlanAligner();
+        
         this.id = builder.getId();
         this.bundleId = builder.getBundleId();
         this.startDate = builder.getStartDate();
@@ -216,6 +223,12 @@ public class Subscription extends PrivateFields  implements ISubscription {
         if (nextPhaseEvent != null) {
             uncancelEvents.add(nextPhaseEvent);
         }
+        
+        /**
+         * I think you might be better of disentangling state storage from business logic. 
+         * This happens in a number of places as well as here (such as the subsequent call to
+         * rebuildTransitions() so assume this comment applies at all such places :-) -brianm
+         */
         dao.uncancelSubscription(id, uncancelEvents);
         rebuildTransitions();
     }
@@ -451,7 +464,6 @@ public class Subscription extends PrivateFields  implements ISubscription {
     }
 
     private void rebuildTransitions() {
-
         List<IEvent> events = dao.getEventsForSubscription(id);
         if (events == null) {
             return;
