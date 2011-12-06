@@ -16,6 +16,8 @@
 
 package com.ning.billing.payment.provider;
 
+import java.util.List;
+
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.invoice.model.Invoice;
 import com.ning.billing.payment.PaymentInfo;
@@ -29,6 +31,6 @@ public interface PaymentProviderPlugin {
     Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId);
     Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(IAccount account);
     Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId);
-//    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethodInfo(IAccount account);
+    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountId);
 
 }

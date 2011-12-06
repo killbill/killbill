@@ -1,5 +1,7 @@
 package com.ning.billing.payment.api;
 
+import com.google.common.base.Objects;
+
 public class PaymentMethodInfo {
     private final String id;
     private final String accountId;
@@ -37,6 +39,38 @@ public class PaymentMethodInfo {
 
     public String getType() {
         return type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id,
+                                accountId,
+                                defaultMethod,
+                                email,
+                                type);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (getClass() == obj.getClass()) {
+            PaymentMethodInfo other = (PaymentMethodInfo)obj;
+            if (obj == other) {
+                return true;
+            }
+            else {
+                return Objects.equal(id, other.id) &&
+                       Objects.equal(accountId, other.accountId) &&
+                       Objects.equal(defaultMethod, other.defaultMethod) &&
+                       Objects.equal(email, other.email) &&
+                       Objects.equal(type, other.type);
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "PaymentMethodInfo [id=" + id + ", accountId=" + accountId + ", defaultMethod=" + defaultMethod + ", email=" + email + ", type=" + type + "]";
     }
 
 }
