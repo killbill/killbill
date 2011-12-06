@@ -24,7 +24,6 @@ public class ValidationException extends Exception {
 	ValidationException(ValidationErrors errors) {
 		this.errors = errors;
 	}
-
 	public ValidationErrors getErrors() {
 		return errors;
 	}
