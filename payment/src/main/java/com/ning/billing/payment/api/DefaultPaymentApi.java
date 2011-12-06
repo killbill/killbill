@@ -1,5 +1,6 @@
 package com.ning.billing.payment.api;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -22,11 +23,11 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(@Nullable String accountId, String paymentMethodId) {
+    public Either<PaymentError, PaymentMethodInfo> getPaymentMethod(@Nullable String accountId, String paymentMethodId) {
         final String paymentProviderName;
 
         if (accountId == null) {
-            // TODO: backwards compatible mode: get provider name from config
+            // TODO: get provider name from config to support null
             paymentProviderName = null;
         }
         else {
@@ -36,5 +37,17 @@ public class DefaultPaymentApi implements PaymentApi {
         final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
 
         return plugin.getPaymentMethodInfo(paymentMethodId);
+    }
+
+    @Override
+    public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountId) {
+        final String paymentProviderName;
+
+        final IAccount account = accountUserApi.getAccountFromId(UUID.fromString(accountId));
+        paymentProviderName = account.getFieldValue(RequestProcessor.PAYMENT_PROVIDER_KEY);
+
+        final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
+
+        return plugin.getPaymentMethods(accountId);
     }
 }

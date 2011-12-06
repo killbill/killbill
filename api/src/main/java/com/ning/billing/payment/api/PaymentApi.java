@@ -16,8 +16,12 @@
 
 package com.ning.billing.payment.api;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 public interface PaymentApi {
-    Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(@Nullable String accountId, String paymentMethodId);
+    Either<PaymentError, PaymentMethodInfo> getPaymentMethod(@Nullable String accountId, String paymentMethodId);
+
+    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountId);
 }

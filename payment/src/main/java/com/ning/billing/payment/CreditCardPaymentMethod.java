@@ -40,5 +40,4 @@ public class CreditCardPaymentMethod  extends PaymentMethodInfo {
         return maskNumber;
     }
 
-
 }

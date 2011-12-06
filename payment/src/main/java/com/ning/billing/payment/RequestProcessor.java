@@ -55,12 +55,12 @@ public class RequestProcessor {
     }
 
     @Subscribe
-    public void receiveRequest(PaymentInfoRequest request) throws EventBusException {
-        final IAccount account = accountUserApi.getAccountFromId(request.getAccountId());
+    public void receivePaymentInfoRequest(PaymentInfoRequest paymentInfoRequest) throws EventBusException {
+        final IAccount account = accountUserApi.getAccountFromId(paymentInfoRequest.getAccountId());
         final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
         final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
 
-        Either<PaymentError, PaymentInfo> result = plugin.getPaymentInfo(request.getPaymentId());
+        Either<PaymentError, PaymentInfo> result = plugin.getPaymentInfo(paymentInfoRequest.getPaymentId());
 
         eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
     }
