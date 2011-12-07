@@ -18,7 +18,7 @@ package com.ning.billing.analytics;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
-import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 
 public class AnalyticsListener
 {
@@ -33,7 +33,7 @@ public class AnalyticsListener
     }
 
     @Subscribe
-    public void handleSubscriptionTransitionChange(final ISubscriptionTransition event)
+    public void handleSubscriptionTransitionChange(final SubscriptionTransition event)
     {
         switch (event.getTransitionType()) {
             case CREATE:

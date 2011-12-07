@@ -20,10 +20,10 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.IInvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.glue.InvoiceModuleMock;
-import com.ning.billing.invoice.model.InvoiceDefault;
-import com.ning.billing.invoice.model.InvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.annotations.BeforeClass;
@@ -69,10 +69,10 @@ public class InvoiceItemDaoTests {
         DateTime endDate = new DateTime(2011, 11, 1, 0, 0, 0, 0);
         BigDecimal rate = new BigDecimal("20.00");
 
-        IInvoiceItem item = new InvoiceItem(invoiceId, subscriptionId, startDate, endDate, "test", rate, rate, Currency.USD);
+        InvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, "test", rate, rate, Currency.USD);
         dao.createInvoiceItem(item);
 
-        IInvoiceItem thisItem = dao.getInvoiceItem(item.getId().toString());
+        InvoiceItem thisItem = dao.getInvoiceItem(item.getId().toString());
         assertNotNull(thisItem);
         assertEquals(thisItem.getId(), item.getId());
         assertEquals(thisItem.getInvoiceId(), item.getInvoiceId());
@@ -93,11 +93,11 @@ public class InvoiceItemDaoTests {
 
         for (int i = 0; i < 3; i++) {
             UUID invoiceId = UUID.randomUUID();
-            InvoiceItem item = new InvoiceItem(invoiceId, subscriptionId, startDate.plusMonths(i), startDate.plusMonths(i + 1), "test", rate, rate, Currency.USD);
+            DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate.plusMonths(i), startDate.plusMonths(i + 1), "test", rate, rate, Currency.USD);
             dao.createInvoiceItem(item);
         }
 
-        List<IInvoiceItem> items = dao.getInvoiceItemsBySubscription(subscriptionId.toString());
+        List<InvoiceItem> items = dao.getInvoiceItemsBySubscription(subscriptionId.toString());
         assertEquals(items.size(), 3);
     }
 
@@ -110,11 +110,11 @@ public class InvoiceItemDaoTests {
         for (int i = 0; i < 5; i++) {
             UUID subscriptionId = UUID.randomUUID();
             BigDecimal amount = rate.multiply(new BigDecimal(i + 1));
-            InvoiceItem item = new InvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", amount, amount, Currency.USD);
+            DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", amount, amount, Currency.USD);
             dao.createInvoiceItem(item);
         }
 
-        List<IInvoiceItem> items = dao.getInvoiceItemsByInvoice(invoiceId.toString());
+        List<InvoiceItem> items = dao.getInvoiceItemsByInvoice(invoiceId.toString());
         assertEquals(items.size(), 5);
     }
 
@@ -122,7 +122,7 @@ public class InvoiceItemDaoTests {
     public void testGetInvoiceItemsByAccountId() {
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 5, 23, 0, 0, 0, 0);
-        InvoiceDefault invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
+        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
 
         invoiceDao.createInvoice(invoice);
 
@@ -131,10 +131,10 @@ public class InvoiceItemDaoTests {
         BigDecimal rate = new BigDecimal("20.00");
 
         UUID subscriptionId = UUID.randomUUID();
-        InvoiceItem item = new InvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", rate, rate, Currency.USD);
+        DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", rate, rate, Currency.USD);
         dao.createInvoiceItem(item);
 
-        List<IInvoiceItem> items = dao.getInvoiceItemsByAccount(accountId.toString());
+        List<InvoiceItem> items = dao.getInvoiceItemsByAccount(accountId.toString());
         assertEquals(items.size(), 1);
     }
 }

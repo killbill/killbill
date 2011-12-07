@@ -16,13 +16,13 @@
 
 package com.ning.billing.entitlement.events;
 
-import com.ning.billing.entitlement.events.user.IApiEvent;
+import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import org.joda.time.DateTime;
 
 import java.util.UUID;
 
-public abstract class EventBase implements IEvent {
+public abstract class EventBase implements EntitlementEvent {
 
     private final UUID uuid;
     private final UUID subscriptionId;
@@ -35,7 +35,7 @@ public abstract class EventBase implements IEvent {
     private boolean isActive;
     private UUID processingOwner;
     private DateTime nextAvailableProcessingTime;
-    private IEventLyfecycleState processingState;
+    private EventLifecycleState processingState;
 
     public EventBase(EventBaseBuilder builder) {
         this.uuid = builder.getUuid();
@@ -54,14 +54,14 @@ public abstract class EventBase implements IEvent {
     public EventBase(UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive) {
-        this(subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive, null, null, IEventLyfecycleState.AVAILABLE);
+        this(subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive, null, null, EventLifecycleState.AVAILABLE);
     }
 
     private EventBase(UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive,
             UUID processingOwner, DateTime nextAvailableProcessingTime,
-            IEventLyfecycleState processingState) {
+            EventLifecycleState processingState) {
         this(UUID.randomUUID(), subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive,
                 processingOwner, nextAvailableProcessingTime, processingState);
     }
@@ -70,7 +70,7 @@ public abstract class EventBase implements IEvent {
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive,
             UUID processingOwner, DateTime nextAvailableProcessingTime,
-            IEventLyfecycleState processingState) {
+            EventLifecycleState processingState) {
         this.uuid = id;
         this.subscriptionId = subscriptionId;
         this.requestedDate = requestedDate;
@@ -160,12 +160,12 @@ public abstract class EventBase implements IEvent {
 
 
     @Override
-    public IEventLyfecycleState getProcessingState() {
+    public EventLifecycleState getProcessingState() {
         return processingState;
     }
 
     @Override
-    public void setProcessingState(IEventLyfecycleState processingState) {
+    public void setProcessingState(EventLifecycleState processingState) {
         this.processingState = processingState;
     }
 
@@ -204,7 +204,7 @@ public abstract class EventBase implements IEvent {
     // - If all that is not enough return consistent by random ordering based on UUID
     //
     @Override
-    public int compareTo(IEvent other) {
+    public int compareTo(EntitlementEvent other) {
         if (other == null) {
             throw new NullPointerException("IEvent is compared to a null instance");
         }
@@ -224,7 +224,7 @@ public abstract class EventBase implements IEvent {
         } else if (getType() != other.getType()) {
             return (getType() == EventType.PHASE) ? -1 : 1;
         } else if (getType() == EventType.API_USER) {
-            return ((IApiEvent) this).getEventType().compareTo(((IApiEvent) other).getEventType());
+            return ((ApiEvent) this).getEventType().compareTo(((ApiEvent) other).getEventType());
         } else {
             return uuid.compareTo(other.getId());
         }
@@ -233,10 +233,10 @@ public abstract class EventBase implements IEvent {
 
     @Override
     public boolean equals(Object other) {
-      if (! (other instanceof IEvent)) {
+      if (! (other instanceof EntitlementEvent)) {
           return false;
       }
-      return (this.compareTo((IEvent) other) == 0);
+      return (this.compareTo((EntitlementEvent) other) == 0);
     }
 
     @Override

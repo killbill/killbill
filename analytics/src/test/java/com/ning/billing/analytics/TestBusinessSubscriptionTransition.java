@@ -17,7 +17,7 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.catalog.api.*;
-import com.ning.billing.entitlement.api.user.ISubscription;
+import com.ning.billing.entitlement.api.user.Subscription;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
@@ -39,11 +39,11 @@ public class TestBusinessSubscriptionTransition
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
     {
-        final IProduct product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
-        final IPlan plan = new MockPlan("platinum-monthly", product);
-        final IPlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-        final ISubscription prevISubscription = new MockSubscription(ISubscription.SubscriptionState.ACTIVE, plan, phase);
-        final ISubscription nextISubscription = new MockSubscription(ISubscription.SubscriptionState.CANCELLED, plan, phase);
+        final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
+        final Plan plan = new MockPlan("platinum-monthly", product);
+        final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
+        final Subscription prevISubscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
+        final Subscription nextISubscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
 
         prevSubscription = new BusinessSubscription(prevISubscription, USD);
         nextSubscription = new BusinessSubscription(nextISubscription, USD);

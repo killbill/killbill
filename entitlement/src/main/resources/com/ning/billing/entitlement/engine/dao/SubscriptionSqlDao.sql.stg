@@ -1,0 +1,63 @@
+group SubscriptionSqlDao;
+
+insertSubscription() ::= <<
+    insert into subscriptions (
+        id
+      , bundle_id
+      , category
+      , start_dt
+      , bundle_start_dt
+      , active_version
+      , ctd_dt
+      , ptd_dt
+    ) values (
+        :id
+      , :bundle_id
+      , :category
+      , :start_dt
+      , :bundle_start_dt
+      , :active_version
+      , :ctd_dt
+      , :ptd_dt 
+    );
+>>
+
+getSubscriptionFromId(id) ::= <<
+    select
+        id
+      , bundle_id
+      , category
+      , start_dt
+      , bundle_start_dt
+      , active_version
+      , ctd_dt
+      , ptd_dt    
+    from subscriptions
+    where id = :id
+    ;
+>>
+
+getSubscriptionsFromBundleId(bundle_id) ::= <<
+    select
+      id
+      , bundle_id
+      , category
+      , start_dt
+      , bundle_start_dt
+      , active_version
+      , ctd_dt
+      , ptd_dt    
+    from subscriptions
+    where bundle_id = :bundle_id
+    ;
+>>
+
+updateSubscription(id, active_version, ctd_dt, ptd_dt) ::= <<
+    update subscriptions
+    set
+      active_version = :active_version
+      , ctd_dt = :ctd_dt
+      , ptd_dt = :ptd_dt
+    where id = :id
+    ;
+>>

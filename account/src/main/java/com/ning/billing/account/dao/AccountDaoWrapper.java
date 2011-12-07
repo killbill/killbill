@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.*;
 import com.ning.billing.account.api.user.AccountChangeEventDefault;
 import com.ning.billing.account.api.user.AccountCreationEventDefault;
-import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.util.eventbus.EventBus;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -32,10 +32,10 @@ public class AccountDaoWrapper implements AccountDao {
     private final AccountDao accountDao;
     private final FieldStoreDao fieldStoreDao;
     private final IDBI dbi; // needed for transaction support
-    private final IEventBus eventBus;
+    private final EventBus eventBus;
 
     @Inject
-    public AccountDaoWrapper(IDBI dbi, IEventBus eventBus) {
+    public AccountDaoWrapper(IDBI dbi, EventBus eventBus) {
         this.dbi = dbi;
         this.eventBus = eventBus;
         this.accountDao = dbi.onDemand(AccountDao.class);
@@ -61,7 +61,7 @@ public class AccountDaoWrapper implements AccountDao {
     }
 
     private void loadFields(Account account) {
-        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), AccountDefault.OBJECT_TYPE);
+        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), DefaultAccount.OBJECT_TYPE);
         account.getFields().clear();
         if (fields != null) {
             for (CustomField field : fields) {
@@ -83,7 +83,7 @@ public class AccountDaoWrapper implements AccountDao {
     @Override
     public void save(final Account account) {
         final String accountId = account.getId().toString();
-        final String objectType = AccountDefault.OBJECT_TYPE;
+        final String objectType = DefaultAccount.OBJECT_TYPE;
 
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
@@ -100,10 +100,10 @@ public class AccountDaoWrapper implements AccountDao {
                     fieldStoreDao.save(accountId, objectType, fieldStore.getFieldList());
 
                     if (currentAccount == null) {
-                        AccountCreationEvent creationEvent = new AccountCreationEventDefault(account);
+                        AccountCreationNotification creationEvent = new AccountCreationEventDefault(account);
                         eventBus.post(creationEvent);
                     } else {
-                        AccountChangeEvent changeEvent = new AccountChangeEventDefault(account.getId(), currentAccount, account);
+                        AccountChangeNotification changeEvent = new AccountChangeEventDefault(account.getId(), currentAccount, account);
                         if (changeEvent.hasChanges()) {
                             eventBus.post(changeEvent);
                         }

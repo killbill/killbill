@@ -17,15 +17,15 @@
 package com.ning.billing.invoice.tests;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.IInternationalPrice;
-import com.ning.billing.catalog.api.IPrice;
+import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.Price;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
 import static org.testng.Assert.fail;
 
-public class InternationalPriceMock implements IInternationalPrice {
+public class InternationalPriceMock implements InternationalPrice {
     private final BigDecimal rate;
 
     public InternationalPriceMock(BigDecimal rate) {
@@ -33,7 +33,7 @@ public class InternationalPriceMock implements IInternationalPrice {
     }
 
     @Override
-    public IPrice[] getPrices() {
+    public Price[] getPrices() {
         fail();
 
         return null;

@@ -18,8 +18,8 @@ package com.ning.billing.account.core;
 
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
-import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.util.eventbus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,24 +29,24 @@ public class Engine implements AccountService {
     private final static Logger log = LoggerFactory.getLogger(Engine.class);
 
     private static final String ACCOUNT_SERVICE_NAME = "account-service";
-    private final IEventBus eventBus;
+    private final EventBus eventBus;
     private final AccountUserApi userApi;
 
     @Inject
-    public Engine(IEventBus eventBus, AccountUserApi userApi) {
+    public Engine(EventBus eventBus, AccountUserApi userApi) {
         this.eventBus = eventBus;
         this.userApi = userApi;
     }
 
-    @LyfecycleHandlerType(LyfecycleHandlerType.LyfecycleLevel.INIT_SERVICE)
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.INIT_SERVICE)
     public void initialize() {
     }
 
-    @LyfecycleHandlerType(LyfecycleHandlerType.LyfecycleLevel.START_SERVICE)
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.START_SERVICE)
     public void start() {
     }
 
-    @LyfecycleHandlerType(LyfecycleHandlerType.LyfecycleLevel.STOP_SERVICE)
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.STOP_SERVICE)
     public void stop() {
     }
 

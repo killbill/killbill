@@ -16,12 +16,11 @@
 
 package com.ning.billing.catalog;
 
+import com.ning.billing.util.config.XMLSchemaGenerator;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
-
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.util.config.XMLSchemaGenerator;
 
 public class CreateCatalogSchema {
 
@@ -36,7 +35,7 @@ public class CreateCatalogSchema {
 		
 		File f = new File(args[0]);
 		Writer w = new FileWriter(f);
-		w.write(XMLSchemaGenerator.xmlSchemaAsString(Catalog.class));
+		w.write(XMLSchemaGenerator.xmlSchemaAsString(StandaloneCatalog.class));
 		w.close();
 
 	}

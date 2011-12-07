@@ -20,7 +20,7 @@ import com.ning.billing.analytics.*;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.user.ISubscription;
+import com.ning.billing.entitlement.api.user.Subscription;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -44,9 +44,9 @@ public class TestAnalyticsDao
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
 
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
-    private final IProduct product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
-    private final IPlan plan = new MockPlan("platinum-monthly", product);
-    private final IPlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
+    private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
+    private final Plan plan = new MockPlan("platinum-monthly", product);
+    private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
 
     private BusinessSubscriptionTransitionDao businessSubscriptionTransitionDao;
     private BusinessSubscriptionTransition transition;
@@ -67,8 +67,8 @@ public class TestAnalyticsDao
 
     private void setupBusinessSubscriptionTransition()
     {
-        final BusinessSubscription prevSubscription = new BusinessSubscription(null, plan, phase, Currency.USD, new DateTime(DateTimeZone.UTC), ISubscription.SubscriptionState.ACTIVE, UUID.randomUUID(), UUID.randomUUID());
-        final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan, phase, Currency.USD, new DateTime(DateTimeZone.UTC), ISubscription.SubscriptionState.CANCELLED, UUID.randomUUID(), UUID.randomUUID());
+        final BusinessSubscription prevSubscription = new BusinessSubscription(null, plan, phase, Currency.USD, new DateTime(DateTimeZone.UTC), Subscription.SubscriptionState.ACTIVE, UUID.randomUUID(), UUID.randomUUID());
+        final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan, phase, Currency.USD, new DateTime(DateTimeZone.UTC), Subscription.SubscriptionState.CANCELLED, UUID.randomUUID(), UUID.randomUUID());
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan);
         final DateTime requestedTimestamp = new DateTime(DateTimeZone.UTC);
 

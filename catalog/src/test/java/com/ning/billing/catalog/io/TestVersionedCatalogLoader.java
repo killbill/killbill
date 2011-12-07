@@ -15,47 +15,39 @@
  */
 package com.ning.billing.catalog.io;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import com.google.common.io.Resources;
+import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.VersionedCatalog;
+import com.ning.billing.catalog.api.InvalidConfigException;
+import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.util.clock.DefaultClock;
+import org.joda.time.DateTime;
+import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
-
-import org.joda.time.DateTime;
-import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
-
-import com.google.common.io.Resources;
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.VersionedCatalog;
-import com.ning.billing.catalog.api.InvalidConfigException;
+import static org.testng.AssertJUnit.assertEquals;
 
 public class TestVersionedCatalogLoader {
-	private final VersionedCatalogLoader loader = new VersionedCatalogLoader();
+	private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
 
-
-	@Test(enabled=true)
-	public void testPullContentsFrom() throws MalformedURLException, IOException {
-		String contents = loader.pullContentsFrom(Resources.getResource("WeaponsHireSmall.xml"));
-
-		assertTrue(contents.length() > 0);
-		
-	}
 	
 	@Test(enabled=true)
-	public void testAppendToURL() throws MalformedURLException, IOException {
+	public void testAppendToURI() throws MalformedURLException, IOException, URISyntaxException {
 		URL u1 = new URL("http://www.ning.com/foo");
-		assertEquals("http://www.ning.com/foo/bar",loader.appendToURL(u1, "bar").toString());
+		assertEquals("http://www.ning.com/foo/bar",loader.appendToURI(u1, "bar").toString());
 
 		URL u2 = new URL("http://www.ning.com/foo/");
-		assertEquals("http://www.ning.com/foo/bar",loader.appendToURL(u2, "bar").toString());
+		assertEquals("http://www.ning.com/foo/bar",loader.appendToURI(u2, "bar").toString());
 		
 	}
 	
@@ -63,12 +55,12 @@ public class TestVersionedCatalogLoader {
 
 	
 	@Test(enabled=true)
-	public void testFindXmlFileReferences() throws MalformedURLException {
+	public void testFindXmlFileReferences() throws MalformedURLException, URISyntaxException {
 		String page = "dg.xml\n" + 
 				"replica.foo\n" + 
 				"snv1/\n" + 
 				"viking.xml\n" ;
-		List<URL> urls = loader.findXmlFileReferences(page, new URL("http://ning.com/"));
+		List<URI> urls = loader.findXmlFileReferences(page, new URL("http://ning.com/"));
 		assertEquals(2, urls.size());
 		assertEquals("http://ning.com/dg.xml", urls.get(0).toString());
 		assertEquals("http://ning.com/viking.xml", urls.get(1).toString());
@@ -101,7 +93,7 @@ public class TestVersionedCatalogLoader {
 	}
 	
 	@Test(enabled=true)
-	public void testFindXmlUrlReferences() throws MalformedURLException {
+	public void testFindXmlUrlReferences() throws MalformedURLException, URISyntaxException {
 		String page = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">" + 
 				"<html>" + 
 				" <head>" + 
@@ -119,18 +111,18 @@ public class TestVersionedCatalogLoader {
 				"</ul>" + 
 				"<address>Apache/2.2.3 (CentOS) Server at <a href=\"mailto:kate@ning.com\">gepo.ningops.net</a> Port 80</address>" + 
 				"</body></html>" ;
-		List<URL> urls = loader.findXmlUrlReferences(page, new URL("http://ning.com/"));
-		assertEquals(2, urls.size());
-		assertEquals("http://ning.com/dg.xml", urls.get(0).toString());
-		assertEquals("http://ning.com/viking.xml", urls.get(1).toString());
+		List<URI> uris = loader.findXmlUrlReferences(page, new URL("http://ning.com/"));
+		assertEquals(2, uris.size());
+		assertEquals("http://ning.com/dg.xml", uris.get(0).toString());
+		assertEquals("http://ning.com/viking.xml", uris.get(1).toString());
 		
 	}
 	
 	@Test(enabled=true)
-	public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
-		VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog"));
+	public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
+		VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog").toString());
 		assertEquals(4, c.size());
-		Iterator<Catalog> it = c.iterator();
+		Iterator<StandaloneCatalog> it = c.iterator();
 		it.next(); //discard the baseline
 		DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
 		assertEquals(dt.toDate(),it.next().getEffectiveDate());

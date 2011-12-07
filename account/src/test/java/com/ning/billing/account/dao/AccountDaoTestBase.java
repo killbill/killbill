@@ -20,8 +20,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.account.glue.AccountModuleMock;
+import com.ning.billing.util.eventbus.DefaultEventBusService;
 import com.ning.billing.util.eventbus.EventBusService;
-import com.ning.billing.util.eventbus.IEventBusService;
 import org.apache.commons.io.IOUtils;
 import org.testng.annotations.BeforeClass;
 
@@ -49,8 +49,8 @@ public abstract class AccountDaoTestBase {
             accountDao = injector.getInstance(AccountDao.class);
             accountDao.test();
 
-            IEventBusService busService = injector.getInstance(IEventBusService.class);
-            ((EventBusService) busService).startBus();
+            EventBusService busService = injector.getInstance(EventBusService.class);
+            ((DefaultEventBusService) busService).startBus();
         }
         catch (Throwable t) {
             fail(t.toString());

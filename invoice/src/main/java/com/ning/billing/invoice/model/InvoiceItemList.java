@@ -16,20 +16,20 @@
 
 package com.ning.billing.invoice.model;
 
-import com.ning.billing.invoice.api.IInvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItem;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InvoiceItemList extends ArrayList<IInvoiceItem> {
+public class InvoiceItemList extends ArrayList<InvoiceItem> {
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
 
     public BigDecimal getTotalAmount() {
         // TODO: Jeff -- naive implementation, assumes all invoice items share the same currency
         BigDecimal total = new BigDecimal("0");
 
-        for (IInvoiceItem item : this) {
+        for (InvoiceItem item : this) {
             total = total.add(item.getAmount());
         }
 
@@ -37,9 +37,9 @@ public class InvoiceItemList extends ArrayList<IInvoiceItem> {
     }
 
     public void removeZeroDollarItems() {
-        List<IInvoiceItem> itemsToRemove = new ArrayList<IInvoiceItem>();
+        List<InvoiceItem> itemsToRemove = new ArrayList<InvoiceItem>();
 
-        for (IInvoiceItem item : this) {
+        for (InvoiceItem item : this) {
             if (item.getAmount().compareTo(BigDecimal.ZERO) == 0) {
                 itemsToRemove.add(item);
             }
@@ -49,12 +49,12 @@ public class InvoiceItemList extends ArrayList<IInvoiceItem> {
     }
 
     public void removeCancellingPairs() {
-        List<IInvoiceItem> itemsToRemove = new ArrayList<IInvoiceItem>();
+        List<InvoiceItem> itemsToRemove = new ArrayList<InvoiceItem>();
 
         for (int firstItemIndex = 0; firstItemIndex < this.size(); firstItemIndex++) {
             for (int secondItemIndex = firstItemIndex + 1; secondItemIndex < this.size(); secondItemIndex++) {
-                IInvoiceItem firstItem = this.get(firstItemIndex);
-                IInvoiceItem secondItem = this.get(secondItemIndex);
+                InvoiceItem firstItem = this.get(firstItemIndex);
+                InvoiceItem secondItem = this.get(secondItemIndex);
                 if (firstItem.cancels(secondItem)) {
                     itemsToRemove.add(firstItem);
                     itemsToRemove.add(secondItem);

@@ -16,13 +16,11 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import org.testng.annotations.Test;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.entitlement.glue.CatalogModuleMock;
-import com.ning.billing.entitlement.glue.EngineModuleSqlMock;
+import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import org.testng.annotations.Test;
 
 public class TestUserApiCancelSql extends TestUserApiCancel {
 
@@ -31,7 +29,7 @@ public class TestUserApiCancelSql extends TestUserApiCancel {
 
     @Override
     public Injector getInjector() {
-        return Guice.createInjector(Stage.DEVELOPMENT, new EngineModuleSqlMock(), new CatalogModuleMock());
+        return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
     @Test(enabled= true, groups={"stress"})

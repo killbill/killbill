@@ -17,7 +17,7 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountDefault;
+import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.FieldStore;
 import com.ning.billing.catalog.api.Currency;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -105,6 +105,6 @@ public class MockAccount implements Account
 
     @Override
     public String getObjectName() {
-        return AccountDefault.OBJECT_TYPE;
+        return DefaultAccount.OBJECT_TYPE;
     }
 }

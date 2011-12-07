@@ -16,13 +16,12 @@
 
 package com.ning.billing.catalog;
 
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.util.config.ValidationErrors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.util.config.ValidationErrors;
 
 public class TestPlanPhase {
 	Logger log = LoggerFactory.getLogger(TestPlanPhase.class);
@@ -31,7 +30,7 @@ public class TestPlanPhase {
 	public void testValidation() {
 		log.info("Testing Plan Phase Validation");
 		
-		PlanPhase pp = new MockPlanPhase().setBillCycleDuration(BillingPeriod.MONTHLY).setReccuringPrice(null);
+		DefaultPlanPhase pp = new MockPlanPhase().setBillCycleDuration(BillingPeriod.MONTHLY).setReccuringPrice(null).setFixedPrice(new DefaultInternationalPrice());
 		ValidationErrors errors = pp.validate(new MockCatalog(), new ValidationErrors());
 		errors.log(log);
 		Assert.assertEquals(errors.size(), 1);
@@ -40,5 +39,10 @@ public class TestPlanPhase {
 		errors = pp.validate(new MockCatalog(), new ValidationErrors());
 		errors.log(log);
 		Assert.assertEquals(errors.size(), 1);
-	}
+
+		pp = new MockPlanPhase().setReccuringPrice(null).setFixedPrice(null).setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD);
+		errors = pp.validate(new MockCatalog(), new ValidationErrors());
+		errors.log(log);
+		Assert.assertEquals(errors.size(), 1);
+}
 }

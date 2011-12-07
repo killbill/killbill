@@ -17,9 +17,9 @@
 package com.ning.billing.invoice.dao;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.IInvoiceItem;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.model.InvoiceDefault;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoice;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -104,7 +104,7 @@ public interface InvoiceDao {
             DateTime lastPaymentAttempt = lastPaymentAttemptTimeStamp == null ? null : new DateTime(lastPaymentAttemptTimeStamp);
             Currency currency = Currency.valueOf(result.getString("currency"));
 
-            return new InvoiceDefault(id, accountId, invoiceDate, targetDate, currency, lastPaymentAttempt, amountPaid, new ArrayList<IInvoiceItem>());
+            return new DefaultInvoice(id, accountId, invoiceDate, targetDate, currency, lastPaymentAttempt, amountPaid, new ArrayList<InvoiceItem>());
         }
     }
 }

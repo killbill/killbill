@@ -17,8 +17,8 @@
 package com.ning.billing.invoice.dao;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.IInvoiceItem;
-import com.ning.billing.invoice.model.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -38,19 +38,19 @@ import java.util.UUID;
 @RegisterMapper(InvoiceItemDao.InvoiceItemMapper.class)
 public interface InvoiceItemDao {
     @SqlQuery
-    IInvoiceItem getInvoiceItem(@Bind("id") final String invoiceItemId);
+    InvoiceItem getInvoiceItem(@Bind("id") final String invoiceItemId);
 
     @SqlQuery
-    List<IInvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
+    List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
 
     @SqlQuery
-    List<IInvoiceItem> getInvoiceItemsByAccount(@Bind("accountId") final String accountId);
+    List<InvoiceItem> getInvoiceItemsByAccount(@Bind("accountId") final String accountId);
 
     @SqlQuery
-    List<IInvoiceItem> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId);
+    List<InvoiceItem> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId);
 
     @SqlUpdate
-    void createInvoiceItem(@InvoiceItemBinder final IInvoiceItem invoiceItem);
+    void createInvoiceItem(@InvoiceItemBinder final InvoiceItem invoiceItem);
 
     @SqlUpdate
     void test();
@@ -61,8 +61,8 @@ public interface InvoiceItemDao {
     public @interface InvoiceItemBinder {
         public static class InvoiceItemBinderFactory implements BinderFactory {
             public Binder build(Annotation annotation) {
-                return new Binder<InvoiceItemBinder, IInvoiceItem>() {
-                    public void bind(SQLStatement q, InvoiceItemBinder bind, IInvoiceItem item) {
+                return new Binder<InvoiceItemBinder, InvoiceItem>() {
+                    public void bind(SQLStatement q, InvoiceItemBinder bind, InvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("subscriptionId", item.getSubscriptionId().toString());
@@ -78,9 +78,9 @@ public interface InvoiceItemDao {
         }
     }
 
-    public static class InvoiceItemMapper implements ResultSetMapper<IInvoiceItem> {
+    public static class InvoiceItemMapper implements ResultSetMapper<InvoiceItem> {
         @Override
-        public IInvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
+        public InvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
             UUID id = UUID.fromString(result.getString("id"));
             UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
             UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
@@ -91,7 +91,7 @@ public interface InvoiceItemDao {
             BigDecimal rate = result.getBigDecimal("rate");
             Currency currency = Currency.valueOf(result.getString("currency"));
 
-            return new InvoiceItem(id, invoiceId, subscriptionId, startDate, endDate, description, amount, rate , currency);
+            return new DefaultInvoiceItem(id, invoiceId, subscriptionId, startDate, endDate, description, amount, rate , currency);
         }
     }
 }

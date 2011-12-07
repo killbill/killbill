@@ -16,17 +16,18 @@
 
 package com.ning.billing.catalog;
 
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.rules.CaseCancelPolicy;
-import com.ning.billing.catalog.rules.CaseChangePlanAlignment;
-import com.ning.billing.catalog.rules.CaseChangePlanPolicy;
-import com.ning.billing.catalog.rules.CaseCreateAlignment;
-import com.ning.billing.catalog.rules.PlanRules;
+import com.ning.billing.catalog.rules.*;
 
-public class MockCatalog extends Catalog {
+import java.util.Date;
+
+public class MockCatalog extends StandaloneCatalog {
 	private static final String[] PRODUCT_NAMES = new String[]{ "TestProduct1", "TestProduct2", "TestProduct3"};
 	
 	public MockCatalog() {
+		setEffectiveDate(new Date());
 		populateProducts();
 		populateRules();
 		populatePlans();
@@ -48,31 +49,32 @@ public class MockCatalog extends Catalog {
 
 	public void populateProducts() {
 		String[] names = getProductNames();
-		Product[] products = new Product[names.length];
+		DefaultProduct[] products = new DefaultProduct[names.length];
 		for(int i = 0; i < names.length; i++) {
-			products[i] = new Product(names[i], ProductCategory.BASE);
+			products[i] = new DefaultProduct(names[i], ProductCategory.BASE);
 		}
 		setProducts(products);
 	}
 	
 	public void populatePlans() {
-		Product[] products = getProducts();
-		Plan[] plans = new Plan[products.length];
+		DefaultProduct[] products = getProducts();
+		DefaultPlan[] plans = new DefaultPlan[products.length];
 		for(int i = 0; i < products.length; i++) {
-			plans[i] = new MockPlan().setName(products[i].getName().toLowerCase() + "-plan").setProduct(products[i]);
+			DefaultPlanPhase phase = new DefaultPlanPhase().setPhaseType(PhaseType.EVERGREEN).setBillingPeriod(BillingPeriod.MONTHLY).setReccuringPrice(new DefaultInternationalPrice());
+			plans[i] = new MockPlan().setName(products[i].getName().toLowerCase() + "-plan").setProduct(products[i]).setFinalPhase(phase);
 		}
 		setPlans(plans);
 	}
 
 	public void populatePriceLists() {
-		Plan[] plans = getPlans();
+		DefaultPlan[] plans = getPlans();
 		
-		PriceList[] priceList = new PriceList[plans.length - 1];
+		DefaultPriceList[] priceList = new DefaultPriceList[plans.length - 1];
 		for(int i = 1; i < plans.length; i++) {
-			priceList[i-1] = new PriceList(new Plan[]{plans[i]},plans[i].getName()+ "-pl");
+			priceList[i-1] = new DefaultPriceList(new DefaultPlan[]{plans[i]},plans[i].getName()+ "-pl");
 		}
 		
-		PriceListSet set = new PriceListSet(new PriceListDefault(new Plan[]{plans[0]}),priceList);
+		DefaultPriceListSet set = new DefaultPriceListSet(new PriceListDefault(new DefaultPlan[]{plans[0]}),priceList);
 		setPriceLists(set);
 	}
 	

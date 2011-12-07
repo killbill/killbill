@@ -17,56 +17,45 @@
 package com.ning.billing.beatrix.lifecycle;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Modifier;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.jar.JarFile;
-
+import com.ning.billing.lifecycle.KillbillService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.lifecycle.IService;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
+import java.util.jar.JarFile;
 
 public class ServiceFinder {
 
     private static final Logger log = LoggerFactory.getLogger(ServiceFinder.class);
 
 	private final ClassLoader loader;
-	private final Set<Class<? extends IService>> servicesTypes;
+	private final Set<Class<? extends KillbillService>> servicesTypes;
 
 	public ServiceFinder(ClassLoader loader) {
 		this.loader = loader;
 		this.servicesTypes = initialize();
-		Iterator<Class<? extends IService>> it = servicesTypes.iterator();
+		Iterator<Class<? extends KillbillService>> it = servicesTypes.iterator();
 		while (it.hasNext()) {
-		    Class<? extends IService> svc = it.next();
+		    Class<? extends KillbillService> svc = it.next();
 			log.debug("Found IService classes {}", svc.getName());
 		}
 	}
 
-	public Set<Class<? extends IService>> getServices() {
+	public Set<Class<? extends KillbillService>> getServices() {
 	    return servicesTypes;
 	}
 
-	private Set<Class<? extends IService>> initialize() {
+	private Set<Class<? extends KillbillService>> initialize() {
 		try {
 
 		    final Set<String> packageFilter = new HashSet<String>();
 		    packageFilter.add("com.ning.billing");
 		    final String jarFilter = "killbill";
-			return findClasses(loader, IService.class.getName().toString(), jarFilter, packageFilter);
+			return findClasses(loader, KillbillService.class.getName().toString(), jarFilter, packageFilter);
 		} catch (ClassNotFoundException nfe) {
 			throw new RuntimeException("Failed to initialize ClassFinder", nfe);
 		}
@@ -76,13 +65,13 @@ public class ServiceFinder {
      *  Code originally from Kris Dover <krisdover@hotmail.com> and adapted for my purpose.
      *
      */
-	private static Set<Class<? extends IService>> findClasses(ClassLoader classLoader,
+	private static Set<Class<? extends KillbillService>> findClasses(ClassLoader classLoader,
 	        String interfaceFilter,
 	        String jarFilter,
 	        Set<String> packageFilter)
 	        throws ClassNotFoundException {
 
-	    final Set<Class<? extends IService>> result = new HashSet<Class<? extends IService>>();
+	    final Set<Class<? extends KillbillService>> result = new HashSet<Class<? extends KillbillService>>();
 
 	    Object[] classPaths;
 	    try {
@@ -165,7 +154,7 @@ public class ServiceFinder {
 	                    if (!interfaceFilter.equals(interfaceName) ) {
 	                        continue;
 	                    }
-	                    result.add((Class<? extends IService>) theClass);
+	                    result.add((Class<? extends KillbillService>) theClass);
 	                    break;
 	                }
 

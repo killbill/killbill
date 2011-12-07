@@ -19,26 +19,25 @@ package com.ning.billing.entitlement.api.user;
 import com.google.inject.Injector;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.FieldStore;
-import com.ning.billing.catalog.CatalogService;
+import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.*;
-import com.ning.billing.config.IEntitlementConfig;
+import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.api.IEntitlementService;
-import com.ning.billing.entitlement.api.billing.IEntitlementBillingApi;
+import com.ning.billing.entitlement.api.EntitlementService;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.engine.core.Engine;
-import com.ning.billing.entitlement.engine.dao.IEntitlementDao;
-import com.ning.billing.entitlement.engine.dao.IEntitlementDaoMock;
-import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.events.phase.IPhaseEvent;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.engine.dao.MockEntitlementDao;
+import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.entitlement.events.user.IApiEvent;
-import com.ning.billing.entitlement.glue.InjectorMagic;
-import com.ning.billing.lifecycle.IService.ServiceException;
+import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.clock.IClock;
+import com.ning.billing.util.eventbus.DefaultEventBusService;
 import com.ning.billing.util.eventbus.EventBusService;
-import com.ning.billing.util.eventbus.IEventBusService;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +46,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -64,19 +62,19 @@ public abstract class TestUserApiBase {
 
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
 
-    protected IEntitlementService entitlementService;
-    protected IEntitlementUserApi entitlementApi;
-    protected IEntitlementBillingApi billingApi;
-    protected ICatalogService catalogService;
-    protected IEntitlementConfig config;
-    protected IEntitlementDao dao;
+    protected EntitlementService entitlementService;
+    protected EntitlementUserApi entitlementApi;
+    protected EntitlementBillingApi billingApi;
+    protected CatalogService catalogService;
+    protected EntitlementConfig config;
+    protected EntitlementDao dao;
     protected ClockMock clock;
-    protected IEventBusService busService;
+    protected EventBusService busService;
 
     protected Account account;
-    protected ICatalog catalog;
+    protected Catalog catalog;
     protected ApiTestListener testListener;
-    protected ISubscriptionBundle bundle;
+    protected SubscriptionBundle bundle;
 
     public static void loadSystemPropertiesFromClasspath( final String resource )
     {
@@ -93,9 +91,8 @@ public abstract class TestUserApiBase {
     @AfterClass(groups={"setup"})
     public void tearDown() {
         try {
-            InjectorMagic.instance = null;
             busService.getEventBus().register(testListener);
-            ((EventBusService) busService).stopBus();
+            ((DefaultEventBusService) busService).stopBus();
         } catch (Exception e) {
             log.warn("Failed to tearDown test properly ", e);
         }
@@ -108,16 +105,16 @@ public abstract class TestUserApiBase {
         loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = getInjector();
 
-        entitlementService = g.getInstance(IEntitlementService.class);
-        catalogService = g.getInstance(ICatalogService.class);
-        busService = g.getInstance(IEventBusService.class);
-        config = g.getInstance(IEntitlementConfig.class);
-        dao = g.getInstance(IEntitlementDao.class);
-        clock = (ClockMock) g.getInstance(IClock.class);
+        entitlementService = g.getInstance(EntitlementService.class);
+        catalogService = g.getInstance(CatalogService.class);
+        busService = g.getInstance(EventBusService.class);
+        config = g.getInstance(EntitlementConfig.class);
+        dao = g.getInstance(EntitlementDao.class);
+        clock = (ClockMock) g.getInstance(Clock.class);
         try {
 
-            ((CatalogService) catalogService).loadCatalog();
-            ((EventBusService) busService).startBus();
+            ((DefaultCatalogService) catalogService).loadCatalog();
+            ((DefaultEventBusService) busService).startBus();
             ((Engine) entitlementService).initialize();
             init();
         } catch (EntitlementUserApiException e) {
@@ -152,7 +149,7 @@ public abstract class TestUserApiBase {
         testListener.reset();
 
         clock.resetDeltaFromReality();
-        ((IEntitlementDaoMock) dao).reset();
+        ((MockEntitlementDao) dao).reset();
         try {
             busService.getEventBus().register(testListener);
             bundle = entitlementApi.createBundleForAccount(account, "myDefaultBundle");
@@ -194,17 +191,17 @@ public abstract class TestUserApiBase {
         }
     }
 
-    protected Subscription createSubscription(String productName, BillingPeriod term, String planSet) throws EntitlementUserApiException {
+    protected SubscriptionData createSubscription(String productName, BillingPeriod term, String planSet) throws EntitlementUserApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        Subscription subscription = (Subscription) entitlementApi.createSubscription(bundle.getId(), productName, term, planSet, clock.getUTCNow());
+        SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSet, null, clock.getUTCNow());
         assertNotNull(subscription);
         assertTrue(testListener.isCompleted(5000));
         return subscription;
     }
 
-    protected void checkNextPhaseChange(Subscription subscription, int expPendingEvents, DateTime expPhaseChange) {
+    protected void checkNextPhaseChange(SubscriptionData subscription, int expPendingEvents, DateTime expPhaseChange) {
 
-        List<IEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
+        List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
         assertNotNull(events);
         printEvents(events);
         assertEquals(events.size(), expPendingEvents);
@@ -212,13 +209,13 @@ public abstract class TestUserApiBase {
             boolean foundPhase = false;
             boolean foundChange = false;
 
-            for (IEvent cur : events) {
-                if (cur instanceof IPhaseEvent) {
+            for (EntitlementEvent cur : events) {
+                if (cur instanceof PhaseEvent) {
                     assertEquals(foundPhase, false);
                     foundPhase = true;
                     assertEquals(cur.getEffectiveDate(), expPhaseChange);
-                } else if (cur instanceof IApiEvent) {
-                    IApiEvent uEvent = (IApiEvent) cur;
+                } else if (cur instanceof ApiEvent) {
+                    ApiEvent uEvent = (ApiEvent) cur;
                     assertEquals(ApiEventType.CHANGE, uEvent.getEventType());
                     assertEquals(foundChange, false);
                     foundChange = true;
@@ -235,8 +232,8 @@ public abstract class TestUserApiBase {
         assertTrue(in.isEqual(upper) || in.isBefore(upper));
     }
 
-    protected IDuration getDurationDay(final int days) {
-        IDuration result = new IDuration() {
+    protected Duration getDurationDay(final int days) {
+        Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
                 return TimeUnit.DAYS;
@@ -249,8 +246,8 @@ public abstract class TestUserApiBase {
         return result;
     }
 
-    protected IDuration getDurationMonth(final int months) {
-        IDuration result = new IDuration() {
+    protected Duration getDurationMonth(final int months) {
+        Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
                 return TimeUnit.MONTHS;
@@ -264,8 +261,8 @@ public abstract class TestUserApiBase {
     }
 
 
-    protected IDuration getDurationYear(final int years) {
-        IDuration result = new IDuration() {
+    protected Duration getDurationYear(final int years) {
+        Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
                 return TimeUnit.YEARS;
@@ -280,14 +277,18 @@ public abstract class TestUserApiBase {
 
     protected Account getAccount() {
         Account account = new Account() {
+            private final UUID id = UUID.randomUUID();
+
             @Override
             public String getName() {
-                return "accountFirstName accountLastName";
+                return "firstName lastName";
             }
+
             @Override
             public int getFirstNameLength() {
-                return "accountFirstName".length();
+                return "firstName".length();
             }
+
             @Override
             public String getEmail() {
                 return "accountName@yahoo.com";
@@ -308,29 +309,28 @@ public abstract class TestUserApiBase {
             public Currency getCurrency() {
                 return Currency.USD;
             }
+
             @Override
             public UUID getId() {
-                return UUID.randomUUID();
+                return id;
             }
 
             @Override
             public String getIdAsString() {
-                throw new NotImplementedException();
+                return id.toString();
             }
 
             @Override
             public String getFieldValue(String fieldName) {
-                throw new NotImplementedException();
+                return null;
             }
 
             @Override
-            public void setFieldValue(String fieldName, String fieldValue) {
-                throw new NotImplementedException();
-            }
+            public void setFieldValue(String fieldName, String fieldValue) {}
 
             @Override
             public FieldStore getFields() {
-                throw new NotImplementedException();
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
 
             @Override
@@ -342,14 +342,14 @@ public abstract class TestUserApiBase {
     }
 
 
-    protected void printEvents(List<IEvent> events) {
-        for (IEvent cur : events) {
+    protected void printEvents(List<EntitlementEvent> events) {
+        for (EntitlementEvent cur : events) {
             log.debug("Inspect event " + cur);
         }
     }
 
-    protected void printSubscriptionTransitions(List<ISubscriptionTransition> transitions) {
-        for (ISubscriptionTransition cur : transitions) {
+    protected void printSubscriptionTransitions(List<SubscriptionTransition> transitions) {
+        for (SubscriptionTransition cur : transitions) {
             log.debug("Transition " + cur);
         }
     }

@@ -24,9 +24,9 @@ import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.*;
-import com.ning.billing.entitlement.events.IEvent;
+import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.util.eventbus.EventBus;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -50,13 +50,13 @@ public class TestAnalyticsService
     private AccountUserApi accountApi;
 
     @Inject
-    private IEntitlementUserApi entitlementApi;
+    private EntitlementUserApi entitlementApi;
 
     @Inject
     private AnalyticsService service;
 
     @Inject
-    private IEventBus bus;
+    private EventBus bus;
 
     @Inject
     private BusinessSubscriptionTransitionDao dao;
@@ -64,11 +64,11 @@ public class TestAnalyticsService
     @Inject
     private MysqlTestingHelper helper;
 
-    private ISubscriptionTransition transition;
+    private SubscriptionTransition transition;
     private BusinessSubscriptionTransition expectedTransition;
 
     @BeforeClass(alwaysRun = true)
-    public void Setup() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException
+    public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException
     {
         final String analyticsDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
         // For bundles
@@ -80,7 +80,48 @@ public class TestAnalyticsService
         helper.initDb(accountDdl);
         helper.initDb(entitlementDdl);
 
-        bus.start();
+        // We need a bundle to retrieve the event key
+        final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
+        final Account storedAccount = accountApi.createAccount(account);
+        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount, KEY);
+
+        // Verify we correctly initialized the account subsystem
+        Assert.assertNotNull(bundle);
+        Assert.assertEquals(bundle.getKey(), KEY);
+
+        // Create a subscription transition
+        final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
+        final Plan plan = new MockPlan("platinum-monthly", product);
+        final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
+        final UUID subscriptionId = UUID.randomUUID();
+        final DateTime effectiveTransitionTime = new DateTime(DateTimeZone.UTC);
+        final DateTime requestedTransitionTime = new DateTime(DateTimeZone.UTC);
+        final String priceList = "something";
+        transition = new SubscriptionTransitionData(
+            UUID.randomUUID(),
+            subscriptionId,
+            bundle.getId(),
+            EntitlementEvent.EventType.API_USER,
+            ApiEventType.CREATE,
+            requestedTransitionTime,
+            effectiveTransitionTime,
+            null,
+            null,
+            null,
+            null,
+            Subscription.SubscriptionState.ACTIVE,
+            plan,
+            phase,
+            priceList
+        );
+        expectedTransition = new BusinessSubscriptionTransition(
+            KEY,
+            ACCOUNT_KEY,
+            requestedTransitionTime,
+            BusinessSubscriptionEvent.subscriptionCreated(plan),
+            null,
+            new BusinessSubscription(priceList, plan, phase, null, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
+        );
     }
 
     @AfterClass(alwaysRun = true)
@@ -95,51 +136,9 @@ public class TestAnalyticsService
         // Make sure the service has been instantiated
         Assert.assertEquals(service.getName(), "analytics-service");
 
-         // We need a bundle to retrieve the event key
-        final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
-        final Account storedAccount = accountApi.createAccount(account);
-        final ISubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount, KEY);
-
-        // Verify we correctly initialized the account subsystem
-        Assert.assertNotNull(bundle);
-        Assert.assertEquals(bundle.getKey(), KEY);
-
-        // Create a subscription transition
-        final IProduct product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
-        final IPlan plan = new MockPlan("platinum-monthly", product);
-        final IPlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-        final UUID subscriptionId = UUID.randomUUID();
-        final DateTime effectiveTransitionTime = new DateTime(DateTimeZone.UTC);
-        final DateTime requestedTransitionTime = new DateTime(DateTimeZone.UTC);
-        final String priceList = "something";
-        transition = new SubscriptionTransition(
-            UUID.randomUUID(),
-            subscriptionId,
-            bundle.getId(),
-            IEvent.EventType.API_USER,
-            ApiEventType.CREATE,
-            requestedTransitionTime,
-            effectiveTransitionTime,
-            null,
-            null,
-            null,
-            null,
-            ISubscription.SubscriptionState.ACTIVE,
-            plan,
-            phase,
-            priceList
-        );
-        expectedTransition = new BusinessSubscriptionTransition(
-            KEY,
-            ACCOUNT_KEY,
-            requestedTransitionTime,
-            BusinessSubscriptionEvent.subscriptionCreated(plan),
-            null,
-            new BusinessSubscription(priceList, plan, phase, Currency.USD, effectiveTransitionTime, ISubscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
-        );
-
-        // Make sure we can register our service
+        // Test the bus and make sure we can register our service
         try {
+            bus.start();
             service.registerForNotifications();
         }
         catch (Throwable t) {

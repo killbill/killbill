@@ -16,7 +16,7 @@
 
 package com.ning.billing.account.api.user;
 
-import com.ning.billing.account.api.AccountDefault;
+import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
 
 import java.util.UUID;
@@ -74,7 +74,7 @@ public class AccountBuilder {
         return this;
     }
 
-    public AccountDefault build() {
-        return new AccountDefault(id, externalKey, email, name, firstNameLength, phone, currency, billingCycleDay);
+    public DefaultAccount build() {
+        return new DefaultAccount(id, externalKey, email, name, firstNameLength, phone, currency, billingCycleDay);
     }
 }

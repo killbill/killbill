@@ -16,39 +16,39 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import com.ning.billing.entitlement.events.EntitlementEvent;
+
 import java.util.LinkedList;
 import java.util.UUID;
-
-import com.ning.billing.entitlement.events.IEvent;
 
 public class SubscriptionEvents {
 
     public static final long INITIAL_VERSION = 1;
 
     private final UUID subscriptionId;
-    private final LinkedList<IEvent> events;
+    private final LinkedList<EntitlementEvent> events;
 
     private long activeVersion;
 
     public SubscriptionEvents(UUID subscriptionId) {
         super();
         this.subscriptionId = subscriptionId;
-        this.events = new LinkedList<IEvent>();
+        this.events = new LinkedList<EntitlementEvent>();
         this.activeVersion = INITIAL_VERSION;
     }
 
-    public void addEvent(IEvent ev) {
+    public void addEvent(EntitlementEvent ev) {
         events.add(ev);
     }
 
-    public LinkedList<IEvent> getCurrentView() {
+    public LinkedList<EntitlementEvent> getCurrentView() {
         return getViewForVersion(activeVersion);
     }
 
-    public LinkedList<IEvent> getViewForVersion(final long version) {
+    public LinkedList<EntitlementEvent> getViewForVersion(final long version) {
 
-        LinkedList<IEvent> result = new LinkedList<IEvent>();
-        for (IEvent cur : events) {
+        LinkedList<EntitlementEvent> result = new LinkedList<EntitlementEvent>();
+        for (EntitlementEvent cur : events) {
             if (cur.getActiveVersion() == version) {
                 result.add(cur);
             }

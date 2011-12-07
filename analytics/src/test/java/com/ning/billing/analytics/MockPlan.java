@@ -16,34 +16,32 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.PlanAlignmentChange;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 
 import java.util.Iterator;
 
-public class MockPlan implements IPlan
+public class MockPlan implements Plan
 {
     private final String name;
-    private final IProduct product;
+    private final Product product;
 
-    public MockPlan(final String name, final IProduct product)
+    public MockPlan(final String name, final Product product)
     {
         this.name = name;
         this.product = product;
     }
 
     @Override
-    public IPlanPhase[] getInitialPhases()
+    public PlanPhase[] getInitialPhases()
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IProduct getProduct()
+    public Product getProduct()
     {
         return product;
     }
@@ -55,13 +53,13 @@ public class MockPlan implements IPlan
     }
 
     @Override
-    public Iterator<IPlanPhase> getInitialPhaseIterator()
+    public Iterator<PlanPhase> getInitialPhaseIterator()
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IPlanPhase getFinalPhase()
+    public PlanPhase getFinalPhase()
     {
         throw new UnsupportedOperationException();
     }
@@ -77,4 +75,9 @@ public class MockPlan implements IPlan
     {
         throw new UnsupportedOperationException();
     }
+
+	@Override
+	public PlanPhase[] getAllPhases() {
+		 throw new UnsupportedOperationException();
+	}
 }

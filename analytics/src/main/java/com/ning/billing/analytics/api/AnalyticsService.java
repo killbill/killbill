@@ -18,8 +18,8 @@ package com.ning.billing.analytics.api;
 
 import com.google.inject.Inject;
 import com.ning.billing.analytics.AnalyticsListener;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
-import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.util.eventbus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +30,10 @@ public class AnalyticsService implements IAnalyticsService
     private static final String ANALYTICS_SERVICE = "analytics-service";
 
     private final AnalyticsListener listener;
-    private final IEventBus eventBus;
+    private final EventBus eventBus;
 
     @Inject
-    public AnalyticsService(final AnalyticsListener listener, final IEventBus eventBus)
+    public AnalyticsService(final AnalyticsListener listener, final EventBus eventBus)
     {
         this.listener = listener;
         this.eventBus = eventBus;
@@ -45,13 +45,13 @@ public class AnalyticsService implements IAnalyticsService
         return ANALYTICS_SERVICE;
     }
 
-    @LyfecycleHandlerType(LyfecycleHandlerType.LyfecycleLevel.REGISTER_EVENTS)
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
     public void registerForNotifications()
     {
         try {
             eventBus.register(listener);
         }
-        catch (IEventBus.EventBusException e) {
+        catch (EventBus.EventBusException e) {
             log.error("Unable to register to the EventBus!", e);
         }
     }

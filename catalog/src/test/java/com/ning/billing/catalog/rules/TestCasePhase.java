@@ -16,22 +16,15 @@
 
 package com.ning.billing.catalog.rules;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
-
-import javax.xml.bind.annotation.XmlElement;
-
+import com.ning.billing.catalog.DefaultPriceList;
+import com.ning.billing.catalog.DefaultProduct;
+import com.ning.billing.catalog.MockCatalog;
+import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.api.*;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.MockCatalog;
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.rules.CasePhase;
+import javax.xml.bind.annotation.XmlElement;
 
 public class TestCasePhase {
 	protected class CaseResult extends CasePhase<Result>  {
@@ -39,7 +32,7 @@ public class TestCasePhase {
 		@XmlElement(required=true)
 		private Result policy;
 
-		public CaseResult(Product product, ProductCategory productCategory, BillingPeriod billingPeriod, PriceList priceList,
+		public CaseResult(DefaultProduct product, ProductCategory productCategory, BillingPeriod billingPeriod, DefaultPriceList priceList,
 				PhaseType phaseType, Result policy) {
 			setProduct(product);
 			setProductCategory(productCategory);
@@ -60,8 +53,8 @@ public class TestCasePhase {
 	public void testBasic(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -73,7 +66,7 @@ public class TestCasePhase {
 				Result.FOO);
 
 		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
-		assertionNull(cr, "lala", ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
+		assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", PhaseType.EVERGREEN, cat);
@@ -84,8 +77,8 @@ public class TestCasePhase {
 	public void testWildCardProduct(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -97,7 +90,7 @@ public class TestCasePhase {
 				Result.FOO);
 
 		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
-		assertion(Result.FOO, cr,"lala", ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
+		assertion(Result.FOO, cr, cat.getProducts()[1].getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", PhaseType.EVERGREEN, cat);
@@ -108,8 +101,8 @@ public class TestCasePhase {
 	public void testWildCardProductCategory(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -121,7 +114,7 @@ public class TestCasePhase {
 				Result.FOO);
 
 		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
-		assertionNull(cr, "lala", ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
+		assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertion(Result.FOO, cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", PhaseType.EVERGREEN, cat);
@@ -132,8 +125,8 @@ public class TestCasePhase {
 	public void testWildCardBillingPeriod(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -145,7 +138,7 @@ public class TestCasePhase {
 				Result.FOO);
 
 		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
-		assertionNull(cr, "lala", ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
+		assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertion(Result.FOO,cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", PhaseType.EVERGREEN, cat);
@@ -156,8 +149,8 @@ public class TestCasePhase {
 	public void testWildCardPriceList(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -169,7 +162,7 @@ public class TestCasePhase {
 				Result.FOO);
 
 		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
-		assertionNull(cr, "lala", ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
+		assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", PhaseType.EVERGREEN, cat);
@@ -180,8 +173,8 @@ public class TestCasePhase {
 	public void testWildCardPhaseType(){
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr = new CaseResult(
@@ -193,7 +186,7 @@ public class TestCasePhase {
 				Result.FOO);
 
 		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
-		assertionNull(cr, "lala", ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
+		assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), PhaseType.EVERGREEN, cat);
 		assertionNull(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, "dipsy", PhaseType.EVERGREEN, cat);
@@ -201,11 +194,11 @@ public class TestCasePhase {
 	}
 	
 	@Test(enabled=true)
-	public void testOrder(){
+	public void testOrder() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		Product product = cat.getProducts()[0];
-		PriceList priceList = cat.getPriceLists().getDefaultPricelist();
+		DefaultProduct product = cat.getProducts()[0];
+		DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
 
 
 		CaseResult cr0 = new CaseResult(
@@ -251,22 +244,30 @@ public class TestCasePhase {
 		Result r1 = CasePhase.getResult(new CaseResult[]{cr0, cr1, cr2,cr3,cr4}, 
 				new PlanPhaseSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN), cat);
 		
-		assertEquals(Result.FOO, r1);
+		Assert.assertEquals(Result.FOO, r1);
 
 		Result r2 = CasePhase.getResult(new CaseResult[]{cr0, cr1, cr2,cr3,cr4}, 
 				new PlanPhaseSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName(), PhaseType.EVERGREEN), cat);
 		
-		assertEquals(Result.DIPSY, r2);
+		Assert.assertEquals(Result.DIPSY, r2);
 
 	}
 
 
-	protected void assertionNull(CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, PhaseType phaseType, Catalog cat){
-		assertNull(cr.getResult(new PlanPhaseSpecifier(productName, productCategory, bp, priceListName, phaseType), cat));
+	protected void assertionNull(CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, PhaseType phaseType, StandaloneCatalog cat){
+		try {
+			Assert.assertNull(cr.getResult(new PlanPhaseSpecifier(productName, productCategory, bp, priceListName, phaseType), cat));
+		} catch (CatalogApiException e) {
+			Assert.fail("", e);
+		}
 	}
 
-	protected void assertion(Result result, CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, PhaseType phaseType, Catalog cat){
-		assertEquals(result, cr.getResult(new PlanPhaseSpecifier(productName, productCategory, bp, priceListName, phaseType), cat));
+	protected void assertion(Result result, CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, PhaseType phaseType, StandaloneCatalog cat){
+		try {
+			Assert.assertEquals(result, cr.getResult(new PlanPhaseSpecifier(productName, productCategory, bp, priceListName, phaseType), cat));
+		} catch (CatalogApiException e) {
+			Assert.fail("", e);
+		}
 	}
 
 

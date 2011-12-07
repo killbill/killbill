@@ -17,15 +17,15 @@
 package com.ning.billing.account.api.user;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountChangeEvent;
+import com.ning.billing.account.api.AccountChangeNotification;
 import com.ning.billing.account.api.ChangedField;
-import com.ning.billing.account.api.ChangedFieldDefault;
+import com.ning.billing.account.api.DefaultChangedField;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class AccountChangeEventDefault implements AccountChangeEvent {
+public class AccountChangeEventDefault implements AccountChangeNotification {
     private final List<ChangedField> changedFields;
     private final UUID id;
 
@@ -53,22 +53,22 @@ public class AccountChangeEventDefault implements AccountChangeEvent {
         List<ChangedField> changedFields = new ArrayList<ChangedField>();
 
         if (!newData.getExternalKey().equals(oldData.getExternalKey())) {
-            changedFields.add(new ChangedFieldDefault("externalKey", newData.getExternalKey(), oldData.getExternalKey()));
+            changedFields.add(new DefaultChangedField("externalKey", newData.getExternalKey(), oldData.getExternalKey()));
         }
         if (!newData.getEmail().equals(oldData.getEmail())) {
-            changedFields.add(new ChangedFieldDefault("email", newData.getEmail(), oldData.getEmail()));
+            changedFields.add(new DefaultChangedField("email", newData.getEmail(), oldData.getEmail()));
         }
         if (!newData.getName().equals(oldData.getName())) {
-            changedFields.add(new ChangedFieldDefault("firstName", newData.getName(), oldData.getName()));
+            changedFields.add(new DefaultChangedField("firstName", newData.getName(), oldData.getName()));
         }
         if (!newData.getPhone().equals(oldData.getPhone())) {
-            changedFields.add(new ChangedFieldDefault("phone", newData.getPhone(), oldData.getPhone()));
+            changedFields.add(new DefaultChangedField("phone", newData.getPhone(), oldData.getPhone()));
         }
         if (!newData.getCurrency().equals(oldData.getCurrency())) {
-            changedFields.add(new ChangedFieldDefault("currency", newData.getCurrency().toString(), oldData.getCurrency().toString()));
+            changedFields.add(new DefaultChangedField("currency", newData.getCurrency().toString(), oldData.getCurrency().toString()));
         }
         if (newData.getBillCycleDay() != oldData.getBillCycleDay()) {
-            changedFields.add(new ChangedFieldDefault("billCycleDay", Integer.toString(newData.getBillCycleDay()),
+            changedFields.add(new DefaultChangedField("billCycleDay", Integer.toString(newData.getBillCycleDay()),
                                                                Integer.toString(oldData.getBillCycleDay())));
         }
 

@@ -16,24 +16,21 @@
 
 package com.ning.billing.catalog.rules;
 
-import javax.xml.bind.annotation.XmlElement;
-
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
-import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
-import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.ValidationErrors;
+
+import javax.xml.bind.annotation.XmlElement;
 
 public abstract class CasePhase<T> extends CaseStandardNaming<T> {
 
 	@XmlElement(required=false)
 	private PhaseType phaseType;	
 	
-	public T getResult(PlanPhaseSpecifier specifier, Catalog c) {
+	public T getResult(PlanPhaseSpecifier specifier, StandaloneCatalog c) throws CatalogApiException {
 		if (	
 				(phaseType       == null || specifier.getPhaseType() == null || specifier.getPhaseType() == phaseType) &&
 				satisfiesCase(new PlanSpecifier(specifier), c)
@@ -43,7 +40,7 @@ public abstract class CasePhase<T> extends CaseStandardNaming<T> {
 		return null;
 	}
 	
-	public static <K> K getResult(CasePhase<K>[] cases, PlanPhaseSpecifier planSpec, Catalog catalog) {
+	public static <K> K getResult(CasePhase<K>[] cases, PlanPhaseSpecifier planSpec, StandaloneCatalog catalog) throws CatalogApiException {
     	if(cases != null) {
     		for(CasePhase<K> cp : cases) {
     			K result = cp.getResult(planSpec, catalog);
@@ -57,7 +54,7 @@ public abstract class CasePhase<T> extends CaseStandardNaming<T> {
     }
 
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
 		return errors;
 	}
 

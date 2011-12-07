@@ -16,298 +16,56 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import com.google.inject.Inject;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.config.IEntitlementConfig;
-import com.ning.billing.entitlement.api.user.*;
-import com.ning.billing.entitlement.events.IEvent;
-import com.ning.billing.entitlement.events.IEvent.EventType;
-import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.entitlement.events.user.IApiEvent;
-import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.Hostname;
-import com.ning.billing.util.clock.IClock;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.events.EntitlementEvent;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
-public class EntitlementDao implements IEntitlementDao {
-
-    private final static Logger log = LoggerFactory.getLogger(EntitlementDao.class);
-
-    private final IClock clock;
-    private final ISubscriptionSqlDao subscriptionsDao;
-    private final IBundleSqlDao bundlesDao;
-    private final IEventSqlDao eventsDao;
-    private final IEntitlementConfig config;
-    private final String hostname;
-
-    @Inject
-    public EntitlementDao(DBI dbi, IClock clock, IEntitlementConfig config) {
-        this.clock = clock;
-        this.config = config;
-        this.subscriptionsDao = dbi.onDemand(ISubscriptionSqlDao.class);
-        this.eventsDao = dbi.onDemand(IEventSqlDao.class);
-        this.bundlesDao = dbi.onDemand(IBundleSqlDao.class);
-        this.hostname = Hostname.get();
-    }
-
-    @Override
-    public List<ISubscriptionBundle> getSubscriptionBundleForAccount(
-            UUID accountId) {
-        return bundlesDao.getBundleFromAccount(accountId.toString());
-    }
-
-    @Override
-    public ISubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
-        return bundlesDao.getBundleFromId(bundleId.toString());
-    }
-
-    @Override
-    public ISubscriptionBundle createSubscriptionBundle(SubscriptionBundle bundle) {
-        bundlesDao.insertBundle(bundle);
-        return bundle;
-    }
-
-    @Override
-    public ISubscription getSubscriptionFromId(UUID subscriptionId) {
-        return subscriptionsDao.getSubscriptionFromId(subscriptionId.toString());
-    }
-
-    @Override
-    public ISubscription getBaseSubscription(final UUID bundleId) {
-
-        List<ISubscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
-        for (ISubscription cur : subscriptions) {
-            if (((Subscription)cur).getCategory() == ProductCategory.BASE) {
-                return cur;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public List<ISubscription> getSubscriptions(UUID bundleId) {
-        return subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
-    }
-
-    @Override
-    public List<ISubscription> getSubscriptionsForKey(String bundleKey) {
-        ISubscriptionBundle bundle =  bundlesDao.getBundleFromKey(bundleKey);
-        if (bundle == null) {
-            return Collections.emptyList();
-        }
-        return subscriptionsDao.getSubscriptionsFromBundleId(bundle.getId().toString());
-    }
-
-    @Override
-    public void updateSubscription(Subscription subscription) {
-        Date ctd = (subscription.getChargedThroughDate() != null)  ? subscription.getChargedThroughDate().toDate() : null;
-        Date ptd = (subscription.getPaidThroughDate() != null)  ? subscription.getPaidThroughDate().toDate() : null;
-        subscriptionsDao.updateSubscription(subscription.getId().toString(), subscription.getActiveVersion(), ctd, ptd);
-    }
-
-    @Override
-    public void createNextPhaseEvent(final UUID subscriptionId, final IEvent nextPhase) {
-        eventsDao.inTransaction(new Transaction<Void, IEventSqlDao>() {
-
-            @Override
-            public Void inTransaction(IEventSqlDao dao,
-                    TransactionStatus status) throws Exception {
-                cancelNextPhaseEventFromTransaction(subscriptionId, dao);
-                dao.insertEvent(nextPhase);
-                return null;
-            }
-        });
-    }
+public interface EntitlementDao {
 
 
-    @Override
-    public List<IEvent> getEventsForSubscription(UUID subscriptionId) {
-        List<IEvent> events = eventsDao.getEventsForSubscription(subscriptionId.toString());
-        return events;
-    }
+    // Bundle apis
+    public List<SubscriptionBundle> getSubscriptionBundleForAccount(UUID accountId);
 
-    @Override
-    public List<IEvent> getPendingEventsForSubscription(UUID subscriptionId) {
-        Date now = clock.getUTCNow().toDate();
-        List<IEvent> results = eventsDao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
-        return results;
-    }
+    public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId);
 
-    @Override
-    public List<IEvent> getEventsReady(final UUID ownerId, final int sequenceId) {
+    public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle);
 
-        final Date now = clock.getUTCNow().toDate();
-        final Date nextAvailable = clock.getUTCNow().plus(config.getDaoClaimTimeMs()).toDate();
+    public Subscription getSubscriptionFromId(UUID subscriptionId);
 
-        log.debug(String.format("EntitlementDao getEventsReady START effectiveNow =  %s", now));
 
-        List<IEvent> events = eventsDao.inTransaction(new Transaction<List<IEvent>, IEventSqlDao>() {
+    // Subscription retrieval
+    public Subscription getBaseSubscription(UUID bundleId);
 
-            @Override
-            public List<IEvent> inTransaction(IEventSqlDao dao,
-                    TransactionStatus status) throws Exception {
+    public List<Subscription> getSubscriptions(UUID bundleId);
 
-                List<IEvent> claimedEvents = new ArrayList<IEvent>();
-                List<IEvent> input = dao.getReadyEvents(now, config.getDaoMaxReadyEvents());
-                for (IEvent cur : input) {
-                    final boolean claimed = (dao.claimEvent(ownerId.toString(), nextAvailable, cur.getId().toString(), now) == 1);
-                    if (claimed) {
-                        claimedEvents.add(cur);
-                        dao.insertClaimedHistory(sequenceId, ownerId.toString(), hostname, now, cur.getId().toString());
-                    }
-                }
-                return claimedEvents;
-            }
-        });
+    public List<Subscription> getSubscriptionsForKey(String bundleKey);
 
-        for (IEvent cur : events) {
-            log.debug(String.format("EntitlementDao %s [host %s] claimed events %s", ownerId, hostname, cur.getId()));
-            if (cur.getOwner() != null && !cur.getOwner().equals(ownerId)) {
-                log.warn(String.format("EventProcessor %s stealing event %s from %s", ownerId, cur, cur.getOwner()));
-            }
-        }
-        return events;
-    }
+    // Update
+    public void updateSubscription(SubscriptionData subscription);
 
-    @Override
-    public void clearEventsReady(final UUID ownerId, final Collection<IEvent> cleared) {
+    // Event apis
+    public void createNextPhaseEvent(UUID subscriptionId, EntitlementEvent nextPhase);
 
-        log.debug(String.format("EntitlementDao clearEventsReady START cleared size = %d", cleared.size()));
+    public List<EntitlementEvent> getEventsForSubscription(UUID subscriptionId);
 
-        eventsDao.inTransaction(new Transaction<Void, IEventSqlDao>() {
+    public List<EntitlementEvent> getPendingEventsForSubscription(UUID subscriptionId);
 
-            @Override
-            public Void inTransaction(IEventSqlDao dao,
-                    TransactionStatus status) throws Exception {
-                // STEPH Same here batch would nice
-                for (IEvent cur : cleared) {
-                    dao.clearEvent(cur.getId().toString(), ownerId.toString());
-                    log.debug(String.format("EntitlementDao %s [host %s] cleared events %s", ownerId, hostname, cur.getId()));
-                }
-                return null;
-            }
-        });
-    }
+    public List<EntitlementEvent> getEventsReady(UUID ownerId, int sequenceId);
 
-    @Override
-    public ISubscription createSubscription(final Subscription subscription,
-            final List<IEvent> initialEvents) {
+    public void clearEventsReady(UUID ownerId, Collection<EntitlementEvent> cleared);
 
-        subscriptionsDao.inTransaction(new Transaction<Void, ISubscriptionSqlDao>() {
+    // Subscription creation, cancellation, changePlan apis
+    public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents);
 
-            @Override
-            public Void inTransaction(ISubscriptionSqlDao dao,
-                    TransactionStatus status) throws Exception {
+    public void cancelSubscription(UUID subscriptionId, EntitlementEvent cancelEvent);
 
-                dao.insertSubscription(subscription);
-                // STEPH batch as well
-                IEventSqlDao eventsDaoFromSameTranscation = dao.become(IEventSqlDao.class);
-                for (IEvent cur : initialEvents) {
-                    eventsDaoFromSameTranscation.insertEvent(cur);
-                }
-                return null;
-            }
-        });
-        return new Subscription(new SubscriptionBuilder(subscription), true);
-    }
+    public void uncancelSubscription(UUID subscriptionId, List<EntitlementEvent> uncancelEvents);
 
-    @Override
-    public void cancelSubscription(final UUID subscriptionId, final IEvent cancelEvent) {
-
-        eventsDao.inTransaction(new Transaction<Void, IEventSqlDao>() {
-            @Override
-            public Void inTransaction(IEventSqlDao dao,
-                    TransactionStatus status) throws Exception {
-                cancelNextChangeEventFromTransaction(subscriptionId, dao);
-                cancelNextPhaseEventFromTransaction(subscriptionId, dao);
-                dao.insertEvent(cancelEvent);
-                return null;
-            }
-        });
-    }
-
-    @Override
-    public void uncancelSubscription(final UUID subscriptionId, final List<IEvent> uncancelEvents) {
-
-        eventsDao.inTransaction(new Transaction<Void, IEventSqlDao>() {
-
-            @Override
-            public Void inTransaction(IEventSqlDao dao,
-                    TransactionStatus status) throws Exception {
-
-                UUID existingCancelId = null;
-                Date now = clock.getUTCNow().toDate();
-                List<IEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
-
-                for (IEvent cur : events) {
-                    if (cur.getType() == EventType.API_USER && ((IApiEvent) cur).getEventType() == ApiEventType.CANCEL) {
-                        if (existingCancelId != null) {
-                            throw new EntitlementError(String.format("Found multiple cancel active events for subscriptions %s", subscriptionId.toString()));
-                        }
-                        existingCancelId = cur.getId();
-                    }
-                }
-
-                if (existingCancelId != null) {
-                    dao.unactiveEvent(existingCancelId.toString(), now);
-                    for (IEvent cur : uncancelEvents) {
-                        dao.insertEvent(cur);
-                    }
-                }
-                return null;
-            }
-        });
-    }
-
-    @Override
-    public void changePlan(final UUID subscriptionId, final List<IEvent> changeEvents) {
-        eventsDao.inTransaction(new Transaction<Void, IEventSqlDao>() {
-            @Override
-            public Void inTransaction(IEventSqlDao dao,
-                    TransactionStatus status) throws Exception {
-                cancelNextChangeEventFromTransaction(subscriptionId, dao);
-                cancelNextPhaseEventFromTransaction(subscriptionId, dao);
-                for (IEvent cur : changeEvents) {
-                    dao.insertEvent(cur);
-                }
-                return null;
-            }
-        });
-    }
-
-    private void cancelNextPhaseEventFromTransaction(final UUID subscriptionId, final IEventSqlDao dao) {
-        cancelFutureEventFromTransaction(subscriptionId, dao, EventType.PHASE, null);
-    }
-
-    private void cancelNextChangeEventFromTransaction(final UUID subscriptionId, final IEventSqlDao dao) {
-        cancelFutureEventFromTransaction(subscriptionId, dao, EventType.API_USER, ApiEventType.CHANGE);
-    }
-
-    private void cancelFutureEventFromTransaction(final UUID subscriptionId, final IEventSqlDao dao, EventType type, ApiEventType apiType) {
-
-        UUID futureEventId = null;
-        Date now = clock.getUTCNow().toDate();
-        List<IEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
-        for (IEvent cur : events) {
-            if (cur.getType() == type &&
-                    (apiType == null || apiType == ((IApiEvent) cur).getEventType() )) {
-                if (futureEventId != null) {
-                    throw new EntitlementError(
-                            String.format("Found multiple future events for type %s for subscriptions %s",
-                                    type, subscriptionId.toString()));
-                }
-                futureEventId = cur.getId();
-            }
-        }
-
-        if (futureEventId != null) {
-            dao.unactiveEvent(futureEventId.toString(), now);
-        }
-    }
+    public void changePlan(UUID subscriptionId, List<EntitlementEvent> changeEvents);
 }

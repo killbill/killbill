@@ -23,9 +23,9 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.glue.InvoiceModuleMock;
-import com.ning.billing.invoice.model.InvoiceDefault;
-import com.ning.billing.invoice.model.InvoiceItem;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.DefaultInvoiceItem;
+import com.ning.billing.util.clock.DefaultClock;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.annotations.BeforeClass;
@@ -70,7 +70,7 @@ public class InvoiceDaoTests {
     @Test
     public void testCreationAndRetrievalByAccount() {
         UUID accountId = UUID.randomUUID();
-        Invoice invoice = new InvoiceDefault(accountId, new Clock().getUTCNow(), Currency.USD);
+        Invoice invoice = new DefaultInvoice(accountId, new DefaultClock().getUTCNow(), Currency.USD);
         DateTime invoiceDate = invoice.getInvoiceDate();
 
         dao.createInvoice(invoice);
@@ -96,7 +96,7 @@ public class InvoiceDaoTests {
     public void testAddPayment() {
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
-        Invoice invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
+        Invoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
 
         DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
         BigDecimal paymentAmount = new BigDecimal("14.0");
@@ -113,7 +113,7 @@ public class InvoiceDaoTests {
     public void testAddPaymentAttempt() {
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
-        Invoice invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
+        Invoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
 
         DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
 
@@ -134,7 +134,7 @@ public class InvoiceDaoTests {
         int existingInvoiceCount = invoices.size();
         
         UUID accountId = UUID.randomUUID();
-        Invoice invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
+        Invoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
 
         dao.createInvoice(invoice);
         invoices = dao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
@@ -154,7 +154,7 @@ public class InvoiceDaoTests {
         // create a new invoice with one item
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
-        Invoice invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
+        Invoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
         dao.createInvoice(invoice);
 
         UUID invoiceId = invoice.getId();
@@ -163,7 +163,7 @@ public class InvoiceDaoTests {
         BigDecimal rate = new BigDecimal("9.0");
         BigDecimal amount = rate.multiply(new BigDecimal("3.0"));
 
-        InvoiceItem item = new InvoiceItem(invoiceId, subscriptionId, targetDate, endDate, "test", amount, rate, Currency.USD);
+        DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, targetDate, endDate, "test", amount, rate, Currency.USD);
         invoiceItemDao.createInvoiceItem(item);
 
         // ensure that the number of invoices for payment has increased by 1
@@ -223,7 +223,7 @@ public class InvoiceDaoTests {
 
 
         // create invoice 1 (subscriptions 1-4)
-        Invoice invoice1 = new InvoiceDefault(accountId, targetDate, Currency.USD);
+        Invoice invoice1 = new DefaultInvoice(accountId, targetDate, Currency.USD);
         dao.createInvoice(invoice1);
 
         UUID invoiceId1 = invoice1.getId();
@@ -231,20 +231,20 @@ public class InvoiceDaoTests {
         DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
         DateTime endDate = startDate.plusMonths(1);
 
-        InvoiceItem item1 = new InvoiceItem(invoiceId1, subscriptionId1, startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoiceId1, subscriptionId1, startDate, endDate, "test A", rate1, rate1, Currency.USD);
         invoiceItemDao.createInvoiceItem(item1);
 
-        InvoiceItem item2 = new InvoiceItem(invoiceId1, subscriptionId2, startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoiceId1, subscriptionId2, startDate, endDate, "test B", rate2, rate2, Currency.USD);
         invoiceItemDao.createInvoiceItem(item2);
 
-        InvoiceItem item3 = new InvoiceItem(invoiceId1, subscriptionId3, startDate, endDate, "test C", rate3, rate3, Currency.USD);
+        DefaultInvoiceItem item3 = new DefaultInvoiceItem(invoiceId1, subscriptionId3, startDate, endDate, "test C", rate3, rate3, Currency.USD);
         invoiceItemDao.createInvoiceItem(item3);
 
-        InvoiceItem item4 = new InvoiceItem(invoiceId1, subscriptionId4, startDate, endDate, "test D", rate4, rate4, Currency.USD);
+        DefaultInvoiceItem item4 = new DefaultInvoiceItem(invoiceId1, subscriptionId4, startDate, endDate, "test D", rate4, rate4, Currency.USD);
         invoiceItemDao.createInvoiceItem(item4);
 
         // create invoice 2 (subscriptions 1-3)
-        InvoiceDefault invoice = new InvoiceDefault(accountId, targetDate, Currency.USD);
+        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
         dao.createInvoice(invoice);
 
         UUID invoiceId2 = invoice.getId();
@@ -252,13 +252,13 @@ public class InvoiceDaoTests {
         startDate = endDate;
         endDate = startDate.plusMonths(1);
 
-        InvoiceItem item5 = new InvoiceItem(invoiceId2, subscriptionId1, startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        DefaultInvoiceItem item5 = new DefaultInvoiceItem(invoiceId2, subscriptionId1, startDate, endDate, "test A", rate1, rate1, Currency.USD);
         invoiceItemDao.createInvoiceItem(item5);
 
-        InvoiceItem item6 = new InvoiceItem(invoiceId2, subscriptionId2, startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        DefaultInvoiceItem item6 = new DefaultInvoiceItem(invoiceId2, subscriptionId2, startDate, endDate, "test B", rate2, rate2, Currency.USD);
         invoiceItemDao.createInvoiceItem(item6);
 
-        InvoiceItem item7 = new InvoiceItem(invoiceId2, subscriptionId3, startDate, endDate, "test C", rate3, rate3, Currency.USD);
+        DefaultInvoiceItem item7 = new DefaultInvoiceItem(invoiceId2, subscriptionId3, startDate, endDate, "test C", rate3, rate3, Currency.USD);
         invoiceItemDao.createInvoiceItem(item7);
 
         // check that each subscription returns the correct number of invoices

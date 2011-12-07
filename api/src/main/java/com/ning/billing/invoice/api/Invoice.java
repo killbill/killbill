@@ -24,11 +24,11 @@ import java.util.List;
 import java.util.UUID;
 
 public interface Invoice {
-    boolean add(IInvoiceItem item);
+    boolean add(InvoiceItem item);
 
-    boolean add(List<IInvoiceItem> items);
+    boolean add(List<InvoiceItem> items);
 
-    List<IInvoiceItem> getItems();
+    List<InvoiceItem> getItems();
 
     int getNumberOfItems();
 

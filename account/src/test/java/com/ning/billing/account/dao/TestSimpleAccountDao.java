@@ -17,7 +17,7 @@
 package com.ning.billing.account.dao;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountDefault;
+import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import org.testng.annotations.Test;
@@ -33,7 +33,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     private final String firstName = "Wesley";
     private final String email = "me@me.com";
 
-    private AccountDefault createTestAccount() {
+    private DefaultAccount createTestAccount() {
         String thisKey = key + UUID.randomUUID().toString();
         String lastName = UUID.randomUUID().toString();
         String thisEmail = email + " " + UUID.randomUUID();

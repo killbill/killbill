@@ -21,7 +21,7 @@ import org.joda.time.DateTime;
 
 import java.util.UUID;
 
-public class ApiEventBase extends EventBase implements IApiEvent {
+public class ApiEventBase extends EventBase implements ApiEvent {
 
     private final ApiEventType eventType;
     // Only valid for CREATE/CHANGE
@@ -60,7 +60,7 @@ public class ApiEventBase extends EventBase implements IApiEvent {
 
     public ApiEventBase(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,
             String priceList, DateTime requestedDate,  ApiEventType eventType, DateTime effectiveDate, long activeVersion,
-            boolean isActive, UUID processingOwner, DateTime nextAvailableProcessingTime,IEventLyfecycleState processingState) {
+            boolean isActive, UUID processingOwner, DateTime nextAvailableProcessingTime,EventLifecycleState processingState) {
         super(id, subscriptionId, requestedDate, effectiveDate, processed, activeVersion, isActive, processingOwner, nextAvailableProcessingTime, processingState);
         this.eventType = eventType;
         this.eventPlan = eventPlan;

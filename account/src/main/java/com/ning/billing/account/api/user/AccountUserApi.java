@@ -19,7 +19,7 @@ package com.ning.billing.account.api.user;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.AccountDefault;
+import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.dao.AccountDao;
 
 import java.util.List;
@@ -35,7 +35,7 @@ public class AccountUserApi implements com.ning.billing.account.api.AccountUserA
 
     @Override
     public Account createAccount(AccountData data) {
-        Account account = new AccountDefault(data);
+        Account account = new DefaultAccount(data);
         dao.save(account);
         return account;
     }

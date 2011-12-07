@@ -19,8 +19,7 @@ package com.ning.billing.entitlement.api.user;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.entitlement.glue.CatalogModuleMock;
-import com.ning.billing.entitlement.glue.EngineModuleMemoryMock;
+import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 import org.testng.annotations.Test;
 
 public class TestUserApiCreateMemory extends TestUserApiCreate {
@@ -28,11 +27,16 @@ public class TestUserApiCreateMemory extends TestUserApiCreate {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector(Stage.PRODUCTION, new EngineModuleMemoryMock(), new CatalogModuleMock());
+        return Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());
     }
 
     @Test(enabled=true, groups={"fast"})
     public void testCreateWithRequestedDate() {
+        invokeRealMethod(this);
+    }
+
+    @Test(enabled=true, groups={"fast"})
+    public void testCreateWithInitialPhase() {
         invokeRealMethod(this);
     }
 

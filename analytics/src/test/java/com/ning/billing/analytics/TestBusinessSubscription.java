@@ -17,7 +17,7 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.catalog.api.*;
-import com.ning.billing.entitlement.api.user.ISubscription;
+import com.ning.billing.entitlement.api.user.Subscription;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -28,8 +28,8 @@ import static com.ning.billing.catalog.api.Currency.USD;
 
 public class TestBusinessSubscription
 {
-    private final IDuration MONTHLY = MockDuration.MONHTLY();
-    private final IDuration YEARLY = MockDuration.YEARLY();
+    private final Duration MONTHLY = MockDuration.MONHTLY();
+    private final Duration YEARLY = MockDuration.YEARLY();
     final Object[][] catalog = {
         {MONTHLY, 229.0000, 229.0000},
         {MONTHLY, 19.9500, 19.9500},
@@ -42,10 +42,10 @@ public class TestBusinessSubscription
         {YEARLY, 18.2900, 1.5242},
         {YEARLY, 49.0000, 4.0833}};
 
-    private IProduct product;
-    private IPlan plan;
-    private IPlanPhase phase;
-    private ISubscription isubscription;
+    private Product product;
+    private Plan plan;
+    private PlanPhase phase;
+    private Subscription isubscription;
     private BusinessSubscription subscription;
 
     @BeforeMethod(alwaysRun = true)
@@ -54,7 +54,7 @@ public class TestBusinessSubscription
         product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         plan = new MockPlan("platinum-monthly", product);
         phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-        isubscription = new MockSubscription(ISubscription.SubscriptionState.ACTIVE, plan, phase);
+        isubscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
         subscription = new BusinessSubscription(isubscription, USD);
     }
 
@@ -63,7 +63,7 @@ public class TestBusinessSubscription
     {
         int i = 0;
         for (final Object[] object : catalog) {
-            final IDuration duration = (IDuration) object[0];
+            final Duration duration = (Duration) object[0];
             final double price = (Double) object[1];
             final double expectedMrr = (Double) object[2];
 
@@ -94,7 +94,7 @@ public class TestBusinessSubscription
         Assert.assertEquals(subscription, subscription);
         Assert.assertTrue(subscription.equals(subscription));
 
-        final ISubscription otherIsubscription = new MockSubscription(ISubscription.SubscriptionState.CANCELLED, plan, phase);
+        final Subscription otherIsubscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
         Assert.assertTrue(!subscription.equals(new BusinessSubscription(otherIsubscription, USD)));
     }
 }

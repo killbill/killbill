@@ -17,7 +17,7 @@
 package com.ning.billing.invoice.glue;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.invoice.api.IInvoiceUserApi;
+import com.ning.billing.invoice.api.DefaultInvoiceUserApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDaoWrapper;
@@ -34,7 +34,7 @@ public class InvoiceModule extends AbstractModule {
     }
 
     protected void installInvoiceUserApi() {
-        bind(IInvoiceUserApi.class).to(InvoiceUserApi.class).asEagerSingleton();
+        bind(InvoiceUserApi.class).to(DefaultInvoiceUserApi.class).asEagerSingleton();
     }
 
     @Override

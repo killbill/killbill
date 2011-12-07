@@ -16,25 +16,24 @@
 
 package com.ning.billing.catalog.glue;
 
-import org.skife.config.ConfigurationObjectFactory;
-
 import com.google.inject.AbstractModule;
-import com.ning.billing.catalog.CatalogService;
-import com.ning.billing.catalog.CatalogUserApi;
-import com.ning.billing.catalog.api.ICatalogService;
-import com.ning.billing.catalog.api.ICatalogUserApi;
-import com.ning.billing.config.ICatalogConfig;
+import com.ning.billing.catalog.DefaultCatalogService;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.io.ICatalogLoader;
+import com.ning.billing.catalog.io.VersionedCatalogLoader;
+import com.ning.billing.config.CatalogConfig;
+import org.skife.config.ConfigurationObjectFactory;
 
 public class CatalogModule extends AbstractModule {
 
     protected void installConfig() {
-        final ICatalogConfig config = new ConfigurationObjectFactory(System.getProperties()).build(ICatalogConfig.class);
-        bind(ICatalogConfig.class).toInstance(config);
+        final CatalogConfig config = new ConfigurationObjectFactory(System.getProperties()).build(CatalogConfig.class);
+        bind(CatalogConfig.class).toInstance(config);
     }
 
     protected void installCatalog() {
-        bind(ICatalogUserApi.class).to(CatalogUserApi.class).asEagerSingleton();
-        bind(ICatalogService.class).to(CatalogService.class).asEagerSingleton();
+        bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
+        bind(ICatalogLoader.class).to(VersionedCatalogLoader.class).asEagerSingleton();
     }
 
     @Override

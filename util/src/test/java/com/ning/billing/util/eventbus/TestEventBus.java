@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.eventbus;
 
+import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -23,13 +24,11 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.common.eventbus.Subscribe;
-
 public class TestEventBus {
 
     private static final Logger log = LoggerFactory.getLogger(TestEventBus.class);
 
-    private IEventBus eventBus;
+    private EventBus eventBus;
 
 
     @BeforeClass
@@ -43,7 +42,7 @@ public class TestEventBus {
         eventBus.stop();
     }
 
-    public static final class MyEvent implements IEventBusType {
+    public static final class MyEvent implements EventBusNotification {
         String name;
         Long value;
 

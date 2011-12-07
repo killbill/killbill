@@ -15,39 +15,37 @@
  */
 package com.ning.billing.catalog;
 
-import static org.testng.AssertJUnit.assertEquals;
+import com.google.common.io.Resources;
+import com.ning.billing.catalog.api.InvalidConfigException;
+import com.ning.billing.catalog.io.VersionedCatalogLoader;
+import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.util.clock.DefaultClock;
+import org.joda.time.DateTime;
+import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.Date;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
-
-import org.joda.time.DateTime;
-import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
-
-import com.google.common.io.Resources;
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.VersionedCatalog;
-import com.ning.billing.catalog.api.InvalidConfigException;
-import com.ning.billing.catalog.io.VersionedCatalogLoader;
+import static org.testng.AssertJUnit.assertEquals;
 
 public class TestVersionedCatalog {
-	private final VersionedCatalogLoader loader = new VersionedCatalogLoader();
+	private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
 
 	@Test(enabled=true)
-	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
-		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog"));
-		vc.add(new Catalog(new Date()));
+	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
+		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog").toString());
+		vc.add(new StandaloneCatalog(new Date()));
 		assertEquals(5, vc.size());
 	}
 	
 	@Test(enabled=true)
-	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
-		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog"));
+	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
+		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog").toString());
 		Date d = new Date(1L);
 		vc.configureEffectiveDate(d);
 		assertEquals(new Date(0), vc.getEffectiveDate()); // Start at the begining of time
