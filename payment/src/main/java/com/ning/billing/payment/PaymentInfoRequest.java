@@ -18,9 +18,9 @@ package com.ning.billing.payment;
 
 import java.util.UUID;
 
-import com.ning.billing.util.eventbus.IEventBusType;
+import com.ning.billing.util.eventbus.EventBusNotification;
 
-public class PaymentInfoRequest implements IEventBusType {
+public class PaymentInfoRequest implements EventBusNotification {
     private final UUID accountId;
     private final String paymentId;
 

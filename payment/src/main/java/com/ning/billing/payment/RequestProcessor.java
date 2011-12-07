@@ -25,19 +25,19 @@ import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
-import com.ning.billing.util.eventbus.IEventBus;
-import com.ning.billing.util.eventbus.IEventBus.EventBusException;
+import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
 public class RequestProcessor {
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
     private final IAccountUserApi accountUserApi;
     private final PaymentProviderPluginRegistry pluginRegistry;
-    private final IEventBus eventBus;
+    private final EventBus eventBus;
 
     @Inject
     public RequestProcessor(IAccountUserApi accountUserApi,
                             PaymentProviderPluginRegistry pluginRegistry,
-                            IEventBus eventBus) {
+                            EventBus eventBus) {
         this.accountUserApi = accountUserApi;
         this.pluginRegistry = pluginRegistry;
         this.eventBus = eventBus;

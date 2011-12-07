@@ -16,10 +16,36 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.List;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+
 import com.google.inject.Injector;
 import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.IFieldStore;
 import com.ning.billing.catalog.DefaultCatalogService;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
@@ -30,29 +56,13 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
-import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.ApiEvent;
+import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
 import com.ning.billing.util.eventbus.EventBusService;
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.List;
-import java.util.UUID;
-
-import static org.testng.Assert.*;
 
 
 public abstract class TestUserApiBase {
@@ -307,10 +317,9 @@ public abstract class TestUserApiBase {
             }
 
             @Override
-            public void load() {}
-
-            @Override
-            public void save() {}
+            public IFieldStore getFields() {
+                return null;
+            }
 
             @Override
             public String getFieldValue(String fieldName) {

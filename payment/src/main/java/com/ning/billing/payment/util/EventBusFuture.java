@@ -20,11 +20,11 @@ import javax.annotation.Nullable;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AbstractFuture;
-import com.ning.billing.util.eventbus.IEventBus;
-import com.ning.billing.util.eventbus.IEventBus.EventBusException;
+import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
-public class EventBusFuture<T, V extends IEventBusResponseType<T>> extends AbstractFuture<V> {
-    public static <V, W extends IEventBusRequestType<V>, X extends IEventBusResponseType<V>> EventBusFuture<V, X> post(final IEventBus eventBus, final W event) throws EventBusException {
+public class EventBusFuture<T, V extends EventBusResponse<T>> extends AbstractFuture<V> {
+    public static <V, W extends EventBusRequest<V>, X extends EventBusResponse<V>> EventBusFuture<V, X> post(final EventBus eventBus, final W event) throws EventBusException {
         final EventBusFuture<V, X> responseFuture = new EventBusFuture<V, X>(eventBus, event.getId());
 
         eventBus.register(responseFuture);
@@ -32,10 +32,10 @@ public class EventBusFuture<T, V extends IEventBusResponseType<T>> extends Abstr
         return responseFuture;
     }
 
-    private final IEventBus eventBus;
+    private final EventBus eventBus;
     private final T requestId;
 
-    private EventBusFuture(IEventBus eventBus, T requestId) {
+    private EventBusFuture(EventBus eventBus, T requestId) {
         this.eventBus = eventBus;
         this.requestId = requestId;
     }

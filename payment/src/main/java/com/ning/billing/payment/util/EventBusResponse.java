@@ -16,8 +16,8 @@
 
 package com.ning.billing.payment.util;
 
-import com.ning.billing.util.eventbus.IEventBusType;
+import com.ning.billing.util.eventbus.EventBusNotification;
 
-public interface IEventBusRequestType<T> extends IEventBusType {
-    T getId();
+public interface EventBusResponse<T> extends EventBusNotification {
+    T getRequestId();
 }

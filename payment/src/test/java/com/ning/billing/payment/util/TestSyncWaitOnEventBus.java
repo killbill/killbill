@@ -27,12 +27,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.eventbus.Subscribe;
-import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.eventbus.MemoryEventBus;
 
 @Test
 public class TestSyncWaitOnEventBus {
-    private static final class TestEvent implements IEventBusRequestType<UUID> {
+    private static final class TestEvent implements EventBusRequest<UUID> {
         private final UUID id;
         private final String msg;
 
@@ -51,7 +51,7 @@ public class TestSyncWaitOnEventBus {
         }
     }
 
-    private static final class TestResponse implements IEventBusResponseType<UUID> {
+    private static final class TestResponse implements EventBusResponse<UUID> {
         private final UUID id;
         private final String msg;
 
@@ -70,7 +70,7 @@ public class TestSyncWaitOnEventBus {
         }
     }
 
-    private IEventBus eventBus;
+    private EventBus eventBus;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {

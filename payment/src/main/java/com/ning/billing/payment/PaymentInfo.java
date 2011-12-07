@@ -21,9 +21,9 @@ import java.math.BigDecimal;
 import org.joda.time.DateTime;
 
 import com.google.common.base.Objects;
-import com.ning.billing.util.eventbus.IEventBusType;
+import com.ning.billing.util.eventbus.EventBusNotification;
 
-public class PaymentInfo implements IEventBusType {
+public class PaymentInfo implements EventBusNotification {
     public static class Builder {
         private String id;
         private BigDecimal amount;

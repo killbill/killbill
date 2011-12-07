@@ -23,9 +23,9 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.eventbus.IEventBusType;
+import com.ning.billing.util.eventbus.EventBusNotification;
 
-public class Invoice implements IEventBusType {
+public class Invoice implements EventBusNotification {
     private final InvoiceItemList items = new InvoiceItemList();
     private final UUID invoiceId;
     private UUID accountId;

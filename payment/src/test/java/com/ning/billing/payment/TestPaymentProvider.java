@@ -43,13 +43,13 @@ import com.ning.billing.invoice.model.Invoice;
 import com.ning.billing.invoice.model.InvoiceItem;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.setup.PaymentTestModule;
-import com.ning.billing.util.eventbus.IEventBus;
-import com.ning.billing.util.eventbus.IEventBus.EventBusException;
+import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
 @Guice(modules = PaymentTestModule.class)
 public class TestPaymentProvider {
     @Inject
-    private IEventBus eventBus;
+    private EventBus eventBus;
     @Inject
     private RequestProcessor invoiceProcessor;
     @Inject

@@ -16,9 +16,9 @@
 
 package com.ning.billing.payment.api;
 
-import com.ning.billing.lifecycle.IService;
+import com.ning.billing.lifecycle.KillbillService;
 
-public interface PaymentService extends IService {
+public interface PaymentService extends KillbillService {
     @Override
     String getName();
 

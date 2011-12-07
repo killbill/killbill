@@ -15,9 +15,9 @@
  */
 
 package com.ning.billing.payment.api;
-import com.ning.billing.util.eventbus.IEventBusType;
+import com.ning.billing.util.eventbus.EventBusNotification;
 
-public class PaymentError implements IEventBusType {
+public class PaymentError implements EventBusNotification {
     private final String type;
     private final String message;
 

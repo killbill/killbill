@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.ning.billing.account.api.IAccountUserApi;
 import com.ning.billing.account.api.MockAccountUserApi;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
-import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.eventbus.MemoryEventBus;
 
 public class PaymentTestModule extends PaymentModule {
@@ -38,7 +38,7 @@ public class PaymentTestModule extends PaymentModule {
     @Override
     protected void configure() {
         super.configure();
-        bind(IEventBus.class).to(MemoryEventBus.class).asEagerSingleton();
+        bind(EventBus.class).to(MemoryEventBus.class).asEagerSingleton();
         bind(IAccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
     }
 }

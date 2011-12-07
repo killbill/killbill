@@ -53,7 +53,7 @@ public class TestEventBus {
         }
     }
 
-    public static final class MyOtherEvent implements IEventBusType {
+    public static final class MyOtherEvent implements EventBusNotification {
         String name;
         Long value;
 
