@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.provider;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,6 +60,12 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountId) {
         // TODO Auto-generated method stub
         return null;
     }
