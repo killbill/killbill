@@ -20,7 +20,7 @@ import com.ning.billing.catalog.api.Currency;
 
 import java.util.UUID;
 
-public class DefaultAccount extends CustomizableEntityBase implements Account {
+public class DefaultAccount extends CustomizableEntityBase implements Account, Taggable {
     public final static String OBJECT_TYPE = "Account";
 
     private final String externalKey;
@@ -30,6 +30,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     private final String phone;
     private final Currency currency;
     private final int billCycleDay;
+    private final TagStore tags;
 
     public DefaultAccount(AccountData data) {
         this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
@@ -46,6 +47,8 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
         this.phone = phone;
         this.currency = currency;
         this.billCycleDay = billCycleDay;
+
+        this.tags = new TagStore(id, getObjectName());
     }
 
     @Override
