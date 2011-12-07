@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.events.IEventLyfecycle.IEventLyfecycleState;
+import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
 
 @SuppressWarnings("unchecked")
 public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
@@ -35,13 +35,13 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     private boolean isActive;
     private UUID processingOwner;
     private DateTime nextAvailableProcessingTime;
-    private IEventLyfecycleState processingState;
+    private EventLifecycleState processingState;
 
 
     public EventBaseBuilder() {
         this.uuid = UUID.randomUUID();
         this.isActive = true;
-        this.processingState = IEventLyfecycleState.AVAILABLE;
+        this.processingState = EventLifecycleState.AVAILABLE;
     }
 
     public EventBaseBuilder(EventBaseBuilder<?> copy) {
@@ -103,7 +103,7 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         return (T) this;
     }
 
-    public T setProcessingState(IEventLyfecycleState processingState) {
+    public T setProcessingState(EventLifecycleState processingState) {
         this.processingState = processingState;
         return (T) this;
     }
@@ -144,7 +144,7 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         return nextAvailableProcessingTime;
     }
 
-    public IEventLyfecycleState getProcessingState() {
+    public EventLifecycleState getProcessingState() {
         return processingState;
     }
 }

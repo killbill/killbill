@@ -23,15 +23,16 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.ICatalog;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
-import com.ning.billing.catalog.api.IllegalPlanChange;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanChangeResult;
@@ -40,21 +41,22 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
-public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICatalog {
+public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implements Catalog {
 	
-	private Catalog currentCatalog;
+	private StandaloneCatalog currentCatalog;
 	
-	private final List<Catalog> versions = new ArrayList<Catalog>();
+	private final List<StandaloneCatalog> versions = new ArrayList<StandaloneCatalog>();
 	
+	@Inject
 	public VersionedCatalog() {
-		Catalog baseline = new Catalog(new Date(0)); // init with an empty catalog may need to 
+		StandaloneCatalog baseline = new StandaloneCatalog(new Date(0)); // init with an empty catalog may need to 
 													 // populate some empty pieces here to make validation work
-		add(baseline);
+		add(baseline); 
 	}
 	
-	private Catalog versionForDate(Date date) {
-		Catalog previous = versions.get(0);
-		for(Catalog c : versions) {
+	private StandaloneCatalog versionForDate(Date date) {
+		StandaloneCatalog previous = versions.get(0);
+		for(StandaloneCatalog c : versions) {
 			if(c.getEffectiveDate().getTime() > date.getTime()) {
 				return previous;
 			}
@@ -63,20 +65,20 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 		return versions.get(versions.size() - 1);
 	}
 
-	public void add(Catalog e) {
+	public void add(StandaloneCatalog e) {
 		if(currentCatalog == null) {
 			currentCatalog = e;
 		}
 		versions.add(e);
-		Collections.sort(versions,new Comparator<Catalog>() {
+		Collections.sort(versions,new Comparator<StandaloneCatalog>() {
 			@Override
-			public int compare(Catalog c1, Catalog c2) {
+			public int compare(StandaloneCatalog c1, StandaloneCatalog c2) {
 				return c1.getEffectiveDate().compareTo(c2.getEffectiveDate());
 			}
 		});
 	}
 
-	public Iterator<Catalog> iterator() {
+	public Iterator<StandaloneCatalog> iterator() {
 		return versions.iterator();
 	}
 	
@@ -90,14 +92,8 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public Product[] getProducts() {
+	public DefaultProduct[] getProducts() {
 		return currentCatalog.getProducts();
-	}
-
-	@Override
-	public IPlan getPlan(String productName, BillingPeriod term,
-			String planSetName) {
-		return currentCatalog.getPlan(productName, term, planSetName);
 	}
 
 	@Override
@@ -106,19 +102,8 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public Plan[] getPlans() {
+	public DefaultPlan[] getPlans() {
 		return currentCatalog.getPlans();
-	}
-
-	@Override
-	public Plan getPlanFromName(String name) {
-		return currentCatalog.getPlanFromName(name);
-	}
-
-
-	@Override
-	public IPlanPhase getPhaseFromName(String name) {
-		return currentCatalog.getPhaseFromName(name);
 	}
 
 	@Override
@@ -127,51 +112,61 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public void initialize(Catalog catalog, URI sourceURI) {
-		for(Catalog c : versions) {
+	public Plan findPlan(String productName, BillingPeriod term,
+			String planSetName) throws CatalogApiException {
+		return currentCatalog.findPlan(productName, term, planSetName);
+	}
+
+	@Override
+	public DefaultPlan findPlan(String name) throws CatalogApiException {
+		return currentCatalog.findPlan(name);
+	}
+
+	@Override
+	public PlanPhase findPhase(String name) throws CatalogApiException {
+		return currentCatalog.findPhase(name);
+	}
+
+	@Override
+	public Product findProduct(String name) throws CatalogApiException {
+		return currentCatalog.findProduct(name);
+	}
+
+	@Override
+	public void initialize(StandaloneCatalog catalog, URI sourceURI) {
+		for(StandaloneCatalog c : versions) {
 			c.initialize(catalog, sourceURI);
 		}
 	}
 
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		for(Catalog c : versions) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
+		for(StandaloneCatalog c : versions) {
 			errors.addAll(c.validate(c, errors));
 		}
 		return errors;
 	}
 	
 	@Override
-    public PlanPhase getPhaseFor(String name, Date date) {
-    	Catalog c = versionForDate(date);
-    	return c.getPhaseFromName(name);
-    }
-
-	@Override
-	public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from,
-			PlanSpecifier to) {
-		return currentCatalog.getPlanChangePolicy(from, to);
+	public ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
+			PlanSpecifier to) throws CatalogApiException {
+		return currentCatalog.planChangePolicy(from, to);
 	}
 
 	@Override
-	public IProduct getProductFromName(String name) {
-		return currentCatalog.getProductFromName(name);
+	public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException {
+		return currentCatalog.planCancelPolicy(planPhase);
 	}
 
 	@Override
-	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase) {
-		return currentCatalog.getPlanCancelPolicy(planPhase);
+	public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
+			PlanSpecifier to) throws CatalogApiException {
+		return currentCatalog.planChangeAlignment(from, to);
 	}
 
 	@Override
-	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to) {
-		return currentCatalog.getPlanChangeAlignment(from, to);
-	}
-
-	@Override
-	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier) {
-		return currentCatalog.getPlanCreateAlignment(specifier);
+	public PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier) throws CatalogApiException {
+		return currentCatalog.planCreateAlignment(specifier);
 	}
 
 	@Override
@@ -180,13 +175,13 @@ public class VersionedCatalog extends ValidatingConfig<Catalog> implements ICata
 	}
 
 	@Override
-	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase) {
-		return currentCatalog.getBillingAlignment(planPhase);
+	public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException {
+		return currentCatalog.billingAlignment(planPhase);
 	}
 
 	@Override
 	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to)
-			throws IllegalPlanChange {
+			throws CatalogApiException {
 		return currentCatalog.planChange(from, to);
 	}
 	

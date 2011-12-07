@@ -16,12 +16,12 @@
 
 package com.ning.billing.invoice.api;
 
-import com.ning.billing.entitlement.api.billing.IBillingEvent;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
 
 import java.util.ArrayList;
 
-public class BillingEventSet extends ArrayList<IBillingEvent> {
-    public IBillingEvent getLast() {
+public class BillingEventSet extends ArrayList<BillingEvent> {
+    public BillingEvent getLast() {
         if (this.size() == 0) {return null;}
 
         return this.get(this.size() - 1);

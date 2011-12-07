@@ -21,22 +21,22 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.PriceList;
+import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.IllegalPlanChange;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanChangeResult;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
-import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PlanRules extends ValidatingConfig<Catalog>  {
+public class PlanRules extends ValidatingConfig<StandaloneCatalog>  {
 
 	@XmlElementWrapper(name="changePolicy")
 	@XmlElement(name="changePolicyCase", required=false)
@@ -62,20 +62,20 @@ public class PlanRules extends ValidatingConfig<Catalog>  {
 	@XmlElement(name="priceListCase", required=false)
 	private CasePriceList[] priceListCase;
 
-	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier, Catalog catalog) {
+	public PlanAlignmentCreate getPlanCreateAlignment(PlanSpecifier specifier, StandaloneCatalog catalog) throws CatalogApiException {
 		return Case.getResult(createAlignmentCase, specifier, catalog);      
     }
 	
-	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase, Catalog catalog) {
+	public ActionPolicy getPlanCancelPolicy(PlanPhaseSpecifier planPhase, StandaloneCatalog catalog) throws CatalogApiException {
 		return CasePhase.getResult(cancelCase, planPhase, catalog);      
 	}
 
-	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase, Catalog catalog) {
+	public BillingAlignment getBillingAlignment(PlanPhaseSpecifier planPhase, StandaloneCatalog catalog) throws CatalogApiException {
 		return CasePhase.getResult(billingAlignmentCase, planPhase, catalog);      
 	}
 
-	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to, Catalog catalog) throws IllegalPlanChange {
-		PriceList priceList = catalog.getPriceListFromName(to.getPriceListName());
+	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to, StandaloneCatalog catalog) throws CatalogApiException {
+		DefaultPriceList priceList = catalog.getPriceListFromName(to.getPriceListName());
 		if( priceList== null ) {
 			priceList = findPriceList(from.toPlanSpecifier(), catalog);
 			to = new PlanSpecifier(to.getProductName(), to.getProductCategory(), to.getBillingPeriod(), priceList.getName());
@@ -92,12 +92,12 @@ public class PlanRules extends ValidatingConfig<Catalog>  {
 	}
 	
 	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to, Catalog catalog) {
+			PlanSpecifier to, StandaloneCatalog catalog) throws CatalogApiException {
 		return CaseChange.getResult(changeAlignmentCase, from, to, catalog);      
     }
 
 	public ActionPolicy getPlanChangePolicy(PlanPhaseSpecifier from,
-			PlanSpecifier to, Catalog catalog) {
+			PlanSpecifier to, StandaloneCatalog catalog) throws CatalogApiException {
 		if(from.getProductName().equals(to.getProductName()) &&
 				from.getBillingPeriod() == to.getBillingPeriod() &&
 				from.getPriceListName().equals(to.getPriceListName())) {
@@ -107,8 +107,8 @@ public class PlanRules extends ValidatingConfig<Catalog>  {
 		return CaseChange.getResult(changeCase, from, to, catalog); 
 	}
 	
-	private PriceList findPriceList(PlanSpecifier specifier, Catalog catalog) {
-		PriceList result = Case.getResult(priceListCase, specifier, catalog);
+	private DefaultPriceList findPriceList(PlanSpecifier specifier, StandaloneCatalog catalog) throws CatalogApiException {
+		DefaultPriceList result = Case.getResult(priceListCase, specifier, catalog);
 		if (result == null) {
 			result = catalog.getPriceListFromName(specifier.getPriceListName());
 		}
@@ -117,7 +117,7 @@ public class PlanRules extends ValidatingConfig<Catalog>  {
 	
 	
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
 	    //TODO: MDW - Validation: check that the plan change special case pairs are unique!
 	    //TODO: MDW - Validation: check that the each product appears in at most one tier.
 		//TODO: MDW - Unit tests for rules

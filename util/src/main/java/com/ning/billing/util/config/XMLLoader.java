@@ -16,12 +16,9 @@
 
 package com.ning.billing.util.config;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -39,63 +36,51 @@ import org.xml.sax.SAXException;
 import com.ning.billing.catalog.api.InvalidConfigException;
 
 public class XMLLoader {
-	private static final String URI_SCHEME_FOR_CLASSPATH = "jar";
-	private static final String URI_SCHEME_FOR_FILE = "file";
 	public static Logger log = LoggerFactory.getLogger(XMLLoader.class);
 
-	public static <T extends ValidatingConfig<T>> T getObjectFromProperty(String property, Class<T> objectType) throws Exception {
-		if (property == null) {
+	public static <T extends ValidatingConfig<T>> T getObjectFromString(String uri, Class<T> objectType) throws Exception {
+		if (uri == null) {
 			return null;
 		}
-		log.info("Initializing an object of class " + objectType.getName() + " from xml file at: " + property);
+		log.info("Initializing an object of class " + objectType.getName() + " from xml file at: " + uri);
 					
-		return getObjectFromURI(new URI(property), objectType);
+		return getObjectFromStream(new URI(uri), UriAccessor.accessUri(uri), objectType);
 	}
 	
-	public static <T extends ValidatingConfig<T>> T getObjectFromURI(final URI uri, final Class<T> objectType) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, URISyntaxException {
-        String scheme = uri.getScheme();
-        URI uriToCall = uri;
-        if (scheme.equals(URI_SCHEME_FOR_CLASSPATH)) {
-        	InputStream resourceStream = XMLLoader.class.getResourceAsStream(uri.getPath());
-        	return getObjectFromStream(uri, resourceStream, objectType);
-        } else if (scheme.equals(URI_SCHEME_FOR_FILE) &&
-        	!uri.getSchemeSpecificPart().startsWith("/")) { // interpret URIs of this form as relative path uris
-        	uriToCall = new File(uri.getSchemeSpecificPart()).toURI();
-        }
-        return getObjectFromURL(uriToCall.toURL(), objectType);
-    }
-
-	public static <T extends ValidatingConfig<T>> T getObjectFromURL(URL url, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, URISyntaxException {
-        Object o = unmarshaller(clazz).unmarshal(url);
-    
-        if (clazz.isInstance(o)) {
-            @SuppressWarnings("unchecked")
-			T castObject = (T)o;
-            validate(url.toURI(),castObject);
-            return castObject;
-        } else {
-            return null;
-        }
-    }
-
-	public static <T extends ValidatingConfig<T>> T getObjectFromStream(URI uri,InputStream stream, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
+	public static <T extends ValidatingConfig<T>> T getObjectFromUri(URI uri, Class<T> objectType) throws Exception {
+		if (uri == null) {
+			return null;
+		}
+		log.info("Initializing an object of class " + objectType.getName() + " from xml file at: " + uri);
+					
+		return getObjectFromStream(uri, UriAccessor.accessUri(uri), objectType);
+	}
+	
+	public static <T extends ValidatingConfig<T>> T getObjectFromStream(URI uri, InputStream stream, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, ValidationException {
         Object o = unmarshaller(clazz).unmarshal(stream);
         if (clazz.isInstance(o)) {
         	@SuppressWarnings("unchecked")
 			T castObject = (T)o;
-            validate(uri,castObject);
+        	try {
+        		validate(uri,castObject);
+        	} catch (ValidationException e) {
+        		e.getErrors().log(log);
+        		System.err.println(e.getErrors().toString());
+        		throw e;
+        	}
             return castObject;
         } else {
             return null;
         }
-    }
+    } 
 
-    
-
-	public static <T extends ValidatingConfig<T>> void validate(URI uri, T c) {
+	public static <T extends ValidatingConfig<T>> void validate(URI uri, T c) throws ValidationException {
             c.initialize(c, uri);
             ValidationErrors errs = c.validate(c, new ValidationErrors());
-            log.info("Errors: " + errs.size() + " for " + uri);       
+            log.info("Errors: " + errs.size() + " for " + uri);  
+            if(errs.size() > 0) {
+            	throw new ValidationException(errs);
+            }
     }
     
     public static Unmarshaller unmarshaller(Class<?> clazz) throws JAXBException, SAXException, IOException, TransformerException {

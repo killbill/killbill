@@ -21,14 +21,13 @@ import org.testng.annotations.Test;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.entitlement.glue.CatalogModuleMock;
-import com.ning.billing.entitlement.glue.EngineModuleMemoryMock;
+import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 
 public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector(Stage.PRODUCTION, new EngineModuleMemoryMock(), new CatalogModuleMock());
+        return Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());
     }
 
 

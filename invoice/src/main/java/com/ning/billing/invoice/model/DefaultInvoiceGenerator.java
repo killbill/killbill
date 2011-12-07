@@ -19,7 +19,7 @@ package com.ning.billing.invoice.model;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingMode;
-import com.ning.billing.entitlement.api.billing.IBillingEvent;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.invoice.api.BillingEventSet;
 import org.joda.time.DateTime;
 
@@ -91,8 +91,8 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         // for each event, process it either as a terminated event (if there's a subsequent event)
         // ...or as a non-terminated event (if no subsequent event exists)
         for (int i = 0; i < (events.size() - 1); i++) {
-            IBillingEvent thisEvent = events.get(i);
-            IBillingEvent nextEvent = events.get(i + 1);
+            BillingEvent thisEvent = events.get(i);
+            BillingEvent nextEvent = events.get(i + 1);
 
             if (thisEvent.getSubscriptionId() == nextEvent.getSubscriptionId()) {
                 processEvents(invoiceId, thisEvent, nextEvent, items, targetDate, targetCurrency);
@@ -109,7 +109,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         return items;
     }
 
-    private void processEvent(UUID invoiceId, IBillingEvent event, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
+    private void processEvent(UUID invoiceId, BillingEvent event, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
         BigDecimal rate = event.getPrice(targetCurrency);
         BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(event, targetDate, rate);
         IBillingMode billingMode = getBillingMode(event.getBillingMode());
@@ -118,7 +118,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         addInvoiceItem(invoiceId, items, event, billThroughDate, invoiceItemAmount, rate, targetCurrency);
     }
 
-    private void processEvents(UUID invoiceId, IBillingEvent firstEvent, IBillingEvent secondEvent, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
+    private void processEvents(UUID invoiceId, BillingEvent firstEvent, BillingEvent secondEvent, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
         BigDecimal rate = firstEvent.getPrice(targetCurrency);
         BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
         IBillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
@@ -127,14 +127,14 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
     }
 
-    private void addInvoiceItem(UUID invoiceId, List<InvoiceItem> items, IBillingEvent event, DateTime billThroughDate, BigDecimal amount, BigDecimal rate, Currency currency) {
+    private void addInvoiceItem(UUID invoiceId, List<InvoiceItem> items, BillingEvent event, DateTime billThroughDate, BigDecimal amount, BigDecimal rate, Currency currency) {
         if (!(amount.compareTo(BigDecimal.ZERO) == 0)) {
             InvoiceItem item = new InvoiceItem(invoiceId, event.getSubscriptionId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
             items.add(item);
         }
     }
 
-    private BigDecimal calculateInvoiceItemAmount(IBillingEvent event, DateTime targetDate, BigDecimal rate){
+    private BigDecimal calculateInvoiceItemAmount(BillingEvent event, DateTime targetDate, BigDecimal rate){
         IBillingMode billingMode = getBillingMode(event.getBillingMode());
         DateTime startDate = event.getEffectiveDate();
         int billingCycleDay = event.getBillCycleDay();
@@ -150,7 +150,7 @@ public class DefaultInvoiceGenerator implements IInvoiceGenerator {
         }
     }
 
-    private BigDecimal calculateInvoiceItemAmount(IBillingEvent firstEvent, IBillingEvent secondEvent, DateTime targetDate, BigDecimal rate) {
+    private BigDecimal calculateInvoiceItemAmount(BillingEvent firstEvent, BillingEvent secondEvent, DateTime targetDate, BigDecimal rate) {
         IBillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
         DateTime startDate = firstEvent.getEffectiveDate();
         int billingCycleDay = firstEvent.getBillCycleDay();

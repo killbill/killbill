@@ -29,7 +29,7 @@ public class TestEventBus {
 
     private static final Logger log = LoggerFactory.getLogger(TestEventBus.class);
 
-    private IEventBus eventBus;
+    private EventBus eventBus;
 
 
     @BeforeClass
@@ -43,7 +43,7 @@ public class TestEventBus {
         eventBus.stop();
     }
 
-    public static final class MyEvent implements IEventBusType {
+    public static final class MyEvent implements EventBusNotification {
         String name;
         Long value;
 

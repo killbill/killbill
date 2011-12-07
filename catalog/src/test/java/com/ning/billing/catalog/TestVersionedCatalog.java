@@ -30,24 +30,24 @@ import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
+import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestVersionedCatalog {
-	private final VersionedCatalogLoader loader = new VersionedCatalogLoader();
+	private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
 
 	@Test(enabled=true)
-	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
-		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog"));
-		vc.add(new Catalog(new Date()));
+	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
+		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog").toString());
+		vc.add(new StandaloneCatalog(new Date()));
 		assertEquals(5, vc.size());
 	}
 	
 	@Test(enabled=true)
-	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException {
-		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog"));
+	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
+		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog").toString());
 		Date d = new Date(1L);
 		vc.configureEffectiveDate(d);
 		assertEquals(new Date(0), vc.getEffectiveDate()); // Start at the begining of time

@@ -16,9 +16,9 @@
 
 package com.ning.billing.catalog;
 
-public class MockPlan extends Plan {
+public class MockPlan extends DefaultPlan {
 
-	public MockPlan(String name, Product product, PlanPhase[] planPhases, PlanPhase finalPhase, int plansAllowedInBundle) {
+	public MockPlan(String name, DefaultProduct product, DefaultPlanPhase[] planPhases, DefaultPlanPhase finalPhase, int plansAllowedInBundle) {
 		setName(name);
 		setProduct(product);
 		setFinalPhase(finalPhase);

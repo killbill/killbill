@@ -16,56 +16,9 @@
 
 package com.ning.billing.entitlement.events.phase;
 
+import com.ning.billing.entitlement.events.EntitlementEvent;
 
-import org.joda.time.DateTime;
+public interface PhaseEvent extends EntitlementEvent {
 
-import com.ning.billing.entitlement.alignment.IPlanAligner.TimedPhase;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.events.EventBase;
-
-
-public class PhaseEvent extends EventBase implements IPhaseEvent {
-
-    private final String phaseName;
-
-    public PhaseEvent(PhaseEventBuilder builder) {
-        super(builder);
-        this.phaseName = builder.getPhaseName();
-    }
-
-    @Override
-    public EventType getType() {
-        return EventType.PHASE;
-    }
-
-    @Override
-    public String getPhase() {
-        return phaseName;
-    }
-
-    @Override
-    public String toString() {
-        return "PhaseEvent [getId()= " + getId()
-        		+ ", phaseName=" + phaseName
-        		+ ", getType()=" + getType()
-                + ", getPhase()=" + getPhase()
-                + ", getRequestedDate()=" + getRequestedDate()
-                + ", getEffectiveDate()=" + getEffectiveDate()
-                + ", getActiveVersion()=" + getActiveVersion()
-                + ", getProcessedDate()=" + getProcessedDate()
-                + ", getSubscriptionId()=" + getSubscriptionId()
-                + ", isActive()=" + isActive() + "]\n";
-    }
-
-    public static final IPhaseEvent getNextPhaseEvent(TimedPhase nextTimedPhase, Subscription subscription, DateTime now) {
-        return (nextTimedPhase == null) ?
-                null :
-                    new PhaseEvent(new PhaseEventBuilder()
-                        .setSubscriptionId(subscription.getId())
-                        .setRequestedDate(now)
-                        .setEffectiveDate(nextTimedPhase.getStartPhase())
-                        .setProcessedDate(now)
-                        .setActiveVersion(subscription.getActiveVersion())
-                        .setPhaseName(nextTimedPhase.getPhase().getName()));
-    }
+    public String getPhase();
 }

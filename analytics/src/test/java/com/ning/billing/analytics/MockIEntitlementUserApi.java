@@ -18,10 +18,11 @@ package com.ning.billing.analytics;
 
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.IEntitlementUserApi;
-import com.ning.billing.entitlement.api.user.ISubscription;
-import com.ning.billing.entitlement.api.user.ISubscriptionBundle;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import org.joda.time.DateTime;
 
 import java.util.HashMap;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class MockIEntitlementUserApi implements IEntitlementUserApi
+public class MockIEntitlementUserApi implements EntitlementUserApi
 {
     private final Map<UUID, String> subscriptionBundles = new HashMap<UUID, String>();
 
@@ -39,14 +40,14 @@ public class MockIEntitlementUserApi implements IEntitlementUserApi
     }
 
     @Override
-    public ISubscriptionBundle getBundleFromId(final UUID id)
+    public SubscriptionBundle getBundleFromId(final UUID id)
     {
         final String key = subscriptionBundles.get(id);
         if (key == null) {
             return null;
         }
 
-        return new ISubscriptionBundle()
+        return new SubscriptionBundle()
         {
             @Override
             public UUID getAccountId()
@@ -71,53 +72,42 @@ public class MockIEntitlementUserApi implements IEntitlementUserApi
             {
                 return key;
             }
-
-            @Override
-            public void setPrivate(final String name, final String value)
-            {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getPrivate(final String name)
-            {
-                throw new UnsupportedOperationException();
-            }
         };
     }
 
     @Override
-    public ISubscription getSubscriptionFromId(final UUID id)
+    public Subscription getSubscriptionFromId(final UUID id)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<ISubscriptionBundle> getBundlesForAccount(final UUID accountId)
+    public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<ISubscription> getSubscriptionsForBundle(final UUID bundleId)
+    public List<Subscription> getSubscriptionsForBundle(final UUID bundleId)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public ISubscriptionBundle createBundleForAccount(final IAccount account, final String bundleKey) throws EntitlementUserApiException
+    public SubscriptionBundle createBundleForAccount(final IAccount account, final String bundleKey) throws EntitlementUserApiException
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public ISubscription createSubscription(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate) throws EntitlementUserApiException
-    {
+    public List<Subscription> getSubscriptionsForKey(String bundleKey) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public List<ISubscription> getSubscriptionsForKey(String bundleKey) {
-        throw new UnsupportedOperationException();
-    }
+	@Override
+	public Subscription createSubscription(UUID bundleId, String productName,
+			BillingPeriod term, String priceList, PhaseType initialPhase,
+			DateTime requestedDate) throws EntitlementUserApiException {
+		throw new UnsupportedOperationException();
+	}
 }

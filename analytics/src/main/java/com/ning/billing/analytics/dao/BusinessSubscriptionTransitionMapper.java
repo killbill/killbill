@@ -30,7 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import static com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
+import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
 public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<BusinessSubscriptionTransition>
 {

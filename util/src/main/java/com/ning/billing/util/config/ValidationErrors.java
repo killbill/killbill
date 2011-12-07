@@ -35,5 +35,13 @@ public class ValidationErrors extends ArrayList<ValidationError>{
 			error.log(log);
 		}	
 	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		for(ValidationError error : this) {
+			builder.append(error.toString());
+		}	
+		return builder.toString();
+	}
 
 }

@@ -28,8 +28,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
-import com.ning.billing.entitlement.api.user.ISubscriptionTransition;
-import com.ning.billing.util.eventbus.IEventBus;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.util.eventbus.EventBus;
 
 public class ApiTestListener {
 
@@ -48,13 +48,13 @@ public class ApiTestListener {
         PHASE
     }
 
-    public ApiTestListener(IEventBus eventBus) {
+    public ApiTestListener(EventBus eventBus) {
         this.nextExpectedEvent = new Stack<NextEvent>();
         this.completed = false;
     }
 
     @Subscribe
-    public void handleEntitlementEvent(ISubscriptionTransition event) {
+    public void handleEntitlementEvent(SubscriptionTransition event) {
         switch (event.getTransitionType()) {
         case CREATE:
             subscriptionCreated(event);
@@ -139,35 +139,35 @@ public class ApiTestListener {
     }
 
 
-    public void subscriptionCreated(ISubscriptionTransition created) {
+    public void subscriptionCreated(SubscriptionTransition created) {
         log.debug("-> Got event CREATED");
         assertEqualsNicely(NextEvent.CREATE);
         notifyIfStackEmpty();
     }
 
 
-    public void subscriptionCancelled(ISubscriptionTransition cancelled) {
+    public void subscriptionCancelled(SubscriptionTransition cancelled) {
         log.debug("-> Got event CANCEL");
         assertEqualsNicely(NextEvent.CANCEL);
         notifyIfStackEmpty();
     }
 
 
-    public void subscriptionChanged(ISubscriptionTransition changed) {
+    public void subscriptionChanged(SubscriptionTransition changed) {
         log.debug("-> Got event CHANGE");
         assertEqualsNicely(NextEvent.CHANGE);
         notifyIfStackEmpty();
     }
 
 
-    public void subscriptionPaused(ISubscriptionTransition paused) {
+    public void subscriptionPaused(SubscriptionTransition paused) {
         log.debug("-> Got event PAUSE");
         assertEqualsNicely(NextEvent.PAUSE);
         notifyIfStackEmpty();
     }
 
 
-    public void subscriptionResumed(ISubscriptionTransition resumed) {
+    public void subscriptionResumed(SubscriptionTransition resumed) {
         log.debug("-> Got event RESUME");
         assertEqualsNicely(NextEvent.RESUME);
         notifyIfStackEmpty();
@@ -175,7 +175,7 @@ public class ApiTestListener {
 
 
     public void subscriptionPhaseChanged(
-            ISubscriptionTransition phaseChanged) {
+            SubscriptionTransition phaseChanged) {
         log.debug("-> Got event PHASE");
         assertEqualsNicely(NextEvent.PHASE);
         notifyIfStackEmpty();

@@ -17,14 +17,15 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.analytics.utils.Rounder;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.IDuration;
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.entitlement.api.user.ISubscription;
+import com.ning.billing.entitlement.api.user.Subscription;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.UUID;
 
-import static com.ning.billing.entitlement.api.user.ISubscription.SubscriptionState;
+import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
 /**
  * Describe a subscription for Analytics purposes
@@ -88,18 +89,18 @@ public class BusinessSubscription
      * @param subscription Subscription to use as a model
      * @param currency     Account currency
      */
-    BusinessSubscription(final ISubscription subscription, final Currency currency)
+    BusinessSubscription(final Subscription subscription, final Currency currency)
     {
         this(subscription.getCurrentPriceList(), subscription.getCurrentPlan(), subscription.getCurrentPhase(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId());
     }
 
-    public BusinessSubscription(final String priceList, final IPlan currentPlan, final IPlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
+    public BusinessSubscription(final String priceList, final Plan currentPlan, final PlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
     {
         this.priceList = priceList;
 
         // Record plan information
         if (currentPlan != null && currentPlan.getProduct() != null) {
-            final IProduct product = currentPlan.getProduct();
+            final Product product = currentPlan.getProduct();
             productName = product.getName();
             productCategory = product.getCategory();
             // TODO - we should keep the product type
@@ -130,7 +131,14 @@ public class BusinessSubscription
             }
 
             if (currentPhase.getRecurringPrice() != null) {
-                price = currentPhase.getRecurringPrice().getPrice(USD);
+            	//TODO check if this is the right way to handle exception
+            	BigDecimal tmpPrice = null;
+                try {
+                	tmpPrice = currentPhase.getRecurringPrice().getPrice(USD);
+				} catch (CatalogApiException e) {
+					tmpPrice = new BigDecimal(0);
+				}
+                price = tmpPrice;
                 mrr = getMrrFromISubscription(currentPhase.getDuration(), price);
             }
             else {
@@ -239,7 +247,7 @@ public class BusinessSubscription
         return subscriptionId;
     }
 
-    static BigDecimal getMrrFromISubscription(final IDuration duration, final BigDecimal price)
+    static BigDecimal getMrrFromISubscription(final Duration duration, final BigDecimal price)
     {
         if (duration == null || duration.getUnit() == null || duration.getNumber() == 0) {
             return BigDecimal.ZERO;

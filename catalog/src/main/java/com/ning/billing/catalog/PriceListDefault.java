@@ -19,24 +19,25 @@ package com.ning.billing.catalog;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
-import com.ning.billing.catalog.api.IPriceListSet;
+import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PriceListDefault extends PriceList {
+public class PriceListDefault extends DefaultPriceList {
 	
 	public PriceListDefault(){}
 	
-	public PriceListDefault(Plan[] defaultPlans) {
-		super(defaultPlans, IPriceListSet.DEFAULT_PRICELIST_NAME);
+	public PriceListDefault(DefaultPlan[] defaultPlans) {
+		super(defaultPlans, PriceListSet.DEFAULT_PRICELIST_NAME);
 	}
 
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
-		if(getName().equals(IPriceListSet.DEFAULT_PRICELIST_NAME)) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
+		super.validate(catalog, errors);
+		if(!getName().equals(PriceListSet.DEFAULT_PRICELIST_NAME)) {
 			errors.add(new ValidationError("The name of the default pricelist must be 'DEFAULT'", 
-					catalog.getCatalogURI(), PriceList.class, getName()));
+					catalog.getCatalogURI(), DefaultPriceList.class, getName()));
 			
 		}
 		return errors;
@@ -44,7 +45,7 @@ public class PriceListDefault extends PriceList {
 
 	@Override
 	public String getName() {
-		return IPriceListSet.DEFAULT_PRICELIST_NAME;
+		return PriceListSet.DEFAULT_PRICELIST_NAME;
 	}
 
 }

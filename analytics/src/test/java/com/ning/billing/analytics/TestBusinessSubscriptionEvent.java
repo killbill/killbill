@@ -16,22 +16,22 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.IPlan;
-import com.ning.billing.catalog.api.IPlanPhase;
-import com.ning.billing.catalog.api.IProduct;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.ISubscription;
+import com.ning.billing.entitlement.api.user.Subscription;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestBusinessSubscriptionEvent
 {
-    private IProduct product;
-    private IPlan plan;
-    private IPlanPhase phase;
-    private ISubscription isubscription;
+    private Product product;
+    private Plan plan;
+    private PlanPhase phase;
+    private Subscription isubscription;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
@@ -39,7 +39,7 @@ public class TestBusinessSubscriptionEvent
         product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         plan = new MockPlan("platinum-monthly", product);
         phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-        isubscription = new MockSubscription(ISubscription.SubscriptionState.ACTIVE, plan, phase);
+        isubscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
     }
 
     @Test(groups = "fast")
@@ -100,7 +100,7 @@ public class TestBusinessSubscriptionEvent
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "SYSTEM_CHANGE_BASE");
 
-        isubscription = new MockSubscription(ISubscription.SubscriptionState.CANCELLED, plan, phase);
+        isubscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
         event = BusinessSubscriptionEvent.subscriptionPhaseChanged(isubscription.getCurrentPlan(), isubscription.getState());
         // The subscription is cancelled, it's a system cancellation
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL);

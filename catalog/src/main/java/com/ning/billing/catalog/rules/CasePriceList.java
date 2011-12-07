@@ -19,18 +19,18 @@ package com.ning.billing.catalog.rules;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
 
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
+import com.ning.billing.catalog.DefaultPriceList;
+import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 
-public class CasePriceList extends Case<PriceList> {
+public class CasePriceList extends Case<DefaultPriceList> {
 
-	private PriceList toPriceList;
+	private DefaultPriceList toPriceList;
 
 	@XmlElement(required=false, name="fromProduct")
 	@XmlIDREF
-	public Product getProduct(){
+	public DefaultProduct getProduct(){
 		return product;
 	}
 
@@ -46,18 +46,18 @@ public class CasePriceList extends Case<PriceList> {
 	
 	@XmlElement(required=false, name="fromPriceList")
 	@XmlIDREF
-	public PriceList getPriceList() {
+	public DefaultPriceList getPriceList() {
 		return priceList;
 	}
 
 	@Override
 	@XmlElement(required=true, name="toPriceList")
 	@XmlIDREF
-	protected PriceList getResult() {
+	protected DefaultPriceList getResult() {
 		return toPriceList;
 	}
 
-	protected CasePriceList setToPriceList(PriceList toPriceList) {
+	protected CasePriceList setToPriceList(DefaultPriceList toPriceList) {
 		this.toPriceList = toPriceList;
 		return this;
 	}

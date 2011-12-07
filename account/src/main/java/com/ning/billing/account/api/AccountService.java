@@ -17,8 +17,8 @@
 package com.ning.billing.account.api;
 
 import com.google.inject.Inject;
-import com.ning.billing.lifecycle.LyfecycleHandlerType;
-import com.ning.billing.lifecycle.LyfecycleHandlerType.LyfecycleLevel;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
 public class AccountService implements IAccountService {
 
@@ -41,7 +41,7 @@ public class AccountService implements IAccountService {
         return accountApi;
     }
 
-    @LyfecycleHandlerType(LyfecycleLevel.INIT_SERVICE)
+    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void initialize() {
     }
 }

@@ -49,4 +49,8 @@ public class ValidationError {
 	public void log(Logger log) {
 		log.error(String.format("%s [%s] (%s:%s)", description, sourceURI, objectType, objectName));
 	}
+	
+	public String toString() {
+		return String.format("%s [%s] (%s:%s)\n", description, sourceURI, objectType, objectName);
+	}
 }

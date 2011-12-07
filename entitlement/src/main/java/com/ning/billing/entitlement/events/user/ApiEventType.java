@@ -16,7 +16,7 @@
 
 package com.ning.billing.entitlement.events.user;
 
-import com.ning.billing.entitlement.api.user.ISubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 
 
 public enum ApiEventType {

@@ -21,10 +21,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
 
-import com.ning.billing.catalog.Catalog;
-import com.ning.billing.catalog.PriceList;
-import com.ning.billing.catalog.Product;
+import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.DefaultPriceList;
+import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
@@ -33,14 +34,14 @@ import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
+public abstract class CaseChange<T>  extends ValidatingConfig<StandaloneCatalog> {
 
 	@XmlElement(required=false)
 	private PhaseType phaseType;
 
 	@XmlElement(required=false)
 	@XmlIDREF
-	private Product fromProduct;
+	private DefaultProduct fromProduct;
 
 	@XmlElement(required=false)
 	private ProductCategory fromProductCategory;
@@ -50,11 +51,11 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
 
 	@XmlElement(required=false)
 	@XmlIDREF
-	private PriceList fromPriceList;
+	private DefaultPriceList fromPriceList;
 
 	@XmlElement(required=false)
 	@XmlIDREF
-	private Product toProduct;
+	private DefaultProduct toProduct;
 
 	@XmlElement(required=false)
 	private ProductCategory toProductCategory;
@@ -64,18 +65,18 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
 
 	@XmlElement(required=false)
 	@XmlIDREF
-	private PriceList toPriceList;
+	private DefaultPriceList toPriceList;
 
 	protected abstract T getResult();
 	
 	public T getResult(PlanPhaseSpecifier from,
-			PlanSpecifier to, Catalog catalog) {
+			PlanSpecifier to, StandaloneCatalog catalog) throws CatalogApiException {
 		if(	
 				(phaseType     	     == null || from.getPhaseType() == phaseType) &&
-				(fromProduct 	     == null || fromProduct.equals(catalog.getProductFromName(from.getProductName()))) &&
+				(fromProduct 	     == null || fromProduct.equals(catalog.findProduct(from.getProductName()))) &&
 				(fromProductCategory == null || fromProductCategory.equals(from.getProductCategory())) &&
 				(fromBillingPeriod   == null || fromBillingPeriod.equals(from.getBillingPeriod())) &&
-				(toProduct           == null || toProduct.equals(catalog.getProductFromName(to.getProductName()))) &&
+				(toProduct           == null || toProduct.equals(catalog.findProduct(to.getProductName()))) &&
 				(toProductCategory   == null || toProductCategory.equals(to.getProductCategory())) &&
 				(toBillingPeriod     == null || toBillingPeriod.equals(to.getBillingPeriod())) &&
 				(fromPriceList       == null || fromPriceList.equals(catalog.getPriceListFromName(from.getPriceListName()))) &&
@@ -87,7 +88,7 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
 	}
 	
 	static public <K> K getResult(CaseChange<K>[] cases, PlanPhaseSpecifier from,
-			PlanSpecifier to, Catalog catalog) {
+			PlanSpecifier to, StandaloneCatalog catalog) throws CatalogApiException {
     	if(cases != null) {
     		for(CaseChange<K> cc : cases) {
     			K result = cc.getResult(from, to, catalog);
@@ -101,7 +102,7 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
     }
 	
 	@Override
-	public ValidationErrors validate(Catalog catalog, ValidationErrors errors) {
+	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
 		return errors;
 	}
 
@@ -110,7 +111,7 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
 		return this;
 	}
 
-	protected CaseChange<T> setFromProduct(Product fromProduct) {
+	protected CaseChange<T> setFromProduct(DefaultProduct fromProduct) {
 		this.fromProduct = fromProduct;
 		return this;
 	}
@@ -125,12 +126,12 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
 		return this;
 	}
 
-	protected CaseChange<T> setFromPriceList(PriceList fromPriceList) {
+	protected CaseChange<T> setFromPriceList(DefaultPriceList fromPriceList) {
 		this.fromPriceList = fromPriceList;
 		return this;
 	}
 
-	protected CaseChange<T> setToProduct(Product toProduct) {
+	protected CaseChange<T> setToProduct(DefaultProduct toProduct) {
 		this.toProduct = toProduct;
 		return this;
 	}
@@ -145,7 +146,7 @@ public abstract class CaseChange<T>  extends ValidatingConfig<Catalog> {
 		return this;
 	}
 
-	protected CaseChange<T> setToPriceList(PriceList toPriceList) {
+	protected CaseChange<T> setToPriceList(DefaultPriceList toPriceList) {
 		this.toPriceList = toPriceList;
 		return this;
 	}
