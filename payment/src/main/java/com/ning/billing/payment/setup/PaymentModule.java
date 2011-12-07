@@ -21,6 +21,8 @@ import java.util.Properties;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
+import com.ning.billing.payment.api.DefaultPaymentApi;
+import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 
 public class PaymentModule extends AbstractModule {
@@ -44,6 +46,7 @@ public class PaymentModule extends AbstractModule {
 
         bind(PaymentConfig.class).toInstance(config);
         bind(PaymentProviderPluginRegistry.class).asEagerSingleton();
+        bind(PaymentApi.class).to(DefaultPaymentApi.class);
         installPaymentProviderPlugins(config);
     }
 }
