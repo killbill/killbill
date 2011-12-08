@@ -16,8 +16,16 @@
 
 package com.ning.billing.account.api;
 
-public interface FieldStore extends EntityCollection<CustomField> {
-    public void setValue(String fieldName, String fieldValue);
+import java.util.List;
+import org.joda.time.DateTime;
 
-    public String getValue(String fieldName);
+public interface Taggable {
+    public List<Tag> getTagList();
+    public boolean hasTag(String tagName);
+    public void addTag(TagDescription description, String addedBy, DateTime dateAdded);
+    public void addTags(List<Tag> tags);
+    public void clearTags();
+    public void removeTag(TagDescription description);
+    public boolean generateInvoice();
+    public boolean processPayment();
 }

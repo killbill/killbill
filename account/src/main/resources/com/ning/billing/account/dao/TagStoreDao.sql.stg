@@ -1,0 +1,20 @@
+group TagStoreDao;
+
+save() ::= <<
+  INSERT INTO tags(id, tag_description_id, object_id, object_type, date_added, added_by)
+  VALUES (:id, :tagDescriptionId, :objectId, :objectType, :dateAdded, :addedBy)
+  ON DUPLICATE KEY UPDATE
+    tag_description_id = :tagDescriptionId, object_id = :objectId, object_type = :objectType,
+    date_added = :dateAdded, added_by = :addedBy;
+>>
+
+load() ::= <<
+    SELECT id, tag_description_id, object_id, object_type, date_added, added_by
+    FROM tags
+    WHERE object_id = :objectId AND object_type = :objectType;
+>>
+
+test() ::= <<
+  SELECT 1 FROM tags;
+>>
+;

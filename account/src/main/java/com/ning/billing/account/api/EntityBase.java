@@ -33,9 +33,4 @@ public abstract class EntityBase<T> implements Entity {
     public UUID getId() {
         return id;
     }
-
-    @Override
-    public String getIdAsString() {
-        return id.toString();
-    }
 }

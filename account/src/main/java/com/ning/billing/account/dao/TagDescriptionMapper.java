@@ -16,8 +16,8 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.TagDescription;
 import org.skife.jdbi.v2.BeanMapper;
+import com.ning.billing.account.api.TagDescription;
 
 public class TagDescriptionMapper extends BeanMapper<TagDescription> {
     public TagDescriptionMapper() {

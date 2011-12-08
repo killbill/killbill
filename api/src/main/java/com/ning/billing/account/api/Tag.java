@@ -17,19 +17,18 @@
 package com.ning.billing.account.api;
 
 import java.util.UUID;
+import org.joda.time.DateTime;
 
-public class TagStore extends EntityCollectionBase<Tag> {
-    public TagStore(UUID objectId, String objectType) {
-        super(objectId, objectType);
-    }
+public interface Tag extends Entity {
+    UUID getTagDescriptionId();
 
-    @Override
-    public String getEntityKey(Tag entity) {
-        return entity.getDescription();
-    }
+    String getName();
 
-//    @Override
-//    protected IEntityCollectionDao<Tag> getCollectionDao() {
-//        return InjectorMagic.getTagStoreDao();
-//    }
+    boolean getProcessPayment();
+
+    boolean getGenerateInvoice();
+
+    String getAddedBy();
+
+    DateTime getDateAdded();
 }

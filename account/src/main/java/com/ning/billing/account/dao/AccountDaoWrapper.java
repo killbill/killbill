@@ -16,21 +16,27 @@
 
 package com.ning.billing.account.dao;
 
-import com.google.inject.Inject;
-import com.ning.billing.account.api.*;
-import com.ning.billing.account.api.user.AccountChangeEventDefault;
-import com.ning.billing.account.api.user.AccountCreationEventDefault;
-import com.ning.billing.util.eventbus.EventBus;
+import java.util.List;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
-
-import java.util.List;
+import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountChangeNotification;
+import com.ning.billing.account.api.AccountCreationNotification;
+import com.ning.billing.account.api.CustomField;
+import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.FieldStore;
+import com.ning.billing.account.api.Tag;
+import com.ning.billing.account.api.user.AccountChangeEventDefault;
+import com.ning.billing.account.api.user.AccountCreationEventDefault;
+import com.ning.billing.util.eventbus.EventBus;
 
 public class AccountDaoWrapper implements AccountDao {
     private final AccountDao accountDao;
     private final FieldStoreDao fieldStoreDao;
+    private final TagStoreDao tagStoreDao;
     private final IDBI dbi; // needed for transaction support
     private final EventBus eventBus;
 
@@ -40,6 +46,7 @@ public class AccountDaoWrapper implements AccountDao {
         this.eventBus = eventBus;
         this.accountDao = dbi.onDemand(AccountDao.class);
         this.fieldStoreDao = dbi.onDemand(FieldStoreDao.class);
+        this.tagStoreDao = dbi.onDemand(TagStoreDao.class);
     }
 
     @Override
@@ -54,19 +61,31 @@ public class AccountDaoWrapper implements AccountDao {
     @Override
     public Account getById(String id) {
         Account account = accountDao.getById(id);
+
         if (account != null) {
             loadFields(account);
+            loadTags(account);
         }
+
         return account;
     }
 
     private void loadFields(Account account) {
-        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), DefaultAccount.OBJECT_TYPE);
+        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
         account.getFields().clear();
         if (fields != null) {
             for (CustomField field : fields) {
                 account.getFields().setValue(field.getName(), field.getValue());
             }
+        }
+    }
+
+    private void loadTags(Account account) {
+        List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
+
+        if (tags != null) {
+            account.clearTags();
+            account.addTags(tags);
         }
     }
 
@@ -97,7 +116,10 @@ public class AccountDaoWrapper implements AccountDao {
 
                     FieldStore fieldStore = account.getFields();
                     FieldStoreDao fieldStoreDao = conn.attach(FieldStoreDao.class);
-                    fieldStoreDao.save(accountId, objectType, fieldStore.getFieldList());
+                    fieldStoreDao.save(accountId, objectType, fieldStore.getEntityList());
+
+                    TagStoreDao tagStoreDao = conn.attach(TagStoreDao.class);
+                    tagStoreDao.save(accountId, objectType, account.getTagList());
 
                     if (currentAccount == null) {
                         AccountCreationNotification creationEvent = new AccountCreationEventDefault(account);

@@ -16,18 +16,19 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.catalog.api.Currency;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
 import java.util.UUID;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.catalog.api.Currency;
 
 public class MockIAccountUserApi implements AccountUserApi
 {
-    private final MockAccount account;
+    private final AccountData account;
 
     public MockIAccountUserApi(final String accountKey, final Currency currency)
     {
@@ -54,7 +55,7 @@ public class MockIAccountUserApi implements AccountUserApi
     @Override
     public Account getAccountById(final UUID uid)
     {
-        return account;
+        return new DefaultAccount(account);
     }
 
     @Override

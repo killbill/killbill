@@ -16,11 +16,28 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.List;
+import java.util.UUID;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import com.google.inject.Injector;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.FieldStore;
+import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.DefaultCatalogService;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
@@ -38,22 +55,11 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
 import com.ning.billing.util.eventbus.EventBusService;
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.List;
-import java.util.UUID;
-
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 
 public abstract class TestUserApiBase {
@@ -71,7 +77,7 @@ public abstract class TestUserApiBase {
     protected ClockMock clock;
     protected EventBusService busService;
 
-    protected Account account;
+    protected AccountData accountData;
     protected Catalog catalog;
     protected ApiTestListener testListener;
     protected SubscriptionBundle bundle;
@@ -127,8 +133,8 @@ public abstract class TestUserApiBase {
     protected abstract Injector getInjector();
 
     private void init() throws EntitlementUserApiException {
-        account = getAccount();
-        assertNotNull(account);
+        accountData = getAccountData();
+        assertNotNull(accountData);
 
         catalog = catalogService.getCatalog();
         assertNotNull(catalog);
@@ -152,7 +158,7 @@ public abstract class TestUserApiBase {
         ((MockEntitlementDao) dao).reset();
         try {
             busService.getEventBus().register(testListener);
-            bundle = entitlementApi.createBundleForAccount(account, "myDefaultBundle");
+            bundle = entitlementApi.createBundleForAccount(accountData, "myDefaultBundle");
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -275,8 +281,8 @@ public abstract class TestUserApiBase {
         return result;
     }
 
-    protected Account getAccount() {
-        Account account = new Account() {
+    protected AccountData getAccountData() {
+        AccountData accountData = new AccountData() {
             private final UUID id = UUID.randomUUID();
 
             @Override
@@ -314,31 +320,8 @@ public abstract class TestUserApiBase {
             public UUID getId() {
                 return id;
             }
-
-            @Override
-            public String getIdAsString() {
-                return id.toString();
-            }
-
-            @Override
-            public String getFieldValue(String fieldName) {
-                return null;
-            }
-
-            @Override
-            public void setFieldValue(String fieldName, String fieldValue) {}
-
-            @Override
-            public FieldStore getFields() {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            @Override
-            public String getObjectName() {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
-            }
         };
-        return account;
+        return accountData;
     }
 
 

@@ -16,7 +16,18 @@
 
 package com.ning.billing.account.api;
 
+import java.util.List;
+
 public interface EntityCollection<T extends Entity> {
     public String getEntityKey(T entity);
+
     public void clear();
+
+    public void add(T entity);
+
+    public void add(List<T> entities);
+
+    public void remove(T entity);
+
+    public List<T> getEntityList();
 }

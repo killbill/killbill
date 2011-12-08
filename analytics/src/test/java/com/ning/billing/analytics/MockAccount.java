@@ -16,15 +16,11 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.account.api.FieldStore;
-import com.ning.billing.catalog.api.Currency;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.util.UUID;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.catalog.api.Currency;
 
-public class MockAccount implements Account
+public class MockAccount implements AccountData
 {
     private final UUID id;
     private final String accountKey;
@@ -81,30 +77,5 @@ public class MockAccount implements Account
     public UUID getId()
     {
         return id;
-    }
-
-    @Override
-    public String getIdAsString() {
-        return id.toString();
-    }
-
-    @Override
-    public String getFieldValue(String fieldName) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void setFieldValue(String fieldName, String fieldValue) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public FieldStore getFields() {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public String getObjectName() {
-        return DefaultAccount.OBJECT_TYPE;
     }
 }

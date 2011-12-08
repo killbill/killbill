@@ -23,7 +23,7 @@ public abstract class CustomizableEntityBase extends EntityBase implements Custo
 
     public CustomizableEntityBase(UUID id) {
         super(id);
-        fields = StringFieldStore.create(getId(), getObjectName());
+        fields = DefaultFieldStore.create(getId(), getObjectName());
     }
 
     @Override

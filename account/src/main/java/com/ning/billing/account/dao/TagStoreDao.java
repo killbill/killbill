@@ -16,11 +16,47 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.Tag;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.List;
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import com.ning.billing.account.api.DefaultTag;
+import com.ning.billing.account.api.Tag;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagDescriptionMapper.class)
 public interface TagStoreDao extends EntityCollectionDao<Tag> {
+    @Override
+    @SqlBatch
+    public void save(@Bind("objectId") final String objectId,
+                     @Bind("objectType") final String objectType,
+                     @TagBinder final List<Tag> entities);
+
+    @BindingAnnotation(TagBinder.TagBinderFactory.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER})
+    public @interface TagBinder {
+        public static class TagBinderFactory implements BinderFactory {
+            public Binder build(Annotation annotation) {
+                return new Binder<TagBinder, DefaultTag>() {
+                    public void bind(SQLStatement q, TagBinder bind, DefaultTag tag) {
+                        q.bind("id", tag.getId().toString());
+                        q.bind("tagDescriptionId", tag.getTagDescriptionId().toString());
+                        q.bind("dateAdded", tag.getDateAdded().toDate());
+                        q.bind("addedBy", tag.getAddedBy());
+                    }
+                };
+            }
+        }
+    }
 }

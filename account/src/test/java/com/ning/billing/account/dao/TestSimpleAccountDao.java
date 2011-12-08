@@ -16,16 +16,21 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.account.api.user.AccountBuilder;
-import com.ning.billing.catalog.api.Currency;
-import org.testng.annotations.Test;
-
 import java.util.List;
 import java.util.UUID;
+import org.joda.time.DateTime;
+import org.testng.annotations.Test;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.DefaultTagDescription;
+import com.ning.billing.account.api.Tag;
+import com.ning.billing.account.api.TagDescription;
+import com.ning.billing.account.api.user.AccountBuilder;
+import com.ning.billing.catalog.api.Currency;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 @Test(groups = {"account-dao"})
 public class TestSimpleAccountDao extends AccountDaoTestBase {
@@ -95,5 +100,27 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertNotNull(thisAccount);
         assertEquals(thisAccount.getExternalKey(), account.getExternalKey());
         assertEquals(thisAccount.getFieldValue(fieldName), fieldValue);
+    }
+
+    @Test
+    public void testTags() {
+        Account account = createTestAccount();
+        TagDescription description = new DefaultTagDescription("Test Tag", "For testing only", true, true, "Test System", new DateTime());
+        String addedBy = "testTags()";
+        DateTime dateAdded = new DateTime();
+        account.addTag(description, addedBy, dateAdded);
+        assertEquals(account.getTagList().size(), 1);
+        accountDao.save(account);
+
+        Account thisAccount = accountDao.getById(account.getId().toString());
+        List<Tag> tagList = thisAccount.getTagList();
+        assertEquals(tagList.size(), 1);
+        Tag tag = tagList.get(0);
+        assertEquals(tag.getName(), description.getName());
+        assertEquals(tag.getGenerateInvoice(), description.getGenerateInvoice());
+        assertEquals(tag.getProcessPayment(), description.getProcessPayment());
+        assertEquals(tag.getTagDescriptionId(), description.getId());
+        assertEquals(tag.getAddedBy(), addedBy);
+        assertEquals(tag.getDateAdded(), dateAdded);
     }
 }

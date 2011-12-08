@@ -18,7 +18,7 @@ package com.ning.billing.account.api;
 
 import com.ning.billing.catalog.api.Currency;
 
-public interface AccountData {
+public interface AccountData extends Entity{
 
     public String getExternalKey();
 

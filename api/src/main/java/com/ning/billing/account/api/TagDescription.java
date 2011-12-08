@@ -18,10 +18,16 @@ package com.ning.billing.account.api;
 
 import org.joda.time.DateTime;
 
-public interface Taggable {
-    public boolean hasTag(String tagName);
-    public void addTag(TagDescription description, String addedBy, DateTime dateAdded);
-    public void removeTag(TagDescription description);
-    public boolean generateInvoice();
-    public boolean processPayment();
+public interface TagDescription extends Entity {
+    String getName();
+
+    String getCreatedBy();
+
+    DateTime getCreationDate();
+
+    String getDescription();
+
+    boolean getGenerateInvoice();
+
+    boolean getProcessPayment();
 }

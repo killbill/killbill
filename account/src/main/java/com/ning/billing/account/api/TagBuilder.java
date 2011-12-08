@@ -16,16 +16,15 @@
 
 package com.ning.billing.account.api;
 
-import org.joda.time.DateTime;
-
 import java.util.UUID;
+import org.joda.time.DateTime;
 
 public class TagBuilder {
     private UUID id = UUID.randomUUID();
     private UUID tagDescriptionId;
-    private String description;
-    private UUID objectId;
-    private String objectType;
+    private String name;
+    private boolean processPayment;
+    private boolean generateInvoice;
     private String addedBy;
     private DateTime dateAdded;
 
@@ -39,18 +38,18 @@ public class TagBuilder {
         return this;
     }
 
-    public TagBuilder description(String description) {
-        this.description = description;
+    public TagBuilder name(String name) {
+        this.name = name;
         return this;
     }
 
-    public TagBuilder objectId(UUID objectId) {
-        this.objectId = objectId;
+    public TagBuilder processPayment(boolean processPayment) {
+        this.processPayment = processPayment;
         return this;
     }
 
-    public TagBuilder objectType(String objectType) {
-        this.objectType = objectType;
+    public TagBuilder generateInvoice(boolean generateInvoice) {
+        this.generateInvoice = generateInvoice;
         return this;
     }
 
@@ -65,6 +64,6 @@ public class TagBuilder {
     }
 
     public Tag build() {
-        return new Tag(id, tagDescriptionId, description, objectId, objectType, addedBy, dateAdded);
+        return new DefaultTag(id, tagDescriptionId, name, processPayment, generateInvoice, addedBy, dateAdded);
     }
 }

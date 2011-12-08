@@ -16,11 +16,10 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.FieldStore;
-import com.ning.billing.account.api.StringFieldStore;
-import org.testng.annotations.Test;
-
 import java.util.UUID;
+import org.testng.annotations.Test;
+import com.ning.billing.account.api.DefaultFieldStore;
+import com.ning.billing.account.api.FieldStore;
 
 import static org.testng.Assert.assertEquals;
 
@@ -31,15 +30,15 @@ public class TestFieldStore extends AccountDaoTestBase {
         UUID id = UUID.randomUUID();
         String objectType = "Test widget";
 
-        FieldStore fieldStore = new StringFieldStore(id, objectType);
+        FieldStore fieldStore = new DefaultFieldStore(id, objectType);
 
         String fieldName = "TestField1";
         String fieldValue = "Kitty Hawk";
         fieldStore.setValue(fieldName, fieldValue);
 
-        fieldStoreDao.save(id.toString(), objectType, fieldStore.getFieldList());
+        fieldStoreDao.save(id.toString(), objectType, fieldStore.getEntityList());
 
-        fieldStore = StringFieldStore.create(id, objectType);
+        fieldStore = DefaultFieldStore.create(id, objectType);
         fieldStore.add(fieldStoreDao.load(id.toString(), objectType));
 
         assertEquals(fieldStore.getValue(fieldName), fieldValue);
@@ -47,9 +46,9 @@ public class TestFieldStore extends AccountDaoTestBase {
         fieldValue = "Cape Canaveral";
         fieldStore.setValue(fieldName, fieldValue);
         assertEquals(fieldStore.getValue(fieldName), fieldValue);
-        fieldStoreDao.save(id.toString(), objectType, fieldStore.getFieldList());
+        fieldStoreDao.save(id.toString(), objectType, fieldStore.getEntityList());
 
-        fieldStore = StringFieldStore.create(id, objectType);
+        fieldStore = DefaultFieldStore.create(id, objectType);
         assertEquals(fieldStore.getValue(fieldName), null);
         fieldStore.add(fieldStoreDao.load(id.toString(), objectType));
 

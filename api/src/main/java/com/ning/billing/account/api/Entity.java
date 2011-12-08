@@ -20,5 +20,4 @@ import java.util.UUID;
 
 public interface Entity {
     public UUID getId();
-    public String getIdAsString();
 }

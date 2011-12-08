@@ -16,11 +16,12 @@
 
 package com.ning.billing.account.api;
 
+import java.util.List;
+import java.util.UUID;
+import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Currency;
 
-import java.util.UUID;
-
-public class DefaultAccount extends CustomizableEntityBase implements Account, Taggable {
+public class DefaultAccount extends CustomizableEntityBase implements Account {
     public final static String OBJECT_TYPE = "Account";
 
     private final String externalKey;
@@ -30,7 +31,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account, T
     private final String phone;
     private final Currency currency;
     private final int billCycleDay;
-    private final TagStore tags;
+    private final DefaultTagStore tags;
 
     public DefaultAccount(AccountData data) {
         this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
@@ -48,7 +49,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account, T
         this.currency = currency;
         this.billCycleDay = billCycleDay;
 
-        this.tags = new TagStore(id, getObjectName());
+        this.tags = new DefaultTagStore(id, getObjectName());
     }
 
     @Override
@@ -89,5 +90,46 @@ public class DefaultAccount extends CustomizableEntityBase implements Account, T
     @Override
     public int getBillCycleDay() {
         return billCycleDay;
+    }
+
+    @Override
+    public List<Tag> getTagList() {
+        return tags.getEntityList();
+    }
+
+    @Override
+    public boolean hasTag(String tagName) {
+        return tags.containsTag(tagName);
+    }
+
+    @Override
+    public void addTag(TagDescription description, String addedBy, DateTime dateAdded) {
+        Tag tag = new DefaultTag(description, addedBy, dateAdded);
+        tags.add(tag) ;
+    }
+
+    @Override
+    public void addTags(List<Tag> tags) {
+        this.tags.add(tags);
+    }
+
+    @Override
+    public void clearTags() {
+        this.tags.clear();
+    }
+
+    @Override
+    public void removeTag(TagDescription description) {
+        tags.remove(description.getName());
+    }
+
+    @Override
+    public boolean generateInvoice() {
+        return tags.generateInvoice();
+    }
+
+    @Override
+    public boolean processPayment() {
+        return tags.processPayment();
     }
 }

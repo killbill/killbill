@@ -16,17 +16,15 @@
 
 package com.ning.billing.account.api;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-public class StringFieldStore extends EntityCollectionBase<CustomField> implements FieldStore {
-    public StringFieldStore(UUID objectId, String objectType) {
+public class DefaultFieldStore extends EntityCollectionBase<CustomField> implements FieldStore {
+    public DefaultFieldStore(UUID objectId, String objectType) {
         super(objectId, objectType);
     }
 
-    public static StringFieldStore create(UUID objectId, String objectType) {
-        return new StringFieldStore(objectId, objectType);
+    public static DefaultFieldStore create(UUID objectId, String objectType) {
+        return new DefaultFieldStore(objectId, objectType);
     }
 
     @Override
@@ -47,23 +45,6 @@ public class StringFieldStore extends EntityCollectionBase<CustomField> implemen
             return entities.get(fieldName).getValue();
         } else {
             return null;
-        }
-    }
-
-    @Override
-    public List<CustomField> getFieldList() {
-        return new ArrayList<CustomField>(entities.values());
-    }
-
-    @Override
-    public void add(CustomField field) {
-        entities.put(field.getName(), field);
-    }
-
-    @Override
-    public void add(List<CustomField> fields) {
-        for (CustomField field : fields) {
-            add(field);
         }
     }
 }

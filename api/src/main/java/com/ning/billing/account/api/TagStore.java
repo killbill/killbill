@@ -16,8 +16,12 @@
 
 package com.ning.billing.account.api;
 
-public interface FieldStore extends EntityCollection<CustomField> {
-    public void setValue(String fieldName, String fieldValue);
+public interface TagStore extends EntityCollection<Tag> {
+    public boolean processPayment();
 
-    public String getValue(String fieldName);
+    public boolean generateInvoice();
+
+    public void remove(String tagName);
+
+    public boolean containsTag(String tagName);
 }

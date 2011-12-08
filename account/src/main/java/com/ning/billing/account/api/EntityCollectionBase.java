@@ -16,7 +16,9 @@
 
 package com.ning.billing.account.api;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,6 +40,27 @@ public abstract class EntityCollectionBase<T extends Entity> implements EntityCo
     @Override
     public abstract String getEntityKey(T entity);
 
+    @Override
+    public void add(T entity) {
+        entities.put(getEntityKey(entity), entity);
+    }
+
+    @Override
+    public void add(List<T> entities) {
+        for (T entity : entities) {
+            add(entity);
+        }
+    }
+
+    @Override
+    public void remove(T entity) {
+        entities.remove(entity);
+    }
+
+    @Override
+    public List<T> getEntityList() {
+        return new ArrayList<T>(entities.values());
+    }
 //    public void save() {
 //        IEntityCollectionDao<T> dao = getCollectionDao();
 //

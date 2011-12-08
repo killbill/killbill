@@ -43,6 +43,7 @@ CREATE TABLE tags (
   id char(36) NOT NULL,
   tag_description_id char(36) NOT NULL,
   object_id char(36) NOT NULL,
+  object_type varchar(30) NOT NULL,
   date_added datetime NOT NULL,
   added_by varchar(50) NOT NULL,
   PRIMARY KEY(id)

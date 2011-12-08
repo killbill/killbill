@@ -16,6 +16,6 @@
 
 package com.ning.billing.account.api;
 
-public interface Account extends AccountData, Entity, CustomizableEntity {
+public interface Account extends AccountData, CustomizableEntity, Taggable {
 
 }
