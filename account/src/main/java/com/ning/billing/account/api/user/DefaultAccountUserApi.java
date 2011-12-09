@@ -25,11 +25,11 @@ import com.ning.billing.account.dao.AccountDao;
 import java.util.List;
 import java.util.UUID;
 
-public class AccountUserApi implements com.ning.billing.account.api.AccountUserApi {
+public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
     private final AccountDao dao;
 
     @Inject
-    public AccountUserApi(AccountDao dao) {
+    public DefaultAccountUserApi(AccountDao dao) {
         this.dao = dao;
     }
 

@@ -27,6 +27,7 @@ import com.ning.billing.account.api.Tag;
 import com.ning.billing.account.api.TagDescription;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.clock.DefaultClock;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -106,8 +107,11 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     public void testTags() {
         Account account = createTestAccount();
         TagDescription description = new DefaultTagDescription("Test Tag", "For testing only", true, true, "Test System", new DateTime());
+        TagDescriptionDao tagDescriptionDao = dbi.onDemand(TagDescriptionDao.class);
+        tagDescriptionDao.save(description);
+
         String addedBy = "testTags()";
-        DateTime dateAdded = new DateTime();
+        DateTime dateAdded = new DefaultClock().getUTCNow();
         account.addTag(description, addedBy, dateAdded);
         assertEquals(account.getTagList().size(), 1);
         accountDao.save(account);
@@ -121,6 +125,6 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertEquals(tag.getProcessPayment(), description.getProcessPayment());
         assertEquals(tag.getTagDescriptionId(), description.getId());
         assertEquals(tag.getAddedBy(), addedBy);
-        assertEquals(tag.getDateAdded(), dateAdded);
+        assertEquals(tag.getDateAdded().compareTo(dateAdded), 0);
     }
 }

@@ -16,13 +16,31 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.List;
+import org.skife.jdbi.v2.IDBI;
+import com.google.inject.Inject;
 import com.ning.billing.account.api.Tag;
 
-import java.util.UUID;
+public class TagStoreDaoWrapper implements TagStoreDao {
+    private final TagStoreDao dao;
 
-public interface TagDao {
-    public void create(Tag tag);
-    public void update(Tag tag);
-    public Tag load(UUID id);
+    @Inject
+    public TagStoreDaoWrapper(IDBI dbi) {
+        dao = dbi.onDemand(TagStoreDao.class);
+    }
 
+    @Override
+    public void save(String objectId, String objectType, List<Tag> entities) {
+        dao.save(objectId, objectType, entities);
+    }
+
+    @Override
+    public List<Tag> load(String objectId, String objectType) {
+        return dao.load(objectId, objectType);
+    }
+
+    @Override
+    public void test() {
+        dao.test();
+    }
 }

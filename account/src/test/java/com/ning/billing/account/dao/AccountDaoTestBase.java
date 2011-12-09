@@ -23,6 +23,7 @@ import com.ning.billing.account.glue.AccountModuleMock;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
 import com.ning.billing.util.eventbus.EventBusService;
 import org.apache.commons.io.IOUtils;
+import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.BeforeClass;
 
 import java.io.IOException;
@@ -30,8 +31,9 @@ import java.io.IOException;
 import static org.testng.Assert.fail;
 
 public abstract class AccountDaoTestBase {
-    protected FieldStoreDao fieldStoreDao;
+    //protected FieldStoreDao fieldStoreDao;
     protected AccountDao accountDao;
+    protected IDBI dbi;
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
@@ -43,8 +45,10 @@ public abstract class AccountDaoTestBase {
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
-            fieldStoreDao = injector.getInstance(FieldStoreDao.class);
-            fieldStoreDao.test();
+            //fieldStoreDao = injector.getInstance(FieldStoreDao.class);
+            //fieldStoreDao.test();
+
+            dbi = injector.getInstance(IDBI.class);
 
             accountDao = injector.getInstance(AccountDao.class);
             accountDao.test();

@@ -29,11 +29,11 @@ DROP TABLE IF EXISTS tag_descriptions;
 CREATE TABLE tag_descriptions (
   id char(36) NOT NULL,
   name varchar(20) NOT NULL,
-  added_by varchar(50) NOT NULL,
-  created datetime NOT NULL,
+  created_by varchar(50) NOT NULL,
+  creation_date datetime NOT NULL,
   description varchar(200) NOT NULL,
-  generateInvoice boolean DEFAULT false,
-  processPayment boolean DEFAULT false,
+  generate_invoice boolean DEFAULT false,
+  process_payment boolean DEFAULT false,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX tag_descriptions_name ON tag_descriptions(name);

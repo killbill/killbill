@@ -38,6 +38,11 @@ public class DefaultTag extends EntityBase implements Tag {
         this.dateAdded = dateAdded;
     }
 
+    public DefaultTag(UUID id, TagDescription tagDescription, String addedBy, DateTime dateAdded) {
+        this(id, tagDescription.getId(), tagDescription.getName(), tagDescription.getProcessPayment(),
+                tagDescription.getGenerateInvoice(), addedBy, dateAdded);
+    }
+
     public DefaultTag(TagDescription tagDescription, String addedBy, DateTime dateAdded) {
         this(UUID.randomUUID(), tagDescription.getId(), tagDescription.getName(), tagDescription.getProcessPayment(),
                 tagDescription.getGenerateInvoice(), addedBy, dateAdded);

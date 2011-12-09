@@ -36,6 +36,7 @@ public class TestFieldStore extends AccountDaoTestBase {
         String fieldValue = "Kitty Hawk";
         fieldStore.setValue(fieldName, fieldValue);
 
+        FieldStoreDao fieldStoreDao = dbi.onDemand(FieldStoreDao.class);
         fieldStoreDao.save(id.toString(), objectType, fieldStore.getEntityList());
 
         fieldStore = DefaultFieldStore.create(id, objectType);

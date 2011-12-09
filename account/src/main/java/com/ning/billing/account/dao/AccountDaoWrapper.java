@@ -35,8 +35,6 @@ import com.ning.billing.util.eventbus.EventBus;
 
 public class AccountDaoWrapper implements AccountDao {
     private final AccountDao accountDao;
-    private final FieldStoreDao fieldStoreDao;
-    private final TagStoreDao tagStoreDao;
     private final IDBI dbi; // needed for transaction support
     private final EventBus eventBus;
 
@@ -45,48 +43,80 @@ public class AccountDaoWrapper implements AccountDao {
         this.dbi = dbi;
         this.eventBus = eventBus;
         this.accountDao = dbi.onDemand(AccountDao.class);
-        this.fieldStoreDao = dbi.onDemand(FieldStoreDao.class);
-        this.tagStoreDao = dbi.onDemand(TagStoreDao.class);
     }
 
     @Override
-    public Account getAccountByKey(String key) {
-        Account account = accountDao.getAccountByKey(key);
-        if (account != null) {
-            loadFields(account);
-        }
-        return account;
-    }
+    public Account getAccountByKey(final String key) {
+        return dbi.inTransaction(new TransactionCallback<Account>() {
+            @Override
+            public Account inTransaction(Handle conn, TransactionStatus status) throws Exception {
+                try {
+                    conn.begin();
+                    Account account = accountDao.getAccountByKey(key);
 
-    @Override
-    public Account getById(String id) {
-        Account account = accountDao.getById(id);
+                    if (account != null) {
+                        FieldStoreDao fieldStoreDao = conn.attach(FieldStoreDao.class);
+                        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
 
-        if (account != null) {
-            loadFields(account);
-            loadTags(account);
-        }
+                        account.getFields().clear();
+                        if (fields != null) {
+                            for (CustomField field : fields) {
+                                account.getFields().setValue(field.getName(), field.getValue());
+                            }
+                        }
 
-        return account;
-    }
+                        TagStoreDao tagStoreDao = conn.attach(TagStoreDao.class);
+                        List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
+                        account.clearTags();
 
-    private void loadFields(Account account) {
-        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
-        account.getFields().clear();
-        if (fields != null) {
-            for (CustomField field : fields) {
-                account.getFields().setValue(field.getName(), field.getValue());
+                        if (tags != null) {
+                            account.addTags(tags);
+                        }
+                    }
+
+                    return account;
+                } catch (Throwable t) {
+                    return null;
+                }
             }
-        }
+        });
     }
 
-    private void loadTags(Account account) {
-        List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
+    @Override
+    public Account getById(final String id) {
+        return dbi.inTransaction(new TransactionCallback<Account>() {
+            @Override
+            public Account inTransaction(Handle conn, TransactionStatus status) throws Exception {
+                try {
+                    conn.begin();
+                    Account account = accountDao.getById(id);
 
-        if (tags != null) {
-            account.clearTags();
-            account.addTags(tags);
-        }
+                    if (account != null) {
+                        FieldStoreDao fieldStoreDao = conn.attach(FieldStoreDao.class);
+                        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
+
+                        account.getFields().clear();
+                        if (fields != null) {
+                            for (CustomField field : fields) {
+                                account.getFields().setValue(field.getName(), field.getValue());
+                            }
+                        }
+
+                        TagStoreDao tagStoreDao = conn.attach(TagStoreDao.class);
+                        List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
+                        account.clearTags();
+
+                        if (tags != null) {
+                            account.addTags(tags);
+                        }
+                    }
+
+                    return account;
+                } catch (Throwable t) {
+                    return null;
+                }
+            }
+        });
     }
 
     @Override
