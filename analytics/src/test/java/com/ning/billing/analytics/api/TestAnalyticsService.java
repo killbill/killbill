@@ -70,6 +70,8 @@ public class TestAnalyticsService
     @BeforeClass(alwaysRun = true)
     public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException
     {
+        bus.start();
+
         final String analyticsDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
         // For bundles
         final String accountDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
@@ -90,7 +92,7 @@ public class TestAnalyticsService
         Assert.assertEquals(bundle.getKey(), KEY);
 
         // Create a subscription transition
-        final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
+        final Product product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
         final Plan plan = new MockPlan("platinum-monthly", product);
         final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
         final UUID subscriptionId = UUID.randomUUID();
@@ -120,7 +122,7 @@ public class TestAnalyticsService
             requestedTransitionTime,
             BusinessSubscriptionEvent.subscriptionCreated(plan),
             null,
-            new BusinessSubscription(priceList, plan, phase, null, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
+            new BusinessSubscription(priceList, plan, phase, Currency.USD, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
         );
     }
 
@@ -138,7 +140,6 @@ public class TestAnalyticsService
 
         // Test the bus and make sure we can register our service
         try {
-            bus.start();
             service.registerForNotifications();
         }
         catch (Throwable t) {
