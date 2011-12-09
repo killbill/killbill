@@ -315,7 +315,10 @@ public abstract class TestUserApiBase {
             public Currency getCurrency() {
                 return Currency.USD;
             }
-
+            @Override
+            public String getPaymentProviderName() {
+                return "Paypal";
+            }
             @Override
             public UUID getId() {
                 return id;

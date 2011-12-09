@@ -30,6 +30,7 @@ public class AccountBuilder {
     private String phone;
     private Currency currency;
     private int billingCycleDay;
+    private String paymentProviderName;
 
     public AccountBuilder() {
         this(UUID.randomUUID());
@@ -74,7 +75,12 @@ public class AccountBuilder {
         return this;
     }
 
+    public AccountBuilder paymentProviderName(String paymentProviderName) {
+        this.paymentProviderName = paymentProviderName;
+        return this;
+    }
+
     public DefaultAccount build() {
-        return new DefaultAccount(id, externalKey, email, name, firstNameLength, phone, currency, billingCycleDay);
+        return new DefaultAccount(id, externalKey, email, name, firstNameLength, phone, currency, billingCycleDay, paymentProviderName);
     }
 }

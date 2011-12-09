@@ -33,4 +33,6 @@ public interface AccountData extends Entity{
     public int getBillCycleDay();
 
     public Currency getCurrency();
+
+    public String getPaymentProviderName();
 }

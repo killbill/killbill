@@ -22,12 +22,21 @@ import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.sqlobject.*;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -53,11 +62,13 @@ public interface AccountDao extends EntityDao<Account> {
             String phone = result.getString("phone");
             int billingCycleDay = result.getInt("billing_cycle_day");
             Currency currency = Currency.valueOf(result.getString("currency"));
+            String paymentProviderName = result.getString("payment_provider_name");
 
             return new AccountBuilder(id).externalKey(externalKey).email(email)
                                          .name(name).firstNameLength(firstNameLength)
                                          .phone(phone).currency(currency)
-                                         .billingCycleDay(billingCycleDay).build();
+                                         .billingCycleDay(billingCycleDay)
+                                         .paymentProviderName(paymentProviderName).build();
         }
     }
 
@@ -77,6 +88,7 @@ public interface AccountDao extends EntityDao<Account> {
                         q.bind("phone", account.getPhone());
                         q.bind("currency", account.getCurrency().toString());
                         q.bind("billingCycleDay", account.getBillCycleDay());
+                        q.bind("paymentProviderName", account.getPaymentProviderName());
                     }
                 };
             }

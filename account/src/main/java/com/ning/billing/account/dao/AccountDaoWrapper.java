@@ -29,7 +29,7 @@ import com.ning.billing.account.api.CustomField;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.FieldStore;
 import com.ning.billing.account.api.Tag;
-import com.ning.billing.account.api.user.AccountChangeEventDefault;
+import com.ning.billing.account.api.user.AccountChangeNotificationDefault;
 import com.ning.billing.account.api.user.AccountCreationEventDefault;
 import com.ning.billing.util.eventbus.EventBus;
 
@@ -155,7 +155,7 @@ public class AccountDaoWrapper implements AccountDao {
                         AccountCreationNotification creationEvent = new AccountCreationEventDefault(account);
                         eventBus.post(creationEvent);
                     } else {
-                        AccountChangeNotification changeEvent = new AccountChangeEventDefault(account.getId(), currentAccount, account);
+                        AccountChangeNotification changeEvent = new AccountChangeNotificationDefault(account.getId(), currentAccount, account);
                         if (changeEvent.hasChanges()) {
                             eventBus.post(changeEvent);
                         }

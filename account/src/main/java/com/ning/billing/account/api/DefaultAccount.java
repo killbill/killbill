@@ -31,15 +31,17 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     private final String phone;
     private final Currency currency;
     private final int billCycleDay;
+    private final String paymentProviderName;
     private final DefaultTagStore tags;
 
     public DefaultAccount(AccountData data) {
         this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
-                data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay());
+                data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
+                data.getPaymentProviderName());
     }
 
     public DefaultAccount(UUID id, String externalKey, String email, String name, int firstNameLength,
-                          String phone, Currency currency, int billCycleDay) {
+                          String phone, Currency currency, int billCycleDay, String paymentProviderName) {
         super(id);
         this.externalKey = externalKey;
         this.email = email;
@@ -48,6 +50,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
         this.phone = phone;
         this.currency = currency;
         this.billCycleDay = billCycleDay;
+        this.paymentProviderName = paymentProviderName;
 
         this.tags = new DefaultTagStore(id, getObjectName());
     }
@@ -90,6 +93,11 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     @Override
     public int getBillCycleDay() {
         return billCycleDay;
+    }
+
+    @Override
+    public String getPaymentProviderName() {
+        return paymentProviderName;
     }
 
     @Override
