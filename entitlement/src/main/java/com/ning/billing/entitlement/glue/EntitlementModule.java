@@ -24,6 +24,8 @@ import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.test.DefaultEntitlementTestApi;
 import com.ning.billing.entitlement.api.test.EntitlementTestApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
@@ -67,6 +69,7 @@ public class EntitlementModule extends AbstractModule {
         bind(EntitlementTestApi.class).to(DefaultEntitlementTestApi.class).asEagerSingleton();
         bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
         bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
+        bind(EntitlementMigrationApi.class).to(DefaultEntitlementMigrationApi.class).asEagerSingleton();
     }
 
     @Override

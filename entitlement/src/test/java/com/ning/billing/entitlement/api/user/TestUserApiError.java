@@ -88,7 +88,9 @@ public class TestUserApiError extends TestUserApiBase {
     private void tCreateSubscriptionInternal(UUID bundleId, String productName,
             BillingPeriod term, String planSet, ErrorCode expected)  {
         try {
-            entitlementApi.createSubscription(bundleId, productName, term, planSet, null, clock.getUTCNow());
+            entitlementApi.createSubscription(bundleId,
+                    getProductSpecifier(productName, planSet, term, null),
+                    clock.getUTCNow());
             assertFalse(true);
         } catch (EntitlementUserApiException e) {
             assertEquals(e.getCode(), expected.getCode());

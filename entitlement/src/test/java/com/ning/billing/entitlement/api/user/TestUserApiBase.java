@@ -24,6 +24,7 @@ import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.EntitlementService;
+import com.ning.billing.entitlement.api.ProductSpecifier;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
@@ -190,9 +191,29 @@ public abstract class TestUserApiBase {
         }
     }
 
-    protected SubscriptionData createSubscription(String productName, BillingPeriod term, String planSet) throws EntitlementUserApiException {
+    protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet) throws EntitlementUserApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSet, null, clock.getUTCNow());
+        SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+                new ProductSpecifier() {
+            @Override
+            public BillingPeriod getBillingPeriod() {
+                return term;
+            }
+            @Override
+            public PhaseType getInitialPhaseType() {
+                return null;
+            }
+            @Override
+            public String getPriceList() {
+                return planSet;
+            }
+            @Override
+            public String getProductName() {
+                return productName;
+            }
+
+        },
+                clock.getUTCNow());
         assertNotNull(subscription);
         assertTrue(testListener.isCompleted(5000));
         return subscription;
@@ -323,6 +344,26 @@ public abstract class TestUserApiBase {
         return account;
     }
 
+    protected ProductSpecifier getProductSpecifier(final String productName, final String priceList, final BillingPeriod term, final PhaseType phaseType) {
+        return new ProductSpecifier() {
+            @Override
+            public BillingPeriod getBillingPeriod() {
+                return term;
+            }
+            @Override
+            public PhaseType getInitialPhaseType() {
+                return phaseType;
+            }
+            @Override
+            public String getPriceList() {
+                return priceList;
+            }
+            @Override
+            public String getProductName() {
+                return productName;
+            }
+        };
+    }
 
     protected void printEvents(List<EntitlementEvent> events) {
         for (EntitlementEvent cur : events) {
