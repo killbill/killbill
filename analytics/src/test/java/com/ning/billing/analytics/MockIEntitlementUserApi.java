@@ -17,9 +17,7 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.account.api.IAccount;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.entitlement.api.ProductSpecifier;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -106,7 +104,7 @@ public class MockIEntitlementUserApi implements EntitlementUserApi
     }
 
 	@Override
-	public Subscription createSubscription(UUID bundleId, ProductSpecifier spec,
+	public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec,
 			DateTime requestedDate) throws EntitlementUserApiException {
 		throw new UnsupportedOperationException();
 	}

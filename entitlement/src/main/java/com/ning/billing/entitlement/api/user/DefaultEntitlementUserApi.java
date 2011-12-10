@@ -28,8 +28,8 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.entitlement.api.ProductSpecifier;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
@@ -89,10 +89,10 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public Subscription createSubscription(UUID bundleId, ProductSpecifier spec, DateTime requestedDate) throws EntitlementUserApiException {
+    public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate) throws EntitlementUserApiException {
 
         try {
-            String realPriceList = (spec.getPriceList() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceList();
+            String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
             if (requestedDate != null && requestedDate.isAfter(now)) {
@@ -142,7 +142,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             .setCategory(plan.getProduct().getCategory())
             .setBundleStartDate(bundleStartDate)
             .setStartDate(effectiveDate),
-            plan, spec.getInitialPhaseType(), realPriceList, requestedDate, effectiveDate, now);
+            plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now);
 
             return subscription;
         } catch (CatalogApiException e) {

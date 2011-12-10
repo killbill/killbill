@@ -20,8 +20,8 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.ProductSpecifier;
 
 public interface EntitlementMigrationApi {
 
@@ -41,9 +41,14 @@ public interface EntitlementMigrationApi {
         public EntitlementSubscriptionMigrationCase [] getSubscriptionCases();
     }
 
+    /**
+     *
+     * Each case is either a PHASE or a different PlanSpecifer
+     */
     public interface EntitlementSubscriptionMigrationCase {
-        public ProductSpecifier getProductSpecifier();
+        public PlanPhaseSpecifier getPlanPhaseSpecifer();
         public DateTime getEffectiveDate();
+        public DateTime getCancelledDate();
     }
 
 
@@ -56,5 +61,12 @@ public interface EntitlementMigrationApi {
      *
      */
     public void migrate(EntitlementAccountMigration toBeMigrated);
+
+    /**
+     * Remove all the data pertaining to that acount
+     *
+     * @param accountKey
+     */
+    public void undoMigration(UUID accountKey);
 
 }

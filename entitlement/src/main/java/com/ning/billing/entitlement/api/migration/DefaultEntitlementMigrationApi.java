@@ -16,9 +16,15 @@
 
 package com.ning.billing.entitlement.api.migration;
 
+import java.util.UUID;
+
 public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
 
     @Override
     public void migrate(EntitlementAccountMigration toBeMigrated) {
+    }
+
+    @Override
+    public void undoMigration(UUID accountKey) {
     }
 }
