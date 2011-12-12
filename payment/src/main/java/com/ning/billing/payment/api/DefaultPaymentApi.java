@@ -56,14 +56,15 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountId) {
+    public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountKey) {
         final String paymentProviderName;
+        paymentProviderName = null;
 
-        final IAccount account = accountUserApi.getAccountFromId(UUID.fromString(accountId));
-        paymentProviderName = account.getFieldValue(RequestProcessor.PAYMENT_PROVIDER_KEY);
+//        final IAccount account = accountUserApi.getAccountByKey(accountKey);
+//        paymentProviderName = account.getFieldValue(RequestProcessor.PAYMENT_PROVIDER_KEY);
 
         final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
 
-        return plugin.getPaymentMethods(accountId);
+        return plugin.getPaymentMethods(accountKey);
     }
 }

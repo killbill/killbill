@@ -22,18 +22,15 @@ public class PaymentMethodInfo {
     private final String id;
     private final String accountId;
     private final Boolean defaultMethod;
-    private final String email;
     private final String type;
 
     public PaymentMethodInfo(String id,
                              String accountId,
                              Boolean defaultMethod,
-                             String email,
                              String type) {
         this.id = id;
         this.accountId = accountId;
         this.defaultMethod = defaultMethod;
-        this.email = email;
         this.type = type;
     }
 
@@ -49,10 +46,6 @@ public class PaymentMethodInfo {
         return defaultMethod;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
     public String getType() {
         return type;
     }
@@ -62,7 +55,6 @@ public class PaymentMethodInfo {
         return Objects.hashCode(id,
                                 accountId,
                                 defaultMethod,
-                                email,
                                 type);
     }
 
@@ -77,7 +69,6 @@ public class PaymentMethodInfo {
                 return Objects.equal(id, other.id) &&
                        Objects.equal(accountId, other.accountId) &&
                        Objects.equal(defaultMethod, other.defaultMethod) &&
-                       Objects.equal(email, other.email) &&
                        Objects.equal(type, other.type);
             }
         }
@@ -86,7 +77,61 @@ public class PaymentMethodInfo {
 
     @Override
     public String toString() {
-        return "PaymentMethodInfo [id=" + id + ", accountId=" + accountId + ", defaultMethod=" + defaultMethod + ", email=" + email + ", type=" + type + "]";
+        return "PaymentMethodInfo [id=" + id + ", accountId=" + accountId + ", defaultMethod=" + defaultMethod + ", type=" + type + "]";
     }
 
+    protected abstract static class BuilderBase<T extends PaymentMethodInfo, V extends BuilderBase<T, V>> {
+        protected final Class<V> builderClazz;
+        protected String id;
+        protected String accountId;
+        protected Boolean defaultMethod;
+
+        protected BuilderBase(Class<V> builderClazz) {
+            this.builderClazz = builderClazz;
+        }
+
+        protected BuilderBase(Class<V> builderClazz, T src) {
+            this(builderClazz);
+            this.id = src.id;
+            this.accountId = src.accountId;
+            this.defaultMethod = src.defaultMethod;
+        }
+
+        public V setId(String id) {
+            this.id = id;
+            return builderClazz.cast(this);
+        }
+
+        public V setAccountId(String accountId) {
+            this.accountId = accountId;
+            return builderClazz.cast(this);
+        }
+
+        public V setDefaultMethod(Boolean defaultMethod) {
+            this.defaultMethod = defaultMethod;
+            return builderClazz.cast(this);
+        }
+    }
+
+    public static class Builder extends BuilderBase<PaymentMethodInfo, Builder> {
+        private String type;
+
+        public Builder() {
+            super(Builder.class);
+        }
+
+        public Builder(PaymentMethodInfo src) {
+            super(Builder.class, src);
+            this.type = src.type;
+        }
+
+        public Builder setType(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public PaymentMethodInfo build() {
+            return new PaymentMethodInfo(id, accountId, defaultMethod, type);
+        }
+    }
 }

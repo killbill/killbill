@@ -110,7 +110,7 @@ public class TestPaymentProvider {
 
         paymentInfoReceiver.clear();
         eventBus.post(paymentInfoRequest);
-        await().atMost(1, MINUTES).until(new Callable<Boolean>() {
+        await().atMost(5, MINUTES).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 List<PaymentInfo> processedPayments = paymentInfoReceiver.getProcessedPayments();
