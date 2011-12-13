@@ -34,5 +34,6 @@ public interface PaymentProviderPlugin {
     Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId);
     Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String screenName);
     Either<PaymentError, PaypalPaymentMethodInfo> addPaypalPaymentMethod(IAccount account, PaypalPaymentMethodInfo paypalPaymentMethod);
+    Either<PaymentError, Void> updatePaymentGateway(String accountKey);
 
 }

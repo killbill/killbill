@@ -40,31 +40,34 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Either<PaymentError, PaymentMethodInfo> getPaymentMethod(@Nullable String accountId, String paymentMethodId) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountId);
+        return plugin.getPaymentMethodInfo(paymentMethodId);
+    }
+
+    private PaymentProviderPlugin getPaymentProviderPlugin(String accountKey) {
         final String paymentProviderName;
 
-        if (accountId == null) {
+        if (accountKey == null) {
             // TODO: get provider name from config to support null
             paymentProviderName = null;
         }
         else {
-            final IAccount account = accountUserApi.getAccountFromId(UUID.fromString(accountId));
+            final IAccount account = accountUserApi.getAccountFromId(UUID.fromString(accountKey));
             paymentProviderName = account.getFieldValue(RequestProcessor.PAYMENT_PROVIDER_KEY);
         }
-        final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
 
-        return plugin.getPaymentMethodInfo(paymentMethodId);
+        return pluginRegistry.getPlugin(paymentProviderName);
     }
 
     @Override
     public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountKey) {
-        final String paymentProviderName;
-        paymentProviderName = null;
-
-//        final IAccount account = accountUserApi.getAccountByKey(accountKey);
-//        paymentProviderName = account.getFieldValue(RequestProcessor.PAYMENT_PROVIDER_KEY);
-
-        final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
-
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
         return plugin.getPaymentMethods(accountKey);
+    }
+
+    @Override
+    public Either<PaymentError, Void> updatePaymentGateway(String accountKey) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+        return plugin.updatePaymentGateway(accountKey);
     }
 }

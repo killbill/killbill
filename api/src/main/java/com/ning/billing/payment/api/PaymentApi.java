@@ -21,7 +21,9 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public interface PaymentApi {
-    Either<PaymentError, PaymentMethodInfo> getPaymentMethod(@Nullable String accountId, String paymentMethodId);
+    Either<PaymentError, PaymentMethodInfo> getPaymentMethod(@Nullable String accountKey, String paymentMethodId);
 
-    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountId);
+    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountKey);
+
+    Either<PaymentError, Void> updatePaymentGateway(String accountKey);
 }

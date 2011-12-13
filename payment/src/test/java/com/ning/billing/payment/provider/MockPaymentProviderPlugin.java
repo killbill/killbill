@@ -55,25 +55,31 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(IAccount account) {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO
+        return Either.left(new PaymentError("unknown", "Not implemented"));
     }
 
     @Override
     public Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO
+        return Either.left(new PaymentError("unknown", "Not implemented"));
     }
 
     @Override
     public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountId) {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO
+        return Either.left(new PaymentError("unknown", "Not implemented"));
     }
 
     @Override
     public Either<PaymentError, PaypalPaymentMethodInfo> addPaypalPaymentMethod(IAccount account, PaypalPaymentMethodInfo paypalPaymentMethod) {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO
+        return Either.left(new PaymentError("unknown", "Not implemented"));
+    }
+
+    @Override
+    public Either<PaymentError, Void> updatePaymentGateway(String accountKey) {
+        // TODO
+        return Either.left(new PaymentError("unknown", "Not implemented"));
     }
 }
