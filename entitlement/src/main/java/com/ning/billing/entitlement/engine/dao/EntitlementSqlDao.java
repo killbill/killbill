@@ -372,7 +372,8 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public void undoMigration(final List<UUID> bundleIds, final List<UUID> subscriptionIds) {
+    public void undoMigration(final UUID accountId) {
+
         eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
 
             @Override
@@ -382,13 +383,14 @@ public class EntitlementSqlDao implements EntitlementDao {
                 SubscriptionSqlDao transSubDao = transEventDao.become(SubscriptionSqlDao.class);
                 BundleSqlDao transBundleDao = transEventDao.become(BundleSqlDao.class);
 
-                for (UUID curBundle : bundleIds) {
-                    transBundleDao.removeBundle(curBundle.toString());
-                }
-
-                for (UUID curSubscription : subscriptionIds) {
-                    transSubDao.removeSubscription(curSubscription.toString());
-                    eventsDao.removeEvents(curSubscription.toString());
+                final List<SubscriptionBundle> bundles = transBundleDao.getBundleFromAccount(accountId.toString());
+                for (SubscriptionBundle curBundle : bundles) {
+                    List<Subscription> subscriptions = transSubDao.getSubscriptionsFromBundleId(curBundle.getId().toString());
+                    for (Subscription cur : subscriptions) {
+                        eventsDao.removeEvents(cur.getId().toString());
+                        transSubDao.removeSubscription(cur.getId().toString());
+                    }
+                    transBundleDao.removeBundle(curBundle.getId().toString());
                 }
                 return null;
             }

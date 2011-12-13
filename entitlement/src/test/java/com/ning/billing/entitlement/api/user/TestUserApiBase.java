@@ -25,6 +25,7 @@ import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDao;
@@ -64,6 +65,9 @@ public abstract class TestUserApiBase {
     protected EntitlementService entitlementService;
     protected EntitlementUserApi entitlementApi;
     protected EntitlementBillingApi billingApi;
+
+    protected EntitlementMigrationApi migrationApi;
+
     protected CatalogService catalogService;
     protected EntitlementConfig config;
     protected EntitlementDao dao;

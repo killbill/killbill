@@ -72,5 +72,5 @@ public interface EntitlementDao {
 
     public void migrate(AccountMigrationData data);
 
-    public void undoMigration(List<UUID> bundleIds, List<UUID> subscriptionIds);
+    public void undoMigration(UUID accountId);
 }
