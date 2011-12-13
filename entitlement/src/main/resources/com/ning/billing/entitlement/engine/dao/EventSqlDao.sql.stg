@@ -96,6 +96,13 @@ insertEvent() ::= <<
     );   
 >>
 
+removeEvents(subscription_id) ::= <<
+    delete from events
+      where
+    subscription_id = :subscription_id
+    ;
+>>
+
 insertClaimedHistory(sequence_id, owner_id, hostname, claimed_dt, event_id) ::= <<
     insert into claimed_events (
         sequence_id

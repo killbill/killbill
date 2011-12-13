@@ -70,6 +70,9 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
     public int claimEvent(@Bind("owner") String owner, @Bind("next_available") Date nextAvailable, @Bind("event_id") String eventId, @Bind("now") Date now);
 
     @SqlUpdate
+    public void removeEvents(@Bind("subscription_id") String subscriptionId);
+
+    @SqlUpdate
     public void clearEvent(@Bind("event_id") String eventId, @Bind("owner") String owner);
 
     @SqlUpdate

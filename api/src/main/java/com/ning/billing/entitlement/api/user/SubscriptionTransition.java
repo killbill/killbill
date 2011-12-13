@@ -28,6 +28,7 @@ import com.ning.billing.util.eventbus.EventBusNotification;
 public interface SubscriptionTransition extends EventBusNotification {
 
     public enum SubscriptionTransitionType {
+        MIGRATE_ENTITLEMENT,
         CREATE,
         CHANGE,
         PAUSE,

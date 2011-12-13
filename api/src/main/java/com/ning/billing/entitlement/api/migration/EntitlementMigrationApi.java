@@ -60,13 +60,15 @@ public interface EntitlementMigrationApi {
 
      *
      */
-    public void migrate(EntitlementAccountMigration toBeMigrated);
+    public void migrate(EntitlementAccountMigration toBeMigrated)
+    throws EntitlementMigrationApiException;
 
     /**
      * Remove all the data pertaining to that acount
      *
      * @param accountKey
      */
-    public void undoMigration(UUID accountKey);
+    public void undoMigration(UUID accountKey)
+        throws EntitlementMigrationApiException;
 
 }

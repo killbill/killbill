@@ -20,6 +20,10 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition.Subscription
 
 
 public enum ApiEventType {
+    MIGRATE_ENTITLEMENT {
+        @Override
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.MIGRATE_ENTITLEMENT; }
+    },
     CREATE {
         @Override
         public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CREATE; }
