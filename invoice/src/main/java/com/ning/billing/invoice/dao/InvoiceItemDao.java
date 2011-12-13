@@ -16,24 +16,82 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.invoice.model.InvoiceItem;
-import com.ning.billing.invoice.model.InvoiceItemList;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoiceItem;
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.sqlobject.*;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
+
+import java.lang.annotation.*;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(InvoiceItemMapper.class)
+@RegisterMapper(InvoiceItemDao.InvoiceItemMapper.class)
 public interface InvoiceItemDao {
     @SqlQuery
-    InvoiceItemList getInvoiceItemsByInvoice(@Bind final String invoiceId);
+    InvoiceItem getInvoiceItem(@Bind("id") final String invoiceItemId);
 
     @SqlQuery
-    InvoiceItemList getInvoiceItemsByAccount(@Bind final String accountId);
+    List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
+
+    @SqlQuery
+    List<InvoiceItem> getInvoiceItemsByAccount(@Bind("accountId") final String accountId);
+
+    @SqlQuery
+    List<InvoiceItem> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId);
 
     @SqlUpdate
-    void createInvoiceItem(@BindBean final InvoiceItem invoiceItem);
+    void createInvoiceItem(@InvoiceItemBinder final InvoiceItem invoiceItem);
+
+    @SqlUpdate
+    void test();
+
+    @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER})
+    public @interface InvoiceItemBinder {
+        public static class InvoiceItemBinderFactory implements BinderFactory {
+            public Binder build(Annotation annotation) {
+                return new Binder<InvoiceItemBinder, InvoiceItem>() {
+                    public void bind(SQLStatement q, InvoiceItemBinder bind, InvoiceItem item) {
+                        q.bind("id", item.getId().toString());
+                        q.bind("invoiceId", item.getInvoiceId().toString());
+                        q.bind("subscriptionId", item.getSubscriptionId().toString());
+                        q.bind("startDate", item.getStartDate().toDate());
+                        q.bind("endDate", item.getEndDate().toDate());
+                        q.bind("description", item.getDescription());
+                        q.bind("amount", item.getAmount());
+                        q.bind("rate", item.getRate());
+                        q.bind("currency", item.getCurrency().toString());
+                    }
+                };
+            }
+        }
+    }
+
+    public static class InvoiceItemMapper implements ResultSetMapper<InvoiceItem> {
+        @Override
+        public InvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
+            UUID id = UUID.fromString(result.getString("id"));
+            UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
+            UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
+            DateTime startDate = new DateTime(result.getTimestamp("start_date"));
+            DateTime endDate = new DateTime(result.getTimestamp("end_date"));
+            String description = result.getString("description");
+            BigDecimal amount = result.getBigDecimal("amount");
+            BigDecimal rate = result.getBigDecimal("rate");
+            Currency currency = Currency.valueOf(result.getString("currency"));
+
+            return new DefaultInvoiceItem(id, invoiceId, subscriptionId, startDate, endDate, description, amount, rate , currency);
+        }
+    }
 }

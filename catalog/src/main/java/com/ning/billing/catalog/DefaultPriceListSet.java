@@ -16,16 +16,16 @@
 
 package com.ning.billing.catalog;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {

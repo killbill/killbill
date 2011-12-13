@@ -16,24 +16,17 @@
 
 package com.ning.billing.catalog;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlIDREF;
-
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
+
+import javax.xml.bind.annotation.*;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements Plan {

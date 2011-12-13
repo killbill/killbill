@@ -16,91 +16,82 @@
 
 package com.ning.billing.account.dao;
 
-import java.util.List;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.user.AccountBuilder;
+import com.ning.billing.catalog.api.Currency;
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
+
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.IDBI;
-
-import com.google.inject.Inject;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountData;
-import com.ning.billing.account.api.ICustomField;
-
-public class AccountDao implements IAccountDao {
-
-    private final IAccountDaoSql dao;
-
-    @Inject
-    public AccountDao(IDBI dbi) {
-        this.dao = dbi.onDemand(IAccountDaoSql.class);
-    }
+@ExternalizedSqlViaStringTemplate3
+@RegisterMapper(AccountDaoWrapper.AccountMapper.class)
+public interface AccountDao extends EntityDao<Account> {
+    @SqlQuery
+    public Account getAccountByKey(@Bind("externalKey") final String key);
 
     @Override
-    public IAccount createAccount(IAccountData input) {
-        IAccount result = new Account().withKey(input.getKey());
-        dao.insertAccount(result);
-        return result;
-    }
+    @SqlUpdate
+    public void save(@AccountBinder Account account);
 
-    @Override
-    public IAccount getAccountByKey(String key) {
-        IAccount account = dao.getAccountByKey(key);
-        if (account != null) {
-            loadFields(account);
+    public static class AccountMapper implements ResultSetMapper<Account> {
+        @Override
+        public Account map(int index, ResultSet result, StatementContext context) throws SQLException {
+            UUID id = UUID.fromString(result.getString("id"));
+            String externalKey = result.getString("external_key");
+            String email = result.getString("email");
+            String name = result.getString("name");
+            int firstNameLength = result.getInt("first_name_length");
+            String phone = result.getString("phone");
+            int billingCycleDay = result.getInt("billing_cycle_day");
+            Currency currency = Currency.valueOf(result.getString("currency"));
+            String paymentProviderName = result.getString("payment_provider_name");
+
+            return new AccountBuilder(id).externalKey(externalKey).email(email)
+                                         .name(name).firstNameLength(firstNameLength)
+                                         .phone(phone).currency(currency)
+                                         .billingCycleDay(billingCycleDay)
+                                         .paymentProviderName(paymentProviderName).build();
         }
-        return account;
     }
 
-    @Override
-    public IAccount getAccountById(UUID uid) {
-        IAccount account = dao.getAccountFromId(uid.toString());
-        if (account != null) {
-            loadFields(account);
-        }
-        return account;
-    }
-
-    private void loadFields(IAccount account) {
-        List<ICustomField> fields = dao.getFields(account.getId().toString(), Account.OBJECT_TYPE);
-        account.getFields().clear();
-        if (fields != null) {
-            for (ICustomField field : fields) {
-                account.getFields().setValue(field.getName(), field.getValue());
+    @BindingAnnotation(AccountBinder.AccountBinderFactory.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER})
+    public @interface AccountBinder {
+        public static class AccountBinderFactory implements BinderFactory {
+            public Binder build(Annotation annotation) {
+                return new Binder<AccountBinder, DefaultAccount>() {
+                    public void bind(SQLStatement q, AccountBinder bind, DefaultAccount account) {
+                        q.bind("id", account.getId().toString());
+                        q.bind("externalKey", account.getExternalKey());
+                        q.bind("email", account.getEmail());
+                        q.bind("name", account.getName());
+                        q.bind("firstNameLength", account.getFirstNameLength());
+                        q.bind("phone", account.getPhone());
+                        q.bind("currency", account.getCurrency().toString());
+                        q.bind("billingCycleDay", account.getBillCycleDay());
+                        q.bind("paymentProviderName", account.getPaymentProviderName());
+                    }
+                };
             }
-        }
-    }
-
-    @Override
-    public List<IAccount> getAccounts() {
-        return dao.getAccounts();
-    }
-
-    @Override
-    public void test() {
-        dao.test();
-    }
-
-    @Override
-    public void save(IAccount account) {
-        final String objectId = account.getId().toString();
-        final String objectType = Account.OBJECT_TYPE;
-
-        dao.begin();
-        try {
-            dao.insertAccount(account);
-            List<ICustomField> newFields = account.getFields().getNewFields();
-            dao.createFields(objectId, objectType, newFields);
-            for (ICustomField field : newFields) {
-                field.setAsSaved();
-            }
-
-            dao.saveFields(objectId, objectType, account.getFields().getUpdatedFields());
-            dao.commit();
-        }
-        catch (RuntimeException ex) {
-            dao.rollback();
-            throw ex;
         }
     }
 }

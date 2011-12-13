@@ -16,20 +16,16 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
+import com.google.inject.Inject;
+import com.ning.billing.config.EntitlementConfig;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory;
+import com.ning.billing.util.clock.Clock;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-
-import com.google.inject.Inject;
-import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.config.EntitlementConfig;
-import com.ning.billing.entitlement.api.user.SubscriptionApiService;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
-import com.ning.billing.util.clock.Clock;
 
 public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEntitlementDao {
 

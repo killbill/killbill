@@ -22,18 +22,18 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 
 public class DefaultPaymentApi implements PaymentApi {
     private final PaymentProviderPluginRegistry pluginRegistry;
-    private final IAccountUserApi accountUserApi;
+    private final AccountUserApi accountUserApi;
 
     @Inject
-    public DefaultPaymentApi(PaymentProviderPluginRegistry pluginRegistry, IAccountUserApi accountUserApi) {
+    public DefaultPaymentApi(PaymentProviderPluginRegistry pluginRegistry, AccountUserApi accountUserApi) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
     }
@@ -52,7 +52,7 @@ public class DefaultPaymentApi implements PaymentApi {
             paymentProviderName = null;
         }
         else {
-            final IAccount account = accountUserApi.getAccountFromId(UUID.fromString(accountKey));
+            final Account account = accountUserApi.getAccountById(UUID.fromString(accountKey));
             paymentProviderName = account.getFieldValue(RequestProcessor.PAYMENT_PROVIDER_KEY);
         }
 

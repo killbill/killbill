@@ -16,23 +16,19 @@
 
 package com.ning.billing.util.config;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import com.ning.billing.catalog.api.InvalidConfigException;
+import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Date;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
-
-import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
-
-import com.ning.billing.catalog.api.InvalidConfigException;
+import static org.testng.Assert.assertEquals;
 
 
 public class TestXMLLoader {

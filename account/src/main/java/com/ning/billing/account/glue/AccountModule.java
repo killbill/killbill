@@ -16,49 +16,52 @@
 
 package com.ning.billing.account.glue;
 
-import org.skife.config.ConfigurationObjectFactory;
-
 import com.google.inject.AbstractModule;
-import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.IAccountService;
-import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.AccountDaoWrapper;
 import com.ning.billing.account.dao.FieldStoreDao;
-import com.ning.billing.account.dao.IAccountDao;
-import com.ning.billing.account.dao.IFieldStoreDao;
+import com.ning.billing.account.dao.FieldStoreDaoWrapper;
+import com.ning.billing.account.dao.TagStoreDao;
+import com.ning.billing.account.dao.TagStoreDaoWrapper;
+import org.skife.config.ConfigurationObjectFactory;
 
 public class AccountModule extends AbstractModule {
 
-    protected void installConfig() {
-        final IAccountConfig config = new ConfigurationObjectFactory(System.getProperties()).build(IAccountConfig.class);
-        bind(IAccountConfig.class).toInstance(config);
+    private void installConfig() {
+        final AccountConfig config = new ConfigurationObjectFactory(System.getProperties()).build(AccountConfig.class);
+        bind(AccountConfig.class).toInstance(config);
     }
 
-    protected void installAccountDao() {
-        bind(IAccountDao.class).to(AccountDao.class).asEagerSingleton();
-//        bind(IAccountDaoSql.class).to(IAccountDaoSql.class).asEagerSingleton();
+    private void installAccountCore() {
+//        bind(IAccountService.class).to(Engine.class).asEagerSingleton();
+//        bind(Engine.class).asEagerSingleton();
     }
 
-    protected void installAccountUserApi() {
-        bind(IAccountUserApi.class).to(AccountUserApi.class).asEagerSingleton();
+    private void installAccountDao() {
+        bind(AccountDao.class).to(AccountDaoWrapper.class).asEagerSingleton();
     }
 
-    protected void installAccountService() {
-        bind(IAccountService.class).to(AccountService.class).asEagerSingleton();
+    private void installAccountUserApi() {
+        bind(AccountUserApi.class).to(DefaultAccountUserApi.class).asEagerSingleton();
     }
 
-    protected void installFieldStore() {
-        bind(IFieldStoreDao.class).to(FieldStoreDao.class).asEagerSingleton();
-    }
+//    private void installFieldStore() {
+//        bind(FieldStoreDao.class).to(FieldStoreDaoWrapper.class).asEagerSingleton();
+//    }
+//
+//    private void installTagStore() {
+//        bind(TagStoreDao.class).to(TagStoreDaoWrapper.class).asEagerSingleton();
+//    }
 
     @Override
     protected void configure() {
         installConfig();
+        installAccountCore();
         installAccountDao();
         installAccountUserApi();
-        installAccountService();
-        installFieldStore();
+//        installFieldStore();
+//        installTagStore();
     }
-
 }

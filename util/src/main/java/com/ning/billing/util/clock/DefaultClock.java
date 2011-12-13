@@ -16,13 +16,12 @@
 
 package com.ning.billing.util.clock;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.ning.billing.catalog.api.Duration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.ning.billing.catalog.api.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DefaultClock implements Clock {
 

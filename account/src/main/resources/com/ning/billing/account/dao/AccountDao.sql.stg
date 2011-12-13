@@ -1,0 +1,33 @@
+group AccountDaoSql;
+
+save() ::= <<
+    INSERT INTO accounts
+    (id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name)
+    VALUES
+    (:id, :externalKey, :email, :name, :firstNameLength, :phone, :currency, :billingCycleDay, :paymentProviderName)
+    ON DUPLICATE KEY UPDATE
+      external_key = :externalKey, email = :email, name = :name, first_name_length = :firstNameLength,
+      phone = :phone, currency = :currency, payment_provider_name = :paymentProviderName;
+>>
+
+getAccountByKey() ::= <<
+    select id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name
+    from accounts
+    where external_key = :externalKey;
+>>
+
+getById() ::= <<
+    select id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name
+    from accounts
+    where id = :id;
+>>
+
+get() ::= <<
+    select id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name
+    from accounts;
+>>
+
+test() ::= <<
+    select 1 from accounts;
+>>
+;

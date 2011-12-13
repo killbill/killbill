@@ -36,11 +36,12 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.model.Invoice;
-import com.ning.billing.invoice.model.InvoiceItem;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.setup.PaymentTestModule;
 import com.ning.billing.util.eventbus.EventBus;
@@ -53,7 +54,7 @@ public class TestPaymentProvider {
     @Inject
     private RequestProcessor invoiceProcessor;
     @Inject
-    private IAccountUserApi accountUserApi;
+    private AccountUserApi accountUserApi;
     private MockPaymentInfoReceiver paymentInfoReceiver;
 
     @BeforeMethod(alwaysRun = true)
@@ -70,13 +71,13 @@ public class TestPaymentProvider {
         eventBus.stop();
     }
 
-    protected IAccount getTestAccount() {
-        return accountUserApi.createAccount(new Account());
+    protected Account getTestAccount() {
+        return accountUserApi.createAccount(new DefaultAccount());
     }
 
     @Test
     public void testSimpleInvoice() throws Exception {
-        final IAccount account = getTestAccount();
+        final Account account = getTestAccount();
         final UUID subscriptionUuid = UUID.randomUUID();
         final UUID invoiceUuid = UUID.randomUUID();
         final DateTime now = new DateTime();
@@ -89,7 +90,7 @@ public class TestPaymentProvider {
                                                      new BigDecimal("1"),
                                                      Currency.USD);
         final List<InvoiceItem> lineItems = Arrays.asList(lineItem);
-        final Invoice invoice = new Invoice(account.getId(), lineItems, Currency.USD);
+        final Invoice invoice = new DefaultInvoice(account.getId(), lineItems, Currency.USD);
 
         eventBus.post(invoice);
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {

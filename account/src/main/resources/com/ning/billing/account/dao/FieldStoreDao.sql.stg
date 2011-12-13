@@ -1,0 +1,20 @@
+group IFieldStoreDao;
+
+save() ::= <<
+  INSERT INTO custom_fields(id, object_id, object_type, field_name, field_value)
+  VALUES (:id, :objectId, :objectType, :fieldName, :fieldValue)
+  ON DUPLICATE KEY UPDATE
+    field_value = :fieldValue;
+>>
+
+load() ::= <<
+    SELECT id, field_name, field_value
+    FROM custom_fields
+    WHERE object_id = :objectId AND object_type = :objectType;
+>>
+
+test() ::= <<
+  SELECT 1 FROM custom_fields;
+>>
+;
+

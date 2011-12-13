@@ -17,7 +17,7 @@
 package com.ning.billing.invoice.tests;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.invoice.model.IBillingMode;
+import com.ning.billing.invoice.model.BillingMode;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import org.joda.time.DateTime;
 
@@ -27,7 +27,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
 public abstract class ProRationTestBase extends InvoicingTestBase{
-    protected abstract IBillingMode getBillingMode();
+    protected abstract BillingMode getBillingMode();
     protected abstract BillingPeriod getBillingPeriod();
 
     protected void testCalculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay, BigDecimal expectedValue) throws InvalidDateSequenceException {

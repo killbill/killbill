@@ -1,24 +1,53 @@
 group InvoiceDao;
 
 getInvoicesByAccount() ::= <<
-  select * from invoices where account_id = :accountId order by invoiceDate asc;
+  SELECT id, account_id, invoice_date, target_date, currency, amount_paid, last_payment_attempt
+  FROM invoices
+  WHERE account_id = :accountId
+  ORDER BY invoice_date ASC;
+>>
+
+getInvoicesBySubscription() ::= <<
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, i.amount_paid, i.last_payment_attempt
+  FROM invoices i
+  INNER JOIN invoice_items ii ON i.id = ii.invoice_id
+  WHERE ii.subscription_id = :subscriptionId;
+>>
+
+getInvoicesForPayment() ::= <<
+  SELECT i.id
+  FROM invoices i
+  INNER JOIN invoice_items ii ON i.id = ii.invoice_id
+  WHERE DATEDIFF(:targetDate, i.last_payment_attempt) >= :numberOfDays OR (i.last_payment_attempt IS NULL)
+  GROUP BY i.id, i.amount_paid
+  HAVING SUM(ii.amount) > (i.amount_paid);
 >>
 
 getInvoice() ::= <<
-  select * from invoices where invoice_id = :invoiceId;
+  SELECT id, account_id, invoice_date, target_date, currency, amount_paid, last_payment_attempt
+  FROM invoices
+  WHERE id = :id;
 >>
 
 createInvoice() ::= <<
-  INSERT INTO invoices(invoice_id, account_id, invoiceDate)
-  VALUES (:invoiceId, :accountId, :invoiceDate);
+  INSERT INTO invoices(id, account_id, invoice_date, target_date, currency, amount_paid, last_payment_attempt)
+  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :amountPaid, :lastPaymentAttempt);
 >>
 
-addPayment() ::= <<
-  UPDATE invoices SET amount_paid = amount_paid + :paymentAmount
-  WHERE invoice_id = :invoiceId;
+notifySuccessfulPayment() ::= <<
+  UPDATE invoices
+  SET amount_paid = amount_paid + :paymentAmount, last_payment_attempt = :paymentDate
+  WHERE id = :id;
+>>
+
+notifyFailedPayment() ::= <<
+  UPDATE invoices
+  SET last_payment_attempt = :paymentAttemptDate
+  WHERE id = :id;
 >>
 
 test() ::= <<
-  SELECT DISTINCT 1 FROM invoices;
+  SELECT 1
+  FROM invoices;
 >>
 ;

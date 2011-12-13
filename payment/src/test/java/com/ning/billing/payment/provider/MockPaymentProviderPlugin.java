@@ -21,8 +21,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.invoice.model.Invoice;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.PaymentInfo;
 import com.ning.billing.payment.PaymentProviderAccount;
 import com.ning.billing.payment.PaypalPaymentMethodInfo;
@@ -34,7 +34,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     private final Map<String, PaymentInfo> payments = new ConcurrentHashMap<String, PaymentInfo>();
 
     @Override
-    public Either<PaymentError, PaymentInfo> processInvoice(IAccount account, Invoice invoice) {
+    public Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice) {
         PaymentInfo payment = new PaymentInfo.Builder().setId(UUID.randomUUID().toString()).build();
 
         payments.put(payment.getId(), payment);
@@ -54,7 +54,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(IAccount account) {
+    public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(Account account) {
         // TODO
         return Either.left(new PaymentError("unknown", "Not implemented"));
     }
@@ -72,7 +72,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, PaypalPaymentMethodInfo> addPaypalPaymentMethod(IAccount account, PaypalPaymentMethodInfo paypalPaymentMethod) {
+    public Either<PaymentError, PaypalPaymentMethodInfo> addPaypalPaymentMethod(Account account, PaypalPaymentMethodInfo paypalPaymentMethod) {
         // TODO
         return Either.left(new PaymentError("unknown", "Not implemented"));
     }

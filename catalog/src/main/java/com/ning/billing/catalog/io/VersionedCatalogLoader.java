@@ -16,13 +16,6 @@
 
 package com.ning.billing.catalog.io;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import com.google.inject.Inject;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.VersionedCatalog;
@@ -30,6 +23,13 @@ import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.config.UriAccessor;
 import com.ning.billing.util.config.XMLLoader;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class VersionedCatalogLoader implements ICatalogLoader  {
 	private static final Object PROTOCOL_FOR_FILE = "file";

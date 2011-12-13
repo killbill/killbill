@@ -16,14 +16,13 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.List;
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import org.joda.time.DateTime;
+
+import java.util.List;
+import java.util.UUID;
 
 
 public interface Subscription {

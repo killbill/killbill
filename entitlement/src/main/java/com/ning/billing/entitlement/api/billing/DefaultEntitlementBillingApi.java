@@ -16,18 +16,16 @@
 
 package com.ning.billing.entitlement.api.billing;
 
+import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import org.joda.time.DateTime;
+
 import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-import com.google.inject.Inject;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
-
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
@@ -40,7 +38,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     }
 
     @Override
-    public List<IAccount> getActiveAccounts() {
+    public List<Account> getActiveAccounts() {
         return null;
     }
 
@@ -54,7 +52,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     public void setChargedThroughDate(UUID subscriptionId, DateTime ctd) {
         SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionId);
         if (subscription == null) {
-            new EntitlementBillingApiException(String.format("Unknwon subscription %s", subscriptionId));
+            new EntitlementBillingApiException(String.format("Unknown subscription %s", subscriptionId));
         }
 
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)

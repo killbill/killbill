@@ -18,9 +18,9 @@ package com.ning.billing.payment;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountUserApi;
-import com.ning.billing.invoice.model.Invoice;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
@@ -30,12 +30,12 @@ import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
 public class RequestProcessor {
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
-    private final IAccountUserApi accountUserApi;
+    private final AccountUserApi accountUserApi;
     private final PaymentProviderPluginRegistry pluginRegistry;
     private final EventBus eventBus;
 
     @Inject
-    public RequestProcessor(IAccountUserApi accountUserApi,
+    public RequestProcessor(AccountUserApi accountUserApi,
                             PaymentProviderPluginRegistry pluginRegistry,
                             EventBus eventBus) {
         this.accountUserApi = accountUserApi;
@@ -45,7 +45,7 @@ public class RequestProcessor {
 
     @Subscribe
     public void receiveInvoice(Invoice invoice) throws EventBusException {
-        final IAccount account = accountUserApi.getAccountFromId(invoice.getAccountId());
+        final Account account = accountUserApi.getAccountById(invoice.getAccountId());
         final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
         final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
 
@@ -56,7 +56,7 @@ public class RequestProcessor {
 
     @Subscribe
     public void receivePaymentInfoRequest(PaymentInfoRequest paymentInfoRequest) throws EventBusException {
-        final IAccount account = accountUserApi.getAccountFromId(paymentInfoRequest.getAccountId());
+        final Account account = accountUserApi.getAccountById(paymentInfoRequest.getAccountId());
         final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
         final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
 

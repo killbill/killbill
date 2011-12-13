@@ -21,25 +21,20 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class MockAccountUserApi implements IAccountUserApi {
-    private final CopyOnWriteArrayList<IAccount> accounts = new CopyOnWriteArrayList<IAccount>();
+public class MockAccountUserApi implements AccountUserApi {
+    private final CopyOnWriteArrayList<Account> accounts = new CopyOnWriteArrayList<Account>();
 
     @Override
-    public IAccount createAccount(IAccountData data) {
-        IAccount result = new Account().withKey(data.getKey())
-                                       .withName(data.getName())
-                                       .withEmail(data.getEmail())
-                                       .withPhone(data.getPhone())
-                                       .withBillCycleDay(data.getBillCycleDay())
-                                       .withCurrency(data.getCurrency());
+    public Account createAccount(AccountData data) {
+        Account result = new DefaultAccount(data);
         accounts.add(result);
         return result;
     }
 
     @Override
-    public IAccount getAccountByKey(String key) {
-        for (IAccount account : accounts) {
-            if (key.equals(account.getKey())) {
+    public Account getAccountByKey(String key) {
+        for (Account account : accounts) {
+            if (key.equals(account.getExternalKey())) {
                 return account;
             }
         }
@@ -47,8 +42,8 @@ public class MockAccountUserApi implements IAccountUserApi {
     }
 
     @Override
-    public IAccount getAccountFromId(UUID uid) {
-        for (IAccount account : accounts) {
+    public Account getAccountById(UUID uid) {
+        for (Account account : accounts) {
             if (uid.equals(account.getId())) {
                 return account;
             }
@@ -57,8 +52,12 @@ public class MockAccountUserApi implements IAccountUserApi {
     }
 
     @Override
-    public List<IAccount> getAccounts() {
-        return new ArrayList<IAccount>(accounts);
+    public List<Account> getAccounts() {
+        return new ArrayList<Account>(accounts);
     }
 
+    @Override
+    public void saveAccount(Account account) {
+        throw new UnsupportedOperationException();
+    }
 }

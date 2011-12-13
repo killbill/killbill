@@ -16,37 +16,63 @@
 
 package com.ning.billing.account.dao;
 
-import com.google.inject.Inject;
-import com.ning.billing.account.api.ICustomField;
-import org.skife.jdbi.v2.IDBI;
-
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import com.ning.billing.account.api.CustomField;
+import com.ning.billing.account.api.StringCustomField;
 
-public class FieldStoreDao implements IFieldStoreDao {
-    private final IFieldStoreDao dao;
+@ExternalizedSqlViaStringTemplate3
+@RegisterMapper(FieldStoreDao.CustomFieldMapper.class)
+public interface FieldStoreDao extends EntityCollectionDao<CustomField> {
+    @Override
+    @SqlBatch
+    public void save(@Bind("objectId") final String objectId,
+                     @Bind("objectType") final String objectType,
+                     @CustomFieldBinder final List<CustomField> entities);
 
-    @Inject
-    public FieldStoreDao(IDBI dbi) {
-        dao = dbi.onDemand(IFieldStoreDao.class);
+
+    public class CustomFieldMapper implements ResultSetMapper<CustomField> {
+        @Override
+        public CustomField map(int index, ResultSet result, StatementContext context) throws SQLException {
+            UUID id = UUID.fromString(result.getString("id"));
+            String fieldName = result.getString("field_name");
+            String fieldValue = result.getString("field_value");
+            return new StringCustomField(id, fieldName, fieldValue);
+        }
     }
 
-    @Override
-    public void saveFields(String objectId, String objectType, List<ICustomField> fields) {
-        dao.saveFields(objectId, objectType, fields);
-    }
-
-    @Override
-    public void createFields(String objectId, String objectType,  List<ICustomField> fields) {
-        dao.createFields(objectId, objectType, fields);
-    }
-
-    @Override
-    public List<ICustomField> getFields(String objectId, String objectType) {
-        return dao.getFields(objectId, objectType);
-    }
-
-    @Override
-    public void test() {
-        dao.test();
+    @BindingAnnotation(CustomFieldBinder.CustomFieldBinderFactory.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER})
+    public @interface CustomFieldBinder {
+        public static class CustomFieldBinderFactory implements BinderFactory {
+            public Binder build(Annotation annotation) {
+                return new Binder<CustomFieldBinder, CustomField>() {
+                    public void bind(SQLStatement q, CustomFieldBinder bind, CustomField customField) {
+                        q.bind("id", customField.getId().toString());
+                        q.bind("fieldName", customField.getName());
+                        q.bind("fieldValue", customField.getValue());
+                    }
+                };
+            }
+        }
     }
 }

@@ -17,8 +17,8 @@
 package com.ning.billing.analytics;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.dao.BusinessAccountDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,20 +28,20 @@ public class BusinessAccountRecorder
     private static final Logger log = LoggerFactory.getLogger(BusinessAccountRecorder.class);
 
     private final BusinessAccountDao dao;
-    private final IAccountUserApi accountApi;
+    private final AccountUserApi accountApi;
 
     @Inject
-    public BusinessAccountRecorder(final BusinessAccountDao dao, final IAccountUserApi accountApi)
+    public BusinessAccountRecorder(final BusinessAccountDao dao, final AccountUserApi accountApi)
     {
         this.dao = dao;
         this.accountApi = accountApi;
     }
 
-    public void subscriptionCreated(final IAccount created)
+    public void subscriptionCreated(final Account created)
     {
     }
 
-    public void subscriptionUpdated(final IAccount updated)
+    public void subscriptionUpdated(final Account updated)
     {
     }
 }

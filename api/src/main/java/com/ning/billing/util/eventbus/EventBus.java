@@ -16,8 +16,8 @@
 
 package com.ning.billing.util.eventbus;
 
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import com.google.common.eventbus.Subscribe;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 
 /**

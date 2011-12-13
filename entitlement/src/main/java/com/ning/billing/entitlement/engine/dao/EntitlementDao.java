@@ -16,15 +16,15 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.events.EntitlementEvent;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
-import com.ning.billing.entitlement.events.EntitlementEvent;
 
 public interface EntitlementDao {
 

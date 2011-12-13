@@ -16,16 +16,12 @@
 
 package com.ning.billing.catalog;
 
-import java.util.Date;
-
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.rules.CaseCancelPolicy;
-import com.ning.billing.catalog.rules.CaseChangePlanAlignment;
-import com.ning.billing.catalog.rules.CaseChangePlanPolicy;
-import com.ning.billing.catalog.rules.CaseCreateAlignment;
-import com.ning.billing.catalog.rules.PlanRules;
+import com.ning.billing.catalog.rules.*;
+
+import java.util.Date;
 
 public class MockCatalog extends StandaloneCatalog {
 	private static final String[] PRODUCT_NAMES = new String[]{ "TestProduct1", "TestProduct2", "TestProduct3"};

@@ -16,13 +16,15 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
+import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
+import com.ning.billing.entitlement.events.EventBaseBuilder;
+import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
+import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.entitlement.events.phase.PhaseEventBuilder;
+import com.ning.billing.entitlement.events.phase.PhaseEventData;
+import com.ning.billing.entitlement.events.user.*;
+import com.ning.billing.entitlement.exceptions.EntitlementError;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
@@ -38,23 +40,12 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.entitlement.events.EventBaseBuilder;
-import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
-import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
-import com.ning.billing.entitlement.events.phase.PhaseEvent;
-import com.ning.billing.entitlement.events.phase.PhaseEventData;
-import com.ning.billing.entitlement.events.phase.PhaseEventBuilder;
-import com.ning.billing.entitlement.events.user.ApiEventBuilder;
-import com.ning.billing.entitlement.events.user.ApiEventCancel;
-import com.ning.billing.entitlement.events.user.ApiEventChange;
-import com.ning.billing.entitlement.events.user.ApiEventCreate;
-import com.ning.billing.entitlement.events.user.ApiEventPause;
-import com.ning.billing.entitlement.events.user.ApiEventResume;
-import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.entitlement.events.user.ApiEventUncancel;
-import com.ning.billing.entitlement.events.user.ApiEvent;
-import com.ning.billing.entitlement.exceptions.EntitlementError;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transmogrifier  {

@@ -17,6 +17,7 @@
 package com.ning.billing.account.glue;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.glue.EventBusModule;
 import org.skife.jdbi.v2.IDBI;
 
 import java.io.IOException;
@@ -33,5 +34,6 @@ public class AccountModuleMock extends AccountModule {
     protected void configure() {
         bind(IDBI.class).toInstance(helper.getDBI());
         super.configure();
+        install(new EventBusModule());
     }
 }

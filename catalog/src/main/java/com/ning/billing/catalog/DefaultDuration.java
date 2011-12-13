@@ -16,14 +16,14 @@
 
 package com.ning.billing.catalog;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> implements Duration {

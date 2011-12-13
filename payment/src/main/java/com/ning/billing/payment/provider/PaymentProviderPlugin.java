@@ -18,8 +18,8 @@ package com.ning.billing.payment.provider;
 
 import java.util.List;
 
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.invoice.model.Invoice;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.PaymentInfo;
 import com.ning.billing.payment.PaymentProviderAccount;
 import com.ning.billing.payment.PaypalPaymentMethodInfo;
@@ -28,12 +28,12 @@ import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 
 public interface PaymentProviderPlugin {
-    Either<PaymentError, PaymentInfo> processInvoice(IAccount account, Invoice invoice);
+    Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice);
     Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId);
-    Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(IAccount account);
+    Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(Account account);
     Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId);
     Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String screenName);
-    Either<PaymentError, PaypalPaymentMethodInfo> addPaypalPaymentMethod(IAccount account, PaypalPaymentMethodInfo paypalPaymentMethod);
+    Either<PaymentError, PaypalPaymentMethodInfo> addPaypalPaymentMethod(Account account, PaypalPaymentMethodInfo paypalPaymentMethod);
     Either<PaymentError, Void> updatePaymentGateway(String accountKey);
 
 }

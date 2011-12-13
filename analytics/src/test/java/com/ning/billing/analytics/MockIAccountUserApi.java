@@ -16,44 +16,50 @@
 
 package com.ning.billing.analytics;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import java.util.List;
 import java.util.UUID;
-
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountData;
-import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
 
-public class MockIAccountUserApi implements IAccountUserApi
+public class MockIAccountUserApi implements AccountUserApi
 {
-    private final Account account;
+    private final AccountData account;
 
     public MockIAccountUserApi(final String accountKey, final Currency currency)
     {
-        account = new Account(UUID.randomUUID()).withKey(accountKey).withCurrency(currency);
+        account = new MockAccount(UUID.randomUUID(), accountKey, currency);
     }
 
     @Override
-    public IAccount createAccount(final IAccountData data)
+    public Account createAccount(final AccountData data)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IAccount getAccountByKey(final String key)
+    public void saveAccount(Account account) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public Account getAccountByKey(final String key)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IAccount getAccountFromId(final UUID uid)
+    public Account getAccountById(final UUID uid)
     {
-        return account;
+        return new DefaultAccount(account);
     }
 
     @Override
-    public List<IAccount> getAccounts()
+    public List<Account> getAccounts()
     {
         throw new UnsupportedOperationException();
     }

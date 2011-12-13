@@ -16,96 +16,115 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.List;
+import java.util.UUID;
+import org.joda.time.DateTime;
+import org.testng.annotations.Test;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.DefaultTagDescription;
+import com.ning.billing.account.api.Tag;
+import com.ning.billing.account.api.TagDescription;
+import com.ning.billing.account.api.user.AccountBuilder;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.clock.DefaultClock;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
+@Test(groups = {"account-dao"})
+public class TestSimpleAccountDao extends AccountDaoTestBase {
+    private final String key = "test1234";
+    private final String firstName = "Wesley";
+    private final String email = "me@me.com";
 
-import org.apache.commons.io.IOUtils;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+    private DefaultAccount createTestAccount() {
+        String thisKey = key + UUID.randomUUID().toString();
+        String lastName = UUID.randomUUID().toString();
+        String thisEmail = email + " " + UUID.randomUUID();
+        String name = firstName + " " + lastName;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.glue.AccountModuleMock;
-
-@Test(groups = {"Account", "Account-DAO"})
-public class TestSimpleAccountDao {
-    private IAccountDao dao;
-
-    @BeforeClass(alwaysRun = true)
-    private void setup() throws IOException {
-        AccountModuleMock module = new AccountModuleMock();
-        final String ddl = IOUtils.toString(IAccountDaoSql.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-        module.createDb(ddl);
-
-        // Healthcheck test to make sure MySQL is setup properly
-        try {
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
-
-            dao = injector.getInstance(IAccountDao.class);
-            dao.test();
-        }
-        catch (Throwable t) {
-            fail(t.toString());
-        }
+        int firstNameLength = firstName.length();
+        return new AccountBuilder().externalKey(thisKey).name(name).firstNameLength(firstNameLength)
+                                   .email(thisEmail).currency(Currency.USD).build();
     }
 
-    @Test(enabled=true, groups={"Account-DAO"})
     public void testBasic() {
 
-        IAccount a = new Account().withKey("foo");
-        dao.createAccount(a);
+        Account a = createTestAccount();
+        accountDao.save(a);
+        String key = a.getExternalKey();
 
-        IAccount r = dao.getAccountByKey("foo");
+        Account r = accountDao.getAccountByKey(key);
         assertNotNull(r);
-        assertEquals(r.getKey(), a.getKey());
+        assertEquals(r.getExternalKey(), a.getExternalKey());
 
-        r = dao.getAccountById(r.getId());
+        r = accountDao.getById(r.getId().toString());
         assertNotNull(r);
-        assertEquals(r.getKey(), a.getKey());
+        assertEquals(r.getExternalKey(), a.getExternalKey());
 
-        List<IAccount> all = dao.getAccounts();
+        List<Account> all = accountDao.get();
         assertNotNull(all);
         assertTrue(all.size() >= 1);
     }
 
     @Test
     public void testGetById() {
-        String key = "test1234";
-
-        IAccount account = Account.create().withKey(key);
+        Account account = createTestAccount();
         UUID id = account.getId();
+        String key = account.getExternalKey();
+        String name = account.getName();
+        int firstNameLength = account.getFirstNameLength();
 
-        dao.save(account);
+        accountDao.save(account);
 
-        account = dao.getAccountById(id);
+        account = accountDao.getById(id.toString());
         assertNotNull(account);
         assertEquals(account.getId(), id);
-        assertEquals(account.getKey(), key);
+        assertEquals(account.getExternalKey(), key);
+        assertEquals(account.getName(), name);
+        assertEquals(account.getFirstNameLength(), firstNameLength);
+
     }
 
     @Test
     public void testCustomFields() {
-        String key = "test45678";
-        IAccount account = Account.create().withKey(key);
-
+        Account account = createTestAccount();
         String fieldName = "testField1";
         String fieldValue = "testField1_value";
         account.setFieldValue(fieldName, fieldValue);
 
-        dao.save(account);
+        accountDao.save(account);
 
-        account = dao.getAccountByKey(key);
-        assertNotNull(account);
-        assertEquals(account.getKey(), key);
-        assertEquals(account.getFieldValue(fieldName), fieldValue);
+        Account thisAccount = accountDao.getAccountByKey(account.getExternalKey());
+        assertNotNull(thisAccount);
+        assertEquals(thisAccount.getExternalKey(), account.getExternalKey());
+        assertEquals(thisAccount.getFieldValue(fieldName), fieldValue);
+    }
+
+    @Test
+    public void testTags() {
+        Account account = createTestAccount();
+        TagDescription description = new DefaultTagDescription("Test Tag", "For testing only", true, true, "Test System", new DateTime());
+        TagDescriptionDao tagDescriptionDao = dbi.onDemand(TagDescriptionDao.class);
+        tagDescriptionDao.save(description);
+
+        String addedBy = "testTags()";
+        DateTime dateAdded = new DefaultClock().getUTCNow();
+        account.addTag(description, addedBy, dateAdded);
+        assertEquals(account.getTagList().size(), 1);
+        accountDao.save(account);
+
+        Account thisAccount = accountDao.getById(account.getId().toString());
+        List<Tag> tagList = thisAccount.getTagList();
+        assertEquals(tagList.size(), 1);
+        Tag tag = tagList.get(0);
+        assertEquals(tag.getName(), description.getName());
+        assertEquals(tag.getGenerateInvoice(), description.getGenerateInvoice());
+        assertEquals(tag.getProcessPayment(), description.getProcessPayment());
+        assertEquals(tag.getTagDescriptionId(), description.getId());
+        assertEquals(tag.getAddedBy(), addedBy);
+        assertEquals(tag.getDateAdded().compareTo(dateAdded), 0);
     }
 }

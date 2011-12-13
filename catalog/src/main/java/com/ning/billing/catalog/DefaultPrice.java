@@ -16,17 +16,16 @@
 
 package com.ning.billing.catalog;
 
-import java.math.BigDecimal;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.CurrencyValueNull;
 import com.ning.billing.catalog.api.Price;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import java.math.BigDecimal;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements Price {

@@ -16,35 +16,25 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
+import com.google.inject.Inject;
+import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.config.EntitlementConfig;
+import com.ning.billing.entitlement.api.user.*;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
+import com.ning.billing.entitlement.events.user.ApiEvent;
+import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.Hostname;
+import com.ning.billing.util.clock.Clock;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.config.EntitlementConfig;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
-import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.entitlement.events.user.ApiEvent;
-import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.Hostname;
-import com.ning.billing.util.clock.Clock;
+import java.util.*;
 
 public class EntitlementSqlDao implements EntitlementDao {
 

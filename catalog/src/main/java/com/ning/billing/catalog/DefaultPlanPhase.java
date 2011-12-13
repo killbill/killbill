@@ -16,22 +16,16 @@
 
 package com.ning.billing.catalog;
 
-import java.net.URI;
+import com.ning.billing.catalog.api.*;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationError;
+import com.ning.billing.util.config.ValidationErrors;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.InternationalPrice;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationError;
-import com.ning.billing.util.config.ValidationErrors;
+import java.net.URI;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implements PlanPhase {

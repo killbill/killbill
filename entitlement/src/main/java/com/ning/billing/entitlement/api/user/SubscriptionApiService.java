@@ -16,26 +16,9 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.joda.time.DateTime;
-
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.ActionPolicy;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.PriceList;
-import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanChangeResult;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
@@ -44,13 +27,13 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
-import com.ning.billing.entitlement.events.user.ApiEventBuilder;
-import com.ning.billing.entitlement.events.user.ApiEventCancel;
-import com.ning.billing.entitlement.events.user.ApiEventChange;
-import com.ning.billing.entitlement.events.user.ApiEventCreate;
-import com.ning.billing.entitlement.events.user.ApiEventUncancel;
+import com.ning.billing.entitlement.events.user.*;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
+import org.joda.time.DateTime;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SubscriptionApiService {
 

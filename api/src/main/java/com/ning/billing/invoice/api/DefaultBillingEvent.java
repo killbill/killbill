@@ -20,8 +20,8 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InternationalPrice;
-import com.ning.billing.entitlement.api.billing.BillingMode;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.entitlement.api.billing.BillingModeType;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -40,11 +40,11 @@ public class DefaultBillingEvent implements BillingEvent {
     private final InternationalPrice price;
     private final BillingPeriod billingPeriod;
     private final int billCycleDay;
-    private final BillingMode billingMode;
+    private final BillingModeType billingMode;
 
 
     public DefaultBillingEvent(UUID subscriptionId, DateTime startDate, String planName, String planPhaseName, InternationalPrice price,
-                        BillingPeriod billingPeriod, int billCycleDay, BillingMode billingMode) {
+                        BillingPeriod billingPeriod, int billCycleDay, BillingModeType billingMode) {
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;
         this.planName = planName;
@@ -113,7 +113,7 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public BillingMode getBillingMode() {
+    public BillingModeType getBillingMode() {
         return billingMode;
     }
 

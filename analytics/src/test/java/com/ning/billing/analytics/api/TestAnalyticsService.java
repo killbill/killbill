@@ -17,31 +17,13 @@
 package com.ning.billing.analytics.api;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountUserApi;
-import com.ning.billing.analytics.AnalyticsTestModule;
-import com.ning.billing.analytics.BusinessSubscription;
-import com.ning.billing.analytics.BusinessSubscriptionEvent;
-import com.ning.billing.analytics.BusinessSubscriptionTransition;
-import com.ning.billing.analytics.MockAccount;
-import com.ning.billing.analytics.MockDuration;
-import com.ning.billing.analytics.MockPhase;
-import com.ning.billing.analytics.MockPlan;
-import com.ning.billing.analytics.MockProduct;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.analytics.*;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
+import com.ning.billing.entitlement.api.user.*;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.eventbus.EventBus;
@@ -65,7 +47,7 @@ public class TestAnalyticsService
     private static final String ACCOUNT_KEY = "pierre-1234";
 
     @Inject
-    private IAccountUserApi accountApi;
+    private AccountUserApi accountApi;
 
     @Inject
     private EntitlementUserApi entitlementApi;
@@ -88,6 +70,8 @@ public class TestAnalyticsService
     @BeforeClass(alwaysRun = true)
     public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException
     {
+        bus.start();
+
         final String analyticsDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
         // For bundles
         final String accountDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
@@ -100,7 +84,7 @@ public class TestAnalyticsService
 
         // We need a bundle to retrieve the event key
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
-        final IAccount storedAccount = accountApi.createAccount(account);
+        final Account storedAccount = accountApi.createAccount(account);
         final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount, KEY);
 
         // Verify we correctly initialized the account subsystem
@@ -108,7 +92,7 @@ public class TestAnalyticsService
         Assert.assertEquals(bundle.getKey(), KEY);
 
         // Create a subscription transition
-        final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
+        final Product product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
         final Plan plan = new MockPlan("platinum-monthly", product);
         final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
         final UUID subscriptionId = UUID.randomUUID();
@@ -138,7 +122,7 @@ public class TestAnalyticsService
             requestedTransitionTime,
             BusinessSubscriptionEvent.subscriptionCreated(plan),
             null,
-            new BusinessSubscription(priceList, plan, phase, null, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
+            new BusinessSubscription(priceList, plan, phase, Currency.USD, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
         );
     }
 
@@ -156,7 +140,6 @@ public class TestAnalyticsService
 
         // Test the bus and make sure we can register our service
         try {
-            bus.start();
             service.registerForNotifications();
         }
         catch (Throwable t) {

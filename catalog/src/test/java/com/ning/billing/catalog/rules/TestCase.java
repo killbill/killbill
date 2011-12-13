@@ -16,23 +16,17 @@
 
 package com.ning.billing.catalog.rules;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
+import com.ning.billing.catalog.DefaultPriceList;
+import com.ning.billing.catalog.DefaultProduct;
+import com.ning.billing.catalog.MockCatalog;
+import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.api.*;
+import org.testng.annotations.Test;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import org.testng.annotations.Test;
-
-import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.catalog.MockCatalog;
-import com.ning.billing.catalog.DefaultPriceList;
-import com.ning.billing.catalog.DefaultProduct;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.catalog.api.PlanSpecifier;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.rules.Case;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNull;
 
 public class TestCase {
 
