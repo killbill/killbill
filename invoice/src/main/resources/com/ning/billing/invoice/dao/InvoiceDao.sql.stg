@@ -23,15 +23,18 @@ getInvoicesForPayment() ::= <<
   HAVING SUM(ii.amount) > (i.amount_paid);
 >>
 
-getInvoice() ::= <<
+getById() ::= <<
   SELECT id, account_id, invoice_date, target_date, currency, amount_paid, last_payment_attempt
   FROM invoices
   WHERE id = :id;
 >>
 
-createInvoice() ::= <<
+save() ::= <<
   INSERT INTO invoices(id, account_id, invoice_date, target_date, currency, amount_paid, last_payment_attempt)
-  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :amountPaid, :lastPaymentAttempt);
+  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :amountPaid, :lastPaymentAttempt)
+  ON DUPLICATE KEY UPDATE
+    invoice_date = :invoiceDate, target_date = :targetDate, currency = :currency,
+    amount_paid = :amountPaid, last_payment_attempt = :lastPaymentAttempt;
 >>
 
 notifySuccessfulPayment() ::= <<

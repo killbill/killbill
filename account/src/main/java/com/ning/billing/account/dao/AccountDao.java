@@ -17,9 +17,10 @@
 package com.ning.billing.account.dao;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.entity.EntityDao;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -78,8 +79,8 @@ public interface AccountDao extends EntityDao<Account> {
     public @interface AccountBinder {
         public static class AccountBinderFactory implements BinderFactory {
             public Binder build(Annotation annotation) {
-                return new Binder<AccountBinder, DefaultAccount>() {
-                    public void bind(SQLStatement q, AccountBinder bind, DefaultAccount account) {
+                return new Binder<AccountBinder, AccountData>() {
+                    public void bind(SQLStatement q, AccountBinder bind, AccountData account) {
                         q.bind("id", account.getId().toString());
                         q.bind("externalKey", account.getExternalKey());
                         q.bind("email", account.getEmail());

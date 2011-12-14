@@ -22,12 +22,14 @@ import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.account.api.DefaultTagDescription;
-import com.ning.billing.account.api.Tag;
-import com.ning.billing.account.api.TagDescription;
+import com.ning.billing.util.tag.DefaultTagDescription;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDescription;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.tag.dao.TagDescriptionDao;
+import com.ning.billing.util.tag.dao.TagDescriptionDao;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;

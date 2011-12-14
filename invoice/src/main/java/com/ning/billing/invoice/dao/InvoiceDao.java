@@ -20,6 +20,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.util.entity.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -40,15 +41,13 @@ import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper({UuidMapper.class, InvoiceDao.InvoiceMapper.class})
-public interface InvoiceDao {
+public interface InvoiceDao extends EntityDao<Invoice> {
+    @Override
+    @SqlUpdate
+    void save(@InvoiceBinder Invoice invoice);
+
     @SqlQuery
     List<Invoice> getInvoicesByAccount(@Bind("accountId") final String accountId);
-
-    @SqlQuery
-    Invoice getInvoice(@Bind("id") final String invoiceId);
-
-    @SqlUpdate
-    void createInvoice(@InvoiceBinder final Invoice invoice);
 
     @SqlQuery
     List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId);
@@ -65,9 +64,6 @@ public interface InvoiceDao {
     @SqlUpdate
     void notifyFailedPayment(@Bind("id") final String invoiceId,
                              @Bind("paymentAttemptDate") final Date paymentAttemptDate);
-
-    @SqlUpdate
-    void test();
 
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)

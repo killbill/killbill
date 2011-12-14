@@ -21,10 +21,6 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountDaoWrapper;
-import com.ning.billing.account.dao.FieldStoreDao;
-import com.ning.billing.account.dao.FieldStoreDaoWrapper;
-import com.ning.billing.account.dao.TagStoreDao;
-import com.ning.billing.account.dao.TagStoreDaoWrapper;
 import org.skife.config.ConfigurationObjectFactory;
 
 public class AccountModule extends AbstractModule {

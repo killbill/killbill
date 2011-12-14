@@ -16,6 +16,9 @@
 
 package com.ning.billing.account.api;
 
+import com.ning.billing.util.customfield.CustomizableEntity;
+import com.ning.billing.util.tag.Taggable;
+
 public interface Account extends AccountData, CustomizableEntity, Taggable {
 
 }

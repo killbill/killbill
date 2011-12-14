@@ -18,8 +18,9 @@ package com.ning.billing.account.dao;
 
 import java.util.UUID;
 import org.testng.annotations.Test;
-import com.ning.billing.account.api.DefaultFieldStore;
-import com.ning.billing.account.api.FieldStore;
+import com.ning.billing.util.customfield.DefaultFieldStore;
+import com.ning.billing.util.customfield.FieldStore;
+import com.ning.billing.util.customfield.dao.FieldStoreDao;
 
 import static org.testng.Assert.assertEquals;
 

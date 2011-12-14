@@ -25,13 +25,15 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountChangeNotification;
 import com.ning.billing.account.api.AccountCreationNotification;
-import com.ning.billing.account.api.CustomField;
+import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.account.api.FieldStore;
-import com.ning.billing.account.api.Tag;
-import com.ning.billing.account.api.user.AccountChangeNotificationDefault;
-import com.ning.billing.account.api.user.AccountCreationEventDefault;
+import com.ning.billing.util.customfield.FieldStore;
+import com.ning.billing.util.customfield.dao.FieldStoreDao;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
+import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.tag.dao.TagStoreDao;
 
 public class AccountDaoWrapper implements AccountDao {
     private final AccountDao accountDao;
@@ -87,34 +89,29 @@ public class AccountDaoWrapper implements AccountDao {
         return dbi.inTransaction(new TransactionCallback<Account>() {
             @Override
             public Account inTransaction(Handle conn, TransactionStatus status) throws Exception {
-                try {
-                    conn.begin();
-                    Account account = accountDao.getById(id);
+                Account account = accountDao.getById(id);
 
-                    if (account != null) {
-                        FieldStoreDao fieldStoreDao = conn.attach(FieldStoreDao.class);
-                        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
+                if (account != null) {
+                    FieldStoreDao fieldStoreDao = conn.attach(FieldStoreDao.class);
+                    List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
 
-                        account.getFields().clear();
-                        if (fields != null) {
-                            for (CustomField field : fields) {
-                                account.getFields().setValue(field.getName(), field.getValue());
-                            }
-                        }
-
-                        TagStoreDao tagStoreDao = conn.attach(TagStoreDao.class);
-                        List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
-                        account.clearTags();
-
-                        if (tags != null) {
-                            account.addTags(tags);
+                    account.getFields().clear();
+                    if (fields != null) {
+                        for (CustomField field : fields) {
+                            account.getFields().setValue(field.getName(), field.getValue());
                         }
                     }
 
-                    return account;
-                } catch (Throwable t) {
-                    return null;
+                    TagStoreDao tagStoreDao = conn.attach(TagStoreDao.class);
+                    List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
+                    account.clearTags();
+
+                    if (tags != null) {
+                        account.addTags(tags);
+                    }
                 }
+
+                return account;
             }
         });
     }
@@ -137,37 +134,28 @@ public class AccountDaoWrapper implements AccountDao {
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(Handle conn, TransactionStatus status) throws Exception {
-                try {
-                    conn.begin();
+                AccountDao accountDao = conn.attach(AccountDao.class);
+                Account currentAccount = accountDao.getById(accountId);
+                accountDao.save(account);
 
-                    AccountDao accountDao = conn.attach(AccountDao.class);
-                    Account currentAccount = accountDao.getById(accountId);
-                    accountDao.save(account);
+                FieldStore fieldStore = account.getFields();
+                FieldStoreDao fieldStoreDao = conn.attach(FieldStoreDao.class);
+                fieldStoreDao.save(accountId, objectType, fieldStore.getEntityList());
 
-                    FieldStore fieldStore = account.getFields();
-                    FieldStoreDao fieldStoreDao = conn.attach(FieldStoreDao.class);
-                    fieldStoreDao.save(accountId, objectType, fieldStore.getEntityList());
+                TagStoreDao tagStoreDao = conn.attach(TagStoreDao.class);
+                tagStoreDao.save(accountId, objectType, account.getTagList());
 
-                    TagStoreDao tagStoreDao = conn.attach(TagStoreDao.class);
-                    tagStoreDao.save(accountId, objectType, account.getTagList());
-
-                    if (currentAccount == null) {
-                        AccountCreationNotification creationEvent = new AccountCreationEventDefault(account);
-                        eventBus.post(creationEvent);
-                    } else {
-                        AccountChangeNotification changeEvent = new AccountChangeNotificationDefault(account.getId(), currentAccount, account);
-                        if (changeEvent.hasChanges()) {
-                            eventBus.post(changeEvent);
-                        }
+                if (currentAccount == null) {
+                    AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
+                    eventBus.post(creationEvent);
+                } else {
+                    AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
+                    if (changeEvent.hasChanges()) {
+                        eventBus.post(changeEvent);
                     }
-
-                    conn.commit();
-                } catch (Exception e) {
-                    conn.rollback();
-                    throw e;
                 }
 
-                return null;
+            return null;
             }
         });
     }

@@ -36,31 +36,7 @@ import java.util.UUID;
 
 import static org.testng.Assert.*;
 
-public class InvoiceItemDaoTests {
-    private InvoiceItemDaoWrapper dao;
-    private InvoiceDao invoiceDao;
-
-    @BeforeClass(alwaysRun = true)
-    private void setup() throws IOException {
-        InvoiceModuleMock module = new InvoiceModuleMock();
-        final String ddl = IOUtils.toString(InvoiceDaoWrapper.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-        module.createDb(ddl);
-
-        // Healthcheck test to make sure MySQL is setup properly
-        try {
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
-
-            dao = injector.getInstance(InvoiceItemDaoWrapper.class);
-            dao.test();
-
-            invoiceDao = injector.getInstance(InvoiceDaoWrapper.class);
-            invoiceDao.test();
-        }
-        catch (Throwable t) {
-            fail(t.toString());
-        }
-    }
-
+public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
     @Test
     public void testInvoiceItemCreation() {
         UUID invoiceId = UUID.randomUUID();
@@ -70,9 +46,9 @@ public class InvoiceItemDaoTests {
         BigDecimal rate = new BigDecimal("20.00");
 
         InvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, "test", rate, rate, Currency.USD);
-        dao.createInvoiceItem(item);
+        invoiceItemDao.save(item);
 
-        InvoiceItem thisItem = dao.getInvoiceItem(item.getId().toString());
+        InvoiceItem thisItem = invoiceItemDao.getById(item.getId().toString());
         assertNotNull(thisItem);
         assertEquals(thisItem.getId(), item.getId());
         assertEquals(thisItem.getInvoiceId(), item.getInvoiceId());
@@ -94,10 +70,10 @@ public class InvoiceItemDaoTests {
         for (int i = 0; i < 3; i++) {
             UUID invoiceId = UUID.randomUUID();
             DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate.plusMonths(i), startDate.plusMonths(i + 1), "test", rate, rate, Currency.USD);
-            dao.createInvoiceItem(item);
+            invoiceItemDao.save(item);
         }
 
-        List<InvoiceItem> items = dao.getInvoiceItemsBySubscription(subscriptionId.toString());
+        List<InvoiceItem> items = invoiceItemDao.getInvoiceItemsBySubscription(subscriptionId.toString());
         assertEquals(items.size(), 3);
     }
 
@@ -111,10 +87,10 @@ public class InvoiceItemDaoTests {
             UUID subscriptionId = UUID.randomUUID();
             BigDecimal amount = rate.multiply(new BigDecimal(i + 1));
             DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", amount, amount, Currency.USD);
-            dao.createInvoiceItem(item);
+            invoiceItemDao.save(item);
         }
 
-        List<InvoiceItem> items = dao.getInvoiceItemsByInvoice(invoiceId.toString());
+        List<InvoiceItem> items = invoiceItemDao.getInvoiceItemsByInvoice(invoiceId.toString());
         assertEquals(items.size(), 5);
     }
 
@@ -124,7 +100,7 @@ public class InvoiceItemDaoTests {
         DateTime targetDate = new DateTime(2011, 5, 23, 0, 0, 0, 0);
         DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
 
-        invoiceDao.createInvoice(invoice);
+        invoiceDao.save(invoice);
 
         UUID invoiceId = invoice.getId();
         DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
@@ -132,9 +108,9 @@ public class InvoiceItemDaoTests {
 
         UUID subscriptionId = UUID.randomUUID();
         DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", rate, rate, Currency.USD);
-        dao.createInvoiceItem(item);
+        invoiceItemDao.save(item);
 
-        List<InvoiceItem> items = dao.getInvoiceItemsByAccount(accountId.toString());
+        List<InvoiceItem> items = invoiceItemDao.getInvoiceItemsByAccount(accountId.toString());
         assertEquals(items.size(), 1);
     }
 }

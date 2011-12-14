@@ -17,14 +17,13 @@
 package com.ning.billing.invoice.api;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.entity.Entity;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public interface InvoiceItem extends Comparable<InvoiceItem> {
-    UUID getId();
-
+public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
     UUID getInvoiceId();
 
     UUID getSubscriptionId();

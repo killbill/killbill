@@ -19,6 +19,7 @@ package com.ning.billing.invoice.dao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
+import com.ning.billing.util.entity.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -36,10 +37,7 @@ import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(InvoiceItemDao.InvoiceItemMapper.class)
-public interface InvoiceItemDao {
-    @SqlQuery
-    InvoiceItem getInvoiceItem(@Bind("id") final String invoiceItemId);
-
+public interface InvoiceItemDao extends EntityDao<InvoiceItem> {
     @SqlQuery
     List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
 
@@ -49,11 +47,9 @@ public interface InvoiceItemDao {
     @SqlQuery
     List<InvoiceItem> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId);
 
+    @Override
     @SqlUpdate
-    void createInvoiceItem(@InvoiceItemBinder final InvoiceItem invoiceItem);
-
-    @SqlUpdate
-    void test();
+    void save(@InvoiceItemBinder final InvoiceItem invoiceItem);
 
     @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
