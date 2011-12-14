@@ -21,6 +21,8 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
@@ -30,38 +32,57 @@ import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
 public class RequestProcessor {
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
+    private final InvoicePaymentApi invoiceApi;
     private final AccountUserApi accountUserApi;
     private final PaymentProviderPluginRegistry pluginRegistry;
     private final EventBus eventBus;
 
     @Inject
     public RequestProcessor(AccountUserApi accountUserApi,
+                            InvoicePaymentApi invoiceApi,
                             PaymentProviderPluginRegistry pluginRegistry,
                             EventBus eventBus) {
+        this.invoiceApi = invoiceApi;
         this.accountUserApi = accountUserApi;
         this.pluginRegistry = pluginRegistry;
         this.eventBus = eventBus;
     }
 
     @Subscribe
-    public void receiveInvoice(Invoice invoice) throws EventBusException {
-        final Account account = accountUserApi.getAccountById(invoice.getAccountId());
-        final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
-        final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
+    public void receiveInvoice(InvoiceCreationNotification event) throws EventBusException {
+        final Invoice invoice = invoiceApi.getInvoice(event.getInvoiceId());
+        if (invoice == null) {
+            // TODO: log a warning ?
+        }
+        else {
+            final Account account = accountUserApi.getAccountById(event.getAccountId());
+            if (account == null) {
+                // TODO: log a warning ?
+            }
+            else {
+                final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
+                final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
 
-        Either<PaymentError, PaymentInfo> result = plugin.processInvoice(account, invoice);
+                Either<PaymentError, PaymentInfo> result = plugin.processInvoice(account, invoice);
 
-        eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
+                eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
+            }
+        }
     }
 
     @Subscribe
     public void receivePaymentInfoRequest(PaymentInfoRequest paymentInfoRequest) throws EventBusException {
         final Account account = accountUserApi.getAccountById(paymentInfoRequest.getAccountId());
-        final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
-        final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
+        if (account == null) {
+            // TODO: log a warning ?
+        }
+        else {
+            final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
+            final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
 
-        Either<PaymentError, PaymentInfo> result = plugin.getPaymentInfo(paymentInfoRequest.getPaymentId());
+            Either<PaymentError, PaymentInfo> result = plugin.getPaymentInfo(paymentInfoRequest.getPaymentId());
 
-        eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
+            eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
+        }
     }
 }

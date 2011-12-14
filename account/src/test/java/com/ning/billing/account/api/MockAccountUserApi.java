@@ -21,8 +21,24 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.ning.billing.catalog.api.Currency;
+
 public class MockAccountUserApi implements AccountUserApi {
     private final CopyOnWriteArrayList<Account> accounts = new CopyOnWriteArrayList<Account>();
+
+    public Account createAccount(UUID id,
+                                 String externalKey,
+                                 String email,
+                                 String name,
+                                 int firstNameLength,
+                                 String phone,
+                                 Currency currency,
+                                 int billCycleDay,
+                                 String paymentProviderName) {
+        Account result = new DefaultAccount(id, externalKey, email, name, firstNameLength, phone, currency, billCycleDay, paymentProviderName);
+        accounts.add(result);
+        return result;
+    }
 
     @Override
     public Account createAccount(AccountData data) {
