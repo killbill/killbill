@@ -71,9 +71,16 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle) {
-        bundlesDao.insertBundle(bundle);
-        return bundle;
+    public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle) {
+        return bundlesDao.inTransaction(new Transaction<SubscriptionBundle, BundleSqlDao>() {
+
+            @Override
+            public SubscriptionBundle inTransaction(BundleSqlDao trans,
+                    TransactionStatus status) throws Exception {
+                trans.insertBundle(bundle);
+                return trans.getBundleFromId(bundle.getId().toString());
+            }
+        });
     }
 
     @Override
