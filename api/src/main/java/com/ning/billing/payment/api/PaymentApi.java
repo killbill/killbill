@@ -20,10 +20,14 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.payment.provider.PaymentProviderPlugin;
+
 public interface PaymentApi {
     Either<PaymentError, PaymentMethodInfo> getPaymentMethod(@Nullable String accountKey, String paymentMethodId);
 
     Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountKey);
 
     Either<PaymentError, Void> updatePaymentGateway(String accountKey);
+
+    Either<PaymentError, PaymentProviderPlugin> getPaymentProviderAccount(String screenName);
 }
