@@ -82,4 +82,10 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         // TODO
         return Either.left(new PaymentError("unknown", "Not implemented"));
     }
+
+    @Override
+    public Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
+        // TODO
+        return Either.left(new PaymentError("unknown", "Not implemented"));
+    }
 }
