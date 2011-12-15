@@ -70,4 +70,10 @@ public class DefaultPaymentApi implements PaymentApi {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
         return plugin.updatePaymentGateway(accountKey);
     }
+
+    @Override
+    public Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+        return plugin.getPaymentProviderAccount(accountKey);
+    }
 }

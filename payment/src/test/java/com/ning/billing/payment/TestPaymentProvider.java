@@ -194,4 +194,9 @@ public class TestPaymentProvider {
         assertEquals(paymentInfoReceiver.getProcessedPayments().get(0), paymentInfo);
     }
 
+    protected Account getTestAccount() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

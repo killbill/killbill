@@ -14,18 +14,24 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.payment.api;
 
 public class PaymentProviderAccount {
     private final String id;
     private final String accountNumber;
+    private final String accountName;
+    private final String phoneNumber;
     private final String defaultPaymentMethodId;
 
     public PaymentProviderAccount(String id,
                                   String accountNumber,
+                                  String accountName,
+                                  String phoneNumber,
                                   String defaultPaymentMethodId) {
         this.id = id;
         this.accountNumber = accountNumber;
+        this.accountName = accountName;
+        this.phoneNumber = phoneNumber;
         this.defaultPaymentMethodId = defaultPaymentMethodId;
     }
 
@@ -35,6 +41,14 @@ public class PaymentProviderAccount {
 
     public String getAccountNumber() {
         return accountNumber;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
     public String getDefaultPaymentMethodId() {
