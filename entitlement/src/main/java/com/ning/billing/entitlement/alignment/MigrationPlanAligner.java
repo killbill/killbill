@@ -70,11 +70,10 @@ public class MigrationPlanAligner {
     }
 
     public TimedMigration [] getEventsOnFuturePlanChangeMigration(SubscriptionData subscription,
-            Plan currentPlan, PlanPhase currentPhase, Plan newPlan, String priceList, DateTime effectiveDate, DateTime effectiveDateForChangePlan) {
+            Plan currentPlan, PlanPhase currentPhase, Plan newPlan, PlanPhase newPhase, String priceList, DateTime effectiveDate, DateTime effectiveDateForChangePlan) {
         TimedMigration [] result = new TimedMigration[2];
         result[0] = new TimedMigration(effectiveDate, EventType.API_USER, ApiEventType.MIGRATE_ENTITLEMENT, currentPlan, currentPhase, priceList);
-        PlanPhase newPlanPhase = newPlan.getAllPhases()[0];
-        result[1] = new TimedMigration(effectiveDate, EventType.API_USER, ApiEventType.CHANGE, newPlan, newPlanPhase, priceList);
+        result[1] = new TimedMigration(effectiveDateForChangePlan, EventType.API_USER, ApiEventType.CHANGE, newPlan, newPhase, priceList);
         return result;
     }
 
@@ -82,7 +81,7 @@ public class MigrationPlanAligner {
             Plan plan, PlanPhase initialPhase, String priceList, DateTime effectiveDate, DateTime effectiveDateForCancellation) {
         TimedMigration [] result = new TimedMigration[2];
         result[0] = new TimedMigration(effectiveDate, EventType.API_USER, ApiEventType.MIGRATE_ENTITLEMENT, plan, initialPhase, priceList);
-        result[1] = new TimedMigration(effectiveDate, EventType.API_USER, ApiEventType.CANCEL, null, null, null);
+        result[1] = new TimedMigration(effectiveDateForCancellation, EventType.API_USER, ApiEventType.CANCEL, null, null, null);
         return result;
     }
 }

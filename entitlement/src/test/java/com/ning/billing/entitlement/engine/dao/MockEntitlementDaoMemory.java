@@ -36,6 +36,8 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
+import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
+import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -350,8 +352,22 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         }
     }
 
+
     @Override
-    public void migrate(AccountMigrationData data) {
+    public void migrate(final AccountMigrationData accountData) {
+        synchronized(events) {
+            for (BundleMigrationData curBundle : accountData.getData()) {
+                SubscriptionBundleData bundleData = curBundle.getData();
+                for (SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
+                    SubscriptionData subData = curSubscription.getData();
+                    for (EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
+                        events.add(curEvent);
+                    }
+                    subscriptions.add(subData);
+                }
+                bundles.add(bundleData);
+            }
+        }
     }
 
     @Override

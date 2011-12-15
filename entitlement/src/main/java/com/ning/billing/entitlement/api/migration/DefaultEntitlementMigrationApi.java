@@ -130,7 +130,6 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
         throws EntitlementMigrationApiException {
 
         try {
-            // STEPH ah... what is that exactly?
             final DateTime bundleStartDate = now;
 
             List<EntitlementEvent> emptyEvents =  Collections.emptyList();
@@ -140,8 +139,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             .setBundleId(bundleId)
             .setCategory(productCategory)
             .setBundleStartDate(bundleStartDate)
-            // STEPH
-            /* .setStartDate(effectiveDate) */,
+            .setStartDate(now),
             emptyEvents);
 
             TimedMigration [] events = null;
@@ -184,6 +182,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                         plan0,
                         getPlanPhase(plan0, input[0].getPlanPhaseSpecifer().getPhaseType()),
                         plan1,
+                        getPlanPhase(plan1, input[1].getPlanPhaseSpecifer().getPhaseType()),
                         input[0].getPlanPhaseSpecifer().getPriceListName(),
                         now,
                         input[1].getEffectiveDate());
@@ -221,8 +220,8 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
 
                 ApiEventBuilder builder = new ApiEventBuilder()
                 .setSubscriptionId(subscriptionData.getId())
-                .setEventPlan(cur.getPlan().getName())
-                .setEventPlanPhase(cur.getPhase().getName())
+                .setEventPlan((cur.getPlan() != null) ? cur.getPlan().getName() : null)
+                .setEventPlanPhase((cur.getPhase() != null) ? cur.getPhase().getName() : null)
                 .setEventPriceList(cur.getPriceList())
                 .setActiveVersion(subscriptionData.getActiveVersion())
                 .setEffectiveDate(cur.getEventTime())

@@ -49,6 +49,7 @@ import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventCreate;
+import com.ning.billing.entitlement.events.user.ApiEventMigrate;
 import com.ning.billing.entitlement.events.user.ApiEventPause;
 import com.ning.billing.entitlement.events.user.ApiEventResume;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -179,6 +180,8 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
 
                 if (userType == ApiEventType.CREATE) {
                     result = new ApiEventCreate(builder);
+                } else if (userType == ApiEventType.MIGRATE_ENTITLEMENT) {
+                    result = new ApiEventMigrate(builder);
                 } else if (userType == ApiEventType.CHANGE) {
                     result = new ApiEventChange(builder);
                 } else if (userType == ApiEventType.CANCEL) {

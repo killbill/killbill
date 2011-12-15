@@ -24,11 +24,14 @@ import com.google.inject.Inject;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.config.EntitlementConfig;
 
+import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.test.DefaultEntitlementTestApi;
 import com.ning.billing.entitlement.api.test.EntitlementTestApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
@@ -64,6 +67,7 @@ public class Engine implements EventListener, EntitlementService {
     private final EntitlementUserApi userApi;
     private final EntitlementBillingApi billingApi;
     private final EntitlementTestApi testApi;
+    private final EntitlementMigrationApi migrationApi;
     private final EventBus eventBus;
 
     private boolean startedNotificationThread;
@@ -71,7 +75,8 @@ public class Engine implements EventListener, EntitlementService {
     @Inject
     public Engine(Clock clock, EntitlementDao dao, EventNotifier apiEventProcessor,
             PlanAligner planAligner, EntitlementConfig config, DefaultEntitlementUserApi userApi,
-            DefaultEntitlementBillingApi billingApi, DefaultEntitlementTestApi testApi, EventBus eventBus) {
+            DefaultEntitlementBillingApi billingApi, DefaultEntitlementTestApi testApi,
+            DefaultEntitlementMigrationApi migrationApi, EventBus eventBus) {
         super();
         this.clock = clock;
         this.dao = dao;
@@ -80,6 +85,7 @@ public class Engine implements EventListener, EntitlementService {
         this.userApi = userApi;
         this.testApi = testApi;
         this.billingApi = billingApi;
+        this.migrationApi = migrationApi;
         this.eventBus = eventBus;
 
         this.startedNotificationThread = false;
@@ -122,6 +128,12 @@ public class Engine implements EventListener, EntitlementService {
     public EntitlementTestApi getTestApi() {
         return testApi;
     }
+
+    @Override
+    public EntitlementMigrationApi getMigrationApi() {
+        return migrationApi;
+    }
+
 
     @Override
     public void processEventReady(EntitlementEvent event) {
@@ -190,4 +202,5 @@ public class Engine implements EventListener, EntitlementService {
             log.error(String.format("Failed to insert next phase for subscription %s", subscription.getId()), e);
         }
     }
+
 }
