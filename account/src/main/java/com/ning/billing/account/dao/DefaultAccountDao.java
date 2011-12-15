@@ -17,82 +17,42 @@
 package com.ning.billing.account.dao;
 
 import java.util.List;
-import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.TransactionCallback;
+import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountChangeNotification;
 import com.ning.billing.account.api.AccountCreationNotification;
-import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.util.customfield.FieldStore;
-import com.ning.billing.util.customfield.dao.FieldStoreDao;
-import com.ning.billing.util.tag.Tag;
 import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.FieldStore;
+import com.ning.billing.util.customfield.dao.FieldStoreDao;
 import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagStoreDao;
 
-public class AccountDaoWrapper implements AccountDao {
-    private final AccountDao accountDao;
-    private final IDBI dbi; // needed for transaction support
+public class DefaultAccountDao implements AccountDao {
+    private final AccountSqlDao accountDao;
     private final EventBus eventBus;
 
     @Inject
-    public AccountDaoWrapper(IDBI dbi, EventBus eventBus) {
-        this.dbi = dbi;
+    public DefaultAccountDao(IDBI dbi, EventBus eventBus) {
         this.eventBus = eventBus;
-        this.accountDao = dbi.onDemand(AccountDao.class);
+        this.accountDao = dbi.onDemand(AccountSqlDao.class);
     }
 
     @Override
     public Account getAccountByKey(final String key) {
-        return dbi.inTransaction(new TransactionCallback<Account>() {
+        return accountDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
             @Override
-            public Account inTransaction(Handle conn, TransactionStatus status) throws Exception {
-                try {
-                    conn.begin();
-                    Account account = accountDao.getAccountByKey(key);
-
-                    if (account != null) {
-                        FieldStoreDao fieldStoreDao = conn.attach(FieldStoreDao.class);
-                        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
-
-                        account.getFields().clear();
-                        if (fields != null) {
-                            for (CustomField field : fields) {
-                                account.getFields().setValue(field.getName(), field.getValue());
-                            }
-                        }
-
-                        TagStoreDao tagStoreDao = conn.attach(TagStoreDao.class);
-                        List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
-                        account.clearTags();
-
-                        if (tags != null) {
-                            account.addTags(tags);
-                        }
-                    }
-
-                    return account;
-                } catch (Throwable t) {
-                    return null;
-                }
-            }
-        });
-    }
-
-    @Override
-    public Account getById(final String id) {
-        return dbi.inTransaction(new TransactionCallback<Account>() {
-            @Override
-            public Account inTransaction(Handle conn, TransactionStatus status) throws Exception {
-                Account account = accountDao.getById(id);
+            public Account inTransaction(AccountSqlDao accountSqlDao, TransactionStatus status) throws Exception {
+                Account account = accountSqlDao.getAccountByKey(key);
 
                 if (account != null) {
-                    FieldStoreDao fieldStoreDao = conn.attach(FieldStoreDao.class);
+                    FieldStoreDao fieldStoreDao = accountSqlDao.become(FieldStoreDao.class);
                     List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
 
                     account.getFields().clear();
@@ -102,7 +62,39 @@ public class AccountDaoWrapper implements AccountDao {
                         }
                     }
 
-                    TagStoreDao tagStoreDao = conn.attach(TagStoreDao.class);
+                    TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
+                    List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
+                    account.clearTags();
+
+                    if (tags != null) {
+                        account.addTags(tags);
+                    }
+                }
+
+                return account;
+            }
+        });
+    }
+
+    @Override
+    public Account getById(final String id) {
+        return accountDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
+            @Override
+            public Account inTransaction(AccountSqlDao accountSqlDao, TransactionStatus status) throws Exception {
+                Account account = accountSqlDao.getById(id);
+
+                if (account != null) {
+                    FieldStoreDao fieldStoreDao = accountSqlDao.become(FieldStoreDao.class);
+                    List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
+
+                    account.getFields().clear();
+                    if (fields != null) {
+                        for (CustomField field : fields) {
+                            account.getFields().setValue(field.getName(), field.getValue());
+                        }
+                    }
+
+                    TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
                     List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
                     account.clearTags();
 
@@ -131,18 +123,17 @@ public class AccountDaoWrapper implements AccountDao {
         final String accountId = account.getId().toString();
         final String objectType = DefaultAccount.OBJECT_TYPE;
 
-        dbi.inTransaction(new TransactionCallback<Void>() {
+        accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
             @Override
-            public Void inTransaction(Handle conn, TransactionStatus status) throws Exception {
-                AccountDao accountDao = conn.attach(AccountDao.class);
+            public Void inTransaction(AccountSqlDao accountDao, TransactionStatus status) throws Exception {
                 Account currentAccount = accountDao.getById(accountId);
                 accountDao.save(account);
 
                 FieldStore fieldStore = account.getFields();
-                FieldStoreDao fieldStoreDao = conn.attach(FieldStoreDao.class);
+                FieldStoreDao fieldStoreDao = accountDao.become(FieldStoreDao.class);
                 fieldStoreDao.save(accountId, objectType, fieldStore.getEntityList());
 
-                TagStoreDao tagStoreDao = conn.attach(TagStoreDao.class);
+                TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
                 tagStoreDao.save(accountId, objectType, account.getTagList());
 
                 if (currentAccount == null) {
@@ -155,7 +146,7 @@ public class AccountDaoWrapper implements AccountDao {
                     }
                 }
 
-            return null;
+                return null;
             }
         });
     }

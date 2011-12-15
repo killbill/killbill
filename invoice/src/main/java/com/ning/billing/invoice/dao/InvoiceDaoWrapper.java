@@ -69,31 +69,22 @@ public class InvoiceDaoWrapper implements InvoiceDao {
          dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(Handle conn, TransactionStatus status) throws Exception {
-                try {
-                    conn.begin();
-
-                    InvoiceDao invoiceDao = conn.attach(InvoiceDao.class);
-                    Invoice currentInvoice = invoiceDao.getById(invoice.getId().toString());
-                    invoiceDao.save(invoice);
+                InvoiceDao invoiceDao = conn.attach(InvoiceDao.class);
+                Invoice currentInvoice = invoiceDao.getById(invoice.getId().toString());
+                invoiceDao.save(invoice);
 
 //                    List<InvoiceItem> invoiceItems = invoice.getItems();
 //                    InvoiceItemDao invoiceItemDao = conn.attach(InvoiceItemDao.class);
 //                    invoiceItemDao.save(invoiceItems);
 
-                    if (currentInvoice == null) {
-                        InvoiceCreationNotification event;
-                        event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
-                                                                      invoice.getAmountOutstanding(), invoice.getCurrency(),
-                                                                      invoice.getInvoiceDate());
-                        eventBus.post(event);
-                    } else {
+                if (currentInvoice == null) {
+                    InvoiceCreationNotification event;
+                    event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
+                                                                  invoice.getAmountOutstanding(), invoice.getCurrency(),
+                                                                  invoice.getInvoiceDate());
+                    eventBus.post(event);
+                } else {
 
-                    }
-
-                    conn.commit();
-                } catch (Exception e) {
-                    conn.rollback();
-                    throw e;
                 }
 
                 return null;

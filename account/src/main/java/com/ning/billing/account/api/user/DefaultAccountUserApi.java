@@ -16,14 +16,13 @@
 
 package com.ning.billing.account.api.user;
 
+import java.util.List;
+import java.util.UUID;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.dao.AccountDao;
-
-import java.util.List;
-import java.util.UUID;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
     private final AccountDao dao;

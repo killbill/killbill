@@ -33,6 +33,7 @@ import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.util.customfield.CustomField;
@@ -41,7 +42,7 @@ import com.ning.billing.util.entity.EntityCollectionDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(FieldStoreDao.CustomFieldMapper.class)
-public interface FieldStoreDao extends EntityCollectionDao<CustomField> {
+public interface FieldStoreDao extends EntityCollectionDao<CustomField>, Transmogrifier {
     @Override
     @SqlBatch
     public void save(@Bind("objectId") final String objectId,
