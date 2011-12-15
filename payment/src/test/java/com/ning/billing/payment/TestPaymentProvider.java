@@ -37,19 +37,12 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.MockAccountUserApi;
-import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.billing.BillingEvent;
-import com.ning.billing.entitlement.api.billing.BillingModeType;
-import com.ning.billing.invoice.api.BillingEventSet;
-import com.ning.billing.invoice.api.DefaultBillingEvent;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
-import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.MockInvoicePaymentApi;
-import com.ning.billing.invoice.model.InvoiceGenerator;
-import com.ning.billing.invoice.model.InvoiceItemList;
-import com.ning.billing.invoice.tests.InternationalPriceMock;
+import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.setup.PaymentTestModule;
 import com.ning.billing.util.eventbus.EventBus;
@@ -63,8 +56,6 @@ public class TestPaymentProvider {
     private RequestProcessor invoiceProcessor;
     @Inject
     private MockAccountUserApi accountUserApi;
-    @Inject
-    private InvoiceGenerator generator;
     @Inject
     private MockInvoicePaymentApi invoiceApi;
 
@@ -91,23 +82,9 @@ public class TestPaymentProvider {
     }
 
     protected Invoice createInvoice(Account account,
-                                    List<BillingEvent> events,
-                                    List<InvoiceItem> items,
                                     DateTime targetDate,
                                     Currency currency) {
-        BillingEventSet billingEvents = null;
-        InvoiceItemList invoiceItems = null;
-
-        if (events != null) {
-            billingEvents = new BillingEventSet();
-            billingEvents.addAll(events);
-        }
-        if (items != null) {
-            invoiceItems = new InvoiceItemList();
-            invoiceItems.addAll(items);
-        }
-
-        Invoice invoice = generator.generateInvoice(account.getId(), billingEvents, invoiceItems, targetDate, currency);
+        Invoice invoice = new DefaultInvoice(account.getId(), targetDate, currency);
 
         invoiceApi.add(invoice);
         return invoice;
@@ -146,19 +123,11 @@ public class TestPaymentProvider {
     public void testSimpleInvoice() throws Exception {
         final Account account = createAccount();
         final DateTime now = new DateTime();
+        final UUID subscriptionId = UUID.randomUUID();
+        final BigDecimal amount = new BigDecimal("10.00");
+        final Invoice invoice = createInvoice(account, now, Currency.USD);
 
-        BillingEventSet events = new BillingEventSet();
-
-        UUID subscriptionId = UUID.randomUUID();
-        String planName = "My plan";
-        String phaseName = "phase 1";
-
-        BillingEvent event = new DefaultBillingEvent(subscriptionId, now, planName, phaseName,
-                                               new InternationalPriceMock(new BigDecimal("10.00")), BillingPeriod.MONTHLY,
-                                               1, BillingModeType.IN_ADVANCE);
-        events.add(event);
-
-        final Invoice invoice = createInvoice(account, null, null, new DateTime(), Currency.USD);
+        invoice.add(new DefaultInvoiceItem(invoice.getId(), subscriptionId, now, now.plusMonths(1), "Test", amount, new BigDecimal("1.0"), Currency.USD));
 
         eventBus.post(createNotificationFor(invoice));
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
@@ -193,10 +162,4 @@ public class TestPaymentProvider {
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
         assertEquals(paymentInfoReceiver.getProcessedPayments().get(0), paymentInfo);
     }
-
-    protected Account getTestAccount() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }
