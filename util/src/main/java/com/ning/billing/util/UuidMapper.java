@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.dao;
+package com.ning.billing.util;
 
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;

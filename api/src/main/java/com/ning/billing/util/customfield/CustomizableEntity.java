@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.customfield;
 
+import java.util.List;
 import com.ning.billing.util.entity.Entity;
 
 public interface CustomizableEntity extends Entity {
@@ -23,7 +24,9 @@ public interface CustomizableEntity extends Entity {
 
     public void setFieldValue(String fieldName, String fieldValue);
 
-    public FieldStore getFields();
+    public List<CustomField> getFieldList();
+
+    public void clearFields();
 
     public String getObjectName();
 }

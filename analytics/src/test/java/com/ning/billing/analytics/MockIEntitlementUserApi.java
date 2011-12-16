@@ -93,7 +93,7 @@ public class MockIEntitlementUserApi implements EntitlementUserApi
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(final AccountData account, final String bundleKey) throws EntitlementUserApiException
+    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey) throws EntitlementUserApiException
     {
         throw new UnsupportedOperationException();
     }

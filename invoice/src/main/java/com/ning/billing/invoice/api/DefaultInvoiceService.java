@@ -21,12 +21,12 @@ import com.ning.billing.lifecycle.LifecycleHandlerType;
 
 public class DefaultInvoiceService implements InvoiceService {
     private static final String INVOICE_SERVICE_NAME = "invoice-service";
-    private final InvoiceUserApi userApi;
+    //private final InvoiceUserApi userApi;
     private final InvoicePaymentApi paymentApi;
 
     @Inject
-    public DefaultInvoiceService(InvoiceUserApi userApi, InvoicePaymentApi paymentApi) {
-        this.userApi = userApi;
+    public DefaultInvoiceService(InvoicePaymentApi paymentApi) {
+        //this.userApi = userApi;
         this.paymentApi = paymentApi;
     }
 
@@ -37,7 +37,7 @@ public class DefaultInvoiceService implements InvoiceService {
 
     @Override
     public InvoiceUserApi getUserApi() {
-        return userApi;
+        return null;
     }
 
     @Override

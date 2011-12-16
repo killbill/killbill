@@ -55,6 +55,11 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
+    public UUID getIdFromKey(String externalKey) {
+        return dao.getIdFromKey(externalKey);
+    }
+
+    @Override
     public void saveAccount(Account account) {
         dao.save(account);
     }

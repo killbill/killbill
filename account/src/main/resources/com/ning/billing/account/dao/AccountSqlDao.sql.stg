@@ -27,6 +27,12 @@ get() ::= <<
     from accounts;
 >>
 
+getIdFromKey() ::= <<
+    select id
+    from accounts
+    where external_key = :externalKey;
+>>
+
 test() ::= <<
     select 1 from accounts;
 >>

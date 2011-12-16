@@ -16,11 +16,19 @@
 
 package com.ning.billing.analytics;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import java.util.List;
 import java.util.UUID;
+import org.joda.time.DateTime;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDescription;
 
-public class MockAccount implements AccountData
+public class MockAccount implements Account
 {
     private final UUID id;
     private final String accountKey;
@@ -82,5 +90,70 @@ public class MockAccount implements AccountData
     public UUID getId()
     {
         return id;
+    }
+
+    @Override
+    public String getFieldValue(String fieldName) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void setFieldValue(String fieldName, String fieldValue) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public List<CustomField> getFieldList() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void clearFields() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public String getObjectName() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public List<Tag> getTagList() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public boolean hasTag(String tagName) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void addTag(TagDescription description, String addedBy, DateTime dateAdded) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void addTags(List<Tag> tags) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void clearTags() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void removeTag(TagDescription description) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public boolean generateInvoice() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public boolean processPayment() {
+        throw new NotImplementedException();
     }
 }

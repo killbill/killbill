@@ -20,6 +20,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.util.UuidMapper;
 import com.ning.billing.util.entity.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;

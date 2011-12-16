@@ -27,7 +27,9 @@ public interface AccountUserApi {
 
     public Account getAccountByKey(String key);
 
-    public Account getAccountById(UUID uid);
+    public Account getAccountById(UUID accountId);
 
     public List<Account> getAccounts();
+
+    public UUID getIdFromKey(String externalKey);
 }

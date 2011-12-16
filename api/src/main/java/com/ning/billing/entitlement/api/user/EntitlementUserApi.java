@@ -36,9 +36,8 @@ public interface EntitlementUserApi {
 
     public List<Subscription> getSubscriptionsForKey(String bundleKey);
 
-    public SubscriptionBundle createBundleForAccount(AccountData account, String bundleKey)
+    public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleKey)
         throws EntitlementUserApiException;
-
 
     public Subscription createSubscription(UUID bundleId, String productName, BillingPeriod term, String priceList, PhaseType initialPhase, DateTime requestedDate)
         throws EntitlementUserApiException;

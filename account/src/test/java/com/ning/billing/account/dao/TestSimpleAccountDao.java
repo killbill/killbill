@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.util.tag.DefaultTagDescription;
 import com.ning.billing.util.tag.Tag;
@@ -128,5 +129,69 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertEquals(tag.getTagDescriptionId(), description.getId());
         assertEquals(tag.getAddedBy(), addedBy);
         assertEquals(tag.getDateAdded().compareTo(dateAdded), 0);
+    }
+
+    @Test
+    public void testGetIdFromKey() {
+        Account account = createTestAccount();
+        accountDao.save(account);
+
+        UUID accountId = accountDao.getIdFromKey(account.getExternalKey());
+        assertEquals(accountId, account.getId());
+    }
+
+    @Test
+    public void testUpdate() {
+        final Account account = createTestAccount();
+        accountDao.save(account);
+
+        AccountData accountData = new AccountData() {
+            @Override
+            public String getExternalKey() {
+                return account.getExternalKey();
+            }
+            @Override
+            public String getName() {
+                return "Jane Doe";
+            }
+            @Override
+            public int getFirstNameLength() {
+                return 4;
+            }
+            @Override
+            public String getEmail() {
+                return account.getEmail();
+            }
+            @Override
+            public String getPhone() {
+                return account.getPhone();
+            }
+            @Override
+            public int getBillCycleDay() {
+                return account.getBillCycleDay();
+            }
+            @Override
+            public Currency getCurrency() {
+                return account.getCurrency();
+            }
+            @Override
+            public String getPaymentProviderName() {
+                return account.getPaymentProviderName();
+            }
+        };
+
+        Account updatedAccount = new DefaultAccount(account.getId(), accountData);
+        accountDao.save(updatedAccount);
+
+        Account savedAccount = accountDao.getAccountByKey(account.getExternalKey());
+
+        assertNotNull(savedAccount);
+        assertEquals(savedAccount.getName(), updatedAccount.getName());
+        assertEquals(savedAccount.getEmail(), updatedAccount.getEmail());
+        assertEquals(savedAccount.getPhone(), updatedAccount.getPhone());
+        assertEquals(savedAccount.getPaymentProviderName(), updatedAccount.getPaymentProviderName());
+        assertEquals(savedAccount.getBillCycleDay(), updatedAccount.getBillCycleDay());
+        assertEquals(savedAccount.getFirstNameLength(), updatedAccount.getFirstNameLength());
+
     }
 }

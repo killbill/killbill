@@ -85,7 +85,7 @@ public class TestAnalyticsService
         // We need a bundle to retrieve the event key
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
         final Account storedAccount = accountApi.createAccount(account);
-        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount, KEY);
+        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount.getId(), KEY);
 
         // Verify we correctly initialized the account subsystem
         Assert.assertNotNull(bundle);
