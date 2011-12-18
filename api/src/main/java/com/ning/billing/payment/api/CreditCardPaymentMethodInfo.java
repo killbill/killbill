@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.payment.api;
 
-import com.ning.billing.payment.api.PaymentMethodInfo;
 
 public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
     public static final class Builder extends BuilderBase<CreditCardPaymentMethodInfo, Builder> {

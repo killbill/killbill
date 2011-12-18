@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.payment.api;
 
-import com.ning.billing.payment.api.PaymentMethodInfo;
+import com.google.common.base.Strings;
+
 
 public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
     public static final class Builder extends BuilderBase<PaypalPaymentMethodInfo, Builder> {
@@ -50,11 +51,16 @@ public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
     private final String email;
 
     public PaypalPaymentMethodInfo(String id,
-                               String accountId,
-                               Boolean defaultMethod,
-                               String baid,
-                               String email) {
+                                   String accountId,
+                                   Boolean defaultMethod,
+                                   String baid,
+                                   String email) {
         super(id, accountId, defaultMethod, "paypal");
+
+        if (Strings.isNullOrEmpty(accountId) || Strings.isNullOrEmpty(baid) || Strings.isNullOrEmpty(email)) {
+            throw new IllegalArgumentException("accountId, baid and email should be present");
+        }
+
         this.baid = baid;
         this.email = email;
     }

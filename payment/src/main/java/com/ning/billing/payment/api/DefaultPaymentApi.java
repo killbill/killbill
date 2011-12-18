@@ -76,4 +76,10 @@ public class DefaultPaymentApi implements PaymentApi {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
         return plugin.getPaymentProviderAccount(accountKey);
     }
+
+    @Override
+    public Either<PaymentError, String> addPaypalPaymentMethod(@Nullable String accountId, PaypalPaymentMethodInfo paypalPaymentMethod) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountId);
+        return plugin.addPaypalPaymentMethod(accountId, paypalPaymentMethod);
+    }
 }

@@ -18,7 +18,9 @@ package com.ning.billing.account.api;
 
 import java.util.List;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 
 public class DefaultAccount extends CustomizableEntityBase implements Account {
@@ -140,4 +142,10 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     public boolean processPayment() {
         return tags.processPayment();
     }
+
+    @Override
+    public String toString() {
+        return "DefaultAccount [externalKey=" + externalKey + ", email=" + email + ", name=" + name + ", firstNameLength=" + firstNameLength + ", phone=" + phone + ", currency=" + currency + ", billCycleDay=" + billCycleDay + ", paymentProviderName=" + paymentProviderName + ", tags=" + tags + "]";
+    }
+
 }

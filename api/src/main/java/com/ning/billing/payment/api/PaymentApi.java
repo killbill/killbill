@@ -28,4 +28,6 @@ public interface PaymentApi {
     Either<PaymentError, Void> updatePaymentGateway(String accountKey);
 
     Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
+
+    Either<PaymentError, String> addPaypalPaymentMethod(@Nullable String accountId, PaypalPaymentMethodInfo paypalPaymentMethod);
 }

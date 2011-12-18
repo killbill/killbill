@@ -21,16 +21,16 @@ import java.util.List;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.PaymentInfo;
-import com.ning.billing.payment.PaypalPaymentMethodInfo;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
+import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
 
 public interface PaymentProviderPlugin {
     Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice);
     Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(Account account);
-    Either<PaymentError, PaypalPaymentMethodInfo> addPaypalPaymentMethod(Account account, PaypalPaymentMethodInfo paypalPaymentMethod);
+    Either<PaymentError, String> addPaypalPaymentMethod(String accountId, PaypalPaymentMethodInfo paypalPaymentMethod);
 
     Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId);
     Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId);

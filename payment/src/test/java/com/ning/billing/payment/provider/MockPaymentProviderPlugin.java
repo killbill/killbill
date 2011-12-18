@@ -24,11 +24,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.PaymentInfo;
-import com.ning.billing.payment.PaypalPaymentMethodInfo;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
+import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
 
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     private final Map<String, PaymentInfo> payments = new ConcurrentHashMap<String, PaymentInfo>();
