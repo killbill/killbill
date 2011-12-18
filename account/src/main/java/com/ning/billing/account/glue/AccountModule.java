@@ -20,11 +20,8 @@ import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.AccountDaoWrapper;
-import com.ning.billing.account.dao.FieldStoreDao;
-import com.ning.billing.account.dao.FieldStoreDaoWrapper;
-import com.ning.billing.account.dao.TagStoreDao;
-import com.ning.billing.account.dao.TagStoreDaoWrapper;
+import com.ning.billing.account.dao.AccountSqlDao;
+import com.ning.billing.account.dao.DefaultAccountDao;
 import org.skife.config.ConfigurationObjectFactory;
 
 public class AccountModule extends AbstractModule {
@@ -40,20 +37,12 @@ public class AccountModule extends AbstractModule {
     }
 
     private void installAccountDao() {
-        bind(AccountDao.class).to(AccountDaoWrapper.class).asEagerSingleton();
+        bind(AccountDao.class).to(DefaultAccountDao.class).asEagerSingleton();
     }
 
     private void installAccountUserApi() {
         bind(AccountUserApi.class).to(DefaultAccountUserApi.class).asEagerSingleton();
     }
-
-//    private void installFieldStore() {
-//        bind(FieldStoreDao.class).to(FieldStoreDaoWrapper.class).asEagerSingleton();
-//    }
-//
-//    private void installTagStore() {
-//        bind(TagStoreDao.class).to(TagStoreDaoWrapper.class).asEagerSingleton();
-//    }
 
     @Override
     protected void configure() {
@@ -61,7 +50,5 @@ public class AccountModule extends AbstractModule {
         installAccountCore();
         installAccountDao();
         installAccountUserApi();
-//        installFieldStore();
-//        installTagStore();
     }
 }

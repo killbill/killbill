@@ -22,6 +22,11 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.customfield.CustomizableEntityBase;
+import com.ning.billing.util.tag.DefaultTag;
+import com.ning.billing.util.tag.DefaultTagStore;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDescription;
 
 public class DefaultAccount extends CustomizableEntityBase implements Account {
     public final static String OBJECT_TYPE = "Account";
@@ -38,6 +43,12 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 
     public DefaultAccount(AccountData data) {
         this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
+                data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
+                data.getPaymentProviderName());
+    }
+
+    public DefaultAccount(UUID id, AccountData data) {
+        this(id, data.getExternalKey(), data.getEmail(), data.getName(),
                 data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
                 data.getPaymentProviderName());
     }

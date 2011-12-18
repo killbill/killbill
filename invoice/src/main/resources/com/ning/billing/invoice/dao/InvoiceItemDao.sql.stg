@@ -1,6 +1,6 @@
 group InvoiceItemDao;
 
-getInvoiceItem() ::= <<
+getById() ::= <<
   SELECT id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency
   FROM invoice_items
   WHERE id = :id;
@@ -25,9 +25,12 @@ getInvoiceItemsBySubscription() ::= <<
   WHERE subscription_id = :subscriptionId;
 >>
 
-createInvoiceItem() ::= <<
+save() ::= <<
   INSERT INTO invoice_items(id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency)
   VALUES(:id, :invoiceId, :subscriptionId, :startDate, :endDate, :description, :amount, :rate, :currency)
+  ON DUPLICATE KEY UPDATE
+    start_date = :startDate, end_date = :endDate, description = :description,
+    amount = :amount, rate = :rate, currency = :currency''
 >>
 
 test() ::= <<

@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.api;
 
+import com.ning.billing.util.entity.Entity;
 import com.ning.billing.catalog.api.Currency;
 import org.joda.time.DateTime;
 
@@ -23,7 +24,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-public interface Invoice {
+public interface Invoice extends Entity {
     boolean add(InvoiceItem item);
 
     boolean add(List<InvoiceItem> items);
@@ -31,8 +32,6 @@ public interface Invoice {
     List<InvoiceItem> getItems();
 
     int getNumberOfItems();
-
-    UUID getId();
 
     UUID getAccountId();
 

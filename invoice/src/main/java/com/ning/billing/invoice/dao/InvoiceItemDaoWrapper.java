@@ -31,8 +31,13 @@ public class InvoiceItemDaoWrapper implements InvoiceItemDao {
     }
 
     @Override
-    public InvoiceItem getInvoiceItem(String invoiceItemId) {
-        return dao.getInvoiceItem(invoiceItemId);
+    public InvoiceItem getById(String invoiceItemId) {
+        return dao.getById(invoiceItemId);
+    }
+
+    @Override
+    public List<InvoiceItem> get() {
+        return dao.get();
     }
 
     @Override
@@ -51,8 +56,8 @@ public class InvoiceItemDaoWrapper implements InvoiceItemDao {
     }
 
     @Override
-    public void createInvoiceItem(InvoiceItem invoiceItem) {
-        dao.createInvoiceItem(invoiceItem);
+    public void save(InvoiceItem invoiceItem) {
+        dao.save(invoiceItem);
     }
 
     @Override

@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
-public interface BundleSqlDao extends Transactional<EventSqlDao>, CloseMe, Transmogrifier {
+public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Transmogrifier {
 
     @SqlUpdate
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle);
