@@ -18,15 +18,38 @@ package com.ning.billing.analytics.api;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountCreationNotification;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.analytics.*;
+import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
+import com.ning.billing.analytics.AnalyticsTestModule;
+import com.ning.billing.analytics.BusinessSubscription;
+import com.ning.billing.analytics.BusinessSubscriptionEvent;
+import com.ning.billing.analytics.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.MockAccount;
+import com.ning.billing.analytics.MockDuration;
+import com.ning.billing.analytics.MockPhase;
+import com.ning.billing.analytics.MockPlan;
+import com.ning.billing.analytics.MockProduct;
+import com.ning.billing.analytics.dao.BusinessAccountDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.user.*;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.tag.DefaultTagDescription;
+import com.ning.billing.util.tag.dao.TagDescriptionDao;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -45,6 +68,8 @@ public class TestAnalyticsService
 {
     private static final String KEY = "1234";
     private static final String ACCOUNT_KEY = "pierre-1234";
+    private static final DefaultTagDescription TAG_ONE = new DefaultTagDescription("batch20", "something", false, false, "pierre", new DateTime(DateTimeZone.UTC));
+    private static final DefaultTagDescription TAG_TWO = new DefaultTagDescription("awesome", "something", false, false, "pierre", new DateTime(DateTimeZone.UTC));
 
     @Inject
     private AccountUserApi accountApi;
@@ -53,13 +78,19 @@ public class TestAnalyticsService
     private EntitlementUserApi entitlementApi;
 
     @Inject
+    private TagDescriptionDao tagDao;
+
+    @Inject
     private AnalyticsService service;
 
     @Inject
     private EventBus bus;
 
     @Inject
-    private BusinessSubscriptionTransitionDao dao;
+    private BusinessSubscriptionTransitionDao subscriptionDao;
+
+    @Inject
+    private BusinessAccountDao accountDao;
 
     @Inject
     private MysqlTestingHelper helper;
@@ -67,13 +98,33 @@ public class TestAnalyticsService
     private SubscriptionTransition transition;
     private BusinessSubscriptionTransition expectedTransition;
 
+    private AccountCreationNotification accountCreationNotification;
+
     @BeforeClass(alwaysRun = true)
     public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException
+    {
+        // Killbill generic setup
+        setupBusAndMySQL();
+
+        tagDao.save(TAG_ONE);
+        tagDao.save(TAG_TWO);
+
+        final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
+        final Account storedAccount = accountApi.createAccount(account);
+        storedAccount.addTag(TAG_ONE, "pierre", new DateTime(DateTimeZone.UTC));
+        storedAccount.addTag(TAG_TWO, "pierre", new DateTime(DateTimeZone.UTC));
+        accountApi.saveAccount(storedAccount);
+
+        // Create events for the bus and expected results
+        createSubscriptionTransitionEvent(storedAccount);
+        createAccountCreationEvent(storedAccount);
+    }
+
+    private void setupBusAndMySQL() throws IOException
     {
         bus.start();
 
         final String analyticsDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
-        // For bundles
         final String accountDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
         final String entitlementDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 
@@ -81,17 +132,17 @@ public class TestAnalyticsService
         helper.initDb(analyticsDdl);
         helper.initDb(accountDdl);
         helper.initDb(entitlementDdl);
+    }
 
-        // We need a bundle to retrieve the event key
-        final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
-        final Account storedAccount = accountApi.createAccount(account);
-        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(storedAccount.getId(), KEY);
+    private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException
+    {
+        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), KEY);
 
         // Verify we correctly initialized the account subsystem
         Assert.assertNotNull(bundle);
         Assert.assertEquals(bundle.getKey(), KEY);
 
-        // Create a subscription transition
+        // Create a subscription transition event
         final Product product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
         final Plan plan = new MockPlan("platinum-monthly", product);
         final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
@@ -99,6 +150,7 @@ public class TestAnalyticsService
         final DateTime effectiveTransitionTime = new DateTime(DateTimeZone.UTC);
         final DateTime requestedTransitionTime = new DateTime(DateTimeZone.UTC);
         final String priceList = "something";
+
         transition = new SubscriptionTransitionData(
             UUID.randomUUID(),
             subscriptionId,
@@ -126,6 +178,11 @@ public class TestAnalyticsService
         );
     }
 
+    private void createAccountCreationEvent(final Account account)
+    {
+        accountCreationNotification = new DefaultAccountCreationEvent(account);
+    }
+
     @AfterClass(alwaysRun = true)
     public void stopMysql()
     {
@@ -146,11 +203,18 @@ public class TestAnalyticsService
             Assert.fail("Unable to start the bus or service! " + t);
         }
 
-        // Send an event to the bus and make sure our Dao got it
+        // Send events and wait for the async part...
         bus.post(transition);
+        bus.post(accountCreationNotification);
         Thread.sleep(1000);
-        Assert.assertEquals(dao.getTransitions(KEY).size(), 1);
-        Assert.assertEquals(dao.getTransitions(KEY).get(0), expectedTransition);
+
+        Assert.assertEquals(subscriptionDao.getTransitions(KEY).size(), 1);
+        Assert.assertEquals(subscriptionDao.getTransitions(KEY).get(0), expectedTransition);
+
+        Assert.assertEquals(accountDao.getAccount(ACCOUNT_KEY).getKey(), ACCOUNT_KEY);
+        Assert.assertEquals(accountDao.getAccount(ACCOUNT_KEY).getTags().size(), 2);
+        Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTags().indexOf(TAG_ONE.getName()) != -1);
+        Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTags().indexOf(TAG_TWO.getName()) != -1);
 
         // Test the shutdown sequence
         try {
