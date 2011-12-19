@@ -18,6 +18,8 @@ package com.ning.billing.analytics;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.ning.billing.account.api.AccountChangeNotification;
+import com.ning.billing.account.api.AccountCreationNotification;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 
 public class AnalyticsListener
@@ -62,7 +64,18 @@ public class AnalyticsListener
     }
 
     @Subscribe
-    public void handleAccountChange(final Object event)
+    public void handleAccountCreation(final AccountCreationNotification event)
     {
+        bacRecorder.accountCreated(event.getData());
+    }
+
+    @Subscribe
+    public void handleAccountChange(final AccountChangeNotification event)
+    {
+        if (!event.hasChanges()) {
+            return;
+        }
+
+        bacRecorder.accountUpdated(event.getAccountId(), event.getChangedFields());
     }
 }
