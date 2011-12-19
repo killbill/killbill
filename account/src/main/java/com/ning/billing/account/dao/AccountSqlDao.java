@@ -40,6 +40,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -69,12 +70,15 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
             int billingCycleDay = result.getInt("billing_cycle_day");
             Currency currency = Currency.valueOf(result.getString("currency"));
             String paymentProviderName = result.getString("payment_provider_name");
+            BigDecimal balance = result.getBigDecimal("balance");
 
             return new AccountBuilder(id).externalKey(externalKey).email(email)
                                          .name(name).firstNameLength(firstNameLength)
                                          .phone(phone).currency(currency)
                                          .billingCycleDay(billingCycleDay)
-                                         .paymentProviderName(paymentProviderName).build();
+                                         .paymentProviderName(paymentProviderName)
+                                         .balance(balance)
+                                         .build();
         }
     }
 

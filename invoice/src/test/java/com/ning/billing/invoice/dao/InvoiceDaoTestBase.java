@@ -30,7 +30,6 @@ import static org.testng.Assert.fail;
 
 public abstract class InvoiceDaoTestBase {
     protected InvoiceDao invoiceDao;
-    protected InvoiceItemSqlDao invoiceItemDao;
 
     @BeforeClass()
     protected void setup() throws IOException {
@@ -44,9 +43,6 @@ public abstract class InvoiceDaoTestBase {
 
             invoiceDao = injector.getInstance(InvoiceDao.class);
             invoiceDao.test();
-
-            invoiceItemDao = injector.getInstance(InvoiceItemSqlDao.class);
-            invoiceItemDao.test();
 
             EventBusService busService = injector.getInstance(EventBusService.class);
             ((DefaultEventBusService) busService).startBus();

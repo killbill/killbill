@@ -40,8 +40,11 @@ public abstract class AccountDaoTestBase {
         // Healthcheck test to make sure MySQL is setup properly
         try {
             AccountModuleMock module = new AccountModuleMock();
-            final String ddl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-            module.createDb(ddl);
+            final String accountDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+            final String invoiceDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+            module.startDb();
+            module.initDb(accountDdl);
+            module.initDb(invoiceDdl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
             dbi = injector.getInstance(IDBI.class);
