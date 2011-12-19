@@ -44,10 +44,6 @@ public abstract class AccountDaoTestBase {
             module.createDb(ddl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
-
-            //fieldStoreDao = injector.getInstance(FieldStoreDao.class);
-            //fieldStoreDao.test();
-
             dbi = injector.getInstance(IDBI.class);
 
             accountDao = injector.getInstance(AccountDao.class);

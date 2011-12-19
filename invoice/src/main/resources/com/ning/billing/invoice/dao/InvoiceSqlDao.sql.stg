@@ -1,0 +1,62 @@
+group InvoiceDao;
+
+getInvoicesByAccount() ::= <<
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, i.amount
+         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+  FROM i.invoices
+  LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
+  WHERE i.account_id = :accountId
+  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
+  ORDER BY i.invoice_date ASC;
+>>
+
+getInvoicesBySubscription() ::= <<
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency,
+         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+  FROM invoices i
+  INNER JOIN invoice_items ii ON i.id = ii.invoice_id
+  LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
+  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
+  WHERE ii.subscription_id = :subscriptionId;
+>>
+
+getInvoicesForPayment() ::= <<
+  SELECT i.id
+  FROM invoices i
+  INNER JOIN invoice_items ii ON i.id = ii.invoice_id
+  LEFT JOIN invoice_payments ip ON i.id = ip.invoice_id
+  WHERE DATEDIFF(:targetDate, MAX(ip.payment_date)) >= :numberOfDays OR (MAX(ip.payment_date) IS NULL)
+  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
+  HAVING SUM(ii.amount) > SUM(ip.amount);
+>>
+
+getById() ::= <<
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, SUM(ii.amount), i.currency
+  FROM invoices i
+  INNER JOIN invoice_items ii ON i.id = ii.invoice_id
+  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
+  WHERE i.id = :id;
+>>
+
+save() ::= <<
+  INSERT INTO invoices(id, account_id, invoice_date, target_date, currency)
+  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency)
+  ON DUPLICATE KEY UPDATE
+    invoice_date = :invoiceDate, target_date = :targetDate, currency = :currency;
+>>
+
+notifySuccessfulPayment() ::= <<
+  INSERT INTO invoice_payments(invoice_id, payment_id, payment_date, amount, currency)
+  VALUES(:invoiceId, :paymentId, :paymentDate, :amount, :currency);
+>>
+
+notifyFailedPayment() ::= <<
+  INSERT INTO invoice_payments(invoice_id, payment_id, payment_date)
+  VALUES(:invoiceId, :paymentId, :paymentDate);
+>>
+
+test() ::= <<
+  SELECT 1
+  FROM invoices;
+>>
+;

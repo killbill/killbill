@@ -71,8 +71,17 @@ public class DefaultAccountChangeNotification implements AccountChangeNotificati
             changedFields.add(new DefaultChangedField("billCycleDay", Integer.toString(oldData.getBillCycleDay()),
                                                                Integer.toString(newData.getBillCycleDay())));
         }
-        if (!newData.getPaymentProviderName().equals(oldData.getPaymentProviderName())) {
-            changedFields.add((new DefaultChangedField("paymentProviderName", oldData.getPaymentProviderName(), newData.getPaymentProviderName())));
+
+        String oldProviderName = oldData.getPaymentProviderName();
+        String newProviderName = newData.getPaymentProviderName();
+
+        if ((newProviderName == null) && (oldProviderName == null)) {
+        } else if ((newProviderName == null) && (oldProviderName != null)) {
+            changedFields.add((new DefaultChangedField("paymentProviderName", oldProviderName, newProviderName)));
+        } else if ((newProviderName != null) && (oldProviderName == null)) {
+            changedFields.add((new DefaultChangedField("paymentProviderName", oldProviderName, newProviderName)));
+        } else if (!newProviderName.equals(oldProviderName)) {
+            changedFields.add((new DefaultChangedField("paymentProviderName", oldProviderName, newProviderName)));
         }
 
         return changedFields;

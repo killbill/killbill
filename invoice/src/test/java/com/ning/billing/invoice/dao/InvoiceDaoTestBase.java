@@ -30,22 +30,22 @@ import static org.testng.Assert.fail;
 
 public abstract class InvoiceDaoTestBase {
     protected InvoiceDao invoiceDao;
-    protected InvoiceItemDao invoiceItemDao;
+    protected InvoiceItemSqlDao invoiceItemDao;
 
     @BeforeClass()
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
             InvoiceModuleMock module = new InvoiceModuleMock();
-            final String ddl = IOUtils.toString(InvoiceDaoWrapper.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+            final String ddl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             module.createDb(ddl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
-            invoiceDao = injector.getInstance(InvoiceDaoWrapper.class);
+            invoiceDao = injector.getInstance(InvoiceDao.class);
             invoiceDao.test();
 
-            invoiceItemDao = injector.getInstance(InvoiceItemDao.class);
+            invoiceItemDao = injector.getInstance(InvoiceItemSqlDao.class);
             invoiceItemDao.test();
 
             EventBusService busService = injector.getInstance(EventBusService.class);

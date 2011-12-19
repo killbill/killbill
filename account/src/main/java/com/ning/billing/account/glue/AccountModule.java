@@ -32,8 +32,6 @@ public class AccountModule extends AbstractModule {
     }
 
     private void installAccountCore() {
-//        bind(IAccountService.class).to(Engine.class).asEagerSingleton();
-//        bind(Engine.class).asEagerSingleton();
     }
 
     private void installAccountDao() {

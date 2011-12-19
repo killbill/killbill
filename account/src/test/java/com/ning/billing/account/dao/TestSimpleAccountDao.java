@@ -47,9 +47,10 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         String lastName = UUID.randomUUID().toString();
         String thisEmail = email + " " + UUID.randomUUID();
         String name = firstName + " " + lastName;
+        String phone = "123-456-7890";
 
         int firstNameLength = firstName.length();
-        return new AccountBuilder().externalKey(thisKey).name(name).firstNameLength(firstNameLength)
+        return new AccountBuilder().externalKey(thisKey).name(name).phone(phone).firstNameLength(firstNameLength)
                                    .email(thisEmail).currency(Currency.USD).build();
     }
 

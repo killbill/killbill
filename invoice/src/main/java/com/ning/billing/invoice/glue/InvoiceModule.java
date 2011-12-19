@@ -17,29 +17,30 @@
 package com.ning.billing.invoice.glue;
 
 import com.google.inject.AbstractModule;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.dao.InvoiceDaoWrapper;
-import com.ning.billing.invoice.dao.InvoiceItemDao;
-import com.ning.billing.invoice.dao.InvoiceItemDaoWrapper;
 
 public class InvoiceModule extends AbstractModule {
     private void installInvoiceDao() {
-        bind(InvoiceDao.class).to(InvoiceDaoWrapper.class).asEagerSingleton();
-    }
-
-    private void installInvoiceItemDao() {
-        bind(InvoiceItemDao.class).to(InvoiceItemDaoWrapper.class).asEagerSingleton();
+        bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
     }
 
     protected void installInvoiceUserApi() {
         bind(InvoiceUserApi.class).to(DefaultInvoiceUserApi.class).asEagerSingleton();
     }
 
+    protected void installInvoicePaymentApi() {
+        bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         installInvoiceDao();
-        installInvoiceItemDao();
+        installInvoiceUserApi();
+        installInvoicePaymentApi();
     }
 }
