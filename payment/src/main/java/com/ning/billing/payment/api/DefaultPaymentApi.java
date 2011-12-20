@@ -27,7 +27,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 
@@ -46,21 +45,19 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, PaymentMethodInfo> getPaymentMethod(@Nullable String accountId, String paymentMethodId) {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountId);
+    public Either<PaymentError, PaymentMethodInfo> getPaymentMethod(@Nullable String accountKey, String paymentMethodId) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
         return plugin.getPaymentMethodInfo(paymentMethodId);
     }
 
     private PaymentProviderPlugin getPaymentProviderPlugin(String accountKey) {
-        final String paymentProviderName;
+        String paymentProviderName = null;
 
-        if (accountKey == null) {
-            // TODO: get provider name from config to support null
-            paymentProviderName = null;
-        }
-        else {
-            final Account account = accountUserApi.getAccountById(UUID.fromString(accountKey));
-            paymentProviderName = account.getFieldValue(RequestProcessor.PAYMENT_PROVIDER_KEY);
+        if (accountKey != null) {
+            final Account account = accountUserApi.getAccountByKey(accountKey);
+            if (account != null) {
+                paymentProviderName = account.getPaymentProviderName();
+            }
         }
 
         return pluginRegistry.getPlugin(paymentProviderName);
