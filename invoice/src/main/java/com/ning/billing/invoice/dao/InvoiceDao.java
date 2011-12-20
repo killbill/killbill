@@ -27,6 +27,8 @@ public interface InvoiceDao {
 
     Invoice getById(final String id);
 
+    List<Invoice> get();
+
     List<Invoice> getInvoicesByAccount(final String accountId);
 
     List<Invoice> getInvoicesBySubscription(final String subscriptionId);

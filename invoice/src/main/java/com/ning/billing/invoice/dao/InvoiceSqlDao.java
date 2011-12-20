@@ -91,8 +91,8 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
                         q.bind("targetDate", invoice.getTargetDate().toDate());
                         q.bind("amountPaid", invoice.getAmountPaid());
                         q.bind("amountOutstanding", invoice.getAmountOutstanding());
-                        DateTime invoiceDate = invoice.getLastPaymentAttempt();
-                        q.bind("lastPaymentAttempt", invoiceDate == null ? null : invoiceDate.toDate());
+                        DateTime last_payment_date = invoice.getLastPaymentAttempt();
+                        q.bind("lastPaymentAttempt", last_payment_date == null ? null : last_payment_date.toDate());
                         q.bind("currency", invoice.getCurrency().toString());
                     }
                 };
@@ -108,6 +108,9 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             DateTime invoiceDate = new DateTime(result.getTimestamp("invoice_date"));
             DateTime targetDate = new DateTime(result.getTimestamp("target_date"));
             BigDecimal amountPaid = result.getBigDecimal("amount_paid");
+            if (amountPaid == null) {
+                amountPaid = BigDecimal.ZERO;
+            }
             Timestamp lastPaymentAttemptTimeStamp = result.getTimestamp("last_payment_attempt");
             DateTime lastPaymentAttempt = lastPaymentAttemptTimeStamp == null ? null : new DateTime(lastPaymentAttemptTimeStamp);
             Currency currency = Currency.valueOf(result.getString("currency"));

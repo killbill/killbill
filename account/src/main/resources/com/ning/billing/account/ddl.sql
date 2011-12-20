@@ -2,12 +2,12 @@ DROP TABLE IF EXISTS accounts;
 CREATE TABLE accounts (
     id char(36) NOT NULL,
     external_key varchar(128) NULL,
-    email varchar(50) DEFAULT NULL,
+    email varchar(50) NOT NULL,
     name varchar(100) NOT NULL,
     first_name_length int NOT NULL,
     phone varchar(13) DEFAULT NULL,
-    currency char(3) NOT NULL,
-    billing_cycle_day int NOT NULL,
+    currency char(3) DEFAULT NULL,
+    billing_cycle_day int DEFAULT NULL,
     payment_provider_name varchar(20) DEFAULT NULL,
     PRIMARY KEY(id)
 ) ENGINE=innodb;

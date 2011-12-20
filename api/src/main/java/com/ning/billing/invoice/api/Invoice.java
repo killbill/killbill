@@ -48,4 +48,6 @@ public interface Invoice extends Entity {
     BigDecimal getTotalAmount();
 
     BigDecimal getAmountOutstanding();
+
+    boolean isDueForPayment(DateTime targetDate, int numberOfDays);
 }
