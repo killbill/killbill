@@ -67,7 +67,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
 
     @SqlUpdate
     void notifySuccessfulPayment(@Bind("invoiceId") final String invoiceId,
-                                 @Bind("paymentAmount") final BigDecimal paymentAmount,
+                                 @Bind("amount") final BigDecimal paymentAmount,
                                  @Bind("currency") final String currency,
                                  @Bind("paymentId") final String paymentId,
                                  @Bind("paymentDate") final Date paymentDate);

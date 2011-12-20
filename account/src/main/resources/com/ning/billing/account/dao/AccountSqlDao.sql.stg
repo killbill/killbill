@@ -21,9 +21,6 @@ getById() ::= <<
       a.id, a.external_key, a.email, a.name, a.first_name_length,
       a.phone, a.currency, a.billing_cycle_day, a.payment_provider_name
     from accounts a
-      left join invoices i on i.account_id = a.id
-      left join invoice_items ii on ii.invoice_id = i.id
-      left join invoice_payments ip ON ip.invoice_id = i.id
     where a.id = :id;
 >>
 

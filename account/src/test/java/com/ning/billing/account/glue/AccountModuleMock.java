@@ -33,6 +33,10 @@ public class AccountModuleMock extends AccountModule {
         helper.initDb(ddl);
     }
 
+    public void stopDb() {
+        helper.stopMysql();
+    }
+
     @Override
     protected void configure() {
         bind(IDBI.class).toInstance(helper.getDBI());

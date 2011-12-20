@@ -24,6 +24,7 @@ import com.ning.billing.util.eventbus.DefaultEventBusService;
 import com.ning.billing.util.eventbus.EventBusService;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ import java.io.IOException;
 import static org.testng.Assert.fail;
 
 public abstract class AccountDaoTestBase {
-    //protected FieldStoreDao fieldStoreDao;
+    protected AccountModuleMock module;
     protected AccountDao accountDao;
     protected IDBI dbi;
 
@@ -39,7 +40,7 @@ public abstract class AccountDaoTestBase {
     protected void setup() throws IOException {
         // Healthcheck test to make sure MySQL is setup properly
         try {
-            AccountModuleMock module = new AccountModuleMock();
+            module = new AccountModuleMock();
             final String accountDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
             final String invoiceDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             module.startDb();
@@ -58,5 +59,11 @@ public abstract class AccountDaoTestBase {
         catch (Throwable t) {
             fail(t.toString());
         }
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void stopMysql()
+    {
+        module.stopDb();
     }
 }

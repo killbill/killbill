@@ -70,14 +70,12 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
             int billingCycleDay = result.getInt("billing_cycle_day");
             Currency currency = Currency.valueOf(result.getString("currency"));
             String paymentProviderName = result.getString("payment_provider_name");
-            BigDecimal balance = result.getBigDecimal("balance");
 
             return new AccountBuilder(id).externalKey(externalKey).email(email)
                                          .name(name).firstNameLength(firstNameLength)
                                          .phone(phone).currency(currency)
                                          .billingCycleDay(billingCycleDay)
                                          .paymentProviderName(paymentProviderName)
-                                         .balance(balance)
                                          .build();
         }
     }

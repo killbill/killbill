@@ -18,6 +18,7 @@ package com.ning.billing.analytics;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
@@ -155,5 +156,10 @@ public class MockAccount implements Account
     @Override
     public boolean processPayment() {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public BigDecimal getBalance() {
+        return BigDecimal.ZERO;
     }
 }
