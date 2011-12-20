@@ -14,10 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
 
 import com.google.common.base.Objects;
@@ -160,18 +162,19 @@ public class PaymentInfo implements EventBusNotification {
         this.updatedDate = src.updatedDate;
     }
 
-    public PaymentInfo(String id,
-                       BigDecimal amount,
-                       BigDecimal appliedCreditBalanceAmount,
-                       String bankIdentificationNumber,
-                       String paymentNumber,
-                       BigDecimal refundAmount,
-                       String status,
-                       String type,
-                       String referenceId,
-                       DateTime effectiveDate,
-                       DateTime createdDate,
-                       DateTime updatedDate) {
+    @JsonCreator
+    public PaymentInfo(@JsonProperty("id") String id,
+                       @JsonProperty("amount") BigDecimal amount,
+                       @JsonProperty("appliedCreditBalanceAmount") BigDecimal appliedCreditBalanceAmount,
+                       @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
+                       @JsonProperty("paymentNumber") String paymentNumber,
+                       @JsonProperty("refundAmount") BigDecimal refundAmount,
+                       @JsonProperty("status") String status,
+                       @JsonProperty("type") String type,
+                       @JsonProperty("referenceId") String referenceId,
+                       @JsonProperty("effectiveDate") DateTime effectiveDate,
+                       @JsonProperty("createdDate") DateTime createdDate,
+                       @JsonProperty("updatedDate") DateTime updatedDate) {
         this.id = id;
         this.amount = amount;
         this.appliedCreditBalanceAmount = appliedCreditBalanceAmount;

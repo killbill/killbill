@@ -16,6 +16,8 @@
 
 package com.ning.billing.payment.api;
 
+import org.codehaus.jackson.annotate.JsonValue;
+
 public abstract class Either<T, V> {
     public static <T, V> Either<T, V> left(T value) {
         return new Left<T, V>(value);
@@ -51,6 +53,7 @@ public abstract class Either<T, V> {
             return true;
         }
         @Override
+        @JsonValue
         public T getLeft() {
             return value;
         }
@@ -68,6 +71,7 @@ public abstract class Either<T, V> {
         }
 
         @Override
+        @JsonValue
         public V getRight() {
             return value;
         }

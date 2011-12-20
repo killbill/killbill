@@ -15,8 +15,12 @@
  */
 
 package com.ning.billing.payment.api;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+import org.codehaus.jackson.annotate.JsonTypeInfo.Id;
+
 import com.ning.billing.util.eventbus.EventBusNotification;
 
+@JsonTypeInfo(use = Id.NAME, property = "error")
 public class PaymentError implements EventBusNotification {
     private final String type;
     private final String message;

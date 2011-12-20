@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.google.common.eventbus.Subscribe;
 import com.ning.billing.payment.api.PaymentError;
+import com.ning.billing.payment.api.PaymentInfo;
 
 public class MockPaymentInfoReceiver {
     private final List<PaymentInfo> processedPayments = Collections.synchronizedList(new ArrayList<PaymentInfo>());

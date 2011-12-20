@@ -44,6 +44,7 @@ import com.ning.billing.invoice.api.MockInvoicePaymentApi;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import com.ning.billing.payment.api.PaymentError;
+import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.setup.PaymentTestModule;
 import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.eventbus.EventBus.EventBusException;
@@ -55,9 +56,9 @@ public class TestPaymentProvider {
     @Inject
     private RequestProcessor invoiceProcessor;
     @Inject
-    private MockAccountUserApi accountUserApi;
+    protected MockAccountUserApi accountUserApi;
     @Inject
-    private MockInvoicePaymentApi invoiceApi;
+    protected MockInvoicePaymentApi invoiceApi;
 
     private MockPaymentInfoReceiver paymentInfoReceiver;
 

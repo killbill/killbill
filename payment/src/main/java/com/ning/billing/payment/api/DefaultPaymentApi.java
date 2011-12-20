@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.api;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +25,8 @@ import javax.annotation.Nullable;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
@@ -31,11 +34,15 @@ import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 public class DefaultPaymentApi implements PaymentApi {
     private final PaymentProviderPluginRegistry pluginRegistry;
     private final AccountUserApi accountUserApi;
+    private final InvoicePaymentApi invoicePaymentApi;
 
     @Inject
-    public DefaultPaymentApi(PaymentProviderPluginRegistry pluginRegistry, AccountUserApi accountUserApi) {
+    public DefaultPaymentApi(PaymentProviderPluginRegistry pluginRegistry,
+                             AccountUserApi accountUserApi,
+                             InvoicePaymentApi invoicePaymentApi) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
+        this.invoicePaymentApi = invoicePaymentApi;
     }
 
     @Override
@@ -78,8 +85,47 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, String> addPaypalPaymentMethod(@Nullable String accountId, PaypalPaymentMethodInfo paypalPaymentMethod) {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountId);
-        return plugin.addPaypalPaymentMethod(accountId, paypalPaymentMethod);
+    public Either<PaymentError, String> addPaypalPaymentMethod(@Nullable String accountKey, PaypalPaymentMethodInfo paypalPaymentMethod) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+        return plugin.addPaypalPaymentMethod(accountKey, paypalPaymentMethod);
+    }
+
+    @Override
+    public Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+        return plugin.deletePaypalPaymentMethod(accountKey, paymentMethodId);
+    }
+
+    @Override
+    public Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+        return plugin.updatePaypalPaymentMethod(accountKey, paymentMethodInfo);
+    }
+
+    @Override
+    public List<Either<PaymentError, PaymentInfo>> createPayment(String accountKey, List<String> invoiceIds) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+        final Account account = accountUserApi.getAccountByKey(accountKey);
+        List<Either<PaymentError, PaymentInfo>> processedPaymentsOrErrors = new ArrayList<Either<PaymentError, PaymentInfo>>(invoiceIds.size());
+
+        for (String invoiceId : invoiceIds) {
+            Invoice invoice = invoicePaymentApi.getInvoice(UUID.fromString(invoiceId));
+            Either<PaymentError, PaymentInfo> paymentOrError = plugin.processInvoice(account, invoice);
+            processedPaymentsOrErrors.add(paymentOrError);
+        }
+
+        return processedPaymentsOrErrors;
+    }
+
+    @Override
+    public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(PaymentProviderAccount account) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Either<PaymentError, PaymentProviderAccount> updatePaymentProviderAccount(PaymentProviderAccount account) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -23,9 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.payment.PaymentInfo;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentError;
+import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
 import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
@@ -72,12 +72,6 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, PaypalPaymentMethodInfo> addPaypalPaymentMethod(Account account, PaypalPaymentMethodInfo paypalPaymentMethod) {
-        // TODO
-        return Either.left(new PaymentError("unknown", "Not implemented"));
-    }
-
-    @Override
     public Either<PaymentError, Void> updatePaymentGateway(String accountKey) {
         // TODO
         return Either.left(new PaymentError("unknown", "Not implemented"));
@@ -85,6 +79,24 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
+        // TODO
+        return Either.left(new PaymentError("unknown", "Not implemented"));
+    }
+
+    @Override
+    public Either<PaymentError, String> addPaypalPaymentMethod(String accountId, PaypalPaymentMethodInfo paypalPaymentMethod) {
+        // TODO
+        return Either.left(new PaymentError("unknown", "Not implemented"));
+    }
+
+    @Override
+    public Either<PaymentError, Void> deletePaypalPaymentMethod(String accountKey, String paymentMethodId) {
+        // TODO
+        return Either.left(new PaymentError("unknown", "Not implemented"));
+    }
+
+    @Override
+    public Either<PaymentError, PaymentMethodInfo> updatePaypalPaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo) {
         // TODO
         return Either.left(new PaymentError("unknown", "Not implemented"));
     }

@@ -20,9 +20,9 @@ import java.util.List;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.payment.PaymentInfo;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentError;
+import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
 import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
@@ -35,8 +35,10 @@ public interface PaymentProviderPlugin {
     Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId);
     Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId);
     Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
-    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String screenName);
+    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountKey);
 
     Either<PaymentError, Void> updatePaymentGateway(String accountKey);
+    Either<PaymentError, Void> deletePaypalPaymentMethod(String accountKey, String paymentMethodId);
+    Either<PaymentError, PaymentMethodInfo> updatePaypalPaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo);
 
 }

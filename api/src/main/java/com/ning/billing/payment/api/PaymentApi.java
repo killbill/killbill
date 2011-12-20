@@ -25,9 +25,21 @@ public interface PaymentApi {
 
     Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountKey);
 
+    Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId);
+
     Either<PaymentError, Void> updatePaymentGateway(String accountKey);
+
+    Either<PaymentError, String> addPaypalPaymentMethod(@Nullable String accountKey, PaypalPaymentMethodInfo paypalPaymentMethod);
+
+    Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo);
+
+    List<Either<PaymentError, PaymentInfo>> createPayment(String accountKey, List<String> invoiceIds);
 
     Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
 
-    Either<PaymentError, String> addPaypalPaymentMethod(@Nullable String accountId, PaypalPaymentMethodInfo paypalPaymentMethod);
+    Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(PaymentProviderAccount account);
+
+    Either<PaymentError, PaymentProviderAccount> updatePaymentProviderAccount(PaymentProviderAccount account);
+
+
 }
