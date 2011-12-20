@@ -16,6 +16,7 @@
 
 package com.ning.billing.account.api;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -34,8 +35,9 @@ public class MockAccountUserApi implements AccountUserApi {
                                  String phone,
                                  Currency currency,
                                  int billCycleDay,
-                                 String paymentProviderName) {
-        Account result = new DefaultAccount(id, externalKey, email, name, firstNameLength, phone, currency, billCycleDay, paymentProviderName);
+                                 String paymentProviderName,
+                                 BigDecimal balance) {
+        Account result = new DefaultAccount(id, externalKey, email, name, firstNameLength, phone, currency, billCycleDay, paymentProviderName, balance);
         accounts.add(result);
         return result;
     }
@@ -75,5 +77,15 @@ public class MockAccountUserApi implements AccountUserApi {
     @Override
     public void saveAccount(Account account) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UUID getIdFromKey(String externalKey) {
+        for (Account account : accounts) {
+            if (externalKey.equals(account.getExternalKey())) {
+                return account.getId();
+            }
+        }
+        return null;
     }
 }

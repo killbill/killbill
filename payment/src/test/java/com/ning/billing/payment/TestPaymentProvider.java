@@ -79,7 +79,7 @@ public class TestPaymentProvider {
     protected Account createAccount() {
         String name = "First" + RandomStringUtils.random(5) + " " + "Last" + RandomStringUtils.random(5);
         String externalKey = "12345";
-        return accountUserApi.createAccount(UUID.randomUUID(), externalKey, "user@example.com", name, name.length(), "123-456-7890", Currency.USD, 1, null);
+        return accountUserApi.createAccount(UUID.randomUUID(), externalKey, "user@example.com", name, name.length(), "123-456-7890", Currency.USD, 1, null, BigDecimal.ZERO);
     }
 
     protected Invoice createInvoice(Account account,

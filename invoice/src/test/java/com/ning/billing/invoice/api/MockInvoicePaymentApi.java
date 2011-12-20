@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 
 public class MockInvoicePaymentApi implements InvoicePaymentApi
@@ -33,7 +35,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId) {
+    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId, DateTime paymentAttemptDate) {
         throw new UnsupportedOperationException();
     }
 
@@ -57,5 +59,10 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
             }
         }
         return null;
+    }
+
+    @Override
+    public void paymentFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate) {
+        throw new UnsupportedOperationException();
     }
 }
