@@ -14,14 +14,26 @@
  * under the License.
  */
 
-package com.ning.billing.account.dao;
+package com.ning.billing.util.glue;
 
-import java.util.UUID;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.util.entity.EntityDao;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.ning.billing.util.tag.dao.TagDescriptionDao;
+import org.skife.jdbi.v2.IDBI;
 
-public interface AccountDao extends EntityDao<Account> {
-    public Account getAccountByKey(String key);
+public class TagDescriptionDaoProvider implements Provider<TagDescriptionDao>
+{
+    private final IDBI dbi;
 
-    public UUID getIdFromKey(String externalKey);
+    @Inject
+    public TagDescriptionDaoProvider(final IDBI dbi)
+    {
+        this.dbi = dbi;
+    }
+
+    @Override
+    public TagDescriptionDao get()
+    {
+        return dbi.onDemand(TagDescriptionDao.class);
+    }
 }

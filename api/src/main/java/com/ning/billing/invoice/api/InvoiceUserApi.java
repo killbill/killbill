@@ -21,6 +21,7 @@ import org.joda.time.DateTime;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import com.ning.billing.catalog.api.Currency;
 
 public interface InvoiceUserApi {
     public List<UUID> getInvoicesForPayment(DateTime targetDate, int numberOfDays);
@@ -29,7 +30,8 @@ public interface InvoiceUserApi {
 
     public Invoice getInvoice(UUID invoiceId);
 
-    public void paymentAttemptFailed(UUID invoiceId, DateTime paymentAttemptDate);
+    public void paymentAttemptFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate);
 
-    public void paymentAttemptSuccessful(UUID invoiceId, DateTime paymentAttemptDate, BigDecimal paymentAmount);
+    public void paymentAttemptSuccessful(UUID invoiceId, BigDecimal amount, Currency currency,
+                                         UUID paymentId, DateTime paymentDate);
 }

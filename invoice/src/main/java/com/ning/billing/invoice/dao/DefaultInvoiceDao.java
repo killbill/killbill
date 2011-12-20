@@ -22,9 +22,8 @@ import com.ning.billing.invoice.api.InvoiceCreationNotification;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
 import com.ning.billing.util.eventbus.EventBus;
-import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.TransactionCallback;
+import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,18 +33,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-public class InvoiceDaoWrapper implements InvoiceDao {
-    private final IDBI dbi;
-
-    private final InvoiceDao invoiceDao;
+public class DefaultInvoiceDao implements InvoiceDao {
+    private final InvoiceSqlDao invoiceDao;
 
     private final EventBus eventBus;
-    private final static Logger log = LoggerFactory.getLogger(InvoiceDaoWrapper.class);
+    private final static Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
 
     @Inject
-    public InvoiceDaoWrapper(IDBI dbi, EventBus eventBus) {
-        this.dbi = dbi;
-        this.invoiceDao = dbi.onDemand(InvoiceDao.class);
+    public DefaultInvoiceDao(IDBI dbi, EventBus eventBus) {
+        this.invoiceDao = dbi.onDemand(InvoiceSqlDao.class);
         this.eventBus = eventBus;
     }
 
@@ -60,22 +56,16 @@ public class InvoiceDaoWrapper implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> get() {
-        return invoiceDao.get();
-    }
-
-    @Override
     public void save(final Invoice invoice) {
-         dbi.inTransaction(new TransactionCallback<Void>() {
-            @Override
-            public Void inTransaction(Handle conn, TransactionStatus status) throws Exception {
-                InvoiceDao invoiceDao = conn.attach(InvoiceDao.class);
+         invoiceDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
+             @Override
+             public Void inTransaction(InvoiceSqlDao invoiceDao, TransactionStatus status) throws Exception {
                 Invoice currentInvoice = invoiceDao.getById(invoice.getId().toString());
                 invoiceDao.save(invoice);
 
-//                    List<InvoiceItem> invoiceItems = invoice.getItems();
-//                    InvoiceItemDao invoiceItemDao = conn.attach(InvoiceItemDao.class);
-//                    invoiceItemDao.save(invoiceItems);
+                List<InvoiceItem> invoiceItems = invoice.getItems();
+                InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
+                invoiceItemDao.save(invoiceItems);
 
                 if (currentInvoice == null) {
                     InvoiceCreationNotification event;
@@ -88,8 +78,8 @@ public class InvoiceDaoWrapper implements InvoiceDao {
                 }
 
                 return null;
-            }
-        });
+             }
+         });
     }
 
     @Override
@@ -103,13 +93,13 @@ public class InvoiceDaoWrapper implements InvoiceDao {
     }
 
     @Override
-    public void notifySuccessfulPayment(String invoiceId, Date paymentDate, BigDecimal paymentAmount) {
-        invoiceDao.notifySuccessfulPayment(invoiceId, paymentDate, paymentAmount);
+    public void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentId, Date paymentDate) {
+        invoiceDao.notifySuccessfulPayment(invoiceId, paymentAmount, currency, paymentId, paymentDate);
     }
 
     @Override
-    public void notifyFailedPayment(String invoiceId, Date paymentAttemptDate) {
-        invoiceDao.notifyFailedPayment(invoiceId, paymentAttemptDate);
+    public void notifyFailedPayment(String invoiceId, String paymentId, Date paymentAttemptDate) {
+        invoiceDao.notifyFailedPayment(invoiceId, paymentId, paymentAttemptDate);
     }
 
     @Override

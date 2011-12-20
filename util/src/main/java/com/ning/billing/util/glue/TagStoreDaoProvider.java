@@ -14,18 +14,26 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.dao;
+package com.ning.billing.util.glue;
 
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.ning.billing.util.tag.dao.TagStoreDao;
+import org.skife.jdbi.v2.IDBI;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.UUID;
+public class TagStoreDaoProvider implements Provider<TagStoreDao>
+{
+    private final IDBI dbi;
 
-public class UuidMapper implements ResultSetMapper<UUID> {
+    @Inject
+    public TagStoreDaoProvider(final IDBI dbi)
+    {
+        this.dbi = dbi;
+    }
+
     @Override
-    public UUID map(final int index, ResultSet resultSet, StatementContext statementContext) throws SQLException {
-        return UUID.fromString(resultSet.getString(1));
+    public TagStoreDao get()
+    {
+        return dbi.onDemand(TagStoreDao.class);
     }
 }

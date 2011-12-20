@@ -19,6 +19,7 @@ package com.ning.billing.account.api.user;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public class AccountBuilder {
@@ -31,6 +32,7 @@ public class AccountBuilder {
     private Currency currency;
     private int billingCycleDay;
     private String paymentProviderName;
+    private BigDecimal balance;
 
     public AccountBuilder() {
         this(UUID.randomUUID());
@@ -80,7 +82,13 @@ public class AccountBuilder {
         return this;
     }
 
+    public AccountBuilder balance(BigDecimal balance) {
+        this.balance = balance;
+        return this;
+    }
+
     public DefaultAccount build() {
-        return new DefaultAccount(id, externalKey, email, name, firstNameLength, phone, currency, billingCycleDay, paymentProviderName);
+        return new DefaultAccount(id, externalKey, email, name, firstNameLength,
+                                  phone, currency, billingCycleDay, paymentProviderName, balance);
     }
 }

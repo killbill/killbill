@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.customfield;
 
+import java.util.List;
 import java.util.UUID;
 import com.ning.billing.util.entity.EntityBase;
 
@@ -38,8 +39,13 @@ public abstract class CustomizableEntityBase extends EntityBase implements Custo
     }
 
     @Override
-    public FieldStore getFields() {
-        return fields;
+    public List<CustomField> getFieldList() {
+        return fields.getEntityList();
+    }
+
+    @Override
+    public void clearFields() {
+        fields.clear();
     }
 
     public abstract String getObjectName();

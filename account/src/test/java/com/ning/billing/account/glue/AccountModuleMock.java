@@ -25,9 +25,16 @@ import java.io.IOException;
 public class AccountModuleMock extends AccountModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
 
-    public void createDb(String ddl) throws IOException {
+    public void startDb() throws IOException {
         helper.startMysql();
+    }
+
+    public void initDb(String ddl) throws IOException {
         helper.initDb(ddl);
+    }
+
+    public void stopDb() {
+        helper.stopMysql();
     }
 
     @Override

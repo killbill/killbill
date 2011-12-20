@@ -17,9 +17,9 @@
 package com.ning.billing.account.dao;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.UuidMapper;
 import com.ning.billing.util.entity.EntityDao;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -40,15 +40,19 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3
-@RegisterMapper(AccountSqlDao.AccountMapper.class)
+@RegisterMapper({UuidMapper.class, AccountSqlDao.AccountMapper.class})
 public interface AccountSqlDao extends EntityDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
     @SqlQuery
     public Account getAccountByKey(@Bind("externalKey") final String key);
+
+    @SqlQuery
+    public UUID getIdFromKey(@Bind("externalKey") final String key);
 
     @Override
     @SqlUpdate
@@ -71,7 +75,8 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
                                          .name(name).firstNameLength(firstNameLength)
                                          .phone(phone).currency(currency)
                                          .billingCycleDay(billingCycleDay)
-                                         .paymentProviderName(paymentProviderName).build();
+                                         .paymentProviderName(paymentProviderName)
+                                         .build();
         }
     }
 
@@ -81,8 +86,8 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     public @interface AccountBinder {
         public static class AccountBinderFactory implements BinderFactory {
             public Binder build(Annotation annotation) {
-                return new Binder<AccountBinder, AccountData>() {
-                    public void bind(SQLStatement q, AccountBinder bind, AccountData account) {
+                return new Binder<AccountBinder, Account>() {
+                    public void bind(SQLStatement q, AccountBinder bind, Account account) {
                         q.bind("id", account.getId().toString());
                         q.bind("externalKey", account.getExternalKey());
                         q.bind("email", account.getEmail());

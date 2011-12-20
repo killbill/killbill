@@ -29,10 +29,12 @@ import com.ning.billing.catalog.api.Currency;
 public class MockIAccountUserApi implements AccountUserApi
 {
     private final AccountData account;
+    private final UUID id;
 
     public MockIAccountUserApi(final String accountKey, final Currency currency)
     {
-        account = new MockAccount(UUID.randomUUID(), accountKey, currency);
+        this.id = UUID.randomUUID();
+        account = new MockAccount(id, accountKey, currency);
     }
 
     @Override
@@ -62,5 +64,10 @@ public class MockIAccountUserApi implements AccountUserApi
     public List<Account> getAccounts()
     {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UUID getIdFromKey(String externalKey) {
+        return id;
     }
 }

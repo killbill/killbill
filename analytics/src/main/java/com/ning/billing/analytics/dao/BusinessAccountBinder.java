@@ -30,6 +30,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.sql.Types;
 
 @BindingAnnotation(BusinessAccountBinder.BacBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -59,7 +60,12 @@ public @interface BusinessAccountBinder
                     q.bind("account_key", account.getKey());
                     q.bind("balance", account.getRoundedBalance());
                     q.bind("tags", joiner.join(account.getTags()));
-                    q.bind("last_invoice_date", account.getLastInvoiceDate().getMillis());
+                    if (account.getLastInvoiceDate() != null) {
+                        q.bind("last_invoice_date", account.getLastInvoiceDate().getMillis());
+                    }
+                    else {
+                        q.bindNull("last_invoice_date", Types.BIGINT);
+                    }
                     q.bind("total_invoice_balance", account.getRoundedTotalInvoiceBalance());
                     q.bind("last_payment_status", account.getLastPaymentStatus());
                     q.bind("payment_method", account.getPaymentMethod());

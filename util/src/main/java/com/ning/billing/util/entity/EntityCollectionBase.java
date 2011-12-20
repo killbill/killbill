@@ -61,21 +61,4 @@ public abstract class EntityCollectionBase<T extends Entity> implements EntityCo
     public List<T> getEntityList() {
         return new ArrayList<T>(entities.values());
     }
-//    public void save() {
-//        IEntityCollectionDao<T> dao = getCollectionDao();
-//
-//        dao.save(objectId.toString(), objectType, new ArrayList(entities.values()));
-//    }
-//
-//    public void load() {
-//        IEntityCollectionDao<T> dao = getCollectionDao();
-//
-//        List<T> entities = dao.load(objectId.toString(), objectType);
-//        this.entities.clear();
-//        if (entities != null) {
-//            for (T entity : entities) {
-//                this.entities.put(getEntityKey(entity), entity);
-//            }
-//        }
-//    }
 }

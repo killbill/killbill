@@ -158,7 +158,8 @@ public abstract class TestUserApiBase {
         ((MockEntitlementDao) dao).reset();
         try {
             busService.getEventBus().register(testListener);
-            bundle = entitlementApi.createBundleForAccount(accountData, "myDefaultBundle");
+            UUID accountId = UUID.randomUUID();
+            bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle");
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -283,8 +284,6 @@ public abstract class TestUserApiBase {
 
     protected AccountData getAccountData() {
         AccountData accountData = new AccountData() {
-            private final UUID id = UUID.randomUUID();
-
             @Override
             public String getName() {
                 return "firstName lastName";
@@ -318,10 +317,6 @@ public abstract class TestUserApiBase {
             @Override
             public String getPaymentProviderName() {
                 return "Paypal";
-            }
-            @Override
-            public UUID getId() {
-                return id;
             }
         };
         return accountData;

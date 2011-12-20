@@ -14,14 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.account.dao;
+package com.ning.billing.util.glue;
 
-import java.util.UUID;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.util.entity.EntityDao;
+import com.google.inject.AbstractModule;
+import com.ning.billing.util.tag.dao.TagDescriptionDao;
+import com.ning.billing.util.tag.dao.TagStoreDao;
 
-public interface AccountDao extends EntityDao<Account> {
-    public Account getAccountByKey(String key);
-
-    public UUID getIdFromKey(String externalKey);
+public class TagStoreModule extends AbstractModule
+{
+    @Override
+    protected void configure()
+    {
+        bind(TagDescriptionDao.class).toProvider(TagDescriptionDaoProvider.class).asEagerSingleton();
+        bind(TagStoreDao.class).toProvider(TagStoreDaoProvider.class).asEagerSingleton();
+    }
 }

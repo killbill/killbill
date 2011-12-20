@@ -78,9 +78,9 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(AccountData account, String bundleName)
+    public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleName)
     throws EntitlementUserApiException {
-        SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, account.getId());
+        SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId);
         return dao.createSubscriptionBundle(bundle);
     }
 

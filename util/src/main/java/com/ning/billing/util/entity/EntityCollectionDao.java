@@ -20,6 +20,11 @@ import org.skife.jdbi.v2.sqlobject.*;
 
 import java.util.List;
 
+/**
+ * provides consistent semantics for entity collections
+ * note: this is intended to be extended by an interface which provides @ExternalizedSqlViaStringTemplate3 and mappers
+ * @param <T>
+ */
 public interface EntityCollectionDao<T extends Entity> {
     @SqlBatch
     public void save(@Bind("objectId") final String objectId,

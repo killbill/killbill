@@ -17,6 +17,7 @@
 package com.ning.billing.account.dao;
 
 import java.util.List;
+import java.util.UUID;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -28,7 +29,6 @@ import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.FieldStore;
 import com.ning.billing.util.customfield.dao.FieldStoreDao;
 import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.tag.Tag;
@@ -55,10 +55,10 @@ public class DefaultAccountDao implements AccountDao {
                     FieldStoreDao fieldStoreDao = accountSqlDao.become(FieldStoreDao.class);
                     List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
 
-                    account.getFields().clear();
+                    account.clearFields();
                     if (fields != null) {
                         for (CustomField field : fields) {
-                            account.getFields().setValue(field.getName(), field.getValue());
+                            account.setFieldValue(field.getName(), field.getValue());
                         }
                     }
 
@@ -77,6 +77,11 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     @Override
+    public UUID getIdFromKey(final String externalKey) {
+        return accountDao.getIdFromKey(externalKey);
+    }
+
+    @Override
     public Account getById(final String id) {
         return accountDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
             @Override
@@ -87,10 +92,10 @@ public class DefaultAccountDao implements AccountDao {
                     FieldStoreDao fieldStoreDao = accountSqlDao.become(FieldStoreDao.class);
                     List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
 
-                    account.getFields().clear();
+                    account.clearFields();
                     if (fields != null) {
                         for (CustomField field : fields) {
-                            account.getFields().setValue(field.getName(), field.getValue());
+                            account.setFieldValue(field.getName(), field.getValue());
                         }
                     }
 
@@ -129,9 +134,8 @@ public class DefaultAccountDao implements AccountDao {
                 Account currentAccount = accountDao.getById(accountId);
                 accountDao.save(account);
 
-                FieldStore fieldStore = account.getFields();
                 FieldStoreDao fieldStoreDao = accountDao.become(FieldStoreDao.class);
-                fieldStoreDao.save(accountId, objectType, fieldStore.getEntityList());
+                fieldStoreDao.save(accountId, objectType, account.getFieldList());
 
                 TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
                 tagStoreDao.save(accountId, objectType, account.getTagList());

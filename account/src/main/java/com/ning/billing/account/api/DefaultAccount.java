@@ -16,11 +16,10 @@
 
 package com.ning.billing.account.api;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-
 import org.joda.time.DateTime;
-
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomizableEntityBase;
 import com.ning.billing.util.tag.DefaultTag;
@@ -39,22 +38,24 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     private final Currency currency;
     private final int billCycleDay;
     private final String paymentProviderName;
+    private final BigDecimal balance;
     private final DefaultTagStore tags;
 
     public DefaultAccount(AccountData data) {
         this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
                 data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
-                data.getPaymentProviderName());
+                data.getPaymentProviderName(), BigDecimal.ZERO);
     }
 
     public DefaultAccount(UUID id, AccountData data) {
         this(id, data.getExternalKey(), data.getEmail(), data.getName(),
                 data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
-                data.getPaymentProviderName());
+                data.getPaymentProviderName(), BigDecimal.ZERO);
     }
 
     public DefaultAccount(UUID id, String externalKey, String email, String name, int firstNameLength,
-                          String phone, Currency currency, int billCycleDay, String paymentProviderName) {
+                          String phone, Currency currency, int billCycleDay, String paymentProviderName,
+                          BigDecimal balance) {
         super(id);
         this.externalKey = externalKey;
         this.email = email;
@@ -64,6 +65,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
         this.currency = currency;
         this.billCycleDay = billCycleDay;
         this.paymentProviderName = paymentProviderName;
+        this.balance = balance;
 
         this.tags = new DefaultTagStore(id, getObjectName());
     }
@@ -155,8 +157,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
-    public String toString() {
-        return "DefaultAccount [externalKey=" + externalKey + ", email=" + email + ", name=" + name + ", firstNameLength=" + firstNameLength + ", phone=" + phone + ", currency=" + currency + ", billCycleDay=" + billCycleDay + ", paymentProviderName=" + paymentProviderName + ", tags=" + tags + "]";
+    public BigDecimal getBalance() {
+        return balance;
     }
-
 }
