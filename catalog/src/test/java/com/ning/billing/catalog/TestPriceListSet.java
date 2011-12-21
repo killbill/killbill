@@ -16,16 +16,17 @@
 
 package com.ning.billing.catalog;
 
-import static com.ning.billing.catalog.api.BillingPeriod.*;
-import static com.ning.billing.catalog.api.PhaseType.*;
-
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.ProductCategory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
+import static com.ning.billing.catalog.api.BillingPeriod.ANNUAL;
+import static com.ning.billing.catalog.api.BillingPeriod.MONTHLY;
+import static com.ning.billing.catalog.api.PhaseType.DISCOUNT;
+import static com.ning.billing.catalog.api.PhaseType.EVERGREEN;
 
 public class TestPriceListSet {
 	@Test(enabled=true)

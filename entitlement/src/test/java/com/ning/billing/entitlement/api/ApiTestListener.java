@@ -16,20 +16,16 @@
 
 package com.ning.billing.entitlement.api;
 
-import java.util.EmptyStackException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.util.eventbus.EventBus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Stack;
 
 public class ApiTestListener {
 

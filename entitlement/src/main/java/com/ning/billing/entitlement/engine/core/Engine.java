@@ -16,14 +16,8 @@
 
 package com.ning.billing.entitlement.engine.core;
 
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.config.EntitlementConfig;
-
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.EntitlementService;
@@ -45,7 +39,9 @@ import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.eventbus.EventBus.EventBusException;
-import com.sun.org.apache.xml.internal.resolver.CatalogException;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Engine implements EventListener, EntitlementService {
 

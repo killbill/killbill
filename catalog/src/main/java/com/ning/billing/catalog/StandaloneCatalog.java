@@ -16,34 +16,17 @@
 
 package com.ning.billing.catalog;
 
-import java.net.URI;
-import java.util.Collection;
-import java.util.Date;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.ActionPolicy;
-import com.ning.billing.catalog.api.BillingAlignment;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.IllegalPlanChange;
-import com.ning.billing.catalog.api.PlanAlignmentChange;
-import com.ning.billing.catalog.api.PlanAlignmentCreate;
-import com.ning.billing.catalog.api.PlanChangeResult;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.catalog.rules.PlanRules;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
+
+import javax.xml.bind.annotation.*;
+import java.net.URI;
+import java.util.Collection;
+import java.util.Date;
 
 @XmlRootElement(name="catalog")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -84,7 +67,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 	 * @see com.ning.billing.catalog.ICatalog#getCalalogName()
 	 */
 	@Override
-	public String getCalalogName() {
+	public String getCatalogName() {
 		return catalogName;
 	}
 

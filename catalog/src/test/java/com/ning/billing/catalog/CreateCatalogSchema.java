@@ -16,12 +16,11 @@
 
 package com.ning.billing.catalog;
 
+import com.ning.billing.util.config.XMLSchemaGenerator;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
-
-import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.util.config.XMLSchemaGenerator;
 
 public class CreateCatalogSchema {
 

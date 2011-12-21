@@ -16,32 +16,35 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.invoice.model.Invoice;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
-
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
+import com.ning.billing.invoice.api.Invoice;
 
-@ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(InvoiceMapper.class)
 public interface InvoiceDao {
-    @SqlQuery
-    List<Invoice> getInvoicesByAccount(@Bind final String accountId);
+    void save(Invoice invoice);
 
-    @SqlQuery
-    Invoice getInvoice(@Bind final String invoiceId);
+    Invoice getById(final String id);
 
-    @SqlUpdate
-    void createInvoice(@BindBean final Invoice invoice);
+    List<Invoice> get();
 
-    @SqlUpdate
-    void addPayment(@Bind final String invoiceId, @Bind final BigDecimal paymentAmount);
+    List<Invoice> getInvoicesByAccount(final String accountId);
 
-    @SqlQuery
-    int test();
+    List<Invoice> getInvoicesBySubscription(final String subscriptionId);
+
+    List<UUID> getInvoicesForPayment(final Date targetDate,
+                                     final int numberOfDays);
+
+    void notifySuccessfulPayment(final String invoiceId,
+                                 final BigDecimal paymentAmount,
+                                 final String currency,
+                                 final String paymentId,
+                                 final Date paymentDate);
+
+    void notifyFailedPayment(final String invoiceId,
+                             final String paymentId,
+                             final Date paymentAttemptDate);
+
+    void test();
 }

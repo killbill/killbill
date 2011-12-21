@@ -17,10 +17,10 @@
 package com.ning.billing.entitlement.glue;
 
 
-import com.ning.billing.entitlement.engine.core.MockApiEventProcessorMemory;
 import com.ning.billing.entitlement.engine.core.EventNotifier;
-import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
+import com.ning.billing.entitlement.engine.core.MockApiEventProcessorMemory;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
 
 public class MockEngineModuleMemory extends MockEngineModule {
     @Override

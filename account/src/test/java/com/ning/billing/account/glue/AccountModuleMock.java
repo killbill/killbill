@@ -17,6 +17,7 @@
 package com.ning.billing.account.glue;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.glue.EventBusModule;
 import org.skife.jdbi.v2.IDBI;
 
 import java.io.IOException;
@@ -24,14 +25,22 @@ import java.io.IOException;
 public class AccountModuleMock extends AccountModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
 
-    public void createDb(String ddl) throws IOException {
+    public void startDb() throws IOException {
         helper.startMysql();
+    }
+
+    public void initDb(String ddl) throws IOException {
         helper.initDb(ddl);
+    }
+
+    public void stopDb() {
+        helper.stopMysql();
     }
 
     @Override
     protected void configure() {
         bind(IDBI.class).toInstance(helper.getDBI());
         super.configure();
+        install(new EventBusModule());
     }
 }

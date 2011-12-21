@@ -18,10 +18,8 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.List;
 import java.util.UUID;
-
 import org.joda.time.DateTime;
-
-import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 
@@ -38,9 +36,8 @@ public interface EntitlementUserApi {
 
     public List<Subscription> getSubscriptionsForKey(String bundleKey);
 
-    public SubscriptionBundle createBundleForAccount(IAccount account, String bundleKey)
+    public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleKey)
         throws EntitlementUserApiException;
-
 
     public Subscription createSubscription(UUID bundleId, String productName, BillingPeriod term, String priceList, PhaseType initialPhase, DateTime requestedDate)
         throws EntitlementUserApiException;

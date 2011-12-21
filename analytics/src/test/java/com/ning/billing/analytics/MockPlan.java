@@ -16,12 +16,10 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.PlanAlignmentChange;
 
 import java.util.Iterator;
 

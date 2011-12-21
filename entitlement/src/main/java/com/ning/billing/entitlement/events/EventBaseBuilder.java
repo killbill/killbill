@@ -16,11 +16,10 @@
 
 package com.ning.billing.entitlement.events;
 
-import java.util.UUID;
-
+import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
 import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
+import java.util.UUID;
 
 @SuppressWarnings("unchecked")
 public class EventBaseBuilder<T extends EventBaseBuilder<T>> {

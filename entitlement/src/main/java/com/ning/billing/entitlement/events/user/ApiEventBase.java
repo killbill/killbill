@@ -16,10 +16,10 @@
 
 package com.ning.billing.entitlement.events.user;
 
-import java.util.UUID;
-
-import org.joda.time.DateTime;
 import com.ning.billing.entitlement.events.EventBase;
+import org.joda.time.DateTime;
+
+import java.util.UUID;
 
 public class ApiEventBase extends EventBase implements ApiEvent {
 

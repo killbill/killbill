@@ -1,0 +1,40 @@
+group InvoiceItemDao;
+
+getById() ::= <<
+  SELECT id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency
+  FROM invoice_items
+  WHERE id = :id;
+>>
+
+getInvoiceItemsByInvoice() ::= <<
+  SELECT id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency
+  FROM invoice_items
+  WHERE invoice_id = :invoiceId;
+>>
+
+getInvoiceItemsByAccount() ::= <<
+  SELECT ii.id, ii.invoice_id, ii.subscription_id, ii.start_date, ii.end_date, ii.description, ii.amount, ii.rate, ii.currency
+  FROM invoice_items ii
+  INNER JOIN invoices i ON i.id = ii.invoice_id
+  WHERE i.account_id = :accountId;
+>>
+
+getInvoiceItemsBySubscription() ::= <<
+  SELECT id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency
+  FROM invoice_items
+  WHERE subscription_id = :subscriptionId;
+>>
+
+save() ::= <<
+  INSERT INTO invoice_items(id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency)
+  VALUES(:id, :invoiceId, :subscriptionId, :startDate, :endDate, :description, :amount, :rate, :currency)
+  ON DUPLICATE KEY UPDATE
+    start_date = :startDate, end_date = :endDate, description = :description,
+    amount = :amount, rate = :rate, currency = :currency''
+>>
+
+test() ::= <<
+  SELECT 1
+  FROM invoice_items;
+>>
+;

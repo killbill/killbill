@@ -18,7 +18,7 @@
 <!-- 
 Use cases covered so far:
 	Tiered Product (Pistol/Shotgun/Assault-Rifle)
-	Multiple change plan policies 
+	Multiple changeEvent plan policies
 	Multiple PlanAlignment (see below, trial add-on alignments and rescue discount package)
 	Product transition rules
 	Add on (Scopes, Hoster)

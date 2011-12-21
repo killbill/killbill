@@ -16,25 +16,15 @@
 
 package com.ning.billing.catalog.rules;
 
+import com.ning.billing.catalog.DefaultPriceList;
+import com.ning.billing.catalog.DefaultProduct;
+import com.ning.billing.catalog.MockCatalog;
+import com.ning.billing.catalog.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
-
-import com.ning.billing.catalog.MockCatalog;
-import com.ning.billing.catalog.DefaultPriceList;
-import com.ning.billing.catalog.DefaultProduct;
-import com.ning.billing.catalog.api.ActionPolicy;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.catalog.api.IllegalPlanChange;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanAlignmentChange;
-import com.ning.billing.catalog.api.PlanChangeResult;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.PlanSpecifier;
 
 public class TestPlanRules {
 	Logger log = LoggerFactory.getLogger(TestPlanRules.class);

@@ -18,28 +18,22 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.List;
 import java.util.UUID;
-
 import org.joda.time.DateTime;
-
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.IAccount;
+import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.entitlement.alignment.PlanAligner;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
@@ -84,9 +78,9 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(IAccount account, String bundleName)
+    public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleName)
     throws EntitlementUserApiException {
-        SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, account.getId());
+        SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId);
         return dao.createSubscriptionBundle(bundle);
     }
 

@@ -16,13 +16,12 @@
 
 package com.ning.billing.catalog;
 
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.util.config.ValidationErrors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.util.config.ValidationErrors;
 
 public class TestPlanPhase {
 	Logger log = LoggerFactory.getLogger(TestPlanPhase.class);
