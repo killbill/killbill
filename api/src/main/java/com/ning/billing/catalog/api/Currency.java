@@ -26,10 +26,12 @@ public enum Currency {
 	BRL,
 	EUR,
 	AUD,
-	USD
-
+	USD;
 // Unsupported
 //	CAD,
 //	JPY
 
+    public static Currency getDefaultCurrency() {
+        return Currency.USD;
+    }
 }
