@@ -68,7 +68,8 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
             int firstNameLength = result.getInt("first_name_length");
             String phone = result.getString("phone");
             int billingCycleDay = result.getInt("billing_cycle_day");
-            Currency currency = Currency.valueOf(result.getString("currency"));
+            String currencyString = result.getString("currency");
+            Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
             String paymentProviderName = result.getString("payment_provider_name");
 
             return new AccountBuilder(id).externalKey(externalKey).email(email)
@@ -94,7 +95,8 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
                         q.bind("name", account.getName());
                         q.bind("firstNameLength", account.getFirstNameLength());
                         q.bind("phone", account.getPhone());
-                        q.bind("currency", account.getCurrency().toString());
+                        Currency currency = account.getCurrency();
+                        q.bind("currency", (currency == null) ? null : currency.toString());
                         q.bind("billingCycleDay", account.getBillCycleDay());
                         q.bind("paymentProviderName", account.getPaymentProviderName());
                     }
