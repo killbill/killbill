@@ -123,5 +123,14 @@ public class DefaultInvoice implements Invoice {
     public BigDecimal getAmountOutstanding() {
         return getTotalAmount().subtract(getAmountPaid());
     }
+
+    @Override
+    public boolean isDueForPayment(final DateTime targetDate, final int numberOfDays) {
+        if (lastPaymentAttempt == null) {
+            return true;
+        }
+
+        return lastPaymentAttempt.plusDays(numberOfDays).isBefore(targetDate);
+    }
 }
 

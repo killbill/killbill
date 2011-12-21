@@ -17,9 +17,11 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
+import org.joda.time.Days;
 import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
@@ -70,8 +72,8 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         Invoice savedInvoice = invoiceDao.getById(invoiceId.toString());
         assertNotNull(savedInvoice);
-        assertEquals(savedInvoice.getTotalAmount(), new BigDecimal("21.00"));
-        assertEquals(savedInvoice.getAmountOutstanding(), new BigDecimal("21.00"));
+        assertEquals(savedInvoice.getTotalAmount().compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(savedInvoice.getAmountOutstanding().compareTo(new BigDecimal("21.00")), 0);
         assertEquals(savedInvoice.getAmountPaid(), BigDecimal.ZERO);
         assertEquals(savedInvoice.getItems().size(), 1);
 
@@ -81,10 +83,10 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         Invoice retrievedInvoice = invoiceDao.getById(invoiceId.toString());
         assertNotNull(retrievedInvoice);
-        assertEquals(retrievedInvoice.getTotalAmount(), new BigDecimal("21.00"));
-        assertEquals(retrievedInvoice.getAmountOutstanding(), new BigDecimal("10.00"));
-        assertEquals(retrievedInvoice.getAmountPaid(), new BigDecimal("11.00"));
         assertEquals(retrievedInvoice.getItems().size(), 1);
+        assertEquals(retrievedInvoice.getTotalAmount().compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(retrievedInvoice.getAmountOutstanding().compareTo(new BigDecimal("10.00")), 0);
+        assertEquals(retrievedInvoice.getAmountPaid().compareTo(new BigDecimal("11.00")), 0);
     }
 
     @Test
@@ -148,15 +150,10 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         List<UUID> invoices;
         DateTime notionalDate = new DateTime();
 
-        // determine the number of existing invoices available for payment (to avoid side effects from other tests)
-        invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
-        int existingInvoiceCount = invoices.size();
-
         // create a new invoice with one item
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
         Invoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
-        invoiceDao.save(invoice);
 
         UUID invoiceId = invoice.getId();
         UUID subscriptionId = UUID.randomUUID();
@@ -165,50 +162,76 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal amount = rate.multiply(new BigDecimal("3.0"));
 
         DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, targetDate, endDate, "test", amount, rate, Currency.USD);
-        invoiceItemDao.save(item);
+        invoice.add(item);
+        invoiceDao.save(invoice);
 
         // ensure that the number of invoices for payment has increased by 1
+        int count;
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
-        assertEquals(invoices.size(), existingInvoiceCount + 1);
+        List<Invoice> invoicesDue = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate);
+        count = invoicesDue.size();
+        assertEquals(invoices.size(), count);
 
-        // attempt a payment; ensure that the number of invoices for payment has decreased by 1 (no retries for eight days)
+        // attempt a payment; ensure that the number of invoices for payment has decreased by 1
+        // (no retries for NUMBER_OF_DAYS_BETWEEN_RETRIES days)
         invoiceDao.notifyFailedPayment(invoice.getId().toString(), UUID.randomUUID().toString(), notionalDate.toDate());
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
-        assertEquals(invoices.size(), existingInvoiceCount);
+        count = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate).size();
+        assertEquals(invoices.size(), count);
 
-        // advance clock by 8 days; ensure that number of invoices for payment has increased by 1 (retry)
+        // advance clock by NUMBER_OF_DAYS_BETWEEN_RETRIES days
+        // ensure that number of invoices for payment has increased by 1 (retry)
         notionalDate = notionalDate.plusDays(NUMBER_OF_DAY_BETWEEN_RETRIES);
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
-        assertEquals(invoices.size(), existingInvoiceCount + 1);
+        count = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate).size();
+        assertEquals(invoices.size(), count);
 
         // post successful partial payment; ensure that number of invoices for payment has decreased by 1
         invoiceDao.notifySuccessfulPayment(invoiceId.toString(), new BigDecimal("22.0000"), Currency.USD.toString(), UUID.randomUUID().toString(), notionalDate.toDate());
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
-        assertEquals(invoices.size(), existingInvoiceCount);
+        count = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate).size();
+        assertEquals(invoices.size(), count);
 
         // get invoice; verify amount paid is correct
         invoice = invoiceDao.getById(invoiceId.toString());
         assertEquals(invoice.getAmountPaid().compareTo(new BigDecimal("22.0")), 0);
 
-        // advance clock eight days; ensure that number of invoices for payment has increased by 1 (retry)
+        // advance clock NUMBER_OF_DAYS_BETWEEN_RETRIES days
+        // ensure that number of invoices for payment has increased by 1 (retry)
         notionalDate = notionalDate.plusDays(NUMBER_OF_DAY_BETWEEN_RETRIES);
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
-        assertEquals(invoices.size(), existingInvoiceCount + 1);
+        count = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate).size();
+        assertEquals(invoices.size(), count);
 
         // post completed payment; ensure that the number of invoices for payment has decreased by 1
         invoiceDao.notifySuccessfulPayment(invoiceId.toString(), new BigDecimal("5.0000"), Currency.USD.toString(), UUID.randomUUID().toString(), notionalDate.toDate());
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
-        assertEquals(invoices.size(), existingInvoiceCount);
+        count = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate).size();
+        assertEquals(invoices.size(), count);
 
         // get invoice; verify amount paid is correct
         invoice = invoiceDao.getById(invoiceId.toString());
+        count = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate).size();
         assertEquals(invoice.getAmountPaid().compareTo(new BigDecimal("27.0")), 0);
 
-        // advance clock by 8 days; ensure that the number of invoices for payment hasn't changed
+        // advance clock by NUMBER_OF_DAYS_BETWEEN_RETRIES days
+        // ensure that the number of invoices for payment hasn't changed
         notionalDate = notionalDate.plusDays(NUMBER_OF_DAY_BETWEEN_RETRIES);
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
-        assertEquals(invoices.size(), existingInvoiceCount);
+        count = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate).size();
+        assertEquals(invoices.size(), count);
+    }
 
+    private List<Invoice> getInvoicesDueForPaymentAttempt(List<Invoice> invoices, DateTime date) {
+        List<Invoice> invoicesDue= new ArrayList<Invoice>();
+
+        for (Invoice invoice : invoices) {
+            if (invoice.isDueForPayment(date, NUMBER_OF_DAY_BETWEEN_RETRIES)) {
+                invoicesDue.add(invoice);
+            }
+        }
+
+        return invoicesDue;
     }
 
     @Test

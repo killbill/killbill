@@ -36,3 +36,15 @@ CREATE TABLE invoice_payments (
   PRIMARY KEY(invoice_id, payment_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX invoice_payments_unique ON invoice_payments(invoice_id, payment_id);
+
+DROP VIEW IF EXISTS invoice_payment_summary;
+CREATE VIEW invoice_payment_summary AS
+SELECT invoice_id, SUM(amount) AS total_paid, MAX(payment_date) AS last_payment_date
+FROM invoice_payments
+GROUP BY invoice_id;
+
+DROP VIEW IF EXISTS invoice_item_summary;
+CREATE VIEW invoice_item_summary AS
+SELECT invoice_id, SUM(amount) AS total_amount
+FROM invoice_items
+GROUP BY invoice_id;
