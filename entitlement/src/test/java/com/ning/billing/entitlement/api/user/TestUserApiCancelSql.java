@@ -48,24 +48,28 @@ public class TestUserApiCancelSql extends TestUserApiCancel {
         }
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testCancelSubscriptionIMM() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionIMM();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testCancelSubscriptionEOTWithChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionEOTWithChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testCancelSubscriptionEOTWithNoChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionEOTWithNoChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testUncancel() {
-        invokeRealMethod(this);
+        super.testUncancel();
     }
 
 }

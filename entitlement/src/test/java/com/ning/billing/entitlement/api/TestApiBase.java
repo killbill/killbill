@@ -177,28 +177,6 @@ public abstract class TestApiBase {
         log.warn("DONE WITH TEST\n");
     }
 
-    // Glue magic to invoke the real test
-    protected void invokeRealMethod(Object invoker)  {
-
-        try {
-            String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
-            String realMethodName= methodName + "Real";
-
-            Class<?> thisClass = invoker.getClass();
-            Class<?> superClass = thisClass.getSuperclass();
-            Method [] methods = superClass.getDeclaredMethods();
-            for (Method cur : methods) {
-                if (cur.getName().equals(realMethodName)) {
-                    cur.invoke(invoker);
-                    return;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
-    }
-
     protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet) throws EntitlementUserApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),

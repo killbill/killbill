@@ -30,23 +30,27 @@ public class TestMigrationSql extends TestMigration {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
+    @Override
     @Test(enabled=true, groups="sql")
     public void testSingleBasePlan() {
-        invokeRealMethod(this);
+        super.testSingleBasePlan();
     }
 
+    @Override
     @Test(enabled=true, groups="sql")
     public void testSingleBasePlanFutureCancelled() {
-        invokeRealMethod(this);
+        super.testSingleBasePlanFutureCancelled();
     }
 
+    @Override
     @Test(enabled=true, groups="sql")
     public void testSingleBasePlanWithPendingPhase() {
-        invokeRealMethod(this);
+        super.testSingleBasePlanWithPendingPhase();
     }
 
+    @Override
     @Test(enabled=true, groups="sql")
     public void testSingleBasePlanWithPendingChange() {
-        invokeRealMethod(this);
+        super.testSingleBasePlanWithPendingChange();
     }
 }

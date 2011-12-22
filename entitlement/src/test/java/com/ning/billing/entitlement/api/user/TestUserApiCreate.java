@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
@@ -40,8 +41,7 @@ import com.ning.billing.util.clock.DefaultClock;
 public abstract class TestUserApiCreate extends TestApiBase {
 
 
-
-    protected void testCreateWithRequestedDateReal() {
+    public void testCreateWithRequestedDate() {
         log.info("Starting testCreateWithRequestedDate");
         try {
 
@@ -73,7 +73,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
         }
     }
 
-    protected void testCreateWithInitialPhaseReal() {
+    protected void testCreateWithInitialPhase() {
         log.info("Starting testCreateWithInitialPhase");
         try {
 
@@ -113,7 +113,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
         }
     }
 
-    protected void testSimpleCreateSubscriptionReal() {
+    protected void testSimpleCreateSubscription() {
 
         log.info("Starting testSimpleCreateSubscription");
         try {
@@ -179,7 +179,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
     }
 
 
-    protected void testSimpleSubscriptionThroughPhasesReal() {
+    protected void testSimpleSubscriptionThroughPhases() {
 
         log.info("Starting testSimpleSubscriptionThroughPhases");
         try {
@@ -230,7 +230,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
         }
     }
 
-    protected void testSubscriptionWithAddOnReal() {
+    protected void testSubscriptionWithAddOn() {
 
         log.info("Starting testSubscriptionWithAddOn");
         try {

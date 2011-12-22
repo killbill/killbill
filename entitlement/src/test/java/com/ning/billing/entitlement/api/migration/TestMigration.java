@@ -54,7 +54,7 @@ import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 public abstract class TestMigration extends TestApiBase {
 
 
-    public void testSingleBasePlanReal() {
+    public void testSingleBasePlan() {
 
         try {
             DateTime beforeMigration = clock.getUTCNow();
@@ -84,7 +84,7 @@ public abstract class TestMigration extends TestApiBase {
     }
 
 
-    public void testSingleBasePlanFutureCancelledReal() {
+    public void testSingleBasePlanFutureCancelled() {
 
         try {
 
@@ -128,7 +128,7 @@ public abstract class TestMigration extends TestApiBase {
         }
     }
 
-    public void testSingleBasePlanWithPendingPhaseReal() {
+    public void testSingleBasePlanWithPendingPhase() {
 
         try {
             DateTime beforeMigration = clock.getUTCNow();
@@ -172,7 +172,7 @@ public abstract class TestMigration extends TestApiBase {
     }
 
 
-    public void testSingleBasePlanWithPendingChangeReal() {
+    public void testSingleBasePlanWithPendingChange() {
 
         try {
             DateTime beforeMigration = clock.getUTCNow();

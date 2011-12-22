@@ -38,7 +38,7 @@ import com.ning.billing.util.clock.DefaultClock;
 
 public abstract class TestUserApiCancel extends TestApiBase {
 
-    protected void testCancelSubscriptionIMMReal() {
+    protected void testCancelSubscriptionIMM() {
 
         log.info("Starting testCancelSubscriptionIMM");
 
@@ -80,7 +80,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
     }
 
 
-    protected void testCancelSubscriptionEOTWithChargeThroughDateReal() {
+    protected void testCancelSubscriptionEOTWithChargeThroughDate() {
         log.info("Starting testCancelSubscriptionEOTWithChargeThroughDate");
 
         try {
@@ -132,7 +132,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
     }
 
 
-    protected void testCancelSubscriptionEOTWithNoChargeThroughDateReal() {
+    protected void testCancelSubscriptionEOTWithNoChargeThroughDate() {
 
         log.info("Starting testCancelSubscriptionEOTWithNoChargeThroughDate");
 
@@ -176,7 +176,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
     // Similar test to testCancelSubscriptionEOTWithChargeThroughDate except we uncancel and check things
     // are as they used to be and we can move forward without hitting cancellation
     //
-    protected void testUncancelReal() {
+    protected void testUncancel() {
 
         log.info("Starting testUncancel");
 

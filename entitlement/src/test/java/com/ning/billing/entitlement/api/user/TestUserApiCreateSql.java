@@ -30,29 +30,34 @@ public class TestUserApiCreateSql extends TestUserApiCreate {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testCreateWithRequestedDate() {
-        invokeRealMethod(this);
+        super.testCreateWithRequestedDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testCreateWithInitialPhase() {
-        invokeRealMethod(this);
+        super.testCreateWithInitialPhase();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testSimpleCreateSubscription() {
-        invokeRealMethod(this);
+        super.testSimpleCreateSubscription();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     protected void testSimpleSubscriptionThroughPhases() {
-        invokeRealMethod(this);
+        super.testSimpleSubscriptionThroughPhases();
     }
 
+    @Override
     @Test(enabled=false, groups={"sql"})
     protected void testSubscriptionWithAddOn() {
-        invokeRealMethod(this);
+        super.testSubscriptionWithAddOn();
     }
 
 }
