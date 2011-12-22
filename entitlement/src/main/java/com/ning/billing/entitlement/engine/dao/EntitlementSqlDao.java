@@ -73,6 +73,11 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
+    public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey) {
+        return bundlesDao.getBundleFromKey(bundleKey);
+    }
+
+    @Override
     public List<SubscriptionBundle> getSubscriptionBundleForAccount(
             UUID accountId) {
         return bundlesDao.getBundleFromAccount(accountId.toString());

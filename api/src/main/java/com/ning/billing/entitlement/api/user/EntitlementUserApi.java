@@ -31,6 +31,8 @@ public interface EntitlementUserApi {
 
     public Subscription getSubscriptionFromId(UUID id);
 
+    public SubscriptionBundle getBundleForKey(String bundleKey);
+
     public List<SubscriptionBundle> getBundlesForAccount(UUID accountId);
 
     public List<Subscription> getSubscriptionsForBundle(UUID bundleId);

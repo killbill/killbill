@@ -33,6 +33,8 @@ public interface EntitlementDao {
     // Bundle apis
     public List<SubscriptionBundle> getSubscriptionBundleForAccount(UUID accountId);
 
+    public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey);
+
     public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId);
 
     public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle);

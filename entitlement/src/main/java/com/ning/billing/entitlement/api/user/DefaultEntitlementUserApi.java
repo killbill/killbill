@@ -66,6 +66,11 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
+    public SubscriptionBundle getBundleForKey(String bundleKey) {
+        return dao.getSubscriptionBundleFromKey(bundleKey);
+    }
+
+    @Override
     public List<SubscriptionBundle> getBundlesForAccount(UUID accountId) {
         return dao.getSubscriptionBundleForAccount(accountId);
     }

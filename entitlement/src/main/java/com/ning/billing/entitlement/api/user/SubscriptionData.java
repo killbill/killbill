@@ -183,6 +183,18 @@ public class SubscriptionData implements Subscription {
         return activeTransitions;
     }
 
+    @Override
+    public SubscriptionTransition getPendingTransition() {
+        if (transitions == null) {
+            return null;
+        }
+        for (SubscriptionTransition cur : transitions) {
+            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
+                return cur;
+            }
+        }
+        return null;
+    }
 
     public SubscriptionTransition getLatestTranstion() {
 

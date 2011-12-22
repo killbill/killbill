@@ -105,6 +105,17 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
+    public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey) {
+        for (SubscriptionBundle cur : bundles) {
+            if (cur.getKey().equals(bundleKey)) {
+                return cur;
+            }
+        }
+        return null;
+    }
+
+
+    @Override
     public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle) {
         bundles.add(bundle);
         return getSubscriptionBundleFromId(bundle.getId());

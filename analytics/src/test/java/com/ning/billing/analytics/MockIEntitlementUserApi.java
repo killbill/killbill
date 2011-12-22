@@ -106,6 +106,11 @@ public class MockIEntitlementUserApi implements EntitlementUserApi
 	@Override
 	public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec,
 			DateTime requestedDate) throws EntitlementUserApiException {
-		throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
 	}
+
+    @Override
+    public SubscriptionBundle getBundleForKey(String bundleKey) {
+        throw new UnsupportedOperationException();
+    }
 }
