@@ -14,24 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing.entitlement.events.user;
 
-import com.google.inject.Injector;
-import com.ning.billing.entitlement.api.TestApiBase;
+public class ApiEventMigrate extends ApiEventBase {
 
-public class TestUserApiPriceList extends TestApiBase  {
-
-    @Override
-    protected Injector getInjector() {
-        return null;
+    public ApiEventMigrate(ApiEventBuilder builder) {
+        super(builder.setEventType(ApiEventType.MIGRATE_ENTITLEMENT));
     }
-
-    protected void testChangeDefaultToDiscountToDefault() {
-
-    }
-
-    protected void testChangeDiscountToDefaultoDiscount() {
-
-    }
-
 }

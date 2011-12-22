@@ -355,6 +355,7 @@ public class SubscriptionData implements Subscription {
                 ApiEvent userEV = (ApiEvent) cur;
                 apiEventType = userEV.getEventType();
                 switch(apiEventType) {
+                case MIGRATE_ENTITLEMENT:
                 case CREATE:
                     nextState = SubscriptionState.ACTIVE;
                     nextPlanName = userEV.getEventPlan();

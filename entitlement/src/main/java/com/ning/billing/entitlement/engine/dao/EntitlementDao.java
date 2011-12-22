@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -68,4 +69,8 @@ public interface EntitlementDao {
     public void uncancelSubscription(UUID subscriptionId, List<EntitlementEvent> uncancelEvents);
 
     public void changePlan(UUID subscriptionId, List<EntitlementEvent> changeEvents);
+
+    public void migrate(AccountMigrationData data);
+
+    public void undoMigration(UUID accountId);
 }

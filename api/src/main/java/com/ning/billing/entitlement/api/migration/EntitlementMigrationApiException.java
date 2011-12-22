@@ -14,24 +14,25 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing.entitlement.api.migration;
 
-import com.google.inject.Injector;
-import com.ning.billing.entitlement.api.TestApiBase;
+public class EntitlementMigrationApiException extends Exception {
 
-public class TestUserApiPriceList extends TestApiBase  {
+    private static final long serialVersionUID = 7623133L;
 
-    @Override
-    protected Injector getInjector() {
-        return null;
+    public EntitlementMigrationApiException() {
+        super();
     }
 
-    protected void testChangeDefaultToDiscountToDefault() {
-
+    public EntitlementMigrationApiException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    protected void testChangeDiscountToDefaultoDiscount() {
-
+    public EntitlementMigrationApiException(String message) {
+        super(message);
     }
 
+    public EntitlementMigrationApiException(Throwable cause) {
+        super(cause);
+    }
 }

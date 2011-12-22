@@ -14,17 +14,22 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing.entitlement.api;
 
 import com.google.inject.Injector;
 import com.ning.billing.account.api.IAccount;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.config.EntitlementConfig;
-import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDao;
@@ -55,15 +60,18 @@ import java.util.UUID;
 import static org.testng.Assert.*;
 
 
-public abstract class TestUserApiBase {
+public abstract class TestApiBase {
 
-    protected static final Logger log = LoggerFactory.getLogger(TestUserApiBase.class);
+    protected static final Logger log = LoggerFactory.getLogger(TestApiBase.class);
 
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
 
     protected EntitlementService entitlementService;
     protected EntitlementUserApi entitlementApi;
     protected EntitlementBillingApi billingApi;
+
+    protected EntitlementMigrationApi migrationApi;
+
     protected CatalogService catalogService;
     protected EntitlementConfig config;
     protected EntitlementDao dao;
@@ -77,7 +85,7 @@ public abstract class TestUserApiBase {
 
     public static void loadSystemPropertiesFromClasspath( final String resource )
     {
-        final URL url = TestUserApiBase.class.getResource(resource);
+        final URL url = TestApiBase.class.getResource(resource);
         assertNotNull(url);
 
         try {
@@ -136,6 +144,7 @@ public abstract class TestUserApiBase {
         testListener = new ApiTestListener(busService.getEventBus());
         entitlementApi = entitlementService.getUserApi();
         billingApi = entitlementService.getBillingApi();
+        migrationApi = entitlementService.getMigrationApi();
 
     }
 

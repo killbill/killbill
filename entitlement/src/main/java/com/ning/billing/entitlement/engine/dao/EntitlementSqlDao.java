@@ -32,6 +32,9 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.config.EntitlementConfig;
+import com.ning.billing.entitlement.api.migration.AccountMigrationData;
+import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
+import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -338,5 +341,59 @@ public class EntitlementSqlDao implements EntitlementDao {
             result.add(reloaded);
         }
         return result;
+    }
+
+    @Override
+    public void migrate(final AccountMigrationData accountData) {
+
+        eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
+
+            @Override
+            public Void inTransaction(EventSqlDao transEventDao,
+                    TransactionStatus status) throws Exception {
+
+                SubscriptionSqlDao transSubDao = transEventDao.become(SubscriptionSqlDao.class);
+                BundleSqlDao transBundleDao = transEventDao.become(BundleSqlDao.class);
+
+                for (BundleMigrationData curBundle : accountData.getData()) {
+                    SubscriptionBundleData bundleData = curBundle.getData();
+                    for (SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
+                        SubscriptionData subData = curSubscription.getData();
+                        for (EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
+                            transEventDao.insertEvent(curEvent);
+                        }
+                        transSubDao.insertSubscription(subData);
+                    }
+                    transBundleDao.insertBundle(bundleData);
+                }
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void undoMigration(final UUID accountId) {
+
+        eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
+
+            @Override
+            public Void inTransaction(EventSqlDao transEventDao,
+                    TransactionStatus status) throws Exception {
+
+                SubscriptionSqlDao transSubDao = transEventDao.become(SubscriptionSqlDao.class);
+                BundleSqlDao transBundleDao = transEventDao.become(BundleSqlDao.class);
+
+                final List<SubscriptionBundle> bundles = transBundleDao.getBundleFromAccount(accountId.toString());
+                for (SubscriptionBundle curBundle : bundles) {
+                    List<Subscription> subscriptions = transSubDao.getSubscriptionsFromBundleId(curBundle.getId().toString());
+                    for (Subscription cur : subscriptions) {
+                        eventsDao.removeEvents(cur.getId().toString());
+                        transSubDao.removeSubscription(cur.getId().toString());
+                    }
+                    transBundleDao.removeBundle(curBundle.getId().toString());
+                }
+                return null;
+            }
+        });
     }
 }

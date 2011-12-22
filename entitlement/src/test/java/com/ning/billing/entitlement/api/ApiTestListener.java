@@ -40,6 +40,7 @@ public class ApiTestListener {
     private volatile boolean completed;
 
     public enum NextEvent {
+        MIGRATE_ENTITLEMENT,
         CREATE,
         CHANGE,
         CANCEL,
@@ -56,6 +57,9 @@ public class ApiTestListener {
     @Subscribe
     public void handleEntitlementEvent(SubscriptionTransition event) {
         switch (event.getTransitionType()) {
+        case MIGRATE_ENTITLEMENT:
+            subscriptionMigrated(event);
+            break;
         case CREATE:
             subscriptionCreated(event);
             break;
@@ -138,6 +142,12 @@ public class ApiTestListener {
         }
     }
 
+
+    public void subscriptionMigrated(SubscriptionTransition migrated) {
+        log.debug("-> Got event MIGRATED");
+        assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
+        notifyIfStackEmpty();
+    }
 
     public void subscriptionCreated(SubscriptionTransition created) {
         log.debug("-> Got event CREATED");

@@ -88,7 +88,10 @@ public class SubscriptionApiService {
             .setEffectiveDate(effectiveDate)
             .setRequestedDate(requestedDate));
 
-            PhaseEvent nextPhaseEvent = PhaseEventData.getNextPhaseEvent(curAndNextPhases[1], subscription, processedDate);
+            TimedPhase nextTimedPhase = curAndNextPhases[1];
+            PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
+                    PhaseEventData.getNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, processedDate, nextTimedPhase.getStartPhase()) :
+                        null;
             List<EntitlementEvent> events = new ArrayList<EntitlementEvent>();
             events.add(creationEvent);
             if (nextPhaseEvent != null) {
@@ -163,7 +166,9 @@ public class SubscriptionApiService {
 
         DateTime planStartDate = subscription.getCurrentPlanStart();
         TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription.getCurrentPlan(), subscription.getInitialPhaseOnCurrentPlan().getPhaseType(), now, planStartDate);
-        PhaseEvent nextPhaseEvent = PhaseEventData.getNextPhaseEvent(nextTimedPhase, subscription, now);
+        PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
+                PhaseEventData.getNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
+                    null;
         if (nextPhaseEvent != null) {
             uncancelEvents.add(nextPhaseEvent);
         }
@@ -227,7 +232,9 @@ public class SubscriptionApiService {
         .setRequestedDate(now));
 
         TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), effectiveDate);
-        PhaseEvent nextPhaseEvent = PhaseEventData.getNextPhaseEvent(nextTimedPhase, subscription, now);
+        PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
+                PhaseEventData.getNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
+                    null;
         List<EntitlementEvent> changeEvents = new ArrayList<EntitlementEvent>();
         // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.
         if (nextPhaseEvent != null && ! nextPhaseEvent.getEffectiveDate().equals(changeEvent.getEffectiveDate())) {
