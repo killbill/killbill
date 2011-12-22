@@ -16,34 +16,23 @@
 
 package com.ning.billing.payment.api;
 
-import org.apache.commons.lang.StringUtils;
-
 import com.google.common.base.Objects;
 
 public class PaymentProviderAccount {
     private final String id;
     private final String accountNumber;
-    private final String firstName;
-    private final String lastName;
-    private final String email;
-    private final String currency;
+    private final String accountName;
     private final String phoneNumber;
     private final String defaultPaymentMethodId;
 
     public PaymentProviderAccount(String id,
                                   String accountNumber,
-                                  String firstName,
-                                  String lastName,
-                                  String email,
-                                  String currency,
+                                  String accountName,
                                   String phoneNumber,
                                   String defaultPaymentMethodId) {
         this.id = id;
         this.accountNumber = accountNumber;
-        this.firstName = StringUtils.substring(firstName, 0, 100);
-        this.lastName  = StringUtils.substring(lastName, 0, 100);
-        this.email     = StringUtils.substring(lastName, 0, 80);
-        this.currency = currency;
+        this.accountName = accountName;
         this.phoneNumber = phoneNumber;
         this.defaultPaymentMethodId = defaultPaymentMethodId;
     }
@@ -56,20 +45,8 @@ public class PaymentProviderAccount {
         return accountNumber;
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public String getEmail() {
-        return email;
+    public String getAccountName() {
+        return accountName;
     }
 
     public String getPhoneNumber() {
@@ -83,10 +60,7 @@ public class PaymentProviderAccount {
     public static class Builder {
         private String id;
         private String accountNumber;
-        private String firstName;
-        private String lastName;
-        private String email;
-        private String currency;
+        private String accountName;
         private String phoneNumber;
         private String defaultPaymentMethodId;
 
@@ -100,23 +74,8 @@ public class PaymentProviderAccount {
             return this;
         }
 
-        public Builder setFirstName(String firstName) {
-            this.firstName = firstName;
-            return this;
-        }
-
-        public Builder setLastName(String lastName) {
-            this.lastName = lastName;
-            return this;
-        }
-
-        public Builder setEmail(String email) {
-            this.email = email;
-            return this;
-        }
-
-        public Builder setCurrency(String currency) {
-            this.currency = currency;
+        public Builder setAccountName(String accountName) {
+            this.accountName = accountName;
             return this;
         }
 
@@ -131,7 +90,7 @@ public class PaymentProviderAccount {
         }
 
         public PaymentProviderAccount build() {
-            return new PaymentProviderAccount(id, accountNumber, firstName, lastName, email, currency, phoneNumber, defaultPaymentMethodId);
+            return new PaymentProviderAccount(id, accountNumber, accountName, phoneNumber, defaultPaymentMethodId);
         }
 
     }
@@ -140,8 +99,7 @@ public class PaymentProviderAccount {
     public int hashCode() {
         return Objects.hashCode(id,
                                 accountNumber,
-                                firstName,
-                                lastName,
+                                accountName,
                                 phoneNumber,
                                 defaultPaymentMethodId);
     }
