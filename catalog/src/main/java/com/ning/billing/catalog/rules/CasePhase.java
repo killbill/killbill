@@ -35,8 +35,8 @@ public abstract class CasePhase<T> extends CaseStandardNaming<T> {
 	private PhaseType phaseType;	
 	
 	public T getResult(PlanPhaseSpecifier specifier, StandaloneCatalog c) throws CatalogApiException {
-		if (	
-				(phaseType       == null || specifier.getPhaseType() == null || specifier.getPhaseType() == phaseType) &&
+		if ((phaseType       == null || 
+				specifier.getPhaseType() == null || specifier.getPhaseType() == phaseType) &&
 				satisfiesCase(new PlanSpecifier(specifier), c)
 				) {
 			return getResult(); 
