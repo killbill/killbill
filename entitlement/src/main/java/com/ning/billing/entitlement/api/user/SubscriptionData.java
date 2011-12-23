@@ -183,6 +183,19 @@ public class SubscriptionData implements Subscription {
         return activeTransitions;
     }
 
+    @Override
+    public List<SubscriptionTransition> getAllTransitions() {
+        if (transitions == null) {
+            return Collections.emptyList();
+        }
+
+        List<SubscriptionTransition> result = new ArrayList<SubscriptionTransition>();
+        for (SubscriptionTransition cur : transitions) {
+            result.add(cur);
+               }
+        return result;
+    }
+
 
     public SubscriptionTransition getLatestTranstion() {
 

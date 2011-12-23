@@ -17,6 +17,7 @@
 package com.ning.billing.entitlement.api.billing;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InternationalPrice;
 import org.joda.time.DateTime;
@@ -61,20 +62,6 @@ public interface BillingEvent extends Comparable<BillingEvent> {
 
     /**
      *
-     * @return the international price for the event
-     *
-     */
-    public InternationalPrice getPrice();
-
-    /**
-     *
-     * @param currency the target currency for invoicing
-     * @return the price of the plan phase in the specified currency
-     */
-    public BigDecimal getPrice(Currency currency);
-
-    /**
-     *
      * @return the billing period for the active phase
      */
     public BillingPeriod getBillingPeriod();
@@ -90,4 +77,16 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      * @return the description of the billing event
      */
     public String getDescription();
+
+    /**
+     * 
+     * @return the fixed price for the phase
+     */
+    public InternationalPrice getFixedPrice();
+
+    /**
+     * 
+     * @return the recurring price for the phase
+     */
+    public InternationalPrice getRecurringPrice();
 }

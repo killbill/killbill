@@ -16,18 +16,22 @@
 
 package com.ning.billing.entitlement.api.billing;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.IAccount;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
-
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.events.EntitlementEvent;
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
@@ -40,13 +44,29 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     }
 
     @Override
-    public List<IAccount> getActiveAccounts() {
-        return null;
+    public SortedSet<BillingEvent> getBillingEventsForSubscription(
+            UUID accountId) {
+        
+        List<SubscriptionBundle> bundles = dao.getSubscriptionBundleForAccount(accountId);
+        List<Subscription> subscriptions = new ArrayList<Subscription>();
+        for (SubscriptionBundle bundle: bundles) {
+            subscriptions.addAll(dao.getSubscriptions(bundle.getId()));
+        }
+        List<SubscriptionTransition> transitions = new ArrayList<SubscriptionTransition>();
+        for (Subscription subscription: subscriptions) {
+            transitions.addAll(subscription.getAllTransitions());
+        }
+        
+        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
+        
+        for (SubscriptionTransition transition : transitions) {
+            result.add(createBillingEvent(transition));
+        }
+        return result;
     }
 
-    @Override
-    public SortedSet<BillingEvent> getBillingEventsForSubscription(
-            UUID subscriptionId) {
+    private BillingEvent createBillingEvent(SubscriptionTransition transition) {
+        
         return null;
     }
 
