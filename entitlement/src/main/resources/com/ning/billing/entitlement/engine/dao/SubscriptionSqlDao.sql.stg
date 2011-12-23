@@ -24,8 +24,7 @@ insertSubscription() ::= <<
 
 removeSubscription(id) ::= <<
     delete from subscriptions
-      where
-   where id = :id
+     where id = :id
     ;    
 >>
 
