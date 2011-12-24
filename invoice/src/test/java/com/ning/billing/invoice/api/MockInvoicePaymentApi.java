@@ -29,14 +29,22 @@ import com.ning.billing.catalog.api.Currency;
 public class MockInvoicePaymentApi implements InvoicePaymentApi
 {
     private final CopyOnWriteArrayList<Invoice> invoices = new CopyOnWriteArrayList<Invoice>();
+    private final CopyOnWriteArrayList<InvoicePayment> invoicePayments = new CopyOnWriteArrayList<InvoicePayment>();
 
     public void add(Invoice invoice) {
         invoices.add(invoice);
     }
 
     @Override
-    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId, DateTime paymentAttemptDate) {
-        throw new UnsupportedOperationException();
+    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+        InvoicePayment invoicePayment = new InvoicePayment(invoiceId, amount, currency, paymentAttemptId, paymentAttemptDate);
+
+        for (InvoicePayment existingInvoicePayment : invoicePayments) {
+            if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
+                invoicePayments.remove(existingInvoicePayment);
+            }
+        }
+        invoicePayments.add(invoicePayment);
     }
 
     @Override
@@ -62,7 +70,50 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public void paymentFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate) {
-        throw new UnsupportedOperationException();
+    public void paymentFailed(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+        InvoicePayment invoicePayment = new InvoicePayment(invoiceId, null, null, paymentAttemptId, paymentAttemptDate);
+        for (InvoicePayment existingInvoicePayment : invoicePayments) {
+            if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
+                invoicePayments.remove(invoicePayment);
+            }
+        }
+        invoicePayments.add(invoicePayment);
+    }
+
+    private static class InvoicePayment {
+        private final UUID invoiceId;
+        private final UUID paymentAttemptId;
+        private final DateTime paymentAttemptDate;
+        private final BigDecimal amount;
+        private final Currency currency;
+
+        public InvoicePayment(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+            this.invoiceId = invoiceId;
+            this.paymentAttemptId = paymentAttemptId;
+            this.paymentAttemptDate = paymentAttemptDate;
+            this.amount = amount;
+            this.currency = currency;
+        }
+
+        public UUID getInvoiceId() {
+            return invoiceId;
+        }
+
+        public UUID getPaymentAttemptId() {
+            return paymentAttemptId;
+        }
+
+        public DateTime getPaymentAttemptDate() {
+            return paymentAttemptDate;
+        }
+
+        public BigDecimal getAmount() {
+            return amount;
+        }
+
+        public Currency getCurrency() {
+            return currency;
+        }
+
     }
 }
