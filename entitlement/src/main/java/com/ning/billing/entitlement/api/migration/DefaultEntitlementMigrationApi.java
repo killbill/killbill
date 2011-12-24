@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -51,6 +52,7 @@ import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventMigrate;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
 
@@ -129,85 +131,20 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             EntitlementSubscriptionMigrationCase [] input, DateTime now)
         throws EntitlementMigrationApiException {
 
-        try {
-            final DateTime bundleStartDate = now;
-
-            List<EntitlementEvent> emptyEvents =  Collections.emptyList();
-
-            SubscriptionData subscriptionData = factory.createSubscription(new SubscriptionBuilder()
+        TimedMigration [] events = migrationAligner.getEventsMigration(input, now);
+        DateTime migrationStartDate= events[0].getEventTime();
+        List<EntitlementEvent> emptyEvents =  Collections.emptyList();
+        SubscriptionData subscriptionData = factory.createSubscription(new SubscriptionBuilder()
             .setId(UUID.randomUUID())
             .setBundleId(bundleId)
             .setCategory(productCategory)
-            .setBundleStartDate(bundleStartDate)
-            .setStartDate(now),
+            .setBundleStartDate(migrationStartDate)
+            .setStartDate(migrationStartDate),
             emptyEvents);
-
-            TimedMigration [] events = null;
-            Plan plan0 = catalogService.getCatalog().findPlan(input[0].getPlanPhaseSpecifer().getProductName(),
-                    input[0].getPlanPhaseSpecifer().getBillingPeriod(), input[0].getPlanPhaseSpecifer().getPriceListName());
-
-            Plan plan1 = (input.length > 1) ? catalogService.getCatalog().findPlan(input[1].getPlanPhaseSpecifer().getProductName(),
-                    input[1].getPlanPhaseSpecifer().getBillingPeriod(), input[1].getPlanPhaseSpecifer().getPriceListName()) :
-                        null;
-
-            if (isRegularMigratedSubscription(input)) {
-
-                events = migrationAligner.getEventsOnRegularMigration(subscriptionData,
-                        plan0,
-                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifer().getPhaseType()),
-                        input[0].getPlanPhaseSpecifer().getPriceListName(),
-                        now);
-
-            } else if (isRegularFutureCancelledMigratedSubscription(input)) {
-
-                events = migrationAligner.getEventsOnFuturePlanCancelMigration(subscriptionData,
-                        plan0,
-                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifer().getPhaseType()),
-                        input[0].getPlanPhaseSpecifer().getPriceListName(),
-                        now,
-                        input[0].getCancelledDate());
-
-            } else if (isPhaseChangeMigratedSubscription(input)) {
-
-                events = migrationAligner.getEventsOnFuturePhaseChangeMigration(subscriptionData,
-                        plan0,
-                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifer().getPhaseType()),
-                        input[0].getPlanPhaseSpecifer().getPriceListName(),
-                        now,
-                        input[1].getEffectiveDate());
-
-            } else if (isPlanChangeMigratedSubscription(input)) {
-
-                events = migrationAligner.getEventsOnFuturePlanChangeMigration(subscriptionData,
-                        plan0,
-                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifer().getPhaseType()),
-                        plan1,
-                        getPlanPhase(plan1, input[1].getPlanPhaseSpecifer().getPhaseType()),
-                        input[0].getPlanPhaseSpecifer().getPriceListName(),
-                        now,
-                        input[1].getEffectiveDate());
-
-            } else {
-                throw new EntitlementMigrationApiException("Unknown migration type");
-            }
-            return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, events));
-        } catch (CatalogApiException e) {
-            throw new EntitlementMigrationApiException(e);
-        }
-    }
-
-    // STEPH should be in catalog
-    private PlanPhase getPlanPhase(Plan plan, PhaseType phaseType) throws EntitlementMigrationApiException {
-        for (PlanPhase cur: plan.getAllPhases()) {
-            if (cur.getPhaseType() == phaseType) {
-                return cur;
-            }
-        }
-        throw new EntitlementMigrationApiException(String.format("Cannot find PlanPhase from Plan %s and type %s", plan.getName(), phaseType));
+        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, events));
     }
 
     private List<EntitlementEvent> toEvents(SubscriptionData subscriptionData, DateTime now, TimedMigration [] migrationEvents) {
-
 
         List<EntitlementEvent> events = new ArrayList<EntitlementEvent>(migrationEvents.length);
         for (TimedMigration cur : migrationEvents) {
@@ -247,35 +184,5 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             }
         }
         return events;
-    }
-
-    private boolean isRegularMigratedSubscription(EntitlementSubscriptionMigrationCase [] input) {
-        return (input.length == 1 && input[0].getCancelledDate() == null);
-    }
-
-    private boolean isRegularFutureCancelledMigratedSubscription(EntitlementSubscriptionMigrationCase [] input) {
-        return (input.length == 1 && input[0].getCancelledDate() != null);
-    }
-
-    private boolean isPhaseChangeMigratedSubscription(EntitlementSubscriptionMigrationCase [] input) {
-        if (input.length != 2) {
-            return false;
-        }
-        return isSamePlan(input[0].getPlanPhaseSpecifer(), input[1].getPlanPhaseSpecifer());
-    }
-
-    private boolean isPlanChangeMigratedSubscription(EntitlementSubscriptionMigrationCase [] input) {
-        if (input.length != 2) {
-            return false;
-        }
-        return ! isSamePlan(input[0].getPlanPhaseSpecifer(), input[1].getPlanPhaseSpecifer());
-    }
-
-    private boolean isSamePlan(PlanPhaseSpecifier plan0, PlanPhaseSpecifier plan1) {
-        if (plan0.getPriceListName().equals(plan1.getPriceListName()) &&
-                plan0.getProductName().equals(plan1.getProductName())) {
-            return true;
-        }
-        return false;
     }
 }
