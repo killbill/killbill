@@ -167,12 +167,9 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
 
             EntitlementEvent result = null;
             if (eventType == EventType.PHASE) {
-                EventBaseBuilder<PhaseEventBuilder> realBase = (EventBaseBuilder<PhaseEventBuilder>) base;
-                result = new PhaseEventData(new PhaseEventBuilder(realBase).setPhaseName(phaseName));
+                result = new PhaseEventData(new PhaseEventBuilder(base).setPhaseName(phaseName));
             } else if (eventType == EventType.API_USER) {
-
-                EventBaseBuilder<ApiEventBuilder> realBase = (EventBaseBuilder<ApiEventBuilder>) base;
-                ApiEventBuilder builder = new ApiEventBuilder(realBase)
+                ApiEventBuilder builder = new ApiEventBuilder(base)
                     .setEventPlan(planName)
                     .setEventPlanPhase(phaseName)
                     .setEventPriceList(priceListName)
