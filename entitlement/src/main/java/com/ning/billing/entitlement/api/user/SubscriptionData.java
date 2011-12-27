@@ -277,10 +277,10 @@ public class SubscriptionData implements Subscription {
     }
 
 
-    public DateTime getPlanChangeEffectiveDate(ActionPolicy policy, DateTime now) {
+    public DateTime getPlanChangeEffectiveDate(ActionPolicy policy, DateTime requestedDate) {
 
         if (policy == ActionPolicy.IMMEDIATE) {
-            return now;
+            return requestedDate;
         }
         if (policy != ActionPolicy.END_OF_TERM) {
             throw new EntitlementError(String.format("Unexpected policy type %s", policy.toString()));

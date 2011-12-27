@@ -132,7 +132,8 @@ public abstract class TestMigration extends TestApiBase {
 
         try {
             DateTime beforeMigration = clock.getUTCNow();
-            EntitlementAccountMigration toBeMigrated = createAccountFuturePendingPhase();
+            final DateTime trialDate = clock.getUTCNow().minusDays(10);
+            EntitlementAccountMigration toBeMigrated = createAccountFuturePendingPhase(trialDate);
             DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
@@ -146,7 +147,8 @@ public abstract class TestMigration extends TestApiBase {
             List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId());
             assertEquals(subscriptions.size(), 1);
             Subscription subscription = subscriptions.get(0);
-            assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
+
+            assertEquals(subscription.getStartDate(), trialDate);
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.TRIAL);
@@ -158,7 +160,7 @@ public abstract class TestMigration extends TestApiBase {
             clock.setDeltaFromReality(thirtyDays, 0);
             assertTrue(testListener.isCompleted(5000));
 
-            assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
+            assertEquals(subscription.getStartDate(), trialDate);
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
@@ -299,9 +301,8 @@ public abstract class TestMigration extends TestApiBase {
     }
 
 
-    private EntitlementAccountMigration createAccountFuturePendingPhase() {
+    private EntitlementAccountMigration createAccountFuturePendingPhase(final DateTime trialDate) {
         List<EntitlementSubscriptionMigrationCase> cases = new LinkedList<EntitlementSubscriptionMigrationCase>();
-        final DateTime trialDate = clock.getUTCNow().minusDays(10);
         cases.add(new EntitlementSubscriptionMigrationCase() {
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifer() {
@@ -323,7 +324,7 @@ public abstract class TestMigration extends TestApiBase {
             }
             @Override
             public DateTime getEffectiveDate() {
-                return trialDate.plusDays(31);
+                return trialDate.plusDays(30);
             }
             @Override
             public DateTime getCancelledDate() {
