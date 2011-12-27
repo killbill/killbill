@@ -57,11 +57,10 @@ public interface EntitlementMigrationApi {
      * The semantics is 'all or nothing' (atomic operation)
      *
      * @param toBeMigrated all the bundles and associated subscription that should be migrated for the account
-
      *
      */
     public void migrate(EntitlementAccountMigration toBeMigrated)
-    throws EntitlementMigrationApiException;
+        throws EntitlementMigrationApiException;
 
     /**
      * Remove all the data pertaining to that acount
