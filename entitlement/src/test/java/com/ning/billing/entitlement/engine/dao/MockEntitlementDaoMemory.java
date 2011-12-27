@@ -365,8 +365,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
 
     @Override
-    public void migrate(final AccountMigrationData accountData) {
+    public void migrate(final UUID accountId, final AccountMigrationData accountData) {
         synchronized(events) {
+
+            undoMigration(accountId);
+
             for (BundleMigrationData curBundle : accountData.getData()) {
                 SubscriptionBundleData bundleData = curBundle.getData();
                 for (SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {

@@ -181,7 +181,8 @@ public class MigrationPlanAligner {
         if (input.length != 2) {
             return false;
         }
-        return isSamePlan(input[0].getPlanPhaseSpecifer(), input[1].getPlanPhaseSpecifer());
+        return (isSamePlan(input[0].getPlanPhaseSpecifer(), input[1].getPlanPhaseSpecifer()) &&
+                !isSamePhase(input[0].getPlanPhaseSpecifer(), input[1].getPlanPhaseSpecifer()));
     }
 
     private boolean isPlanChangeMigratedSubscription(EntitlementSubscriptionMigrationCase [] input) {
@@ -194,6 +195,13 @@ public class MigrationPlanAligner {
     private boolean isSamePlan(PlanPhaseSpecifier plan0, PlanPhaseSpecifier plan1) {
         if (plan0.getPriceListName().equals(plan1.getPriceListName()) &&
                 plan0.getProductName().equals(plan1.getProductName())) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isSamePhase(PlanPhaseSpecifier plan0, PlanPhaseSpecifier plan1) {
+        if (plan0.getPhaseType() == plan1.getPhaseType()) {
             return true;
         }
         return false;

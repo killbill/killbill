@@ -72,7 +72,7 @@ public interface EntitlementDao {
 
     public void changePlan(UUID subscriptionId, List<EntitlementEvent> changeEvents);
 
-    public void migrate(AccountMigrationData data);
+    public void migrate(UUID acountId, AccountMigrationData data);
 
     public void undoMigration(UUID accountId);
 }

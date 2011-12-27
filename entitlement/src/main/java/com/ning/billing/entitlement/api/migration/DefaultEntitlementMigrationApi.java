@@ -80,7 +80,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
     public void migrate(EntitlementAccountMigration toBeMigrated)
     throws EntitlementMigrationApiException {
         AccountMigrationData accountMigrationData = createAccountMigrationData(toBeMigrated);
-        dao.migrate(accountMigrationData);
+        dao.migrate(toBeMigrated.getAccountKey(), accountMigrationData);
     }
 
     @Override

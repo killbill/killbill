@@ -349,7 +349,7 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public void migrate(final AccountMigrationData accountData) {
+    public void migrate(final UUID accountId, final AccountMigrationData accountData) {
 
         eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
 
@@ -359,6 +359,9 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                 SubscriptionSqlDao transSubDao = transEventDao.become(SubscriptionSqlDao.class);
                 BundleSqlDao transBundleDao = transEventDao.become(BundleSqlDao.class);
+
+                // First get rid of any data from account
+                undoMigrationFromTransaction(accountId, transEventDao, transBundleDao, transSubDao);
 
                 for (BundleMigrationData curBundle : accountData.getData()) {
                     SubscriptionBundleData bundleData = curBundle.getData();
@@ -387,18 +390,21 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                 SubscriptionSqlDao transSubDao = transEventDao.become(SubscriptionSqlDao.class);
                 BundleSqlDao transBundleDao = transEventDao.become(BundleSqlDao.class);
-
-                final List<SubscriptionBundle> bundles = transBundleDao.getBundleFromAccount(accountId.toString());
-                for (SubscriptionBundle curBundle : bundles) {
-                    List<Subscription> subscriptions = transSubDao.getSubscriptionsFromBundleId(curBundle.getId().toString());
-                    for (Subscription cur : subscriptions) {
-                        eventsDao.removeEvents(cur.getId().toString());
-                        transSubDao.removeSubscription(cur.getId().toString());
-                    }
-                    transBundleDao.removeBundle(curBundle.getId().toString());
-                }
+                undoMigrationFromTransaction(accountId, transEventDao, transBundleDao, transSubDao);
                 return null;
             }
         });
+    }
+
+    private void undoMigrationFromTransaction(final UUID accountId, EventSqlDao transEventDao, BundleSqlDao transBundleDao, SubscriptionSqlDao transSubDao) {
+        final List<SubscriptionBundle> bundles = transBundleDao.getBundleFromAccount(accountId.toString());
+        for (SubscriptionBundle curBundle : bundles) {
+            List<Subscription> subscriptions = transSubDao.getSubscriptionsFromBundleId(curBundle.getId().toString());
+            for (Subscription cur : subscriptions) {
+                eventsDao.removeEvents(cur.getId().toString());
+                transSubDao.removeSubscription(cur.getId().toString());
+            }
+            transBundleDao.removeBundle(curBundle.getId().toString());
+        }
     }
 }
