@@ -16,15 +16,14 @@
 
 package com.ning.billing.entitlement.api.user;
 
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.List;
-
 import org.joda.time.DateTime;
 import org.testng.Assert;
-import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;

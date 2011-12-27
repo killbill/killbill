@@ -16,13 +16,9 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.UUID;
-
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.user.ApiEventCreate;
+import java.util.UUID;
 
 public class SubscriptionBundleData implements SubscriptionBundle {
 

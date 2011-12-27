@@ -15,25 +15,23 @@
  */
 package com.ning.billing.catalog;
 
-import static org.testng.AssertJUnit.assertEquals;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.util.Date;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
-
-import org.joda.time.DateTime;
-import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
-
 import com.google.common.io.Resources;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.DefaultClock;
+import org.joda.time.DateTime;
+import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.util.Date;
+
+import static org.testng.AssertJUnit.assertEquals;
 
 public class TestVersionedCatalog {
 	private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());

@@ -16,11 +16,10 @@
 
 package com.ning.billing.catalog.io;
 
-import org.testng.annotations.Test;
-
 import com.google.common.io.Resources;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.util.config.XMLLoader;
+import org.testng.annotations.Test;
 
 public class TestXMLReader {
 

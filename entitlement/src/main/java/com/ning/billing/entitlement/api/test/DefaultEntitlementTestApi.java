@@ -16,14 +16,13 @@
 
 package com.ning.billing.entitlement.api.test;
 
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.engine.core.EventNotifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
 
 public class DefaultEntitlementTestApi implements EntitlementTestApi {
 

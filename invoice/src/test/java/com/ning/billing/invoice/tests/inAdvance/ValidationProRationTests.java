@@ -17,7 +17,7 @@
 package com.ning.billing.invoice.tests.inAdvance;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.invoice.model.IBillingMode;
+import com.ning.billing.invoice.model.BillingMode;
 import com.ning.billing.invoice.model.InAdvanceBillingMode;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.tests.ProRationTestBase;
@@ -35,7 +35,7 @@ public class ValidationProRationTests extends ProRationTestBase {
     }
 
     @Override
-    protected IBillingMode getBillingMode() {
+    protected BillingMode getBillingMode() {
         return new InAdvanceBillingMode();
     }
 

@@ -16,9 +16,9 @@
 
 package com.ning.billing.catalog.rules;
 
-import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
+import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PlanSpecifier;

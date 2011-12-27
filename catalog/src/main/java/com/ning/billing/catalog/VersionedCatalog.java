@@ -23,28 +23,37 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanChangeResult;
+import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
+
+@XmlRootElement(name="catalog")
+@XmlAccessorType(XmlAccessType.NONE)
 public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implements Catalog {
 	
 	private StandaloneCatalog currentCatalog;
 	
+	@XmlElement(name="catalogVersion", required=true)
 	private final List<StandaloneCatalog> versions = new ArrayList<StandaloneCatalog>();
 	
 	@Inject
@@ -170,8 +179,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 	}
 
 	@Override
-	public String getCalalogName() {
-		return currentCatalog.getCalalogName();
+	public String getCatalogName() {
+		return currentCatalog.getCatalogName();
 	}
 
 	@Override

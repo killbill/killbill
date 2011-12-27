@@ -25,7 +25,6 @@ import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.util.config.XMLLoader;
 
 public class DefaultCatalogService implements KillbillService, Provider<Catalog>, CatalogService {
 

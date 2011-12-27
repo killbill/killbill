@@ -16,18 +16,14 @@
 
 package com.ning.billing.catalog.rules;
 
-import javax.xml.bind.annotation.XmlElement;
-
 import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.catalog.DefaultPriceList;
-import com.ning.billing.catalog.DefaultProduct;
-import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
-import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.ValidationErrors;
+
+import javax.xml.bind.annotation.XmlElement;
 
 public abstract class CasePhase<T> extends CaseStandardNaming<T> {
 

@@ -16,12 +16,11 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import org.testng.annotations.Test;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import org.testng.annotations.Test;
 
 public class TestUserApiCreateSql extends TestUserApiCreate {
 

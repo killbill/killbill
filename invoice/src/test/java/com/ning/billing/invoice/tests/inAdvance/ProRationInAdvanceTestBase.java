@@ -16,7 +16,7 @@
 
 package com.ning.billing.invoice.tests.inAdvance;
 
-import com.ning.billing.invoice.model.IBillingMode;
+import com.ning.billing.invoice.model.BillingMode;
 import com.ning.billing.invoice.model.InAdvanceBillingMode;
 import com.ning.billing.invoice.tests.ProRationTestBase;
 import org.testng.annotations.Test;
@@ -24,7 +24,7 @@ import org.testng.annotations.Test;
 @Test(groups = {"invoicing", "proRation"})
 public abstract class ProRationInAdvanceTestBase extends ProRationTestBase {
     @Override
-    protected IBillingMode getBillingMode() {
+    protected BillingMode getBillingMode() {
         return new InAdvanceBillingMode();
     }
 }

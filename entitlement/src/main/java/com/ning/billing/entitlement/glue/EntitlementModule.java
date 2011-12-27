@@ -16,8 +16,6 @@
 
 package com.ning.billing.entitlement.glue;
 
-import org.skife.config.ConfigurationObjectFactory;
-
 import com.google.inject.AbstractModule;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
@@ -35,10 +33,11 @@ import com.ning.billing.entitlement.api.user.SubscriptionApiService;
 import com.ning.billing.entitlement.engine.core.DefaultApiEventProcessor;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.core.EventNotifier;
-import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
+import org.skife.config.ConfigurationObjectFactory;
 
 
 

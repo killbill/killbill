@@ -16,13 +16,12 @@
 
 package com.ning.billing.util.clock;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.ning.billing.catalog.api.Duration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.ning.billing.catalog.api.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 // STEPH should really be in tests but not accessible from other sub modules
 public class ClockMock extends DefaultClock {

@@ -17,31 +17,62 @@
 package com.ning.billing.analytics;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.account.api.IAccountUserApi;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.analytics.dao.BusinessAccountDao;
+import com.ning.billing.util.tag.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class BusinessAccountRecorder
 {
     private static final Logger log = LoggerFactory.getLogger(BusinessAccountRecorder.class);
 
     private final BusinessAccountDao dao;
-    private final IAccountUserApi accountApi;
+    private final AccountUserApi accountApi;
 
     @Inject
-    public BusinessAccountRecorder(final BusinessAccountDao dao, final IAccountUserApi accountApi)
+    public BusinessAccountRecorder(final BusinessAccountDao dao, final AccountUserApi accountApi)
     {
         this.dao = dao;
         this.accountApi = accountApi;
     }
 
-    public void subscriptionCreated(final IAccount created)
+    public void accountCreated(final AccountData data)
     {
+        final Account account = accountApi.getAccountByKey(data.getExternalKey());
+
+        final List<String> tags = new ArrayList<String>();
+        for (final Tag tag : account.getTagList()) {
+            tags.add(tag.getName());
+        }
+
+        // TODO Need payment and invoice api to fill most fields
+        final BusinessAccount bac = new BusinessAccount(
+            account.getExternalKey(),
+            null, // TODO
+            tags,
+            null, // TODO
+            null, // TODO
+            null, // TODO
+            null, // TODO
+            null, // TODO
+            null // TODO
+        );
+
+        log.info("ACCOUNT CREATION " + bac);
+        dao.createAccount(bac);
     }
 
-    public void subscriptionUpdated(final IAccount updated)
+    public void accountUpdated(final UUID accountId, final List<ChangedField> changedFields)
     {
+        // None of the fields updated interest us so far - see DefaultAccountChangeNotification
+        // TODO We'll need notifications for tags changes eventually
     }
 }

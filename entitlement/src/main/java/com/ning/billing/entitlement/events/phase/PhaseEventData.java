@@ -17,11 +17,10 @@
 package com.ning.billing.entitlement.events.phase;
 
 
-import org.joda.time.DateTime;
-
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.events.EventBase;
+import org.joda.time.DateTime;
 
 
 public class PhaseEventData extends EventBase implements PhaseEvent {

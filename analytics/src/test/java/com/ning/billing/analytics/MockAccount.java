@@ -16,12 +16,20 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.catalog.api.Currency;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
+import org.joda.time.DateTime;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDescription;
 
-public class MockAccount implements IAccount
+public class MockAccount implements Account
 {
     private final UUID id;
     private final String accountKey;
@@ -35,33 +43,37 @@ public class MockAccount implements IAccount
     }
 
     @Override
-    public String getName()
-    {
-        throw new UnsupportedOperationException();
+    public int getFirstNameLength() {
+        return 0;
     }
 
     @Override
     public String getEmail()
     {
-        throw new UnsupportedOperationException();
+        return "test@test.com";
     }
 
     @Override
     public String getPhone()
     {
-        throw new UnsupportedOperationException();
+        return "408-555-6665";
     }
 
     @Override
-    public String getKey()
+    public String getExternalKey()
     {
         return accountKey;
     }
 
     @Override
+    public String getName() {
+        return "firstName lastName";
+    }
+
+    @Override
     public int getBillCycleDay()
     {
-        throw new UnsupportedOperationException();
+        return 12;
     }
 
     @Override
@@ -71,32 +83,83 @@ public class MockAccount implements IAccount
     }
 
     @Override
+    public String getPaymentProviderName() {
+        return "PayPal";
+    }
+
+    @Override
     public UUID getId()
     {
         return id;
     }
 
     @Override
-    public void load()
-    {
-        throw new UnsupportedOperationException();
+    public String getFieldValue(String fieldName) {
+        throw new NotImplementedException();
     }
 
     @Override
-    public void save()
-    {
-        throw new UnsupportedOperationException();
+    public void setFieldValue(String fieldName, String fieldValue) {
+        throw new NotImplementedException();
     }
 
     @Override
-    public String getFieldValue(final String fieldName)
-    {
-        throw new UnsupportedOperationException();
+    public List<CustomField> getFieldList() {
+        throw new NotImplementedException();
     }
 
     @Override
-    public void setFieldValue(final String fieldName, final String fieldValue)
-    {
-        throw new UnsupportedOperationException();
+    public void clearFields() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public String getObjectName() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public List<Tag> getTagList() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public boolean hasTag(String tagName) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void addTag(TagDescription description, String addedBy, DateTime dateAdded) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void addTags(List<Tag> tags) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void clearTags() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void removeTag(TagDescription description) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public boolean generateInvoice() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public boolean processPayment() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public BigDecimal getBalance() {
+        return BigDecimal.ZERO;
     }
 }

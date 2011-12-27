@@ -16,12 +16,7 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.api.user.Subscription;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;

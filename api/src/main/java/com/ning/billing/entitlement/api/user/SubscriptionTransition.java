@@ -16,14 +16,13 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.util.eventbus.EventBusNotification;
+import org.joda.time.DateTime;
+
+import java.util.UUID;
 
 public interface SubscriptionTransition extends EventBusNotification {
 

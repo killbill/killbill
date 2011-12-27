@@ -17,14 +17,15 @@
 package com.ning.billing.entitlement.api.user;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertFalse;
 
-import java.util.List;
-
+import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 import org.testng.Assert;
+
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
@@ -33,8 +34,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.entitlement.api.TestApiBase;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.util.clock.DefaultClock;
+import java.util.List;
 
 public abstract class TestUserApiCancel extends TestApiBase {
 

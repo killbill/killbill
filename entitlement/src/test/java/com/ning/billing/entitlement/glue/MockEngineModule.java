@@ -17,8 +17,8 @@
 package com.ning.billing.entitlement.glue;
 
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.EventBusModule;
 
 public class MockEngineModule extends EntitlementModule {

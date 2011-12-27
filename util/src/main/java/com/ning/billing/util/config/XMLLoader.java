@@ -16,9 +16,10 @@
 
 package com.ning.billing.util.config;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
+import com.ning.billing.catalog.api.InvalidConfigException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -28,12 +29,9 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
-
-import com.ning.billing.catalog.api.InvalidConfigException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 
 public class XMLLoader {
 	public static Logger log = LoggerFactory.getLogger(XMLLoader.class);

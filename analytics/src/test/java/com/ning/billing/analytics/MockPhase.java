@@ -16,14 +16,7 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.InternationalPrice;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.Price;
-import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.*;
 
 import java.math.BigDecimal;
 import java.util.Date;
