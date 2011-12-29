@@ -54,6 +54,12 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
 
     @Override
     @Test(enabled=true, groups={"sql"})
+    public void testCorrectPhaseAlignmentOnChange() {
+        super.testCorrectPhaseAlignmentOnChange();
+    }
+
+    @Override
+    @Test(enabled=true, groups={"sql"})
     public void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
         super.testChangePlanBundleAlignEOTWithNoChargeThroughDate();
     }

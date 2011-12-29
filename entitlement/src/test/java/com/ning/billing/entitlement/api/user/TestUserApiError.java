@@ -46,7 +46,7 @@ public class TestUserApiError extends TestApiBase {
     }
 
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionBadCatalog() {
         // WRONG PRODUTCS
         tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
@@ -63,17 +63,17 @@ public class TestUserApiError extends TestApiBase {
 
     }
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionNoBundle() {
         tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BUNDLE);
     }
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionNoBP() {
         tCreateSubscriptionInternal(bundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BP);
     }
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionBPExists() {
         try {
             createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -84,7 +84,7 @@ public class TestUserApiError extends TestApiBase {
         }
     }
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionAddOnNotAvailable() {
         try {
             UUID accountId = UUID.randomUUID();
@@ -97,7 +97,7 @@ public class TestUserApiError extends TestApiBase {
         }
     }
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionAddOnIncluded() {
         try {
             UUID accountId = UUID.randomUUID();
@@ -129,7 +129,7 @@ public class TestUserApiError extends TestApiBase {
     }
 
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testChangeSubscriptionNonActive() {
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -153,7 +153,7 @@ public class TestUserApiError extends TestApiBase {
     }
 
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testChangeSubscriptionFutureCancelled() {
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -184,11 +184,11 @@ public class TestUserApiError extends TestApiBase {
     }
 
 
-    @Test(enabled=false)
+    @Test(enabled=false, groups={"fast"})
     public void testCancelBadState() {
     }
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testUncancelBadState() {
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);

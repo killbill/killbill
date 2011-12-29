@@ -447,7 +447,7 @@ Use Cases to do:
 		</plan>
 		<plan name="laser-scope-monthly">
 		<product>Laser-Scope</product>
-		   <initialPhases>
+           <initialPhases>
               <phase type="DISCOUNT">
                  <duration>
                     <unit>MONTHS</unit>
@@ -475,6 +475,20 @@ Use Cases to do:
 		</plan>
 		<plan name="telescopic-scope-monthly">
 			<product>Telescopic-Scope</product>
+			<initialPhases>
+              <phase type="DISCOUNT">
+                 <duration>
+                    <unit>MONTHS</unit>
+                    <number>1</number>
+                  </duration>
+                 <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                      <price><currency>USD</currency><value>399.95</value></price>                             
+                      <price><currency>EUR</currency><value>299.95</value></price>
+                      <price><currency>GBP</currency><value>399.95</value></price>
+                      </recurringPrice>
+                </phase>
+            </initialPhases>
 			<finalPhase type="EVERGREEN">
 				<duration>
 					<unit>UNLIMITED</unit>

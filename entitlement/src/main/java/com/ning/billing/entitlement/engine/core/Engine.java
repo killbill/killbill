@@ -187,7 +187,7 @@ public class Engine implements EventListener, EntitlementService {
     private void insertNextPhaseEvent(SubscriptionData subscription) {
         try {
             DateTime now = clock.getUTCNow();
-            TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription.getCurrentPlan(), subscription.getInitialPhaseOnCurrentPlan().getPhaseType(), now, subscription.getCurrentPlanStart());
+            TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now);
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                     PhaseEventData.getNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
                         null;

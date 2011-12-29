@@ -182,8 +182,6 @@ public abstract class TestApiBase {
 
     @AfterMethod(groups={"setup"})
     public void cleanupTest() {
-
-
         ((Engine)entitlementService).stop();
         log.warn("DONE WITH TEST\n");
     }

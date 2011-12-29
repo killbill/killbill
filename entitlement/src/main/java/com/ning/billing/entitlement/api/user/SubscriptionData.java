@@ -231,6 +231,7 @@ public class SubscriptionData implements Subscription {
         return paidThroughDate;
     }
 
+    /*
     public DateTime getCurrentPlanStart() {
         return getInitialTransitionForCurrentPlan().getEffectiveTransitionTime();
     }
@@ -238,8 +239,8 @@ public class SubscriptionData implements Subscription {
     public PlanPhase getInitialPhaseOnCurrentPlan() {
         return getInitialTransitionForCurrentPlan().getNextPhase();
     }
-
-    private SubscriptionTransitionData getInitialTransitionForCurrentPlan() {
+*/
+    public SubscriptionTransitionData getInitialTransitionForCurrentPlan() {
         if (transitions == null) {
             throw new EntitlementError(String.format("No transitions for subscription %s", getId()));
         }
