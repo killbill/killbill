@@ -27,6 +27,8 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
@@ -87,6 +89,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         return dao.createSubscriptionBundle(bundle);
     }
 
+
     @Override
     public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate) throws EntitlementUserApiException {
 
@@ -103,7 +106,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             Plan plan = catalogService.getCatalog().findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList);
 
 
-            PlanPhase phase = (plan.getInitialPhases() != null) ? plan.getInitialPhases()[0] : plan.getFinalPhase();
+            PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new EntitlementError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
                         spec.getProductName(), spec.getBillingPeriod().toString(), realPriceList));
@@ -116,7 +119,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
             DateTime bundleStartDate = null;
             Subscription baseSubscription = dao.getBaseSubscription(bundleId);
-
             switch(plan.getProduct().getCategory()) {
             case BASE:
                 if (baseSubscription != null) {
@@ -128,6 +130,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                 if (baseSubscription == null) {
                     throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_NO_BP, bundleId);
                 }
+                checkAddonCreationRights(baseSubscription, plan);
                 bundleStartDate = baseSubscription.getStartDate();
                 break;
             default:
@@ -135,7 +138,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                         plan.getProduct().getCategory().toString()));
             }
 
-            SubscriptionData subscription = apiService.createBasePlan(new SubscriptionBuilder()
+            SubscriptionData subscription = apiService.createPlan(new SubscriptionBuilder()
             .setId(UUID.randomUUID())
             .setBundleId(bundleId)
             .setCategory(plan.getProduct().getCategory())
@@ -147,5 +150,30 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }
+    }
+
+    private void checkAddonCreationRights(Subscription baseSubscription, Plan targetAddOnPlan)
+        throws EntitlementUserApiException, CatalogApiException {
+
+        if (baseSubscription.getState() != SubscriptionState.ACTIVE) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
+        }
+
+        Product targetAddonProduct = targetAddOnPlan.getProduct();
+        Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
+
+        Product [] includedAddOns = baseProduct.getIncluded();
+        for (Product curInc : includedAddOns) {
+            if (curInc.getName().equals(targetAddonProduct.getName())) {
+                throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED, targetAddOnPlan.getName(), baseProduct.getName());
+            }
+        }
+        Product[] availableAddOns = baseProduct.getAvailable();
+        for (Product curAv : availableAddOns) {
+            if (curAv.getName().equals(targetAddonProduct.getName())) {
+                return;
+            }
+        }
+        throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE, targetAddOnPlan.getName(), baseProduct.getName());
     }
 }

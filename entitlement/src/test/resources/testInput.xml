@@ -51,13 +51,13 @@ Use Cases to do:
 	<products>
 		<product name="Pistol">
 			<category>BASE</category>
-			<available>
-				<addonProduct>Telescopic-Scope</addonProduct>
-				<addonProduct>Laser-Scope</addonProduct>
-			</available>
 		</product>
 		<product name="Shotgun">
 			<category>BASE</category>
+            <available>
+                <addonProduct>Telescopic-Scope</addonProduct>
+                <addonProduct>Laser-Scope</addonProduct>
+            </available>
 		</product>
 		<product name="Assault-Rifle">
 			<category>BASE</category>
@@ -447,6 +447,20 @@ Use Cases to do:
 		</plan>
 		<plan name="laser-scope-monthly">
 		<product>Laser-Scope</product>
+		   <initialPhases>
+              <phase type="DISCOUNT">
+                 <duration>
+                    <unit>MONTHS</unit>
+                    <number>1</number>
+                  </duration>
+                 <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                      <price><currency>USD</currency><value>999.95</value></price>                             
+                      <price><currency>EUR</currency><value>499.95</value></price>
+                      <price><currency>GBP</currency><value>999.95</value></price>
+                      </recurringPrice>
+                </phase>
+            </initialPhases>
 			<finalPhase type="EVERGREEN">
 				<duration>
 					<unit>UNLIMITED</unit>

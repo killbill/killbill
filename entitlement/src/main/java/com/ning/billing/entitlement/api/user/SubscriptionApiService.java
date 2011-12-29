@@ -52,13 +52,13 @@ public class SubscriptionApiService {
 
 
 
-    public SubscriptionData createBasePlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
+    public SubscriptionData createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
             String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate)
         throws EntitlementUserApiException {
 
         try {
-            SubscriptionData subscription = new SubscriptionData(builder, this, clock);
 
+            SubscriptionData subscription = new SubscriptionData(builder, this, clock);
 
             TimedPhase [] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(subscription, plan, initialPhase, realPriceList, effectiveDate);
             ApiEventCreate creationEvent = new ApiEventCreate(new ApiEventBuilder()

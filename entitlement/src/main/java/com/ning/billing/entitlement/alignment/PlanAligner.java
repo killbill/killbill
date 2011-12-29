@@ -163,9 +163,13 @@ public class PlanAligner  {
         PlanPhase currentPhase = subscription.getCurrentPhase();
         Plan currentPlan = subscription.getCurrentPlan();
         String currentPriceList = subscription.getCurrentPriceList();
+        ProductCategory currentCategory = currentPlan.getProduct().getCategory();
+        if (currentCategory != ProductCategory.BASE) {
+            throw new EntitlementError(String.format("Only implemented changePlan for BasePlan"));
+        }
 
         PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                currentPlan.getProduct().getCategory(),
+                currentCategory,
                 currentPlan.getBillingPeriod(),
                 currentPriceList,
                 currentPhase.getPhaseType());
@@ -208,6 +212,7 @@ public class PlanAligner  {
         DateTime curPhaseStart = (initialPhase == null) ? initialPhaseStartDate : null;
         DateTime nextPhaseStart = null;
         for (PlanPhase cur : plan.getAllPhases()) {
+            // For create we can specifcy the phase so skip any phase until we reach initialPhase
             if (curPhaseStart == null) {
                 if (initialPhase != cur.getPhaseType()) {
                     continue;

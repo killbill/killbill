@@ -68,9 +68,9 @@ public class TestUserApiError extends TestApiBase {
         tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BUNDLE);
     }
 
-    @Test(enabled=false)
+    @Test(enabled=true)
     public void testCreateSubscriptionNoBP() {
-        //tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BP);
+        tCreateSubscriptionInternal(bundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BP);
     }
 
     @Test(enabled=true)
@@ -83,6 +83,33 @@ public class TestUserApiError extends TestApiBase {
             Assert.assertFalse(true);
         }
     }
+
+    @Test(enabled=true)
+    public void testCreateSubscriptionAddOnNotAvailable() {
+        try {
+            UUID accountId = UUID.randomUUID();
+            SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle");
+            createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.assertFalse(true);
+        }
+    }
+
+    @Test(enabled=true)
+    public void testCreateSubscriptionAddOnIncluded() {
+        try {
+            UUID accountId = UUID.randomUUID();
+            SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle");
+            createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.assertFalse(true);
+        }
+    }
+
 
     private void tCreateSubscriptionInternal(UUID bundleId, String productName,
             BillingPeriod term, String planSet, ErrorCode expected)  {
