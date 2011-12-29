@@ -135,9 +135,6 @@ Use Cases to do:
 		</changePolicy>
 		<changeAlignment>
 			<changeAlignmentCase>
-				<alignment>START_OF_SUBSCRIPTION</alignment>
-			</changeAlignmentCase>
-			<changeAlignmentCase>
 				<toPriceList>rescue</toPriceList>
 				<alignment>CHANGE_OF_PLAN</alignment>
 			</changeAlignmentCase>
@@ -146,20 +143,23 @@ Use Cases to do:
 				<toPriceList>rescue</toPriceList>
 				<alignment>CHANGE_OF_PRICELIST</alignment>
 			</changeAlignmentCase>
+            <changeAlignmentCase>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </changeAlignmentCase>
 		</changeAlignment>
 		<cancelPolicy>
-			<cancelPolicyCase>
-				<policy>END_OF_TERM</policy>
-			</cancelPolicyCase>
 			<cancelPolicyCase>
 				<phaseType>TRIAL</phaseType>
 				<policy>IMMEDIATE</policy>
 			</cancelPolicyCase>
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
 		</cancelPolicy>
 		<createAlignment>
-			<createAlignmentCase>
-				<alignment>START_OF_BUNDLE</alignment>
-			</createAlignmentCase>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
 		</createAlignment>
 		<billingAlignment>
 		<billingAlignmentCase>

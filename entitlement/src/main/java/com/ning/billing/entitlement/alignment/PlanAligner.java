@@ -66,7 +66,8 @@ public class PlanAligner  {
     public TimedPhase [] getCurrentAndNextTimedPhaseOnCreate(SubscriptionData subscription,
             Plan plan, PhaseType initialPhase, String priceList, DateTime effectiveDate)
         throws CatalogApiException, EntitlementUserApiException {
-        List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription, plan, initialPhase, priceList, effectiveDate);
+        List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getStartDate(),
+                subscription.getBundleStartDate(), plan, initialPhase, priceList);
         TimedPhase [] result = new TimedPhase[2];
         result[0] = getTimedPhase(timedPhases, effectiveDate, WhichPhase.CURRENT);
         result[1] = getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
@@ -126,13 +127,15 @@ public class PlanAligner  {
             }
 
             switch(lastPlanTransition.getTransitionType()) {
-            // If we never had any Plan change, this a simple Phase alignement based on initial Phase and startPhaseDate
+            // If we never had any Plan change, borrow the logics for createPlan alignment
             case CREATE:
-                DateTime initialStartPhase = subscription.getStartDate();
-                PhaseType initialPhase = lastPlanTransition.getNextPhase().getPhaseType();
-                List<TimedPhase> timedPhases = getPhaseAlignments(subscription.getCurrentPlan(), initialPhase, initialStartPhase);
+                List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getStartDate(),
+                        subscription.getBundleStartDate(),
+                        lastPlanTransition.getNextPlan(),
+                        lastPlanTransition.getNextPhase().getPhaseType(),
+                        lastPlanTransition.getNextPriceList());
                 return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
-            // If we went through Plan changes, look at previous Plan Transition and borrow changePlan logics to recompute everything
+            // If we went through Plan changes, borrow the logics for chnagePlan alignement
             case CHANGE:
                 return getTimedPhaseOnChange(subscription.getStartDate(),
                         subscription.getBundleStartDate(),
@@ -151,8 +154,9 @@ public class PlanAligner  {
         }
     }
 
-    private List<TimedPhase> getTimedPhaseOnCreate(SubscriptionData subscription,
-            Plan plan, PhaseType initialPhase, String priceList, DateTime effectiveDate)
+    private List<TimedPhase> getTimedPhaseOnCreate(DateTime subscriptionStartDate,
+            DateTime bundleStartDate,
+            Plan plan, PhaseType initialPhase, String priceList)
         throws CatalogApiException, EntitlementUserApiException  {
 
         Catalog catalog = catalogService.getCatalog();
@@ -163,15 +167,14 @@ public class PlanAligner  {
                 priceList);
 
         DateTime planStartDate = null;
-        PlanAlignmentCreate alignement = null;
-        alignement = catalog.planCreateAlignment(planSpecifier);
+        PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier);
 
         switch(alignement) {
         case START_OF_SUBSCRIPTION:
-            planStartDate = subscription.getStartDate();
+            planStartDate = subscriptionStartDate;
             break;
         case START_OF_BUNDLE:
-            planStartDate = subscription.getBundleStartDate();
+            planStartDate = bundleStartDate;
             break;
         default:
             throw new EntitlementError(String.format("Unknwon PlanAlignmentCreate %s", alignement));
@@ -204,6 +207,7 @@ public class PlanAligner  {
 
         Catalog catalog = catalogService.getCatalog();
         ProductCategory currentCategory = currentPlan.getProduct().getCategory();
+        // STEPH tiered ADDON not implemented yet
         if (currentCategory != ProductCategory.BASE) {
             throw new EntitlementError(String.format("Only implemented changePlan for BasePlan"));
         }
@@ -294,7 +298,7 @@ public class PlanAligner  {
         case NEXT:
             return next;
         default:
-            throw new EntitlementError(String.format("Unepected %s TimedPhase", which));
+            throw new EntitlementError(String.format("Unexpected %s TimedPhase", which));
         }
     }
 }
