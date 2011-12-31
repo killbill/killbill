@@ -135,7 +135,7 @@ public class PlanAligner  {
                         lastPlanTransition.getNextPhase().getPhaseType(),
                         lastPlanTransition.getNextPriceList());
                 return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
-            // If we went through Plan changes, borrow the logics for chnagePlan alignement
+            // If we went through Plan changes, borrow the logics for changePlan alignement
             case CHANGE:
                 return getTimedPhaseOnChange(subscription.getStartDate(),
                         subscription.getBundleStartDate(),
@@ -149,7 +149,7 @@ public class PlanAligner  {
                 throw new EntitlementError(String.format("Unexpectd initial transition %s for current plan %s on subscription %s",
                         lastPlanTransition.getTransitionType(), subscription.getCurrentPlan(), subscription.getId()));
             }
-        } catch (Exception /*EntitlementUserApiException, CatalogApiException */ e) {
+        } catch (Exception /* EntitlementUserApiException, CatalogApiException */ e) {
             throw new EntitlementError(String.format("Could not compute next phase change for subscription %s", subscription.getId()), e);
         }
     }

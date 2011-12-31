@@ -40,7 +40,10 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestUserApiAddOn extends TestApiBase {
 
@@ -48,6 +51,76 @@ public class TestUserApiAddOn extends TestApiBase {
     public Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
+
+
+    @Test(enabled=true, groups={"sql"})
+    public void testCancelBPWthAddon() {
+        try {
+
+            String baseProduct = "Shotgun";
+            BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            // CREATE BP
+            SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+
+            String aoProduct = "Telescopic-Scope";
+            BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            DateTime beforeAOCreation = clock.getUTCNow();
+            SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+            DateTime afterAOCreation = clock.getUTCNow();
+
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+
+            // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
+            Duration twoMonths = getDurationMonth(2);
+            clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
+            assertTrue(testListener.isCompleted(5000));
+
+            // SET CTD TO CANCEL IN FUTURE
+            DateTime now = clock.getUTCNow();
+            Duration ctd = getDurationMonth(1);
+            DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate);
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+
+            // FUTURE CANCELLATION
+            baseSubscription.cancel(now, false);
+
+            // REFETCH AO SUBSCRIPTION AND CHECK THIS IS FUTURE CANCELLED
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+
+
+            /*
+             * STEPH not true because this will only happen when CANCEL event is being processed
+             * => isFutureCancelled is broken for AO
+                SubscriptionTransition aaPendingSubscription = aoSubscription.getPendingTransition();
+                assertNotNull(aaPendingSubscription);
+                assertEquals(aaPendingSubscription.getTransitionType(), SubscriptionTransitionType.CANCEL);
+             */
+
+            // MOVE AFTER CANCELLATION
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            clock.addDeltaFromReality(ctd);
+            now = clock.getUTCNow();
+            assertTrue(testListener.isCompleted(5000));
+
+            // REFETCH AO SUBSCRIPTION AND CHECK THIS IS FUTURE CANCELLED
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
+
+
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
 
     @Test(enabled=true, groups={"sql"})
     public void testAddonCreateWithBundleAlign() {
@@ -118,7 +191,7 @@ public class TestUserApiAddOn extends TestApiBase {
             Duration someTimeLater = getDurationDay(13);
             clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
 
-            // CREATE ADDON (ALIGN BUNDLE)
+            // CREATE ADDON
             DateTime beforeAOCreation = clock.getUTCNow();
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
             DateTime afterAOCreation = clock.getUTCNow();

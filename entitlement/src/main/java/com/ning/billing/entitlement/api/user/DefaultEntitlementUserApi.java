@@ -30,6 +30,7 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
@@ -41,14 +42,17 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     private final EntitlementDao dao;
     private final CatalogService catalogService;
     private final SubscriptionApiService apiService;
+    private final AddonUtils addonUtils;
 
     @Inject
-    public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, CatalogService catalogService, SubscriptionApiService apiService) {
+    public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, CatalogService catalogService,
+            SubscriptionApiService apiService, AddonUtils addonUtils) {
         super();
         this.clock = clock;
         this.apiService = apiService;
         this.dao = dao;
         this.catalogService = catalogService;
+        this.addonUtils = addonUtils;
     }
 
     @Override
@@ -159,21 +163,14 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
         }
 
-        Product targetAddonProduct = targetAddOnPlan.getProduct();
-        Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
+        if (addonUtils.isAddonIncluded(baseSubscription, targetAddOnPlan)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED,
+                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
+        }
 
-        Product [] includedAddOns = baseProduct.getIncluded();
-        for (Product curInc : includedAddOns) {
-            if (curInc.getName().equals(targetAddonProduct.getName())) {
-                throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED, targetAddOnPlan.getName(), baseProduct.getName());
-            }
+        if (!addonUtils.isAddonAvailable(baseSubscription, targetAddOnPlan)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE,
+                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
         }
-        Product[] availableAddOns = baseProduct.getAvailable();
-        for (Product curAv : availableAddOns) {
-            if (curAv.getName().equals(targetAddonProduct.getName())) {
-                return;
-            }
-        }
-        throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE, targetAddOnPlan.getName(), baseProduct.getName());
     }
 }

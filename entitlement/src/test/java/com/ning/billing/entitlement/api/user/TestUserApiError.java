@@ -36,6 +36,7 @@ import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class TestUserApiError extends TestApiBase {
 
@@ -157,13 +158,21 @@ public class TestUserApiError extends TestApiBase {
     public void testChangeSubscriptionFutureCancelled() {
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            PlanPhase trialPhase = subscription.getCurrentPhase();
+
+            // MOVE TO NEXT PHASE
+            PlanPhase currentPhase = subscription.getCurrentPhase();
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
+            assertTrue(testListener.isCompleted(3000));
+
 
             // SET CTD TO CANCEL IN FUTURE
-            PlanPhase trialPhase = subscription.getCurrentPhase();
             DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId());
 
             subscription.cancel(clock.getUTCNow(), false);

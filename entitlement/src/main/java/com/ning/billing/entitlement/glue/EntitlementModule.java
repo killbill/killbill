@@ -30,6 +30,7 @@ import com.ning.billing.entitlement.api.test.EntitlementTestApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionApiService;
+import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.DefaultApiEventProcessor;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.core.EventNotifier;
@@ -66,6 +67,7 @@ public class EntitlementModule extends AbstractModule {
         bind(EntitlementService.class).to(Engine.class).asEagerSingleton();
         bind(Engine.class).asEagerSingleton();
         bind(PlanAligner.class).asEagerSingleton();
+        bind(AddonUtils.class).asEagerSingleton();
         bind(MigrationPlanAligner.class).asEagerSingleton();
         bind(EntitlementTestApi.class).to(DefaultEntitlementTestApi.class).asEagerSingleton();
         bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();

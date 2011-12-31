@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.api.user;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.*;
+import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
@@ -231,15 +232,6 @@ public class SubscriptionData implements Subscription {
         return paidThroughDate;
     }
 
-    /*
-    public DateTime getCurrentPlanStart() {
-        return getInitialTransitionForCurrentPlan().getEffectiveTransitionTime();
-    }
-
-    public PlanPhase getInitialPhaseOnCurrentPlan() {
-        return getInitialTransitionForCurrentPlan().getNextPhase();
-    }
-*/
     public SubscriptionTransitionData getInitialTransitionForCurrentPlan() {
         if (transitions == null) {
             throw new EntitlementError(String.format("No transitions for subscription %s", getId()));
