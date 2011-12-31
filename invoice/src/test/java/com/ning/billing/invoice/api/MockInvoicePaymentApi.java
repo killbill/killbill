@@ -74,46 +74,20 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
         InvoicePayment invoicePayment = new InvoicePayment(invoiceId, null, null, paymentAttemptId, paymentAttemptDate);
         for (InvoicePayment existingInvoicePayment : invoicePayments) {
             if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
-                invoicePayments.remove(invoicePayment);
+                invoicePayments.remove(existingInvoicePayment);
             }
         }
         invoicePayments.add(invoicePayment);
     }
 
-    private static class InvoicePayment {
-        private final UUID invoiceId;
-        private final UUID paymentAttemptId;
-        private final DateTime paymentAttemptDate;
-        private final BigDecimal amount;
-        private final Currency currency;
-
-        public InvoicePayment(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
-            this.invoiceId = invoiceId;
-            this.paymentAttemptId = paymentAttemptId;
-            this.paymentAttemptDate = paymentAttemptDate;
-            this.amount = amount;
-            this.currency = currency;
+    @Override
+    public InvoicePayment getInvoicePayment(UUID invoiceId, UUID paymentAttemptId) {
+        for (InvoicePayment existingInvoicePayment : invoicePayments) {
+            if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
+                return existingInvoicePayment;
+            }
         }
-
-        public UUID getInvoiceId() {
-            return invoiceId;
-        }
-
-        public UUID getPaymentAttemptId() {
-            return paymentAttemptId;
-        }
-
-        public DateTime getPaymentAttemptDate() {
-            return paymentAttemptDate;
-        }
-
-        public BigDecimal getAmount() {
-            return amount;
-        }
-
-        public Currency getCurrency() {
-            return currency;
-        }
-
+        return null;
     }
+
 }

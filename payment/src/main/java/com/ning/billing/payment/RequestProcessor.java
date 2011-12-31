@@ -79,11 +79,17 @@ public class RequestProcessor {
                         Either<PaymentError, PaymentInfo> result = plugin.processInvoice(account, invoice);
 
                         if (result.isLeft()) {
-                            invoiceApi.paymentFailed(invoice.getId(), paymentAttempt.getPaymentAttemptId(), paymentAttempt.getPaymentAttemptDate());
+                            invoiceApi.paymentFailed(invoice.getId(),
+                                                     paymentAttempt.getPaymentAttemptId(),
+                                                     paymentAttempt.getPaymentAttemptDate());
                         }
                         else {
                             updatePaymentAttemptWithPaymentInfoId(result.getRight().getId(), plugin);
-                            invoiceApi.paymentSuccessful(invoice.getId(), paymentAmount, invoice.getCurrency(), paymentAttempt.getPaymentAttemptId(), paymentAttempt.getPaymentAttemptDate());
+                            invoiceApi.paymentSuccessful(invoice.getId(),
+                                                         paymentAmount,
+                                                         invoice.getCurrency(),
+                                                         paymentAttempt.getPaymentAttemptId(),
+                                                         paymentAttempt.getPaymentAttemptDate());
                         }
                         eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
                     }

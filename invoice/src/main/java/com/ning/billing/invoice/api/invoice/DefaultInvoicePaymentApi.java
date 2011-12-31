@@ -19,11 +19,13 @@ package com.ning.billing.invoice.api.invoice;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.IDBI;
+
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 
@@ -54,4 +56,10 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     public Invoice getInvoice(UUID invoiceId) {
         return dao.getById(invoiceId.toString());
     }
+
+    @Override
+    public InvoicePayment getInvoicePayment(UUID invoiceId, UUID paymentAttemptId) {
+        throw new UnsupportedOperationException();
+    }
+
 }
