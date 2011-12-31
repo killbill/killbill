@@ -58,7 +58,7 @@ public class TestPaymentProvider {
     @Inject
     protected MockAccountUserApi accountUserApi;
     @Inject
-    protected MockInvoicePaymentApi invoiceApi;
+    protected MockInvoicePaymentApi invoicePaymentApi;
 
     private MockPaymentInfoReceiver paymentInfoReceiver;
 
@@ -76,59 +76,16 @@ public class TestPaymentProvider {
         eventBus.stop();
     }
 
-    protected Account createAccount() {
+    protected Account createTestAccount() {
         String name = "First" + RandomStringUtils.random(5) + " " + "Last" + RandomStringUtils.random(5);
         String externalKey = "12345";
         return accountUserApi.createAccount(UUID.randomUUID(), externalKey, "user@example.com", name, name.length(), "123-456-7890", Currency.USD, 1, null, BigDecimal.ZERO);
     }
 
-    protected Invoice createInvoice(Account account,
-                                    DateTime targetDate,
-                                    Currency currency) {
-        Invoice invoice = new DefaultInvoice(account.getId(), targetDate, currency);
-
-        invoiceApi.add(invoice);
-        return invoice;
-    }
-
-    protected InvoiceCreationNotification createNotificationFor(final Invoice invoice) {
-        return new InvoiceCreationNotification() {
-            @Override
-            public UUID getInvoiceId() {
-                return invoice.getId();
-            }
-
-            @Override
-            public DateTime getInvoiceCreationDate() {
-                return invoice.getInvoiceDate();
-            }
-
-            @Override
-            public Currency getCurrency() {
-                return invoice.getCurrency();
-            }
-
-            @Override
-            public BigDecimal getAmountOwed() {
-                return invoice.getAmountOutstanding();
-            }
-
-            @Override
-            public UUID getAccountId() {
-                return invoice.getAccountId();
-            }
-        };
-    }
-
     @Test
     public void testSimpleInvoice() throws Exception {
-        final Account account = createAccount();
-        final DateTime now = new DateTime();
-        final UUID subscriptionId = UUID.randomUUID();
-        final BigDecimal amount = new BigDecimal("10.00");
-        final Invoice invoice = createInvoice(account, now, Currency.USD);
-
-        invoice.add(new DefaultInvoiceItem(invoice.getId(), subscriptionId, now, now.plusMonths(1), "Test", amount, new BigDecimal("1.0"), Currency.USD));
+        final Account account = createTestAccount();
+        final Invoice invoice = createTestInvoice(account);
 
         eventBus.post(createNotificationFor(invoice));
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
@@ -163,4 +120,53 @@ public class TestPaymentProvider {
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
         assertEquals(paymentInfoReceiver.getProcessedPayments().get(0), paymentInfo);
     }
+
+    protected Invoice createTestInvoice(final Account account) {
+        final DateTime now = new DateTime();
+        final UUID subscriptionId = UUID.randomUUID();
+        final BigDecimal amount = new BigDecimal("10.00");
+        final Invoice invoice = createInvoice(account, now, Currency.USD);
+
+        invoice.add(new DefaultInvoiceItem(invoice.getId(), subscriptionId, now, now.plusMonths(1), "Test", amount, new BigDecimal("1.0"), Currency.USD));
+        return invoice;
+    }
+
+    protected Invoice createInvoice(Account account,
+                                    DateTime targetDate,
+                                    Currency currency) {
+        Invoice invoice = new DefaultInvoice(account.getId(), targetDate, currency);
+
+        invoicePaymentApi.add(invoice);
+        return invoice;
+    }
+
+    protected InvoiceCreationNotification createNotificationFor(final Invoice invoice) {
+        return new InvoiceCreationNotification() {
+            @Override
+            public UUID getInvoiceId() {
+                return invoice.getId();
+            }
+
+            @Override
+            public DateTime getInvoiceCreationDate() {
+                return invoice.getInvoiceDate();
+            }
+
+            @Override
+            public Currency getCurrency() {
+                return invoice.getCurrency();
+            }
+
+            @Override
+            public BigDecimal getAmountOwed() {
+                return invoice.getAmountOutstanding();
+            }
+
+            @Override
+            public UUID getAccountId() {
+                return invoice.getAccountId();
+            }
+        };
+    }
+
 }

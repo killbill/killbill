@@ -75,9 +75,20 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
         InvoicePayment invoicePayment = new InvoicePayment(invoiceId, null, null, paymentAttemptId, paymentAttemptDate);
         for (InvoicePayment existingInvoicePayment : invoicePayments) {
             if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
-                invoicePayments.remove(invoicePayment);
+                invoicePayments.remove(existingInvoicePayment);
             }
         }
         invoicePayments.add(invoicePayment);
     }
+
+    @Override
+    public InvoicePayment getInvoicePayment(UUID invoiceId, UUID paymentAttemptId) {
+        for (InvoicePayment existingInvoicePayment : invoicePayments) {
+            if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
+                return existingInvoicePayment;
+            }
+        }
+        return null;
+    }
+
 }

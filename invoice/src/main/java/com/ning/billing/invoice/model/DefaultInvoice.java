@@ -16,26 +16,27 @@
 
 package com.ning.billing.invoice.model;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.util.clock.DefaultClock;
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.clock.DefaultClock;
+
 public class DefaultInvoice implements Invoice {
     private final InvoiceItemList items = new InvoiceItemList();
     private final UUID id;
-    private UUID accountId;
+    private final UUID accountId;
     private final DateTime invoiceDate;
     private final DateTime targetDate;
-    private Currency currency;
-    private BigDecimal amountPaid;
-    private DateTime lastPaymentAttempt;
+    private final Currency currency;
+    private final BigDecimal amountPaid;
+    private final DateTime lastPaymentAttempt;
 
     public DefaultInvoice(UUID accountId, DateTime targetDate, Currency currency) {
         this(UUID.randomUUID(), accountId, new DefaultClock().getUTCNow(), targetDate, currency, null, BigDecimal.ZERO, new ArrayList<InvoiceItem>());
@@ -132,5 +133,11 @@ public class DefaultInvoice implements Invoice {
 
         return lastPaymentAttempt.plusDays(numberOfDays).isBefore(targetDate);
     }
+
+    @Override
+    public String toString() {
+        return "DefaultInvoice [items=" + items + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + amountPaid + ", lastPaymentAttempt=" + lastPaymentAttempt + "]";
+    }
+
 }
 
