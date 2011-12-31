@@ -25,6 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.InvoicePayment;
 
 public class MockInvoicePaymentApi implements InvoicePaymentApi
 {
@@ -78,42 +79,5 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
             }
         }
         invoicePayments.add(invoicePayment);
-    }
-
-    private static class InvoicePayment {
-        private final UUID invoiceId;
-        private final UUID paymentAttemptId;
-        private final DateTime paymentAttemptDate;
-        private final BigDecimal amount;
-        private final Currency currency;
-
-        public InvoicePayment(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
-            this.invoiceId = invoiceId;
-            this.paymentAttemptId = paymentAttemptId;
-            this.paymentAttemptDate = paymentAttemptDate;
-            this.amount = amount;
-            this.currency = currency;
-        }
-
-        public UUID getInvoiceId() {
-            return invoiceId;
-        }
-
-        public UUID getPaymentAttemptId() {
-            return paymentAttemptId;
-        }
-
-        public DateTime getPaymentAttemptDate() {
-            return paymentAttemptDate;
-        }
-
-        public BigDecimal getAmount() {
-            return amount;
-        }
-
-        public Currency getCurrency() {
-            return currency;
-        }
-
     }
 }
