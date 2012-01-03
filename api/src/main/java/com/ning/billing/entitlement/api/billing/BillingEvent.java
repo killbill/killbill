@@ -16,14 +16,15 @@
 
 package com.ning.billing.entitlement.api.billing;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InternationalPrice;
-import org.joda.time.DateTime;
-
-import java.math.BigDecimal;
-import java.util.UUID;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
@@ -89,4 +90,20 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      * @return the recurring price for the phase
      */
     public InternationalPrice getRecurringPrice();
+
+    /**
+     * Syntactic sugar to wrap currency access call
+     * 
+     * @param currency
+     * @return price value
+     */
+    public BigDecimal getRecurringPrice(Currency currency) throws CatalogApiException ;
+
+    /**
+     * Syntactic sugar to wrap currency access call
+     * 
+     * @param currency
+     * @return price value
+     */
+    public BigDecimal getFixedPrice(Currency currency) throws CatalogApiException ;
 }

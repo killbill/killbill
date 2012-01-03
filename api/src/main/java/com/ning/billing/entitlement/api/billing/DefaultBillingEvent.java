@@ -39,8 +39,8 @@ public class DefaultBillingEvent implements BillingEvent {
     final private BillingMode billingMode;
     final private BillingPeriod billingPeriod;
     
-    public DefaultBillingEvent(SubscriptionTransition transition) {
-        billCycleDay;
+    public DefaultBillingEvent(SubscriptionTransition transition, int billCycleDay) {
+        this.billCycleDay = billCycleDay;
         subscriptionId = transition.getSubscriptionId();
         effectiveDate = transition.getEffectiveTransitionTime();
         planPhaseName = transition.getNextPhase().getName();
@@ -52,11 +52,42 @@ public class DefaultBillingEvent implements BillingEvent {
         billingPeriod = transition.getNextPhase().getBillingPeriod();
         
     }
+
+    // Intended for test only
+    public DefaultBillingEvent(UUID subscriptionId, DateTime effectiveDate, String planName, String planPhaseName, InternationalPrice fixedPrice,
+            InternationalPrice recurringPrice, BillingPeriod billingPeriod, int billCycleDay, BillingMode billingMode, String description) {
+        this.subscriptionId = subscriptionId;
+        this.effectiveDate = effectiveDate;
+        this.planName = planName;
+        this.planPhaseName = planPhaseName;
+        this.fixedPrice = fixedPrice;
+        this.recurringPrice = recurringPrice;
+        this.billingPeriod = billingPeriod;
+        this.billCycleDay = billCycleDay;
+        this.billingMode = billingMode;
+        this.description = description;
+    }
+
+//    public DefaultBillingEvent(BillingEvent event, DateTime effectiveDate) {
+//        this.subscriptionId = event.getSubscriptionId();
+//        this.startDate = startDate;
+//        this.planName = event.getPlanName();
+//        this.planPhaseName = event.getPlanPhaseName();
+//        this.price = event.getPrice();
+//        this.billingPeriod = event.getBillingPeriod();
+//        this.billCycleDay = event.getBillCycleDay();
+//        this.billingMode = event.getBillingMode();
+//    }
+
     
     @Override
     public int compareTo(BillingEvent e1) {
         if (getSubscriptionId().equals(e1.getSubscriptionId())) {
-            return getEffectiveDate().compareTo(e1.getEffectiveDate());
+            if (getEffectiveDate().equals(e1.getEffectiveDate())) { //ordering with a HashSet fails if we get equality
+                return hashCode() - e1.hashCode();
+            } else {
+                return getEffectiveDate().compareTo(e1.getEffectiveDate());
+            }
         } else {
             return getSubscriptionId().compareTo(e1.getSubscriptionId());
         }
@@ -111,5 +142,14 @@ public class DefaultBillingEvent implements BillingEvent {
     public InternationalPrice getRecurringPrice() {
         return recurringPrice;
     }
+    @Override
+    public BigDecimal getFixedPrice(Currency currency) throws CatalogApiException {
+        return fixedPrice.getPrice(currency);
+    }
 
+    @Override
+    public BigDecimal getRecurringPrice(Currency currency) throws CatalogApiException {
+        return recurringPrice.getPrice(currency);
+    }
+    
 }
