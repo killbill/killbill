@@ -39,7 +39,6 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -59,6 +58,9 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
 
     @SqlUpdate
     public int claimEvent(@Bind("owner") String owner, @Bind("next_available") Date nextAvailable, @Bind("event_id") String eventId, @Bind("now") Date now);
+
+    @SqlUpdate
+    public void removeEvents(@Bind("subscription_id") String subscriptionId);
 
     @SqlUpdate
     public void clearEvent(@Bind("event_id") String eventId, @Bind("owner") String owner);
@@ -154,12 +156,9 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
 
             EntitlementEvent result = null;
             if (eventType == EventType.PHASE) {
-                EventBaseBuilder<PhaseEventBuilder> realBase = (EventBaseBuilder<PhaseEventBuilder>) base;
-                result = new PhaseEventData(new PhaseEventBuilder(realBase).setPhaseName(phaseName));
+                result = new PhaseEventData(new PhaseEventBuilder(base).setPhaseName(phaseName));
             } else if (eventType == EventType.API_USER) {
-
-                EventBaseBuilder<ApiEventBuilder> realBase = (EventBaseBuilder<ApiEventBuilder>) base;
-                ApiEventBuilder builder = new ApiEventBuilder(realBase)
+                ApiEventBuilder builder = new ApiEventBuilder(base)
                     .setEventPlan(planName)
                     .setEventPlanPhase(phaseName)
                     .setEventPriceList(priceListName)
@@ -167,6 +166,8 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
 
                 if (userType == ApiEventType.CREATE) {
                     result = new ApiEventCreate(builder);
+                } else if (userType == ApiEventType.MIGRATE_ENTITLEMENT) {
+                    result = new ApiEventMigrate(builder);
                 } else if (userType == ApiEventType.CHANGE) {
                     result = new ApiEventChange(builder);
                 } else if (userType == ApiEventType.CANCEL) {

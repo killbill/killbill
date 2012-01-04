@@ -30,35 +30,40 @@ public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
     }
 
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
-        invokeRealMethod(this);
+         super.testChangePlanBundleAlignEOTWithNoChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testChangePlanBundleAlignEOTWithChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testChangePlanBundleAlignEOTWithChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testChangePlanBundleAlignIMM() {
-        invokeRealMethod(this);
+        super.testChangePlanBundleAlignIMM();
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testMultipleChangeLastIMM() {
-        invokeRealMethod(this);
+        super.testMultipleChangeLastIMM();
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testMultipleChangeLastEOT() {
-        invokeRealMethod(this);
+        super.testMultipleChangeLastEOT();
     }
 
     // Set to false until we implement rescue example.
+    @Override
     @Test(enabled=false, groups={"fast"})
     public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testChangePlanChangePlanAlignEOTWithChargeThroughDate();
     }
-
 }

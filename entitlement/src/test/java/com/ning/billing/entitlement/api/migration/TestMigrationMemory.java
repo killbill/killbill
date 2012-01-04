@@ -14,43 +14,42 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing.entitlement.api.migration;
+
+import org.testng.annotations.Test;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
-import org.testng.annotations.Test;
 
-public class TestUserApiCancelMemory extends TestUserApiCancel {
-
-
+public class TestMigrationMemory extends TestMigration {
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());
+        return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleMemory());
     }
 
     @Override
-    @Test(enabled=true, groups={"fast"})
-    public void testCancelSubscriptionIMM() {
-        super.testCancelSubscriptionIMM();
+    @Test(enabled=true, groups="fast")
+    public void testSingleBasePlan() {
+        super.testSingleBasePlan();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast"})
-    public void testCancelSubscriptionEOTWithChargeThroughDate() {
-        super.testCancelSubscriptionEOTWithChargeThroughDate();
+    @Test(enabled=true, groups="fast")
+    public void testSingleBasePlanFutureCancelled() {
+        super.testSingleBasePlanFutureCancelled();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast"})
-    public void testCancelSubscriptionEOTWithNoChargeThroughDate() {
-        super.testCancelSubscriptionEOTWithNoChargeThroughDate();
+    @Test(enabled=true, groups="fast")
+    public void testSingleBasePlanWithPendingPhase() {
+        super.testSingleBasePlanWithPendingPhase();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast"})
-    public void testUncancel() {
-        super.testUncancel();
+    @Test(enabled=true, groups="fast")
+    public void testSingleBasePlanWithPendingChange() {
+        super.testSingleBasePlanWithPendingChange();
     }
 }

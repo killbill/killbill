@@ -30,29 +30,30 @@ public class TestUserApiCreateMemory extends TestUserApiCreate {
         return Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testCreateWithRequestedDate() {
-        invokeRealMethod(this);
+        super.testCreateWithRequestedDate();
     }
 
     @Test(enabled=true, groups={"fast"})
     public void testCreateWithInitialPhase() {
-        invokeRealMethod(this);
+        super.testSimpleSubscriptionThroughPhases();
     }
 
     @Test(enabled=true, groups={"fast"})
     public void testSimpleCreateSubscription() {
-        invokeRealMethod(this);
+        super.testSimpleCreateSubscription();
     }
 
     @Test(enabled=true, groups={"fast"})
     protected void testSimpleSubscriptionThroughPhases() {
-        invokeRealMethod(this);
+        super.testSimpleSubscriptionThroughPhases();
     }
 
     @Test(enabled=false, groups={"fast"})
     protected void testSubscriptionWithAddOn() {
-        invokeRealMethod(this);
+        super.testSubscriptionWithAddOn();
     }
 
 }

@@ -22,6 +22,12 @@ insertSubscription() ::= <<
     );
 >>
 
+removeSubscription(id) ::= <<
+    delete from subscriptions
+     where id = :id
+    ;    
+>>
+
 getSubscriptionFromId(id) ::= <<
     select
         id

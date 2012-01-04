@@ -24,7 +24,9 @@ import org.joda.time.DateTime;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -104,9 +106,13 @@ public class MockIEntitlementUserApi implements EntitlementUserApi
     }
 
 	@Override
-	public Subscription createSubscription(UUID bundleId, String productName,
-			BillingPeriod term, String priceList, PhaseType initialPhase,
+	public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec,
 			DateTime requestedDate) throws EntitlementUserApiException {
-		throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
 	}
+
+    @Override
+    public SubscriptionBundle getBundleForKey(String bundleKey) {
+        throw new UnsupportedOperationException();
+    }
 }

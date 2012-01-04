@@ -17,8 +17,9 @@
 package com.ning.billing.entitlement.api.user;
 
 import com.google.inject.Injector;
+import com.ning.billing.entitlement.api.TestApiBase;
 
-public class TestUserApiPriceList extends TestUserApiBase  {
+public class TestUserApiPriceList extends TestApiBase  {
 
     @Override
     protected Injector getInjector() {
