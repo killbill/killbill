@@ -68,9 +68,7 @@ public class TestUserApiAddOn extends TestApiBase {
             BillingPeriod aoTerm = BillingPeriod.MONTHLY;
             String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            DateTime beforeAOCreation = clock.getUTCNow();
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
-            DateTime afterAOCreation = clock.getUTCNow();
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -91,18 +89,9 @@ public class TestUserApiAddOn extends TestApiBase {
             // FUTURE CANCELLATION
             baseSubscription.cancel(now, false);
 
-            // REFETCH AO SUBSCRIPTION AND CHECK THIS IS FUTURE CANCELLED
+            // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
-
-
-            /*
-             * STEPH not true because this will only happen when CANCEL event is being processed
-             * => isFutureCancelled is broken for AO
-                SubscriptionTransition aaPendingSubscription = aoSubscription.getPendingTransition();
-                assertNotNull(aaPendingSubscription);
-                assertEquals(aaPendingSubscription.getTransitionType(), SubscriptionTransitionType.CANCEL);
-             */
 
             // MOVE AFTER CANCELLATION
             testListener.reset();
@@ -111,10 +100,9 @@ public class TestUserApiAddOn extends TestApiBase {
             now = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
 
-            // REFETCH AO SUBSCRIPTION AND CHECK THIS IS FUTURE CANCELLED
+            // REFETCH AO SUBSCRIPTION AND CHECK THIS IS CANCELLED
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
-
 
         } catch (Exception e) {
             Assert.fail(e.getMessage());
@@ -123,6 +111,121 @@ public class TestUserApiAddOn extends TestApiBase {
 
 
     @Test(enabled=true, groups={"sql"})
+    public void testChangeBPWthAddonNonIncluded() {
+        try {
+
+            String baseProduct = "Shotgun";
+            BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            // CREATE BP
+            SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+
+            String aoProduct = "Telescopic-Scope";
+            BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+
+            // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
+            Duration twoMonths = getDurationMonth(2);
+            clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
+            assertTrue(testListener.isCompleted(5000));
+
+            // SET CTD TO CANCEL IN FUTURE
+            DateTime now = clock.getUTCNow();
+            Duration ctd = getDurationMonth(1);
+            DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate);
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+
+            // CHANGE IMMEDIATELY WITH TO BP WITH NON INCLUDED ADDON
+            String newBaseProduct = "Assault-Rifle";
+            BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
+            String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now);
+            assertTrue(testListener.isCompleted(5000));
+
+            // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
+
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
+    @Test(enabled=true, groups={"sql"})
+    public void testChangeBPWthAddonNonAvailable() {
+        try {
+
+            String baseProduct = "Shotgun";
+            BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            // CREATE BP
+            SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+
+            String aoProduct = "Telescopic-Scope";
+            BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+
+            // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
+            Duration twoMonths = getDurationMonth(2);
+            clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
+            assertTrue(testListener.isCompleted(5000));
+
+            // SET CTD TO CANCEL IN FUTURE
+            DateTime now = clock.getUTCNow();
+            Duration ctd = getDurationMonth(1);
+            DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate);
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+
+            // CHANGE IMMEDIATELY WITH TO BP WITH NON AVAILABLE ADDON
+            String newBaseProduct = "Pistol";
+            BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
+            String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now);
+
+
+            // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+
+            // MOVE AFTER CHANGE
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            clock.addDeltaFromReality(ctd);
+            now = clock.getUTCNow();
+            assertTrue(testListener.isCompleted(5000));
+
+
+            // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
+
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
+
+    @Test(enabled=false, groups={"sql"})
     public void testAddonCreateWithBundleAlign() {
         try {
             String aoProduct = "Telescopic-Scope";

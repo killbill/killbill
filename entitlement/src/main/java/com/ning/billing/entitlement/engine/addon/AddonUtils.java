@@ -23,6 +23,9 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 
 public class AddonUtils {
 
@@ -34,7 +37,11 @@ public class AddonUtils {
         this.catalogService = catalogService;
     }
 
-    public boolean isAddonAvailable(Subscription baseSubscription, Plan targetAddOnPlan) {
+    public boolean isAddonAvailable(SubscriptionData baseSubscription, Plan targetAddOnPlan) {
+
+        if (baseSubscription.getState() == SubscriptionState.CANCELLED) {
+            return false;
+        }
 
         Product targetAddonProduct = targetAddOnPlan.getProduct();
         Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
@@ -48,7 +55,12 @@ public class AddonUtils {
         return false;
     }
 
-    public boolean isAddonIncluded(Subscription baseSubscription, Plan targetAddOnPlan) {
+    public boolean isAddonIncluded(SubscriptionData baseSubscription, Plan targetAddOnPlan) {
+
+        if (baseSubscription.getState() == SubscriptionState.CANCELLED) {
+            return false;
+        }
+
         Product targetAddonProduct = targetAddOnPlan.getProduct();
         Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
 

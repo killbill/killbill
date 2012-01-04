@@ -122,7 +122,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             }
 
             DateTime bundleStartDate = null;
-            Subscription baseSubscription = dao.getBaseSubscription(bundleId);
+            SubscriptionData baseSubscription = (SubscriptionData) dao.getBaseSubscription(bundleId);
             switch(plan.getProduct().getCategory()) {
             case BASE:
                 if (baseSubscription != null) {
@@ -143,11 +143,11 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             }
 
             SubscriptionData subscription = apiService.createPlan(new SubscriptionBuilder()
-            .setId(UUID.randomUUID())
-            .setBundleId(bundleId)
-            .setCategory(plan.getProduct().getCategory())
-            .setBundleStartDate(bundleStartDate)
-            .setStartDate(effectiveDate),
+                .setId(UUID.randomUUID())
+                .setBundleId(bundleId)
+                .setCategory(plan.getProduct().getCategory())
+                .setBundleStartDate(bundleStartDate)
+                .setStartDate(effectiveDate),
             plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now);
 
             return subscription;
@@ -156,7 +156,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         }
     }
 
-    private void checkAddonCreationRights(Subscription baseSubscription, Plan targetAddOnPlan)
+    private void checkAddonCreationRights(SubscriptionData baseSubscription, Plan targetAddOnPlan)
         throws EntitlementUserApiException, CatalogApiException {
 
         if (baseSubscription.getState() != SubscriptionState.ACTIVE) {

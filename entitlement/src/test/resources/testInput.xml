@@ -91,33 +91,18 @@ Use Cases to do:
 				<phaseType>TRIAL</phaseType>
 				<policy>IMMEDIATE</policy>
 			</changePolicyCase>
-			<changePolicyCase> 
-				<toProduct>Pistol</toProduct>
-				<policy>END_OF_TERM</policy>
-			</changePolicyCase>
+            <changePolicyCase> 
+                <toProduct>Assault-Rifle</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase> 
+                <fromProduct>Pistol</fromProduct>            
+                <toProduct>Shotgun</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
 			<changePolicyCase> 
 				<toPriceList>rescue</toPriceList>
 				<policy>END_OF_TERM</policy>
-			</changePolicyCase>		
-			<changePolicyCase> 
-				<fromProduct>Pistol</fromProduct>
-				<toProduct>Shotgun</toProduct>
-				<policy>IMMEDIATE</policy>
-			</changePolicyCase>
-			<changePolicyCase> 
-				<fromProduct>Assault-Rifle</fromProduct>
-				<toProduct>Shotgun</toProduct>
-				<policy>END_OF_TERM</policy>
-			</changePolicyCase>
-			<changePolicyCase> 
-				<fromBillingPeriod>MONTHLY</fromBillingPeriod>
-				<toProduct>Assault-Rifle</toProduct>
-				<toBillingPeriod>MONTHLY</toBillingPeriod>
-				<policy>END_OF_TERM</policy>
-			</changePolicyCase>
-			<changePolicyCase> 
-				<toProduct>Assault-Rifle</toProduct>
-				<policy>IMMEDIATE</policy>
 			</changePolicyCase>
 			<changePolicyCase> 
 				<fromBillingPeriod>MONTHLY</fromBillingPeriod>
@@ -157,6 +142,10 @@ Use Cases to do:
             </cancelPolicyCase>
 		</cancelPolicy>
 		<createAlignment>
+		    <createAlignmentCase>
+		        <product>Laser-Scope</product>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </createAlignmentCase>
             <createAlignmentCase>
                 <alignment>START_OF_BUNDLE</alignment>
             </createAlignmentCase>

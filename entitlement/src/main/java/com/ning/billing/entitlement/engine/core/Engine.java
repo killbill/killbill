@@ -76,7 +76,6 @@ public class Engine implements EventListener, EntitlementService {
     private final EntitlementBillingApi billingApi;
     private final EntitlementTestApi testApi;
     private final EntitlementMigrationApi migrationApi;
-    private final CatalogService catalogService;
     private final AddonUtils addonUtils;
     private final EventBus eventBus;
 
@@ -86,8 +85,8 @@ public class Engine implements EventListener, EntitlementService {
     public Engine(Clock clock, EntitlementDao dao, EventNotifier apiEventProcessor,
             PlanAligner planAligner, EntitlementConfig config, DefaultEntitlementUserApi userApi,
             DefaultEntitlementBillingApi billingApi, DefaultEntitlementTestApi testApi,
-            DefaultEntitlementMigrationApi migrationApi, CatalogService catalogService,
-            AddonUtils addonUtils, EventBus eventBus) {
+            DefaultEntitlementMigrationApi migrationApi, AddonUtils addonUtils, EventBus eventBus) {
+
         super();
         this.clock = clock;
         this.dao = dao;
@@ -97,7 +96,6 @@ public class Engine implements EventListener, EntitlementService {
         this.testApi = testApi;
         this.billingApi = billingApi;
         this.migrationApi = migrationApi;
-        this.catalogService = catalogService;
         this.addonUtils = addonUtils;
         this.eventBus = eventBus;
 
@@ -162,7 +160,7 @@ public class Engine implements EventListener, EntitlementService {
             onPhaseEvent(subscription);
         } else if (event.getType() == EventType.API_USER &&
                 subscription.getCategory() == ProductCategory.BASE) {
-            onBasePlanEvent(subscription, event);
+            onBasePlanEvent(subscription, (ApiEvent) event);
         }
         try {
             eventBus.post(subscription.getTransitionFromEvent(event));
@@ -222,11 +220,11 @@ public class Engine implements EventListener, EntitlementService {
         }
     }
 
-    private void onBasePlanEvent(SubscriptionData baseSubscription, EntitlementEvent event) {
+    private void onBasePlanEvent(SubscriptionData baseSubscription, ApiEvent event) {
 
         DateTime now = clock.getUTCNow();
 
-        List<Subscription> subscriptions = dao.getSubscriptions(baseSubscription.getId());
+        List<Subscription> subscriptions = dao.getSubscriptions(baseSubscription.getBundleId());
         Iterator<Subscription> it = subscriptions.iterator();
         while (it.hasNext()) {
             SubscriptionData cur = (SubscriptionData) it.next();
