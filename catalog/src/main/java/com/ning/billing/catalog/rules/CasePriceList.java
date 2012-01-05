@@ -25,37 +25,66 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
 
 public class CasePriceList extends Case<DefaultPriceList> {
+    @XmlElement(required=false, name="fromProduct")
+    @XmlIDREF
+    private DefaultProduct fromProduct;
+    
+    @XmlElement(required=false, name="fromProductCategory")
+    private ProductCategory fromProductCategory;
+    
+    @XmlElement(required=false, name="fromBillingPeriod")
+    private BillingPeriod fromBillingPeriod;
+    
+    @XmlElement(required=false, name="fromPriceList")
+    @XmlIDREF
+    private DefaultPriceList fromPriceList;
 
-	private DefaultPriceList toPriceList;
+    @XmlElement(required=true, name="toPriceList")
+    @XmlIDREF
+    private DefaultPriceList toPriceList;
 
-	@XmlElement(required=false, name="fromProduct")
-	@XmlIDREF
-	public DefaultProduct getProduct(){
-		return product;
-	}
+    public DefaultProduct getProduct(){
+        return fromProduct;
+    }
 
-	@XmlElement(required=false, name="fromProductCategory")
-	public ProductCategory getProductCategory() {
-		return productCategory;
-	}
+    public ProductCategory getProductCategory() {
+        return fromProductCategory;
+    }
 
-	@XmlElement(required=false, name="fromBillingPeriod")
-	public BillingPeriod getBillingPeriod() {
-		return billingPeriod;
-	}
-	
-	@XmlElement(required=false, name="fromPriceList")
-	@XmlIDREF
-	public DefaultPriceList getPriceList() {
-		return priceList;
-	}
+    public BillingPeriod getBillingPeriod() {
+        return fromBillingPeriod;
+    }
+    
+    public DefaultPriceList getPriceList() {
+        return fromPriceList;
+    }
 
-	@Override
-	@XmlElement(required=true, name="toPriceList")
-	@XmlIDREF
-	protected DefaultPriceList getResult() {
-		return toPriceList;
-	}
+    protected DefaultPriceList getResult() {
+        return toPriceList;
+    }
+
+    protected CasePriceList setProduct(DefaultProduct product) {
+        this.fromProduct = product;
+        return this;
+    }
+
+    protected CasePriceList setProductCategory(ProductCategory productCategory) {
+        this.fromProductCategory = productCategory;
+        return this;
+    }
+
+    protected CasePriceList setBillingPeriod(BillingPeriod billingPeriod) {
+        this.fromBillingPeriod = billingPeriod;
+        return this;
+    }
+
+    protected CasePriceList setPriceList(DefaultPriceList priceList) {
+        this.fromPriceList = priceList;
+        return this;
+    }
+    
+    
+
 
 	protected CasePriceList setToPriceList(DefaultPriceList toPriceList) {
 		this.toPriceList = toPriceList;
