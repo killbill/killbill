@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.Either;
@@ -32,10 +34,20 @@ import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
 
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     private final Map<String, PaymentInfo> payments = new ConcurrentHashMap<String, PaymentInfo>();
+    private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
 
     @Override
     public Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice) {
-        PaymentInfo payment = new PaymentInfo.Builder().setId(UUID.randomUUID().toString()).build();
+        PaymentInfo payment = new PaymentInfo.Builder().setId(UUID.randomUUID().toString())
+                                            .setAmount(invoice.getAmountOutstanding())
+                                            .setStatus("Processed")
+                                            .setBankIdentificationNumber("1234")
+                                            .setCreatedDate(new DateTime())
+                                            .setEffectiveDate(new DateTime())
+                                            .setPaymentNumber("12345")
+                                            .setReferenceId("12345")
+                                            .setType("Electronic")
+                                            .build();
 
         payments.put(payment.getId(), payment);
         return Either.right(payment);
@@ -55,8 +67,18 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(Account account) {
-        // TODO
-        return Either.left(new PaymentError("unknown", "Not implemented"));
+        if (account != null) {
+            PaymentProviderAccount paymentProviderAccount = accounts.put(account.getExternalKey(),
+                                                                         new PaymentProviderAccount.Builder().setAccountName(account.getExternalKey())
+                                                                                                             .setAccountNumber(account.getExternalKey())
+                                                                                                             .setId(account.getId().toString())
+                                                                                                             .build());
+
+            return Either.right(paymentProviderAccount);
+        }
+        else {
+            return Either.left(new PaymentError("unknown", "Did not get account to create payment provider account"));
+        }
     }
 
     @Override

@@ -3,7 +3,7 @@ CREATE TABLE events (
     id int(11) unsigned NOT NULL AUTO_INCREMENT,
     event_id char(36) NOT NULL,
     event_type varchar(9) NOT NULL,
-    user_type varchar(10) DEFAULT NULL,
+    user_type varchar(25) DEFAULT NULL,
     created_dt datetime NOT NULL,
     updated_dt datetime NOT NULL,
     requested_dt datetime NOT NULL,

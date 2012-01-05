@@ -38,9 +38,12 @@ public class AnalyticsListener
     public void handleSubscriptionTransitionChange(final SubscriptionTransition event)
     {
         switch (event.getTransitionType()) {
+            case MIGRATE_ENTITLEMENT:
+                // TODO do nothing for now
+            break;
             case CREATE:
                 bstRecorder.subscriptionCreated(event);
-                break;
+            break;
             case CANCEL:
                 bstRecorder.subscriptionCancelled(event);
                 break;

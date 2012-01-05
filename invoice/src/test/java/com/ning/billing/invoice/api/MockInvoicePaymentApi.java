@@ -25,18 +25,27 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.InvoicePayment;
 
 public class MockInvoicePaymentApi implements InvoicePaymentApi
 {
     private final CopyOnWriteArrayList<Invoice> invoices = new CopyOnWriteArrayList<Invoice>();
+    private final CopyOnWriteArrayList<InvoicePayment> invoicePayments = new CopyOnWriteArrayList<InvoicePayment>();
 
     public void add(Invoice invoice) {
         invoices.add(invoice);
     }
 
     @Override
-    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId, DateTime paymentAttemptDate) {
-        throw new UnsupportedOperationException();
+    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+        InvoicePayment invoicePayment = new InvoicePayment(invoiceId, amount, currency, paymentAttemptId, paymentAttemptDate);
+
+        for (InvoicePayment existingInvoicePayment : invoicePayments) {
+            if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
+                invoicePayments.remove(existingInvoicePayment);
+            }
+        }
+        invoicePayments.add(invoicePayment);
     }
 
     @Override
@@ -62,7 +71,24 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public void paymentFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate) {
-        throw new UnsupportedOperationException();
+    public void paymentFailed(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+        InvoicePayment invoicePayment = new InvoicePayment(invoiceId, null, null, paymentAttemptId, paymentAttemptDate);
+        for (InvoicePayment existingInvoicePayment : invoicePayments) {
+            if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
+                invoicePayments.remove(existingInvoicePayment);
+            }
+        }
+        invoicePayments.add(invoicePayment);
     }
+
+    @Override
+    public InvoicePayment getInvoicePayment(UUID invoiceId, UUID paymentAttemptId) {
+        for (InvoicePayment existingInvoicePayment : invoicePayments) {
+            if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
+                return existingInvoicePayment;
+            }
+        }
+        return null;
+    }
+
 }

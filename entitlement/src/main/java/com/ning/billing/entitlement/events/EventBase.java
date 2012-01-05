@@ -37,7 +37,7 @@ public abstract class EventBase implements EntitlementEvent {
     private DateTime nextAvailableProcessingTime;
     private EventLifecycleState processingState;
 
-    public EventBase(EventBaseBuilder builder) {
+    public EventBase(EventBaseBuilder<?> builder) {
         this.uuid = builder.getUuid();
         this.subscriptionId = builder.getSubscriptionId();
         this.requestedDate = builder.getRequestedDate();

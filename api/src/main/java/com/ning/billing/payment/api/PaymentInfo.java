@@ -26,6 +26,113 @@ import com.google.common.base.Objects;
 import com.ning.billing.util.eventbus.EventBusNotification;
 
 public class PaymentInfo implements EventBusNotification {
+    private final String id;
+    private final BigDecimal amount;
+    private final BigDecimal refundAmount;
+    private final BigDecimal appliedCreditBalanceAmount;
+    private final String paymentNumber;
+    private final String bankIdentificationNumber;
+    private final String status;
+    private final String type;
+    private final String referenceId;
+    private final DateTime effectiveDate;
+    private final DateTime createdDate;
+    private final DateTime updatedDate;
+
+    public PaymentInfo(PaymentInfo src) {
+        this.id = src.id;
+        this.amount = src.amount;
+        this.refundAmount = src.refundAmount;
+        this.appliedCreditBalanceAmount = src.appliedCreditBalanceAmount;
+        this.paymentNumber = src.paymentNumber;
+        this.bankIdentificationNumber = src.bankIdentificationNumber;
+        this.status = src.status;
+        this.type = src.type;
+        this.referenceId = src.referenceId;
+        this.effectiveDate = src.effectiveDate;
+        this.createdDate = src.createdDate;
+        this.updatedDate = src.updatedDate;
+    }
+
+    @JsonCreator
+    public PaymentInfo(@JsonProperty("id") String id,
+                       @JsonProperty("amount") BigDecimal amount,
+                       @JsonProperty("appliedCreditBalanceAmount") BigDecimal appliedCreditBalanceAmount,
+                       @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
+                       @JsonProperty("paymentNumber") String paymentNumber,
+                       @JsonProperty("refundAmount") BigDecimal refundAmount,
+                       @JsonProperty("status") String status,
+                       @JsonProperty("type") String type,
+                       @JsonProperty("referenceId") String referenceId,
+                       @JsonProperty("effectiveDate") DateTime effectiveDate,
+                       @JsonProperty("createdDate") DateTime createdDate,
+                       @JsonProperty("updatedDate") DateTime updatedDate) {
+        this.id = id;
+        this.amount = amount;
+        this.appliedCreditBalanceAmount = appliedCreditBalanceAmount;
+        this.bankIdentificationNumber = bankIdentificationNumber;
+        this.createdDate = createdDate;
+        this.effectiveDate = effectiveDate;
+        this.paymentNumber = paymentNumber;
+        this.referenceId = referenceId;
+        this.refundAmount = refundAmount;
+        this.status = status;
+        this.type = type;
+        this.updatedDate = updatedDate;
+    }
+
+    public Builder cloner() {
+        return new Builder(this);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public BigDecimal getAppliedCreditBalanceAmount() {
+        return appliedCreditBalanceAmount;
+    }
+
+    public String getBankIdentificationNumber() {
+        return bankIdentificationNumber;
+    }
+
+    public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public DateTime getEffectiveDate() {
+        return effectiveDate;
+    }
+
+    public String getPaymentNumber() {
+        return paymentNumber;
+    }
+
+    public String getReferenceId() {
+        return referenceId;
+    }
+
+    public BigDecimal getRefundAmount() {
+        return refundAmount;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public DateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
     public static class Builder {
         private String id;
         private BigDecimal amount;
@@ -132,113 +239,6 @@ public class PaymentInfo implements EventBusNotification {
                                    createdDate,
                                    updatedDate);
         }
-    }
-
-    private final String id;
-    private final BigDecimal amount;
-    private final BigDecimal refundAmount;
-    private final BigDecimal appliedCreditBalanceAmount;
-    private final String paymentNumber;
-    private final String bankIdentificationNumber;
-    private final String status;
-    private final String type;
-    private final String referenceId;
-    private final DateTime effectiveDate;
-    private final DateTime createdDate;
-    private final DateTime updatedDate;
-
-    public PaymentInfo(PaymentInfo src) {
-        this.id = src.id;
-        this.amount = src.amount;
-        this.refundAmount = src.refundAmount;
-        this.appliedCreditBalanceAmount = src.appliedCreditBalanceAmount;
-        this.paymentNumber = src.paymentNumber;
-        this.bankIdentificationNumber = src.bankIdentificationNumber;
-        this.status = src.status;
-        this.type = src.type;
-        this.referenceId = src.referenceId;
-        this.effectiveDate = src.effectiveDate;
-        this.createdDate = src.createdDate;
-        this.updatedDate = src.updatedDate;
-    }
-
-    @JsonCreator
-    public PaymentInfo(@JsonProperty("id") String id,
-                       @JsonProperty("amount") BigDecimal amount,
-                       @JsonProperty("appliedCreditBalanceAmount") BigDecimal appliedCreditBalanceAmount,
-                       @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
-                       @JsonProperty("paymentNumber") String paymentNumber,
-                       @JsonProperty("refundAmount") BigDecimal refundAmount,
-                       @JsonProperty("status") String status,
-                       @JsonProperty("type") String type,
-                       @JsonProperty("referenceId") String referenceId,
-                       @JsonProperty("effectiveDate") DateTime effectiveDate,
-                       @JsonProperty("createdDate") DateTime createdDate,
-                       @JsonProperty("updatedDate") DateTime updatedDate) {
-        this.id = id;
-        this.amount = amount;
-        this.appliedCreditBalanceAmount = appliedCreditBalanceAmount;
-        this.bankIdentificationNumber = bankIdentificationNumber;
-        this.createdDate = createdDate;
-        this.effectiveDate = effectiveDate;
-        this.paymentNumber = paymentNumber;
-        this.referenceId = referenceId;
-        this.refundAmount = refundAmount;
-        this.status = status;
-        this.type = type;
-        this.updatedDate = updatedDate;
-    }
-
-    public Builder cloner() {
-        return new Builder(this);
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public BigDecimal getAppliedCreditBalanceAmount() {
-        return appliedCreditBalanceAmount;
-    }
-
-    public String getBankIdentificationNumber() {
-        return bankIdentificationNumber;
-    }
-
-    public DateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public DateTime getEffectiveDate() {
-        return effectiveDate;
-    }
-
-    public String getPaymentNumber() {
-        return paymentNumber;
-    }
-
-    public String getReferenceId() {
-        return referenceId;
-    }
-
-    public BigDecimal getRefundAmount() {
-        return refundAmount;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public DateTime getUpdatedDate() {
-        return updatedDate;
     }
 
     @Override

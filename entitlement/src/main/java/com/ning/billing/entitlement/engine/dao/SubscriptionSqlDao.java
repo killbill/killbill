@@ -49,6 +49,9 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
     @SqlUpdate
     public void insertSubscription(@Bind(binder = ISubscriptionDaoBinder.class) SubscriptionData sub);
 
+    @SqlUpdate
+    public void removeSubscription(@Bind("id") String id);
+
     @SqlQuery
     @Mapper(ISubscriptionDaoSqlMapper.class)
     public Subscription getSubscriptionFromId(@Bind("id") String id);

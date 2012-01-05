@@ -27,6 +27,7 @@ import java.util.UUID;
 public interface SubscriptionTransition extends EventBusNotification {
 
     public enum SubscriptionTransitionType {
+        MIGRATE_ENTITLEMENT,
         CREATE,
         CHANGE,
         PAUSE,

@@ -50,40 +50,44 @@ public class DefaultAccountChangeNotification implements AccountChangeNotificati
     }
 
     private List<ChangedField> calculateChangedFields(Account oldData, Account newData) {
-        List<ChangedField> changedFields = new ArrayList<ChangedField>();
 
-        if (!newData.getExternalKey().equals(oldData.getExternalKey())) {
-            changedFields.add(new DefaultChangedField("externalKey", oldData.getExternalKey(), newData.getExternalKey()));
-        }
-        if (!newData.getEmail().equals(oldData.getEmail())) {
-            changedFields.add(new DefaultChangedField("email", oldData.getEmail(), newData.getEmail()));
-        }
-        if (!newData.getName().equals(oldData.getName())) {
-            changedFields.add(new DefaultChangedField("firstName", oldData.getName(), newData.getName()));
-        }
-        if (!newData.getPhone().equals(oldData.getPhone())) {
-            changedFields.add(new DefaultChangedField("phone", oldData.getPhone(), newData.getPhone()));
-        }
-        if (!newData.getCurrency().equals(oldData.getCurrency())) {
-            changedFields.add(new DefaultChangedField("currency", oldData.getCurrency().toString(), newData.getCurrency().toString()));
-        }
-        if (newData.getBillCycleDay() != oldData.getBillCycleDay()) {
-            changedFields.add(new DefaultChangedField("billCycleDay", Integer.toString(oldData.getBillCycleDay()),
-                                                               Integer.toString(newData.getBillCycleDay())));
-        }
+        List<ChangedField> tmpChangedFields = new ArrayList<ChangedField>();
 
-        String oldProviderName = oldData.getPaymentProviderName();
-        String newProviderName = newData.getPaymentProviderName();
+        addIfValueChanged(tmpChangedFields, "externalKey",
+                oldData.getExternalKey(), newData.getExternalKey());
 
-        if ((newProviderName == null) && (oldProviderName == null)) {
-        } else if ((newProviderName == null) && (oldProviderName != null)) {
-            changedFields.add((new DefaultChangedField("paymentProviderName", oldProviderName, newProviderName)));
-        } else if ((newProviderName != null) && (oldProviderName == null)) {
-            changedFields.add((new DefaultChangedField("paymentProviderName", oldProviderName, newProviderName)));
-        } else if (!newProviderName.equals(oldProviderName)) {
-            changedFields.add((new DefaultChangedField("paymentProviderName", oldProviderName, newProviderName)));
+        addIfValueChanged(tmpChangedFields, "email",
+                oldData.getEmail(), newData.getEmail());
+
+        addIfValueChanged(tmpChangedFields, "firstName",
+                oldData.getName(), newData.getName());
+
+        addIfValueChanged(tmpChangedFields, "phone",
+                oldData.getPhone(), newData.getPhone());
+
+        addIfValueChanged(tmpChangedFields, "currency",
+                (oldData.getCurrency() != null) ? oldData.getCurrency().toString() : null,
+                 (newData.getCurrency() != null) ? newData.getCurrency().toString() : null);
+
+        addIfValueChanged(tmpChangedFields,
+                "billCycleDay",
+                Integer.toString(oldData.getBillCycleDay()), Integer.toString(newData.getBillCycleDay()));
+
+        addIfValueChanged(tmpChangedFields,"paymentProviderName",
+                oldData.getPaymentProviderName(), newData.getPaymentProviderName());
+        return tmpChangedFields;
+    }
+
+    private void addIfValueChanged(List<ChangedField> inputList, String key, String oldData, String newData) {
+        // If both null => no changes
+        if (newData == null && oldData == null) {
+            return;
+        // If only one is null
+        } else if (newData == null || oldData == null) {
+            inputList.add(new DefaultChangedField(key, oldData, newData));
+        // If non are null we can safely compare values
+        } else if (!newData.equals(oldData)) {
+            inputList.add(new DefaultChangedField(key, oldData, newData));
         }
-
-        return changedFields;
     }
 }

@@ -57,6 +57,15 @@
 				<alignment>START_OF_SUBSCRIPTION</alignment>
 			</changeAlignmentCase>
 		</changeAlignment>
+		 <createAlignment>
+            <createAlignmentCase>
+                <product>Laser-Scope</product>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </createAlignmentCase>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
 	</rules>
 
 	<plans>
