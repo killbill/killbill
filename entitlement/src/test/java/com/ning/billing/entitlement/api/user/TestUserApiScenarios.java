@@ -23,7 +23,9 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhase;
+
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
@@ -32,7 +34,7 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
 
-public class TestUserApiScenarios extends TestUserApiBase {
+public class TestUserApiScenarios extends TestApiBase {
 
     @Override
     protected Injector getInjector() {

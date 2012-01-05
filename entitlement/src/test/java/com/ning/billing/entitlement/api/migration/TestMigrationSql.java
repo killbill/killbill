@@ -14,15 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing.entitlement.api.migration;
+
+import org.testng.annotations.Test;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
-import org.testng.annotations.Test;
 
-public class TestUserApiCreateSql extends TestUserApiCreate {
+public class TestMigrationSql extends TestMigration {
 
     @Override
     protected Injector getInjector() {
@@ -30,33 +31,26 @@ public class TestUserApiCreateSql extends TestUserApiCreate {
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
-    public void testCreateWithRequestedDate() {
-        super.testCreateWithRequestedDate();
+    @Test(enabled=true, groups="sql")
+    public void testSingleBasePlan() {
+        super.testSingleBasePlan();
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
-    public void testCreateWithInitialPhase() {
-        super.testCreateWithInitialPhase();
+    @Test(enabled=true, groups="sql")
+    public void testSingleBasePlanFutureCancelled() {
+        super.testSingleBasePlanFutureCancelled();
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
-    public void testSimpleCreateSubscription() {
-        super.testSimpleCreateSubscription();
+    @Test(enabled=true, groups="sql")
+    public void testSingleBasePlanWithPendingPhase() {
+        super.testSingleBasePlanWithPendingPhase();
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
-    protected void testSimpleSubscriptionThroughPhases() {
-        super.testSimpleSubscriptionThroughPhases();
+    @Test(enabled=true, groups="sql")
+    public void testSingleBasePlanWithPendingChange() {
+        super.testSingleBasePlanWithPendingChange();
     }
-
-    @Override
-    @Test(enabled=false, groups={"sql"})
-    protected void testSubscriptionWithAddOn() {
-        super.testSubscriptionWithAddOn();
-    }
-
 }

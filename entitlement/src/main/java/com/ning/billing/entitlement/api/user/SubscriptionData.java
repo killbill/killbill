@@ -170,6 +170,18 @@ public class SubscriptionData implements Subscription {
         return activeTransitions;
     }
 
+    @Override
+    public SubscriptionTransition getPendingTransition() {
+        if (transitions == null) {
+            return null;
+        }
+        for (SubscriptionTransition cur : transitions) {
+            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
+                return cur;
+            }
+        }
+        return null;
+    }
 
     public SubscriptionTransition getLatestTranstion() {
 
@@ -265,10 +277,10 @@ public class SubscriptionData implements Subscription {
     }
 
 
-    public DateTime getPlanChangeEffectiveDate(ActionPolicy policy, DateTime now) {
+    public DateTime getPlanChangeEffectiveDate(ActionPolicy policy, DateTime requestedDate) {
 
         if (policy == ActionPolicy.IMMEDIATE) {
-            return now;
+            return requestedDate;
         }
         if (policy != ActionPolicy.END_OF_TERM) {
             throw new EntitlementError(String.format("Unexpected policy type %s", policy.toString()));
@@ -342,6 +354,7 @@ public class SubscriptionData implements Subscription {
                 ApiEvent userEV = (ApiEvent) cur;
                 apiEventType = userEV.getEventType();
                 switch(apiEventType) {
+                case MIGRATE_ENTITLEMENT:
                 case CREATE:
                     nextState = SubscriptionState.ACTIVE;
                     nextPlanName = userEV.getEventPlan();

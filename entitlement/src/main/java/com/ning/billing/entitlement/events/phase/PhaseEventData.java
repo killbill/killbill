@@ -56,15 +56,15 @@ public class PhaseEventData extends EventBase implements PhaseEvent {
                 + ", isActive()=" + isActive() + "]\n";
     }
 
-    public static final PhaseEvent getNextPhaseEvent(TimedPhase nextTimedPhase, SubscriptionData subscription, DateTime now) {
-        return (nextTimedPhase == null) ?
+    public static final PhaseEvent getNextPhaseEvent(String phaseName, SubscriptionData subscription, DateTime now, DateTime effectiveDate) {
+        return (phaseName == null) ?
                 null :
                     new PhaseEventData(new PhaseEventBuilder()
                         .setSubscriptionId(subscription.getId())
                         .setRequestedDate(now)
-                        .setEffectiveDate(nextTimedPhase.getStartPhase())
+                        .setEffectiveDate(effectiveDate)
                         .setProcessedDate(now)
                         .setActiveVersion(subscription.getActiveVersion())
-                        .setPhaseName(nextTimedPhase.getPhase().getName()));
+                        .setPhaseName(phaseName));
     }
 }

@@ -14,28 +14,25 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.events.phase;
+package com.ning.billing.entitlement.api.migration;
 
-import com.ning.billing.entitlement.events.EventBaseBuilder;
+public class EntitlementMigrationApiException extends Exception {
 
-public class PhaseEventBuilder extends EventBaseBuilder<PhaseEventBuilder> {
+    private static final long serialVersionUID = 7623133L;
 
-    private String phaseName;
-
-    public PhaseEventBuilder() {
+    public EntitlementMigrationApiException() {
         super();
     }
 
-    public PhaseEventBuilder(EventBaseBuilder<?> base) {
-        super(base);
+    public EntitlementMigrationApiException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    public PhaseEventBuilder setPhaseName(String phaseName) {
-        this.phaseName = phaseName;
-        return this;
+    public EntitlementMigrationApiException(String message) {
+        super(message);
     }
 
-    public String getPhaseName() {
-        return phaseName;
+    public EntitlementMigrationApiException(Throwable cause) {
+        super(cause);
     }
 }
