@@ -26,6 +26,15 @@ import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.catalog.api.BillingAlignment;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -36,15 +45,19 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
     private final EntitlementDao dao;
+    private final AccountUserApi accountApi;
+    private final CatalogService catalogService;
 
     @Inject
-    public DefaultEntitlementBillingApi(EntitlementDao dao) {
+    public DefaultEntitlementBillingApi(EntitlementDao dao, AccountUserApi accountApi, CatalogService catalogService) {
         super();
         this.dao = dao;
+        this.accountApi = accountApi;
+        this.catalogService = catalogService;
     }
 
     @Override
-    public SortedSet<BillingEvent> getBillingEventsForSubscription(
+    public SortedSet<BillingEvent> getBillingEventsForAccount(
             UUID accountId) {
         
         List<SubscriptionBundle> bundles = dao.getSubscriptionBundleForAccount(accountId);
@@ -57,22 +70,40 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             transitions.addAll(subscription.getAllTransitions());
         }
         
-        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
+        Account account = accountApi.getAccountById(accountId);
         
+        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();        
         for (SubscriptionTransition transition : transitions) {
-            result.add(createBillingEvent(transition));
+            result.add(new DefaultBillingEvent(transition, account.getBillCycleDay()));
         }
         return result;
     }
     
-    public List<Account> getActiveAccounts() {
-        return null;
+    private int calculateBCD(SubscriptionTransition transition, UUID accountId) throws CatalogApiException {
+    	Catalog catalog = catalogService.getCatalog();
+    	Plan plan = transition.getNextPlan();
+    	Product product = plan.getProduct();
+    	PlanPhase phase = transition.getNextPhase();
+    	
+    	BillingAlignment alignment = catalog.billingAlignment(
+    			new PlanPhaseSpecifier(product.getName(), 
+    					product.getCategory(), 
+    					phase.getBillingPeriod(), 
+    					transition.getNextPriceList(), 
+    					phase.getPhaseType()));
+    	int result = 0;
+    	switch (alignment) {
+    		case ACCOUNT : result = accountApi.getAccountById(accountId).getBillCycleDay();
+    		break;
+    		case BUNDLE : result = dao.getSubscriptionBundleFromId(transition.getBundleId()).getStartDate().getDayOfMonth();
+    		break;
+    		case SUBSCRIPTION : result = dao.getSubscriptionFromId(transition.getSubscriptionId()).getStartDate().getDayOfMonth();
+    		break;
+    	}
+    	return result;
+    		
     }
-
-    private BillingEvent createBillingEvent(SubscriptionTransition transition) {
-        
-        return null;
-    }
+    
 
     @Override
     public void setChargedThroughDate(UUID subscriptionId, DateTime ctd) {

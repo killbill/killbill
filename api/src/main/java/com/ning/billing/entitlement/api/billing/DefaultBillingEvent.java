@@ -68,18 +68,6 @@ public class DefaultBillingEvent implements BillingEvent {
         this.description = description;
     }
 
-//    public DefaultBillingEvent(BillingEvent event, DateTime effectiveDate) {
-//        this.subscriptionId = event.getSubscriptionId();
-//        this.startDate = startDate;
-//        this.planName = event.getPlanName();
-//        this.planPhaseName = event.getPlanPhaseName();
-//        this.price = event.getPrice();
-//        this.billingPeriod = event.getBillingPeriod();
-//        this.billCycleDay = event.getBillCycleDay();
-//        this.billingMode = event.getBillingMode();
-//    }
-
-    
     @Override
     public int compareTo(BillingEvent e1) {
         if (getSubscriptionId().equals(e1.getSubscriptionId())) {
