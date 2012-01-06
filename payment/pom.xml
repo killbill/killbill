@@ -60,6 +60,11 @@
             <artifactId>commons-lang</artifactId>
         </dependency>
         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
         </dependency>
@@ -81,6 +86,12 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-util</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-account</artifactId>
             <classifier>tests</classifier>
             <scope>test</scope>
@@ -91,5 +102,15 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
+        <dependency>
+             <groupId>com.mysql</groupId>
+             <artifactId>management</artifactId>
+             <scope>test</scope>
+         </dependency>
+         <dependency>
+             <groupId>com.mysql</groupId>
+             <artifactId>management-dbfiles</artifactId>
+             <scope>test</scope>
+         </dependency>
     </dependencies>
 </project>

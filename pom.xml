@@ -90,8 +90,7 @@
                 <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-util</artifactId>
                 <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
+                <classifier>tests</classifier>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>

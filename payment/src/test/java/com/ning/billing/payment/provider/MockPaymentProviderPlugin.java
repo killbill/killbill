@@ -66,11 +66,11 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(Account account) {
+    public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(PaymentProviderAccount account) {
         if (account != null) {
-            PaymentProviderAccount paymentProviderAccount = accounts.put(account.getExternalKey(),
-                                                                         new PaymentProviderAccount.Builder().setAccountName(account.getExternalKey())
-                                                                                                             .setAccountNumber(account.getExternalKey())
+            PaymentProviderAccount paymentProviderAccount = accounts.put(account.getAccountName(),
+                                                                         new PaymentProviderAccount.Builder().setAccountName(account.getAccountName())
+                                                                                                             .setAccountNumber(account.getAccountName())
                                                                                                              .setId(account.getId().toString())
                                                                                                              .build());
 
