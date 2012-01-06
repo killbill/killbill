@@ -19,6 +19,7 @@ package com.ning.billing.payment.api;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Objects;
+import com.ning.billing.catalog.api.Currency;
 
 public class PaymentProviderContactData {
     private final String firstName;
@@ -26,17 +27,23 @@ public class PaymentProviderContactData {
     private final String email;
     private final String phoneNumber;
     private final String externalKey;
+    private final String locale;
+    private final Currency currency;
 
     public PaymentProviderContactData(String firstName,
                                       String lastName,
                                       String email,
                                       String phoneNumber,
-                                      String externalKey) {
+                                      String externalKey,
+                                      String locale,
+                                      Currency currency) {
         this.firstName = StringUtils.substring(firstName, 0, 100);
         this.lastName  = StringUtils.substring(lastName, 0, 100);
         this.email     = StringUtils.substring(email, 0, 80);
         this.phoneNumber = phoneNumber;
         this.externalKey = externalKey;
+        this.locale = locale;
+        this.currency = currency;
     }
 
     public String getFirstName() {
@@ -59,12 +66,22 @@ public class PaymentProviderContactData {
         return externalKey;
     }
 
+    public String getLocale() {
+        return locale;
+    }
+
+    public Currency getCurrency() {
+        return currency;
+    }
+
     public static class Builder {
         private String firstName;
         private String lastName;
         private String email;
         private String phoneNumber;
         private String externalKey;
+        private String locale;
+        private Currency currency;
 
         public Builder setExternalKey(String externalKey) {
             this.externalKey = externalKey;
@@ -91,8 +108,18 @@ public class PaymentProviderContactData {
             return this;
         }
 
+        public Builder setLocale(String locale) {
+            this.locale = locale;
+            return this;
+        }
+
+        public Builder setCurrency(Currency currency) {
+            this.currency = currency;
+            return this;
+        }
+
         public PaymentProviderContactData build() {
-            return new PaymentProviderContactData(firstName, lastName, email, phoneNumber, externalKey);
+            return new PaymentProviderContactData(firstName, lastName, email, phoneNumber, externalKey, locale, currency);
         }
     }
 
@@ -102,7 +129,9 @@ public class PaymentProviderContactData {
                                 lastName,
                                 email,
                                 phoneNumber,
-                                externalKey);
+                                externalKey,
+                                locale,
+                                currency);
     }
 
     @Override
@@ -117,7 +146,9 @@ public class PaymentProviderContactData {
                        Objects.equal(lastName, other.lastName) &&
                        Objects.equal(email, other.email) &&
                        Objects.equal(phoneNumber, other.phoneNumber) &&
-                       Objects.equal(externalKey, other.externalKey);
+                       Objects.equal(externalKey, other.externalKey) &&
+                       Objects.equal(locale, other.locale) &&
+                       Objects.equal(currency, other.currency);
             }
         }
         return false;

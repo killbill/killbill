@@ -29,7 +29,7 @@ import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
 
 public interface PaymentProviderPlugin {
     Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice);
-    Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(Account account);
+    Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(PaymentProviderAccount account);
     Either<PaymentError, String> addPaypalPaymentMethod(String accountId, PaypalPaymentMethodInfo paypalPaymentMethod);
 
     Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId);

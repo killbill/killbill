@@ -116,8 +116,8 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(PaymentProviderAccount account) {
-        // TODO Auto-generated method stub
-        return null;
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(null);
+        return plugin.createPaymentProviderAccount(account);
     }
 
     @Override
