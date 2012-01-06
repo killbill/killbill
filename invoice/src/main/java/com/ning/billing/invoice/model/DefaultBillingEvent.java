@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -27,11 +27,6 @@ import org.joda.time.DateTime;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-
-//
-// TODO that class should not be under API but invoice
-// (only interfaces in api, any implementation class goes in submodule)
-//
 public class DefaultBillingEvent implements BillingEvent {
     private final UUID subscriptionId;
     private final DateTime startDate;

@@ -17,7 +17,6 @@
 package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.BillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import org.joda.time.DateTime;
 
