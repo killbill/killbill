@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomizableEntityBase;
 import com.ning.billing.util.tag.DefaultTag;
@@ -40,22 +41,25 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     private final String paymentProviderName;
     private final BigDecimal balance;
     private final DefaultTagStore tags;
+    private final DateTimeZone timeZone;
+    private final String locale;
+    private final DateTime nextBillingDate;
 
-    public DefaultAccount(AccountData data) {
-        this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
-                data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
-                data.getPaymentProviderName(), BigDecimal.ZERO);
+    public DefaultAccount(final AccountData data) {
+        this(UUID.randomUUID(), data);
     }
 
-    public DefaultAccount(UUID id, AccountData data) {
+    public DefaultAccount(final UUID id, final AccountData data) {
         this(id, data.getExternalKey(), data.getEmail(), data.getName(),
                 data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
-                data.getPaymentProviderName(), BigDecimal.ZERO);
+                data.getPaymentProviderName(), BigDecimal.ZERO, data.getTimeZone(), data.getLocale(),
+                data.getNextBillingDate());
     }
 
-    public DefaultAccount(UUID id, String externalKey, String email, String name, int firstNameLength,
-                          String phone, Currency currency, int billCycleDay, String paymentProviderName,
-                          BigDecimal balance) {
+    public DefaultAccount(final UUID id, final String externalKey, final String email, final String name, final int firstNameLength,
+                          final String phone, final Currency currency, final int billCycleDay, final String paymentProviderName,
+                          final BigDecimal balance, final DateTimeZone timeZone, final String locale,
+                          final DateTime nextBillingDate) {
         super(id);
         this.externalKey = externalKey;
         this.email = email;
@@ -66,6 +70,9 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
         this.billCycleDay = billCycleDay;
         this.paymentProviderName = paymentProviderName;
         this.balance = balance;
+        this.timeZone = timeZone;
+        this.locale = locale;
+        this.nextBillingDate = nextBillingDate;
 
         this.tags = new DefaultTagStore(id, getObjectName());
     }
@@ -116,6 +123,26 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
+    @Override
+    public DateTimeZone getTimeZone() {
+        return timeZone;
+    }
+
+    @Override
+    public String getLocale() {
+        return locale;
+    }
+
+    @Override
+    public DateTime getNextBillingDate() {
+        return nextBillingDate;
+    }
+
+    @Override
     public List<Tag> getTagList() {
         return tags.getEntityList();
     }
@@ -156,10 +183,5 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     @Override
     public boolean processPayment() {
         return tags.processPayment();
-    }
-
-    @Override
-    public BigDecimal getBalance() {
-        return balance;
     }
 }

@@ -2,34 +2,38 @@ group AccountDaoSql;
 
 create() ::= <<
     INSERT INTO accounts
-    (id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name)
+      (id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day,
+      payment_provider_name, time_zone, locale, next_billing_date)
     VALUES
-    (:id, :externalKey, :email, :name, :firstNameLength, :phone, :currency, :billingCycleDay, :paymentProviderName);
+      (:id, :externalKey, :email, :name, :firstNameLength, :phone, :currency, :billingCycleDay,
+      :paymentProviderName, :timeZone, :locale, :nextBillingDate);
 >>
 
 update() ::= <<
     UPDATE accounts
     SET email = :email, name = :name, first_name_length = :firstNameLength, phone = :phone,
-        currency = :currency, billing_cycle_day = :billingCycleDay, payment_provider_name = :paymentProviderName
+        currency = :currency, billing_cycle_day = :billingCycleDay, payment_provider_name = :paymentProviderName,
+        time_zone = :timeZone, locale = :locale, next_billing_date = :nextBillingDate
     WHERE id = :id AND external_key = :externalKey;
 >>
 
 getAccountByKey() ::= <<
-    select id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name
+    select id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day,
+      payment_provider_name, time_zone, locale, next_billing_date
     from accounts
     where external_key = :externalKey;
 >>
 
 getById() ::= <<
-    select
-      a.id, a.external_key, a.email, a.name, a.first_name_length,
-      a.phone, a.currency, a.billing_cycle_day, a.payment_provider_name
-    from accounts a
-    where a.id = :id;
+    select id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day,
+      payment_provider_name, time_zone, locale, next_billing_date
+    from accounts
+    where id = :id;
 >>
 
 get() ::= <<
-    select id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name
+    select id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day,
+      payment_provider_name, time_zone, locale, next_billing_date
     from accounts;
 >>
 

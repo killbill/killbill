@@ -19,6 +19,7 @@ package com.ning.billing.account.dao;
 import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -178,6 +179,20 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
             @Override
             public String getPaymentProviderName() {
                 return account.getPaymentProviderName();
+            }
+            @Override
+            public DateTimeZone getTimeZone() {
+                return DateTimeZone.forID("Australia/Darwin");
+            }
+
+            @Override
+            public String getLocale() {
+                return "EN-GB";
+            }
+
+            @Override
+            public DateTime getNextBillingDate() {
+                return null;
             }
         };
 

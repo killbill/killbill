@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -309,6 +310,20 @@ public abstract class TestApiBase {
             @Override
             public String getPaymentProviderName() {
                 return "Paypal";
+            }
+            @Override
+            public DateTimeZone getTimeZone() {
+                return DateTimeZone.forID("Europe/Paris");
+            }
+
+            @Override
+            public String getLocale() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public DateTime getNextBillingDate() {
+                return null;
             }
         };
         return accountData;

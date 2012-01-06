@@ -22,6 +22,8 @@ import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.UuidMapper;
 import com.ning.billing.util.entity.EntityDao;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -44,6 +46,7 @@ import java.lang.annotation.Target;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3
@@ -73,15 +76,28 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
             int firstNameLength = result.getInt("first_name_length");
             String phone = result.getString("phone");
             int billingCycleDay = result.getInt("billing_cycle_day");
+
             String currencyString = result.getString("currency");
             Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
+
             String paymentProviderName = result.getString("payment_provider_name");
+
+            String timeZoneId = result.getString("time_zone");
+            DateTimeZone timeZone = (timeZoneId == null) ? null : DateTimeZone.forID(timeZoneId);
+
+            String locale = result.getString("locale");
+
+            Timestamp nextBillingDateTimestamp = result.getTimestamp("next_billing_date");
+            DateTime nextBillingDate = nextBillingDateTimestamp == null ? null : new DateTime(nextBillingDateTimestamp);
 
             return new AccountBuilder(id).externalKey(externalKey).email(email)
                                          .name(name).firstNameLength(firstNameLength)
                                          .phone(phone).currency(currency)
                                          .billingCycleDay(billingCycleDay)
                                          .paymentProviderName(paymentProviderName)
+                                         .timeZone(timeZone)
+                                         .locale(locale)
+                                         .nextBillingDate(nextBillingDate)
                                          .build();
         }
     }
@@ -100,10 +116,20 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
                         q.bind("name", account.getName());
                         q.bind("firstNameLength", account.getFirstNameLength());
                         q.bind("phone", account.getPhone());
+
                         Currency currency = account.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());
+
                         q.bind("billingCycleDay", account.getBillCycleDay());
                         q.bind("paymentProviderName", account.getPaymentProviderName());
+
+                        DateTimeZone timeZone = account.getTimeZone();
+                        q.bind("timeZone", (timeZone == null) ? null : timeZone.toString());
+
+                        q.bind("locale", account.getLocale());
+
+                        DateTime nextBillingDate = account.getNextBillingDate();
+                        q.bind("nextBillingDate", (nextBillingDate == null) ? null : nextBillingDate.toDate());
                     }
                 };
             }

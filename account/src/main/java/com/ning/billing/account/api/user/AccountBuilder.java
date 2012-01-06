@@ -21,6 +21,8 @@ import com.ning.billing.catalog.api.Currency;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 public class AccountBuilder {
     private UUID id;
@@ -33,31 +35,34 @@ public class AccountBuilder {
     private int billingCycleDay;
     private String paymentProviderName;
     private BigDecimal balance;
+    private DateTimeZone timeZone;
+    private String locale;
+    private DateTime nextBillingDate;
 
     public AccountBuilder() {
         this(UUID.randomUUID());
     }
 
-    public AccountBuilder(UUID id) {
+    public AccountBuilder(final UUID id) {
         this.id = id;
     }
 
-    public AccountBuilder externalKey(String externalKey) {
+    public AccountBuilder externalKey(final String externalKey) {
         this.externalKey = externalKey;
         return this;
     }
 
-    public AccountBuilder email(String email) {
+    public AccountBuilder email(final String email) {
         this.email = email;
         return this;
     }
 
-    public AccountBuilder name(String name) {
+    public AccountBuilder name(final String name) {
         this.name = name;
         return this;
     }
 
-    public AccountBuilder firstNameLength(int firstNameLength) {
+    public AccountBuilder firstNameLength(final int firstNameLength) {
         this.firstNameLength = firstNameLength;
         return this;
     }
@@ -67,28 +72,44 @@ public class AccountBuilder {
         return this;
     }
 
-    public AccountBuilder billingCycleDay(int billingCycleDay) {
+    public AccountBuilder billingCycleDay(final int billingCycleDay) {
         this.billingCycleDay = billingCycleDay;
         return this;
     }
 
-    public AccountBuilder currency(Currency currency) {
+    public AccountBuilder currency(final Currency currency) {
         this.currency = currency;
         return this;
     }
 
-    public AccountBuilder paymentProviderName(String paymentProviderName) {
+    public AccountBuilder paymentProviderName(final String paymentProviderName) {
         this.paymentProviderName = paymentProviderName;
         return this;
     }
 
-    public AccountBuilder balance(BigDecimal balance) {
+    public AccountBuilder balance(final BigDecimal balance) {
         this.balance = balance;
+        return this;
+    }
+
+    public AccountBuilder timeZone(final DateTimeZone timeZone) {
+        this.timeZone = timeZone;
+        return this;
+    }
+
+    public AccountBuilder locale(final String locale) {
+        this.locale = locale;
+        return this;
+    }
+
+    public AccountBuilder nextBillingDate(final DateTime nextBillingDate) {
+        this.nextBillingDate = nextBillingDate;
         return this;
     }
 
     public DefaultAccount build() {
         return new DefaultAccount(id, externalKey, email, name, firstNameLength,
-                                  phone, currency, billingCycleDay, paymentProviderName, balance);
+                                  phone, currency, billingCycleDay, paymentProviderName,
+                                  balance, timeZone, locale, nextBillingDate);
     }
 }

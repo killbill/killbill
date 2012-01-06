@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.Currency;
@@ -85,6 +86,21 @@ public class MockAccount implements Account
     @Override
     public String getPaymentProviderName() {
         return "PayPal";
+    }
+
+    @Override
+    public DateTimeZone getTimeZone() {
+        return DateTimeZone.forID("Pacific/Fiji");
+    }
+
+    @Override
+    public String getLocale() {
+        return "EN-US";
+    }
+
+    @Override
+    public DateTime getNextBillingDate() {
+        return null;
     }
 
     @Override
