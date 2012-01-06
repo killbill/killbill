@@ -16,12 +16,11 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import org.testng.annotations.Test;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import org.testng.annotations.Test;
 
 public class TestUserApiCancelSql extends TestUserApiCancel {
 
@@ -48,24 +47,28 @@ public class TestUserApiCancelSql extends TestUserApiCancel {
         }
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testCancelSubscriptionIMM() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionIMM();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testCancelSubscriptionEOTWithChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionEOTWithChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testCancelSubscriptionEOTWithNoChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionEOTWithNoChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testUncancel() {
-        invokeRealMethod(this);
+        super.testUncancel();
     }
 
 }

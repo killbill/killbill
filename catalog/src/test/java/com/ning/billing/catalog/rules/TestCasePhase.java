@@ -16,21 +16,15 @@
 
 package com.ning.billing.catalog.rules;
 
-import javax.xml.bind.annotation.XmlElement;
-
+import com.ning.billing.catalog.DefaultPriceList;
+import com.ning.billing.catalog.DefaultProduct;
+import com.ning.billing.catalog.MockCatalog;
+import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.api.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.catalog.MockCatalog;
-import com.ning.billing.catalog.DefaultPriceList;
-import com.ning.billing.catalog.DefaultProduct;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.rules.CasePhase;
+import javax.xml.bind.annotation.XmlElement;
 
 public class TestCasePhase {
 	protected class CaseResult extends CasePhase<Result>  {

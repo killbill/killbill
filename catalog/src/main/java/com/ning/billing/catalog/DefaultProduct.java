@@ -16,20 +16,13 @@
 
 package com.ning.billing.catalog;
 
-import java.net.URI;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlIDREF;
-
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
+
+import javax.xml.bind.annotation.*;
+import java.net.URI;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implements Product {
@@ -107,7 +100,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 	
 	@Override
 	public void initialize(StandaloneCatalog catalog, URI sourceURI) {
-		catalogName = catalog.getCalalogName();
+		catalogName = catalog.getCatalogName();
 	}
 
 	@Override

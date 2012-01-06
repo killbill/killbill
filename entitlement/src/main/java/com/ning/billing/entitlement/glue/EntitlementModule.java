@@ -16,14 +16,15 @@
 
 package com.ning.billing.entitlement.glue;
 
-import org.skife.config.ConfigurationObjectFactory;
-
 import com.google.inject.AbstractModule;
 import com.ning.billing.config.EntitlementConfig;
+import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.test.DefaultEntitlementTestApi;
 import com.ning.billing.entitlement.api.test.EntitlementTestApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
@@ -32,10 +33,11 @@ import com.ning.billing.entitlement.api.user.SubscriptionApiService;
 import com.ning.billing.entitlement.engine.core.DefaultApiEventProcessor;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.core.EventNotifier;
-import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
+import org.skife.config.ConfigurationObjectFactory;
 
 
 
@@ -64,9 +66,11 @@ public class EntitlementModule extends AbstractModule {
         bind(EntitlementService.class).to(Engine.class).asEagerSingleton();
         bind(Engine.class).asEagerSingleton();
         bind(PlanAligner.class).asEagerSingleton();
+        bind(MigrationPlanAligner.class).asEagerSingleton();
         bind(EntitlementTestApi.class).to(DefaultEntitlementTestApi.class).asEagerSingleton();
         bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
         bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
+        bind(EntitlementMigrationApi.class).to(DefaultEntitlementMigrationApi.class).asEagerSingleton();
     }
 
     @Override

@@ -16,18 +16,17 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.lang.reflect.Field;
-import java.util.List;
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
+import org.joda.time.DateTime;
+
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.UUID;
 
 public class SubscriptionFactory {
 
@@ -44,10 +43,11 @@ public class SubscriptionFactory {
 
     public SubscriptionData createSubscription(SubscriptionBuilder builder, List<EntitlementEvent> events) {
         SubscriptionData subscription = new SubscriptionData(builder, apiService, clock);
-        subscription.rebuildTransitions(events, catalogService.getCatalog());
+        if (events.size() > 0) {
+            subscription.rebuildTransitions(events, catalogService.getCatalog());
+        }
         return subscription;
     }
-
 
 
     public static class SubscriptionBuilder {

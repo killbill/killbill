@@ -25,13 +25,13 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.events.EntitlementEvent;
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
@@ -64,6 +64,10 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         }
         return result;
     }
+    
+    public List<Account> getActiveAccounts() {
+        return null;
+    }
 
     private BillingEvent createBillingEvent(SubscriptionTransition transition) {
         
@@ -74,7 +78,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     public void setChargedThroughDate(UUID subscriptionId, DateTime ctd) {
         SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionId);
         if (subscription == null) {
-            new EntitlementBillingApiException(String.format("Unknwon subscription %s", subscriptionId));
+            new EntitlementBillingApiException(String.format("Unknown subscription %s", subscriptionId));
         }
 
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)

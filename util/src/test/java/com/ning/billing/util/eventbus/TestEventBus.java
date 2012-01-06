@@ -16,14 +16,13 @@
 
 package com.ning.billing.util.eventbus;
 
+import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import com.google.common.eventbus.Subscribe;
 
 public class TestEventBus {
 

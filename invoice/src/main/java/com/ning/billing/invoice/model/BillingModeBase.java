@@ -21,7 +21,7 @@ import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 
-public abstract class BillingModeBase implements IBillingMode {
+public abstract class BillingModeBase implements BillingMode {
     @Override
     public BigDecimal calculateNumberOfBillingCycles(final DateTime startDate, final DateTime endDate, final DateTime targetDate, final int billingCycleDay, final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
         if (endDate.isBefore(startDate)) {throw new InvalidDateSequenceException();}

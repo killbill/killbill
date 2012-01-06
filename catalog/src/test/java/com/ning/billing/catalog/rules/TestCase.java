@@ -16,215 +16,259 @@
 
 package com.ning.billing.catalog.rules;
 
+import com.ning.billing.catalog.DefaultPriceList;
+import com.ning.billing.catalog.DefaultProduct;
+import com.ning.billing.catalog.MockCatalog;
+import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.api.*;
+import org.testng.annotations.Test;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlIDREF;
+
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
 
-import javax.xml.bind.annotation.XmlElement;
-
-import org.testng.annotations.Test;
-
-import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.catalog.MockCatalog;
-import com.ning.billing.catalog.DefaultPriceList;
-import com.ning.billing.catalog.DefaultProduct;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.catalog.api.PlanSpecifier;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.rules.Case;
-
 public class TestCase {
 
-	protected class CaseResult extends Case<Result>  {
+    protected class CaseResult extends Case<Result>  {
 
-		@XmlElement(required=true)
-		private Result policy;
+        @XmlElement(required=true)
+        private Result policy;
 
-		public CaseResult(DefaultProduct product, ProductCategory productCategory, BillingPeriod billingPeriod, DefaultPriceList priceList,
-				 Result policy) {
-			setProduct(product);
-			setProductCategory(productCategory);
-			setBillingPeriod(billingPeriod);
-			setPriceList(priceList);
-			this.policy = policy;
-		}
+        public CaseResult(DefaultProduct product, ProductCategory productCategory, BillingPeriod billingPeriod, DefaultPriceList priceList,
+                Result policy) {
+            setProduct(product);
+            setProductCategory(productCategory);
+            setBillingPeriod(billingPeriod);
+            setPriceList(priceList);
+            this.policy = policy;
+        }
 
-		@Override
-		protected Result getResult() {
-			return policy;
-		}
-	}
+        @Override
+        protected Result getResult() {
+            return policy;
+        }
 
-	@Test(enabled=true)
-	public void testBasic() throws CatalogApiException{
-		MockCatalog cat = new MockCatalog();
+        @XmlElement(required=false, name="product")
+        @XmlIDREF
+        protected DefaultProduct product;
+        @XmlElement(required=false, name="productCategory")
+        protected ProductCategory productCategory;
 
-		DefaultProduct product = cat.getProducts()[0];
-		DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+        @XmlElement(required=false, name="billingPeriod")
+        protected BillingPeriod billingPeriod;
 
+        @XmlElement(required=false, name="priceList")
+        @XmlIDREF
+        protected DefaultPriceList priceList;
 
-		CaseResult cr = new CaseResult(
-				product, 
-				ProductCategory.BASE,
-				BillingPeriod.MONTHLY, 
-				priceList,
-				Result.FOO);
+        public DefaultProduct getProduct(){
+            return product;
+        }
 
-		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr, cat.getProducts()[1].getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", cat);
-	}
+        public ProductCategory getProductCategory() {
+            return productCategory;
+        }
 
-	@Test(enabled=true)
-	public void testWildCardProduct() throws CatalogApiException{
-		MockCatalog cat = new MockCatalog();
+        public BillingPeriod getBillingPeriod() {
+            return billingPeriod;
+        }
 
-		DefaultProduct product = cat.getProducts()[0];
-		DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+        public DefaultPriceList getPriceList() {
+            return priceList;
+        }
 
+        protected CaseResult setProduct(DefaultProduct product) {
+            this.product = product;
+            return this;
+        }
 
-		CaseResult cr = new CaseResult(
-				null, 
-				ProductCategory.BASE,
-				BillingPeriod.MONTHLY, 
-				priceList,
+        protected CaseResult setProductCategory(ProductCategory productCategory) {
+            this.productCategory = productCategory;
+            return this;
+        }
 
-				Result.FOO);
+        protected CaseResult setBillingPeriod(BillingPeriod billingPeriod) {
+            this.billingPeriod = billingPeriod;
+            return this;
+        }
 
-		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertion(Result.FOO, cr, cat.getProducts()[1].getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", cat);
-	}
-	
-	@Test(enabled=true)
-	public void testWildCardProductCategory() throws CatalogApiException{
-		MockCatalog cat = new MockCatalog();
+        protected CaseResult setPriceList(DefaultPriceList priceList) {
+            this.priceList = priceList;
+            return this;
+        }
+    }
 
-		DefaultProduct product = cat.getProducts()[0];
-		DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+    @Test(enabled=true)
+    public void testBasic() throws CatalogApiException{
+        MockCatalog cat = new MockCatalog();
 
-
-		CaseResult cr = new CaseResult(
-				product, 
-				null,
-				BillingPeriod.MONTHLY, 
-				priceList,
-
-				Result.FOO);
-
-		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertion(Result.FOO, cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", cat);
-	}
-	
-	@Test(enabled=true)
-	public void testWildCardBillingPeriod() throws CatalogApiException{
-		MockCatalog cat = new MockCatalog();
-
-		DefaultProduct product = cat.getProducts()[0];
-		DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+        DefaultProduct product = cat.getProducts()[0];
+        DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
 
 
-		CaseResult cr = new CaseResult(
-				product, 
-				ProductCategory.BASE,
-				null, 
-				priceList,
+        CaseResult cr = new CaseResult(
+                product, 
+                ProductCategory.BASE,
+                BillingPeriod.MONTHLY, 
+                priceList,
+                Result.FOO);
 
-				Result.FOO);
+        assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr, cat.getProducts()[1].getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", cat);
+    }
 
-		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertion(Result.FOO,cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", cat);
-	}
+    @Test(enabled=true)
+    public void testWildCardProduct() throws CatalogApiException{
+        MockCatalog cat = new MockCatalog();
 
-	@Test(enabled=true)
-	public void testWildCardPriceList() throws CatalogApiException{
-		MockCatalog cat = new MockCatalog();
-
-		DefaultProduct product = cat.getProducts()[0];
-		DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
-
-
-		CaseResult cr = new CaseResult(
-				product, 
-				ProductCategory.BASE,
-				BillingPeriod.MONTHLY, 
-				null,
-
-				Result.FOO);
-
-		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), cat);
-		assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), cat);
-		assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", cat);
-	}
-	
-	@Test
-	public void testCaseOrder() throws CatalogApiException {
-		MockCatalog cat = new MockCatalog();
-
-		DefaultProduct product = cat.getProducts()[0];
-		DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+        DefaultProduct product = cat.getProducts()[0];
+        DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
 
 
-		CaseResult cr0 = new CaseResult(
-				product, 
-				ProductCategory.BASE,
-				BillingPeriod.MONTHLY, 
-				priceList,
-				Result.FOO);
+        CaseResult cr = new CaseResult(
+                null, 
+                ProductCategory.BASE,
+                BillingPeriod.MONTHLY, 
+                priceList,
 
-		CaseResult cr1 = new CaseResult(
-				product, 
-				ProductCategory.BASE,
-				BillingPeriod.MONTHLY, 
-				priceList,
-				Result.BAR);
+                Result.FOO);
 
-		CaseResult cr2 = new CaseResult(
-				product, 
-				ProductCategory.BASE,
-				BillingPeriod.ANNUAL, 
-				priceList,
-				Result.DIPSY);
+        assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertion(Result.FOO, cr, cat.getProducts()[1].getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", cat);
+    }
 
-		CaseResult cr3 = new CaseResult(
-				product, 
-				ProductCategory.BASE,
-				BillingPeriod.ANNUAL, 
-				priceList,
-				Result.LALA);
+    @Test(enabled=true)
+    public void testWildCardProductCategory() throws CatalogApiException{
+        MockCatalog cat = new MockCatalog();
 
-		Result r1 = Case.getResult(new CaseResult[]{cr0, cr1, cr2,cr3}, 
-				new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName()), cat);
-		assertEquals(Result.FOO, r1);
-		
-		Result r2 = Case.getResult(new CaseResult[]{cr0, cr1, cr2}, 
-				new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName()), cat);
-		assertEquals(Result.DIPSY, r2);
-	}
-
-	
+        DefaultProduct product = cat.getProducts()[0];
+        DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
 
 
-	protected void assertionNull(CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, StandaloneCatalog cat) throws CatalogApiException{
-		assertNull(cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
-	}
+        CaseResult cr = new CaseResult(
+                product, 
+                null,
+                BillingPeriod.MONTHLY, 
+                priceList,
 
-	protected void assertion(Result result, CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName,StandaloneCatalog cat) throws CatalogApiException{
-		assertEquals(result, cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
-	}
+                Result.FOO);
+
+        assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertion(Result.FOO, cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", cat);
+    }
+
+    @Test(enabled=true)
+    public void testWildCardBillingPeriod() throws CatalogApiException{
+        MockCatalog cat = new MockCatalog();
+
+        DefaultProduct product = cat.getProducts()[0];
+        DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+
+        CaseResult cr = new CaseResult(
+                product, 
+                ProductCategory.BASE,
+                null, 
+                priceList,
+
+                Result.FOO);
+
+        assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertion(Result.FOO,cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", cat);
+    }
+
+    @Test(enabled=true)
+    public void testWildCardPriceList() throws CatalogApiException{
+        MockCatalog cat = new MockCatalog();
+
+        DefaultProduct product = cat.getProducts()[0];
+        DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+
+        CaseResult cr = new CaseResult(
+                product, 
+                ProductCategory.BASE,
+                BillingPeriod.MONTHLY, 
+                null,
+
+                Result.FOO);
+
+        assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr,  cat.getProducts()[1].getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.ADD_ON,BillingPeriod.MONTHLY, priceList.getName(), cat);
+        assertionNull(cr, product.getName(), ProductCategory.BASE,BillingPeriod.ANNUAL, priceList.getName(), cat);
+        assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE,BillingPeriod.MONTHLY, "dipsy", cat);
+    }
+
+    @Test
+    public void testCaseOrder() throws CatalogApiException {
+        MockCatalog cat = new MockCatalog();
+
+        DefaultProduct product = cat.getProducts()[0];
+        DefaultPriceList priceList = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+
+        CaseResult cr0 = new CaseResult(
+                product, 
+                ProductCategory.BASE,
+                BillingPeriod.MONTHLY, 
+                priceList,
+                Result.FOO);
+
+        CaseResult cr1 = new CaseResult(
+                product, 
+                ProductCategory.BASE,
+                BillingPeriod.MONTHLY, 
+                priceList,
+                Result.BAR);
+
+        CaseResult cr2 = new CaseResult(
+                product, 
+                ProductCategory.BASE,
+                BillingPeriod.ANNUAL, 
+                priceList,
+                Result.DIPSY);
+
+        CaseResult cr3 = new CaseResult(
+                product, 
+                ProductCategory.BASE,
+                BillingPeriod.ANNUAL, 
+                priceList,
+                Result.LALA);
+
+        Result r1 = Case.getResult(new CaseResult[]{cr0, cr1, cr2,cr3}, 
+                new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName()), cat);
+        assertEquals(Result.FOO, r1);
+
+        Result r2 = Case.getResult(new CaseResult[]{cr0, cr1, cr2}, 
+                new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName()), cat);
+        assertEquals(Result.DIPSY, r2);
+    }
+
+
+
+
+    protected void assertionNull(CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName, StandaloneCatalog cat) throws CatalogApiException{
+        assertNull(cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
+    }
+
+    protected void assertion(Result result, CaseResult cr, String productName, ProductCategory productCategory, BillingPeriod bp, String priceListName,StandaloneCatalog cat) throws CatalogApiException{
+        assertEquals(result, cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
+    }
 
 
 }

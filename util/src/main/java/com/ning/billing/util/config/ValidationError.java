@@ -15,9 +15,9 @@
  */
 package com.ning.billing.util.config;
 
-import java.net.URI;
-
 import org.slf4j.Logger;
+
+import java.net.URI;
 
 
 public class ValidationError {

@@ -16,10 +16,10 @@
 
 package com.ning.billing.catalog;
 
+import com.ning.billing.catalog.api.Currency;
+
 import java.math.BigDecimal;
 import java.util.Date;
-
-import com.ning.billing.catalog.api.Currency;
 
 public class MockInternationalPrice extends DefaultInternationalPrice {
 	

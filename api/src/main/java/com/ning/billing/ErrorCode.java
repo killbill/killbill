@@ -33,7 +33,7 @@ public enum ErrorCode {
 
     /* Creation */
     ENT_CREATE_BAD_PHASE(1011, "Can't create plan initial phase %s"),
-    ENT_CREATE_NO_BUNDLE(1012, "Bundle %s does not exists"),
+    ENT_CREATE_NO_BUNDLE(1012, "Bundle %s does not exist"),
     ENT_CREATE_NO_BP(1013, "Missing Base Subscription for bundle %s"),
     ENT_CREATE_BP_EXISTS(1015, "Subscription bundle %s already has a base subscription"),
     /* Change plan */

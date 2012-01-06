@@ -16,13 +16,12 @@
 
 package com.ning.billing.util.clock;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.ning.billing.catalog.api.Duration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.ning.billing.catalog.api.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DefaultClock implements Clock {
 
@@ -42,21 +41,21 @@ public class DefaultClock implements Clock {
         return input.minus(input.getMillisOfSecond());
     }
 
-    public static DateTime addDuration(DateTime input, List<Duration> durations) {
 
+    public static DateTime addOrRemoveDuration(DateTime input, List<Duration> durations, boolean add) {
         DateTime result = input;
         for (Duration cur : durations) {
             switch (cur.getUnit()) {
             case DAYS:
-                result = result.plusDays(cur.getNumber());
+                result = add ? result.plusDays(cur.getNumber()) : result.minusDays(cur.getNumber());
                 break;
 
             case MONTHS:
-                result = result.plusMonths(cur.getNumber());
+                result = add ? result.plusMonths(cur.getNumber()) : result.minusMonths(cur.getNumber());
                 break;
 
             case YEARS:
-                result = result.plusYears(cur.getNumber());
+                result = add ? result.plusYears(cur.getNumber()) : result.minusYears(cur.getNumber());
                 break;
             case UNLIMITED:
             default:
@@ -66,9 +65,23 @@ public class DefaultClock implements Clock {
         return result;
     }
 
+    public static DateTime addDuration(DateTime input, List<Duration> durations) {
+        return addOrRemoveDuration(input, durations, true);
+    }
+
+    public static DateTime removeDuration(DateTime input, List<Duration> durations) {
+        return addOrRemoveDuration(input, durations, false);
+    }
+
     public static DateTime addDuration(DateTime input, Duration duration) {
         List<Duration> list = new ArrayList<Duration>();
         list.add(duration);
-        return addDuration(input, list);
+        return addOrRemoveDuration(input, list, true);
+    }
+
+    public static DateTime removeDuration(DateTime input, Duration duration) {
+        List<Duration> list = new ArrayList<Duration>();
+        list.add(duration);
+        return addOrRemoveDuration(input, list, false);
     }
 }

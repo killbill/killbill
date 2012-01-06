@@ -16,12 +16,11 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import org.testng.annotations.Test;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import org.testng.annotations.Test;
 
 public class TestUserApiCreateSql extends TestUserApiCreate {
 
@@ -30,29 +29,34 @@ public class TestUserApiCreateSql extends TestUserApiCreate {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testCreateWithRequestedDate() {
-        invokeRealMethod(this);
+        super.testCreateWithRequestedDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testCreateWithInitialPhase() {
-        invokeRealMethod(this);
+        super.testCreateWithInitialPhase();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testSimpleCreateSubscription() {
-        invokeRealMethod(this);
+        super.testSimpleCreateSubscription();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     protected void testSimpleSubscriptionThroughPhases() {
-        invokeRealMethod(this);
+        super.testSimpleSubscriptionThroughPhases();
     }
 
+    @Override
     @Test(enabled=false, groups={"sql"})
     protected void testSubscriptionWithAddOn() {
-        invokeRealMethod(this);
+        super.testSubscriptionWithAddOn();
     }
 
 }

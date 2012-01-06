@@ -16,10 +16,10 @@
 
 package com.ning.billing.util.config;
 
+import org.slf4j.Logger;
+
 import java.net.URI;
 import java.util.ArrayList;
-
-import org.slf4j.Logger;
 
 public class ValidationErrors extends ArrayList<ValidationError>{
 	private static final long serialVersionUID = 1L;

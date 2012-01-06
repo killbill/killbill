@@ -47,7 +47,7 @@ public interface Catalog {
 
     public abstract void configureEffectiveDate(Date date);
 
-    public abstract String getCalalogName();
+    public abstract String getCatalogName();
 
     public abstract PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier) throws CatalogApiException;
 

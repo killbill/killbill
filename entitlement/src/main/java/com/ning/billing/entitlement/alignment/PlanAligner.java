@@ -16,29 +16,18 @@
 
 package com.ning.billing.entitlement.alignment;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.joda.time.DateTime;
-
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanAlignmentChange;
-import com.ning.billing.catalog.api.PlanAlignmentCreate;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.DefaultClock;
+import org.joda.time.DateTime;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  *

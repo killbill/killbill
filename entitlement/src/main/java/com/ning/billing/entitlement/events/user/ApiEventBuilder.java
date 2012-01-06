@@ -29,7 +29,7 @@ public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
         super();
     }
 
-    public ApiEventBuilder(EventBaseBuilder<ApiEventBuilder> base) {
+    public ApiEventBuilder(EventBaseBuilder<?> base) {
         super(base);
     }
 

@@ -22,6 +22,7 @@ import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.util.glue.EventBusModule;
+import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
@@ -37,6 +38,7 @@ public class AnalyticsTestModule extends AnalyticsModule
         install(new CatalogModule());
         install(new EventBusModule());
         install(new EntitlementModule());
+        install(new TagStoreModule());
 
         // Install the Dao layer
         final MysqlTestingHelper helper = new MysqlTestingHelper();

@@ -16,10 +16,13 @@
 
 package com.ning.billing.entitlement.api.billing;
 
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+
+import com.ning.billing.account.api.Account;
 
 public interface EntitlementBillingApi {
 
@@ -27,6 +30,14 @@ public interface EntitlementBillingApi {
      *
      * @param accountId 
      * @return an ordered list of billing events for the given account
+     * @return the list of accounts which have active subscriptions
+     */
+    public List<Account> getActiveAccounts();
+
+    /**
+     *
+     * @param subscriptionId the subscriptionId of interest for a gievn account
+     * @return an ordered list of billing event
      *
      */
     public SortedSet<BillingEvent> getBillingEventsForSubscription(UUID accountId);

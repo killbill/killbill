@@ -16,24 +16,16 @@
 
 package com.ning.billing.catalog.rules;
 
+import com.ning.billing.catalog.DefaultPriceList;
+import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.api.*;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-
-import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.catalog.DefaultPriceList;
-import com.ning.billing.catalog.api.ActionPolicy;
-import com.ning.billing.catalog.api.BillingAlignment;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.IllegalPlanChange;
-import com.ning.billing.catalog.api.PlanAlignmentChange;
-import com.ning.billing.catalog.api.PlanAlignmentCreate;
-import com.ning.billing.catalog.api.PlanChangeResult;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.PlanSpecifier;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class PlanRules extends ValidatingConfig<StandaloneCatalog>  {

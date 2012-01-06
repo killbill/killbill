@@ -16,14 +16,13 @@
 
 package com.ning.billing.catalog.glue;
 
-import org.skife.config.ConfigurationObjectFactory;
-
 import com.google.inject.AbstractModule;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.io.ICatalogLoader;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.config.CatalogConfig;
+import org.skife.config.ConfigurationObjectFactory;
 
 public class CatalogModule extends AbstractModule {
 

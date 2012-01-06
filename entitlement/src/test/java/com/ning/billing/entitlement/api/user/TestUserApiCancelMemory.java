@@ -16,12 +16,11 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import org.testng.annotations.Test;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
+import org.testng.annotations.Test;
 
 public class TestUserApiCancelMemory extends TestUserApiCancel {
 
@@ -31,23 +30,27 @@ public class TestUserApiCancelMemory extends TestUserApiCancel {
         return Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testCancelSubscriptionIMM() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionIMM();
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testCancelSubscriptionEOTWithChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionEOTWithChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testCancelSubscriptionEOTWithNoChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionEOTWithNoChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testUncancel() {
-        invokeRealMethod(this);
+        super.testUncancel();
     }
 }

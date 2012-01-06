@@ -16,12 +16,11 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import org.testng.annotations.Test;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import org.testng.annotations.Test;
 
 public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
 
@@ -53,35 +52,41 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
         }
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testChangePlanBundleAlignEOTWithNoChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testChangePlanBundleAlignEOTWithChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testChangePlanBundleAlignEOTWithChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testChangePlanBundleAlignIMM() {
-        invokeRealMethod(this);
+        super.testChangePlanBundleAlignIMM();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testMultipleChangeLastIMM() {
-        invokeRealMethod(this);
+        super.testMultipleChangeLastIMM();
     }
 
+    @Override
     @Test(enabled=true, groups={"sql"})
     public void testMultipleChangeLastEOT() {
-        invokeRealMethod(this);
+        super.testMultipleChangeLastEOT();
     }
 
     // rescue not implemented yet
+    @Override
     @Test(enabled=false, groups={"sql"})
     public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testChangePlanChangePlanAlignEOTWithChargeThroughDate();
     }
 
 }

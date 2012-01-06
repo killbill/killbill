@@ -16,14 +16,11 @@
 
 package com.ning.billing.entitlement.events;
 
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import org.joda.time.DateTime;
+
+import java.util.UUID;
 
 public abstract class EventBase implements EntitlementEvent {
 
@@ -40,7 +37,7 @@ public abstract class EventBase implements EntitlementEvent {
     private DateTime nextAvailableProcessingTime;
     private EventLifecycleState processingState;
 
-    public EventBase(EventBaseBuilder builder) {
+    public EventBase(EventBaseBuilder<?> builder) {
         this.uuid = builder.getUuid();
         this.subscriptionId = builder.getSubscriptionId();
         this.requestedDate = builder.getRequestedDate();

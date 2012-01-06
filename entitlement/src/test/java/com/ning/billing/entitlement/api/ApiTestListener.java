@@ -16,20 +16,16 @@
 
 package com.ning.billing.entitlement.api;
 
-import java.util.EmptyStackException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.util.eventbus.EventBus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Stack;
 
 public class ApiTestListener {
 
@@ -40,6 +36,7 @@ public class ApiTestListener {
     private volatile boolean completed;
 
     public enum NextEvent {
+        MIGRATE_ENTITLEMENT,
         CREATE,
         CHANGE,
         CANCEL,
@@ -56,6 +53,9 @@ public class ApiTestListener {
     @Subscribe
     public void handleEntitlementEvent(SubscriptionTransition event) {
         switch (event.getTransitionType()) {
+        case MIGRATE_ENTITLEMENT:
+            subscriptionMigrated(event);
+            break;
         case CREATE:
             subscriptionCreated(event);
             break;
@@ -138,6 +138,12 @@ public class ApiTestListener {
         }
     }
 
+
+    public void subscriptionMigrated(SubscriptionTransition migrated) {
+        log.debug("-> Got event MIGRATED");
+        assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
+        notifyIfStackEmpty();
+    }
 
     public void subscriptionCreated(SubscriptionTransition created) {
         log.debug("-> Got event CREATED");

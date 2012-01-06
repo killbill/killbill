@@ -15,19 +15,18 @@
  */
 package com.ning.billing.catalog;
 
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Date;
-
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.config.ValidationErrors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.config.ValidationErrors;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Date;
 
 public class TestInternationalPrice {
 	private static final Logger log = LoggerFactory.getLogger(TestInternationalPrice.class);

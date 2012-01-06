@@ -18,28 +18,20 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.List;
 import java.util.UUID;
-
 import org.joda.time.DateTime;
-
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.IAccount;
-import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.entitlement.alignment.PlanAligner;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
@@ -68,6 +60,11 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
+    public SubscriptionBundle getBundleForKey(String bundleKey) {
+        return dao.getSubscriptionBundleFromKey(bundleKey);
+    }
+
+    @Override
     public List<SubscriptionBundle> getBundlesForAccount(UUID accountId) {
         return dao.getSubscriptionBundleForAccount(accountId);
     }
@@ -84,18 +81,17 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(IAccount account, String bundleName)
+    public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleName)
     throws EntitlementUserApiException {
-        SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, account.getId());
+        SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId);
         return dao.createSubscriptionBundle(bundle);
     }
 
     @Override
-    public Subscription createSubscription(UUID bundleId, String productName,
-            BillingPeriod term, String priceList, PhaseType initialPhase, DateTime requestedDate) throws EntitlementUserApiException {
+    public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate) throws EntitlementUserApiException {
 
         try {
-            String realPriceList = (priceList == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : priceList;
+            String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
             if (requestedDate != null && requestedDate.isAfter(now)) {
@@ -104,13 +100,13 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             requestedDate = (requestedDate == null) ? now : requestedDate;
             DateTime effectiveDate = requestedDate;
 
-            Plan plan = catalogService.getCatalog().findPlan(productName, term, realPriceList);
+            Plan plan = catalogService.getCatalog().findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList);
 
 
             PlanPhase phase = (plan.getInitialPhases() != null) ? plan.getInitialPhases()[0] : plan.getFinalPhase();
             if (phase == null) {
                 throw new EntitlementError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
-                        productName, term.toString(), realPriceList));
+                        spec.getProductName(), spec.getBillingPeriod().toString(), realPriceList));
             }
 
             SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(bundleId);
@@ -145,7 +141,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             .setCategory(plan.getProduct().getCategory())
             .setBundleStartDate(bundleStartDate)
             .setStartDate(effectiveDate),
-            plan, initialPhase, realPriceList, requestedDate, effectiveDate, now);
+            plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now);
 
             return subscription;
         } catch (CatalogApiException e) {

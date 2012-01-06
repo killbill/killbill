@@ -16,14 +16,14 @@
 
 package com.ning.billing.entitlement.engine.core;
 
-import java.util.Collection;
-import java.util.List;
-
 import com.google.inject.Inject;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.util.clock.Clock;
+
+import java.util.Collection;
+import java.util.List;
 
 public class DefaultApiEventProcessor extends ApiEventProcessorBase {
 

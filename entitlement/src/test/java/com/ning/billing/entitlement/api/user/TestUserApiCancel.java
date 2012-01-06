@@ -17,14 +17,15 @@
 package com.ning.billing.entitlement.api.user;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertFalse;
 
-import java.util.List;
-
+import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 import org.testng.Assert;
+
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
@@ -32,12 +33,12 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.entitlement.api.TestApiBase;
+import java.util.List;
 
-public abstract class TestUserApiCancel extends TestUserApiBase {
+public abstract class TestUserApiCancel extends TestApiBase {
 
-    protected void testCancelSubscriptionIMMReal() {
+    protected void testCancelSubscriptionIMM() {
 
         log.info("Starting testCancelSubscriptionIMM");
 
@@ -79,7 +80,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
     }
 
 
-    protected void testCancelSubscriptionEOTWithChargeThroughDateReal() {
+    protected void testCancelSubscriptionEOTWithChargeThroughDate() {
         log.info("Starting testCancelSubscriptionEOTWithChargeThroughDate");
 
         try {
@@ -131,7 +132,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
     }
 
 
-    protected void testCancelSubscriptionEOTWithNoChargeThroughDateReal() {
+    protected void testCancelSubscriptionEOTWithNoChargeThroughDate() {
 
         log.info("Starting testCancelSubscriptionEOTWithNoChargeThroughDate");
 
@@ -175,7 +176,7 @@ public abstract class TestUserApiCancel extends TestUserApiBase {
     // Similar test to testCancelSubscriptionEOTWithChargeThroughDate except we uncancel and check things
     // are as they used to be and we can move forward without hitting cancellation
     //
-    protected void testUncancelReal() {
+    protected void testUncancel() {
 
         log.info("Starting testUncancel");
 

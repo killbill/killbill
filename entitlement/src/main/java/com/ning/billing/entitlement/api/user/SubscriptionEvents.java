@@ -16,10 +16,10 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import com.ning.billing.entitlement.events.EntitlementEvent;
+
 import java.util.LinkedList;
 import java.util.UUID;
-
-import com.ning.billing.entitlement.events.EntitlementEvent;
 
 public class SubscriptionEvents {
 

@@ -36,7 +36,7 @@ public class DefaultBillingEvent implements BillingEvent {
     final private InternationalPrice fixedPrice;
     final private InternationalPrice recurringPrice;
     final private String description;
-    final private BillingMode billingMode;
+    final private BillingModeType billingModeType;
     final private BillingPeriod billingPeriod;
     
     public DefaultBillingEvent(SubscriptionTransition transition, int billCycleDay) {
@@ -48,14 +48,14 @@ public class DefaultBillingEvent implements BillingEvent {
         fixedPrice = transition.getNextPhase().getFixedPrice();
         recurringPrice = transition.getNextPhase().getRecurringPrice();
         description = transition.getTransitionType().toString();
-        billingMode=BillingMode.IN_ADVANCE;
+        billingModeType=BillingModeType.IN_ADVANCE;
         billingPeriod = transition.getNextPhase().getBillingPeriod();
         
     }
 
     // Intended for test only
     public DefaultBillingEvent(UUID subscriptionId, DateTime effectiveDate, String planName, String planPhaseName, InternationalPrice fixedPrice,
-            InternationalPrice recurringPrice, BillingPeriod billingPeriod, int billCycleDay, BillingMode billingMode, String description) {
+            InternationalPrice recurringPrice, BillingPeriod billingPeriod, int billCycleDay, BillingModeType billingModeType, String description) {
         this.subscriptionId = subscriptionId;
         this.effectiveDate = effectiveDate;
         this.planName = planName;
@@ -64,7 +64,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.recurringPrice = recurringPrice;
         this.billingPeriod = billingPeriod;
         this.billCycleDay = billCycleDay;
-        this.billingMode = billingMode;
+        this.billingModeType = billingModeType;
         this.description = description;
     }
 
@@ -124,8 +124,8 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public BillingMode getBillingMode() {
-        return billingMode;
+    public BillingModeType getBillingMode() {
+        return billingModeType;
     }
 
     @Override

@@ -71,7 +71,7 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      *
      * @return the billing mode for the current event
      */
-    public BillingMode getBillingMode();
+    public BillingModeType getBillingMode();
 
     /**
      *
