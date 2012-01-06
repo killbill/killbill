@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing.entitlement.api;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -37,12 +37,20 @@ import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
-import com.ning.billing.entitlement.api.ApiTestListener;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDao;
@@ -62,15 +70,18 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 
-public abstract class TestUserApiBase {
+public abstract class TestApiBase {
 
-    protected static final Logger log = LoggerFactory.getLogger(TestUserApiBase.class);
+    protected static final Logger log = LoggerFactory.getLogger(TestApiBase.class);
 
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
 
     protected EntitlementService entitlementService;
     protected EntitlementUserApi entitlementApi;
     protected EntitlementBillingApi billingApi;
+
+    protected EntitlementMigrationApi migrationApi;
+
     protected CatalogService catalogService;
     protected EntitlementConfig config;
     protected EntitlementDao dao;
@@ -84,7 +95,7 @@ public abstract class TestUserApiBase {
 
     public static void loadSystemPropertiesFromClasspath( final String resource )
     {
-        final URL url = TestUserApiBase.class.getResource(resource);
+        final URL url = TestApiBase.class.getResource(resource);
         assertNotNull(url);
 
         try {
@@ -143,6 +154,7 @@ public abstract class TestUserApiBase {
         testListener = new ApiTestListener(busService.getEventBus());
         entitlementApi = entitlementService.getUserApi();
         billingApi = entitlementService.getBillingApi();
+        migrationApi = entitlementService.getMigrationApi();
 
     }
 
@@ -176,31 +188,11 @@ public abstract class TestUserApiBase {
         log.warn("DONE WITH TEST\n");
     }
 
-    // Glue magic to invoke the real test
-    protected void invokeRealMethod(Object invoker)  {
-
-        try {
-            String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
-            String realMethodName= methodName + "Real";
-
-            Class<?> thisClass = invoker.getClass();
-            Class<?> superClass = thisClass.getSuperclass();
-            Method [] methods = superClass.getDeclaredMethods();
-            for (Method cur : methods) {
-                if (cur.getName().equals(realMethodName)) {
-                    cur.invoke(invoker);
-                    return;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
-    }
-
-    protected SubscriptionData createSubscription(String productName, BillingPeriod term, String planSet) throws EntitlementUserApiException {
+    protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet) throws EntitlementUserApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(), productName, term, planSet, null, clock.getUTCNow());
+        SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
+                clock.getUTCNow());
         assertNotNull(subscription);
         assertTrue(testListener.isCompleted(5000));
         return subscription;
@@ -322,6 +314,9 @@ public abstract class TestUserApiBase {
         return accountData;
     }
 
+    protected PlanPhaseSpecifier getProductSpecifier(final String productName, final String priceList, final BillingPeriod term, final PhaseType phaseType) {
+        return new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, priceList, phaseType);
+    }
 
     protected void printEvents(List<EntitlementEvent> events) {
         for (EntitlementEvent cur : events) {

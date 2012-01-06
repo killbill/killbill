@@ -26,7 +26,10 @@ import java.util.List;
 
 public interface EntityDao<T extends Entity> {
     @SqlUpdate
-    public void save(@BindBean T entity);
+    public void create(@BindBean T entity);
+
+    @SqlUpdate
+    public void update(@BindBean T entity);
 
     @SqlQuery
     public T getById(@Bind("id") final String id);

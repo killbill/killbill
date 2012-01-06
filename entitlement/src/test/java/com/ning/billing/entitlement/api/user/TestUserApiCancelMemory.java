@@ -30,23 +30,27 @@ public class TestUserApiCancelMemory extends TestUserApiCancel {
         return Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testCancelSubscriptionIMM() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionIMM();
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testCancelSubscriptionEOTWithChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionEOTWithChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testCancelSubscriptionEOTWithNoChargeThroughDate() {
-        invokeRealMethod(this);
+        super.testCancelSubscriptionEOTWithNoChargeThroughDate();
     }
 
+    @Override
     @Test(enabled=true, groups={"fast"})
     public void testUncancel() {
-        invokeRealMethod(this);
+        super.testUncancel();
     }
 }

@@ -109,6 +109,11 @@ public class MockAccount implements Account
     }
 
     @Override
+    public void addFields(List<CustomField> fields) {
+        throw new NotImplementedException();
+    }
+
+    @Override
     public void clearFields() {
         throw new NotImplementedException();
     }

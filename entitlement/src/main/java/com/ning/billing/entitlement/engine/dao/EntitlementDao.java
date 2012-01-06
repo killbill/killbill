@@ -16,12 +16,12 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
+import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +31,8 @@ public interface EntitlementDao {
 
     // Bundle apis
     public List<SubscriptionBundle> getSubscriptionBundleForAccount(UUID accountId);
+
+    public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey);
 
     public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId);
 
@@ -68,4 +70,8 @@ public interface EntitlementDao {
     public void uncancelSubscription(UUID subscriptionId, List<EntitlementEvent> uncancelEvents);
 
     public void changePlan(UUID subscriptionId, List<EntitlementEvent> changeEvents);
+
+    public void migrate(UUID acountId, AccountMigrationData data);
+
+    public void undoMigration(UUID accountId);
 }

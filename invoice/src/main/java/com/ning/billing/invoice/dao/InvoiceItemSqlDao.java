@@ -50,10 +50,14 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
 
     @Override
     @SqlUpdate
-    void save(@InvoiceItemBinder final InvoiceItem invoiceItem);
+    void create(@InvoiceItemBinder final InvoiceItem invoiceItem);
+
+    @Override
+    @SqlUpdate
+    void update(@InvoiceItemBinder final InvoiceItem invoiceItem);
 
     @SqlBatch
-    void save(@InvoiceItemBinder final List<InvoiceItem> items);
+    void create(@InvoiceItemBinder final List<InvoiceItem> items);
 
     @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)

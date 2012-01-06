@@ -82,7 +82,15 @@ public enum ErrorCode {
     /*
      * Phases
      */
-    CAT_NO_SUCH_PHASE(2040,"Could not find any phases named '%s'")
+    CAT_NO_SUCH_PHASE(2040,"Could not find any phases named '%s'"),
+
+   /*
+    *
+    * Range 3000 : ACCOUNT
+    *
+    */
+    ACCOUNT_ALREADY_EXISTS(3000, "Account already exists for key %s"),
+    ACCOUNT_INVALID_NAME(3001, "An invalid name was specified when creating or updating an account.")
     ;
 
     private int code;

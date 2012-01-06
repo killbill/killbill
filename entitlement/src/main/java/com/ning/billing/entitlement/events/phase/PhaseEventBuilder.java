@@ -26,7 +26,7 @@ public class PhaseEventBuilder extends EventBaseBuilder<PhaseEventBuilder> {
         super();
     }
 
-    public PhaseEventBuilder(EventBaseBuilder<PhaseEventBuilder> base) {
+    public PhaseEventBuilder(EventBaseBuilder<?> base) {
         super(base);
     }
 

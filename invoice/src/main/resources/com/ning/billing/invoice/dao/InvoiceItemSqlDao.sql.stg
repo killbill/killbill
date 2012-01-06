@@ -25,12 +25,16 @@ getInvoiceItemsBySubscription() ::= <<
   WHERE subscription_id = :subscriptionId;
 >>
 
-save() ::= <<
+create() ::= <<
   INSERT INTO invoice_items(id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency)
-  VALUES(:id, :invoiceId, :subscriptionId, :startDate, :endDate, :description, :amount, :rate, :currency)
-  ON DUPLICATE KEY UPDATE
-    start_date = :startDate, end_date = :endDate, description = :description,
-    amount = :amount, rate = :rate, currency = :currency''
+  VALUES(:id, :invoiceId, :subscriptionId, :startDate, :endDate, :description, :amount, :rate, :currency);
+>>
+
+update() ::= <<
+  UPDATE invoice_items
+  SET invoice_id = :invoiceId, subscription_id = :subscriptionId, start_date = :startDate, end_date = :endDate,
+      description = :description, amount = :amount, rate = :rate, currency = :currency
+  WHERE id = :id;
 >>
 
 test() ::= <<

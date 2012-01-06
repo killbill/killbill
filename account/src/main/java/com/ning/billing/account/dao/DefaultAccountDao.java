@@ -124,7 +124,7 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     @Override
-    public void save(final Account account) {
+    public void create(final Account account) {
         final String accountId = account.getId().toString();
         final String objectType = DefaultAccount.OBJECT_TYPE;
 
@@ -132,7 +132,7 @@ public class DefaultAccountDao implements AccountDao {
             @Override
             public Void inTransaction(AccountSqlDao accountDao, TransactionStatus status) throws Exception {
                 Account currentAccount = accountDao.getById(accountId);
-                accountDao.save(account);
+                accountDao.create(account);
 
                 FieldStoreDao fieldStoreDao = accountDao.become(FieldStoreDao.class);
                 fieldStoreDao.save(accountId, objectType, account.getFieldList());
@@ -140,14 +140,37 @@ public class DefaultAccountDao implements AccountDao {
                 TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
                 tagStoreDao.save(accountId, objectType, account.getTagList());
 
-                if (currentAccount == null) {
-                    AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
-                    eventBus.post(creationEvent);
-                } else {
-                    AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
-                    if (changeEvent.hasChanges()) {
-                        eventBus.post(changeEvent);
-                    }
+                AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
+                eventBus.post(creationEvent);
+
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void update(final Account account) {
+        final String accountId = account.getId().toString();
+        final String objectType = DefaultAccount.OBJECT_TYPE;
+
+        accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            @Override
+            public Void inTransaction(AccountSqlDao accountDao, TransactionStatus status) throws Exception {
+                Account currentAccount = accountDao.getById(accountId);
+
+                accountDao.update(account);
+
+                FieldStoreDao fieldStoreDao = accountDao.become(FieldStoreDao.class);
+                fieldStoreDao.clear(accountId, objectType);
+                fieldStoreDao.save(accountId, objectType, account.getFieldList());
+
+                TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
+                tagStoreDao.clear(accountId, objectType);
+                tagStoreDao.save(accountId, objectType, account.getTagList());
+
+                AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
+                if (changeEvent.hasChanges()) {
+                    eventBus.post(changeEvent);
                 }
 
                 return null;

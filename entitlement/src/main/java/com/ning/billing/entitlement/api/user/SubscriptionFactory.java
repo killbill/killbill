@@ -43,10 +43,11 @@ public class SubscriptionFactory {
 
     public SubscriptionData createSubscription(SubscriptionBuilder builder, List<EntitlementEvent> events) {
         SubscriptionData subscription = new SubscriptionData(builder, apiService, clock);
-        subscription.rebuildTransitions(events, catalogService.getCatalog());
+        if (events.size() > 0) {
+            subscription.rebuildTransitions(events, catalogService.getCatalog());
+        }
         return subscription;
     }
-
 
 
     public static class SubscriptionBuilder {

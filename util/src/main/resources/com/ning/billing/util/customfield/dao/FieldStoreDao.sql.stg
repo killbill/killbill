@@ -13,6 +13,11 @@ load() ::= <<
     WHERE object_id = :objectId AND object_type = :objectType;
 >>
 
+clear() ::= <<
+  DELETE FROM custom_fields
+  WHERE object_id = :objectId AND object_type = :objectType;
+>>
+
 test() ::= <<
   SELECT 1 FROM custom_fields;
 >>
