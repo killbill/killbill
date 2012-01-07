@@ -75,6 +75,17 @@ public class DefaultAccountChangeNotification implements AccountChangeNotificati
 
         addIfValueChanged(tmpChangedFields,"paymentProviderName",
                 oldData.getPaymentProviderName(), newData.getPaymentProviderName());
+
+        addIfValueChanged(tmpChangedFields, "locale", oldData.getLocale(), newData.getLocale());
+
+        addIfValueChanged(tmpChangedFields, "timeZone",
+                oldData.getTimeZone().toString(),
+                newData.getTimeZone().toString());
+
+        addIfValueChanged(tmpChangedFields, "nextBillingDate",
+                oldData.getNextBillingDate().toString(),
+                newData.getNextBillingDate().toString());
+
         return tmpChangedFields;
     }
 
@@ -85,7 +96,7 @@ public class DefaultAccountChangeNotification implements AccountChangeNotificati
         // If only one is null
         } else if (newData == null || oldData == null) {
             inputList.add(new DefaultChangedField(key, oldData, newData));
-        // If non are null we can safely compare values
+        // If neither are null we can safely compare values
         } else if (!newData.equals(oldData)) {
             inputList.add(new DefaultChangedField(key, oldData, newData));
         }

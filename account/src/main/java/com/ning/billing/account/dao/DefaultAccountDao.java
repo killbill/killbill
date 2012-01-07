@@ -22,7 +22,9 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeNotification;
 import com.ning.billing.account.api.AccountCreationNotification;
 import com.ning.billing.account.api.DefaultAccount;
@@ -125,20 +127,33 @@ public class DefaultAccountDao implements AccountDao {
 
     @Override
     public void create(final Account account) {
-        final String accountId = account.getId().toString();
+        final String key = account.getExternalKey();
         final String objectType = DefaultAccount.OBJECT_TYPE;
 
         accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
             @Override
             public Void inTransaction(AccountSqlDao accountDao, TransactionStatus status) throws Exception {
-                Account currentAccount = accountDao.getById(accountId);
+                Account currentAccount = accountDao.getAccountByKey(key);
+                if (currentAccount != null) {
+                    throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, account.getExternalKey());
+                }
+
                 accountDao.create(account);
 
+                String accountId = account.getId().toString();
                 FieldStoreDao fieldStoreDao = accountDao.become(FieldStoreDao.class);
-                fieldStoreDao.save(accountId, objectType, account.getFieldList());
+
+                List<CustomField> fieldList = account.getFieldList();
+                if (fieldList != null) {
+                    fieldStoreDao.save(accountId, objectType, account.getFieldList());
+                }
 
                 TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
-                tagStoreDao.save(accountId, objectType, account.getTagList());
+
+                List<Tag> tagList = account.getTagList();
+                if (tagList != null) {
+                    tagStoreDao.save(accountId, objectType, account.getTagList());
+                }
 
                 AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
                 eventBus.post(creationEvent);
@@ -150,23 +165,36 @@ public class DefaultAccountDao implements AccountDao {
 
     @Override
     public void update(final Account account) {
-        final String accountId = account.getId().toString();
+        final String key = account.getExternalKey();
         final String objectType = DefaultAccount.OBJECT_TYPE;
 
         accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
             @Override
             public Void inTransaction(AccountSqlDao accountDao, TransactionStatus status) throws Exception {
-                Account currentAccount = accountDao.getById(accountId);
+                Account currentAccount = accountDao.getAccountByKey(key);
+
+                if (currentAccount == null) {
+                    throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST, key);
+                }
 
                 accountDao.update(account);
 
+                String accountId = account.getId().toString();
                 FieldStoreDao fieldStoreDao = accountDao.become(FieldStoreDao.class);
                 fieldStoreDao.clear(accountId, objectType);
-                fieldStoreDao.save(accountId, objectType, account.getFieldList());
+
+                List<CustomField> fieldList = account.getFieldList();
+                if (fieldList != null) {
+                    fieldStoreDao.save(accountId, objectType, account.getFieldList());
+                }
 
                 TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
                 tagStoreDao.clear(accountId, objectType);
-                tagStoreDao.save(accountId, objectType, account.getTagList());
+
+                List<Tag> tagList = account.getTagList();
+                if (tagList != null) {
+                    tagStoreDao.save(accountId, objectType, tagList);
+                }
 
                 AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
                 if (changeEvent.hasChanges()) {

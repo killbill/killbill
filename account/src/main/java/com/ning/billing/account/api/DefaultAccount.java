@@ -69,7 +69,13 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
         this.currency = currency;
         this.billCycleDay = billCycleDay;
         this.paymentProviderName = paymentProviderName;
-        this.balance = balance;
+
+        if (balance == null) {
+            this.balance = BigDecimal.ZERO;
+        } else {
+            this.balance = balance;
+        }
+
         this.timeZone = timeZone;
         this.locale = locale;
         this.nextBillingDate = nextBillingDate;

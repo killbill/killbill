@@ -90,7 +90,8 @@ public enum ErrorCode {
     *
     */
     ACCOUNT_ALREADY_EXISTS(3000, "Account already exists for key %s"),
-    ACCOUNT_INVALID_NAME(3001, "An invalid name was specified when creating or updating an account.")
+    ACCOUNT_INVALID_NAME(3001, "An invalid name was specified when creating or updating an account."),
+    ACCOUNT_DOES_NOT_EXIST(3002, "Account does not exist for key %s")
     ;
 
     private int code;

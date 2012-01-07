@@ -34,7 +34,7 @@ public class AccountBuilder {
     private Currency currency;
     private int billingCycleDay;
     private String paymentProviderName;
-    private BigDecimal balance;
+    private BigDecimal balance = BigDecimal.ZERO;
     private DateTimeZone timeZone;
     private String locale;
     private DateTime nextBillingDate;

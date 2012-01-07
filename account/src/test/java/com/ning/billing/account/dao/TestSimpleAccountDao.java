@@ -49,10 +49,13 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         String thisEmail = email + " " + UUID.randomUUID();
         String name = firstName + " " + lastName;
         String phone = "123-456-7890";
+        String locale = "EN-US";
+        DateTimeZone timeZone = DateTimeZone.forID("America/Los_Angeles");
 
         int firstNameLength = firstName.length();
         return new AccountBuilder().externalKey(thisKey).name(name).phone(phone).firstNameLength(firstNameLength)
-                                   .email(thisEmail).currency(Currency.USD).build();
+                                   .email(thisEmail).currency(Currency.USD).locale(locale)
+                                   .timeZone(timeZone).build();
     }
 
     public void testBasic() {
@@ -187,7 +190,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
 
             @Override
             public String getLocale() {
-                return "EN-GB";
+                return "FR-CA";
             }
 
             @Override
@@ -208,6 +211,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getPaymentProviderName(), updatedAccount.getPaymentProviderName());
         assertEquals(savedAccount.getBillCycleDay(), updatedAccount.getBillCycleDay());
         assertEquals(savedAccount.getFirstNameLength(), updatedAccount.getFirstNameLength());
-
+        assertEquals(savedAccount.getTimeZone(), updatedAccount.getTimeZone());
+        assertEquals(savedAccount.getLocale(), updatedAccount.getLocale());
     }
 }
