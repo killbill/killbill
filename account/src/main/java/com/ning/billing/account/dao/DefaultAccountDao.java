@@ -50,27 +50,10 @@ public class DefaultAccountDao implements AccountDao {
             @Override
             public Account inTransaction(AccountSqlDao accountSqlDao, TransactionStatus status) throws Exception {
                 Account account = accountSqlDao.getAccountByKey(key);
-
                 if (account != null) {
-                    FieldStoreDao fieldStoreDao = accountSqlDao.become(FieldStoreDao.class);
-                    List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
-
-                    account.clearFields();
-                    if (fields != null) {
-                        for (CustomField field : fields) {
-                            account.setFieldValue(field.getName(), field.getValue());
-                        }
-                    }
-
-                    TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
-                    List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
-                    account.clearTags();
-
-                    if (tags != null) {
-                        account.addTags(tags);
-                    }
+                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
+                    setTagsFromWithinTransaction(account, accountSqlDao);
                 }
-
                 return account;
             }
         });
@@ -87,40 +70,19 @@ public class DefaultAccountDao implements AccountDao {
             @Override
             public Account inTransaction(AccountSqlDao accountSqlDao, TransactionStatus status) throws Exception {
                 Account account = accountSqlDao.getById(id);
-
                 if (account != null) {
-                    FieldStoreDao fieldStoreDao = accountSqlDao.become(FieldStoreDao.class);
-                    List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
-
-                    account.clearFields();
-                    if (fields != null) {
-                        for (CustomField field : fields) {
-                            account.setFieldValue(field.getName(), field.getValue());
-                        }
-                    }
-
-                    TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
-                    List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
-                    account.clearTags();
-
-                    if (tags != null) {
-                        account.addTags(tags);
-                    }
+                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
+                    setTagsFromWithinTransaction(account, accountSqlDao);
                 }
-
                 return account;
             }
         });
     }
 
+
     @Override
     public List<Account> get() {
         return accountDao.get();
-    }
-
-    @Override
-    public void test() {
-        accountDao.test();
     }
 
     @Override
@@ -130,19 +92,17 @@ public class DefaultAccountDao implements AccountDao {
 
         accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
             @Override
-            public Void inTransaction(AccountSqlDao accountDao, TransactionStatus status) throws Exception {
-                Account currentAccount = accountDao.getById(accountId);
-                accountDao.create(account);
+            public Void inTransaction(AccountSqlDao accountSqlDao, TransactionStatus status) throws Exception {
+                accountSqlDao.create(account);
 
-                FieldStoreDao fieldStoreDao = accountDao.become(FieldStoreDao.class);
+                FieldStoreDao fieldStoreDao = accountSqlDao.become(FieldStoreDao.class);
                 fieldStoreDao.save(accountId, objectType, account.getFieldList());
 
-                TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
+                TagStoreDao tagStoreDao = accountSqlDao.become(TagStoreDao.class);
                 tagStoreDao.save(accountId, objectType, account.getTagList());
 
                 AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
                 eventBus.post(creationEvent);
-
                 return null;
             }
         });
@@ -155,12 +115,12 @@ public class DefaultAccountDao implements AccountDao {
 
         accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
             @Override
-            public Void inTransaction(AccountSqlDao accountDao, TransactionStatus status) throws Exception {
-                Account currentAccount = accountDao.getById(accountId);
+            public Void inTransaction(AccountSqlDao accountSqlDao, TransactionStatus status) throws Exception {
+                Account currentAccount = accountSqlDao.getById(accountId);
 
-                accountDao.update(account);
+                accountSqlDao.update(account);
 
-                FieldStoreDao fieldStoreDao = accountDao.become(FieldStoreDao.class);
+                FieldStoreDao fieldStoreDao = accountSqlDao.become(FieldStoreDao.class);
                 fieldStoreDao.clear(accountId, objectType);
                 fieldStoreDao.save(accountId, objectType, account.getFieldList());
 
@@ -172,9 +132,35 @@ public class DefaultAccountDao implements AccountDao {
                 if (changeEvent.hasChanges()) {
                     eventBus.post(changeEvent);
                 }
-
                 return null;
             }
         });
+    }
+
+    @Override
+    public void test() {
+        accountDao.test();
+    }
+
+    private void setCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
+        FieldStoreDao fieldStoreDao = transactionalDao.become(FieldStoreDao.class);
+        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
+
+        account.clearFields();
+        if (fields != null) {
+            for (CustomField field : fields) {
+                account.setFieldValue(field.getName(), field.getValue());
+            }
+        }
+    }
+
+    private void setTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
+        TagStoreDao tagStoreDao = transactionalDao.become(TagStoreDao.class);
+        List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
+        account.clearTags();
+
+        if (tags != null) {
+            account.addTags(tags);
+        }
     }
 }
