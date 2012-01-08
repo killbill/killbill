@@ -17,7 +17,7 @@
     <groupId>com.ning.billing</groupId>
     <artifactId>killbill</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
     <url>http://github.com/ning/killbill</url>
