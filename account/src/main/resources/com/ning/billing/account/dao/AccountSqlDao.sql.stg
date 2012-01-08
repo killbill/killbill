@@ -11,7 +11,7 @@ update() ::= <<
     UPDATE accounts
     SET email = :email, name = :name, first_name_length = :firstNameLength, phone = :phone,
         currency = :currency, billing_cycle_day = :billingCycleDay, payment_provider_name = :paymentProviderName
-    WHERE id = :id AND external_key = :externalKey;
+    WHERE id = :id;
 >>
 
 getAccountByKey() ::= <<
