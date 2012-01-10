@@ -20,6 +20,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.account.api.Account;
+
 public interface PaymentApi {
     Either<PaymentError, PaymentMethodInfo> getPaymentMethod(@Nullable String accountKey, String paymentMethodId);
 
@@ -34,6 +36,7 @@ public interface PaymentApi {
     Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo);
 
     List<Either<PaymentError, PaymentInfo>> createPayment(String accountKey, List<String> invoiceIds);
+    List<Either<PaymentError, PaymentInfo>> createPayment(Account account, List<String> invoiceIds);
 
     Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
 
@@ -41,5 +44,6 @@ public interface PaymentApi {
 
     Either<PaymentError, PaymentProviderAccount> updatePaymentProviderAccount(PaymentProviderAccount account);
 
+    PaymentAttempt getPaymentAttemptForPaymentId(String id);
 
 }

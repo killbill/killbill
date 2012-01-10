@@ -71,7 +71,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
             PaymentProviderAccount paymentProviderAccount = accounts.put(account.getAccountName(),
                                                                          new PaymentProviderAccount.Builder().setAccountName(account.getAccountName())
                                                                                                              .setAccountNumber(account.getAccountName())
-                                                                                                             .setId(account.getId().toString())
+                                                                                                             .setId(account.getId())
                                                                                                              .build());
 
             return Either.right(paymentProviderAccount);

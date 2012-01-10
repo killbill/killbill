@@ -16,18 +16,16 @@
 
 package com.ning.billing.payment;
 
-import java.math.BigDecimal;
-import java.util.UUID;
+import java.util.Arrays;
+import java.util.List;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.Either;
-import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
@@ -37,18 +35,18 @@ import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
 public class RequestProcessor {
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
-    private final InvoicePaymentApi invoiceApi;
     private final AccountUserApi accountUserApi;
+    private final PaymentApi paymentApi;
     private final PaymentProviderPluginRegistry pluginRegistry;
     private final EventBus eventBus;
 
     @Inject
     public RequestProcessor(AccountUserApi accountUserApi,
-                            InvoicePaymentApi invoiceApi,
+                            PaymentApi paymentApi,
                             PaymentProviderPluginRegistry pluginRegistry,
                             EventBus eventBus) {
-        this.invoiceApi = invoiceApi;
         this.accountUserApi = accountUserApi;
+        this.paymentApi = paymentApi;
         this.pluginRegistry = pluginRegistry;
         this.eventBus = eventBus;
     }
@@ -56,54 +54,26 @@ public class RequestProcessor {
     @Subscribe
     public void receiveInvoice(InvoiceCreationNotification event) {
         try {
-            final Invoice invoice = invoiceApi.getInvoice(event.getInvoiceId());
-            if (invoice == null) {
+            final Account account = accountUserApi.getAccountById(event.getAccountId());
+
+            if (account == null) {
                 // TODO: log a warning
             }
             else {
-                PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
+                List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()));
 
-                if (invoice.getAmountOutstanding().compareTo(BigDecimal.ZERO) == 0 ) {
-                // TODO: send a notification that invoice was ignored ?
+                if (results.isEmpty()) {
+                    eventBus.post(new PaymentError("unknown", "No payment processed"));
                 }
                 else {
-                    final Account account = accountUserApi.getAccountById(event.getAccountId());
-
-                    if (account == null) {
-                        // TODO: log a warning
-                    }
-                    else {
-                        final BigDecimal paymentAmount = invoice.getAmountOutstanding();
-                        final String paymentProviderName = account.getPaymentProviderName();
-                        final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
-
-                        Either<PaymentError, PaymentInfo> result = plugin.processInvoice(account, invoice);
-
-                        if (result.isLeft()) {
-                            invoiceApi.paymentFailed(invoice.getId(),
-                                                     paymentAttempt.getPaymentAttemptId(),
-                                                     paymentAttempt.getPaymentAttemptDate());
-                        }
-                        else {
-                            updatePaymentAttemptWithPaymentInfoId(result.getRight().getId(), plugin);
-                            invoiceApi.paymentSuccessful(invoice.getId(),
-                                                         paymentAmount,
-                                                         invoice.getCurrency(),
-                                                         paymentAttempt.getPaymentAttemptId(),
-                                                         paymentAttempt.getPaymentAttemptDate());
-                        }
-                        eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
-                    }
+                    Either<PaymentError, PaymentInfo> result = results.get(0);
+                    eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
                 }
             }
         }
         catch (EventBusException ex) {
             //  TODO: log
         }
-    }
-
-    private void updatePaymentAttemptWithPaymentInfoId(String id, PaymentProviderPlugin plugin) {
-        // TODO update PaymentAttempt with paymentId
     }
 
     @Subscribe

@@ -71,13 +71,13 @@ public class PaymentInfo implements EventBusNotification {
         this.amount = amount;
         this.appliedCreditBalanceAmount = appliedCreditBalanceAmount;
         this.bankIdentificationNumber = bankIdentificationNumber;
-        this.createdDate = createdDate;
         this.effectiveDate = effectiveDate;
         this.paymentNumber = paymentNumber;
         this.referenceId = referenceId;
         this.refundAmount = refundAmount;
         this.status = status;
         this.type = type;
+        this.createdDate = createdDate;
         this.updatedDate = updatedDate;
     }
 

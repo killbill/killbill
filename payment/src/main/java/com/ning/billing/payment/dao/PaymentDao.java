@@ -16,6 +16,20 @@
 
 package com.ning.billing.payment.dao;
 
-public class PaymentDao {
+import java.util.UUID;
+
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentInfo;
+
+public interface PaymentDao {
+
+    PaymentAttempt createPaymentAttempt(Invoice invoice);
+
+    void savePaymentInfo(PaymentInfo right);
+
+    PaymentAttempt getPaymentAttemptForPaymentId(String paymentId);
+
+    void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String paymentId);
 
 }

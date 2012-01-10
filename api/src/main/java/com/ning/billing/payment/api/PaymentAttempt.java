@@ -25,6 +25,7 @@ import com.ning.billing.invoice.api.Invoice;
 
 public class PaymentAttempt {
     private final UUID paymentAttemptId;
+    private final String paymentId;
     private final DateTime paymentAttemptDate;
     private final Invoice invoice;
 
@@ -32,10 +33,26 @@ public class PaymentAttempt {
         this.paymentAttemptId = paymentAttemptId;
         this.paymentAttemptDate = new DateTime(DateTimeZone.UTC);
         this.invoice = invoice;
+        this.paymentId = null;
+    }
+
+    public PaymentAttempt(UUID paymentAttemptId, Invoice invoice, String paymentId) {
+        this(paymentAttemptId, invoice, paymentId, null);
+    }
+
+    public PaymentAttempt(UUID paymentAttemptId, Invoice invoice, String paymentId, DateTime paymentAttemptDate) {
+        this.paymentAttemptId = paymentAttemptId;
+        this.paymentAttemptDate = paymentAttemptDate == null ? new DateTime(DateTimeZone.UTC) : paymentAttemptDate;
+        this.invoice = invoice;
+        this.paymentId = paymentId;
     }
 
     public UUID getPaymentAttemptId() {
         return paymentAttemptId;
+    }
+
+    public String getPaymentId() {
+        return paymentId;
     }
 
     public DateTime getPaymentAttemptDate() {
@@ -48,7 +65,7 @@ public class PaymentAttempt {
 
     @Override
     public String toString() {
-        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", paymentAttemptDate=" + paymentAttemptDate + ", invoice=" + invoice + "]";
+        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", paymentId=" + paymentId + ", paymentAttemptDate=" + paymentAttemptDate + ", invoice=" + invoice + "]";
     }
 
 }

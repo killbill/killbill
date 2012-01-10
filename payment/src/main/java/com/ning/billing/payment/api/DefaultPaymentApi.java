@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.api;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +28,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 
@@ -34,14 +36,17 @@ public class DefaultPaymentApi implements PaymentApi {
     private final PaymentProviderPluginRegistry pluginRegistry;
     private final AccountUserApi accountUserApi;
     private final InvoicePaymentApi invoicePaymentApi;
+    private final PaymentDao paymentDao;
 
     @Inject
     public DefaultPaymentApi(PaymentProviderPluginRegistry pluginRegistry,
                              AccountUserApi accountUserApi,
-                             InvoicePaymentApi invoicePaymentApi) {
+                             InvoicePaymentApi invoicePaymentApi,
+                             PaymentDao paymentDao) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
         this.invoicePaymentApi = invoicePaymentApi;
+        this.paymentDao = paymentDao;
     }
 
     @Override
@@ -55,9 +60,17 @@ public class DefaultPaymentApi implements PaymentApi {
 
         if (accountKey != null) {
             final Account account = accountUserApi.getAccountByKey(accountKey);
-            if (account != null) {
-                paymentProviderName = account.getPaymentProviderName();
-            }
+            return getPaymentProviderPlugin(account);
+        }
+
+        return pluginRegistry.getPlugin(paymentProviderName);
+    }
+
+    private PaymentProviderPlugin getPaymentProviderPlugin(Account account) {
+        String paymentProviderName = null;
+
+        if (account != null) {
+            paymentProviderName = account.getPaymentProviderName();
         }
 
         return pluginRegistry.getPlugin(paymentProviderName);
@@ -101,14 +114,45 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public List<Either<PaymentError, PaymentInfo>> createPayment(String accountKey, List<String> invoiceIds) {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
         final Account account = accountUserApi.getAccountByKey(accountKey);
+        return createPayment(account, invoiceIds);
+    }
+
+    @Override
+    public List<Either<PaymentError, PaymentInfo>> createPayment(Account account, List<String> invoiceIds) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+
         List<Either<PaymentError, PaymentInfo>> processedPaymentsOrErrors = new ArrayList<Either<PaymentError, PaymentInfo>>(invoiceIds.size());
 
         for (String invoiceId : invoiceIds) {
             Invoice invoice = invoicePaymentApi.getInvoice(UUID.fromString(invoiceId));
-            Either<PaymentError, PaymentInfo> paymentOrError = plugin.processInvoice(account, invoice);
-            processedPaymentsOrErrors.add(paymentOrError);
+
+            if (invoice.getAmountOutstanding().compareTo(BigDecimal.ZERO) == 0 ) {
+            // TODO: send a notification that invoice was ignored ?
+            }
+            else {
+                PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice);
+                Either<PaymentError, PaymentInfo> paymentOrError = plugin.processInvoice(account, invoice);
+                processedPaymentsOrErrors.add(paymentOrError);
+
+                if (paymentOrError.isRight()) {
+                    PaymentInfo info = paymentOrError.getRight();
+
+                    paymentDao.savePaymentInfo(info);
+                    paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), info.getId());
+
+                    invoicePaymentApi.paymentSuccessful(invoice.getId(),
+                                                        invoice.getAmountOutstanding(),
+                                                        invoice.getCurrency(),
+                                                        paymentAttempt.getPaymentAttemptId(),
+                                                        paymentAttempt.getPaymentAttemptDate());
+                }
+                else {
+                    invoicePaymentApi.paymentFailed(invoice.getId(),
+                                                    paymentAttempt.getPaymentAttemptId(),
+                                                    paymentAttempt.getPaymentAttemptDate());
+                }
+            }
         }
 
         return processedPaymentsOrErrors;
@@ -116,7 +160,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(PaymentProviderAccount account) {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(null);
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin((Account)null);
         return plugin.createPaymentProviderAccount(account);
     }
 
@@ -125,4 +169,10 @@ public class DefaultPaymentApi implements PaymentApi {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public PaymentAttempt getPaymentAttemptForPaymentId(String id) {
+        return paymentDao.getPaymentAttemptForPaymentId(id);
+    }
+
 }
