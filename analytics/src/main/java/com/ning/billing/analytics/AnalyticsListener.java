@@ -18,6 +18,7 @@ package com.ning.billing.analytics;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeNotification;
 import com.ning.billing.account.api.AccountCreationNotification;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
@@ -35,8 +36,7 @@ public class AnalyticsListener
     }
 
     @Subscribe
-    public void handleSubscriptionTransitionChange(final SubscriptionTransition event)
-    {
+    public void handleSubscriptionTransitionChange(final SubscriptionTransition event) throws AccountApiException {
         switch (event.getTransitionType()) {
             case MIGRATE_ENTITLEMENT:
                 // TODO do nothing for now

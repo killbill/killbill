@@ -127,6 +127,10 @@ public class DefaultInvoice implements Invoice {
 
     @Override
     public boolean isDueForPayment(final DateTime targetDate, final int numberOfDays) {
+        if (getTotalAmount().compareTo(BigDecimal.ZERO) == 0) {
+            return false;
+        }
+
         if (lastPaymentAttempt == null) {
             return true;
         }

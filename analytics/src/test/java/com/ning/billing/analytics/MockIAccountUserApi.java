@@ -21,10 +21,13 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.List;
 import java.util.UUID;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.Tag;
 
 public class MockIAccountUserApi implements AccountUserApi
 {
@@ -38,14 +41,14 @@ public class MockIAccountUserApi implements AccountUserApi
     }
 
     @Override
-    public Account createAccount(final AccountData data)
+    public Account createAccount(final AccountData data, final List<CustomField> fields, final List<Tag> tags)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void saveAccount(Account account) {
-        throw new NotImplementedException();
+    public void updateAccount(final Account account) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -55,8 +58,7 @@ public class MockIAccountUserApi implements AccountUserApi
     }
 
     @Override
-    public Account getAccountById(final UUID uid)
-    {
+    public Account getAccountById(final UUID uid) {
         return new DefaultAccount(account);
     }
 

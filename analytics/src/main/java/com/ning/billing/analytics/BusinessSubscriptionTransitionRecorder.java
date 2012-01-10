@@ -18,6 +18,7 @@ package com.ning.billing.analytics;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
 import com.ning.billing.catalog.api.Currency;
@@ -46,44 +47,37 @@ public class BusinessSubscriptionTransitionRecorder
         this.accountApi = accountApi;
     }
 
-    public void subscriptionCreated(final SubscriptionTransition created)
-    {
+    public void subscriptionCreated(final SubscriptionTransition created) throws AccountApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan());
         recordTransition(event, created);
     }
 
-    public void subscriptionCancelled(final SubscriptionTransition cancelled)
-    {
+    public void subscriptionCancelled(final SubscriptionTransition cancelled) throws AccountApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getNextPlan());
         recordTransition(event, cancelled);
     }
 
-    public void subscriptionChanged(final SubscriptionTransition changed)
-    {
+    public void subscriptionChanged(final SubscriptionTransition changed) throws AccountApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan());
         recordTransition(event, changed);
     }
 
-    public void subscriptionPaused(final SubscriptionTransition paused)
-    {
+    public void subscriptionPaused(final SubscriptionTransition paused) throws AccountApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPaused(paused.getNextPlan());
         recordTransition(event, paused);
     }
 
-    public void subscriptionResumed(final SubscriptionTransition resumed)
-    {
+    public void subscriptionResumed(final SubscriptionTransition resumed) throws AccountApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionResumed(resumed.getNextPlan());
         recordTransition(event, resumed);
     }
 
-    public void subscriptionPhaseChanged(final SubscriptionTransition phaseChanged)
-    {
+    public void subscriptionPhaseChanged(final SubscriptionTransition phaseChanged) throws AccountApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState());
         recordTransition(event, phaseChanged);
     }
 
-    public void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionTransition transition)
-    {
+    public void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionTransition transition) throws AccountApiException {
         Currency currency = null;
         String transitionKey = null;
         String accountKey = null;

@@ -23,7 +23,7 @@ import java.util.UUID;
 import com.ning.billing.invoice.api.Invoice;
 
 public interface InvoiceDao {
-    void save(Invoice invoice);
+    void create(Invoice invoice);
 
     Invoice getById(final String id);
 

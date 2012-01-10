@@ -18,12 +18,14 @@ package com.ning.billing.account.api;
 
 import java.util.List;
 import java.util.UUID;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.Tag;
 
 public interface AccountUserApi {
 
-    public Account createAccount(AccountData data);
+    public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException;
 
-    public void saveAccount(Account account);
+    public void updateAccount(Account account);
 
     public Account getAccountByKey(String key);
 

@@ -1,13 +1,17 @@
 group AccountDaoSql;
 
-save() ::= <<
+create() ::= <<
     INSERT INTO accounts
     (id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name)
     VALUES
-    (:id, :externalKey, :email, :name, :firstNameLength, :phone, :currency, :billingCycleDay, :paymentProviderName)
-    ON DUPLICATE KEY UPDATE
-      external_key = :externalKey, email = :email, name = :name, first_name_length = :firstNameLength,
-      phone = :phone, currency = :currency, payment_provider_name = :paymentProviderName;
+    (:id, :externalKey, :email, :name, :firstNameLength, :phone, :currency, :billingCycleDay, :paymentProviderName);
+>>
+
+update() ::= <<
+    UPDATE accounts
+    SET email = :email, name = :name, first_name_length = :firstNameLength, phone = :phone,
+        currency = :currency, billing_cycle_day = :billingCycleDay, payment_provider_name = :paymentProviderName
+    WHERE id = :id;
 >>
 
 getAccountByKey() ::= <<

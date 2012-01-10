@@ -14,29 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.util.entity;
+package com.ning.billing.account.api;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import com.ning.billing.BillingExceptionBase;
+import com.ning.billing.ErrorCode;
 
-import java.util.List;
+public class AccountApiException extends BillingExceptionBase {
+    public AccountApiException(Throwable cause, int code, final String msg) {
+        super(cause, code, msg);
+    }
 
-public interface EntityDao<T extends Entity> {
-    @SqlUpdate
-    public void create(@BindBean T entity);
+    public AccountApiException(Throwable cause, ErrorCode code, final Object... args) {
+        super(cause, code, args);
+    }
 
-    @SqlUpdate
-    public void update(@BindBean T entity);
-
-    @SqlQuery
-    public T getById(@Bind("id") final String id);
-
-    @SqlQuery
-    public List<T> get();
-
-    @SqlUpdate
-    public void test();
+    public AccountApiException(ErrorCode code, final Object... args) {
+        super(code, args);
+    }
 }

@@ -48,7 +48,9 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.tag.DefaultTag;
 import com.ning.billing.util.tag.DefaultTagDescription;
+import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagDescriptionDao;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -61,13 +63,17 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+
+import static org.testng.Assert.fail;
 
 @Guice(modules = AnalyticsTestModule.class)
 public class TestAnalyticsService
 {
-    private static final String KEY = "1234";
-    private static final String ACCOUNT_KEY = "pierre-1234";
+    private static final String KEY = "12345";
+    private static final String ACCOUNT_KEY = "pierre-12345";
     private static final DefaultTagDescription TAG_ONE = new DefaultTagDescription("batch20", "something", false, false, "pierre", new DateTime(DateTimeZone.UTC));
     private static final DefaultTagDescription TAG_TWO = new DefaultTagDescription("awesome", "something", false, false, "pierre", new DateTime(DateTimeZone.UTC));
 
@@ -106,18 +112,23 @@ public class TestAnalyticsService
         // Killbill generic setup
         setupBusAndMySQL();
 
-        tagDao.save(TAG_ONE);
-        tagDao.save(TAG_TWO);
+        tagDao.create(TAG_ONE);
+        tagDao.create(TAG_TWO);
 
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
-        final Account storedAccount = accountApi.createAccount(account);
-        storedAccount.addTag(TAG_ONE, "pierre", new DateTime(DateTimeZone.UTC));
-        storedAccount.addTag(TAG_TWO, "pierre", new DateTime(DateTimeZone.UTC));
-        accountApi.saveAccount(storedAccount);
+        try {
+            List<Tag> tags = new ArrayList<Tag>();
+            tags.add(new DefaultTag(TAG_ONE, "pierre", new DateTime(DateTimeZone.UTC)));
+            tags.add(new DefaultTag(TAG_TWO, "pierre", new DateTime(DateTimeZone.UTC)));
 
-        // Create events for the bus and expected results
-        createSubscriptionTransitionEvent(storedAccount);
-        createAccountCreationEvent(storedAccount);
+            final Account storedAccount = accountApi.createAccount(account, null, tags);
+
+            // Create events for the bus and expected results
+            createSubscriptionTransitionEvent(storedAccount);
+            createAccountCreationEvent(storedAccount);
+        } catch (Throwable t) {
+            fail("Initializing accounts failed.", t);
+        }
     }
 
     private void setupBusAndMySQL() throws IOException
@@ -127,11 +138,13 @@ public class TestAnalyticsService
         final String analyticsDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
         final String accountDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
         final String entitlementDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+        final String utilDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
         helper.startMysql();
         helper.initDb(analyticsDdl);
         helper.initDb(accountDdl);
         helper.initDb(entitlementDdl);
+        helper.initDb(utilDdl);
     }
 
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException

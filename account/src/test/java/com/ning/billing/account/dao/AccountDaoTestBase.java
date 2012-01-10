@@ -38,14 +38,17 @@ public abstract class AccountDaoTestBase {
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
-        // Healthcheck test to make sure MySQL is setup properly
+        // Health check test to make sure MySQL is setup properly
         try {
             module = new AccountModuleMock();
             final String accountDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
             final String invoiceDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+            final String utilDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+
             module.startDb();
             module.initDb(accountDdl);
             module.initDb(invoiceDdl);
+            module.initDb(utilDdl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
             dbi = injector.getInstance(IDBI.class);
