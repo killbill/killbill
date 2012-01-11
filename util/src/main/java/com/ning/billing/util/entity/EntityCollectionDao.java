@@ -31,6 +31,10 @@ public interface EntityCollectionDao<T extends Entity> {
                      @Bind("objectType") final String objectType,
                      @BindBean final List<T> entities);
 
+    @SqlUpdate
+    public void clear(@Bind("objectId") final String objectId,
+                      @Bind("objectType") final String objectType);
+
     @SqlQuery
     public List<T> load(@Bind("objectId") final String objectId,
                         @Bind("objectType") final String objectType);

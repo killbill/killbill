@@ -26,6 +26,8 @@ public interface CustomizableEntity extends Entity {
 
     public List<CustomField> getFieldList();
 
+    public void addFields(List<CustomField> fields);
+
     public void clearFields();
 
     public String getObjectName();

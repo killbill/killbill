@@ -52,11 +52,15 @@ getById() ::= <<
   GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency;
 >>
 
-save() ::= <<
+create() ::= <<
   INSERT INTO invoices(id, account_id, invoice_date, target_date, currency)
-  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency)
-  ON DUPLICATE KEY UPDATE
-    invoice_date = :invoiceDate, target_date = :targetDate, currency = :currency;
+  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency);
+>>
+
+update() ::= <<
+  UPDATE invoices
+  SET account_id = :accountId, invoice_date = :invoiceDate, target_date = :targetDate, currency = :currency
+  WHERE id = :id;
 >>
 
 notifySuccessfulPayment() ::= <<

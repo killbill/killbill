@@ -1,12 +1,15 @@
 group TagDescriptionDao;
 
-save() ::= <<
+create() ::= <<
   INSERT INTO tag_descriptions(id, name, created_by, creation_date, description, generate_invoice, process_payment)
-  VALUES(:id, :name, :createdBy, :creationDate, :description, :generateInvoice, :processPayment)
-  ON DUPLICATE KEY UPDATE
-    name = :name, created_by = :createdBy, creation_date = :creationDate,
-    description := description, generate_invoice = :generateInvoice,
-    process_payment = :processPayment
+  VALUES(:id, :name, :createdBy, :creationDate, :description, :generateInvoice, :processPayment);
+>>
+
+update() ::= <<
+  UPDATE tag_descriptions
+  SET name = :name, created_by = :createdBy, creation_date = :creationDate,
+      description = :description, generate_invoice = :generateInvoice, process_payment = :processPayment)
+  WHERE id = :id;
 >>
 
 load() ::= <<

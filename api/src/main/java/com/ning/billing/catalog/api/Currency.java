@@ -31,7 +31,7 @@ public enum Currency {
 //	CAD,
 //	JPY
 
-    public Currency getDefaultCurrency() {
+    public static Currency getDefaultCurrency() {
         return Currency.USD;
     }
 }

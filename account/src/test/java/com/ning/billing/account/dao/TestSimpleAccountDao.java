@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.util.tag.DefaultTagDescription;
@@ -29,7 +30,6 @@ import com.ning.billing.util.tag.TagDescription;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.tag.dao.TagDescriptionDao;
 import com.ning.billing.util.tag.dao.TagDescriptionDao;
 
 import static org.testng.Assert.assertEquals;
@@ -57,7 +57,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     public void testBasic() {
 
         Account a = createTestAccount();
-        accountDao.save(a);
+        accountDao.create(a);
         String key = a.getExternalKey();
 
         Account r = accountDao.getAccountByKey(key);
@@ -74,14 +74,14 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testGetById() {
+    public void testGetById() throws AccountApiException {
         Account account = createTestAccount();
         UUID id = account.getId();
         String key = account.getExternalKey();
         String name = account.getName();
         int firstNameLength = account.getFirstNameLength();
 
-        accountDao.save(account);
+        accountDao.create(account);
 
         account = accountDao.getById(id.toString());
         assertNotNull(account);
@@ -99,7 +99,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         String fieldValue = "testField1_value";
         account.setFieldValue(fieldName, fieldValue);
 
-        accountDao.save(account);
+        accountDao.create(account);
 
         Account thisAccount = accountDao.getAccountByKey(account.getExternalKey());
         assertNotNull(thisAccount);
@@ -112,13 +112,13 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         Account account = createTestAccount();
         TagDescription description = new DefaultTagDescription("Test Tag", "For testing only", true, true, "Test System", new DateTime());
         TagDescriptionDao tagDescriptionDao = dbi.onDemand(TagDescriptionDao.class);
-        tagDescriptionDao.save(description);
+        tagDescriptionDao.create(description);
 
         String addedBy = "testTags()";
         DateTime dateAdded = new DefaultClock().getUTCNow();
         account.addTag(description, addedBy, dateAdded);
         assertEquals(account.getTagList().size(), 1);
-        accountDao.save(account);
+        accountDao.create(account);
 
         Account thisAccount = accountDao.getById(account.getId().toString());
         List<Tag> tagList = thisAccount.getTagList();
@@ -135,16 +135,16 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     @Test
     public void testGetIdFromKey() {
         Account account = createTestAccount();
-        accountDao.save(account);
+        accountDao.create(account);
 
         UUID accountId = accountDao.getIdFromKey(account.getExternalKey());
         assertEquals(accountId, account.getId());
     }
 
     @Test
-    public void testUpdate() {
+    public void testUpdate() throws AccountApiException {
         final Account account = createTestAccount();
-        accountDao.save(account);
+        accountDao.create(account);
 
         AccountData accountData = new AccountData() {
             @Override
@@ -182,7 +182,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         };
 
         Account updatedAccount = new DefaultAccount(account.getId(), accountData);
-        accountDao.save(updatedAccount);
+        accountDao.update(updatedAccount);
 
         Account savedAccount = accountDao.getAccountByKey(account.getExternalKey());
 
