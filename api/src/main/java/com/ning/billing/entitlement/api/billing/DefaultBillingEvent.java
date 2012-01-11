@@ -25,26 +25,29 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 
 public class DefaultBillingEvent implements BillingEvent {
     final private int billCycleDay;
-    final private UUID subscriptionId;
+    final private Subscription subscription;
     final private DateTime effectiveDate;
-    final private String planPhaseName;
-    final private String planName;
+    final private PlanPhase planPhase;
+    final private Plan plan;
     final private InternationalPrice fixedPrice;
     final private InternationalPrice recurringPrice;
     final private String description;
     final private BillingModeType billingModeType;
     final private BillingPeriod billingPeriod;
     
-    public DefaultBillingEvent(SubscriptionTransition transition, int billCycleDay) {
+    public DefaultBillingEvent(SubscriptionTransition transition, Subscription subscription, int billCycleDay) {
         this.billCycleDay = billCycleDay;
-        subscriptionId = transition.getSubscriptionId();
+        this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();
-        planPhaseName = transition.getNextPhase().getName();
-        planName = transition.getNextPlan().getName();
+        planPhase = transition.getNextPhase();
+        plan = transition.getNextPlan();
         fixedPrice = transition.getNextPhase().getFixedPrice();
         recurringPrice = transition.getNextPhase().getRecurringPrice();
         description = transition.getTransitionType().toString();
@@ -54,12 +57,12 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     // Intended for test only
-    public DefaultBillingEvent(UUID subscriptionId, DateTime effectiveDate, String planName, String planPhaseName, InternationalPrice fixedPrice,
+    public DefaultBillingEvent(Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase, InternationalPrice fixedPrice,
             InternationalPrice recurringPrice, BillingPeriod billingPeriod, int billCycleDay, BillingModeType billingModeType, String description) {
-        this.subscriptionId = subscriptionId;
+        this.subscription = subscription;
         this.effectiveDate = effectiveDate;
-        this.planName = planName;
-        this.planPhaseName = planPhaseName;
+        this.plan = plan;
+        this.planPhase = planPhase;
         this.fixedPrice = fixedPrice;
         this.recurringPrice = recurringPrice;
         this.billingPeriod = billingPeriod;
@@ -70,14 +73,14 @@ public class DefaultBillingEvent implements BillingEvent {
 
     @Override
     public int compareTo(BillingEvent e1) {
-        if (getSubscriptionId().equals(e1.getSubscriptionId())) {
+        if (getSubscription().getId().equals(e1.getSubscription().getId())) {
             if (getEffectiveDate().equals(e1.getEffectiveDate())) { //ordering with a HashSet fails if we get equality
                 return hashCode() - e1.hashCode();
             } else {
                 return getEffectiveDate().compareTo(e1.getEffectiveDate());
             }
         } else {
-            return getSubscriptionId().compareTo(e1.getSubscriptionId());
+            return getSubscription().getId().compareTo(e1.getSubscription().getId());
         }
     }
 
@@ -87,8 +90,8 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public UUID getSubscriptionId() {
-        return subscriptionId;
+    public Subscription getSubscription() {
+        return subscription;
     }
 
     @Override
@@ -97,13 +100,13 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public String getPlanPhaseName() {
-        return planPhaseName;
+    public PlanPhase getPlanPhase() {
+        return planPhase;
     }
 
     @Override
-    public String getPlanName() {
-        return planName;
+    public Plan getPlan() {
+        return plan;
     }
 
     @Override

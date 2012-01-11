@@ -16,45 +16,65 @@
 
 package com.ning.billing.catalog.api;
 
-import java.util.Date;
+import org.joda.time.DateTime;
 
 public interface Catalog {
-
-	public abstract Product[] getProducts();
-	
-	public abstract Plan findPlan(String productName, BillingPeriod term, String priceList) throws CatalogApiException;
-
-	public abstract Plan findPlan(String name) throws CatalogApiException;
-
-    public abstract Product findProduct(String name) throws CatalogApiException;
-
-    public abstract PlanPhase findPhase(String name) throws CatalogApiException;
-
-	
-	public abstract Currency[] getSupportedCurrencies();
-
-	public abstract Plan[] getPlans();
-
-	public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
-			PlanSpecifier to) throws CatalogApiException;
-
-	public abstract PlanChangeResult planChange(PlanPhaseSpecifier from,
-			PlanSpecifier to) throws IllegalPlanChange, CatalogApiException;
-
-    public abstract Date getEffectiveDate();
-
-    public abstract ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException;
-
-    public abstract void configureEffectiveDate(Date date);
-
+	//
+    // Simple getters
+    //
     public abstract String getCatalogName();
 
-    public abstract PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier) throws CatalogApiException;
+    public abstract Currency[] getSupportedCurrencies(DateTime requestedDate);
 
-    public abstract BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException;
+	public abstract Product[] getProducts(DateTime requestedDate);
+	
+	public abstract Plan[] getPlans(DateTime requestedDate);
+
+	
+	//
+	// Find a plan
+	//
+
+	public abstract Plan findPlan(String name, DateTime requestedDate) throws CatalogApiException;
+
+	public abstract Plan findPlan(String productName, BillingPeriod term, String priceListName,
+									DateTime requestedDate) throws CatalogApiException;
+	
+	public abstract Plan findPlan(String name, DateTime effectiveDate, DateTime subscriptionStartDate) throws CatalogApiException;
+
+	public abstract Plan findPlan(String productName, BillingPeriod term, String priceListName,
+									DateTime requestedDate, DateTime subscriptionStartDate) throws CatalogApiException;
+	
+	//
+	// Find a product
+	//
+    public abstract Product findProduct(String name, DateTime requestedDate) throws CatalogApiException;
+
+    //
+    // Find a phase
+    //  
+    public abstract PlanPhase findPhase(String name, DateTime requestedDate, DateTime subscriptionStartDate) throws CatalogApiException;
+
+    //
+    // Rules
+    //
+	public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
+			PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
+
+	public abstract PlanChangeResult planChange(PlanPhaseSpecifier from,
+			PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
+
+    public abstract ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase, DateTime requestedDate) throws CatalogApiException;
+
+    public abstract PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException;
+
+    public abstract BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase, DateTime requestedDate) throws CatalogApiException;
 
     public abstract PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to) throws CatalogApiException;
+			PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
 
+    public abstract boolean canCreatePlan(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException;
+	
+	
 	
 }

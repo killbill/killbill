@@ -23,8 +23,11 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.BillingAlignment;
@@ -43,7 +46,8 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
-
+	private Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
+	
     private final EntitlementDao dao;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
@@ -65,22 +69,23 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         for (SubscriptionBundle bundle: bundles) {
             subscriptions.addAll(dao.getSubscriptions(bundle.getId()));
         }
-        List<SubscriptionTransition> transitions = new ArrayList<SubscriptionTransition>();
-        for (Subscription subscription: subscriptions) {
-            transitions.addAll(subscription.getAllTransitions());
-        }
-        
-        Account account = accountApi.getAccountById(accountId);
-        
+
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();        
-        for (SubscriptionTransition transition : transitions) {
-            result.add(new DefaultBillingEvent(transition, account.getBillCycleDay()));
+        for (Subscription subscription: subscriptions) {
+        	for (SubscriptionTransition transition : subscription.getAllTransitions()) {
+        		try {
+        			result.add(new DefaultBillingEvent(transition, subscription, calculateBCD(transition, accountId)));
+        		} catch (CatalogApiException e) {
+        			log.error("Failing to identify catalog components while creating BillingEvent from transition: " + 
+        					transition.getId().toString(), e);
+        		}
+        	}
         }
         return result;
     }
     
     private int calculateBCD(SubscriptionTransition transition, UUID accountId) throws CatalogApiException {
-    	Catalog catalog = catalogService.getCatalog();
+    	Catalog catalog = catalogService.getFullCatalog();
     	Plan plan = transition.getNextPlan();
     	Product product = plan.getProduct();
     	PlanPhase phase = transition.getNextPhase();
@@ -90,15 +95,27 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     					product.getCategory(), 
     					phase.getBillingPeriod(), 
     					transition.getNextPriceList(), 
-    					phase.getPhaseType()));
+    					phase.getPhaseType()), 
+    					transition.getRequestedTransitionTime());
     	int result = 0;
+    	Account account = accountApi.getAccountById(accountId);
     	switch (alignment) {
-    		case ACCOUNT : result = accountApi.getAccountById(accountId).getBillCycleDay();
+    		case ACCOUNT : 
+    			result = account.getBillCycleDay();
     		break;
-    		case BUNDLE : result = dao.getSubscriptionBundleFromId(transition.getBundleId()).getStartDate().getDayOfMonth();
+    		case BUNDLE : 
+    			SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(transition.getBundleId());
+    			//TODO result = bundle.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
+    			result = bundle.getStartDate().getDayOfMonth();
     		break;
-    		case SUBSCRIPTION : result = dao.getSubscriptionFromId(transition.getSubscriptionId()).getStartDate().getDayOfMonth();
+    		case SUBSCRIPTION :
+    			Subscription subscription = dao.getSubscriptionFromId(transition.getSubscriptionId());
+    			//TODO result = subscription.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
+    			result = subscription.getStartDate().getDayOfMonth();
     		break;
+    	}
+    	if(result == 0) {
+    		throw new CatalogApiException(ErrorCode.CAT_INVALID_BILLING_ALIGNMENT, alignment.toString());
     	}
     	return result;
     		

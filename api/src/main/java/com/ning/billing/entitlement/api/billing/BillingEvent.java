@@ -17,7 +17,6 @@
 package com.ning.billing.entitlement.api.billing;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 
@@ -25,6 +24,9 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.user.Subscription;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
@@ -38,9 +40,9 @@ public interface BillingEvent extends Comparable<BillingEvent> {
 
     /**
      *
-     * @return the id for the matching subscription
+     * @return the subscription
      */
-    public UUID getSubscriptionId();
+    public Subscription getSubscription();
 
     /**
      *
@@ -50,16 +52,16 @@ public interface BillingEvent extends Comparable<BillingEvent> {
 
     /**
      *
-     * @return the name of the plan phase
+     * @return the plan phase
      */
-    public String getPlanPhaseName();
+    public PlanPhase getPlanPhase();
 
 
     /**
      *
-     * @return the name of the plan
+     * @return the plan
      */
-    public String getPlanName();
+    public Plan getPlan();
 
     /**
      *

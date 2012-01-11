@@ -35,8 +35,8 @@ public class TestCatalogService {
 			
 		}, new VersionedCatalogLoader(new DefaultClock()));
 		service.loadCatalog();
-		Assert.assertNotNull(service.getCatalog());
-		Assert.assertEquals(service.getCatalog().getCatalogName(), "WeaponsHireSmall");
+		Assert.assertNotNull(service.getFullCatalog());
+		Assert.assertEquals(service.getFullCatalog().getCatalogName(), "WeaponsHireSmall");
 	}
 	
 	@Test
@@ -49,7 +49,7 @@ public class TestCatalogService {
 			
 		}, new VersionedCatalogLoader(new DefaultClock()));
 		service.loadCatalog();
-		Assert.assertNotNull(service.getCatalog());
-		Assert.assertEquals(service.getCatalog().getCatalogName(), "Firearms");
+		Assert.assertNotNull(service.getFullCatalog());
+		Assert.assertEquals(service.getFullCatalog().getCatalogName(), "Firearms");
 	}
 }

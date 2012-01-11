@@ -16,16 +16,18 @@
 
 package com.ning.billing.catalog;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
@@ -47,7 +49,7 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
 	}
 
 	public DefaultPlan getPlanListFrom(String priceListName, Product product,
-			BillingPeriod period) {
+			BillingPeriod period) throws CatalogApiException {
 		DefaultPlan result = null;
 		DefaultPriceList pl = findPriceListFrom(priceListName);
 		if(pl != null) {
@@ -60,7 +62,10 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
 		return defaultPricelist.findPlan(product, period);
 	}
 
-	public DefaultPriceList findPriceListFrom (String priceListName) {
+	public DefaultPriceList findPriceListFrom (String priceListName) throws CatalogApiException {
+		if(priceListName == null) {
+			throw new CatalogApiException(ErrorCode.CAT_NULL_PRICE_LIST_NAME);
+		}
 		if (defaultPricelist.getName().equals(priceListName)) {
 			return defaultPricelist;
 		} 
@@ -69,7 +74,7 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
 				return pl;
 			}
 		}
-		return null;
+		throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, priceListName);
 	}
 
 	@Override

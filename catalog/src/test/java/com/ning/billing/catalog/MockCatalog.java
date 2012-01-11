@@ -57,7 +57,7 @@ public class MockCatalog extends StandaloneCatalog {
 	}
 	
 	public void populatePlans() {
-		DefaultProduct[] products = getProducts();
+		DefaultProduct[] products = getCurrentProducts();
 		DefaultPlan[] plans = new DefaultPlan[products.length];
 		for(int i = 0; i < products.length; i++) {
 			DefaultPlanPhase phase = new DefaultPlanPhase().setPhaseType(PhaseType.EVERGREEN).setBillingPeriod(BillingPeriod.MONTHLY).setReccuringPrice(new DefaultInternationalPrice());
@@ -67,7 +67,7 @@ public class MockCatalog extends StandaloneCatalog {
 	}
 
 	public void populatePriceLists() {
-		DefaultPlan[] plans = getPlans();
+		DefaultPlan[] plans = getCurrentPlans();
 		
 		DefaultPriceList[] priceList = new DefaultPriceList[plans.length - 1];
 		for(int i = 1; i < plans.length; i++) {

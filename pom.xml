@@ -61,6 +61,13 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-account</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-entitlement</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -68,6 +75,13 @@
                 <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-catalog</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-catalog</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>

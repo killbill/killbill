@@ -103,7 +103,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             BillingEvent thisEvent = events.get(i);
             BillingEvent nextEvent = events.get(i + 1);
 
-            if (thisEvent.getSubscriptionId() == nextEvent.getSubscriptionId()) {
+            if (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) {
                 processEvents(invoiceId, thisEvent, nextEvent, items, targetDate, targetCurrency);
             } else {
                 processEvent(invoiceId, thisEvent, items, targetDate, targetCurrency);
@@ -152,7 +152,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     private void addInvoiceItem(UUID invoiceId, List<InvoiceItem> items, BillingEvent event, DateTime billThroughDate, BigDecimal amount, BigDecimal rate, Currency currency) {
         if (!(amount.compareTo(BigDecimal.ZERO) == 0)) {
-            DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, event.getSubscriptionId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
+            DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, event.getSubscription().getId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
             items.add(item);
         }
     }

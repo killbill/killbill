@@ -68,14 +68,14 @@ public abstract class CaseChange<T>  extends ValidatingConfig<StandaloneCatalog>
 			PlanSpecifier to, StandaloneCatalog catalog) throws CatalogApiException {
 		if(	
 				(phaseType     	     == null || from.getPhaseType() == phaseType) &&
-				(fromProduct 	     == null || fromProduct.equals(catalog.findProduct(from.getProductName()))) &&
+				(fromProduct 	     == null || fromProduct.equals(catalog.findCurrentProduct(from.getProductName()))) &&
 				(fromProductCategory == null || fromProductCategory.equals(from.getProductCategory())) &&
 				(fromBillingPeriod   == null || fromBillingPeriod.equals(from.getBillingPeriod())) &&
-				(toProduct           == null || toProduct.equals(catalog.findProduct(to.getProductName()))) &&
+				(toProduct           == null || toProduct.equals(catalog.findCurrentProduct(to.getProductName()))) &&
 				(toProductCategory   == null || toProductCategory.equals(to.getProductCategory())) &&
 				(toBillingPeriod     == null || toBillingPeriod.equals(to.getBillingPeriod())) &&
-				(fromPriceList       == null || fromPriceList.equals(catalog.getPriceListFromName(from.getPriceListName()))) &&
-				(toPriceList         == null || toPriceList.equals(catalog.getPriceListFromName(to.getPriceListName())))
+				(fromPriceList       == null || fromPriceList.equals(catalog.findCurrentPriceList(from.getPriceListName()))) &&
+				(toPriceList         == null || toPriceList.equals(catalog.findCurrentPriceList(to.getPriceListName())))
 				) {
 			return getResult();
 		}

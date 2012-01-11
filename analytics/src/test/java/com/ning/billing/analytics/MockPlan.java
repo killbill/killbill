@@ -17,10 +17,12 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 
+import java.util.Date;
 import java.util.Iterator;
 
 public class MockPlan implements Plan
@@ -51,6 +53,12 @@ public class MockPlan implements Plan
     {
         return name;
     }
+    
+    @Override
+    public Date getEffectiveDateForExistingSubscriptons()
+    {
+        return new Date();
+    }
 
     @Override
     public Iterator<PlanPhase> getInitialPhaseIterator()
@@ -79,5 +87,15 @@ public class MockPlan implements Plan
 	@Override
 	public PlanPhase[] getAllPhases() {
 		 throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public PlanPhase findPhase(String name) throws CatalogApiException {
+		 throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isRetired() {
+		return false;
 	}
 }

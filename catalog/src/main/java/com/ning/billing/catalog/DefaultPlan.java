@@ -16,25 +16,42 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
+
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
-
-import javax.xml.bind.annotation.*;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements Plan {
 
-
 	@XmlAttribute(required=true)
 	@XmlID
 	private String name;
+	
+	@XmlAttribute(required=false)
+	private Boolean retired = false;
+	
+	//TODO MDW Validation - effectiveDateForExistingSubscriptons > catalog effectiveDate 
+	@XmlElement(required=false)
+	private Date effectiveDateForExistingSubscriptons;
 
 	@XmlElement(required=true)
 	@XmlIDREF
@@ -55,6 +72,12 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 	private Integer plansAllowedInBundle = 1;
 
 	/* (non-Javadoc)
+	 * @see com.ning.billing.catalog.IPlan#getEffectiveDateForExistingSubscriptons()
+	 */
+	@Override
+	public Date getEffectiveDateForExistingSubscriptons() {
+		return effectiveDateForExistingSubscriptons;
+	}	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPlan#getPhases()
 	 */
     @Override
@@ -77,6 +100,12 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 	public String getName() {
 		return name;
 	}
+	
+	@Override
+	public boolean isRetired() {
+		return retired;
+	}
+	
 	@Override
 	public DefaultPlanPhase getFinalPhase() {
 		return finalPhase;
@@ -94,6 +123,17 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 	    }
         allPhases[cnt++] = finalPhase;
 	    return allPhases;
+	}
+
+	@Override
+	public PlanPhase findPhase(String name) throws CatalogApiException {
+		for(PlanPhase pp : getAllPhases()) {
+			if(pp.getName().equals(name)) {
+				return pp;
+			}
+
+		}
+		throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PHASE, name);
 	}
 
 	@Override
@@ -138,9 +178,21 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
 	@Override
 	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
+		if(effectiveDateForExistingSubscriptons != null &&
+				catalog.getEffectiveDate().getTime() > effectiveDateForExistingSubscriptons.getTime()) {
+			errors.add(new ValidationError(String.format("Price effective date %s is before catalog effective date '%s'",
+					effectiveDateForExistingSubscriptons,
+					catalog.getEffectiveDate().getTime()), 
+					catalog.getCatalogURI(), DefaultInternationalPrice.class, ""));
+		}
+		
 		return errors;
 	}
 
+	protected void setEffectiveDateForExistingSubscriptons(
+			Date effectiveDateForExistingSubscriptons) {
+		this.effectiveDateForExistingSubscriptons = effectiveDateForExistingSubscriptons;
+	}
 
 	protected DefaultPlan setName(String name) {
 		this.name = name;
@@ -166,4 +218,16 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 		this.initialPhases = phases;
 		return this;
 	}
+
+	public DefaultPlan setRetired(boolean retired) {
+		this.retired = retired;
+		return this;
+	}
+	
+	public DefaultPlan setPlansAllowedInBundle(Integer plansAllowedInBundle) {
+		this.plansAllowedInBundle = plansAllowedInBundle;
+		return this;
+	}
+	
+	
 }

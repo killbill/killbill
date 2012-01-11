@@ -342,8 +342,8 @@ public class SubscriptionData implements Subscription {
         String nextPriceList = null;
 
         SubscriptionState previousState = null;
-        String previousPlanName = null;
-        String previousPhaseName = null;
+        //String previousPlanName = null;
+        //String previousPhaseName = null;
         String previousPriceList = null;
 
         transitions = new LinkedList<SubscriptionTransitionData>();
@@ -407,10 +407,8 @@ public class SubscriptionData implements Subscription {
             Plan nextPlan = null;
             PlanPhase nextPhase = null;
             try {
-                previousPlan = (previousPlanName != null) ? catalog.findPlan(previousPlanName) : null;
-                previousPhase = (previousPhaseName != null) ? catalog.findPhase(previousPhaseName) : null;
-                nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName) : null;
-                nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName) : null;
+                nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getRequestedDate(), getStartDate()) : null;
+                nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getStartDate()) : null;
             } catch (CatalogApiException e) {
                 log.error(String.format("Failed to build transition for subscription %s", id), e);
             }
@@ -433,8 +431,8 @@ public class SubscriptionData implements Subscription {
             transitions.add(transition);
 
             previousState = nextState;
-            previousPlanName = nextPlanName;
-            previousPhaseName = nextPhaseName;
+            previousPlan = nextPlan;
+            previousPhase = nextPhase;
             previousPriceList = nextPriceList;
         }
     }
