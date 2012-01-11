@@ -23,6 +23,8 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.Tag;
 
 public class MockAccountUserApi implements AccountUserApi {
     private final CopyOnWriteArrayList<Account> accounts = new CopyOnWriteArrayList<Account>();
@@ -43,7 +45,7 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account createAccount(AccountData data) {
+    public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException {
         Account result = new DefaultAccount(data);
         accounts.add(result);
         return result;
@@ -75,11 +77,6 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public void saveAccount(Account account) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public UUID getIdFromKey(String externalKey) {
         for (Account account : accounts) {
             if (externalKey.equals(account.getExternalKey())) {
@@ -87,5 +84,10 @@ public class MockAccountUserApi implements AccountUserApi {
             }
         }
         return null;
+    }
+
+    @Override
+    public void updateAccount(Account account) {
+        throw new UnsupportedOperationException();
     }
 }

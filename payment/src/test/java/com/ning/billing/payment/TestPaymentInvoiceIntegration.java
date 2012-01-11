@@ -88,11 +88,12 @@ public class TestPaymentInvoiceIntegration {
     @BeforeClass(alwaysRun = true)
     public void startMysql() throws IOException {
         final String accountddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+        final String utilddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
         final String invoiceddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
 
         helper = new MysqlTestingHelper();
         helper.startMysql();
-        helper.initDb(accountddl + "\n" + invoiceddl);
+        helper.initDb(accountddl + "\n" + invoiceddl + "\n" + utilddl);
         dbi = helper.getDBI();
     }
 
@@ -138,7 +139,7 @@ public class TestPaymentInvoiceIntegration {
                                                                      .currency(Currency.USD)
                                                                      .billingCycleDay(1)
                                                                      .build();
-        accountDao.save(account);
+        accountDao.create(account);
         return account;
     }
 
@@ -159,7 +160,7 @@ public class TestPaymentInvoiceIntegration {
                                                item.getRate(),
                                                item.getCurrency()));
         }
-        invoiceDao.save(invoice);
+        invoiceDao.create(invoice);
         return invoice;
     }
 
@@ -189,6 +190,6 @@ public class TestPaymentInvoiceIntegration {
         PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(payments.get(0).getId());
         Assert.assertNotNull(paymentAttempt);
 
-        invoicePaymentApi.getInvoicePayment(invoice.getId(), paymentAttempt.getPaymentAttemptId());
+        Invoice invoiceForPayment = invoicePaymentApi.getInvoiceForPaymentAttemptId(paymentAttempt.getPaymentAttemptId());
     }
 }

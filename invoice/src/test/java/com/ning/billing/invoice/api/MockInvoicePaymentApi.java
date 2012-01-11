@@ -82,12 +82,17 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(UUID invoiceId, UUID paymentAttemptId) {
+    public Invoice getInvoiceForPaymentAttemptId(UUID paymentAttemptId) {
         for (InvoicePayment existingInvoicePayment : invoicePayments) {
-            if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
-                return existingInvoicePayment;
+            if (existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
+                return getInvoice(existingInvoicePayment.getInvoiceId());
             }
         }
+        return null;
+    }
+
+    public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
+        // TODO Auto-generated method stub
         return null;
     }
 

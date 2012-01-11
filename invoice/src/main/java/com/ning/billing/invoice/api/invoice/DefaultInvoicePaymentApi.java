@@ -28,7 +28,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.payment.api.InvoicePayment;
 
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     private final InvoiceDao dao;
@@ -59,8 +58,9 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(UUID invoiceId, UUID paymentAttemptId) {
-        throw new UnsupportedOperationException();
+    public Invoice getInvoiceForPaymentAttemptId(UUID paymentAttemptId) {
+        String invoiceIdStr = dao.getInvoiceIdByPaymentAttemptId(paymentAttemptId);
+        return dao.getById(invoiceIdStr);
     }
 
 }

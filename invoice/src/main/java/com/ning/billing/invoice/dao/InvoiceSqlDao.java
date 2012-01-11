@@ -16,12 +16,20 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.util.UuidMapper;
-import com.ning.billing.util.entity.EntityDao;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -38,15 +46,12 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.lang.annotation.*;
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.util.UuidMapper;
+import com.ning.billing.util.entity.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper({UuidMapper.class, InvoiceSqlDao.InvoiceMapper.class})
@@ -64,6 +69,9 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
 
     @SqlQuery
     List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId);
+
+    @SqlQuery
+    String getInvoiceIdByPaymentAttemptId(@Bind("paymentAttemptId") final String paymentAttemptId);
 
     @SqlQuery
     List<UUID> getInvoicesForPayment(@Bind("targetDate") final Date targetDate,
@@ -86,8 +94,10 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     @Target({ElementType.PARAMETER})
     public @interface InvoiceBinder {
         public static class InvoiceBinderFactory implements BinderFactory {
+            @Override
             public Binder build(Annotation annotation) {
                 return new Binder<InvoiceBinder, Invoice>() {
+                    @Override
                     public void bind(SQLStatement q, InvoiceBinder bind, Invoice invoice) {
                         q.bind("id", invoice.getId().toString());
                         q.bind("accountId", invoice.getAccountId().toString());
@@ -122,5 +132,6 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             return new DefaultInvoice(id, accountId, invoiceDate, targetDate, currency, lastPaymentAttempt, amountPaid, new ArrayList<InvoiceItem>());
         }
     }
+
 }
 

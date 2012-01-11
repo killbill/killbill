@@ -68,6 +68,13 @@ notifySuccessfulPayment() ::= <<
   VALUES(:invoiceId, :paymentId, :paymentDate, :amount, :currency);
 >>
 
+getInvoiceIdByPaymentAttemptId() ::= <<
+  SELECT i.id
+    FROM invoices i, invoice_payments ip
+   WHERE ip.invoice_id = i.id
+     AND ip.payment_attempt_id = :paymentAttemptId
+>>
+
 notifyFailedPayment() ::= <<
   INSERT INTO invoice_payments(invoice_id, payment_id, payment_date)
   VALUES(:invoiceId, :paymentId, :paymentAttemptDate);

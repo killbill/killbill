@@ -28,7 +28,7 @@ public class MockAccountDao implements AccountDao {
     private final Map<String, Account> accounts = new ConcurrentHashMap<String, Account>();
 
     @Override
-    public void save(Account entity) {
+    public void create(Account entity) {
         accounts.put(entity.getId().toString(), entity);
     }
 
@@ -60,6 +60,11 @@ public class MockAccountDao implements AccountDao {
     public UUID getIdFromKey(String externalKey) {
         Account account = getAccountByKey(externalKey);
         return account == null ? null : account.getId();
+    }
+
+    @Override
+    public void update(Account entity) {
+        accounts.put(entity.getId().toString(), entity);
     }
 
 }

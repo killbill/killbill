@@ -43,7 +43,7 @@ public class TestNotifyInvoicePaymentApi extends TestPaymentProvider {
                                      paymentAttempt.getPaymentAttemptId(),
                                      paymentAttempt.getPaymentAttemptDate());
 
-        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(invoice.getId(), paymentAttempt.getPaymentAttemptId());
+        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getPaymentAttemptId());
 
         assertNotNull(invoicePayment);
     }
@@ -58,7 +58,7 @@ public class TestNotifyInvoicePaymentApi extends TestPaymentProvider {
                                  paymentAttempt.getPaymentAttemptId(),
                                  paymentAttempt.getPaymentAttemptDate());
 
-        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(invoice.getId(), paymentAttempt.getPaymentAttemptId());
+        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getPaymentAttemptId());
 
         assertNotNull(invoicePayment);
     }

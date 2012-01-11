@@ -23,7 +23,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.payment.api.InvoicePayment;
 
 public interface InvoicePaymentApi {
     public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate);
@@ -34,5 +33,5 @@ public interface InvoicePaymentApi {
 
     public Invoice getInvoice(UUID invoiceId);
 
-    public InvoicePayment getInvoicePayment(UUID invoiceId, UUID paymentAttemptId);
+    public Invoice getInvoiceForPaymentAttemptId(UUID paymentAttemptId);
 }

@@ -33,30 +33,15 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.payment.api.InvoicePayment;
 
 public class MockInvoiceDao implements InvoiceDao {
-    private static final class InvoicePaymentInfo {
-        public final String invoiceId;
-        public final String paymentId;
-        public final DateTime paymentDate;
-        public final BigDecimal amount;
-        public final Currency currency;
-
-        public InvoicePaymentInfo(String invoiceId, String paymentId, DateTime paymentDate, BigDecimal amount, Currency currency) {
-            this.invoiceId = invoiceId;
-            this.paymentId = paymentId;
-            this.paymentDate = paymentDate;
-            this.amount = amount;
-            this.currency = currency;
-        }
-    }
-
     private final Object monitor = new Object();
     private final Map<String, Invoice> invoices = new LinkedHashMap<String, Invoice>();
-    private final List<InvoicePaymentInfo> paymentInfos = new ArrayList<MockInvoiceDao.InvoicePaymentInfo>();
+    private final Map<UUID, InvoicePayment> invoicePayments = new LinkedHashMap<UUID, InvoicePayment>();
 
     @Override
-    public void save(Invoice invoice) {
+    public void create(Invoice invoice) {
         synchronized (monitor) {
             invoices.put(invoice.getId().toString(), invoice);
         }
@@ -70,13 +55,13 @@ public class MockInvoiceDao implements InvoiceDao {
         DateTime lastPaymentDate = null;
         BigDecimal amountPaid = new BigDecimal("0");
 
-        for (InvoicePaymentInfo info : paymentInfos) {
-            if (info.invoiceId.equals(invoice.getId().toString())) {
-                if (lastPaymentDate == null || lastPaymentDate.isBefore(info.paymentDate)) {
-                    lastPaymentDate = info.paymentDate;
+        for (InvoicePayment invoicePayment : invoicePayments.values()) {
+            if (invoicePayment.getInvoiceId().equals(invoice.getId().toString())) {
+                if (lastPaymentDate == null || lastPaymentDate.isBefore(invoicePayment.getPaymentAttemptDate())) {
+                    lastPaymentDate = invoicePayment.getPaymentAttemptDate();
                 }
-                if (info.amount != null) {
-                    amountPaid.add(info.amount);
+                if (invoicePayment.getAmount() != null) {
+                    amountPaid.add(invoicePayment.getAmount());
                 }
             }
         }
@@ -148,14 +133,13 @@ public class MockInvoiceDao implements InvoiceDao {
         Set<UUID> result = new LinkedHashSet<UUID>();
 
         synchronized (monitor) {
-            for (InvoicePaymentInfo info : paymentInfos) {
-                Invoice invoice = invoices.get(info.invoiceId);
+            for (InvoicePayment invoicePayment : invoicePayments.values()) {
+                Invoice invoice = invoices.get(invoicePayment.getInvoiceId());
                 if ((invoice != null) &&
-                    (((info.paymentDate == null) || !info.paymentDate.plusDays(numberOfDays).isAfter(targetDate.getTime())) &&
+                    (((invoicePayment.getPaymentAttemptDate() == null) || !invoicePayment.getPaymentAttemptDate().plusDays(numberOfDays).isAfter(targetDate.getTime())) &&
                     (invoice.getTotalAmount() != null) && invoice.getTotalAmount().doubleValue() >= 0) &&
-                    ((info.amount == null) || info.amount.doubleValue() >= invoice.getTotalAmount().doubleValue())) {
-
-                    result.add(invoice.getId());
+                    ((invoicePayment.getAmount() == null) || invoicePayment.getAmount().doubleValue() >= invoice.getTotalAmount().doubleValue())) {
+                        result.add(invoice.getId());
                 }
             }
         }
@@ -164,24 +148,37 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifySuccessfulPayment(String invoiceId,
-                                        BigDecimal paymentAmount,
-                                        String currency, String paymentId,
-                                        Date paymentDate) {
+    public void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentAttemptId, Date paymentAttemptDate) {
         synchronized (monitor) {
-            paymentInfos.add(new InvoicePaymentInfo(invoiceId, paymentId, new DateTime(paymentDate), paymentAmount, Currency.valueOf(currency)));
+            invoicePayments.put(UUID.fromString(paymentAttemptId),
+                                new InvoicePayment(UUID.fromString(invoiceId), paymentAmount, Currency.valueOf(currency), UUID.fromString(paymentAttemptId), new DateTime(paymentAttemptDate)));
         }
     }
 
     @Override
-    public void notifyFailedPayment(String invoiceId, String paymentId,
+    public void notifyFailedPayment(String invoiceId,
+                                    String paymentAttemptId,
                                     Date paymentAttemptDate) {
         synchronized (monitor) {
-            paymentInfos.add(new InvoicePaymentInfo(invoiceId, paymentId, new DateTime(paymentAttemptDate), null, null));
+            invoicePayments.put(UUID.fromString(paymentAttemptId),
+                                new InvoicePayment(UUID.fromString(invoiceId), null, null, UUID.fromString(paymentAttemptId), new DateTime(paymentAttemptDate)));
+
         }
     }
 
     @Override
     public void test() {
+    }
+
+    @Override
+    public String getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
+        synchronized(monitor) {
+            for (InvoicePayment invoicePayment : invoicePayments.values()) {
+                if (paymentAttemptId.toString().equals(invoicePayment.getPaymentAttemptId())) {
+                    return invoicePayment.getInvoiceId().toString();
+                }
+            }
+        }
+        return null;
     }
 }

@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
 import com.ning.billing.invoice.api.Invoice;
 
 public interface InvoiceDao {
@@ -46,5 +47,8 @@ public interface InvoiceDao {
                              final String paymentId,
                              final Date paymentAttemptDate);
 
+    String getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId);
+
     void test();
+
 }
