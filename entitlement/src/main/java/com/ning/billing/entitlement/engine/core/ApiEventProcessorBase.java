@@ -67,8 +67,6 @@ public abstract class ApiEventProcessorBase implements EventNotifier {
         this.nbProcessedEvents = 0;
     }
 
-
-
     @Override
     public void startNotifications(final EventListener listener) {
 

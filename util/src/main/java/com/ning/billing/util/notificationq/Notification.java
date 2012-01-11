@@ -14,8 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.util.notification;
+package com.ning.billing.util.notificationq;
 
-public interface INotification {
+import java.util.UUID;
 
+import org.joda.time.DateTime;
+
+
+public interface Notification extends NotificationLifecycle {
+
+    public UUID getId();
+
+    public String getNotificationKey();
+
+    public DateTime getEffectiveDate();
 }

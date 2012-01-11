@@ -1,0 +1,83 @@
+group NotificationSqlDao;
+
+getReadyNotifications(now, max) ::= <<
+    select
+      notification_id
+    , notification_key
+      , created_dt
+      , effective_dt
+      , processing_owner
+      , processing_available_dt
+      , processing_state
+    from notifications
+    where
+      effective_dt \<= :now
+      and processing_state != 'PROCESSED'
+      and (processing_owner IS NULL OR processing_available_dt \<= :now)
+    order by
+      effective_dt asc
+      , created_dt asc
+      , id asc
+    limit :max
+    ;
+>>
+
+
+claimNotification(owner, next_available, notification_id, now) ::= <<
+    update notifications
+    set
+      processing_owner = :owner
+      , processing_available_dt = :next_available
+      , processing_state = 'IN_PROCESSING'
+    where
+      notification_id = :notification_id
+      and processing_state != 'PROCESSED'
+      and (processing_owner IS NULL OR processing_available_dt \<= :now)
+    ;
+>>
+
+clearNotification(notification_id, owner) ::= <<
+    update notifications
+    set
+      processing_owner = NULL
+      , processing_state = 'PROCESSED'
+    where
+      notification_id = :notification_id
+      and processing_owner = :owner
+    ;
+>>
+
+insertNotification() ::= <<
+    insert into notifications (
+      notification_id
+    , notification_key
+      , created_dt
+      , effective_dt
+      , processing_owner
+      , processing_available_dt
+      , processing_state
+    ) values (
+      :notification_id
+      , :notification_key
+      , :created_dt
+      , :effective_dt
+      , :processing_owner
+      , :processing_available_dt
+      , :processing_state
+    );   
+>>
+
+
+insertClaimedHistory(sequence_id, owner, hostname, claimed_dt, notification_id) ::= <<
+    insert into claimed_notifications (
+        sequence_id
+        , owner_id
+        , claimed_dt
+        , notification_id
+      ) values (
+        :sequence_id
+        , :owner
+        , :claimed_dt
+        , :notification_id
+      );
+>>

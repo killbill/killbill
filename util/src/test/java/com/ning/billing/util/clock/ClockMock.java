@@ -76,6 +76,15 @@ public class ClockMock extends DefaultClock {
         deltaFromRealityMs = delta;
     }
 
+    public synchronized void addDeltaFromReality(long delta) {
+        if (deltaType != DeltaType.DELTA_ABS) {
+            throw new RuntimeException("ClockMock should be set with type DELTA_ABS");
+        }
+        deltaFromRealityDuration = null;
+        deltaFromRealitDurationEpsilon = 0;
+        deltaFromRealityMs += delta;
+    }
+
     public synchronized void resetDeltaFromReality() {
         deltaType = DeltaType.DELTA_NONE;
         deltaFromRealityDuration = null;
