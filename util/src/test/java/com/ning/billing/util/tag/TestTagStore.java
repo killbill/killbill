@@ -20,48 +20,61 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import org.apache.commons.io.IOUtils;
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import com.ning.billing.dbi.MysqlTestingHelper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
+import com.ning.billing.account.api.ControlTagType;
+import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.tag.dao.TagDescriptionDao;
-import com.ning.billing.util.tag.dao.TagStoreDao;
+import com.ning.billing.util.tag.dao.TagDefinitionDao;
+import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.fail;
 
 @Test(groups={"util"})
 public class TestTagStore {
     private final static String ACCOUNT_TYPE = "ACCOUNT";
     private final Clock clock = new DefaultClock();
-    private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private IDBI dbi;
-    private TagDescription tag1;
-    private TagDescription tag2;
+    private TagDefinition tag1;
+    private TagDefinition tag2;
+    private TagStoreModuleMock module;
+    private TagStoreSqlDao tagStoreSqlDao;
+    private TagDefinitionDao tagDefinitionDao;
+    private Logger log = LoggerFactory.getLogger(TestTagStore.class);
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
+            module = new TagStoreModuleMock();
             final String utilDdl = IOUtils.toString(TestTagStore.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
-            helper.startMysql();
-            helper.initDb(utilDdl);
+            module.startDb();
+            module.initDb(utilDdl);
 
-            dbi = helper.getDBI();
+            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
+            dbi = injector.getInstance(IDBI.class);
 
-            tag1 = new DefaultTagDescription("tag1", "First tag", true, true, "test", clock.getUTCNow());
-            tag2 = new DefaultTagDescription("tag2", "Second tag", false, false, "test", clock.getUTCNow());
+            tagStoreSqlDao = injector.getInstance(TagStoreSqlDao.class);
+            tagStoreSqlDao.test();
 
-            TagDescriptionDao dao = dbi.onDemand(TagDescriptionDao.class);
-            dao.create(tag1);
-            dao.create(tag2);
+            tagDefinitionDao = injector.getInstance(TagDefinitionDao.class);
+            tag1 = tagDefinitionDao.create("tag1", "First tag", "test");
+            tag2 = tagDefinitionDao.create("tag2", "Second tag", "test");
         }
         catch (Throwable t) {
+            log.error("Failed to start tag store tests", t);
             fail(t.toString());
         }
     }
@@ -69,7 +82,7 @@ public class TestTagStore {
     @AfterClass(alwaysRun = true)
     public void stopMysql()
     {
-        helper.stopMysql();
+        module.stopDb();
     }
 
     @Test
@@ -77,22 +90,245 @@ public class TestTagStore {
         UUID accountId = UUID.randomUUID();
 
         TagStore tagStore = new DefaultTagStore(accountId, ACCOUNT_TYPE);
-        Tag tag = new DefaultTag(tag2, "test", clock.getUTCNow());
+        Tag tag = new DescriptiveTag(tag2, "test", clock.getUTCNow());
         tagStore.add(tag);
 
-        TagStoreDao dao = dbi.onDemand(TagStoreDao.class);
+        TagStoreSqlDao dao = dbi.onDemand(TagStoreSqlDao.class);
         dao.save(accountId.toString(), ACCOUNT_TYPE, tagStore.getEntityList());
 
         List<Tag> savedTags = dao.load(accountId.toString(), ACCOUNT_TYPE);
         assertEquals(savedTags.size(), 1);
 
         Tag savedTag = savedTags.get(0);
-        assertEquals(savedTag.getTagDescriptionId(), tag.getTagDescriptionId());
         assertEquals(savedTag.getAddedBy(), tag.getAddedBy());
-        assertEquals(savedTag.getDateAdded().compareTo(tag.getDateAdded()), 0);
-        assertEquals(savedTag.getGenerateInvoice(), tag.getGenerateInvoice());
-        assertEquals(savedTag.getName(), tag.getName());
-        assertEquals(savedTag.getProcessPayment(), tag.getProcessPayment());
+        assertEquals(savedTag.getAddedDate().compareTo(tag.getAddedDate()), 0);
+        assertEquals(savedTag.getTagDefinitionName(), tag.getTagDefinitionName());
         assertEquals(savedTag.getId(), tag.getId());
+    }
+
+    @Test
+    public void testControlTagCreation() {
+        UUID accountId = UUID.randomUUID();
+        TagStore tagStore = new DefaultTagStore(accountId, ACCOUNT_TYPE);
+
+        ControlTag tag = new DefaultControlTag("testUser", clock.getUTCNow(), ControlTagType.AUTO_INVOICING_OFF);
+        tagStore.add(tag);
+        assertEquals(tagStore.generateInvoice(), false);
+
+        List<Tag> tagList = tagStore.getEntityList();
+        tagStoreSqlDao.save(accountId.toString(), ACCOUNT_TYPE, tagList);
+
+        tagStore.clear();
+        assertEquals(tagStore.getEntityList().size(), 0);
+
+        tagList = tagStoreSqlDao.load(accountId.toString(), ACCOUNT_TYPE);
+        tagStore.add(tagList);
+        assertEquals(tagList.size(), 1);
+
+        assertEquals(tagStore.generateInvoice(), false);
+    }
+
+    @Test
+    public void testDescriptiveTagCreation() {
+        UUID accountId = UUID.randomUUID();
+        TagStore tagStore = new DefaultTagStore(accountId, ACCOUNT_TYPE);
+
+        String definitionName = "SomeTestTag";
+        TagDefinition tagDefinition = null;
+        try {
+            tagDefinition = tagDefinitionDao.create(definitionName, "Test tag for some test purpose", "testUser");
+        } catch (TagDefinitionApiException e) {
+            fail("Tag definition creation failed.", e);
+        }
+
+        DescriptiveTag tag = new DescriptiveTag(tagDefinition, "testUser", clock.getUTCNow());
+        tagStore.add(tag);
+        assertEquals(tagStore.generateInvoice(), true);
+
+        List<Tag> tagList = tagStore.getEntityList();
+        tagStoreSqlDao.save(accountId.toString(), ACCOUNT_TYPE, tagList);
+
+        tagStore.clear();
+        assertEquals(tagStore.getEntityList().size(), 0);
+
+        tagList = tagStoreSqlDao.load(accountId.toString(), ACCOUNT_TYPE);
+        tagStore.add(tagList);
+        assertEquals(tagList.size(), 1);
+
+        assertEquals(tagStore.generateInvoice(), true);
+    }
+
+    @Test
+    public void testMixedTagCreation() {
+        UUID accountId = UUID.randomUUID();
+        TagStore tagStore = new DefaultTagStore(accountId, ACCOUNT_TYPE);
+
+        String definitionName = "MixedTagTest";
+        TagDefinition tagDefinition = null;
+        try {
+            tagDefinition = tagDefinitionDao.create(definitionName, "Test tag for some test purpose", "testUser");
+        } catch (TagDefinitionApiException e) {
+            fail("Tag definition creation failed.", e);
+        }
+
+        DescriptiveTag descriptiveTag = new DescriptiveTag(tagDefinition, "testUser", clock.getUTCNow());
+        tagStore.add(descriptiveTag);
+        assertEquals(tagStore.generateInvoice(), true);
+
+        ControlTag controlTag = new DefaultControlTag("testUser", clock.getUTCNow(), ControlTagType.AUTO_INVOICING_OFF);
+        tagStore.add(controlTag);
+        assertEquals(tagStore.generateInvoice(), false);
+
+        List<Tag> tagList = tagStore.getEntityList();
+        tagStoreSqlDao.save(accountId.toString(), ACCOUNT_TYPE, tagList);
+
+        tagStore.clear();
+        assertEquals(tagStore.getEntityList().size(), 0);
+
+        tagList = tagStoreSqlDao.load(accountId.toString(), ACCOUNT_TYPE);
+        tagStore.add(tagList);
+        assertEquals(tagList.size(), 2);
+
+        assertEquals(tagStore.generateInvoice(), false);
+    }
+
+    @Test
+    public void testControlTags() {
+        UUID accountId = UUID.randomUUID();
+        TagStore tagStore = new DefaultTagStore(accountId, ACCOUNT_TYPE);
+        assertEquals(tagStore.generateInvoice(), true);
+        assertEquals(tagStore.processPayment(), true);
+
+        ControlTag invoiceTag = new DefaultControlTag("testUser", clock.getUTCNow(), ControlTagType.AUTO_INVOICING_OFF);
+        tagStore.add(invoiceTag);
+        assertEquals(tagStore.generateInvoice(), false);
+        assertEquals(tagStore.processPayment(), true);
+
+        ControlTag paymentTag = new DefaultControlTag("testUser", clock.getUTCNow(), ControlTagType.AUTO_BILLING_OFF);
+        tagStore.add(paymentTag);
+        assertEquals(tagStore.generateInvoice(), false);
+        assertEquals(tagStore.processPayment(), false);
+    }
+
+    @Test(expectedExceptions = TagDefinitionApiException.class)
+    public void testTagDefinitionCreationWithControlTagName() throws TagDefinitionApiException {
+        String definitionName = ControlTagType.AUTO_BILLING_OFF.toString();
+        tagDefinitionDao.create(definitionName, "This should break", "test");
+    }
+
+    @Test
+    public void testTagDefinitionDeletionForUnusedDefinition() throws TagDefinitionApiException {
+        String definitionName = "TestTag1234";
+        tagDefinitionDao.create(definitionName, "Some test tag", "test");
+
+        TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName);
+        assertNotNull(tagDefinition);
+
+        tagDefinitionDao.deleteTagDefinition(definitionName);
+        tagDefinition = tagDefinitionDao.getByName(definitionName);
+        assertNull(tagDefinition);
+    }
+
+    @Test(expectedExceptions = TagDefinitionApiException.class)
+    public void testTagDefinitionDeletionForDefinitionInUse() throws TagDefinitionApiException {
+        String definitionName = "TestTag12345";
+        tagDefinitionDao.create(definitionName, "Some test tag", "test");
+
+        TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName);
+        assertNotNull(tagDefinition);
+
+        UUID objectId = UUID.randomUUID();
+        String objectType = "TestType";
+        TagStore tagStore = new DefaultTagStore(objectId, objectType);
+        Tag tag = new DescriptiveTag(tagDefinition, "test", clock.getUTCNow());
+        tagStore.add(tag);
+
+        tagStoreSqlDao.save(objectId.toString(), objectType, tagStore.getEntityList());
+        List<Tag> tags = tagStoreSqlDao.load(objectId.toString(), objectType);
+        assertEquals(tags.size(), 1);
+
+        tagDefinitionDao.deleteTagDefinition(definitionName);
+    }
+
+    @Test
+    public void testDeleteAllTagsForDefinitionInUse() {
+        String definitionName = "TestTag1234567";
+        try {
+            tagDefinitionDao.create(definitionName, "Some test tag", "test");
+        } catch (TagDefinitionApiException e) {
+            fail("Could not create tag definition", e);
+        }
+
+        TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName);
+        assertNotNull(tagDefinition);
+
+        UUID objectId = UUID.randomUUID();
+        String objectType = "TestType";
+        TagStore tagStore = new DefaultTagStore(objectId, objectType);
+        Tag tag = new DescriptiveTag(tagDefinition, "test", clock.getUTCNow());
+        tagStore.add(tag);
+
+        tagStoreSqlDao.save(objectId.toString(), objectType, tagStore.getEntityList());
+        List<Tag> tags = tagStoreSqlDao.load(objectId.toString(), objectType);
+        assertEquals(tags.size(), 1);
+
+        try {
+            tagDefinitionDao.deleteAllTagsForDefinition(definitionName);
+        } catch (TagDefinitionApiException e) {
+            fail("Could not delete tags for tag definition", e);
+        }
+
+        try {
+            tagDefinitionDao.deleteTagDefinition(definitionName);
+        } catch (TagDefinitionApiException e) {
+            fail("Could not delete tag definition", e);
+        }
+    }
+
+    @Test
+    public void testDeleteAllTagsForDefinitionNotInUse() {
+        String definitionName = "TestTag4321";
+        try {
+            tagDefinitionDao.create(definitionName, "Some test tag", "test");
+        } catch (TagDefinitionApiException e) {
+            fail("Could not create tag definition", e);
+        }
+
+        TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName);
+        assertNotNull(tagDefinition);
+
+        try {
+            tagDefinitionDao.deleteAllTagsForDefinition(definitionName);
+        } catch (TagDefinitionApiException e) {
+            fail("Could not delete tags for tag definition", e);
+        }
+
+        try {
+            tagDefinitionDao.deleteTagDefinition(definitionName);
+        } catch (TagDefinitionApiException e) {
+            fail("Could not delete tag definition", e);
+        }
+    }
+
+    @Test(expectedExceptions = TagDefinitionApiException.class)
+    public void testDeleteAllTagsForDefinitionWithWrongName() throws TagDefinitionApiException {
+        String definitionName = "TestTag654321";
+        String wrongDefinitionName = "TestTag564321";
+        try {
+            tagDefinitionDao.create(definitionName, "Some test tag", "test");
+        } catch (TagDefinitionApiException e) {
+            fail("Could not create tag definition", e);
+        }
+
+        TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName);
+        assertNotNull(tagDefinition);
+
+        tagDefinitionDao.deleteAllTagsForDefinition(wrongDefinitionName);
+
+        try {
+            tagDefinitionDao.deleteTagDefinition(definitionName);
+        } catch (TagDefinitionApiException e) {
+            fail("Could not delete tag definition", e);
+        }
     }
 }

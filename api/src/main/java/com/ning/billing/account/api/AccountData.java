@@ -31,8 +31,6 @@ public interface AccountData {
 
     public String getEmail();
 
-    public String getPhone();
-
     public int getBillCycleDay();
 
     public Currency getCurrency();
@@ -43,5 +41,17 @@ public interface AccountData {
 
     public String getLocale();
 
-    public DateTime getNextBillingDate();
+    public String getAddress1();
+
+    public String getAddress2();
+
+    public String getCity();
+
+    public String getStateOrProvince();
+
+    public String getPostalCode();
+
+    public String getCountry();
+
+    public String getPhone();
 }

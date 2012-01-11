@@ -14,11 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.util.tag.dao;
 
-import java.math.BigDecimal;
-import com.ning.billing.util.customfield.CustomizableEntity;
-import com.ning.billing.util.tag.Taggable;
+import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.tag.TagDefinition;
 
-public interface Account extends AccountData, CustomizableEntity, Taggable {
+public interface TagDefinitionDao {
+    public TagDefinition getByName(String definitionName);
+
+    public TagDefinition create(String definitionName, String description, String createdBy) throws TagDefinitionApiException;
+
+    public void deleteAllTagsForDefinition(String definitionName) throws TagDefinitionApiException;
+
+    public void deleteTagDefinition(String definitionName) throws TagDefinitionApiException;
 }

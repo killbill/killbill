@@ -16,76 +16,79 @@
 
 package com.ning.billing.account.api;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomizableEntityBase;
-import com.ning.billing.util.tag.DefaultTag;
+import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.DefaultTagStore;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDescription;
+import com.ning.billing.util.tag.TagDefinition;
 
 public class DefaultAccount extends CustomizableEntityBase implements Account {
-    public final static String OBJECT_TYPE = "Account";
+    //public final static String OBJECT_TYPE = "Account";
 
     private final String externalKey;
     private final String email;
     private final String name;
     private final int firstNameLength;
-    private final String phone;
     private final Currency currency;
     private final int billCycleDay;
     private final String paymentProviderName;
-    private final BigDecimal balance;
     private final DefaultTagStore tags;
     private final DateTimeZone timeZone;
     private final String locale;
-    private final DateTime nextBillingDate;
+    private final String address1;
+    private final String address2;
+    private final String city;
+    private final String stateOrProvince;
+    private final String country;
+    private final String postalCode;
+    private final String phone;
 
     public DefaultAccount(final AccountData data) {
         this(UUID.randomUUID(), data);
     }
 
     public DefaultAccount(final UUID id, final AccountData data) {
-        this(id, data.getExternalKey(), data.getEmail(), data.getName(),
-                data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
-                data.getPaymentProviderName(), BigDecimal.ZERO, data.getTimeZone(), data.getLocale(),
-                data.getNextBillingDate());
+        this(id, data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
+                data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
+                data.getTimeZone(), data.getLocale(),
+                data.getAddress1(), data.getAddress2(), data.getCity(), data.getStateOrProvince(), data.getCountry(),
+                data.getPostalCode(), data.getPhone());
     }
 
     public DefaultAccount(final UUID id, final String externalKey, final String email, final String name, final int firstNameLength,
-                          final String phone, final Currency currency, final int billCycleDay, final String paymentProviderName,
-                          final BigDecimal balance, final DateTimeZone timeZone, final String locale,
-                          final DateTime nextBillingDate) {
+                          final Currency currency, final int billCycleDay, final String paymentProviderName,
+                          final DateTimeZone timeZone, final String locale,
+                          final String address1, final String address2, final String city,
+                          final String stateOrProvince, final String country, final String postalCode, final String phone) {
         super(id);
         this.externalKey = externalKey;
         this.email = email;
         this.name = name;
         this.firstNameLength = firstNameLength;
-        this.phone = phone;
         this.currency = currency;
         this.billCycleDay = billCycleDay;
         this.paymentProviderName = paymentProviderName;
-
-        if (balance == null) {
-            this.balance = BigDecimal.ZERO;
-        } else {
-            this.balance = balance;
-        }
-
         this.timeZone = timeZone;
         this.locale = locale;
-        this.nextBillingDate = nextBillingDate;
+        this.address1 = address1;
+        this.address2 = address2;
+        this.city = city;
+        this.stateOrProvince = stateOrProvince;
+        this.postalCode = postalCode;
+        this.country = country;
+        this.phone = phone;
 
         this.tags = new DefaultTagStore(id, getObjectName());
     }
 
     @Override
     public String getObjectName() {
-        return OBJECT_TYPE;
+        return "Account";
     }
 
     @Override
@@ -109,11 +112,6 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
-    public String getPhone() {
-        return phone;
-    }
-
-    @Override
     public Currency getCurrency() {
         return currency;
     }
@@ -129,11 +127,6 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
-    public BigDecimal getBalance() {
-        return balance;
-    }
-
-    @Override
     public DateTimeZone getTimeZone() {
         return timeZone;
     }
@@ -144,8 +137,38 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
-    public DateTime getNextBillingDate() {
-        return nextBillingDate;
+    public String getAddress1() {
+        return address1;
+    }
+
+    @Override
+    public String getAddress2() {
+        return address2;
+    }
+
+    @Override
+    public String getCity() {
+        return city;
+    }
+
+    @Override
+    public String getStateOrProvince() {
+        return stateOrProvince;
+    }
+
+    @Override
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    @Override
+    public String getCountry() {
+        return country;
+    }
+
+    @Override
+    public String getPhone() {
+        return phone;
     }
 
     @Override
@@ -159,8 +182,8 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
-    public void addTag(TagDescription description, String addedBy, DateTime dateAdded) {
-        Tag tag = new DefaultTag(description, addedBy, dateAdded);
+    public void addTag(TagDefinition description, String addedBy, DateTime dateAdded) {
+        Tag tag = new DescriptiveTag(description, addedBy, dateAdded);
         tags.add(tag) ;
     }
 
@@ -177,7 +200,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
-    public void removeTag(TagDescription description) {
+    public void removeTag(TagDefinition description) {
         tags.remove(description.getName());
     }
 

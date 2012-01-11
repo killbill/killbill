@@ -17,7 +17,6 @@
 package com.ning.billing.account.dao;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.UuidMapper;
@@ -43,7 +42,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -74,7 +72,6 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
             String email = result.getString("email");
             String name = result.getString("name");
             int firstNameLength = result.getInt("first_name_length");
-            String phone = result.getString("phone");
             int billingCycleDay = result.getInt("billing_cycle_day");
 
             String currencyString = result.getString("currency");
@@ -87,17 +84,23 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
 
             String locale = result.getString("locale");
 
-            Timestamp nextBillingDateTimestamp = result.getTimestamp("next_billing_date");
-            DateTime nextBillingDate = nextBillingDateTimestamp == null ? null : new DateTime(nextBillingDateTimestamp);
+            String address1 = result.getString("address1");
+            String address2 = result.getString("address2");
+            String city = result.getString("city");
+            String stateOrProvince = result.getString("state_or_province");
+            String postalCode = result.getString("postal_code");
+            String country = result.getString("country");
+            String phone = result.getString("phone");
 
             return new AccountBuilder(id).externalKey(externalKey).email(email)
                                          .name(name).firstNameLength(firstNameLength)
                                          .phone(phone).currency(currency)
                                          .billingCycleDay(billingCycleDay)
                                          .paymentProviderName(paymentProviderName)
-                                         .timeZone(timeZone)
-                                         .locale(locale)
-                                         .nextBillingDate(nextBillingDate)
+                                         .timeZone(timeZone).locale(locale)
+                                         .address1(address1).address2(address2)
+                                         .city(city).stateOrProvince(stateOrProvince)
+                                         .postalCode(postalCode).country(country)
                                          .build();
         }
     }
@@ -115,7 +118,6 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
                         q.bind("email", account.getEmail());
                         q.bind("name", account.getName());
                         q.bind("firstNameLength", account.getFirstNameLength());
-                        q.bind("phone", account.getPhone());
 
                         Currency currency = account.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());
@@ -125,11 +127,15 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
 
                         DateTimeZone timeZone = account.getTimeZone();
                         q.bind("timeZone", (timeZone == null) ? null : timeZone.toString());
-
                         q.bind("locale", account.getLocale());
 
-                        DateTime nextBillingDate = account.getNextBillingDate();
-                        q.bind("nextBillingDate", (nextBillingDate == null) ? null : nextBillingDate.toDate());
+                        q.bind("address1", account.getAddress1());
+                        q.bind("address2", account.getAddress2());
+                        q.bind("city", account.getCity());
+                        q.bind("stateOrProvince", account.getStateOrProvince());
+                        q.bind("country", account.getCountry());
+                        q.bind("postalCode", account.getPostalCode());
+                        q.bind("phone", account.getPhone());
                     }
                 };
             }

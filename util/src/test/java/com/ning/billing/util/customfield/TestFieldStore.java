@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -39,6 +41,7 @@ import static org.testng.Assert.fail;
 
 @Test(groups={"util"})
 public class TestFieldStore {
+    Logger log = LoggerFactory.getLogger(TestFieldStore.class);
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private IDBI dbi;
 
@@ -54,6 +57,7 @@ public class TestFieldStore {
             dbi = helper.getDBI();
         }
         catch (Throwable t) {
+            log.error("Setup failed", t);
             fail(t.toString());
         }
     }

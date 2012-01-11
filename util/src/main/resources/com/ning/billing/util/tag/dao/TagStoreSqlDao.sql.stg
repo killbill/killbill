@@ -1,0 +1,30 @@
+group TagStoreDao;
+
+save() ::= <<
+  INSERT INTO tags(id, tag_definition_name, object_id, object_type, added_date, added_by)
+  VALUES (:id, :tagDefinitionName, :objectId, :objectType, :addedDate, :addedBy)
+  ON DUPLICATE KEY UPDATE
+    tag_definition_name = :tagDefinitionName, object_id = :objectId, object_type = :objectType,
+    added_date = :addedDate, added_by = :addedBy;
+>>
+
+load() ::= <<
+    SELECT t.id, t.object_id, t.object_type, t.added_date, t.added_by,
+           td.id AS tag_definition_id,
+           t.tag_definition_name AS tag_definition_name,
+           td.description AS tag_description,
+           td.created_by, td.creation_date
+    FROM tags t
+    LEFT JOIN tag_definitions td ON t.tag_definition_name = td.name
+    WHERE t.object_id = :objectId AND t.object_type = :objectType;
+>>
+
+clear() ::= <<
+  DELETE FROM tags
+  WHERE object_id = :objectId AND object_type = :objectType;
+>>
+
+test() ::= <<
+  SELECT 1 FROM tags;
+>>
+;

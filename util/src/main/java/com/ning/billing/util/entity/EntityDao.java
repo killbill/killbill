@@ -23,13 +23,15 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 import java.util.List;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.util.eventbus.EventBus;
 
 public interface EntityDao<T extends Entity> {
     @SqlUpdate
-    public void create(@BindBean T entity);
+    public void create(@BindBean final T entity);
 
     @SqlUpdate
-    public void update(@BindBean T entity);
+    public void update(@BindBean final T entity) throws AccountApiException, EventBus.EventBusException;
 
     @SqlQuery
     public T getById(@Bind("id") final String id);

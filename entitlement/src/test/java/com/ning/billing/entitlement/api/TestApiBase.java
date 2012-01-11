@@ -322,8 +322,33 @@ public abstract class TestApiBase {
             }
 
             @Override
-            public DateTime getNextBillingDate() {
-                return null;
+            public String getAddress1() {
+                return null;  
+            }
+
+            @Override
+            public String getAddress2() {
+                return null;  
+            }
+
+            @Override
+            public String getCity() {
+                return null;  
+            }
+
+            @Override
+            public String getStateOrProvince() {
+                return null;  
+            }
+
+            @Override
+            public String getPostalCode() {
+                return null;  
+            }
+
+            @Override
+            public String getCountry() {
+                return null;  
             }
         };
         return accountData;

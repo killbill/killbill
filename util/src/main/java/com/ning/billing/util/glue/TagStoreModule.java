@@ -17,15 +17,21 @@
 package com.ning.billing.util.glue;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.util.tag.dao.TagDescriptionDao;
-import com.ning.billing.util.tag.dao.TagStoreDao;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.tag.dao.DefaultTagDefinitionDao;
+import com.ning.billing.util.tag.dao.TagDefinitionDao;
+import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
+import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 
 public class TagStoreModule extends AbstractModule
 {
     @Override
     protected void configure()
     {
-        bind(TagDescriptionDao.class).toProvider(TagDescriptionDaoProvider.class).asEagerSingleton();
-        bind(TagStoreDao.class).toProvider(TagStoreDaoProvider.class).asEagerSingleton();
+        bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
+        bind(TagDefinitionSqlDao.class).toProvider(TagDescriptionDaoProvider.class).asEagerSingleton();
+        bind(TagDefinitionDao.class).to(DefaultTagDefinitionDao.class).asEagerSingleton();
+        bind(TagStoreSqlDao.class).toProvider(TagStoreDaoProvider.class).asEagerSingleton();
     }
 }

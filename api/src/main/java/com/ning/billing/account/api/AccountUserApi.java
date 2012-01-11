@@ -25,7 +25,12 @@ public interface AccountUserApi {
 
     public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException;
 
-    public void updateAccount(Account account);
+    /***
+     *
+     * Note: does not update the external key
+     * @param account
+     */
+    public void updateAccount(Account account) throws Exception;
 
     public Account getAccountByKey(String key);
 
@@ -33,5 +38,5 @@ public interface AccountUserApi {
 
     public List<Account> getAccounts();
 
-    public UUID getIdFromKey(String externalKey);
+    public UUID getIdFromKey(String externalKey) throws AccountApiException;
 }

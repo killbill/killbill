@@ -26,6 +26,7 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.tag.Tag;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
@@ -62,12 +63,12 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
-    public UUID getIdFromKey(final String externalKey) {
+    public UUID getIdFromKey(final String externalKey) throws AccountApiException {
         return dao.getIdFromKey(externalKey);
     }
 
     @Override
-    public void updateAccount(final Account account) {
+    public void updateAccount(final Account account) throws AccountApiException, EventBus.EventBusException {
         dao.update(account);
     }
 }

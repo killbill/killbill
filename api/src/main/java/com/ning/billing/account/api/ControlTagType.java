@@ -16,9 +16,23 @@
 
 package com.ning.billing.account.api;
 
-import java.math.BigDecimal;
-import com.ning.billing.util.customfield.CustomizableEntity;
-import com.ning.billing.util.tag.Taggable;
+public enum ControlTagType {
+    AUTO_BILLING_OFF(true, false),
+    AUTO_INVOICING_OFF(false, true);
 
-public interface Account extends AccountData, CustomizableEntity, Taggable {
+    private final boolean autoPaymentOff;
+    private final boolean autoInvoicingOff;
+
+    ControlTagType(final boolean autoPaymentOff, final boolean autoInvoicingOff) {
+        this.autoPaymentOff = autoPaymentOff;
+        this.autoInvoicingOff = autoInvoicingOff;
+    }
+
+    public boolean autoPaymentOff() {
+        return this.autoPaymentOff;
+    }
+
+    public boolean autoInvoicingOff() {
+        return this.autoInvoicingOff;
+    }
 }

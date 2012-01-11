@@ -14,11 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.util.tag;
 
-import java.math.BigDecimal;
-import com.ning.billing.util.customfield.CustomizableEntity;
-import com.ning.billing.util.tag.Taggable;
+import org.joda.time.DateTime;
+import com.ning.billing.util.entity.Entity;
 
-public interface Account extends AccountData, CustomizableEntity, Taggable {
+public interface TagDefinition extends Entity {
+    String getName();
+
+    String getCreatedBy();
+
+    DateTime getCreationDate();
+
+    String getDescription();
 }

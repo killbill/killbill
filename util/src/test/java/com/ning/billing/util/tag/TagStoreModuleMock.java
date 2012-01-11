@@ -14,26 +14,31 @@
  * under the License.
  */
 
-package com.ning.billing.util.glue;
+package com.ning.billing.util.tag;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
+import java.io.IOException;
 import org.skife.jdbi.v2.IDBI;
+import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.glue.TagStoreModule;
 
-public class TagDescriptionDaoProvider implements Provider<TagDefinitionSqlDao>
-{
-    private final IDBI dbi;
+public class TagStoreModuleMock extends TagStoreModule {
+    private final MysqlTestingHelper helper = new MysqlTestingHelper();
 
-    @Inject
-    public TagDescriptionDaoProvider(final IDBI dbi)
-    {
-        this.dbi = dbi;
+    public void startDb() throws IOException {
+        helper.startMysql();
+    }
+
+    public void initDb(String ddl) throws IOException {
+        helper.initDb(ddl);
+    }
+
+    public void stopDb() {
+        helper.stopMysql();
     }
 
     @Override
-    public TagDefinitionSqlDao get()
-    {
-        return dbi.onDemand(TagDefinitionSqlDao.class);
+    protected void configure() {
+        bind(IDBI.class).toInstance(helper.getDBI());
+        super.configure();
     }
 }

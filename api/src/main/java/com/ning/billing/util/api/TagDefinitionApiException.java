@@ -14,21 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag;
+package com.ning.billing.util.api;
 
-import org.joda.time.DateTime;
-import com.ning.billing.util.entity.Entity;
+import com.ning.billing.BillingExceptionBase;
+import com.ning.billing.ErrorCode;
 
-public interface TagDescription extends Entity {
-    String getName();
+public class TagDefinitionApiException extends BillingExceptionBase {
+    public TagDefinitionApiException(Throwable cause, int code, final String msg) {
+        super(cause, code, msg);
+    }
 
-    String getCreatedBy();
+    public TagDefinitionApiException(Throwable cause, ErrorCode code, final Object... args) {
+        super(cause, code, args);
+    }
 
-    DateTime getCreationDate();
-
-    String getDescription();
-
-    boolean getGenerateInvoice();
-
-    boolean getProcessPayment();
+    public TagDefinitionApiException(ErrorCode code, final Object... args) {
+        super(code, args);
+    }
 }

@@ -22,10 +22,10 @@ import org.joda.time.DateTime;
 public interface Taggable {
     public List<Tag> getTagList();
     public boolean hasTag(String tagName);
-    public void addTag(TagDescription description, String addedBy, DateTime dateAdded);
+    public void addTag(TagDefinition description, String addedBy, DateTime dateAdded);
     public void addTags(List<Tag> tags);
     public void clearTags();
-    public void removeTag(TagDescription description);
+    public void removeTag(TagDefinition description);
     public boolean generateInvoice();
     public boolean processPayment();
 }

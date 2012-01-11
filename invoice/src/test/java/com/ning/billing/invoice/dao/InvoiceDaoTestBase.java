@@ -18,6 +18,7 @@ package com.ning.billing.invoice.dao;
 
 import java.io.IOException;
 import org.apache.commons.io.IOUtils;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -31,12 +32,13 @@ import static org.testng.Assert.fail;
 public abstract class InvoiceDaoTestBase {
     protected InvoiceDao invoiceDao;
     protected InvoiceItemSqlDao invoiceItemDao;
+    private InvoiceModuleMock module;
 
     @BeforeClass()
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
-            InvoiceModuleMock module = new InvoiceModuleMock();
+            module = new InvoiceModuleMock();
             final String ddl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             module.createDb(ddl);
 
@@ -53,5 +55,11 @@ public abstract class InvoiceDaoTestBase {
         catch (Throwable t) {
             fail(t.toString());
         }
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void stopMysql()
+    {
+        module.stopDb();
     }
 }

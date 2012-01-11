@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.util.tag;
 
-import java.math.BigDecimal;
-import com.ning.billing.util.customfield.CustomizableEntity;
-import com.ning.billing.util.tag.Taggable;
+import com.ning.billing.account.api.ControlTagType;
 
-public interface Account extends AccountData, CustomizableEntity, Taggable {
+public interface ControlTag extends Tag {
+    public ControlTagType getControlTagType();
 }

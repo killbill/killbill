@@ -50,7 +50,7 @@ public class BusinessAccountRecorder
 
         final List<String> tags = new ArrayList<String>();
         for (final Tag tag : account.getTagList()) {
-            tags.add(tag.getName());
+            tags.add(tag.getTagDefinitionName());
         }
 
         // TODO Need payment and invoice api to fill most fields

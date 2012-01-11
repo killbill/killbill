@@ -21,27 +21,27 @@ import java.util.UUID;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeNotification;
 import com.ning.billing.account.api.AccountCreationNotification;
-import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.FieldStoreDao;
 import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.dao.TagStoreDao;
+import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 
 public class DefaultAccountDao implements AccountDao {
     private final AccountSqlDao accountDao;
     private final EventBus eventBus;
 
     @Inject
-    public DefaultAccountDao(IDBI dbi, EventBus eventBus) {
+    public DefaultAccountDao(final IDBI dbi, final EventBus eventBus) {
         this.eventBus = eventBus;
         this.accountDao = dbi.onDemand(AccountSqlDao.class);
     }
@@ -50,36 +50,22 @@ public class DefaultAccountDao implements AccountDao {
     public Account getAccountByKey(final String key) {
         return accountDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
             @Override
-            public Account inTransaction(AccountSqlDao accountSqlDao, TransactionStatus status) throws Exception {
+            public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
                 Account account = accountSqlDao.getAccountByKey(key);
-
                 if (account != null) {
-                    FieldStoreDao fieldStoreDao = accountSqlDao.become(FieldStoreDao.class);
-                    List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
-
-                    account.clearFields();
-                    if (fields != null) {
-                        for (CustomField field : fields) {
-                            account.setFieldValue(field.getName(), field.getValue());
-                        }
-                    }
-
-                    TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
-                    List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
-                    account.clearTags();
-
-                    if (tags != null) {
-                        account.addTags(tags);
-                    }
+                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
+                    setTagsFromWithinTransaction(account, accountSqlDao);
                 }
-
                 return account;
             }
         });
     }
 
     @Override
-    public UUID getIdFromKey(final String externalKey) {
+    public UUID getIdFromKey(final String externalKey) throws AccountApiException {
+        if (externalKey == null) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_CANNOT_MAP_NULL_KEY, "");
+        }
         return accountDao.getIdFromKey(externalKey);
     }
 
@@ -87,33 +73,17 @@ public class DefaultAccountDao implements AccountDao {
     public Account getById(final String id) {
         return accountDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
             @Override
-            public Account inTransaction(AccountSqlDao accountSqlDao, TransactionStatus status) throws Exception {
+            public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
                 Account account = accountSqlDao.getById(id);
-
                 if (account != null) {
-                    FieldStoreDao fieldStoreDao = accountSqlDao.become(FieldStoreDao.class);
-                    List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
-
-                    account.clearFields();
-                    if (fields != null) {
-                        for (CustomField field : fields) {
-                            account.setFieldValue(field.getName(), field.getValue());
-                        }
-                    }
-
-                    TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
-                    List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
-                    account.clearTags();
-
-                    if (tags != null) {
-                        account.addTags(tags);
-                    }
+                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
+                    setTagsFromWithinTransaction(account, accountSqlDao);
                 }
-
                 return account;
             }
         });
     }
+
 
     @Override
     public List<Account> get() {
@@ -121,88 +91,118 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     @Override
+    public void create(final Account account) {
+        final String key = account.getExternalKey();
+
+        accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            @Override
+            public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
+                Account currentAccount = accountSqlDao.getAccountByKey(key);
+                if (currentAccount != null) {
+                    throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
+                }
+                accountSqlDao.create(account);
+
+                saveTagsFromWithinTransaction(account, accountSqlDao, true);
+                saveCustomFieldsFromWithinTransaction(account, accountSqlDao, true);
+
+                AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
+                eventBus.post(creationEvent);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void update(final Account account) throws AccountApiException {
+        try {
+            accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+                @Override
+                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, EventBus.EventBusException {
+                    String accountId = account.getId().toString();
+                    Account currentAccount = accountSqlDao.getById(accountId);
+                    if (currentAccount == null) {
+                        throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
+                    }
+
+                    String currentKey = currentAccount.getExternalKey();
+                    if (!currentKey.equals(account.getExternalKey())) {
+                        throw new AccountApiException(ErrorCode.ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY, currentKey);
+                    }
+
+                    accountSqlDao.update(account);
+
+                    saveTagsFromWithinTransaction(account, accountSqlDao, false);
+                    saveCustomFieldsFromWithinTransaction(account, accountSqlDao, false);
+
+                    AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
+                    if (changeEvent.hasChanges()) {
+                        eventBus.post(changeEvent);
+                    }
+                    return null;
+                }
+            });
+        } catch (RuntimeException t) {
+            if (t.getCause() instanceof AccountApiException) {
+                throw (AccountApiException) t.getCause();
+            } else {
+                throw t;
+            }
+        }
+    }
+
+    @Override
     public void test() {
         accountDao.test();
     }
 
-    @Override
-    public void create(final Account account) {
-        final String key = account.getExternalKey();
-        final String objectType = DefaultAccount.OBJECT_TYPE;
+    private void setCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
+        FieldStoreDao fieldStoreDao = transactionalDao.become(FieldStoreDao.class);
+        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
 
-        accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
-            @Override
-            public Void inTransaction(AccountSqlDao accountDao, TransactionStatus status) throws Exception {
-                Account currentAccount = accountDao.getAccountByKey(key);
-                if (currentAccount != null) {
-                    throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, account.getExternalKey());
-                }
-
-                accountDao.create(account);
-
-                String accountId = account.getId().toString();
-                FieldStoreDao fieldStoreDao = accountDao.become(FieldStoreDao.class);
-
-                List<CustomField> fieldList = account.getFieldList();
-                if (fieldList != null) {
-                    fieldStoreDao.save(accountId, objectType, account.getFieldList());
-                }
-
-                TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
-
-                List<Tag> tagList = account.getTagList();
-                if (tagList != null) {
-                    tagStoreDao.save(accountId, objectType, account.getTagList());
-                }
-
-                AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
-                eventBus.post(creationEvent);
-
-                return null;
-            }
-        });
+        account.clearFields();
+        if (fields != null) {
+            account.addFields(fields);
+        }
     }
 
-    @Override
-    public void update(final Account account) {
-        final String key = account.getExternalKey();
-        final String objectType = DefaultAccount.OBJECT_TYPE;
+    private void setTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
+        TagStoreSqlDao tagStoreDao = transactionalDao.become(TagStoreSqlDao.class);
+        List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
+        account.clearTags();
 
-        accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
-            @Override
-            public Void inTransaction(AccountSqlDao accountDao, TransactionStatus status) throws Exception {
-                Account currentAccount = accountDao.getAccountByKey(key);
+        if (tags != null) {
+            account.addTags(tags);
+        }
+    }
 
-                if (currentAccount == null) {
-                    throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST, key);
-                }
+    private void saveCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao, final boolean isCreation) {
+        String accountId = account.getId().toString();
+        String objectType = account.getObjectName();
 
-                accountDao.update(account);
+        TagStoreSqlDao tagStoreDao = transactionalDao.become(TagStoreSqlDao.class);
+        if (!isCreation) {
+            tagStoreDao.clear(accountId, objectType);
+        }
 
-                String accountId = account.getId().toString();
-                FieldStoreDao fieldStoreDao = accountDao.become(FieldStoreDao.class);
-                fieldStoreDao.clear(accountId, objectType);
+        List<Tag> tagList = account.getTagList();
+        if (tagList != null) {
+            tagStoreDao.save(accountId, objectType, tagList);
+        }
+    }
 
-                List<CustomField> fieldList = account.getFieldList();
-                if (fieldList != null) {
-                    fieldStoreDao.save(accountId, objectType, account.getFieldList());
-                }
+    private void saveTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao, final boolean isCreation) {
+        String accountId = account.getId().toString();
+        String objectType = account.getObjectName();
 
-                TagStoreDao tagStoreDao = fieldStoreDao.become(TagStoreDao.class);
-                tagStoreDao.clear(accountId, objectType);
+        FieldStoreDao fieldStoreDao = transactionalDao.become(FieldStoreDao.class);
+        if (!isCreation) {
+            fieldStoreDao.clear(accountId, objectType);
+        }
 
-                List<Tag> tagList = account.getTagList();
-                if (tagList != null) {
-                    tagStoreDao.save(accountId, objectType, tagList);
-                }
-
-                AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
-                if (changeEvent.hasChanges()) {
-                    eventBus.post(changeEvent);
-                }
-
-                return null;
-            }
-        });
+        List<CustomField> fieldList = account.getFieldList();
+        if (fieldList != null) {
+            fieldStoreDao.save(accountId, objectType, fieldList);
+        }
     }
 }

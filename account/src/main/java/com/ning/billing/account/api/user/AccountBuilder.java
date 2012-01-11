@@ -30,14 +30,19 @@ public class AccountBuilder {
     private String email;
     private String name;
     private int firstNameLength;
-    private String phone;
     private Currency currency;
     private int billingCycleDay;
     private String paymentProviderName;
-    private BigDecimal balance = BigDecimal.ZERO;
     private DateTimeZone timeZone;
     private String locale;
-    private DateTime nextBillingDate;
+    private String address1;
+    private String address2;
+    private String city;
+    private String stateOrProvince;
+    private String country;
+    private String postalCode;
+    private String phone;
+
 
     public AccountBuilder() {
         this(UUID.randomUUID());
@@ -67,11 +72,6 @@ public class AccountBuilder {
         return this;
     }
 
-    public AccountBuilder phone(String phone) {
-        this.phone = phone;
-        return this;
-    }
-
     public AccountBuilder billingCycleDay(final int billingCycleDay) {
         this.billingCycleDay = billingCycleDay;
         return this;
@@ -87,11 +87,6 @@ public class AccountBuilder {
         return this;
     }
 
-    public AccountBuilder balance(final BigDecimal balance) {
-        this.balance = balance;
-        return this;
-    }
-
     public AccountBuilder timeZone(final DateTimeZone timeZone) {
         this.timeZone = timeZone;
         return this;
@@ -102,14 +97,46 @@ public class AccountBuilder {
         return this;
     }
 
-    public AccountBuilder nextBillingDate(final DateTime nextBillingDate) {
-        this.nextBillingDate = nextBillingDate;
+    public AccountBuilder address1(final String address1) {
+        this.address1 = address1;
+        return this;
+    }
+
+    public AccountBuilder address2(final String address2) {
+        this.address2 = address2;
+        return this;
+    }
+
+    public AccountBuilder city(final String city) {
+        this.city = city;
+        return this;
+    }
+
+    public AccountBuilder stateOrProvince(final String stateOrProvince) {
+        this.stateOrProvince = stateOrProvince;
+        return this;
+    }
+
+    public AccountBuilder postalCode(final String postalCode) {
+        this.postalCode = postalCode;
+        return this;
+    }
+
+    public AccountBuilder country(final String country) {
+        this.country = country;
+        return this;
+    }
+
+    public AccountBuilder phone(final String phone) {
+        this.phone = phone;
         return this;
     }
 
     public DefaultAccount build() {
         return new DefaultAccount(id, externalKey, email, name, firstNameLength,
-                                  phone, currency, billingCycleDay, paymentProviderName,
-                                  balance, timeZone, locale, nextBillingDate);
+                                  currency, billingCycleDay, paymentProviderName,
+                                  timeZone, locale,
+                                  address1, address2, city, stateOrProvince, country,
+                                  postalCode, phone);
     }
 }

@@ -62,9 +62,6 @@ public class DefaultAccountChangeNotification implements AccountChangeNotificati
         addIfValueChanged(tmpChangedFields, "firstName",
                 oldData.getName(), newData.getName());
 
-        addIfValueChanged(tmpChangedFields, "phone",
-                oldData.getPhone(), newData.getPhone());
-
         addIfValueChanged(tmpChangedFields, "currency",
                 (oldData.getCurrency() != null) ? oldData.getCurrency().toString() : null,
                  (newData.getCurrency() != null) ? newData.getCurrency().toString() : null);
@@ -79,12 +76,16 @@ public class DefaultAccountChangeNotification implements AccountChangeNotificati
         addIfValueChanged(tmpChangedFields, "locale", oldData.getLocale(), newData.getLocale());
 
         addIfValueChanged(tmpChangedFields, "timeZone",
-                oldData.getTimeZone().toString(),
-                newData.getTimeZone().toString());
+                (oldData.getTimeZone() == null) ? null : oldData.getTimeZone().toString(),
+                (newData.getTimeZone() == null) ? null : newData.getTimeZone().toString());
 
-        addIfValueChanged(tmpChangedFields, "nextBillingDate",
-                oldData.getNextBillingDate().toString(),
-                newData.getNextBillingDate().toString());
+        addIfValueChanged(tmpChangedFields, "address1", oldData.getAddress1(), newData.getAddress1());
+        addIfValueChanged(tmpChangedFields, "address2", oldData.getAddress2(), newData.getAddress2());
+        addIfValueChanged(tmpChangedFields, "city", oldData.getCity(), newData.getCity());
+        addIfValueChanged(tmpChangedFields, "stateOrProvince", oldData.getStateOrProvince(), newData.getStateOrProvince());
+        addIfValueChanged(tmpChangedFields, "country", oldData.getCountry(), newData.getCountry());
+        addIfValueChanged(tmpChangedFields, "postalCode", oldData.getPostalCode(), newData.getPostalCode());
+        addIfValueChanged(tmpChangedFields, "phone", oldData.getPhone(), newData.getPhone());
 
         return tmpChangedFields;
     }
