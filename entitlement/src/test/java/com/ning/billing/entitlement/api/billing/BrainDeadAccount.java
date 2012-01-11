@@ -145,4 +145,10 @@ public class BrainDeadAccount implements Account {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public void addFields(List<CustomField> fields) {
+		throw new UnsupportedOperationException();
+		
+	}
+
 }

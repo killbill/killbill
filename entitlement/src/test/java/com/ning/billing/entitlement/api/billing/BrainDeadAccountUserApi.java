@@ -20,20 +20,14 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.Tag;
 
 public class BrainDeadAccountUserApi implements AccountUserApi {
 
-	@Override
-	public Account createAccount(AccountData data) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void saveAccount(Account account) {
-		throw new UnsupportedOperationException();
-	}
 
 	@Override
 	public Account getAccountByKey(String key) {
@@ -52,6 +46,17 @@ public class BrainDeadAccountUserApi implements AccountUserApi {
 
 	@Override
 	public UUID getIdFromKey(String externalKey) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Account createAccount(AccountData data, List<CustomField> fields,
+			List<Tag> tags) throws AccountApiException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void updateAccount(Account account) {
 		throw new UnsupportedOperationException();
 	}
 
