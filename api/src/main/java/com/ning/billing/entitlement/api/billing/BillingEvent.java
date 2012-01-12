@@ -16,13 +16,17 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.InternationalPrice;
+import java.math.BigDecimal;
+
 import org.joda.time.DateTime;
 
-import java.math.BigDecimal;
-import java.util.UUID;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.user.Subscription;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
@@ -36,9 +40,9 @@ public interface BillingEvent extends Comparable<BillingEvent> {
 
     /**
      *
-     * @return the id for the matching subscription
+     * @return the subscription
      */
-    public UUID getSubscriptionId();
+    public Subscription getSubscription();
 
     /**
      *
@@ -48,30 +52,16 @@ public interface BillingEvent extends Comparable<BillingEvent> {
 
     /**
      *
-     * @return the name of the plan phase
+     * @return the plan phase
      */
-    public String getPlanPhaseName();
+    public PlanPhase getPlanPhase();
 
 
     /**
      *
-     * @return the name of the plan
+     * @return the plan
      */
-    public String getPlanName();
-
-    /**
-     *
-     * @return the international price for the event
-     *
-     */
-    public InternationalPrice getPrice();
-
-    /**
-     *
-     * @param currency the target currency for invoicing
-     * @return the price of the plan phase in the specified currency
-     */
-    public BigDecimal getPrice(Currency currency);
+    public Plan getPlan();
 
     /**
      *
@@ -90,4 +80,32 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      * @return the description of the billing event
      */
     public String getDescription();
+
+    /**
+     * 
+     * @return the fixed price for the phase
+     */
+    public InternationalPrice getFixedPrice();
+
+    /**
+     * 
+     * @return the recurring price for the phase
+     */
+    public InternationalPrice getRecurringPrice();
+
+    /**
+     * Syntactic sugar to wrap currency access call
+     * 
+     * @param currency
+     * @return price value
+     */
+    public BigDecimal getRecurringPrice(Currency currency) throws CatalogApiException ;
+
+    /**
+     * Syntactic sugar to wrap currency access call
+     * 
+     * @param currency
+     * @return price value
+     */
+    public BigDecimal getFixedPrice(Currency currency) throws CatalogApiException ;
 }

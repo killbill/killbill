@@ -182,8 +182,8 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
-    public void addTag(TagDefinition description, String addedBy, DateTime dateAdded) {
-        Tag tag = new DescriptiveTag(description, addedBy, dateAdded);
+    public void addTag(TagDefinition definition, String addedBy, DateTime dateAdded) {
+        Tag tag = new DescriptiveTag(definition, addedBy, dateAdded);
         tags.add(tag) ;
     }
 
@@ -200,8 +200,8 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
-    public void removeTag(TagDefinition description) {
-        tags.remove(description.getName());
+    public void removeTag(TagDefinition definition) {
+        tags.remove(definition.getName());
     }
 
     @Override

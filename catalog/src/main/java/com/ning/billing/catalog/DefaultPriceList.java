@@ -32,6 +32,9 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
 	@XmlID
 	private String name;
 
+	@XmlAttribute(required=false)
+	private Boolean retired = false;
+	
 	@XmlElementWrapper(name="plans", required=true)
 	@XmlElement(name="plan", required=true)
 	@XmlIDREF
@@ -46,6 +49,10 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
 
 	protected DefaultPlan[] getPlans() {
 		return plans;
+	}
+
+	public boolean isRetired() {
+		return retired;
 	}
 	
 	/* (non-Javadoc)
@@ -94,6 +101,11 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         }
         return count;
     }
+	
+	public DefaultPriceList setRetired(boolean retired) {
+		this.retired = retired;
+		return this;
+	}
 
 
 }

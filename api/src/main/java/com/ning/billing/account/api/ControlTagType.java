@@ -17,15 +17,21 @@
 package com.ning.billing.account.api;
 
 public enum ControlTagType {
-    AUTO_BILLING_OFF(true, false),
-    AUTO_INVOICING_OFF(false, true);
+    AUTO_BILLING_OFF("Suspends billing until removed.", true, false),
+    AUTO_INVOICING_OFF("Suspends invoicing until removed.", false, true);
 
+    private final String description;
     private final boolean autoPaymentOff;
     private final boolean autoInvoicingOff;
 
-    ControlTagType(final boolean autoPaymentOff, final boolean autoInvoicingOff) {
+    ControlTagType(final String description, final boolean autoPaymentOff, final boolean autoInvoicingOff) {
+        this.description = description;
         this.autoPaymentOff = autoPaymentOff;
         this.autoInvoicingOff = autoInvoicingOff;
+    }
+
+    public String getDescription() {
+        return this.description;
     }
 
     public boolean autoPaymentOff() {

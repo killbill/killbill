@@ -1,5 +1,10 @@
 group TagDefinitionDao;
 
+get() ::= <<
+  SELECT id, name, created_by, creation_date, description
+  FROM tag_definitions;
+>>
+
 create() ::= <<
   INSERT INTO tag_definitions(id, name, created_by, creation_date, description)
   VALUES(:id, :name, :createdBy, :creationDate, :description);

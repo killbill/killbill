@@ -28,7 +28,6 @@ public class EventBusModule extends AbstractModule {
     protected void configure() {
         bind(EventBusService.class).to(DefaultEventBusService.class);
         bind(EventBus.class).to(MemoryEventBus.class).asEagerSingleton();
-
     }
 
 }

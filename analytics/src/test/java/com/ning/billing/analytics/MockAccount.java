@@ -173,7 +173,7 @@ public class MockAccount implements Account
     }
 
     @Override
-    public void addTag(TagDefinition description, String addedBy, DateTime dateAdded) {
+    public void addTag(TagDefinition definition, String addedBy, DateTime dateAdded) {
         throw new NotImplementedException();
     }
 
@@ -188,7 +188,7 @@ public class MockAccount implements Account
     }
 
     @Override
-    public void removeTag(TagDefinition description) {
+    public void removeTag(TagDefinition definition) {
         throw new NotImplementedException();
     }
 

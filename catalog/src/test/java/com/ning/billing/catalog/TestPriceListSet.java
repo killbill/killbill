@@ -17,6 +17,7 @@
 package com.ning.billing.catalog;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -30,7 +31,7 @@ import static com.ning.billing.catalog.api.PhaseType.EVERGREEN;
 
 public class TestPriceListSet {
 	@Test(enabled=true)
-	public void testOverriding() {
+	public void testOverriding() throws CatalogApiException {
 		DefaultProduct foo = new DefaultProduct("Foo", ProductCategory.BASE);
 		DefaultProduct bar = new DefaultProduct("Bar", ProductCategory.BASE);
 		DefaultPlan[] defaultPlans = new DefaultPlan[]{ 
@@ -55,7 +56,7 @@ public class TestPriceListSet {
 		Assert.assertEquals(set.getPlanListFrom("child", foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
 	}
 	
-	public void testForNullBillingPeriod() {
+	public void testForNullBillingPeriod() throws CatalogApiException {
 		DefaultProduct foo = new DefaultProduct("Foo", ProductCategory.BASE);
 		DefaultProduct bar = new DefaultProduct("Bar", ProductCategory.BASE);
 		DefaultPlan[] defaultPlans = new DefaultPlan[]{ 

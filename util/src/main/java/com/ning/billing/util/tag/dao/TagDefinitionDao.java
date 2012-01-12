@@ -16,10 +16,13 @@
 
 package com.ning.billing.util.tag.dao;
 
+import java.util.List;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDefinitionDao {
+    public List<TagDefinition> getTagDefinitions();
+
     public TagDefinition getByName(String definitionName);
 
     public TagDefinition create(String definitionName, String description, String createdBy) throws TagDefinitionApiException;

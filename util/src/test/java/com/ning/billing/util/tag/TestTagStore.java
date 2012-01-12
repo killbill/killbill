@@ -39,6 +39,7 @@ import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 @Test(groups={"util"})
@@ -330,5 +331,11 @@ public class TestTagStore {
         } catch (TagDefinitionApiException e) {
             fail("Could not delete tag definition", e);
         }
+    }
+
+    @Test
+    public void testGetTagDefinitions() {
+        List<TagDefinition> definitionList = tagDefinitionDao.getTagDefinitions();
+        assertTrue(definitionList.size() >= ControlTagType.values().length);
     }
 }

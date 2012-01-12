@@ -61,4 +61,9 @@ public class MockProduct implements Product
     {
         return null;
     }
+
+	@Override
+	public boolean isRetired() {
+		return false;
+	}
 }

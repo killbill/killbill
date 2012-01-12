@@ -16,10 +16,13 @@
 
 package com.ning.billing.util.api;
 
+import java.util.List;
 import java.util.UUID;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDefinitionUserApi {
+    public List<TagDefinition> getTagDefinitions();
+
     public TagDefinition create(String name, String description, String createdBy) throws TagDefinitionApiException;
 
     public void deleteAllTagsForDefinition(String definitionName) throws TagDefinitionApiException;

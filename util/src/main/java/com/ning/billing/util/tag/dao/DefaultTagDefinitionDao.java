@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.tag.dao;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.skife.jdbi.v2.IDBI;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
@@ -23,6 +25,7 @@ import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.DefaultTagDefinition;
+import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
 public class DefaultTagDefinitionDao implements TagDefinitionDao {
@@ -33,6 +36,20 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
     public DefaultTagDefinitionDao(IDBI dbi, Clock clock) {
         this.dao = dbi.onDemand(TagDefinitionSqlDao.class);
         this.clock = clock;
+    }
+
+    @Override
+    public List<TagDefinition> getTagDefinitions() {
+        // get user definitions from the database
+        List<TagDefinition> definitionList = new ArrayList<TagDefinition>();
+        definitionList.addAll(dao.get());
+
+        // add control tag definitions
+        for (ControlTagType controlTag : ControlTagType.values()) {
+            definitionList.add(new DefaultTagDefinition(controlTag.toString(), controlTag.getDescription(), null, null));
+        }
+
+        return definitionList;
     }
 
     @Override

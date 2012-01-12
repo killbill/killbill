@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.tag.api;
 
+import java.util.List;
 import com.google.inject.Inject;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagDefinitionUserApi;
@@ -28,6 +29,11 @@ public class DefaultTagDefinitionUserApi implements TagDefinitionUserApi {
     @Inject
     public DefaultTagDefinitionUserApi(TagDefinitionDao dao) {
         this.dao = dao;
+    }
+
+    @Override
+    public List<TagDefinition> getTagDefinitions() {
+        return dao.getTagDefinitions();
     }
 
     @Override
