@@ -71,7 +71,7 @@ public class TestEventBus {
         @Subscribe
         public synchronized void processEvent(MyEvent event) {
             gotEvents++;
-            log.info("Got event {} {}", event.name, event.value);
+            //log.debug("Got event {} {}", event.name, event.value);
         }
 
         public synchronized boolean waitForCompletion(long timeoutMs) {

@@ -19,11 +19,14 @@ package com.ning.billing.util.notificationq;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.DBI;
@@ -34,8 +37,10 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -46,9 +51,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
+import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
 @Guice(modules = TestNotificationQueue.TestNotificationQueueModule.class)
 public class TestNotificationQueue {
@@ -59,15 +66,26 @@ public class TestNotificationQueue {
     private DBI dbi;
 
     @Inject
+    MysqlTestingHelper helper;
+
+    @Inject
     private Clock clock;
 
     private DummySqlTest dao;
 
    // private NotificationQueue queue;
 
+    private void startMysql() throws IOException, ClassNotFoundException, SQLException {
+        final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
+        helper.startMysql();
+        helper.initDb(ddl);
+        helper.initDb(testDdl);
+    }
 
-    @BeforeClass(alwaysRun = true)
-    public void setup() {
+    @BeforeSuite(alwaysRun = true)
+    public void setup() throws Exception {
+        startMysql();
         dao = dbi.onDemand(DummySqlTest.class);
     }
 
@@ -87,10 +105,7 @@ public class TestNotificationQueue {
         ((ClockMock) clock).resetDeltaFromReality();
     }
 
-    @AfterTest
-    public void afterTest() {
 
-    }
 
     /**
      * Verify that we can call start/stop on a disabled queue and that both start/stop callbacks are called
@@ -394,10 +409,18 @@ public class TestNotificationQueue {
     public static class TestNotificationQueueModule extends AbstractModule {
         @Override
         protected void configure() {
+
+            bind(Clock.class).to(ClockMock.class);
+
+            final MysqlTestingHelper helper = new MysqlTestingHelper();
+            bind(MysqlTestingHelper.class).toInstance(helper);
+            DBI dbi = helper.getDBI();
+            bind(DBI.class).toInstance(dbi);
+            /*
             bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
             bind(DbiConfig.class).toInstance(config);
-            bind(Clock.class).to(ClockMock.class);
+            */
         }
     }
 

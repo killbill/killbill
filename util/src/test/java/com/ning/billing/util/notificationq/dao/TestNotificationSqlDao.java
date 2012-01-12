@@ -20,10 +20,13 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.config.ConfigurationObjectFactory;
@@ -31,7 +34,10 @@ import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -40,6 +46,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.notificationq.DefaultNotification;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.NotificationLifecycle.NotificationLifecycleState;
@@ -53,11 +60,33 @@ public class TestNotificationSqlDao {
     @Inject
     private DBI dbi;
 
+    @Inject
+    MysqlTestingHelper helper;
+
     private NotificationSqlDao dao;
 
-    @BeforeClass(alwaysRun = true)
-    public void setup() {
-       dao = dbi.onDemand(NotificationSqlDao.class);
+    private void startMysql() throws IOException, ClassNotFoundException, SQLException {
+
+
+        final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        helper.startMysql();
+        helper.initDb(ddl);
+    }
+
+    @BeforeSuite(alwaysRun = true)
+    public void setup()  {
+        try {
+            startMysql();
+            dao = dbi.onDemand(NotificationSqlDao.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @AfterSuite(alwaysRun = true)
+    public void stopMysql()
+    {
+        helper.stopMysql();
     }
 
 
@@ -167,9 +196,17 @@ public class TestNotificationSqlDao {
     public static class TestNotificationSqlDaoModule extends AbstractModule {
         @Override
         protected void configure() {
+
+            final MysqlTestingHelper helper = new MysqlTestingHelper();
+            bind(MysqlTestingHelper.class).toInstance(helper);
+            DBI dbi = helper.getDBI();
+            bind(DBI.class).toInstance(dbi);
+
+            /*
             bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
             bind(DbiConfig.class).toInstance(config);
+            */
         }
     }
 }
