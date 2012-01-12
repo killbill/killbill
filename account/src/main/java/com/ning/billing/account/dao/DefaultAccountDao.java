@@ -91,26 +91,33 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     @Override
-    public void create(final Account account) {
+    public void create(final Account account) throws AccountApiException {
         final String key = account.getExternalKey();
+        try {
+            accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+                @Override
+                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, EventBus.EventBusException {
+                    Account currentAccount = accountSqlDao.getAccountByKey(key);
+                    if (currentAccount != null) {
+                        throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
+                    }
+                    accountSqlDao.create(account);
 
-        accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
-            @Override
-            public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
-                Account currentAccount = accountSqlDao.getAccountByKey(key);
-                if (currentAccount != null) {
-                    throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
+                    saveTagsFromWithinTransaction(account, accountSqlDao, true);
+                    saveCustomFieldsFromWithinTransaction(account, accountSqlDao, true);
+
+                    AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
+                    eventBus.post(creationEvent);
+                    return null;
                 }
-                accountSqlDao.create(account);
-
-                saveTagsFromWithinTransaction(account, accountSqlDao, true);
-                saveCustomFieldsFromWithinTransaction(account, accountSqlDao, true);
-
-                AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
-                eventBus.post(creationEvent);
-                return null;
+            });
+        } catch (RuntimeException re) {
+            if (re.getCause() instanceof AccountApiException) {
+                throw (AccountApiException) re.getCause();
+            } else {
+                throw re;
             }
-        });
+        }
     }
 
     @Override
@@ -142,11 +149,11 @@ public class DefaultAccountDao implements AccountDao {
                     return null;
                 }
             });
-        } catch (RuntimeException t) {
-            if (t.getCause() instanceof AccountApiException) {
-                throw (AccountApiException) t.getCause();
+        } catch (RuntimeException re) {
+            if (re.getCause() instanceof AccountApiException) {
+                throw (AccountApiException) re.getCause();
             } else {
-                throw t;
+                throw re;
             }
         }
     }

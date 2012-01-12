@@ -68,7 +68,7 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
-    public void updateAccount(final Account account) throws AccountApiException, EventBus.EventBusException {
+    public void updateAccount(final Account account) throws AccountApiException {
         dao.update(account);
     }
 }

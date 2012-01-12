@@ -28,10 +28,10 @@ import com.ning.billing.util.eventbus.EventBus;
 
 public interface EntityDao<T extends Entity> {
     @SqlUpdate
-    public void create(@BindBean final T entity);
+    public void create(@BindBean final T entity) throws AccountApiException;
 
     @SqlUpdate
-    public void update(@BindBean final T entity) throws AccountApiException, EventBus.EventBusException;
+    public void update(@BindBean final T entity) throws AccountApiException;
 
     @SqlQuery
     public T getById(@Bind("id") final String id);

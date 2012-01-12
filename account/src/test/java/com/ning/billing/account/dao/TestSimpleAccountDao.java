@@ -56,7 +56,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                    .timeZone(timeZone).build();
     }
 
-    public void testBasic() {
+    public void testBasic() throws AccountApiException {
 
         Account a = createTestAccount();
         accountDao.create(a);
@@ -95,7 +95,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testCustomFields() {
+    public void testCustomFields() throws AccountApiException {
         Account account = createTestAccount();
         String fieldName = "testField1";
         String fieldValue = "testField1_value";
@@ -110,7 +110,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testTags() {
+    public void testTags() throws AccountApiException {
         Account account = createTestAccount();
         TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", "Test System", new DateTime());
         TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
@@ -132,7 +132,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testGetIdFromKey() {
+    public void testGetIdFromKey() throws AccountApiException {
         Account account = createTestAccount();
         accountDao.create(account);
 

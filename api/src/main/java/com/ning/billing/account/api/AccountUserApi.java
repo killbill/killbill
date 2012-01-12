@@ -19,6 +19,7 @@ package com.ning.billing.account.api;
 import java.util.List;
 import java.util.UUID;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.tag.Tag;
 
 public interface AccountUserApi {
@@ -30,7 +31,7 @@ public interface AccountUserApi {
      * Note: does not update the external key
      * @param account
      */
-    public void updateAccount(Account account) throws Exception;
+    public void updateAccount(Account account) throws AccountApiException;
 
     public Account getAccountByKey(String key);
 
