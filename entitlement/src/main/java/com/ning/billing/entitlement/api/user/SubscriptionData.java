@@ -347,6 +347,9 @@ public class SubscriptionData implements Subscription {
         String previousPriceList = null;
 
         transitions = new LinkedList<SubscriptionTransitionData>();
+        Plan previousPlan = null;
+        PlanPhase previousPhase = null;
+        
         for (final EntitlementEvent cur : events) {
 
             if (!cur.isActive() || cur.getActiveVersion() < activeVersion) {
@@ -402,8 +405,7 @@ public class SubscriptionData implements Subscription {
                         cur.getType()));
             }
 
-            Plan previousPlan = null;
-            PlanPhase previousPhase = null;
+
             Plan nextPlan = null;
             PlanPhase nextPhase = null;
             try {
