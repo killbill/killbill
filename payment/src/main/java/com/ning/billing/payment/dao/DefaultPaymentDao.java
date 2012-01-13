@@ -39,6 +39,11 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
+    public PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId) {
+        return sqlDao.getPaymentAttemptForInvoiceId(invoiceId);
+    }
+
+    @Override
     public PaymentAttempt createPaymentAttempt(Invoice invoice) {
         final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
 
@@ -52,8 +57,8 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String id) {
-        sqlDao.updatePaymentAttemptWithPaymentId(paymentAttemptId.toString(), id);
+    public void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String paymentId) {
+        sqlDao.updatePaymentAttemptWithPaymentId(paymentAttemptId.toString(), paymentId);
     }
 
 }

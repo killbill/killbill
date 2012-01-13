@@ -102,7 +102,7 @@ public class TestPaymentProvider {
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
 
         final PaymentInfo paymentInfo = paymentInfoReceiver.getProcessedPayments().get(0);
-        final PaymentInfoRequest paymentInfoRequest = new PaymentInfoRequest(account.getId(), paymentInfo.getId());
+        final PaymentInfoRequest paymentInfoRequest = new PaymentInfoRequest(account.getId(), paymentInfo.getPaymentId());
 
         paymentInfoReceiver.clear();
         eventBus.post(paymentInfoRequest);

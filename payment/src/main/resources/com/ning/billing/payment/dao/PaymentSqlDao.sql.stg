@@ -1,2 +1,54 @@
 group PaymentSqlDao;
 
+paymentAttemptFields(prefix) ::= <<
+    <prefix>payment_attempt_id,
+    <prefix>account_id,
+    <prefix>invoice_id,
+    <prefix>payment_attempt_amount,
+    <prefix>payment_attempt_dt,
+    <prefix>created_dt,
+    <prefix>updated_dt
+>>
+
+paymentInfoFields(prefix) ::= <<
+    <prefix>payment_id,
+    <prefix>amount,
+    <prefix>refund_amount,
+    <prefix>bank_identification_number,
+    <prefix>payment_number,
+    <prefix>payment_type,
+    <prefix>status,
+    <prefix>reference_id,
+    <prefix>effective_dt,
+    <prefix>created_dt,
+    <prefix>updated_dt
+>>
+
+insertPaymentAttempt() ::= <<
+    INSERT INTO payment_attempts (<paymentAttemptFields()>)
+    VALUES (:payment_attempt_id, :account_id, :invoice_id, :payment_attempt_amount, :payment_attempt_dt, NOW(), NOW());
+>>
+
+getPaymentAttemptForPaymentId() ::= <<
+    SELECT <paymentAttemptFields()>
+      FROM payment_attempts
+     WHERE payment_id = :payment_id
+>>
+
+getPaymentAttemptForInvoiceId() ::= <<
+    SELECT <paymentAttemptFields()>
+      FROM payment_attempts
+     WHERE invoice_id = :invoice_id
+>>
+
+updatePaymentAttemptWithPaymentId() ::= <<
+    UPDATE payment_attempts
+       SET payment_id = :payment_id,
+           updated_dt = NOW()
+     WHERE payment_attempt_id = :payment_attempt_id
+>>
+
+insertPaymentInfo() ::= <<
+    INSERT INTO payments (<paymentInfoFields()>)
+    VALUES (:payment_id, :amount, :refund_amount, :bank_identification_number, :payment_number, :payment_type, :status, :reference_id, :effective_dt, NOW(), NOW());
+>>

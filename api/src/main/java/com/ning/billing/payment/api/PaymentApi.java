@@ -38,6 +38,8 @@ public interface PaymentApi {
     List<Either<PaymentError, PaymentInfo>> createPayment(String accountKey, List<String> invoiceIds);
     List<Either<PaymentError, PaymentInfo>> createPayment(Account account, List<String> invoiceIds);
 
+    List<Either<PaymentError, PaymentInfo>> createRefund(Account account, List<String> invoiceIds); //TODO
+
     Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
 
     Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(PaymentProviderAccount account);

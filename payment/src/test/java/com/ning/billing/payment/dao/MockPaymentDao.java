@@ -47,7 +47,7 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public void savePaymentInfo(PaymentInfo paymentInfo) {
-        payments.put(paymentInfo.getId(), paymentInfo);
+        payments.put(paymentInfo.getPaymentId(), paymentInfo);
     }
 
     @Override
@@ -59,6 +59,16 @@ public class MockPaymentDao implements PaymentDao {
                                                    existingPaymentAttempt.getInvoice(),
                                                    paymentId));
         }
+    }
+
+    @Override
+    public PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId) {
+        for (PaymentAttempt paymentAttempt : paymentAttempts.values()) {
+            if (invoiceId.equals(paymentAttempt.getInvoice().getId())) {
+                return paymentAttempt;
+            }
+        }
+        return null;
     }
 
 }

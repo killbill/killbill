@@ -57,17 +57,6 @@ create() ::= <<
   VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency);
 >>
 
-update() ::= <<
-  UPDATE invoices
-  SET account_id = :accountId, invoice_date = :invoiceDate, target_date = :targetDate, currency = :currency
-  WHERE id = :id;
->>
-
-notifySuccessfulPayment() ::= <<
-  INSERT INTO invoice_payments(invoice_id, payment_id, payment_date, amount, currency)
-  VALUES(:invoiceId, :paymentId, :paymentDate, :amount, :currency);
->>
-
 getInvoiceIdByPaymentAttemptId() ::= <<
   SELECT i.id
     FROM invoices i, invoice_payments ip
@@ -75,9 +64,26 @@ getInvoiceIdByPaymentAttemptId() ::= <<
      AND ip.payment_attempt_id = :paymentAttemptId
 >>
 
+update() ::= <<
+  UPDATE invoices
+  SET account_id = :accountId, invoice_date = :invoiceDate, target_date = :targetDate, currency = :currency
+  WHERE id = :id;
+>>
+
+notifySuccessfulPayment() ::= <<
+  INSERT INTO invoice_payments(invoice_id, payment_attempt_id, payment_date, amount, currency)
+  VALUES(:invoice_id, :payment_attempt_id, :payment_date, :amount, :currency);
+>>
+
 notifyFailedPayment() ::= <<
-  INSERT INTO invoice_payments(invoice_id, payment_id, payment_date)
-  VALUES(:invoiceId, :paymentId, :paymentAttemptDate);
+  INSERT INTO invoice_payments(invoice_id, payment_attempt_id)
+  VALUES(:invoice_id, :payment_attempt_id);
+>>
+
+getInvoicePayment() ::= <<
+    SELECT invoice_id, payment_id, payment_date, amount, currency
+      FROM invoice_payments
+     WHERE payment_id = :payment_id
 >>
 
 test() ::= <<

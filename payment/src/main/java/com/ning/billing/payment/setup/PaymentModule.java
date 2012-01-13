@@ -23,7 +23,7 @@ import org.skife.config.ConfigurationObjectFactory;
 import com.google.inject.AbstractModule;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.payment.dao.MockPaymentDao;
+import com.ning.billing.payment.dao.DefaultPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 
@@ -38,6 +38,10 @@ public class PaymentModule extends AbstractModule {
         this.props = props;
     }
 
+    protected void installPaymentDao() {
+        bind(PaymentDao.class).to(DefaultPaymentDao.class).asEagerSingleton();
+    }
+
     protected void installPaymentProviderPlugins(PaymentConfig config) {
     }
 
@@ -49,8 +53,7 @@ public class PaymentModule extends AbstractModule {
         bind(PaymentConfig.class).toInstance(paymentConfig);
         bind(PaymentProviderPluginRegistry.class).asEagerSingleton();
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
-        bind(MockPaymentDao.class).asEagerSingleton();
-        bind(PaymentDao.class).to(MockPaymentDao.class);
         installPaymentProviderPlugins(paymentConfig);
+        installPaymentDao();
     }
 }

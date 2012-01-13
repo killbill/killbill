@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.payment.api.InvoicePayment;
 
 public interface InvoiceDao {
     void create(Invoice invoice);
@@ -50,5 +51,7 @@ public interface InvoiceDao {
     String getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId);
 
     void test();
+
+    InvoicePayment getInvoicePayment(UUID paymentAttemptId);
 
 }

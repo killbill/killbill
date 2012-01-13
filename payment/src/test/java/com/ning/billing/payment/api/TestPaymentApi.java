@@ -94,7 +94,7 @@ public abstract class TestPaymentApi {
 
         PaymentInfo paymentInfo = results.get(0).getRight();
 
-        assertNotNull(paymentInfo.getId());
+        assertNotNull(paymentInfo.getPaymentId());
         assertEquals(paymentInfo.getAmount().doubleValue(), amount.doubleValue());
     }
 }

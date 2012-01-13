@@ -26,10 +26,9 @@ import com.google.common.base.Objects;
 import com.ning.billing.util.eventbus.EventBusNotification;
 
 public class PaymentInfo implements EventBusNotification {
-    private final String id;
+    private final String paymentId;
     private final BigDecimal amount;
     private final BigDecimal refundAmount;
-    private final BigDecimal appliedCreditBalanceAmount;
     private final String paymentNumber;
     private final String bankIdentificationNumber;
     private final String status;
@@ -40,10 +39,9 @@ public class PaymentInfo implements EventBusNotification {
     private final DateTime updatedDate;
 
     public PaymentInfo(PaymentInfo src) {
-        this.id = src.id;
+        this.paymentId = src.paymentId;
         this.amount = src.amount;
         this.refundAmount = src.refundAmount;
-        this.appliedCreditBalanceAmount = src.appliedCreditBalanceAmount;
         this.paymentNumber = src.paymentNumber;
         this.bankIdentificationNumber = src.bankIdentificationNumber;
         this.status = src.status;
@@ -55,26 +53,24 @@ public class PaymentInfo implements EventBusNotification {
     }
 
     @JsonCreator
-    public PaymentInfo(@JsonProperty("id") String id,
+    public PaymentInfo(@JsonProperty("paymentId") String paymentId,
                        @JsonProperty("amount") BigDecimal amount,
-                       @JsonProperty("appliedCreditBalanceAmount") BigDecimal appliedCreditBalanceAmount,
+                       @JsonProperty("refundAmount") BigDecimal refundAmount,
                        @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
                        @JsonProperty("paymentNumber") String paymentNumber,
-                       @JsonProperty("refundAmount") BigDecimal refundAmount,
                        @JsonProperty("status") String status,
                        @JsonProperty("type") String type,
                        @JsonProperty("referenceId") String referenceId,
                        @JsonProperty("effectiveDate") DateTime effectiveDate,
                        @JsonProperty("createdDate") DateTime createdDate,
                        @JsonProperty("updatedDate") DateTime updatedDate) {
-        this.id = id;
+        this.paymentId = paymentId;
         this.amount = amount;
-        this.appliedCreditBalanceAmount = appliedCreditBalanceAmount;
+        this.refundAmount = refundAmount;
         this.bankIdentificationNumber = bankIdentificationNumber;
         this.effectiveDate = effectiveDate;
         this.paymentNumber = paymentNumber;
         this.referenceId = referenceId;
-        this.refundAmount = refundAmount;
         this.status = status;
         this.type = type;
         this.createdDate = createdDate;
@@ -85,16 +81,12 @@ public class PaymentInfo implements EventBusNotification {
         return new Builder(this);
     }
 
-    public String getId() {
-        return id;
+    public String getPaymentId() {
+        return paymentId;
     }
 
     public BigDecimal getAmount() {
         return amount;
-    }
-
-    public BigDecimal getAppliedCreditBalanceAmount() {
-        return appliedCreditBalanceAmount;
     }
 
     public String getBankIdentificationNumber() {
@@ -134,7 +126,7 @@ public class PaymentInfo implements EventBusNotification {
     }
 
     public static class Builder {
-        private String id;
+        private String paymentId;
         private BigDecimal amount;
         private BigDecimal refundAmount;
         private BigDecimal appliedCreditBalanceAmount;
@@ -151,10 +143,9 @@ public class PaymentInfo implements EventBusNotification {
         }
 
         public Builder(PaymentInfo src) {
-            this.id = src.id;
+            this.paymentId = src.paymentId;
             this.amount = src.amount;
             this.refundAmount = src.refundAmount;
-            this.appliedCreditBalanceAmount = src.appliedCreditBalanceAmount;
             this.paymentNumber = src.paymentNumber;
             this.bankIdentificationNumber = src.bankIdentificationNumber;
             this.type = src.type;
@@ -165,8 +156,8 @@ public class PaymentInfo implements EventBusNotification {
             this.updatedDate = src.updatedDate;
         }
 
-        public Builder setId(String id) {
-            this.id = id;
+        public Builder setPaymentId(String paymentId) {
+            this.paymentId = paymentId;
             return this;
         }
 
@@ -226,12 +217,11 @@ public class PaymentInfo implements EventBusNotification {
         }
 
         public PaymentInfo build() {
-            return new PaymentInfo(id,
+            return new PaymentInfo(paymentId,
                                    amount,
                                    refundAmount,
                                    bankIdentificationNumber,
                                    paymentNumber,
-                                   appliedCreditBalanceAmount,
                                    type,
                                    status,
                                    referenceId,
@@ -244,11 +234,10 @@ public class PaymentInfo implements EventBusNotification {
     @Override
     public int hashCode() {
         return Objects.hashCode(amount,
-                                appliedCreditBalanceAmount,
                                 bankIdentificationNumber,
                                 createdDate,
                                 effectiveDate,
-                                id,
+                                paymentId,
                                 paymentNumber,
                                 referenceId,
                                 refundAmount,
@@ -266,11 +255,10 @@ public class PaymentInfo implements EventBusNotification {
             }
             else {
                 return Objects.equal(amount, other.amount) &&
-                       Objects.equal(appliedCreditBalanceAmount, other.appliedCreditBalanceAmount) &&
                        Objects.equal(bankIdentificationNumber, other.bankIdentificationNumber) &&
                        Objects.equal(createdDate, other.createdDate) &&
                        Objects.equal(effectiveDate, other.effectiveDate) &&
-                       Objects.equal(id, other.id) &&
+                       Objects.equal(paymentId, other.paymentId) &&
                        Objects.equal(paymentNumber, other.paymentNumber) &&
                        Objects.equal(referenceId, other.referenceId) &&
                        Objects.equal(refundAmount, other.refundAmount) &&
@@ -284,6 +272,6 @@ public class PaymentInfo implements EventBusNotification {
 
     @Override
     public String toString() {
-        return "PaymentInfo [id=" + id + ", amount=" + amount + ", refundAmount=" + refundAmount + ", appliedCreditBalanceAmount=" + appliedCreditBalanceAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
+        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
     }
 }

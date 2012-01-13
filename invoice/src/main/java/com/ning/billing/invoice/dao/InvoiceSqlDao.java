@@ -50,6 +50,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.payment.api.InvoicePayment;
 import com.ning.billing.util.UuidMapper;
 import com.ning.billing.util.entity.EntityDao;
 
@@ -76,6 +77,9 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     @SqlQuery
     List<UUID> getInvoicesForPayment(@Bind("targetDate") final Date targetDate,
                                      @Bind("numberOfDays") final int numberOfDays);
+
+    @SqlQuery
+    InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") UUID paymentAttemptId);
 
     @SqlUpdate
     void notifySuccessfulPayment(@Bind("invoiceId") final String invoiceId,

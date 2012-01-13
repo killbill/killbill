@@ -38,7 +38,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice) {
-        PaymentInfo payment = new PaymentInfo.Builder().setId(UUID.randomUUID().toString())
+        PaymentInfo payment = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
                                             .setAmount(invoice.getAmountOutstanding())
                                             .setStatus("Processed")
                                             .setBankIdentificationNumber("1234")
@@ -49,7 +49,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
                                             .setType("Electronic")
                                             .build();
 
-        payments.put(payment.getId(), payment);
+        payments.put(payment.getPaymentId(), payment);
         return Either.right(payment);
     }
 

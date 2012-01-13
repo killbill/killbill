@@ -32,6 +32,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
+import com.ning.billing.payment.api.InvoicePayment;
 import com.ning.billing.util.eventbus.EventBus;
 
 public class DefaultInvoiceDao implements InvoiceDao {
@@ -154,5 +155,10 @@ public class DefaultInvoiceDao implements InvoiceDao {
     @Override
     public String getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
         return invoiceDao.getInvoiceIdByPaymentAttemptId(paymentAttemptId.toString());
+    }
+
+    @Override
+    public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
+        return invoiceDao.getInvoicePayment(paymentAttemptId);
     }
 }

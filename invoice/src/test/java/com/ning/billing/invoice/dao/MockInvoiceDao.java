@@ -181,4 +181,11 @@ public class MockInvoiceDao implements InvoiceDao {
         }
         return null;
     }
+
+    @Override
+    public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
+        synchronized(monitor) {
+            return invoicePayments.get(paymentAttemptId);
+        }
+    }
 }

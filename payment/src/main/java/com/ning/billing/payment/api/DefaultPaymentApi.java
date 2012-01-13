@@ -130,19 +130,26 @@ public class DefaultPaymentApi implements PaymentApi {
             if (invoice.getAmountOutstanding().compareTo(BigDecimal.ZERO) == 0 ) {
             // TODO: send a notification that invoice was ignored ?
             }
+            else if (invoiceId.equals(paymentDao.getPaymentAttemptForInvoiceId(invoiceId))) {
+
+            }
             else {
                 PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice);
                 Either<PaymentError, PaymentInfo> paymentOrError = plugin.processInvoice(account, invoice);
                 processedPaymentsOrErrors.add(paymentOrError);
 
                 if (paymentOrError.isRight()) {
-                    PaymentInfo info = paymentOrError.getRight();
+                    PaymentInfo paymentInfo = paymentOrError.getRight();
 
-                    paymentDao.savePaymentInfo(info);
-                    paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), info.getId());
+                    paymentDao.savePaymentInfo(paymentInfo);
+
+                    if (paymentInfo.getPaymentId() != null) {
+                        paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), paymentInfo.getPaymentId());
+                    }
 
                     invoicePaymentApi.paymentSuccessful(invoice.getId(),
-                                                        invoice.getAmountOutstanding(),
+                                                        paymentInfo.getAmount(),
+//                                                      info.getRefundAmount(), TODO
                                                         invoice.getCurrency(),
                                                         paymentAttempt.getPaymentAttemptId(),
                                                         paymentAttempt.getPaymentAttemptDate());
@@ -173,6 +180,12 @@ public class DefaultPaymentApi implements PaymentApi {
     @Override
     public PaymentAttempt getPaymentAttemptForPaymentId(String id) {
         return paymentDao.getPaymentAttemptForPaymentId(id);
+    }
+
+    @Override
+    public List<Either<PaymentError, PaymentInfo>> createRefund(Account account, List<String> invoiceIds) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

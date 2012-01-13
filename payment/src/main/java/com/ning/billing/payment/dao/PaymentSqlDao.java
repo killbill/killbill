@@ -51,10 +51,15 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
 
     @SqlQuery
     @Mapper(PaymentAttemptMapper.class)
-    PaymentAttempt getPaymentAttemptForPaymentId(@Bind("paymentId") String paymentId);
+    PaymentAttempt getPaymentAttemptForPaymentId(@Bind("payment_id") String paymentId);
+
+    @SqlQuery
+    @Mapper(PaymentAttemptMapper.class)
+    PaymentAttempt getPaymentAttemptForInvoiceId(@Bind("invoice_id") String invoiceId);
 
     @SqlUpdate
-    void updatePaymentAttemptWithPaymentId(String paymentAttemptId, String id);
+    void updatePaymentAttemptWithPaymentId(@Bind("payment_attempt_id") String paymentAttemptId,
+                                           @Bind("payment_id") String payment_id);
 
     @SqlUpdate
     void insertPaymentInfo(@Bind(binder = PaymentInfoBinder.class) PaymentInfo paymentInfo);
@@ -69,10 +74,11 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentAttempt paymentAttempt) {
             Invoice invoice = paymentAttempt.getInvoice();
 
-            stmt.bind("id", paymentAttempt.getPaymentAttemptId().toString());
+            stmt.bind("payment_attempt_id", paymentAttempt.getPaymentAttemptId().toString());
             stmt.bind("payment_id", paymentAttempt.getPaymentId());
             stmt.bind("payment_attempt_dt", getDate(paymentAttempt.getPaymentAttemptDate()));
             stmt.bind("invoice_id", invoice.getId().toString());
+            stmt.bind("payment_attempt_amount", invoice.getAmountOutstanding()); //TODO: suppport partial payments
             stmt.bind("account_id", invoice.getAccountId().toString());
             stmt.bind("invoice_dt", getDate(invoice.getInvoiceDate()));
             stmt.bind("target_dt", getDate(invoice.getTargetDate()));
@@ -93,17 +99,16 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         @Override
         public PaymentAttempt map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
 
-            UUID paymentAttemptId = UUID.fromString(rs.getString("id"));
-            String paymentId = rs.getString("payment_id");
-            DateTime paymentAttemptDate = getDate(rs, "payment_attempt_dt");
-
+            UUID paymentAttemptId = UUID.fromString(rs.getString("payment_attempt_id"));
             UUID invoiceId = UUID.fromString(rs.getString("invoice_id"));
             UUID accountId = UUID.fromString(rs.getString("account_id"));
-            DateTime invoiceDate = getDate(rs, "invoice_dt");
-            DateTime targetDate = getDate(rs, "target_dt");
-            Currency currency = Currency.valueOf(rs.getString("currency"));
-            DateTime lastPaymentAttempt = getDate(rs, "last_payment_attempt");
+            String paymentId = rs.getString("payment_id");
             BigDecimal amountPaid = rs.getBigDecimal("amount_paid");
+            Currency currency = Currency.valueOf(rs.getString("currency"));
+            DateTime targetDate = getDate(rs, "target_dt");
+            DateTime invoiceDate = getDate(rs, "invoice_dt");
+            DateTime paymentAttemptDate = getDate(rs, "payment_attempt_dt");
+            DateTime lastPaymentAttempt = getDate(rs, "last_payment_attempt");
 
             Invoice invoice = new DefaultInvoice(invoiceId, accountId, invoiceDate, targetDate, currency, lastPaymentAttempt, amountPaid);
 
@@ -119,14 +124,13 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
 
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentInfo paymentInfo) {
-            stmt.bind("id", paymentInfo.getId().toString());
+            stmt.bind("payment_id", paymentInfo.getPaymentId().toString());
             stmt.bind("amount", paymentInfo.getAmount());
             stmt.bind("refund_amount", paymentInfo.getRefundAmount());
-            stmt.bind("applied_credit_balance_amount", paymentInfo.getAppliedCreditBalanceAmount());
             stmt.bind("payment_number", paymentInfo.getPaymentNumber());
             stmt.bind("bank_identification_number", paymentInfo.getBankIdentificationNumber());
             stmt.bind("status", paymentInfo.getStatus());
-            stmt.bind("type", paymentInfo.getType());
+            stmt.bind("payment_type", paymentInfo.getType());
             stmt.bind("reference_id", paymentInfo.getReferenceId());
             stmt.bind("effective_dt", getDate(paymentInfo.getEffectiveDate()));
             stmt.bind("created_dt", getDate(paymentInfo.getCreatedDate()));
@@ -144,25 +148,23 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         @Override
         public PaymentInfo map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
 
-            String id = rs.getString("id");
+            String paymentId = rs.getString("payment_id");
             BigDecimal amount = rs.getBigDecimal("amount");
             BigDecimal refundAmount = rs.getBigDecimal("refund_amount");
-            BigDecimal appliedCreditBalanceAmount = rs.getBigDecimal("applied_credit_balance_amount");
             String paymentNumber = rs.getString("payment_number");
             String bankIdentificationNumber = rs.getString("bank_identification_number");
             String status = rs.getString("status");
-            String type = rs.getString("type");
+            String type = rs.getString("payment_type");
             String referenceId = rs.getString("reference_id");
             DateTime effectiveDate = getDate(rs, "effective_dt");
             DateTime createdDate = getDate(rs, "created_dt");
             DateTime updatedDate = getDate(rs, "updated_dt");
 
-            return new PaymentInfo(id,
+            return new PaymentInfo(paymentId,
                                    amount,
-                                   appliedCreditBalanceAmount,
+                                   refundAmount,
                                    bankIdentificationNumber,
                                    paymentNumber,
-                                   refundAmount,
                                    status,
                                    type,
                                    referenceId,
@@ -171,4 +173,5 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
                                    updatedDate);
         }
     }
+
 }

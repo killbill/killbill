@@ -18,7 +18,9 @@ package com.ning.billing.invoice.api.user;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
 
@@ -61,4 +63,10 @@ public class DefaultInvoiceCreationNotification implements InvoiceCreationNotifi
     public DateTime getInvoiceCreationDate() {
         return invoiceCreationDate;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultInvoiceCreationNotification [invoiceId=" + invoiceId + ", accountId=" + accountId + ", amountOwed=" + amountOwed + ", currency=" + currency + ", invoiceCreationDate=" + invoiceCreationDate + "]";
+    }
+
 }

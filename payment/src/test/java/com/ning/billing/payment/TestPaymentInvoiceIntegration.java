@@ -90,10 +90,11 @@ public class TestPaymentInvoiceIntegration {
         final String accountddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
         final String utilddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
         final String invoiceddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+        final String paymentddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
 
         helper = new MysqlTestingHelper();
         helper.startMysql();
-        helper.initDb(accountddl + "\n" + invoiceddl + "\n" + utilddl);
+        helper.initDb(accountddl + "\n" + invoiceddl + "\n" + utilddl + "\n" + paymentddl);
         dbi = helper.getDBI();
     }
 
@@ -187,9 +188,16 @@ public class TestPaymentInvoiceIntegration {
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
 
         List<PaymentInfo> payments = paymentInfoReceiver.getProcessedPayments();
-        PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(payments.get(0).getId());
+        PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(payments.get(0).getPaymentId());
         Assert.assertNotNull(paymentAttempt);
 
         Invoice invoiceForPayment = invoicePaymentApi.getInvoiceForPaymentAttemptId(paymentAttempt.getPaymentAttemptId());
+
+        Assert.assertNotNull(invoiceForPayment);
+        Assert.assertEquals(invoiceForPayment.getId(), invoice.getId());
+        Assert.assertEquals(invoiceForPayment.getAccountId(), account.getId());
+        Assert.assertEquals(invoiceForPayment.getLastPaymentAttempt(), paymentAttempt.getPaymentAttemptDate());
+        Assert.assertEquals(invoiceForPayment.getAmountOutstanding(), new BigDecimal("0"));
+        Assert.assertEquals(invoiceForPayment.getAmountPaid(), amount);
     }
 }
