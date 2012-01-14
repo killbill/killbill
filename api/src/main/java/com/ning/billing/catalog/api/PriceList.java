@@ -21,6 +21,8 @@ public interface PriceList {
 
 	public abstract String getName();
 
+	public abstract boolean isRetired();
+
 	public abstract Plan findPlan(Product product, BillingPeriod period);
 
 }

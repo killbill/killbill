@@ -89,9 +89,9 @@
 				</duration>
 				<billingPeriod>MONTHLY</billingPeriod>
 				<recurringPrice>
-					<price><currency>GBP</currency><value>29.95</value></price>
-					<price><currency>EUR</currency><value>29.95</value></price> 
-					<price><currency>USD</currency><value>29.95</value></price>								
+					<price><currency>GBP</currency><value>3.0</value></price>
+					<price><currency>EUR</currency><value>3.0</value></price> 
+					<price><currency>USD</currency><value>3.0</value></price>								
 				</recurringPrice>
 			</finalPhase>
 		</plan>

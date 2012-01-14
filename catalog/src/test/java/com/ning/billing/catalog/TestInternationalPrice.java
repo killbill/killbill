@@ -67,7 +67,7 @@ public class TestInternationalPrice {
 	  StandaloneCatalog c = new MockCatalog();
 	  c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
 	  c.initialize(c, new URI("foo://bar"));
-	  Assert.assertEquals(c.getPlans()[0].getFinalPhase().getRecurringPrice().getPrice(Currency.GBP), new BigDecimal(0));
+	  Assert.assertEquals(c.getCurrentPlans()[0].getFinalPhase().getRecurringPrice().getPrice(Currency.GBP), new BigDecimal(0));
   }
   
   @Test
@@ -88,16 +88,7 @@ public class TestInternationalPrice {
 	 errors.log(log);
 	 Assert.assertEquals(errors.size(), 3);
   }
-  @Test
-  public void testDateValidation(){
-	 StandaloneCatalog c = new MockCatalog();
-	 c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
-	 DefaultInternationalPrice p1 =  new MockInternationalPrice();
-	 p1.setEffectiveDateForExistingSubscriptons(new Date((new Date().getTime()) - (1000 * 60 * 60 * 24)));
-	 ValidationErrors errors = p1.validate(c, new ValidationErrors());
-	 Assert.assertEquals(errors.size(), 1);
-	 errors.log(log);
-  }
+
   
   
   

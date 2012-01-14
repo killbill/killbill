@@ -23,6 +23,8 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -38,7 +40,7 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.util.clock.DefaultClock;
 
 public abstract class TestUserApiCreate extends TestApiBase {
-
+	Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
 
     public void testCreateWithRequestedDate() {
         log.info("Starting testCreateWithRequestedDate");
@@ -68,6 +70,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertTrue(testListener.isCompleted(5000));
 
         } catch (EntitlementUserApiException e) {
+        	log.error("Unexpected exception",e);
             Assert.fail(e.getMessage());
         }
     }
