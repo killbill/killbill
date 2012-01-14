@@ -17,5 +17,6 @@
 package com.ning.billing.entitlement.engine.dao;
 
 public interface MockEntitlementDao {
+
     public void reset();
 }

@@ -14,23 +14,8 @@ CREATE TABLE events (
     plist_name varchar(64) DEFAULT NULL,
     current_version int(11) DEFAULT 1,
     is_active bool DEFAULT 1,
-    processing_owner char(36) DEFAULT NULL,
-    processing_available_dt datetime DEFAULT NULL,
-    processing_state varchar(14) DEFAULT 'AVAILABLE',
     PRIMARY KEY(id)
 ) ENGINE=innodb;
-
-DROP TABLE IF EXISTS claimed_events;
-CREATE TABLE claimed_events (
-    id int(11) unsigned NOT NULL AUTO_INCREMENT,    
-    sequence_id int(11) unsigned NOT NULL,    
-    owner_id char(36) NOT NULL,
-    hostname varchar(64) NOT NULL,
-    claimed_dt datetime NOT NULL,
-    event_id char(36) NOT NULL,
-    PRIMARY KEY(id)
-) ENGINE=innodb;
-
 
 DROP TABLE IF EXISTS subscriptions;
 CREATE TABLE subscriptions (

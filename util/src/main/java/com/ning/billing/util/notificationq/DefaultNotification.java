@@ -23,14 +23,14 @@ import org.joda.time.DateTime;
 public class DefaultNotification implements Notification {
 
     private final UUID id;
-    private final UUID owner;
+    private final String owner;
     private final DateTime nextAvailableDate;
     private final NotificationLifecycleState lifecycleState;
     private final String notificationKey;
     private final DateTime effectiveDate;
 
 
-    public DefaultNotification(UUID id, UUID owner, DateTime nextAvailableDate,
+    public DefaultNotification(UUID id, String owner, DateTime nextAvailableDate,
             NotificationLifecycleState lifecycleState,
             String notificationKey, DateTime effectiveDate) {
         super();
@@ -52,7 +52,7 @@ public class DefaultNotification implements Notification {
     }
 
     @Override
-    public UUID getOwner() {
+    public String getOwner() {
         return owner;
     }
 

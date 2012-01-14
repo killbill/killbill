@@ -16,49 +16,26 @@
 
 package com.ning.billing.util.notificationq;
 
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.skife.jdbi.v2.DBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import com.google.inject.Inject;
 import com.ning.billing.util.clock.Clock;
 
-public class DefaultNotificationQueueService implements NotificationQueueService {
-
-    private final Logger log = LoggerFactory.getLogger(DefaultNotificationQueueService.class);
+public class DefaultNotificationQueueService extends NotificationQueueServiceBase {
 
     private final DBI dbi;
-    private final Clock clock;
 
-    private final Map<String, NotificationQueue> queues;
-
+    @Inject
     public DefaultNotificationQueueService(final DBI dbi, final Clock clock) {
+        super(clock);
         this.dbi = dbi;
-        this.clock = clock;
-        this.queues = new TreeMap<String, NotificationQueue>();
     }
 
     @Override
-    public NotificationQueue createNotificationQueue(String svcName,
+    protected NotificationQueue createNotificationQueueInternal(String svcName,
             String queueName, NotificationQueueHandler handler,
             NotificationConfig config) {
-        if (svcName == null || queueName == null || handler == null || config == null) {
-            throw new RuntimeException("Need to specify all parameters");
-        }
-
-        String compositeName = svcName + ":" + queueName;
-        NotificationQueue result = null;
-        synchronized(queues) {
-            result = queues.get(compositeName);
-            if (result == null) {
-                result = new NotificationQueue(dbi, clock, svcName, queueName, handler, config);
-                queues.put(compositeName, result);
-            } else {
-                log.warn("Queue for svc {} and name {} already exist", svcName, queueName);
-            }
-        }
-        return result;
+        return new DefaultNotificationQueue(dbi, clock, svcName, queueName, handler, config);
     }
+
 }

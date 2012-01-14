@@ -17,7 +17,6 @@
 package com.ning.billing.entitlement.engine.dao;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -25,7 +24,6 @@ import java.util.UUID;
 
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
@@ -35,16 +33,23 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.Hostname;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.notificationq.NotificationKey;
+import com.ning.billing.util.notificationq.NotificationQueue;
+import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,19 +62,17 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final SubscriptionSqlDao subscriptionsDao;
     private final BundleSqlDao bundlesDao;
     private final EventSqlDao eventsDao;
-    private final EntitlementConfig config;
-    private final String hostname;
     private final SubscriptionFactory factory;
+    private final NotificationQueueService notificationQueueService;
 
     @Inject
-    public EntitlementSqlDao(DBI dbi, Clock clock, EntitlementConfig config, SubscriptionFactory factory) {
+    public EntitlementSqlDao(DBI dbi, Clock clock, SubscriptionFactory factory, NotificationQueueService notificationQueueService) {
         this.clock = clock;
-        this.config = config;
         this.factory = factory;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
         this.eventsDao = dbi.onDemand(EventSqlDao.class);
         this.bundlesDao = dbi.onDemand(BundleSqlDao.class);
-        this.hostname = Hostname.get();
+        this.notificationQueueService = notificationQueueService;
     }
 
     @Override
@@ -146,9 +149,22 @@ public class EntitlementSqlDao implements EntitlementDao {
                     TransactionStatus status) throws Exception {
                 cancelNextPhaseEventFromTransaction(subscriptionId, dao);
                 dao.insertEvent(nextPhase);
+                recordFutureNotificationFromTransaction(dao,
+                        nextPhase.getEffectiveDate(),
+                        new NotificationKey() {
+                            @Override
+                            public String toString() {
+                                return nextPhase.getId().toString();
+                            }
+                        });
                 return null;
             }
         });
+    }
+
+    @Override
+    public EntitlementEvent getEventById(UUID eventId) {
+        return eventsDao.getEventById(eventId.toString());
     }
 
 
@@ -165,61 +181,6 @@ public class EntitlementSqlDao implements EntitlementDao {
         return results;
     }
 
-    @Override
-    public List<EntitlementEvent> getEventsReady(final UUID ownerId, final int sequenceId) {
-
-        final Date now = clock.getUTCNow().toDate();
-        final Date nextAvailable = clock.getUTCNow().plus(config.getDaoClaimTimeMs()).toDate();
-
-        log.debug(String.format("EntitlementDao getEventsReady START effectiveNow =  %s", now));
-
-        List<EntitlementEvent> events = eventsDao.inTransaction(new Transaction<List<EntitlementEvent>, EventSqlDao>() {
-
-            @Override
-            public List<EntitlementEvent> inTransaction(EventSqlDao dao,
-                    TransactionStatus status) throws Exception {
-
-                List<EntitlementEvent> claimedEvents = new ArrayList<EntitlementEvent>();
-                List<EntitlementEvent> input = dao.getReadyEvents(now, config.getDaoMaxReadyEvents());
-                for (EntitlementEvent cur : input) {
-                    final boolean claimed = (dao.claimEvent(ownerId.toString(), nextAvailable, cur.getId().toString(), now) == 1);
-                    if (claimed) {
-                        claimedEvents.add(cur);
-                        dao.insertClaimedHistory(sequenceId, ownerId.toString(), hostname, now, cur.getId().toString());
-                    }
-                }
-                return claimedEvents;
-            }
-        });
-
-        for (EntitlementEvent cur : events) {
-            log.debug(String.format("EntitlementDao %s [host %s] claimed events %s", ownerId, hostname, cur.getId()));
-            if (cur.getOwner() != null && !cur.getOwner().equals(ownerId)) {
-                log.warn(String.format("EventProcessor %s stealing event %s from %s", ownerId, cur, cur.getOwner()));
-            }
-        }
-        return events;
-    }
-
-    @Override
-    public void clearEventsReady(final UUID ownerId, final Collection<EntitlementEvent> cleared) {
-
-        log.debug(String.format("EntitlementDao clearEventsReady START cleared size = %d", cleared.size()));
-
-        eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
-
-            @Override
-            public Void inTransaction(EventSqlDao dao,
-                    TransactionStatus status) throws Exception {
-                // STEPH Same here batch would nice
-                for (EntitlementEvent cur : cleared) {
-                    dao.clearEvent(cur.getId().toString(), ownerId.toString());
-                    log.debug(String.format("EntitlementDao %s [host %s] cleared events %s", ownerId, hostname, cur.getId()));
-                }
-                return null;
-            }
-        });
-    }
 
     @Override
     public void createSubscription(final SubscriptionData subscription,
@@ -234,8 +195,16 @@ public class EntitlementSqlDao implements EntitlementDao {
                 dao.insertSubscription(subscription);
                 // STEPH batch as well
                 EventSqlDao eventsDaoFromSameTranscation = dao.become(EventSqlDao.class);
-                for (EntitlementEvent cur : initialEvents) {
+                for (final EntitlementEvent cur : initialEvents) {
                     eventsDaoFromSameTranscation.insertEvent(cur);
+                    recordFutureNotificationFromTransaction(dao,
+                            cur.getEffectiveDate(),
+                            new NotificationKey() {
+                                @Override
+                                public String toString() {
+                                    return cur.getId().toString();
+                                }
+                            });
                 }
                 return null;
             }
@@ -252,6 +221,14 @@ public class EntitlementSqlDao implements EntitlementDao {
                 cancelNextChangeEventFromTransaction(subscriptionId, dao);
                 cancelNextPhaseEventFromTransaction(subscriptionId, dao);
                 dao.insertEvent(cancelEvent);
+                recordFutureNotificationFromTransaction(dao,
+                        cancelEvent.getEffectiveDate(),
+                        new NotificationKey() {
+                            @Override
+                            public String toString() {
+                                return cancelEvent.getId().toString();
+                            }
+                        });
                 return null;
             }
         });
@@ -281,8 +258,16 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                 if (existingCancelId != null) {
                     dao.unactiveEvent(existingCancelId.toString(), now);
-                    for (EntitlementEvent cur : uncancelEvents) {
+                    for (final EntitlementEvent cur : uncancelEvents) {
                         dao.insertEvent(cur);
+                        recordFutureNotificationFromTransaction(dao,
+                                cur.getEffectiveDate(),
+                                new NotificationKey() {
+                            @Override
+                            public String toString() {
+                                return cur.getId().toString();
+                            }
+                        });
                     }
                 }
                 return null;
@@ -298,8 +283,16 @@ public class EntitlementSqlDao implements EntitlementDao {
                     TransactionStatus status) throws Exception {
                 cancelNextChangeEventFromTransaction(subscriptionId, dao);
                 cancelNextPhaseEventFromTransaction(subscriptionId, dao);
-                for (EntitlementEvent cur : changeEvents) {
+                for (final EntitlementEvent cur : changeEvents) {
                     dao.insertEvent(cur);
+                    recordFutureNotificationFromTransaction(dao,
+                            cur.getEffectiveDate(),
+                            new NotificationKey() {
+                        @Override
+                        public String toString() {
+                            return cur.getId().toString();
+                        }
+                    });
                 }
                 return null;
             }
@@ -372,8 +365,16 @@ public class EntitlementSqlDao implements EntitlementDao {
                     SubscriptionBundleData bundleData = curBundle.getData();
                     for (SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
                         SubscriptionData subData = curSubscription.getData();
-                        for (EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
+                        for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
                             transEventDao.insertEvent(curEvent);
+                            recordFutureNotificationFromTransaction(transEventDao,
+                                    curEvent.getEffectiveDate(),
+                                    new NotificationKey() {
+                                @Override
+                                public String toString() {
+                                    return curEvent.getId().toString();
+                                }
+                            });
                         }
                         transSubDao.insertSubscription(subData);
                     }
@@ -383,6 +384,7 @@ public class EntitlementSqlDao implements EntitlementDao {
             }
         });
     }
+
 
     @Override
     public void undoMigration(final UUID accountId) {
@@ -410,6 +412,16 @@ public class EntitlementSqlDao implements EntitlementDao {
                 transSubDao.removeSubscription(cur.getId().toString());
             }
             transBundleDao.removeBundle(curBundle.getId().toString());
+        }
+    }
+
+    private void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime effectiveDate, final NotificationKey notificationKey) {
+        try {
+            NotificationQueue subscritionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
+                Engine.NOTIFICATION_QUEUE_NAME);
+            subscritionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
+        } catch (NoSuchNotificationQueue e) {
+            throw new RuntimeException(e);
         }
     }
 }

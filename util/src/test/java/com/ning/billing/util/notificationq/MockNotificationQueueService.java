@@ -16,23 +16,20 @@
 
 package com.ning.billing.util.notificationq;
 
-import org.joda.time.DateTime;
+import com.google.inject.Inject;
+import com.ning.billing.util.clock.Clock;
 
+public class MockNotificationQueueService extends NotificationQueueServiceBase {
 
-public interface NotificationLifecycle {
-
-    public enum NotificationLifecycleState {
-        AVAILABLE,
-        IN_PROCESSING,
-        PROCESSED
+    @Inject
+    public MockNotificationQueueService(final Clock clock) {
+        super(clock);
     }
 
-    public String getOwner();
-
-    public DateTime getNextAvailableDate();
-
-    public NotificationLifecycleState getProcessingState();
-
-
-    public boolean isAvailableForProcessing(DateTime now);
+    @Override
+    protected NotificationQueue createNotificationQueueInternal(String svcName,
+            String queueName, NotificationQueueHandler handler,
+            NotificationConfig config) {
+        return new MockNotificationQueue(clock, svcName, queueName, handler, config);
+    }
 }

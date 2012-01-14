@@ -97,7 +97,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             final String notificationKey = r.getString("notification_key");
             final DateTime effectiveDate = getDate(r, "effective_dt");
             final DateTime nextAvailableDate = getDate(r, "processing_available_dt");
-            final UUID processingOwner = (r.getString("processing_owner") != null) ? UUID.fromString(r.getString("processing_owner")) : null;
+            final String processingOwner = r.getString("processing_owner");
             final NotificationLifecycleState processingState = NotificationLifecycleState.valueOf(r.getString("processing_state"));
 
             return new DefaultNotification(id, processingOwner, nextAvailableDate,

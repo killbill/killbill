@@ -116,7 +116,7 @@ public class TestNotificationQueue {
     public void testSimpleQueueDisabled() throws InterruptedException {
 
         final TestStartStop testStartStop = new TestStartStop(false, false);
-        NotificationQueue queue = new NotificationQueue(dbi, clock, "test-svc", "dead",
+        DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "dead",
                 new NotificationQueueHandler() {
                     @Override
                     public void handleReadyNotification(String notificationKey) {
@@ -134,7 +134,7 @@ public class TestNotificationQueue {
 
         executeTest(testStartStop, queue, new WithTest() {
             @Override
-            public void test(final NotificationQueue readyQueue) throws InterruptedException {
+            public void test(final DefaultNotificationQueue readyQueue) throws InterruptedException {
                 // Do nothing
             }
         });
@@ -153,7 +153,7 @@ public class TestNotificationQueue {
         final Map<String, Boolean> expectedNotifications = new TreeMap<String, Boolean>();
 
         final TestStartStop testStartStop = new TestStartStop(false, false);
-        NotificationQueue queue = new NotificationQueue(dbi, clock, "test-svc", "foo",
+        DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "foo",
                 new NotificationQueueHandler() {
                     @Override
                     public void handleReadyNotification(String notificationKey) {
@@ -176,7 +176,7 @@ public class TestNotificationQueue {
 
         executeTest(testStartStop, queue, new WithTest() {
             @Override
-            public void test(final NotificationQueue readyQueue) throws InterruptedException {
+            public void test(final DefaultNotificationQueue readyQueue) throws InterruptedException {
 
                 final UUID key = UUID.randomUUID();
                 final DummyObject obj = new DummyObject("foo", key);
@@ -229,7 +229,7 @@ public class TestNotificationQueue {
         final Map<String, Boolean> expectedNotifications = new TreeMap<String, Boolean>();
 
         final TestStartStop testStartStop = new TestStartStop(false, false);
-        NotificationQueue queue = new NotificationQueue(dbi, clock, "test-svc", "many",
+        DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
                 new NotificationQueueHandler() {
                     @Override
                     public void handleReadyNotification(String notificationKey) {
@@ -252,7 +252,7 @@ public class TestNotificationQueue {
 
         executeTest(testStartStop, queue, new WithTest() {
             @Override
-            public void test(final NotificationQueue readyQueue) throws InterruptedException {
+            public void test(final DefaultNotificationQueue readyQueue) throws InterruptedException {
 
                 final DateTime now = clock.getUTCNow();
                 final int MAX_NOTIFICATIONS = 100;
@@ -388,11 +388,11 @@ public class TestNotificationQueue {
     }
 
     private interface WithTest {
-        public void test(NotificationQueue readyQueue) throws InterruptedException;
+        public void test(DefaultNotificationQueue readyQueue) throws InterruptedException;
     }
 
     private void executeTest(final TestStartStop testStartStop,
-            NotificationQueue queue, WithTest test) throws InterruptedException{
+            DefaultNotificationQueue queue, WithTest test) throws InterruptedException{
 
         queue.startQueue();
         boolean started = testStartStop.waitForStartComplete(3000);

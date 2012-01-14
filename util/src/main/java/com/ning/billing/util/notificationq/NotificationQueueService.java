@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.notificationq;
 
+import java.util.NoSuchElementException;
+
 
 public interface NotificationQueueService {
 
@@ -37,6 +39,22 @@ public interface NotificationQueueService {
         public void completedQueueStop();
     }
 
+    public static final class NotficationQueueAlreadyExists extends Exception {
+        private static final long serialVersionUID = 1541281L;
+
+        public NotficationQueueAlreadyExists(String msg) {
+            super(msg);
+        }
+    }
+
+    public static final class NoSuchNotificationQueue extends Exception {
+        private static final long serialVersionUID = 1541281L;
+
+        public NoSuchNotificationQueue(String msg) {
+            super(msg);
+        }
+    }
+
     /**
      * Creates a new NotificationQueue for a given associated with the given service and queueName
      *
@@ -46,6 +64,23 @@ public interface NotificationQueueService {
      * @param config the notification queue configuration
      *
      * @return a new NotificationQueue
+     *
+     * @throws NotficationQueueAlreadyExists is the queue associated with that service and name already exits
+     *
      */
-    NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config);
+    NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config)
+        throws NotficationQueueAlreadyExists;
+
+    /**
+     * Retrieves an already created NotificationQueue by service and name if it exists
+     *
+     * @param svcName
+     * @param queueName
+     * @return
+     *
+     * @throws NoSuchNotificationQueue if queue does not exist
+     */
+    NotificationQueue getNotificationQueue(final String svcName, final String queueName)
+        throws NoSuchNotificationQueue;
+
 }

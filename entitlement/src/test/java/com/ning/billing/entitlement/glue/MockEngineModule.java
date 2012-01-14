@@ -20,6 +20,7 @@ import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.EventBusModule;
+import com.ning.billing.util.glue.NotificationQueueModule;
 
 public class MockEngineModule extends EntitlementModule {
 
