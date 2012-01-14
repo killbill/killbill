@@ -37,11 +37,9 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
-        InvoicePayment invoicePayment = new InvoicePayment(invoiceId, amount, currency, paymentAttemptId, paymentAttemptDate);
-
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
         for (InvoicePayment existingInvoicePayment : invoicePayments) {
-            if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
+            if (existingInvoicePayment.getInvoiceId().equals(invoicePayment.getInvoiceId()) && existingInvoicePayment.getPaymentAttemptId().equals(invoicePayment.getPaymentAttemptId())) {
                 invoicePayments.remove(existingInvoicePayment);
             }
         }
@@ -71,17 +69,6 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public void paymentFailed(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate) {
-        InvoicePayment invoicePayment = new InvoicePayment(invoiceId, null, null, paymentAttemptId, paymentAttemptDate);
-        for (InvoicePayment existingInvoicePayment : invoicePayments) {
-            if (existingInvoicePayment.getInvoiceId().equals(invoiceId) && existingInvoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
-                invoicePayments.remove(existingInvoicePayment);
-            }
-        }
-        invoicePayments.add(invoicePayment);
-    }
-
-    @Override
     public Invoice getInvoiceForPaymentAttemptId(UUID paymentAttemptId) {
         for (InvoicePayment invoicePayment : invoicePayments) {
             if (invoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
@@ -99,5 +86,17 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
             }
         }
         return null;
+    }
+
+    @Override
+    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+        InvoicePayment invoicePayment = new InvoicePayment(invoiceId, amountOutstanding, currency, paymentAttemptId, paymentAttemptDate);
+        notifyOfPaymentAttempt(invoicePayment);
+    }
+
+    @Override
+    public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+        InvoicePayment invoicePayment = new InvoicePayment(invoiceId, null, null, paymentAttemptId, paymentAttemptDate);
+        notifyOfPaymentAttempt(invoicePayment);
     }
 }

@@ -39,8 +39,6 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTempla
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
 
@@ -72,20 +70,14 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
 
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentAttempt paymentAttempt) {
-            Invoice invoice = paymentAttempt.getInvoice();
-
             stmt.bind("payment_attempt_id", paymentAttempt.getPaymentAttemptId().toString());
-            stmt.bind("payment_id", paymentAttempt.getPaymentId());
+            stmt.bind("invoice_id", paymentAttempt.getInvoiceId().toString());
+            stmt.bind("account_id", paymentAttempt.getAccountId().toString());
+            stmt.bind("amount", paymentAttempt.getAmount()); //TODO: suppport partial payments
+            stmt.bind("currency", paymentAttempt.getCurrency().toString());
+            stmt.bind("invoice_dt", getDate(paymentAttempt.getInvoiceDate()));
             stmt.bind("payment_attempt_dt", getDate(paymentAttempt.getPaymentAttemptDate()));
-            stmt.bind("invoice_id", invoice.getId().toString());
-            stmt.bind("payment_attempt_amount", invoice.getAmountOutstanding()); //TODO: suppport partial payments
-            stmt.bind("account_id", invoice.getAccountId().toString());
-            stmt.bind("invoice_dt", getDate(invoice.getInvoiceDate()));
-            stmt.bind("target_dt", getDate(invoice.getTargetDate()));
-            stmt.bind("amount_paid", invoice.getAmountPaid());
-            stmt.bind("amount_outstanding", invoice.getAmountOutstanding());
-            stmt.bind("last_payment_attempt", getDate(invoice.getLastPaymentAttempt()));
-            stmt.bind("currency", invoice.getCurrency().toString());
+            stmt.bind("payment_id", paymentAttempt.getPaymentId());
         }
     }
 
@@ -102,17 +94,13 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             UUID paymentAttemptId = UUID.fromString(rs.getString("payment_attempt_id"));
             UUID invoiceId = UUID.fromString(rs.getString("invoice_id"));
             UUID accountId = UUID.fromString(rs.getString("account_id"));
-            String paymentId = rs.getString("payment_id");
-            BigDecimal amountPaid = rs.getBigDecimal("amount_paid");
+            BigDecimal amount = rs.getBigDecimal("amount");
             Currency currency = Currency.valueOf(rs.getString("currency"));
-            DateTime targetDate = getDate(rs, "target_dt");
             DateTime invoiceDate = getDate(rs, "invoice_dt");
             DateTime paymentAttemptDate = getDate(rs, "payment_attempt_dt");
-            DateTime lastPaymentAttempt = getDate(rs, "last_payment_attempt");
+            String paymentId = rs.getString("payment_id");
 
-            Invoice invoice = new DefaultInvoice(invoiceId, accountId, invoiceDate, targetDate, currency, lastPaymentAttempt, amountPaid);
-
-            return new PaymentAttempt(paymentAttemptId, invoice, paymentId, paymentAttemptDate);
+            return new PaymentAttempt(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, paymentId);
         }
     }
 

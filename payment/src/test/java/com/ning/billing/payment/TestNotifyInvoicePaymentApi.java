@@ -37,7 +37,8 @@ public class TestNotifyInvoicePaymentApi extends TestPaymentProvider {
         final Invoice invoice = createTestInvoice(account);
 
         PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
-        invoicePaymentApi.paymentSuccessful(invoice.getId(),
+
+        invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
                                      invoice.getAmountOutstanding(),
                                      invoice.getCurrency(),
                                      paymentAttempt.getPaymentAttemptId(),
@@ -54,9 +55,9 @@ public class TestNotifyInvoicePaymentApi extends TestPaymentProvider {
         final Invoice invoice = createTestInvoice(account);
 
         PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
-        invoicePaymentApi.paymentFailed(invoice.getId(),
-                                 paymentAttempt.getPaymentAttemptId(),
-                                 paymentAttempt.getPaymentAttemptDate());
+        invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
+                                                 paymentAttempt.getPaymentAttemptId(),
+                                                 paymentAttempt.getPaymentAttemptDate());
 
         InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getPaymentAttemptId());
 

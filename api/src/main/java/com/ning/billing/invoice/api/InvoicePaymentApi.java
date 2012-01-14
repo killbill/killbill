@@ -26,9 +26,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.InvoicePayment;
 
 public interface InvoicePaymentApi {
-    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentDate);
-
-    public void paymentFailed(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate);
 
     public List<Invoice> getInvoicesByAccount(UUID accountId);
 
@@ -36,5 +33,12 @@ public interface InvoicePaymentApi {
 
     public Invoice getInvoiceForPaymentAttemptId(UUID paymentAttemptId);
 
-    InvoicePayment getInvoicePayment(UUID paymentAttemptId);
+    public InvoicePayment getInvoicePayment(UUID paymentAttemptId);
+
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
+
+    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate);
+
+    public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate);
+
 }

@@ -30,10 +30,12 @@ DROP TABLE IF EXISTS invoice_payments;
 CREATE TABLE invoice_payments (
   invoice_id char(36) NOT NULL,
   payment_attempt_id char(36) NOT NULL,
-  payment_date datetime,
-  payment_attempt_date datetime,
+  payment_dt datetime,
+  payment_attempt_dt datetime,
   amount numeric(10,4),
   currency char(3),
+  created_dt datetime NOT NULL,
+  updated_dt datetime NOT NULL,
   PRIMARY KEY(invoice_id, payment_attempt_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX invoice_payments_unique ON invoice_payments(invoice_id, payment_attempt_id);

@@ -53,18 +53,17 @@ public class MockPaymentDao implements PaymentDao {
     @Override
     public void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String paymentId) {
         PaymentAttempt existingPaymentAttempt = paymentAttempts.get(paymentAttemptId);
+
         if (existingPaymentAttempt != null) {
             paymentAttempts.put(existingPaymentAttempt.getPaymentAttemptId(),
-                                new PaymentAttempt(existingPaymentAttempt.getPaymentAttemptId(),
-                                                   existingPaymentAttempt.getInvoice(),
-                                                   paymentId));
+                                existingPaymentAttempt.cloner().setPaymentId(paymentId).build());
         }
     }
 
     @Override
     public PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId) {
         for (PaymentAttempt paymentAttempt : paymentAttempts.values()) {
-            if (invoiceId.equals(paymentAttempt.getInvoice().getId())) {
+            if (invoiceId.equals(paymentAttempt.getInvoiceId())) {
                 return paymentAttempt;
             }
         }

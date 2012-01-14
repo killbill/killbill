@@ -129,7 +129,6 @@ public class PaymentInfo implements EventBusNotification {
         private String paymentId;
         private BigDecimal amount;
         private BigDecimal refundAmount;
-        private BigDecimal appliedCreditBalanceAmount;
         private String paymentNumber;
         private String bankIdentificationNumber;
         private String type;
@@ -163,11 +162,6 @@ public class PaymentInfo implements EventBusNotification {
 
         public Builder setAmount(BigDecimal amount) {
             this.amount = amount;
-            return this;
-        }
-
-        public Builder setAppliedCreditBalanceAmount(BigDecimal appliedCreditBalanceAmount) {
-            this.appliedCreditBalanceAmount = appliedCreditBalanceAmount;
             return this;
         }
 

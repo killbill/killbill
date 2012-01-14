@@ -138,27 +138,25 @@ public class DefaultPaymentApi implements PaymentApi {
                 Either<PaymentError, PaymentInfo> paymentOrError = plugin.processInvoice(account, invoice);
                 processedPaymentsOrErrors.add(paymentOrError);
 
+                PaymentInfo paymentInfo = null;
+
                 if (paymentOrError.isRight()) {
-                    PaymentInfo paymentInfo = paymentOrError.getRight();
+                    paymentInfo = paymentOrError.getRight();
 
                     paymentDao.savePaymentInfo(paymentInfo);
 
                     if (paymentInfo.getPaymentId() != null) {
                         paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), paymentInfo.getPaymentId());
                     }
+                }
 
-                    invoicePaymentApi.paymentSuccessful(invoice.getId(),
-                                                        paymentInfo.getAmount(),
-//                                                      info.getRefundAmount(), TODO
-                                                        invoice.getCurrency(),
-                                                        paymentAttempt.getPaymentAttemptId(),
-                                                        paymentAttempt.getPaymentAttemptDate());
-                }
-                else {
-                    invoicePaymentApi.paymentFailed(invoice.getId(),
-                                                    paymentAttempt.getPaymentAttemptId(),
-                                                    paymentAttempt.getPaymentAttemptDate());
-                }
+                invoicePaymentApi.notifyOfPaymentAttempt(new InvoicePayment(invoice.getId(),
+                                                                     paymentInfo == null ? null : paymentInfo.getAmount(),
+//                                                                   info.getRefundAmount(), TODO
+                                                                     paymentInfo == null ? null : invoice.getCurrency(),
+                                                                     paymentAttempt.getPaymentAttemptId(),
+                                                                     paymentAttempt.getPaymentAttemptDate()));
+
             }
         }
 

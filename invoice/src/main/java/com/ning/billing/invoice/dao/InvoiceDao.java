@@ -16,7 +16,6 @@
 
 package com.ning.billing.invoice.dao;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -38,20 +37,22 @@ public interface InvoiceDao {
     List<UUID> getInvoicesForPayment(final Date targetDate,
                                      final int numberOfDays);
 
-    void notifySuccessfulPayment(final String invoiceId,
-                                 final BigDecimal paymentAmount,
-                                 final String currency,
-                                 final String paymentId,
-                                 final Date paymentDate);
-
-    void notifyFailedPayment(final String invoiceId,
-                             final String paymentId,
-                             final Date paymentAttemptDate);
+//    void notifySuccessfulPayment(final String invoiceId,
+//                                 final BigDecimal paymentAmount,
+//                                 final String currency,
+//                                 final String paymentId,
+//                                 final Date paymentDate);
+//
+//    void notifyFailedPayment(final String invoiceId,
+//                             final String paymentId,
+//                             final Date paymentAttemptDate);
 
     String getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId);
 
     void test();
 
     InvoicePayment getInvoicePayment(UUID paymentAttemptId);
+
+    void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
 
 }

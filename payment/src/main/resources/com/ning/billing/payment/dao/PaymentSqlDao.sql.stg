@@ -4,7 +4,7 @@ paymentAttemptFields(prefix) ::= <<
     <prefix>payment_attempt_id,
     <prefix>account_id,
     <prefix>invoice_id,
-    <prefix>payment_attempt_amount,
+    <prefix>amount,
     <prefix>payment_attempt_dt,
     <prefix>created_dt,
     <prefix>updated_dt
@@ -26,7 +26,7 @@ paymentInfoFields(prefix) ::= <<
 
 insertPaymentAttempt() ::= <<
     INSERT INTO payment_attempts (<paymentAttemptFields()>)
-    VALUES (:payment_attempt_id, :account_id, :invoice_id, :payment_attempt_amount, :payment_attempt_dt, NOW(), NOW());
+    VALUES (:payment_attempt_id, :account_id, :invoice_id, :amount, :payment_attempt_dt, NOW(), NOW());
 >>
 
 getPaymentAttemptForPaymentId() ::= <<

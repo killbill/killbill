@@ -70,18 +70,13 @@ update() ::= <<
   WHERE id = :id;
 >>
 
-notifySuccessfulPayment() ::= <<
-  INSERT INTO invoice_payments(invoice_id, payment_attempt_id, payment_date, amount, currency)
-  VALUES(:invoice_id, :payment_attempt_id, :payment_date, :amount, :currency);
->>
-
-notifyFailedPayment() ::= <<
-  INSERT INTO invoice_payments(invoice_id, payment_attempt_id)
-  VALUES(:invoice_id, :payment_attempt_id);
+notifyOfPaymentAttempt() ::= <<
+  INSERT INTO invoice_payments(invoice_id, payment_attempt_id, payment_attempt_date, amount, currency, created_date, updated_date)
+  VALUES(:invoice_id, :payment_attempt_id, :payment_attempt_date, :amount, :currency, NOW(), NOW());
 >>
 
 getInvoicePayment() ::= <<
-    SELECT invoice_id, payment_id, payment_date, amount, currency
+    SELECT invoice_id, payment_attempt_id, payment_attempt_date, amount, currency, created_date, updated_date
       FROM invoice_payments
      WHERE payment_id = :payment_id
 >>

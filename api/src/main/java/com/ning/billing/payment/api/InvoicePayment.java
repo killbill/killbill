@@ -32,10 +32,14 @@ public class InvoicePayment {
 
         public InvoicePayment(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
             this.invoiceId = invoiceId;
-            this.paymentAttemptId = paymentAttemptId;
-            this.paymentAttemptDate = paymentAttemptDate;
             this.amount = amount;
             this.currency = currency;
+            this.paymentAttemptId = paymentAttemptId;
+            this.paymentAttemptDate = paymentAttemptDate;
+        }
+
+        public InvoicePayment(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+            this(invoiceId, null, null, paymentAttemptId, paymentAttemptDate);
         }
 
         public UUID getInvoiceId() {

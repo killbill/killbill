@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -81,17 +82,12 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     @SqlQuery
     InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") UUID paymentAttemptId);
 
-    @SqlUpdate
-    void notifySuccessfulPayment(@Bind("invoiceId") final String invoiceId,
-                                 @Bind("amount") final BigDecimal paymentAmount,
-                                 @Bind("currency") final String currency,
-                                 @Bind("paymentId") final String paymentId,
-                                 @Bind("paymentDate") final Date paymentDate);
+//    void notifySuccessfulPayment(@Bind(binder = InvoicePaymentBinder.class) InvoicePayment invoicePayment);
+
+//    void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentId, Date paymentDate);
 
     @SqlUpdate
-    void notifyFailedPayment(@Bind("invoiceId") final String invoiceId,
-                             @Bind("paymentId") final String paymentId,
-                             @Bind("paymentAttemptDate") final Date paymentAttemptDate);
+    void notifyOfPaymentAttempt(@Bind(binder = InvoicePaymentBinder.class) InvoicePayment invoicePayment);
 
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
@@ -99,10 +95,10 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     public @interface InvoiceBinder {
         public static class InvoiceBinderFactory implements BinderFactory {
             @Override
-            public Binder build(Annotation annotation) {
+            public Binder<InvoiceBinder, Invoice> build(Annotation annotation) {
                 return new Binder<InvoiceBinder, Invoice>() {
                     @Override
-                    public void bind(SQLStatement q, InvoiceBinder bind, Invoice invoice) {
+                    public void bind(@SuppressWarnings("rawtypes") SQLStatement q, InvoiceBinder bind, Invoice invoice) {
                         q.bind("id", invoice.getId().toString());
                         q.bind("accountId", invoice.getAccountId().toString());
                         q.bind("invoiceDate", invoice.getInvoiceDate().toDate());
@@ -137,5 +133,40 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
         }
     }
 
+    @SqlUpdate
+    void notifyFailedPayment(@Bind(binder = InvoicePaymentBinder.class) InvoicePayment invoicePayment);
+
+    public static final class InvoicePaymentBinder implements Binder<Bind, InvoicePayment> {
+
+        @Override
+        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, InvoicePayment invoicePayment) {
+            stmt.bind("invoice_id", invoicePayment.getInvoiceId().toString());
+            stmt.bind("amount", invoicePayment.getAmount());
+            stmt.bind("currency", invoicePayment.getCurrency().toString());
+            stmt.bind("payment_attempt_id", invoicePayment.getPaymentAttemptId());
+            stmt.bind("payment_attempt_date", invoicePayment.getPaymentAttemptDate() == null ? null : invoicePayment.getPaymentAttemptDate().toDate());
+        }
+    }
+
+
+    public static class InvoicePaymentMapper implements ResultSetMapper<InvoicePayment> {
+
+        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
+            final Timestamp resultStamp = rs.getTimestamp(fieldName);
+            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
+        }
+
+        @Override
+        public InvoicePayment map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
+
+            UUID invoiceId = UUID.fromString(rs.getString("invoice_id"));
+            BigDecimal amount = rs.getBigDecimal("amount");
+            Currency currency = Currency.valueOf(rs.getString("currency"));
+            UUID paymentAttemptId = UUID.fromString(rs.getString("payment_attempt_id"));
+            DateTime paymentAttemptDate = getDate(rs, "payment_attempt_date");
+
+            return new InvoicePayment(invoiceId, amount, currency, paymentAttemptId, paymentAttemptDate);
+        }
+    }
 }
 

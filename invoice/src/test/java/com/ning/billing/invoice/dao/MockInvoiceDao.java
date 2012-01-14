@@ -29,7 +29,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
@@ -147,24 +146,24 @@ public class MockInvoiceDao implements InvoiceDao {
         return new ArrayList<UUID>(result);
     }
 
-    @Override
-    public void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentAttemptId, Date paymentAttemptDate) {
-        synchronized (monitor) {
-            invoicePayments.put(UUID.fromString(paymentAttemptId),
-                                new InvoicePayment(UUID.fromString(invoiceId), paymentAmount, Currency.valueOf(currency), UUID.fromString(paymentAttemptId), new DateTime(paymentAttemptDate)));
-        }
-    }
-
-    @Override
-    public void notifyFailedPayment(String invoiceId,
-                                    String paymentAttemptId,
-                                    Date paymentAttemptDate) {
-        synchronized (monitor) {
-            invoicePayments.put(UUID.fromString(paymentAttemptId),
-                                new InvoicePayment(UUID.fromString(invoiceId), null, null, UUID.fromString(paymentAttemptId), new DateTime(paymentAttemptDate)));
-
-        }
-    }
+//    @Override
+//    public void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentAttemptId, Date paymentAttemptDate) {
+//        synchronized (monitor) {
+//            invoicePayments.put(UUID.fromString(paymentAttemptId),
+//                                new InvoicePayment(UUID.fromString(invoiceId), paymentAmount, Currency.valueOf(currency), UUID.fromString(paymentAttemptId), new DateTime(paymentAttemptDate)));
+//        }
+//    }
+//
+//    @Override
+//    public void notifyFailedPayment(String invoiceId,
+//                                    String paymentAttemptId,
+//                                    Date paymentAttemptDate) {
+//        synchronized (monitor) {
+//            invoicePayments.put(UUID.fromString(paymentAttemptId),
+//                                new InvoicePayment(UUID.fromString(invoiceId), null, null, UUID.fromString(paymentAttemptId), new DateTime(paymentAttemptDate)));
+//
+//        }
+//    }
 
     @Override
     public void test() {
@@ -187,5 +186,12 @@ public class MockInvoiceDao implements InvoiceDao {
         synchronized(monitor) {
             return invoicePayments.get(paymentAttemptId);
         }
+    }
+
+    @Override
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
+      synchronized (monitor) {
+          invoicePayments.put(invoicePayment.getPaymentAttemptId(), invoicePayment);
+      }
     }
 }

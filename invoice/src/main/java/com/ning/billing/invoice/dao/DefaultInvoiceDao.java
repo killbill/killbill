@@ -16,7 +16,6 @@
 
 package com.ning.billing.invoice.dao;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -137,14 +136,19 @@ public class DefaultInvoiceDao implements InvoiceDao {
         return invoiceDao.getInvoicesForPayment(targetDate, numberOfDays);
     }
 
-    @Override
-    public void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentId, Date paymentDate) {
-        invoiceDao.notifySuccessfulPayment(invoiceId, paymentAmount, currency, paymentId, paymentDate);
-    }
+//    @Override
+//    public void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentId, Date paymentDate) {
+//        invoiceDao.notifySuccessfulPayment(invoiceId, paymentAmount, currency, paymentId, paymentDate);
+//    }
+//
+//    @Override
+//    public void notifyFailedPayment(String invoiceId, String paymentId, Date paymentAttemptDate) {
+//        invoiceDao.notifyFailedPayment(invoiceId, paymentId, paymentAttemptDate);
+//    }
 
     @Override
-    public void notifyFailedPayment(String invoiceId, String paymentId, Date paymentAttemptDate) {
-        invoiceDao.notifyFailedPayment(invoiceId, paymentId, paymentAttemptDate);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
+        invoiceDao.notifyOfPaymentAttempt(invoicePayment);
     }
 
     @Override
@@ -161,4 +165,5 @@ public class DefaultInvoiceDao implements InvoiceDao {
     public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
         return invoiceDao.getInvoicePayment(paymentAttemptId);
     }
+
 }

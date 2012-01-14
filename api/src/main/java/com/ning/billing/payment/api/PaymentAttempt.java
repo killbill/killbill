@@ -16,35 +16,51 @@
 
 package com.ning.billing.payment.api;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import com.google.common.base.Objects;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 
 public class PaymentAttempt {
     private final UUID paymentAttemptId;
+    private final UUID invoiceId;
+    private final UUID accountId;
+    private final BigDecimal amount;
+    private final Currency currency;
     private final String paymentId;
+    private final DateTime invoiceDate;
     private final DateTime paymentAttemptDate;
-    private final Invoice invoice;
+
+    public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, BigDecimal amount, Currency currency, DateTime invoiceDate, DateTime paymentAttemptDate, String paymentId) {
+        this.paymentAttemptId = paymentAttemptId;
+        this.invoiceId = invoiceId;
+        this.accountId = accountId;
+        this.amount = amount;
+        this.currency = currency;
+        this.invoiceDate = invoiceDate;
+        this.paymentAttemptDate = paymentAttemptDate == null ? new DateTime(DateTimeZone.UTC) : paymentAttemptDate;
+        this.paymentId = paymentId;
+    }
+
+    public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, BigDecimal amount, Currency currency, DateTime invoiceDate, DateTime paymentAttemptDate) {
+        this(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, null);
+    }
+
+    public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, DateTime invoiceDate, DateTime paymentAttemptDate) {
+        this(paymentAttemptId, invoiceId, accountId, null, null, invoiceDate, paymentAttemptDate, null);
+    }
 
     public PaymentAttempt(UUID paymentAttemptId, Invoice invoice) {
-        this.paymentAttemptId = paymentAttemptId;
-        this.paymentAttemptDate = new DateTime(DateTimeZone.UTC);
-        this.invoice = invoice;
-        this.paymentId = null;
+        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getAmountOutstanding(), invoice.getCurrency(), invoice.getInvoiceDate(), null);
     }
 
-    public PaymentAttempt(UUID paymentAttemptId, Invoice invoice, String paymentId) {
-        this(paymentAttemptId, invoice, paymentId, null);
-    }
-
-    public PaymentAttempt(UUID paymentAttemptId, Invoice invoice, String paymentId, DateTime paymentAttemptDate) {
-        this.paymentAttemptId = paymentAttemptId;
-        this.paymentAttemptDate = paymentAttemptDate == null ? new DateTime(DateTimeZone.UTC) : paymentAttemptDate;
-        this.invoice = invoice;
-        this.paymentId = paymentId;
+    public DateTime getInvoiceDate() {
+        return invoiceDate;
     }
 
     public UUID getPaymentAttemptId() {
@@ -59,13 +75,138 @@ public class PaymentAttempt {
         return paymentAttemptDate;
     }
 
-    public Invoice getInvoice() {
-        return invoice;
+    public UUID getInvoiceId() {
+        return invoiceId;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public Currency getCurrency() {
+        return currency;
     }
 
     @Override
     public String toString() {
-        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", paymentId=" + paymentId + ", paymentAttemptDate=" + paymentAttemptDate + ", invoice=" + invoice + "]";
+        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", invoiceId=" + invoiceId + ", amount=" + amount + ", currency=" + currency + ", paymentId=" + paymentId + ", paymentAttemptDate=" + paymentAttemptDate + "]";
+    }
+
+    public Builder cloner() {
+        return new Builder(this);
+    }
+
+    public static class Builder {
+        private UUID paymentAttemptId;
+        private UUID invoiceId;
+        private UUID accountId;
+        private BigDecimal amount;
+        private Currency currency;
+        private DateTime invoiceDate;
+        private DateTime paymentAttemptDate;
+        private String paymentId;
+
+        public Builder() {
+        }
+
+        public Builder(PaymentAttempt src) {
+            this.paymentAttemptId = src.paymentAttemptId;
+            this.invoiceId = src.invoiceId;
+            this.accountId = src.accountId;
+            this.amount = src.amount;
+            this.currency = src.currency;
+            this.invoiceDate = src.invoiceDate;
+            this.paymentAttemptDate = src.paymentAttemptDate;
+            this.paymentId = src.paymentId;
+        }
+
+        public Builder setPaymentAttemptId(UUID paymentAttemptId) {
+            this.paymentAttemptId = paymentAttemptId;
+            return this;
+        }
+
+        public Builder setInvoiceId(UUID invoiceId) {
+            this.invoiceId = invoiceId;
+            return this;
+        }
+
+        public Builder setAccountId(UUID accountId) {
+            this.accountId = accountId;
+            return this;
+        }
+
+        public Builder setAmount(BigDecimal amount) {
+            this.amount = amount;
+            return this;
+        }
+
+        public Builder setCurrency(Currency currency) {
+            this.currency = currency;
+            return this;
+        }
+
+        public Builder setInvoiceDate(DateTime invoiceDate) {
+            this.invoiceDate = invoiceDate;
+            return this;
+        }
+
+        public Builder setPaymentAttemptDate(DateTime paymentAttemptDate) {
+            this.paymentAttemptDate = paymentAttemptDate;
+            return this;
+        }
+
+        public Builder setPaymentId(String paymentId) {
+            this.paymentId = paymentId;
+            return this;
+        }
+
+        public PaymentAttempt build() {
+            return new PaymentAttempt(paymentAttemptId,
+                                      invoiceId,
+                                      accountId,
+                                      amount,
+                                      currency,
+                                      invoiceDate,
+                                      paymentAttemptDate,
+                                      paymentId);
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(paymentAttemptId,
+                                invoiceId,
+                                accountId,
+                                amount,
+                                currency,
+                                invoiceDate,
+                                paymentAttemptDate,
+                                paymentId);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (getClass() == obj.getClass()) {
+            PaymentAttempt other = (PaymentAttempt)obj;
+            if (obj == other) {
+                return true;
+            }
+            else {
+                return Objects.equal(paymentAttemptId, other.paymentAttemptId) &&
+                       Objects.equal(invoiceId, other.invoiceId) &&
+                       Objects.equal(accountId, other.accountId) &&
+                       Objects.equal(amount, other.amount) &&
+                       Objects.equal(currency, other.currency) &&
+                       Objects.equal(invoiceDate, other.invoiceDate) &&
+                       Objects.equal(paymentAttemptDate, other.paymentAttemptDate) &&
+                       Objects.equal(paymentId, other.paymentId);
+            }
+        }
+        return false;
     }
 
 }
