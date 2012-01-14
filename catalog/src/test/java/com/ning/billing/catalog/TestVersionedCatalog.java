@@ -15,56 +15,88 @@
  */
 package com.ning.billing.catalog;
 
-import com.google.common.io.Resources;
-import com.ning.billing.catalog.api.InvalidConfigException;
-import com.ning.billing.catalog.io.VersionedCatalogLoader;
-import com.ning.billing.lifecycle.KillbillService.ServiceException;
-import com.ning.billing.util.clock.DefaultClock;
-import org.joda.time.DateTime;
-import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
+import static org.testng.AssertJUnit.assertEquals;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.Date;
 
-import static org.testng.AssertJUnit.assertEquals;
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
+
+import com.google.common.io.Resources;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.InvalidConfigException;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.io.VersionedCatalogLoader;
+import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestVersionedCatalog {
+	private static final Logger log = LoggerFactory.getLogger(TestVersionedCatalog.class);
 	private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
+	private VersionedCatalog vc;
+	
+	@BeforeClass(groups={"setup"})
+	public void setUp() throws ServiceException {
+		vc = loader.load(Resources.getResource("versionedCatalog").toString());
+	}
 
 	@Test(enabled=true)
-	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
-		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog").toString());
+	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException, CatalogApiException {
 		vc.add(new StandaloneCatalog(new Date()));
 		assertEquals(5, vc.size());
 	}
 	
+		
 	@Test(enabled=true)
-	public void testApplyEffectiveDate() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
-		VersionedCatalog vc = loader.load(Resources.getResource("versionedCatalog").toString());
-		Date d = new Date(1L);
-		vc.configureEffectiveDate(d);
-		assertEquals(new Date(0), vc.getEffectiveDate()); // Start at the begining of time
+	public void testFindPlanWithDates() throws Exception {
+		DateTime dt0= new DateTime("2010-01-01T00:00:00+00:00");
+		DateTime dt1 = new DateTime("2011-01-01T00:01:00+00:00");
+		DateTime dt2 = new DateTime("2011-02-02T00:01:00+00:00");
+		DateTime dt214 = new DateTime("2011-02-14T00:01:00+00:00");
+		DateTime dt3 = new DateTime("2011-03-03T00:01:00+00:00");
 		
-		DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
-		d = new Date(dt.getMillis() + 1000);
-		vc.configureEffectiveDate(d);
-		assertEquals(dt.toDate(),vc.getEffectiveDate());
+		// New subscription
+		try {
+			vc.findPlan("pistol-monthly", dt0, dt0);	
+			Assert.fail("Exception should have been thrown there are no plans for this date");
+		} catch (CatalogApiException e) {
+			// Expected behaviour
+			log.error("Expected exception", e);
+			
+		}
+		Plan newSubPlan1 = vc.findPlan("pistol-monthly", dt1, dt1);
+		Plan newSubPlan2 = vc.findPlan("pistol-monthly", dt2, dt2);
+		Plan newSubPlan214 = vc.findPlan("pistol-monthly", dt214, dt214);
+		Plan newSubPlan3 = vc.findPlan("pistol-monthly", dt3, dt3);
 		
-		dt = new DateTime("2011-02-02T00:00:00+00:00");
-		d = new Date(dt.getMillis() + 1000);
-		vc.configureEffectiveDate(d);
-		assertEquals(dt.toDate(),vc.getEffectiveDate());
+		Assert.assertEquals(newSubPlan1.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("1.0"));
+		Assert.assertEquals(newSubPlan2.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("2.0"));
+		Assert.assertEquals(newSubPlan214.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("2.0"));
+		Assert.assertEquals(newSubPlan3.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("3.0"));
 		
-		dt = new DateTime("2011-03-03T00:00:00+00:00");
-		d = new Date(dt.getMillis() + 1000);
-		vc.configureEffectiveDate(d);
-		assertEquals(dt.toDate(),vc.getEffectiveDate());
+		// Existing subscription
+		
+		Plan exSubPlan2 = vc.findPlan("pistol-monthly", dt2, dt1);
+		Plan exSubPlan214 = vc.findPlan("pistol-monthly", dt214, dt1);
+		Plan exSubPlan3 = vc.findPlan("pistol-monthly", dt3, dt1);
+		
+		Assert.assertEquals(exSubPlan2.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("1.0"));
+		Assert.assertEquals(exSubPlan214.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("2.0"));
+		Assert.assertEquals(exSubPlan3.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("2.0"));
+
 		
 	}
-
 }

@@ -22,6 +22,7 @@ import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 import javax.xml.bind.annotation.*;
+
 import java.net.URI;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -32,6 +33,9 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 	@XmlID
     private String name;
 
+	@XmlAttribute(required=false)
+	private Boolean retired = false;
+	
 	@XmlElement(required=true)
     private ProductCategory category;
 	
@@ -52,6 +56,11 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 		return catalogName;
 	}
 
+	@Override
+	public boolean isRetired() {
+		return retired;
+	}
+	
 	@Override
     public ProductCategory getCategory() {
 		return category;
@@ -137,6 +146,11 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 
 	protected DefaultProduct setCatalogName(String catalogName) {
 		this.catalogName = catalogName;
+		return this;
+	}
+
+	public DefaultProduct setRetired(boolean retired) {
+		this.retired = retired;
 		return this;
 	}
 

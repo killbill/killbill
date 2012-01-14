@@ -28,7 +28,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.inject.Inject;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -43,40 +47,137 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.StaticCatalog;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 
 @XmlRootElement(name="catalog")
 @XmlAccessorType(XmlAccessType.NONE)
-public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implements Catalog {
+public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implements Catalog, StaticCatalog {
+	private static final Logger log = LoggerFactory.getLogger(VersionedCatalog.class);
 	
-	private StandaloneCatalog currentCatalog;
+	final private Clock clock;
+	private String catalogName;
 	
 	@XmlElement(name="catalogVersion", required=true)
 	private final List<StandaloneCatalog> versions = new ArrayList<StandaloneCatalog>();
-	
-	@Inject
-	public VersionedCatalog() {
+
+	public VersionedCatalog(Clock clock) {
+		this.clock = clock;
 		StandaloneCatalog baseline = new StandaloneCatalog(new Date(0)); // init with an empty catalog may need to 
 													 // populate some empty pieces here to make validation work
-		add(baseline); 
-	}
-	
-	private StandaloneCatalog versionForDate(Date date) {
-		StandaloneCatalog previous = versions.get(0);
-		for(StandaloneCatalog c : versions) {
-			if(c.getEffectiveDate().getTime() > date.getTime()) {
-				return previous;
-			}
-			previous = c;
-		}
-		return versions.get(versions.size() - 1);
+		try {
+			add(baseline);
+		} catch (CatalogApiException e) {
+			// This should never happen
+			log.error("This error should never happpen", e);
+		} 
 	}
 
-	public void add(StandaloneCatalog e) {
-		if(currentCatalog == null) {
-			currentCatalog = e;
+	//
+	// Private methods
+	//
+	private StandaloneCatalog versionForDate(DateTime date) {
+		return versions.get(indexOfVersionForDate(date.toDate()));
+	}
+
+	private List<StandaloneCatalog> versionsBeforeDate(Date date) {
+		List<StandaloneCatalog> result = new ArrayList<StandaloneCatalog>();
+		int index = indexOfVersionForDate(date);
+		for(int i = 0; i <= index; i++) {
+			result.add(versions.get(i));
+		}
+		return result;
+	}
+
+	private int indexOfVersionForDate(Date date) {
+		for(int i = 1; i < versions.size(); i++) {
+			StandaloneCatalog c = versions.get(i);
+			if(c.getEffectiveDate().getTime() > date.getTime()) {
+				return i - 1;
+			}
+		}
+		return versions.size() - 1;
+	}
+	
+	private class PlanRequestWrapper {
+		String name;
+		String productName;
+		BillingPeriod bp;
+		String priceListName;
+		
+		public PlanRequestWrapper(String name) {
+			super();
+			this.name = name;
+		}
+
+		public PlanRequestWrapper(String productName, BillingPeriod bp,
+				String priceListName) {
+			super();
+			this.productName = productName;
+			this.bp = bp;
+			this.priceListName = priceListName;
+		}
+		
+		public Plan findPlan(StandaloneCatalog catalog) throws CatalogApiException {
+			if(name != null) {
+				return catalog.findCurrentPlan(name);
+			} else {
+				return catalog.findCurrentPlan(productName, bp, priceListName);
+			}
+		}
+	}
+	
+	private Plan findPlan(PlanRequestWrapper wrapper, 
+			DateTime requestedDate,
+			DateTime subscriptionStartDate) 
+					throws CatalogApiException {
+		List<StandaloneCatalog> catalogs = versionsBeforeDate(requestedDate.toDate());
+		if(catalogs.size() == 0) {
+			throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
+		}
+		
+		for(int i = catalogs.size() - 1; i >= 0 ; i--) { // Working backwards to find the latest applicable plan
+			StandaloneCatalog c = catalogs.get(i);
+			Plan plan = null;
+			try {
+				 plan = wrapper.findPlan(c);
+			} catch (CatalogApiException e) {
+				if(e.getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode()) {
+					throw e;
+				} else { 
+					break;
+				}
+			}
+				
+			DateTime catalogEffectiveDate = new DateTime(c.getEffectiveDate());
+			if(subscriptionStartDate.isAfter(catalogEffectiveDate)) { // Its a new subscription this plan always applies
+				return plan;
+			} else { //Its an existing subscription
+				if(plan.getEffectiveDateForExistingSubscriptons() != null) { //if it is null any change to this does not apply to existing subscriptions
+					DateTime existingSubscriptionDate = new DateTime(plan.getEffectiveDateForExistingSubscriptons());
+					if(requestedDate.isAfter(existingSubscriptionDate)){ // this plan is now applicable to existing subs
+						return plan;
+					}
+				}
+			}
+		}
+		
+		throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
+	}
+	
+	//
+	// Public methods not exposed in interface
+	//
+	public void add(StandaloneCatalog e) throws CatalogApiException {
+		if(catalogName == null) {
+			catalogName = e.getCatalogName();
+		} else {
+			if(!catalogName.equals(getCatalogName())) {
+				throw new CatalogApiException(ErrorCode.CAT_CATALOG_NAME_MISMATCH,catalogName, e.getCatalogName());
+			}
 		}
 		versions.add(e);
 		Collections.sort(versions,new Comparator<StandaloneCatalog>() {
@@ -86,61 +187,144 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 			}
 		});
 	}
-
+		
 	public Iterator<StandaloneCatalog> iterator() {
 		return versions.iterator();
-	}
-	
-	@Override
-	public void configureEffectiveDate(Date date) {
-		currentCatalog = versionForDate(date); // 
 	}
 
 	public int size() {
 		return versions.size();
 	}
 
+	//
+    // Simple getters
+    //
 	@Override
-	public DefaultProduct[] getProducts() {
-		return currentCatalog.getProducts();
+	public String getCatalogName() {
+		return catalogName;
 	}
 
 	@Override
-	public Currency[] getSupportedCurrencies() {
-		return currentCatalog.getSupportedCurrencies();
+	public DefaultProduct[] getProducts(DateTime requestedDate) {
+		return versionForDate(requestedDate).getCurrentProducts();
 	}
 
 	@Override
-	public DefaultPlan[] getPlans() {
-		return currentCatalog.getPlans();
+	public Currency[] getSupportedCurrencies(DateTime requestedDate) {
+		return versionForDate(requestedDate).getCurrentSupportedCurrencies();
 	}
 
 	@Override
-	public Date getEffectiveDate() {
-		return currentCatalog.getEffectiveDate();
+	public DefaultPlan[] getPlans(DateTime requestedDate) {
+		return versionForDate(requestedDate).getCurrentPlans();
+	}
+
+	//
+	// Find a plan
+	//
+	@Override
+	public Plan findPlan(String name, 
+			DateTime requestedDate) 
+					throws CatalogApiException {
+		return versionForDate(requestedDate).findCurrentPlan(name);
 	}
 
 	@Override
-	public Plan findPlan(String productName, BillingPeriod term,
-			String planSetName) throws CatalogApiException {
-		return currentCatalog.findPlan(productName, term, planSetName);
+	public Plan findPlan(String productName, 
+			BillingPeriod term,
+			String priceListName,
+			DateTime requestedDate) 
+					throws CatalogApiException {
+		return versionForDate(requestedDate).findCurrentPlan(productName, term, priceListName);
 	}
 
 	@Override
-	public DefaultPlan findPlan(String name) throws CatalogApiException {
-		return currentCatalog.findPlan(name);
+	public Plan findPlan(String name, 
+			DateTime requestedDate,
+			DateTime subscriptionStartDate) 
+					throws CatalogApiException {
+		return findPlan(new PlanRequestWrapper(name), requestedDate, subscriptionStartDate);
 	}
 
 	@Override
-	public PlanPhase findPhase(String name) throws CatalogApiException {
-		return currentCatalog.findPhase(name);
+	public Plan findPlan(String productName, 
+			BillingPeriod term,
+			String priceListName,
+			DateTime requestedDate,
+			DateTime subscriptionStartDate) 
+					throws CatalogApiException {
+		return findPlan(new PlanRequestWrapper(productName, term, priceListName), requestedDate, subscriptionStartDate);
+	}
+
+	//
+	// Find a product
+	//
+	@Override
+	public Product findProduct(String name, DateTime requestedDate) throws CatalogApiException {
+		return versionForDate(requestedDate).findCurrentProduct(name);
+	}
+
+
+    //
+    // Find a phase
+    //
+	@Override
+	public PlanPhase findPhase(String phaseName, 
+			DateTime requestedDate,
+			DateTime subscriptionStartDate) 
+					throws CatalogApiException {
+		String planName = DefaultPlanPhase.planName(phaseName);
+		Plan plan = findPlan(planName, requestedDate, subscriptionStartDate);
+		return plan.findPhase(phaseName);
+	}
+	
+    //
+    // Rules
+    //
+	@Override
+	public ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
+			PlanSpecifier to, DateTime requestedDate) throws CatalogApiException {
+		return versionForDate(requestedDate).planChangePolicy(from, to);
 	}
 
 	@Override
-	public Product findProduct(String name) throws CatalogApiException {
-		return currentCatalog.findProduct(name);
+	public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase, DateTime requestedDate) throws CatalogApiException {
+		return versionForDate(requestedDate).planCancelPolicy(planPhase);
 	}
 
+	@Override
+	public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
+			PlanSpecifier to, DateTime requestedDate) throws CatalogApiException {
+		return versionForDate(requestedDate).planChangeAlignment(from, to);
+	}
+
+	@Override
+	public PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException {
+		return versionForDate(requestedDate).planCreateAlignment(specifier);
+	}
+
+	
+
+	@Override
+	public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase, DateTime requestedDate) throws CatalogApiException {
+		return versionForDate(requestedDate).billingAlignment(planPhase);
+	}
+
+	@Override
+	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to, DateTime requestedDate)
+			throws CatalogApiException {
+		return versionForDate(requestedDate).planChange(from, to);
+	}
+
+	@Override
+	public boolean canCreatePlan(PlanSpecifier specifier, DateTime requestedDate)
+			throws CatalogApiException {
+		return versionForDate(requestedDate).canCreatePlan(specifier);
+	}
+
+	//
+	// VerifiableConfig API
+	//
 	@Override
 	public void initialize(StandaloneCatalog catalog, URI sourceURI) {
 		for(StandaloneCatalog c : versions) {
@@ -153,48 +337,103 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 		for(StandaloneCatalog c : versions) {
 			errors.addAll(c.validate(c, errors));
 		}
+		//TODO MDW validation - ensure all catalog versions have a single name
+		//TODO MDW validation - ensure effective dates are different (actually do we want this?)
+		//TODO MDW validation - check that all products are there
+		//TODO MDW validation - check that all plans are there
+		//TODO MDW validation - check that all currencies are there
+		//TODO MDW validation - check that all pricelists are there
 		return errors;
 	}
-	
+
+	//
+	// Static catalog API
+	//
+	@Override
+	public Date getEffectiveDate() {
+		return versionForDate(clock.getUTCNow()).getEffectiveDate();
+	}
+
+	@Override
+	public Currency[] getCurrentSupportedCurrencies() {
+		return versionForDate(clock.getUTCNow()).getCurrentSupportedCurrencies();
+	}
+
+	@Override
+	public Product[] getCurrentProducts() {
+		return versionForDate(clock.getUTCNow()).getCurrentProducts() ;
+	}
+
+	@Override
+	public Plan[] getCurrentPlans() {
+		return versionForDate(clock.getUTCNow()).getCurrentPlans();
+	}
+
+	@Override
+	public Plan findCurrentPlan(String productName, BillingPeriod term,
+			String priceList) throws CatalogApiException {
+		return versionForDate(clock.getUTCNow()).findCurrentPlan(productName, term, priceList);
+	}
+
+	@Override
+	public Plan findCurrentPlan(String name) throws CatalogApiException {
+		return versionForDate(clock.getUTCNow()).findCurrentPlan(name);
+	}
+
+	@Override
+	public Product findCurrentProduct(String name) throws CatalogApiException {
+		return versionForDate(clock.getUTCNow()).findCurrentProduct(name);
+	}
+
+	@Override
+	public PlanPhase findCurrentPhase(String name) throws CatalogApiException {
+		return versionForDate(clock.getUTCNow()).findCurrentPhase(name);
+	}
+
 	@Override
 	public ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
 			PlanSpecifier to) throws CatalogApiException {
-		return currentCatalog.planChangePolicy(from, to);
-	}
-
-	@Override
-	public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException {
-		return currentCatalog.planCancelPolicy(planPhase);
-	}
-
-	@Override
-	public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to) throws CatalogApiException {
-		return currentCatalog.planChangeAlignment(from, to);
-	}
-
-	@Override
-	public PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier) throws CatalogApiException {
-		return currentCatalog.planCreateAlignment(specifier);
-	}
-
-	@Override
-	public String getCatalogName() {
-		return currentCatalog.getCatalogName();
-	}
-
-	@Override
-	public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException {
-		return currentCatalog.billingAlignment(planPhase);
+		return versionForDate(clock.getUTCNow()).planChangePolicy(from, to);
 	}
 
 	@Override
 	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to)
 			throws CatalogApiException {
-		return currentCatalog.planChange(from, to);
+		return versionForDate(clock.getUTCNow()).planChange(from, to);
 	}
+
+	@Override
+	public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase)
+			throws CatalogApiException {
+		return versionForDate(clock.getUTCNow()).planCancelPolicy(planPhase);
+	}
+
+	@Override
+	public PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier)
+			throws CatalogApiException {
+		return versionForDate(clock.getUTCNow()).planCreateAlignment(specifier);
+	}
+
+	@Override
+	public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase)
+			throws CatalogApiException {
+		return versionForDate(clock.getUTCNow()).billingAlignment(planPhase);
+	}
+
+	@Override
+	public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
+			PlanSpecifier to) throws CatalogApiException {
+		return versionForDate(clock.getUTCNow()).planChangeAlignment(from, to);
+	}
+
+	@Override
+	public boolean canCreatePlan(PlanSpecifier specifier)
+			throws CatalogApiException {
+		return versionForDate(clock.getUTCNow()).canCreatePlan(specifier);
+	}
+
 	
-	//TODO MDW validation - ensure all catalog versions have a single name
-	//TODO MDW validation - ensure effective dates are different (actually do we want this?)
+
+
  
 }

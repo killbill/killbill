@@ -60,13 +60,11 @@ public class VersionedCatalogLoader implements ICatalogLoader  {
 				xmlURIs = findXmlReferences(directoryContents, new URL(uriString));
 			}
 			
-			VersionedCatalog result = new VersionedCatalog();
+			VersionedCatalog result = new VersionedCatalog(clock);
 			for(URI u : xmlURIs) {
 				StandaloneCatalog catalog = XMLLoader.getObjectFromUri(u, StandaloneCatalog.class);
 				result.add(catalog);
 			}
-			Date now = clock.getUTCNow().toDate();
-			result.configureEffectiveDate(now);
 			return result;
 		} catch (Exception e) {
 			throw new ServiceException("Problem encountered loading catalog", e);

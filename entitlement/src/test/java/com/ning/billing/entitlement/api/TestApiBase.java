@@ -147,7 +147,7 @@ public abstract class TestApiBase {
         accountData = getAccountData();
         assertNotNull(accountData);
 
-        catalog = catalogService.getCatalog();
+        catalog = catalogService.getFullCatalog();
         assertNotNull(catalog);
 
 

@@ -16,21 +16,39 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
+import java.util.Collection;
+import java.util.Date;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingAlignment;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
+import com.ning.billing.catalog.api.PlanAlignmentCreate;
+import com.ning.billing.catalog.api.PlanChangeResult;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.catalog.rules.PlanRules;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
-import javax.xml.bind.annotation.*;
-import java.net.URI;
-import java.util.Collection;
-import java.util.Date;
-
 @XmlRootElement(name="catalog")
 @XmlAccessorType(XmlAccessType.NONE)
-public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> implements Catalog {
+public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> implements StaticCatalog {
 	@XmlElement(required=true)
 	private Date effectiveDate;
 
@@ -80,18 +98,18 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 	 * @see com.ning.billing.catalog.ICatalog#getProducts()
 	 */
 	@Override
-	public DefaultProduct[] getProducts() {
+	public DefaultProduct[] getCurrentProducts() {
 		return products;
 	}
 
 
 	@Override
-	public Currency[] getSupportedCurrencies() {
+	public Currency[] getCurrentSupportedCurrencies() {
 		return supportedCurrencies;
 	}
 
 	@Override
-	public DefaultPlan[] getPlans() {
+	public DefaultPlan[] getCurrentPlans() {
 		return plans;
 	}
 
@@ -103,7 +121,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		return planRules;
 	}
 	
-	public DefaultPriceList getPriceListFromName(String priceListName) {
+	public DefaultPriceList findCurrentPriceList(String priceListName) throws CatalogApiException {
 		return priceLists.findPriceListFrom(priceListName);
 	}
 	
@@ -111,29 +129,30 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		return this.priceLists;
 	}
 
-	@Override
-	public void configureEffectiveDate(Date date) {
-		// Nothing to do here this is a method that is only implemented on VersionedCatalog
-	}
-
-
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.ICatalog#getPlan(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public DefaultPlan findPlan(String productName, BillingPeriod period, String priceListName) throws CatalogApiException {
-		Product product = findProduct(productName);
+	public DefaultPlan findCurrentPlan(String productName, BillingPeriod period, String priceListName) throws CatalogApiException {
+		if (productName == null ) {
+			throw new CatalogApiException(ErrorCode.CAT_NULL_PRODUCT_NAME);
+		}
+		if (priceLists == null) {
+			throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND,priceListName);
+		}
+		Product product = findCurrentProduct(productName);
 		DefaultPlan result = priceLists.getPlanListFrom(priceListName, product, period);
 		if ( result == null) {
-			throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, productName, period.toString(), priceListName);
+			String periodString = (period == null) ? "NULL" :  period.toString();
+			throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, productName, periodString, priceListName);
 		}
 		return result;
 	}
 	
 	@Override
-	public DefaultPlan findPlan(String name) throws CatalogApiException {
-		if (name == null) {
-			return null;
+	public DefaultPlan findCurrentPlan(String name) throws CatalogApiException {
+		if (name == null || plans == null) {
+			throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PLAN, name);
 		}
 		for(DefaultPlan p : plans) {
 			if(p.getName().equals(name)) {
@@ -144,7 +163,10 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 	}
 	
 	@Override
-	public Product findProduct(String name) throws CatalogApiException {
+	public Product findCurrentProduct(String name) throws CatalogApiException {
+		if (name == null || products == null) {
+			throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PRODUCT, name);
+		}
 		for(DefaultProduct p : products) {
 			if (p.getName().equals(name)) {
 				return p;
@@ -154,23 +176,17 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 	}
 
 	@Override
-	public DefaultPlanPhase findPhase(String name) throws CatalogApiException {
-		for(DefaultPlan p : plans) {
-
-			if(p.getFinalPhase().getName().equals(name)) {
-				return p.getFinalPhase();
-			}
-			if (p.getInitialPhases() != null) {
-				for(DefaultPlanPhase pp : p.getInitialPhases()) {
-					if(pp.getName().equals(name)) {
-						return pp;
-					}
-				}
-			}
+	public PlanPhase findCurrentPhase(String name) throws CatalogApiException {
+		if (name == null || plans == null) {
+			throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PHASE, name);
 		}
-
-		throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PHASE, name);
+		
+		String  planName = DefaultPlanPhase.planName(name);
+		Plan plan = findCurrentPlan(planName);
+		return plan.findPhase(name);
 	}
+
+
 
 	//////////////////////////////////////////////////////////////////////////////
 	//
@@ -220,9 +236,9 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 	private Collection<? extends ValidationError> validate(StandaloneCatalog catalog,
 			ValidationErrors errors, ValidatingConfig<StandaloneCatalog>[] configs) {
 		for(ValidatingConfig<StandaloneCatalog> config: configs) {
-
+			config.validate(catalog, errors);
 		}
-		return null;
+		return errors;
 	}
 	
 
@@ -275,6 +291,14 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		return this;
 	}
 
-
-
+	@Override
+	public boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException {
+		Product product = findCurrentProduct(specifier.getProductName());
+		Plan plan = findCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName());
+		DefaultPriceList priceList = findCurrentPriceList(specifier.getPriceListName());
+		
+		return (!product.isRetired()) &&
+				(!plan.isRetired()) &&
+				(!priceList.isRetired());
+	}
 }

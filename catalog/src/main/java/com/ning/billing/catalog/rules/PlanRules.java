@@ -16,16 +16,27 @@
 
 package com.ning.billing.catalog.rules;
 
-import com.ning.billing.catalog.DefaultPriceList;
-import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.catalog.api.*;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationErrors;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+
+import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.DefaultPriceList;
+import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingAlignment;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.IllegalPlanChange;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanAlignmentChange;
+import com.ning.billing.catalog.api.PlanAlignmentCreate;
+import com.ning.billing.catalog.api.PlanChangeResult;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class PlanRules extends ValidatingConfig<StandaloneCatalog>  {
@@ -67,11 +78,13 @@ public class PlanRules extends ValidatingConfig<StandaloneCatalog>  {
 	}
 
 	public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to, StandaloneCatalog catalog) throws CatalogApiException {
-		DefaultPriceList priceList = catalog.getPriceListFromName(to.getPriceListName());
-		if( priceList== null ) {
-			priceList = findPriceList(from.toPlanSpecifier(), catalog);
-			to = new PlanSpecifier(to.getProductName(), to.getProductCategory(), to.getBillingPeriod(), priceList.getName());
-		} 
+		DefaultPriceList toPriceList;
+		if( to.getPriceListName() == null ) { // Pricelist may be null because it is unspecified this is the principal use-case
+			toPriceList = findPriceList(from.toPlanSpecifier(), catalog);
+			to = new PlanSpecifier(to.getProductName(), to.getProductCategory(), to.getBillingPeriod(), toPriceList.getName());
+		} else {
+			toPriceList = catalog.findCurrentPriceList(to.getPriceListName());
+		}
 		
 		ActionPolicy policy = getPlanChangePolicy(from, to, catalog);
 		if(policy == ActionPolicy.ILLEGAL) {
@@ -80,7 +93,7 @@ public class PlanRules extends ValidatingConfig<StandaloneCatalog>  {
 		
 		PlanAlignmentChange alignment = getPlanChangeAlignment(from, to, catalog);
 		
-		return new PlanChangeResult(priceList, policy, alignment);
+		return new PlanChangeResult(toPriceList, policy, alignment);
 	}
 	
 	public PlanAlignmentChange getPlanChangeAlignment(PlanPhaseSpecifier from,
@@ -95,6 +108,7 @@ public class PlanRules extends ValidatingConfig<StandaloneCatalog>  {
 				from.getPriceListName().equals(to.getPriceListName())) {
 			return ActionPolicy.ILLEGAL;
 		}
+		//Plan toPlan = catalog.findPlan()
 		
 		return CaseChange.getResult(changeCase, from, to, catalog); 
 	}
@@ -102,7 +116,7 @@ public class PlanRules extends ValidatingConfig<StandaloneCatalog>  {
 	private DefaultPriceList findPriceList(PlanSpecifier specifier, StandaloneCatalog catalog) throws CatalogApiException {
 		DefaultPriceList result = Case.getResult(priceListCase, specifier, catalog);
 		if (result == null) {
-			result = catalog.getPriceListFromName(specifier.getPriceListName());
+			result = catalog.findCurrentPriceList(specifier.getPriceListName());
 		}
 		return result;
 	}

@@ -67,6 +67,8 @@ public interface Subscription {
 
     public List<SubscriptionTransition> getActiveTransitions();
 
+    public List<SubscriptionTransition> getAllTransitions();
+
     public SubscriptionTransition getPendingTransition();
 
 }
