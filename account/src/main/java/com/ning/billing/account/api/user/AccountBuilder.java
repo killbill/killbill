@@ -37,6 +37,7 @@ public class AccountBuilder {
     private String locale;
     private String address1;
     private String address2;
+    private String companyName;
     private String city;
     private String stateOrProvince;
     private String country;
@@ -107,6 +108,11 @@ public class AccountBuilder {
         return this;
     }
 
+    public AccountBuilder companyName(final String companyName) {
+        this.companyName = companyName;
+        return this;
+    }
+
     public AccountBuilder city(final String city) {
         this.city = city;
         return this;
@@ -136,7 +142,7 @@ public class AccountBuilder {
         return new DefaultAccount(id, externalKey, email, name, firstNameLength,
                                   currency, billingCycleDay, paymentProviderName,
                                   timeZone, locale,
-                                  address1, address2, city, stateOrProvince, country,
+                                  address1, address2, companyName, city, stateOrProvince, country,
                                   postalCode, phone);
     }
 }

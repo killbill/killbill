@@ -12,6 +12,7 @@ CREATE TABLE accounts (
     locale varchar(5) DEFAULT NULL,
     address1 varchar(100) DEFAULT NULL,
     address2 varchar(100) DEFAULT NULL,
+    company_name varchar(50) DEFAULT NULL,
     city varchar(50) DEFAULT NULL,
     state_or_province varchar(50) DEFAULT NULL,
     country varchar(50) DEFAULT NULL,
@@ -21,3 +22,4 @@ CREATE TABLE accounts (
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key);
 CREATE UNIQUE INDEX accounts_email ON accounts(email);
+

@@ -207,6 +207,11 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
             }
 
             @Override
+            public String getCompanyName() {
+                return null;
+            }
+
+            @Override
             public String getCity() {
                 return null;
             }
@@ -255,11 +260,12 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         DefaultAccount account = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null);
         accountDao.create(account);
 
         String address1 = "123 address 1";
         String address2 = "456 address 2";
+        String companyName = "Some Company";
         String city = "Cambridge Bay";
         String stateOrProvince = "Nunavut";
         String country = "Canada";
@@ -269,7 +275,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    address1, address2, city, stateOrProvince, country,
+                                                    address1, address2, companyName, city, stateOrProvince, country,
                                                     postalCode, phone);
 
         accountDao.update(updatedAccount);
@@ -280,6 +286,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getId(), accountId);
         assertEquals(savedAccount.getAddress1(), address1);
         assertEquals(savedAccount.getAddress2(), address2);
+        assertEquals(savedAccount.getCompanyName(), companyName);
         assertEquals(savedAccount.getCity(), city);
         assertEquals(savedAccount.getStateOrProvince(), stateOrProvince);
         assertEquals(savedAccount.getCity(), city);
@@ -294,14 +301,14 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         DefaultAccount account = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    "123 address 1", "456 address 2", "Cambridge Bay",
+                                                    "123 address 1", "456 address 2", null, "Cambridge Bay",
                                                     "Nunavut", "Canada", "X0B 0C0", "18001112222");
         accountDao.create(account);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null);
 
         accountDao.update(updatedAccount);
 
@@ -311,6 +318,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getId(), accountId);
         assertEquals(savedAccount.getAddress1(), null);
         assertEquals(savedAccount.getAddress2(), null);
+        assertEquals(savedAccount.getCompanyName(), null);
         assertEquals(savedAccount.getCity(), null);
         assertEquals(savedAccount.getStateOrProvince(), null);
         assertEquals(savedAccount.getCity(), null);
@@ -325,12 +333,12 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
 
         DefaultAccount account = new DefaultAccount(accountId, originalExternalKey, "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
-                                                    null, null, null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null, null, null);
         accountDao.create(account);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey1338", "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
-                                                    null, null, null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null, null, null);
         accountDao.update(updatedAccount);
     }
 }

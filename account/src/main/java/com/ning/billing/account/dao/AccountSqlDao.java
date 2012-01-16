@@ -86,6 +86,7 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
 
             String address1 = result.getString("address1");
             String address2 = result.getString("address2");
+            String companyName = result.getString("company_name");
             String city = result.getString("city");
             String stateOrProvince = result.getString("state_or_province");
             String postalCode = result.getString("postal_code");
@@ -99,6 +100,7 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
                                          .paymentProviderName(paymentProviderName)
                                          .timeZone(timeZone).locale(locale)
                                          .address1(address1).address2(address2)
+                                         .companyName(companyName)
                                          .city(city).stateOrProvince(stateOrProvince)
                                          .postalCode(postalCode).country(country)
                                          .build();
@@ -131,6 +133,7 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
 
                         q.bind("address1", account.getAddress1());
                         q.bind("address2", account.getAddress2());
+                        q.bind("companyName", account.getCompanyName());
                         q.bind("city", account.getCity());
                         q.bind("stateOrProvince", account.getStateOrProvince());
                         q.bind("country", account.getCountry());

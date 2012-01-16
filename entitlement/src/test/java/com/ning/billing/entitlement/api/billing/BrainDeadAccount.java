@@ -91,6 +91,11 @@ public class BrainDeadAccount implements Account {
     }
 
     @Override
+    public String getCompanyName() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public String getCity() {
         throw new UnsupportedOperationException();
     }

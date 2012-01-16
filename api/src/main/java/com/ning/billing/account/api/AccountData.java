@@ -45,6 +45,8 @@ public interface AccountData {
 
     public String getAddress2();
 
+    public String getCompanyName();
+
     public String getCity();
 
     public String getStateOrProvince();

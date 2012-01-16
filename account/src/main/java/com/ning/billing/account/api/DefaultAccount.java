@@ -42,6 +42,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     private final String locale;
     private final String address1;
     private final String address2;
+    private final String companyName;
     private final String city;
     private final String stateOrProvince;
     private final String country;
@@ -56,14 +57,16 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
         this(id, data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
                 data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
                 data.getTimeZone(), data.getLocale(),
-                data.getAddress1(), data.getAddress2(), data.getCity(), data.getStateOrProvince(), data.getCountry(),
+                data.getAddress1(), data.getAddress2(), data.getCompanyName(),
+                data.getCity(), data.getStateOrProvince(), data.getCountry(),
                 data.getPostalCode(), data.getPhone());
     }
 
     public DefaultAccount(final UUID id, final String externalKey, final String email, final String name, final int firstNameLength,
                           final Currency currency, final int billCycleDay, final String paymentProviderName,
                           final DateTimeZone timeZone, final String locale,
-                          final String address1, final String address2, final String city,
+                          final String address1, final String address2, final String companyName,
+                          final String city,
                           final String stateOrProvince, final String country, final String postalCode, final String phone) {
         super(id);
         this.externalKey = externalKey;
@@ -77,6 +80,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
         this.locale = locale;
         this.address1 = address1;
         this.address2 = address2;
+        this.companyName = companyName;
         this.city = city;
         this.stateOrProvince = stateOrProvince;
         this.postalCode = postalCode;
@@ -144,6 +148,11 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     @Override
     public String getAddress2() {
         return address2;
+    }
+
+    @Override
+    public String getCompanyName() {
+        return companyName;
     }
 
     @Override

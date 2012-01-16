@@ -107,6 +107,11 @@ public class MockAccount implements Account
     }
 
     @Override
+    public String getCompanyName() {
+        return null;
+    }
+
+    @Override
     public String getCity() {
         return null;
     }
