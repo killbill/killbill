@@ -29,20 +29,38 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.payment.api.InvoicePayment;
+import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
 public class MockInvoiceDao implements InvoiceDao {
+    private final EventBus eventBus;
     private final Object monitor = new Object();
     private final Map<String, Invoice> invoices = new LinkedHashMap<String, Invoice>();
     private final Map<UUID, InvoicePayment> invoicePayments = new LinkedHashMap<UUID, InvoicePayment>();
+
+    @Inject
+    public MockInvoiceDao(EventBus eventBus) {
+        this.eventBus = eventBus;
+    }
 
     @Override
     public void create(Invoice invoice) {
         synchronized (monitor) {
             invoices.put(invoice.getId().toString(), invoice);
+        }
+        try {
+            eventBus.post(new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
+                                                                 invoice.getAmountOutstanding(), invoice.getCurrency(),
+                                                                 invoice.getInvoiceDate()));
+        }
+        catch (EventBusException ex) {
+            throw new RuntimeException(ex);
         }
     }
 

@@ -19,6 +19,9 @@ package com.ning.billing.payment;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
@@ -40,6 +43,8 @@ public class RequestProcessor {
     private final PaymentProviderPluginRegistry pluginRegistry;
     private final EventBus eventBus;
 
+    private static final Logger log = LoggerFactory.getLogger(RequestProcessor.class);
+
     @Inject
     public RequestProcessor(AccountUserApi accountUserApi,
                             PaymentApi paymentApi,
@@ -53,6 +58,7 @@ public class RequestProcessor {
 
     @Subscribe
     public void receiveInvoice(InvoiceCreationNotification event) {
+        log.info("Received invoice creation notification for account {} and invoice {}", event.getAccountId(), event.getInvoiceId());
         try {
             final Account account = accountUserApi.getAccountById(event.getAccountId());
 

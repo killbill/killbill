@@ -143,7 +143,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             stmt.bind("invoice_id", invoicePayment.getInvoiceId().toString());
             stmt.bind("amount", invoicePayment.getAmount());
             stmt.bind("currency", invoicePayment.getCurrency().toString());
-            stmt.bind("payment_attempt_id", invoicePayment.getPaymentAttemptId());
+            stmt.bind("payment_attempt_id", invoicePayment.getPaymentAttemptId().toString());
             stmt.bind("payment_attempt_date", invoicePayment.getPaymentAttemptDate() == null ? null : invoicePayment.getPaymentAttemptDate().toDate());
         }
     }

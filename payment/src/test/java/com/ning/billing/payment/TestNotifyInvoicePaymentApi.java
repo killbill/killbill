@@ -20,21 +20,50 @@ import static org.testng.Assert.assertNotNull;
 
 import java.util.UUID;
 
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.payment.api.InvoicePayment;
-import com.ning.billing.payment.setup.PaymentTestModule;
+import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
+import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
-@Guice(modules = PaymentTestModule.class)
-public class TestNotifyInvoicePaymentApi extends TestPaymentProvider {
+@Test
+@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
+public class TestNotifyInvoicePaymentApi {
+    @Inject
+    private EventBus eventBus;
+    @Inject
+    private RequestProcessor invoiceProcessor;
+    @Inject
+    private InvoicePaymentApi invoicePaymentApi;
+    @Inject
+    private TestHelper testHelper;
+
+    @BeforeMethod(alwaysRun = true)
+    public void setUp() throws EventBusException {
+        eventBus.start();
+        eventBus.register(invoiceProcessor);
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown() throws EventBusException {
+        eventBus.unregister(invoiceProcessor);
+        eventBus.stop();
+    }
 
     @Test
     public void testNotifyPaymentSuccess() {
-        final Account account = createTestAccount();
-        final Invoice invoice = createTestInvoice(account);
+        final Account account = testHelper.createTestAccount();
+        final Invoice invoice = testHelper.createTestInvoice(account);
 
         PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
 
@@ -51,8 +80,8 @@ public class TestNotifyInvoicePaymentApi extends TestPaymentProvider {
 
     @Test
     public void testNotifyPaymentFailure() {
-        final Account account = createTestAccount();
-        final Invoice invoice = createTestInvoice(account);
+        final Account account = testHelper.createTestAccount();
+        final Invoice invoice = testHelper.createTestInvoice(account);
 
         PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
         invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),

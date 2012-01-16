@@ -1,11 +1,13 @@
 DROP TABLE IF EXISTS payment_attempts;
 CREATE TABLE payment_attempts (
-      payment_attempt_id varchar(36) COLLATE utf8_bin NOT NULL,
-      account_id varchar(36) COLLATE utf8_bin NOT NULL,
-      invoice_id varchar(36) COLLATE utf8_bin NOT NULL,
+      payment_attempt_id char(36) COLLATE utf8_bin NOT NULL,
+      account_id char(36) COLLATE utf8_bin NOT NULL,
+      invoice_id char(36) COLLATE utf8_bin NOT NULL,
       amount decimal(8,2),
+      currency char(3),
       payment_attempt_dt datetime NOT NULL,
       payment_id varchar(36) COLLATE utf8_bin,
+      invoice_dt datetime NOT NULL,
       created_dt datetime NOT NULL,
       updated_dt datetime NOT NULL,
       PRIMARY KEY (payment_attempt_id)

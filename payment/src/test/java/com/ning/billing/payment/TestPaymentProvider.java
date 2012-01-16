@@ -22,13 +22,9 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.joda.time.DateTime;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -36,29 +32,22 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.MockAccountUserApi;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
-import com.ning.billing.invoice.api.MockInvoicePaymentApi;
-import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.invoice.model.DefaultInvoiceItem;
+import com.ning.billing.account.glue.AccountModuleWithMocks;
+import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
-import com.ning.billing.payment.setup.PaymentTestModule;
+import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
-@Guice(modules = PaymentTestModule.class)
+@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
 public class TestPaymentProvider {
     @Inject
     private EventBus eventBus;
     @Inject
     private RequestProcessor invoiceProcessor;
     @Inject
-    protected MockAccountUserApi accountUserApi;
-    @Inject
-    protected MockInvoicePaymentApi invoicePaymentApi;
+    private TestHelper testHelper;
 
     private MockPaymentInfoReceiver paymentInfoReceiver;
 
@@ -72,22 +61,18 @@ public class TestPaymentProvider {
     }
 
     @AfterMethod(alwaysRun = true)
-    public void tearDown() {
+    public void tearDown() throws EventBusException {
+        eventBus.unregister(invoiceProcessor);
+        eventBus.unregister(paymentInfoReceiver);
         eventBus.stop();
-    }
-
-    protected Account createTestAccount() {
-        String name = "First" + RandomStringUtils.random(5) + " " + "Last" + RandomStringUtils.random(5);
-        String externalKey = "12345";
-        return accountUserApi.createAccount(UUID.randomUUID(), externalKey, "user@example.com", name, name.length(), "123-456-7890", Currency.USD, 1, null, BigDecimal.ZERO);
     }
 
     @Test
     public void testSimpleInvoice() throws Exception {
-        final Account account = createTestAccount();
-        final Invoice invoice = createTestInvoice(account);
+        final Account account = testHelper.createTestAccount();
 
-        eventBus.post(createNotificationFor(invoice));
+        testHelper.createTestInvoice(account);
+
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
@@ -120,53 +105,4 @@ public class TestPaymentProvider {
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
         assertEquals(paymentInfoReceiver.getProcessedPayments().get(0), paymentInfo);
     }
-
-    protected Invoice createTestInvoice(final Account account) {
-        final DateTime now = new DateTime();
-        final UUID subscriptionId = UUID.randomUUID();
-        final BigDecimal amount = new BigDecimal("10.00");
-        final Invoice invoice = createInvoice(account, now, Currency.USD);
-
-        invoice.add(new DefaultInvoiceItem(invoice.getId(), subscriptionId, now, now.plusMonths(1), "Test", amount, new BigDecimal("1.0"), Currency.USD));
-        return invoice;
-    }
-
-    protected Invoice createInvoice(Account account,
-                                    DateTime targetDate,
-                                    Currency currency) {
-        Invoice invoice = new DefaultInvoice(account.getId(), targetDate, currency);
-
-        invoicePaymentApi.add(invoice);
-        return invoice;
-    }
-
-    protected InvoiceCreationNotification createNotificationFor(final Invoice invoice) {
-        return new InvoiceCreationNotification() {
-            @Override
-            public UUID getInvoiceId() {
-                return invoice.getId();
-            }
-
-            @Override
-            public DateTime getInvoiceCreationDate() {
-                return invoice.getInvoiceDate();
-            }
-
-            @Override
-            public Currency getCurrency() {
-                return invoice.getCurrency();
-            }
-
-            @Override
-            public BigDecimal getAmountOwed() {
-                return invoice.getAmountOutstanding();
-            }
-
-            @Override
-            public UUID getAccountId() {
-                return invoice.getAccountId();
-            }
-        };
-    }
-
 }

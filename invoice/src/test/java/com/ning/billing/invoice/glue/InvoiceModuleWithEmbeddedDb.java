@@ -14,32 +14,32 @@
  * under the License.
  */
 
-package com.ning.billing.account.glue;
+package com.ning.billing.invoice.glue;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.util.glue.EventBusModule;
 import org.skife.jdbi.v2.IDBI;
 
 import java.io.IOException;
 
-public class AccountModuleMock extends AccountModule {
+public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
+    private IDBI dbi;
 
-    public void startDb() throws IOException {
+    public void createDb(String ddl) throws IOException {
         helper.startMysql();
-    }
-
-    public void initDb(String ddl) throws IOException {
         helper.initDb(ddl);
     }
 
-    public void stopDb() {
-        helper.stopMysql();
+    public InvoiceItemSqlDao getInvoiceItemDao() {
+        return dbi.onDemand(InvoiceItemSqlDao.class);
     }
 
     @Override
-    protected void configure() {
-        bind(IDBI.class).toInstance(helper.getDBI());
+    public void configure() {
+        dbi = helper.getDBI();
+        bind(IDBI.class).toInstance(dbi);
         super.configure();
         install(new EventBusModule());
     }

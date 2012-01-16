@@ -33,9 +33,6 @@ public class AccountModule extends AbstractModule {
         bind(AccountConfig.class).toInstance(config);
     }
 
-    private void installAccountCore() {
-    }
-
     protected void installAccountDao() {
         bind(AccountDao.class).to(DefaultAccountDao.class).asEagerSingleton();
     }

@@ -22,7 +22,7 @@ import org.testng.annotations.BeforeClass;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.invoice.glue.InvoiceModuleMock;
+import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
 import com.ning.billing.util.eventbus.EventBusService;
 
@@ -36,7 +36,7 @@ public abstract class InvoiceDaoTestBase {
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
-            InvoiceModuleMock module = new InvoiceModuleMock();
+            InvoiceModuleWithEmbeddedDb module = new InvoiceModuleWithEmbeddedDb();
             final String ddl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             module.createDb(ddl);
 

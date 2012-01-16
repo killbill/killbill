@@ -35,8 +35,19 @@ public class PaymentAttempt {
     private final String paymentId;
     private final DateTime invoiceDate;
     private final DateTime paymentAttemptDate;
+    private final DateTime createdDate;
+    private final DateTime updatedDate;
 
-    public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, BigDecimal amount, Currency currency, DateTime invoiceDate, DateTime paymentAttemptDate, String paymentId) {
+    public PaymentAttempt(UUID paymentAttemptId,
+                          UUID invoiceId,
+                          UUID accountId,
+                          BigDecimal amount,
+                          Currency currency,
+                          DateTime invoiceDate,
+                          DateTime paymentAttemptDate,
+                          String paymentId,
+                          DateTime createdDate,
+                          DateTime updatedDate) {
         this.paymentAttemptId = paymentAttemptId;
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -45,6 +56,19 @@ public class PaymentAttempt {
         this.invoiceDate = invoiceDate;
         this.paymentAttemptDate = paymentAttemptDate == null ? new DateTime(DateTimeZone.UTC) : paymentAttemptDate;
         this.paymentId = paymentId;
+        this.createdDate = createdDate;
+        this.updatedDate = updatedDate;
+    }
+
+    public PaymentAttempt(UUID paymentAttemptId,
+                          UUID invoiceId,
+                          UUID accountId,
+                          BigDecimal amount,
+                          Currency currency,
+                          DateTime invoiceDate,
+                          DateTime paymentAttemptDate,
+                          String paymentId) {
+        this(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, paymentId, new DateTime(DateTimeZone.UTC), new DateTime(DateTimeZone.UTC));
     }
 
     public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, BigDecimal amount, Currency currency, DateTime invoiceDate, DateTime paymentAttemptDate) {
@@ -83,6 +107,14 @@ public class PaymentAttempt {
         return accountId;
     }
 
+    public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public DateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
     public BigDecimal getAmount() {
         return amount;
     }
@@ -109,6 +141,8 @@ public class PaymentAttempt {
         private DateTime invoiceDate;
         private DateTime paymentAttemptDate;
         private String paymentId;
+        private DateTime createdDate;
+        private DateTime updatedDate;
 
         public Builder() {
         }
@@ -122,6 +156,8 @@ public class PaymentAttempt {
             this.invoiceDate = src.invoiceDate;
             this.paymentAttemptDate = src.paymentAttemptDate;
             this.paymentId = src.paymentId;
+            this.createdDate = src.createdDate;
+            this.updatedDate = src.updatedDate;
         }
 
         public Builder setPaymentAttemptId(UUID paymentAttemptId) {
@@ -149,6 +185,16 @@ public class PaymentAttempt {
             return this;
         }
 
+        public Builder setCreatedDate(DateTime createdDate) {
+            this.createdDate = createdDate;
+            return this;
+        }
+
+        public Builder setUpdatedDate(DateTime updatedDate) {
+            this.updatedDate = updatedDate;
+            return this;
+        }
+
         public Builder setInvoiceDate(DateTime invoiceDate) {
             this.invoiceDate = invoiceDate;
             return this;
@@ -172,7 +218,9 @@ public class PaymentAttempt {
                                       currency,
                                       invoiceDate,
                                       paymentAttemptDate,
-                                      paymentId);
+                                      paymentId,
+                                      createdDate,
+                                      updatedDate);
         }
     }
 

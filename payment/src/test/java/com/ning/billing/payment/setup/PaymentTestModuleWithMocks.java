@@ -19,18 +19,18 @@ package com.ning.billing.payment.setup;
 import org.apache.commons.collections.MapUtils;
 
 import com.google.common.collect.ImmutableMap;
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.MockAccountUserApi;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.invoice.api.MockInvoicePaymentApi;
+import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.MockAccountDao;
+import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.eventbus.EventBus;
 import com.ning.billing.util.eventbus.MemoryEventBus;
 
-public class PaymentTestModule extends PaymentModule {
-    public PaymentTestModule() {
+public class PaymentTestModuleWithMocks extends PaymentModule {
+    public PaymentTestModuleWithMocks() {
         super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock")));
     }
 
@@ -48,9 +48,9 @@ public class PaymentTestModule extends PaymentModule {
     protected void configure() {
         super.configure();
         bind(EventBus.class).to(MemoryEventBus.class).asEagerSingleton();
-        bind(AccountUserApi.class).to(MockAccountUserApi.class);
-        bind(MockAccountUserApi.class).asEagerSingleton();
-        bind(InvoicePaymentApi.class).to(MockInvoicePaymentApi.class);
-        bind(MockInvoicePaymentApi.class).asEagerSingleton();
+        bind(MockAccountDao.class).asEagerSingleton();
+        bind(AccountDao.class).to(MockAccountDao.class);
+        bind(MockInvoiceDao.class).asEagerSingleton();
+        bind(InvoiceDao.class).to(MockInvoiceDao.class);
     }
 }

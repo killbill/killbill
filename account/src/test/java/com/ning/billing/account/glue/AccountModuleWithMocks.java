@@ -14,15 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.payment.api;
+package com.ning.billing.account.glue;
 
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.MockAccountDao;
 
-import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
-
-@Guice(modules = PaymentTestModuleWithMocks.class)
-@Test(groups = "fast")
-public class TestMockPaymentApi extends TestPaymentApi {
-
+public class AccountModuleWithMocks extends AccountModule {
+    @Override
+    protected void installAccountDao() {
+        bind(MockAccountDao.class).asEagerSingleton();
+        bind(AccountDao.class).to(MockAccountDao.class);
+    }
 }

@@ -22,14 +22,33 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountChangeNotification;
+import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
+import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
+import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
 public class MockAccountDao implements AccountDao {
+    private final EventBus eventBus;
     private final Map<String, Account> accounts = new ConcurrentHashMap<String, Account>();
 
+    @Inject
+    public MockAccountDao(EventBus eventBus) {
+        this.eventBus = eventBus;
+    }
+
     @Override
-    public void create(Account entity) {
-        accounts.put(entity.getId().toString(), entity);
+    public void create(Account account) {
+        accounts.put(account.getId().toString(), account);
+
+        try {
+            eventBus.post(new DefaultAccountCreationEvent(account));
+        }
+        catch (EventBusException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
@@ -63,8 +82,17 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public void update(Account entity) {
-        accounts.put(entity.getId().toString(), entity);
-    }
+    public void update(Account account) {
+        Account currentAccount = accounts.put(account.getId().toString(), account);
 
+        AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
+        if (changeEvent.hasChanges()) {
+            try {
+                eventBus.post(changeEvent);
+            }
+            catch (EventBusException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
 }

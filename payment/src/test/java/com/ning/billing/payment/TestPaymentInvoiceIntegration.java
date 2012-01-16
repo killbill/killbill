@@ -24,12 +24,9 @@ import static org.testng.Assert.assertTrue;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.RandomStringUtils;
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -43,18 +40,11 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.user.AccountBuilder;
-import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.glue.AccountModule;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.glue.InvoiceModule;
-import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentError;
@@ -72,13 +62,11 @@ public class TestPaymentInvoiceIntegration {
     @Inject
     private RequestProcessor invoiceProcessor;
     @Inject
-    protected AccountDao accountDao;
+    private InvoicePaymentApi invoicePaymentApi;
     @Inject
-    protected InvoiceDao invoiceDao;
+    private PaymentApi paymentApi;
     @Inject
-    protected InvoicePaymentApi invoicePaymentApi;
-    @Inject
-    protected PaymentApi paymentApi;
+    private TestHelper testHelper;
 
     private MockPaymentInfoReceiver paymentInfoReceiver;
 
@@ -121,58 +109,19 @@ public class TestPaymentInvoiceIntegration {
         eventBus.start();
         eventBus.register(invoiceProcessor);
         eventBus.register(paymentInfoReceiver);
-
     }
 
     @AfterMethod(alwaysRun = true)
-    public void tearDown() {
+    public void tearDown() throws EventBusException {
+        eventBus.unregister(invoiceProcessor);
+        eventBus.unregister(paymentInfoReceiver);
         eventBus.stop();
-    }
-
-    @Test(enabled = false)
-    protected Account createTestAccount() {
-        final String name = "First" + RandomStringUtils.random(5) + " " + "Last" + RandomStringUtils.random(5);
-        final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
-                                                                     .firstNameLength(name.length())
-                                                                     .externalKey("12345")
-                                                                     .phone("123-456-7890")
-                                                                     .email("user@example.com")
-                                                                     .currency(Currency.USD)
-                                                                     .billingCycleDay(1)
-                                                                     .build();
-        accountDao.create(account);
-        return account;
-    }
-
-    @Test(enabled = false)
-    protected Invoice createTestInvoice(Account account,
-                                        DateTime targetDate,
-                                        Currency currency,
-                                        InvoiceItem... items) {
-        Invoice invoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), new DateTime(), targetDate, currency, null, new BigDecimal("0"));
-
-        for (InvoiceItem item : items) {
-            invoice.add(new DefaultInvoiceItem(invoice.getId(),
-                                               item.getSubscriptionId(),
-                                               item.getStartDate(),
-                                               item.getEndDate(),
-                                               item.getDescription(),
-                                               item.getAmount(),
-                                               item.getRate(),
-                                               item.getCurrency()));
-        }
-        invoiceDao.create(invoice);
-        return invoice;
     }
 
     @Test
     public void testInvoiceIntegration() throws Exception {
-        final DateTime now = new DateTime();
-        final Account account = createTestAccount();
-        final UUID subscriptionId = UUID.randomUUID();
-        final BigDecimal amount = new BigDecimal("10.00");
-        final InvoiceItem item = new DefaultInvoiceItem(null, subscriptionId, now, now.plusMonths(1), "Test", amount, new BigDecimal("1.0"), Currency.USD);
-        final Invoice invoice = createTestInvoice(account, now, Currency.USD, item);
+        final Account account = testHelper.createTestAccount();
+        final Invoice invoice = testHelper.createTestInvoice(account);
 
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
             @Override
@@ -196,8 +145,8 @@ public class TestPaymentInvoiceIntegration {
         Assert.assertNotNull(invoiceForPayment);
         Assert.assertEquals(invoiceForPayment.getId(), invoice.getId());
         Assert.assertEquals(invoiceForPayment.getAccountId(), account.getId());
-        Assert.assertEquals(invoiceForPayment.getLastPaymentAttempt(), paymentAttempt.getPaymentAttemptDate());
-        Assert.assertEquals(invoiceForPayment.getAmountOutstanding(), new BigDecimal("0"));
-        Assert.assertEquals(invoiceForPayment.getAmountPaid(), amount);
+        Assert.assertTrue(invoiceForPayment.getLastPaymentAttempt().isEqual(paymentAttempt.getPaymentAttemptDate()));
+        Assert.assertEquals(invoiceForPayment.getAmountOutstanding().floatValue(), new BigDecimal("0").floatValue());
+        Assert.assertEquals(invoiceForPayment.getAmountPaid().floatValue(), invoice.getAmountOutstanding().floatValue());
     }
 }

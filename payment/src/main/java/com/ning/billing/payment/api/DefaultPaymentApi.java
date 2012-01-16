@@ -131,7 +131,7 @@ public class DefaultPaymentApi implements PaymentApi {
             // TODO: send a notification that invoice was ignored ?
             }
             else if (invoiceId.equals(paymentDao.getPaymentAttemptForInvoiceId(invoiceId))) {
-
+                //TODO: do equals on invoice instead and only reject when invoice is exactly the same?
             }
             else {
                 PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice);
