@@ -21,11 +21,33 @@ import java.util.UUID;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDefinitionUserApi {
+    /***
+     *
+     * @return
+     */
     public List<TagDefinition> getTagDefinitions();
 
+    /***
+     *
+     * @param name Identifies the definition.
+     * @param description Describes the use of the definition.
+     * @param createdBy The name of person who created the definition.
+     * @return
+     * @throws TagDefinitionApiException
+     */
     public TagDefinition create(String name, String description, String createdBy) throws TagDefinitionApiException;
 
+    /***
+     *
+     * @param definitionName Identifies the definition.
+     * @throws TagDefinitionApiException
+     */
     public void deleteAllTagsForDefinition(String definitionName) throws TagDefinitionApiException;
 
+    /***
+     *
+     * @param definitionName Identifies the definition.
+     * @throws TagDefinitionApiException
+     */
     public void deleteTagDefinition(String definitionName) throws TagDefinitionApiException;
 }
