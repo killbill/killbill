@@ -111,7 +111,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                     // Not implemented yet
                     break;
                 case STANDALONE:
-                    // Not implemented yet
+                    data = createStandaloneSubscriptionMigrationData(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now);
                     break;
                 default:
                     throw new EntitlementMigrationApiException(String.format("Unkown product type ", curSub.getCategory()));
@@ -131,6 +131,22 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             EntitlementSubscriptionMigrationCase [] input, DateTime now)
         throws EntitlementMigrationApiException {
 
+        TimedMigration [] events = migrationAligner.getEventsMigration(input, now);
+        DateTime migrationStartDate= events[0].getEventTime();
+        List<EntitlementEvent> emptyEvents =  Collections.emptyList();
+        SubscriptionData subscriptionData = factory.createSubscription(new SubscriptionBuilder()
+            .setId(UUID.randomUUID())
+            .setBundleId(bundleId)
+            .setCategory(productCategory)
+            .setBundleStartDate(migrationStartDate)
+            .setStartDate(migrationStartDate),
+            emptyEvents);
+        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, events));
+    }
+
+    private SubscriptionMigrationData createStandaloneSubscriptionMigrationData(UUID bundleId, ProductCategory productCategory,
+            EntitlementSubscriptionMigrationCase [] input, DateTime now)
+    throws EntitlementMigrationApiException {
         TimedMigration [] events = migrationAligner.getEventsMigration(input, now);
         DateTime migrationStartDate= events[0].getEventTime();
         List<EntitlementEvent> emptyEvents =  Collections.emptyList();
