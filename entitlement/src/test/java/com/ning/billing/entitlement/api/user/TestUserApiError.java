@@ -50,17 +50,16 @@ public class TestUserApiError extends TestApiBase {
     @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionBadCatalog() {
         // WRONG PRODUTCS
-        tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
+        tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NULL_PRODUCT_NAME);
         tCreateSubscriptionInternal(bundle.getId(), "Whatever", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
 
 
         // TODO: MARTIN TO FIX WITH CORRECT ERROR CODE. RIGHT NOW NPE
 
         // WRONG BILLING PERIOD
-        //tCreateSubscriptionInternal(bundle.getId(), "Shotgun", null, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.);
+        tCreateSubscriptionInternal(bundle.getId(), "Shotgun", null, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_PLAN_NOT_FOUND);
         // WRONG PLAN SET
-        //tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, null, ErrorCode.);
-        //tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, "Whatever", ErrorCode.);
+        tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, "Whatever", ErrorCode.CAT_PRICE_LIST_NOT_FOUND);
 
     }
 
@@ -118,7 +117,7 @@ public class TestUserApiError extends TestApiBase {
             entitlementApi.createSubscription(bundleId,
                     getProductSpecifier(productName, planSet, term, null),
                     clock.getUTCNow());
-            assertFalse(true);
+            Assert.fail("Exception expected, error code: " + expected);
         } catch (EntitlementUserApiException e) {
             assertEquals(e.getCode(), expected.getCode());
             try {

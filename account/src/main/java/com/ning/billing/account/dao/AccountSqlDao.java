@@ -17,6 +17,7 @@
 package com.ning.billing.account.dao;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.UuidMapper;
@@ -56,7 +57,11 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
 
     @Override
     @SqlUpdate
-    public void save(@AccountBinder Account account);
+    public void create(@AccountBinder Account account);
+
+    @Override
+    @SqlUpdate
+    public void update(@AccountBinder Account account);
 
     public static class AccountMapper implements ResultSetMapper<Account> {
         @Override

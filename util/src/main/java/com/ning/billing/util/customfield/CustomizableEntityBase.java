@@ -23,24 +23,31 @@ import com.ning.billing.util.entity.EntityBase;
 public abstract class CustomizableEntityBase extends EntityBase implements CustomizableEntity {
     protected final FieldStore fields;
 
-    public CustomizableEntityBase(UUID id) {
+    public CustomizableEntityBase(final UUID id) {
         super(id);
         fields = DefaultFieldStore.create(getId(), getObjectName());
     }
 
     @Override
-    public String getFieldValue(String fieldName) {
+    public String getFieldValue(final String fieldName) {
         return fields.getValue(fieldName);
     }
 
     @Override
-    public void setFieldValue(String fieldName, String fieldValue) {
+    public void setFieldValue(final String fieldName, final String fieldValue) {
         fields.setValue(fieldName, fieldValue);
     }
 
     @Override
     public List<CustomField> getFieldList() {
         return fields.getEntityList();
+    }
+
+    @Override
+    public void addFields(final List<CustomField> fields) {
+        if (fields != null) {
+            this.fields.add(fields);
+        }
     }
 
     @Override

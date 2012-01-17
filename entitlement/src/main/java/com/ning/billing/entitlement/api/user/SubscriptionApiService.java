@@ -60,7 +60,7 @@ public class SubscriptionApiService {
 
             SubscriptionData subscription = new SubscriptionData(builder, this, clock);
 
-            TimedPhase [] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(subscription, plan, initialPhase, realPriceList, effectiveDate);
+            TimedPhase [] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate);
             ApiEventCreate creationEvent = new ApiEventCreate(new ApiEventBuilder()
             .setSubscriptionId(subscription.getId())
             .setEventPlan(plan.getName())
@@ -81,7 +81,7 @@ public class SubscriptionApiService {
                 events.add(nextPhaseEvent);
             }
             dao.createSubscription(subscription, events);
-            subscription.rebuildTransitions(events, catalogService.getCatalog());
+            subscription.rebuildTransitions(events, catalogService.getFullCatalog());
             return subscription;
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
@@ -112,7 +112,7 @@ public class SubscriptionApiService {
                     subscription.getCurrentPhase().getPhaseType());
 
             ActionPolicy policy = null;
-            policy = catalogService.getCatalog().planCancelPolicy(planPhase);
+            policy = catalogService.getFullCatalog().planCancelPolicy(planPhase, requestedDate);
             DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, requestedDate);
 
             EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
@@ -123,7 +123,7 @@ public class SubscriptionApiService {
             .setRequestedDate(now));
 
             dao.cancelSubscription(subscription.getId(), cancelEvent);
-            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getCatalog());
+            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }
@@ -148,7 +148,7 @@ public class SubscriptionApiService {
         List<EntitlementEvent> uncancelEvents = new ArrayList<EntitlementEvent>();
         uncancelEvents.add(uncancelEvent);
 
-        TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now);
+        TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now);
         PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                 PhaseEventData.getNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
                     null;
@@ -156,7 +156,7 @@ public class SubscriptionApiService {
             uncancelEvents.add(nextPhaseEvent);
         }
         dao.uncancelSubscription(subscription.getId(), uncancelEvents);
-        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getCatalog());
+        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
     }
 
     public void changePlan(SubscriptionData subscription, String productName, BillingPeriod term,
@@ -186,7 +186,7 @@ public class SubscriptionApiService {
             PlanChangeResult planChangeResult = null;
             try {
 
-                Product destProduct = catalogService.getCatalog().findProduct(productName);
+                Product destProduct = catalogService.getFullCatalog().findProduct(productName, requestedDate);
                 Plan currentPlan = subscription.getCurrentPlan();
                 PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                         currentPlan.getProduct().getCategory(),
@@ -197,7 +197,7 @@ public class SubscriptionApiService {
                         term,
                         priceList);
 
-                planChangeResult = catalogService.getCatalog().planChange(fromPlanPhase, toPlanPhase);
+                planChangeResult = catalogService.getFullCatalog().planChange(fromPlanPhase, toPlanPhase, requestedDate);
             } catch (CatalogApiException e) {
                 throw new EntitlementUserApiException(e);
             }
@@ -205,10 +205,10 @@ public class SubscriptionApiService {
             ActionPolicy policy = planChangeResult.getPolicy();
             PriceList newPriceList = planChangeResult.getNewPriceList();
 
-            Plan newPlan = catalogService.getCatalog().findPlan(productName, term, newPriceList.getName());
+            Plan newPlan = catalogService.getFullCatalog().findPlan(productName, term, newPriceList.getName(), requestedDate);
             DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, now);
 
-            TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), effectiveDate);
+            TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
 
             EntitlementEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
             .setSubscriptionId(subscription.getId())
@@ -220,7 +220,7 @@ public class SubscriptionApiService {
             .setEffectiveDate(effectiveDate)
             .setRequestedDate(now));
 
-            TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), effectiveDate);
+            TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                     PhaseEventData.getNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
                         null;
@@ -231,7 +231,7 @@ public class SubscriptionApiService {
                     }
                     changeEvents.add(changeEvent);
                     dao.changePlan(subscription.getId(), changeEvents);
-                    subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getCatalog());
+                    subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }

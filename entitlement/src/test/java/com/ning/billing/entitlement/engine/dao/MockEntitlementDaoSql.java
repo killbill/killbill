@@ -20,6 +20,8 @@ import com.google.inject.Inject;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.notificationq.NotificationQueueService;
+
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -32,10 +34,11 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
     private final ResetSqlDao resetDao;
 
     @Inject
-    public MockEntitlementDaoSql(DBI dbi, Clock clock, EntitlementConfig config, SubscriptionFactory factory) {
-        super(dbi, clock, config, factory);
+    public MockEntitlementDaoSql(DBI dbi, Clock clock, SubscriptionFactory factory, NotificationQueueService notificationQueueService) {
+        super(dbi, clock, factory, notificationQueueService);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
     }
+
 
     @Override
     public void reset() {
@@ -45,9 +48,10 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
             public Void inTransaction(ResetSqlDao dao, TransactionStatus status)
                     throws Exception {
                 resetDao.resetEvents();
-                resetDao.resetClaimedEvents();
                 resetDao.resetSubscriptions();
                 resetDao.resetBundles();
+                resetDao.resetClaimedNotifications();
+                resetDao.resetNotifications();
                 return null;
             }
         });
@@ -58,14 +62,17 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
         @SqlUpdate("truncate table events")
         public void resetEvents();
 
-        @SqlUpdate("truncate table claimed_events")
-        public void resetClaimedEvents();
-
         @SqlUpdate("truncate table subscriptions")
         public void resetSubscriptions();
 
         @SqlUpdate("truncate table bundles")
         public void resetBundles();
-    }
 
+        @SqlUpdate("truncate table notifications")
+        public void resetNotifications();
+
+        @SqlUpdate("truncate table claimed_notifications")
+        public void resetClaimedNotifications();
+
+    }
 }

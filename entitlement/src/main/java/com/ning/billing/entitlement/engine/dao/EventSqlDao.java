@@ -19,7 +19,6 @@ package com.ning.billing.entitlement.engine.dao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.EventBaseBuilder;
-import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEventBuilder;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
@@ -49,27 +48,15 @@ import java.util.UUID;
 @ExternalizedSqlViaStringTemplate3()
 public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transmogrifier  {
 
-    //
-    // APIs for event notifications
-    //
     @SqlQuery
-    @Mapper(IEventSqlMapper.class)
-    public List<EntitlementEvent> getReadyEvents(@Bind("now") Date now, @Bind("max") int max);
+    @Mapper(EventSqlMapper.class)
+    public EntitlementEvent getEventById(@Bind("event_id") String eventId);
 
     @SqlUpdate
-    public int claimEvent(@Bind("owner") String owner, @Bind("next_available") Date nextAvailable, @Bind("event_id") String eventId, @Bind("now") Date now);
+    public void insertEvent(@Bind(binder = EventSqlDaoBinder.class) EntitlementEvent evt);
 
     @SqlUpdate
     public void removeEvents(@Bind("subscription_id") String subscriptionId);
-
-    @SqlUpdate
-    public void clearEvent(@Bind("event_id") String eventId, @Bind("owner") String owner);
-
-    @SqlUpdate
-    public void insertEvent(@Bind(binder = IEventSqlDaoBinder.class) EntitlementEvent evt);
-
-    @SqlUpdate
-    public void insertClaimedHistory(@Bind("sequence_id") int sequenceId, @Bind("owner_id") String ownerId, @Bind("hostname") String hostname, @Bind("claimed_dt") Date clainedDate, @Bind("event_id") String eventId);
 
     @SqlUpdate
     public void unactiveEvent(@Bind("event_id")String eventId, @Bind("now") Date now);
@@ -78,14 +65,14 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
     public void reactiveEvent(@Bind("event_id")String eventId, @Bind("now") Date now);
 
     @SqlQuery
-    @Mapper(IEventSqlMapper.class)
+    @Mapper(EventSqlMapper.class)
     public List<EntitlementEvent> getFutureActiveEventForSubscription(@Bind("subscription_id") String subscriptionId, @Bind("now") Date now);
 
     @SqlQuery
-    @Mapper(IEventSqlMapper.class)
+    @Mapper(EventSqlMapper.class)
     public List<EntitlementEvent> getEventsForSubscription(@Bind("subscription_id") String subscriptionId);
 
-    public static class IEventSqlDaoBinder implements Binder<Bind, EntitlementEvent> {
+    public static class EventSqlDaoBinder implements Binder<Bind, EntitlementEvent> {
 
         private Date getDate(DateTime dateTime) {
             return dateTime == null ? null : dateTime.toDate();
@@ -106,13 +93,10 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
             stmt.bind("plist_name", (evt.getType() == EventType.API_USER) ? ((ApiEvent) evt).getPriceList() : null);
             stmt.bind("current_version", evt.getActiveVersion());
             stmt.bind("is_active", evt.isActive());
-            stmt.bind("processing_available_dt", getDate(evt.getNextAvailableDate()));
-            stmt.bind("processing_owner", (String) null);
-            stmt.bind("processing_state", EventLifecycleState.AVAILABLE.toString());
         }
     }
 
-    public static class IEventSqlMapper implements ResultSetMapper<EntitlementEvent> {
+    public static class EventSqlMapper implements ResultSetMapper<EntitlementEvent> {
 
         private DateTime getDate(ResultSet r, String fieldName) throws SQLException {
             final Timestamp resultStamp = r.getTimestamp(fieldName);
@@ -135,9 +119,6 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
             String priceListName = r.getString("plist_name");
             long currentVersion = r.getLong("current_version");
             boolean isActive = r.getBoolean("is_active");
-            DateTime nextAvailableDate = getDate(r, "processing_available_dt");
-            UUID processingOwner = (r.getString("processing_owner") != null) ? UUID.fromString(r.getString("processing_owner")) : null;
-            EventLifecycleState processingState = EventLifecycleState.valueOf(r.getString("processing_state"));
 
             EventBaseBuilder<?> base = ((eventType == EventType.PHASE) ?
                     new PhaseEventBuilder() :
@@ -148,11 +129,7 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
                         .setEffectiveDate(effectiveDate)
                         .setProcessedDate(createdDate)
                         .setActiveVersion(currentVersion)
-                        .setActive(isActive)
-                        .setProcessingOwner(processingOwner)
-                        .setNextAvailableProcessingTime(nextAvailableDate)
-                        .setProcessingState(processingState);
-
+                        .setActive(isActive);
 
             EntitlementEvent result = null;
             if (eventType == EventType.PHASE) {

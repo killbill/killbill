@@ -43,7 +43,11 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 public interface TagDescriptionDao extends EntityDao<TagDescription> {
     @Override
     @SqlUpdate
-    public void save(@TagDescriptionBinder TagDescription entity);
+    public void create(@TagDescriptionBinder TagDescription entity);
+
+    @Override
+    @SqlUpdate
+    public void update(@TagDescriptionBinder TagDescription entity);
 
     public class TagDescriptionMapper implements ResultSetMapper<TagDescription> {
         @Override

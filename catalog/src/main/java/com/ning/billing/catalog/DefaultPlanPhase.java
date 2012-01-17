@@ -16,6 +16,7 @@
 
 package com.ning.billing.catalog;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
@@ -51,6 +52,20 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
 	//Not exposed in XML
 	private Plan plan;
+	
+	public static String phaseName(Plan plan, PlanPhase phase) {
+		return plan.getName() + "-" + phase.getPhaseType().toString().toLowerCase();
+	}
+	
+	public static String planName(String phaseName) throws CatalogApiException {
+		for(PhaseType type : PhaseType.values()) {
+			if(phaseName.endsWith(type.toString().toLowerCase())) {
+				return phaseName.substring(0, phaseName.length() - type.toString().length() - 1);
+			}
+		}
+		throw new CatalogApiException(ErrorCode.CAT_BAD_PHASE_NAME, phaseName);
+	}
+
 
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPlanPhase#getRecurringPrice()
@@ -89,7 +104,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 	 */
 	@Override
 	public String getName() {
-		return plan.getName() + "-" + type.toString().toLowerCase();
+		return phaseName(plan,this);
 	}
 
 	/* (non-Javadoc)

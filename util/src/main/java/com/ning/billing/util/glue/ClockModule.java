@@ -14,9 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.util.notification;
+package com.ning.billing.util.glue;
 
-public interface INotificationHandler<T extends INotification> {
+import com.google.inject.AbstractModule;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
-	public void handle(T notification);
+public class ClockModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
+    }
 }

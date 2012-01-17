@@ -19,33 +19,47 @@ package com.ning.billing.account.api.user;
 import java.util.List;
 import java.util.UUID;
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.Tag;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
     private final AccountDao dao;
 
     @Inject
-    public DefaultAccountUserApi(AccountDao dao) {
+    public DefaultAccountUserApi(final AccountDao dao) {
         this.dao = dao;
     }
 
     @Override
-    public Account createAccount(AccountData data) {
-        Account account = new DefaultAccount(data);
-        dao.save(account);
-        return account;
+    public Account createAccount(final AccountData data, final List<CustomField> fields, List<Tag> tags) throws AccountApiException {
+        String key = data.getExternalKey();
+        Account existingAccount = dao.getAccountByKey(key);
+
+        if (existingAccount == null) {
+            Account account = new DefaultAccount(data);
+            account.addFields(fields);
+            account.addTags(tags);
+
+            dao.create(account);
+            return account;
+        } else {
+            throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
+        }
     }
 
     @Override
-    public Account getAccountByKey(String key) {
+    public Account getAccountByKey(final String key) {
         return dao.getAccountByKey(key);
     }
 
     @Override
-    public Account getAccountById(UUID id) {
+    public Account getAccountById(final UUID id) {
         return dao.getById(id.toString());
     }
 
@@ -55,12 +69,12 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
-    public UUID getIdFromKey(String externalKey) {
+    public UUID getIdFromKey(final String externalKey) {
         return dao.getIdFromKey(externalKey);
     }
 
     @Override
-    public void saveAccount(Account account) {
-        dao.save(account);
+    public void updateAccount(final Account account) {
+        dao.update(account);
     }
 }

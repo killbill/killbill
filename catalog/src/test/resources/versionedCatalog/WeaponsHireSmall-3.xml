@@ -57,6 +57,15 @@
 				<alignment>START_OF_SUBSCRIPTION</alignment>
 			</changeAlignmentCase>
 		</changeAlignment>
+		 <createAlignment>
+            <createAlignmentCase>
+                <product>Laser-Scope</product>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </createAlignmentCase>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
 	</rules>
 
 
@@ -80,9 +89,9 @@
 				</duration>
 				<billingPeriod>MONTHLY</billingPeriod>
 				<recurringPrice>
-					<price><currency>GBP</currency><value>29.95</value></price>
-					<price><currency>EUR</currency><value>29.95</value></price> 
-					<price><currency>USD</currency><value>29.95</value></price>								
+					<price><currency>GBP</currency><value>3.0</value></price>
+					<price><currency>EUR</currency><value>3.0</value></price> 
+					<price><currency>USD</currency><value>3.0</value></price>								
 				</recurringPrice>
 			</finalPhase>
 		</plan>

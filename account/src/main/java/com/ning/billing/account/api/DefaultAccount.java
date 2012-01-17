@@ -133,7 +133,9 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 
     @Override
     public void addTags(List<Tag> tags) {
-        this.tags.add(tags);
+        if (tags != null) {
+            this.tags.add(tags);
+        }
     }
 
     @Override

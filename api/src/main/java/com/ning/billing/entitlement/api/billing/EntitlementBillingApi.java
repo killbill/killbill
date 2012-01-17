@@ -16,29 +16,24 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import com.ning.billing.account.api.Account;
-import org.joda.time.DateTime;
-
 import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
+import com.ning.billing.account.api.Account;
+
 public interface EntitlementBillingApi {
 
-    /**
-     *
-     * @return the list of accounts which have active subscriptions
-     */
-    public List<Account> getActiveAccounts();
 
     /**
      *
-     * @param subscriptionId the subscriptionId of interest for a gievn account
-     * @return an ordered list of billing event
+     * @param accountId 
+     * @return an ordered list of billing event for the given accounts
      *
-     * Note: The user api allows to get list of subscription bundle / subscriptions for an account
      */
-    public SortedSet<BillingEvent> getBillingEventsForSubscription(UUID subscriptionId);
+    public SortedSet<BillingEvent> getBillingEventsForAccount(UUID accountId);
 
 
     public void setChargedThroughDate(UUID subscriptionId, DateTime ctd);

@@ -14,8 +14,25 @@
  * under the License.
  */
 
-package com.ning.billing.util.notification;
+package com.ning.billing.util.notificationq;
 
-public interface INotification {
+import org.joda.time.DateTime;
 
+
+public interface NotificationLifecycle {
+
+    public enum NotificationLifecycleState {
+        AVAILABLE,
+        IN_PROCESSING,
+        PROCESSED
+    }
+
+    public String getOwner();
+
+    public DateTime getNextAvailableDate();
+
+    public NotificationLifecycleState getProcessingState();
+
+
+    public boolean isAvailableForProcessing(DateTime now);
 }

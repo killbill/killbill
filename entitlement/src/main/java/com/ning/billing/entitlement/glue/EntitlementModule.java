@@ -31,9 +31,7 @@ import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionApiService;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
-import com.ning.billing.entitlement.engine.core.DefaultApiEventProcessor;
 import com.ning.billing.entitlement.engine.core.Engine;
-import com.ning.billing.entitlement.engine.core.EventNotifier;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.util.clock.Clock;
@@ -52,10 +50,6 @@ public class EntitlementModule extends AbstractModule {
     protected void installConfig() {
         final EntitlementConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EntitlementConfig.class);
         bind(EntitlementConfig.class).toInstance(config);
-    }
-
-    protected void installApiEventProcessor() {
-        bind(EventNotifier.class).to(DefaultApiEventProcessor.class).asEagerSingleton();
     }
 
     protected void installEntitlementDao() {
@@ -79,7 +73,6 @@ public class EntitlementModule extends AbstractModule {
     protected void configure() {
         installConfig();
         installClock();
-        installApiEventProcessor();
         installEntitlementDao();
         installEntitlementCore();
     }

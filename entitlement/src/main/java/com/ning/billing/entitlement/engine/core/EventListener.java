@@ -24,5 +24,4 @@ public interface EventListener {
 
     public void processEventReady(EntitlementEvent event);
 
-    public void completedNotificationStart();
 }

@@ -58,17 +58,6 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     }
 
 
-    public ApiEventBase(UUID id, UUID subscriptionId, DateTime processed, String eventPlan, String eventPhase,
-            String priceList, DateTime requestedDate,  ApiEventType eventType, DateTime effectiveDate, long activeVersion,
-            boolean isActive, UUID processingOwner, DateTime nextAvailableProcessingTime,EventLifecycleState processingState) {
-        super(id, subscriptionId, requestedDate, effectiveDate, processed, activeVersion, isActive, processingOwner, nextAvailableProcessingTime, processingState);
-        this.eventType = eventType;
-        this.eventPlan = eventPlan;
-        this.eventPlanPhase = eventPhase;
-        this.eventPriceList = priceList;
-    }
-
-
     @Override
     public ApiEventType getEventType() {
         return eventType;

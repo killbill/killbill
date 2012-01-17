@@ -20,12 +20,12 @@ import java.util.UUID;
 import com.ning.billing.util.entity.EntityCollectionBase;
 
 public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagStore {
-    public DefaultTagStore(UUID objectId, String objectType) {
+    public DefaultTagStore(final UUID objectId, final String objectType) {
         super(objectId, objectType);
     }
 
     @Override
-    public String getEntityKey(Tag entity) {
+    public String getEntityKey(final Tag entity) {
         return entity.getName();
     }
 
@@ -58,14 +58,14 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
     }
 
     @Override
-    public void remove(String tagName) {
+    public void remove(final String tagName) {
         entities.remove(entities.get(tagName));
     }
 
     @Override
-    public boolean containsTag(String tagName) {
+    public boolean containsTag(final String tagName) {
         for (Tag tag : entities.values()) {
-            if (tag.getName() == tagName) {
+            if (tag.getName().equals(tagName)) {
                 return true;
             }
         }

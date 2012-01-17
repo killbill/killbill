@@ -17,16 +17,12 @@
 package com.ning.billing.entitlement.glue;
 
 
-import com.ning.billing.entitlement.engine.core.EventNotifier;
-import com.ning.billing.entitlement.engine.core.MockApiEventProcessorMemory;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
+import com.ning.billing.util.notificationq.MockNotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService;
 
 public class MockEngineModuleMemory extends MockEngineModule {
-    @Override
-    protected void installApiEventProcessor() {
-        bind(EventNotifier.class).to(MockApiEventProcessorMemory.class).asEagerSingleton();
-    }
 
     @Override
     protected void installEntitlementDao() {
@@ -34,8 +30,12 @@ public class MockEngineModuleMemory extends MockEngineModule {
     }
 
 
+    private void installNotificationQueue() {
+        bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
+    }
     @Override
     protected void configure() {
         super.configure();
+        installNotificationQueue();
     }
 }

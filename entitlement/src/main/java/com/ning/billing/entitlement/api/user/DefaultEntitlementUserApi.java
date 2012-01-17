@@ -107,7 +107,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             requestedDate = (requestedDate == null) ? now : requestedDate;
             DateTime effectiveDate = requestedDate;
 
-            Plan plan = catalogService.getCatalog().findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList);
+            Plan plan = catalogService.getFullCatalog().findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);
 
 
             PlanPhase phase = plan.getAllPhases()[0];

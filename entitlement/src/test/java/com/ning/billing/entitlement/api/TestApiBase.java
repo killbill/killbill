@@ -93,7 +93,7 @@ public abstract class TestApiBase {
     protected ApiTestListener testListener;
     protected SubscriptionBundle bundle;
 
-    public static void loadSystemPropertiesFromClasspath( final String resource )
+    public static void loadSystemPropertiesFromClasspath(final String resource)
     {
         final URL url = TestApiBase.class.getResource(resource);
         assertNotNull(url);
@@ -147,7 +147,7 @@ public abstract class TestApiBase {
         accountData = getAccountData();
         assertNotNull(accountData);
 
-        catalog = catalogService.getCatalog();
+        catalog = catalogService.getFullCatalog();
         assertNotNull(catalog);
 
 

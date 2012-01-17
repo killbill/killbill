@@ -16,14 +16,13 @@
 
 package com.ning.billing.invoice.tests;
 
+import static org.testng.Assert.fail;
+
+import java.math.BigDecimal;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Price;
-
-import java.math.BigDecimal;
-import java.util.Date;
-
-import static org.testng.Assert.fail;
 
 public class InternationalPriceMock implements InternationalPrice {
     private final BigDecimal rate;
@@ -44,8 +43,4 @@ public class InternationalPriceMock implements InternationalPrice {
         return rate;
     }
 
-	@Override
-	public Date getEffectiveDateForExistingSubscriptons() {
-		return new Date();
-	}
 }

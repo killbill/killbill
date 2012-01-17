@@ -237,7 +237,7 @@ public class TestUserApiAddOn extends TestApiBase {
                     ProductCategory.ADD_ON,
                     aoTerm,
                     aoPriceList);
-            PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier);
+            PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
             assertEquals(alignement, PlanAlignmentCreate.START_OF_BUNDLE);
 
             testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignement);
@@ -269,7 +269,7 @@ public class TestUserApiAddOn extends TestApiBase {
                     ProductCategory.ADD_ON,
                     aoTerm,
                     aoPriceList);
-            PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier);
+            PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
             assertEquals(alignement, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
 
             testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignement);

@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.lifecycle.KillbillService;
@@ -30,7 +31,7 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
 
     private static final String CATALOG_SERVICE_NAME = "catalog-service";
 
-    private static Catalog catalog;
+    private static VersionedCatalog catalog;
 
     private final CatalogConfig config;
     private boolean isInitialized;
@@ -74,7 +75,7 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
      * @see com.ning.billing.catalog.ICatlogService#getCatalog()
      */
     @Override
-    public Catalog getCatalog() {
+    public Catalog getFullCatalog() {
         return catalog;
     }
 
@@ -84,5 +85,10 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
     public Catalog get() {
         return catalog;
     }
+
+	@Override
+	public StaticCatalog getCurrentCatalog() {
+		return catalog;
+	}
 
 }

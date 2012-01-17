@@ -16,7 +16,6 @@
 
 package com.ning.billing.entitlement.events;
 
-import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
 import org.joda.time.DateTime;
 
 import java.util.UUID;
@@ -32,15 +31,11 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
     private long activeVersion;
     private boolean isActive;
-    private UUID processingOwner;
-    private DateTime nextAvailableProcessingTime;
-    private EventLifecycleState processingState;
 
 
     public EventBaseBuilder() {
         this.uuid = UUID.randomUUID();
         this.isActive = true;
-        this.processingState = EventLifecycleState.AVAILABLE;
     }
 
     public EventBaseBuilder(EventBaseBuilder<?> copy) {
@@ -52,9 +47,6 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
         this.activeVersion = copy.activeVersion;
         this.isActive = copy.isActive;
-        this.processingOwner = copy.processingOwner;
-        this.nextAvailableProcessingTime = copy.nextAvailableProcessingTime;
-        this.processingState = copy.processingState;
     }
 
     public T setUuid(UUID uuid) {
@@ -92,21 +84,6 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         return (T) this;
     }
 
-    public T setProcessingOwner(UUID processingOwner) {
-        this.processingOwner = processingOwner;
-        return (T) this;
-    }
-
-    public T setNextAvailableProcessingTime(DateTime nextAvailableProcessingTime) {
-        this.nextAvailableProcessingTime = nextAvailableProcessingTime;
-        return (T) this;
-    }
-
-    public T setProcessingState(EventLifecycleState processingState) {
-        this.processingState = processingState;
-        return (T) this;
-    }
-
     public UUID getUuid() {
         return uuid;
     }
@@ -133,17 +110,5 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
     public boolean isActive() {
         return isActive;
-    }
-
-    public UUID getProcessingOwner() {
-        return processingOwner;
-    }
-
-    public DateTime getNextAvailableProcessingTime() {
-        return nextAvailableProcessingTime;
-    }
-
-    public EventLifecycleState getProcessingState() {
-        return processingState;
     }
 }

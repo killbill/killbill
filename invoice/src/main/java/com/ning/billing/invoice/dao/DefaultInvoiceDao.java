@@ -16,6 +16,8 @@
 
 package com.ning.billing.invoice.dao;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
@@ -40,7 +42,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final static Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
 
     @Inject
-    public DefaultInvoiceDao(IDBI dbi, EventBus eventBus) {
+    public DefaultInvoiceDao(final IDBI dbi, final EventBus eventBus) {
         this.invoiceDao = dbi.onDemand(InvoiceSqlDao.class);
         this.eventBus = eventBus;
     }
@@ -54,7 +56,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     public List<Invoice> get() {
         return invoiceDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
              @Override
-             public List<Invoice> inTransaction(InvoiceSqlDao invoiceDao, TransactionStatus status) throws Exception {
+             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                  List<Invoice> invoices = invoiceDao.get();
 
                  InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
@@ -72,7 +74,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     public Invoice getById(final String invoiceId) {
         return invoiceDao.inTransaction(new Transaction<Invoice, InvoiceSqlDao>() {
              @Override
-             public Invoice inTransaction(InvoiceSqlDao invoiceDao, TransactionStatus status) throws Exception {
+             public Invoice inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                  Invoice invoice = invoiceDao.getById(invoiceId);
 
                  if (invoice != null) {
@@ -87,25 +89,24 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void save(final Invoice invoice) {
+    public void create(final Invoice invoice) {
          invoiceDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
              @Override
-             public Void inTransaction(InvoiceSqlDao invoiceDao, TransactionStatus status) throws Exception {
+             public Void inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                 Invoice currentInvoice = invoiceDao.getById(invoice.getId().toString());
-                invoiceDao.save(invoice);
-
-                List<InvoiceItem> invoiceItems = invoice.getItems();
-                InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
-                invoiceItemDao.save(invoiceItems);
 
                 if (currentInvoice == null) {
+                    invoiceDao.create(invoice);
+
+                    List<InvoiceItem> invoiceItems = invoice.getItems();
+                    InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
+                    invoiceItemDao.create(invoiceItems);
+
                     InvoiceCreationNotification event;
                     event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
                                                                   invoice.getAmountOutstanding(), invoice.getCurrency(),
                                                                   invoice.getInvoiceDate());
                     eventBus.post(event);
-                } else {
-
                 }
 
                 return null;

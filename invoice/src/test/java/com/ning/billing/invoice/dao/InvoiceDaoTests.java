@@ -45,7 +45,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice invoice = new DefaultInvoice(accountId, new DefaultClock().getUTCNow(), Currency.USD);
         DateTime invoiceDate = invoice.getInvoiceDate();
 
-        invoiceDao.save(invoice);
+        invoiceDao.create(invoice);
 
         List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId.toString());
         assertNotNull(invoices);
@@ -68,7 +68,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime endDate = new DateTime(2010, 4, 1, 0, 0, 0, 0);
         InvoiceItem invoiceItem = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, "test", new BigDecimal("21.00"), new BigDecimal("7.00"), Currency.USD);
         invoice.add(invoiceItem);
-        invoiceDao.save(invoice);
+        invoiceDao.create(invoice);
 
         Invoice savedInvoice = invoiceDao.getById(invoiceId.toString());
         assertNotNull(savedInvoice);
@@ -105,12 +105,12 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
         BigDecimal paymentAmount = new BigDecimal("14.0");
 
-        invoiceDao.save(invoice);
+        invoiceDao.create(invoice);
         invoiceDao.notifySuccessfulPayment(invoice.getId().toString(), paymentAmount, Currency.USD.toString(), paymentId, paymentAttemptDate.toDate());
 
         invoice = invoiceDao.getById(invoice.getId().toString());
-//        assertEquals(invoice.getAmountPaid().compareTo(paymentAmount), 0);
-//        assertTrue(invoice.getLastPaymentAttempt().equals(paymentAttemptDate));
+        assertEquals(invoice.getAmountPaid().compareTo(paymentAmount), 0);
+        assertTrue(invoice.getLastPaymentAttempt().equals(paymentAttemptDate));
     }
 
     @Test
@@ -121,11 +121,11 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
 
-        invoiceDao.save(invoice);
+        invoiceDao.create(invoice);
         invoiceDao.notifyFailedPayment(invoice.getId().toString(), UUID.randomUUID().toString(), paymentAttemptDate.toDate());
 
         invoice = invoiceDao.getById(invoice.getId().toString());
-//        assertTrue(invoice.getLastPaymentAttempt().equals(paymentAttemptDate));
+        assertTrue(invoice.getLastPaymentAttempt().equals(paymentAttemptDate));
     }
 
     @Test
@@ -140,7 +140,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         UUID accountId = UUID.randomUUID();
         Invoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
 
-        invoiceDao.save(invoice);
+        invoiceDao.create(invoice);
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
         assertEquals(invoices.size(), existingInvoiceCount);
     }
@@ -163,7 +163,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, targetDate, endDate, "test", amount, rate, Currency.USD);
         invoice.add(item);
-        invoiceDao.save(invoice);
+        invoiceDao.create(invoice);
 
         // ensure that the number of invoices for payment has increased by 1
         int count;
@@ -248,7 +248,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         // create invoice 1 (subscriptions 1-4)
         Invoice invoice1 = new DefaultInvoice(accountId, targetDate, Currency.USD);
-        invoiceDao.save(invoice1);
+        invoiceDao.create(invoice1);
 
         UUID invoiceId1 = invoice1.getId();
 
@@ -256,34 +256,34 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime endDate = startDate.plusMonths(1);
 
         DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoiceId1, subscriptionId1, startDate, endDate, "test A", rate1, rate1, Currency.USD);
-        invoiceItemDao.save(item1);
+        invoiceItemDao.create(item1);
 
         DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoiceId1, subscriptionId2, startDate, endDate, "test B", rate2, rate2, Currency.USD);
-        invoiceItemDao.save(item2);
+        invoiceItemDao.create(item2);
 
         DefaultInvoiceItem item3 = new DefaultInvoiceItem(invoiceId1, subscriptionId3, startDate, endDate, "test C", rate3, rate3, Currency.USD);
-        invoiceItemDao.save(item3);
+        invoiceItemDao.create(item3);
 
         DefaultInvoiceItem item4 = new DefaultInvoiceItem(invoiceId1, subscriptionId4, startDate, endDate, "test D", rate4, rate4, Currency.USD);
-        invoiceItemDao.save(item4);
+        invoiceItemDao.create(item4);
 
         // create invoice 2 (subscriptions 1-3)
-        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
-        invoiceDao.save(invoice);
+        DefaultInvoice invoice2 = new DefaultInvoice(accountId, targetDate, Currency.USD);
+        invoiceDao.create(invoice2);
 
-        UUID invoiceId2 = invoice.getId();
+        UUID invoiceId2 = invoice2.getId();
 
         startDate = endDate;
         endDate = startDate.plusMonths(1);
 
         DefaultInvoiceItem item5 = new DefaultInvoiceItem(invoiceId2, subscriptionId1, startDate, endDate, "test A", rate1, rate1, Currency.USD);
-        invoiceItemDao.save(item5);
+        invoiceItemDao.create(item5);
 
         DefaultInvoiceItem item6 = new DefaultInvoiceItem(invoiceId2, subscriptionId2, startDate, endDate, "test B", rate2, rate2, Currency.USD);
-        invoiceItemDao.save(item6);
+        invoiceItemDao.create(item6);
 
         DefaultInvoiceItem item7 = new DefaultInvoiceItem(invoiceId2, subscriptionId3, startDate, endDate, "test C", rate3, rate3, Currency.USD);
-        invoiceItemDao.save(item7);
+        invoiceItemDao.create(item7);
 
         // check that each subscription returns the correct number of invoices
         List<Invoice> items1 = invoiceDao.getInvoicesBySubscription(subscriptionId1.toString());

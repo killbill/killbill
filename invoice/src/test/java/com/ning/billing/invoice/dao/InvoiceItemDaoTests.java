@@ -46,7 +46,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         BigDecimal rate = new BigDecimal("20.00");
 
         InvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, "test", rate, rate, Currency.USD);
-        invoiceItemDao.save(item);
+        invoiceItemDao.create(item);
 
         InvoiceItem thisItem = invoiceItemDao.getById(item.getId().toString());
         assertNotNull(thisItem);
@@ -70,7 +70,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         for (int i = 0; i < 3; i++) {
             UUID invoiceId = UUID.randomUUID();
             DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate.plusMonths(i), startDate.plusMonths(i + 1), "test", rate, rate, Currency.USD);
-            invoiceItemDao.save(item);
+            invoiceItemDao.create(item);
         }
 
         List<InvoiceItem> items = invoiceItemDao.getInvoiceItemsBySubscription(subscriptionId.toString());
@@ -87,7 +87,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
             UUID subscriptionId = UUID.randomUUID();
             BigDecimal amount = rate.multiply(new BigDecimal(i + 1));
             DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", amount, amount, Currency.USD);
-            invoiceItemDao.save(item);
+            invoiceItemDao.create(item);
         }
 
         List<InvoiceItem> items = invoiceItemDao.getInvoiceItemsByInvoice(invoiceId.toString());
@@ -100,7 +100,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         DateTime targetDate = new DateTime(2011, 5, 23, 0, 0, 0, 0);
         DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
 
-        invoiceDao.save(invoice);
+        invoiceDao.create(invoice);
 
         UUID invoiceId = invoice.getId();
         DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
@@ -108,7 +108,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
 
         UUID subscriptionId = UUID.randomUUID();
         DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", rate, rate, Currency.USD);
-        invoiceItemDao.save(item);
+        invoiceItemDao.create(item);
 
         List<InvoiceItem> items = invoiceItemDao.getInvoiceItemsByAccount(accountId.toString());
         assertEquals(items.size(), 1);

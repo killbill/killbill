@@ -16,6 +16,7 @@
 
 package com.ning.billing.catalog.rules;
 
+
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.StandaloneCatalog;
@@ -28,12 +29,15 @@ import com.ning.billing.util.config.ValidationErrors;
 
 public abstract class Case<T> extends ValidatingConfig<StandaloneCatalog> {
 
-	protected DefaultProduct product;
-	protected ProductCategory productCategory;
-	protected BillingPeriod billingPeriod;
-	protected DefaultPriceList priceList;
-
 	protected abstract T getResult();
+	
+	public abstract DefaultProduct getProduct();
+
+	public abstract ProductCategory getProductCategory();
+
+	public abstract BillingPeriod getBillingPeriod();
+	    
+	public abstract DefaultPriceList getPriceList();
 
 	public T getResult(PlanSpecifier planPhase, StandaloneCatalog c) throws CatalogApiException {
 		if (satisfiesCase(planPhase, c)	) {
@@ -43,10 +47,10 @@ public abstract class Case<T> extends ValidatingConfig<StandaloneCatalog> {
 	}
 	
 	protected boolean satisfiesCase(PlanSpecifier planPhase, StandaloneCatalog c) throws CatalogApiException {
-		return (product         == null || product.equals(c.findProduct(planPhase.getProductName()))) &&
-		(productCategory == null || productCategory.equals(planPhase.getProductCategory())) &&
-		(billingPeriod   == null || billingPeriod.equals(planPhase.getBillingPeriod())) &&
-		(priceList       == null || priceList.equals(c.getPriceListFromName(planPhase.getPriceListName())));
+		return (getProduct()         == null || getProduct().equals(c.findCurrentProduct(planPhase.getProductName()))) &&
+		(getProductCategory() == null || getProductCategory().equals(planPhase.getProductCategory())) &&
+		(getBillingPeriod()   == null || getBillingPeriod().equals(planPhase.getBillingPeriod())) &&
+		(getPriceList()       == null || getPriceList().equals(c.findCurrentPriceList(planPhase.getPriceListName())));
 	}
 
 	public static <K> K getResult(Case<K>[] cases, PlanSpecifier planSpec, StandaloneCatalog catalog) throws CatalogApiException {
@@ -67,26 +71,11 @@ public abstract class Case<T> extends ValidatingConfig<StandaloneCatalog> {
 		return errors;
 	}
 
-	protected Case<T> setProduct(DefaultProduct product) {
-		this.product = product;
-		return this;
-	}
+	protected abstract Case<T> setProduct(DefaultProduct product);
 
-	protected Case<T> setProductCategory(ProductCategory productCategory) {
-		this.productCategory = productCategory;
-		return this;
-	}
+	protected abstract  Case<T> setProductCategory(ProductCategory productCategory);
 
-	protected Case<T> setBillingPeriod(BillingPeriod billingPeriod) {
-		this.billingPeriod = billingPeriod;
-		return this;
-	}
+	protected abstract  Case<T> setBillingPeriod(BillingPeriod billingPeriod);
 
-	protected Case<T> setPriceList(DefaultPriceList priceList) {
-		this.priceList = priceList;
-		return this;
-	}
-
-	
-	
+	protected abstract  Case<T> setPriceList(DefaultPriceList priceList);
 }
