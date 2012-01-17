@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
 
 public interface InvoiceDao {
     void create(Invoice invoice);
@@ -30,6 +31,8 @@ public interface InvoiceDao {
     List<Invoice> get();
 
     List<Invoice> getInvoicesByAccount(final String accountId);
+
+    List<InvoiceItem> getInvoiceItemsByAccount(final String accountId);
 
     List<Invoice> getInvoicesBySubscription(final String subscriptionId);
 

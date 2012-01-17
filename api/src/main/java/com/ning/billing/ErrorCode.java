@@ -43,7 +43,10 @@ public enum ErrorCode {
     ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s"),
     /* Un-cancellation */
     ENT_UNCANCEL_BAD_STATE(1070, "Subscription %s was not in a cancelled state"),
-
+    /* Fetch */
+    ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION(1080, "Could not find a bundle for subscription %s"),
+    ENT_GET_INVALID_BUNDLE_ID(1081, "Could not find a bundle matching id %s"),
+    ENT_INVALID_SUBSCRIPTION_ID(1082, "Unknown subscription %s"),
     /*
     *
     * Range 2000 : CATALOG
@@ -102,8 +105,16 @@ public enum ErrorCode {
     *
     */
     ACCOUNT_ALREADY_EXISTS(3000, "Account already exists for key %s"),
-    ACCOUNT_INVALID_NAME(3001, "An invalid name was specified when creating or updating an account.")
+    ACCOUNT_INVALID_NAME(3001, "An invalid name was specified when creating or updating an account."),
 
+   /*
+    *
+    * Range 4000: INVOICE
+    *
+    */
+    INVOICE_ACCOUNT_ID_INVALID(4001, "No account could be retrieved for id %s"),
+    INVOICE_INVALID_TRANSITION(4002, "Transition did not contain a subscription id."),
+    INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID(4003, "No account id was retrieved for subscription id %s")
     ;
     private int code;
     private String format;

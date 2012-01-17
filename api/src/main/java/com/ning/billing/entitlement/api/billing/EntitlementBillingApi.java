@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
 public interface EntitlementBillingApi {
 
@@ -35,7 +36,8 @@ public interface EntitlementBillingApi {
      */
     public SortedSet<BillingEvent> getBillingEventsForAccount(UUID accountId);
 
+    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) throws EntitlementBillingApiException;
 
-    public void setChargedThroughDate(UUID subscriptionId, DateTime ctd);
+    public void setChargedThroughDate(UUID subscriptionId, DateTime ctd) throws EntitlementBillingApiException;
 
 }

@@ -16,8 +16,6 @@
 
 package com.ning.billing.invoice.dao;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
@@ -36,25 +34,32 @@ import java.util.List;
 import java.util.UUID;
 
 public class DefaultInvoiceDao implements InvoiceDao {
-    private final InvoiceSqlDao invoiceDao;
+    private final InvoiceSqlDao invoiceSqlDao;
+    private final InvoiceItemSqlDao invoiceItemSqlDao;
 
     private final EventBus eventBus;
     private final static Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi, final EventBus eventBus) {
-        this.invoiceDao = dbi.onDemand(InvoiceSqlDao.class);
+        this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
+        this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.eventBus = eventBus;
     }
 
     @Override
     public List<Invoice> getInvoicesByAccount(final String accountId) {
-        return invoiceDao.getInvoicesByAccount(accountId);
+        return invoiceSqlDao.getInvoicesByAccount(accountId);
+    }
+
+    @Override
+    public List<InvoiceItem> getInvoiceItemsByAccount(final String accountId) {
+        return invoiceItemSqlDao.getInvoiceItemsByAccount(accountId);
     }
 
     @Override
     public List<Invoice> get() {
-        return invoiceDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
              @Override
              public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                  List<Invoice> invoices = invoiceDao.get();
@@ -72,7 +77,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public Invoice getById(final String invoiceId) {
-        return invoiceDao.inTransaction(new Transaction<Invoice, InvoiceSqlDao>() {
+        return invoiceSqlDao.inTransaction(new Transaction<Invoice, InvoiceSqlDao>() {
              @Override
              public Invoice inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                  Invoice invoice = invoiceDao.getById(invoiceId);
@@ -90,7 +95,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public void create(final Invoice invoice) {
-         invoiceDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
+         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
              @Override
              public Void inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                 Invoice currentInvoice = invoiceDao.getById(invoice.getId().toString());
@@ -107,6 +112,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
                                                                   invoice.getAmountOutstanding(), invoice.getCurrency(),
                                                                   invoice.getInvoiceDate());
                     eventBus.post(event);
+
+
                 }
 
                 return null;
@@ -116,7 +123,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public List<Invoice> getInvoicesBySubscription(final String subscriptionId) {
-        return invoiceDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
              @Override
              public List<Invoice> inTransaction(InvoiceSqlDao invoiceDao, TransactionStatus status) throws Exception {
                  List<Invoice> invoices = invoiceDao.getInvoicesBySubscription(subscriptionId);
@@ -134,21 +141,21 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public List<UUID> getInvoicesForPayment(Date targetDate, int numberOfDays) {
-        return invoiceDao.getInvoicesForPayment(targetDate, numberOfDays);
+        return invoiceSqlDao.getInvoicesForPayment(targetDate, numberOfDays);
     }
 
     @Override
     public void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentId, Date paymentDate) {
-        invoiceDao.notifySuccessfulPayment(invoiceId, paymentAmount, currency, paymentId, paymentDate);
+        invoiceSqlDao.notifySuccessfulPayment(invoiceId, paymentAmount, currency, paymentId, paymentDate);
     }
 
     @Override
     public void notifyFailedPayment(String invoiceId, String paymentId, Date paymentAttemptDate) {
-        invoiceDao.notifyFailedPayment(invoiceId, paymentId, paymentAttemptDate);
+        invoiceSqlDao.notifyFailedPayment(invoiceId, paymentId, paymentAttemptDate);
     }
 
     @Override
     public void test() {
-        invoiceDao.test();
+        invoiceSqlDao.test();
     }
 }

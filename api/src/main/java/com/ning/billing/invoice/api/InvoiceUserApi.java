@@ -28,6 +28,8 @@ public interface InvoiceUserApi {
 
     public List<Invoice> getInvoicesByAccount(UUID accountId);
 
+    public List<InvoiceItem> getInvoiceItemsByAccount(UUID accountId);
+
     public Invoice getInvoice(UUID invoiceId);
 
     public void paymentAttemptFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate);

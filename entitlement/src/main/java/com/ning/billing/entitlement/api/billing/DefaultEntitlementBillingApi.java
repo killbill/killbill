@@ -38,6 +38,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -46,14 +47,14 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
-	private Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
 	
     private final EntitlementDao dao;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
 
     @Inject
-    public DefaultEntitlementBillingApi(EntitlementDao dao, AccountUserApi accountApi, CatalogService catalogService) {
+    public DefaultEntitlementBillingApi(final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
         super();
         this.dao = dao;
         this.accountApi = accountApi;
@@ -62,17 +63,17 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
     @Override
     public SortedSet<BillingEvent> getBillingEventsForAccount(
-            UUID accountId) {
+            final UUID accountId) {
         
         List<SubscriptionBundle> bundles = dao.getSubscriptionBundleForAccount(accountId);
         List<Subscription> subscriptions = new ArrayList<Subscription>();
-        for (SubscriptionBundle bundle: bundles) {
+        for (final SubscriptionBundle bundle: bundles) {
             subscriptions.addAll(dao.getSubscriptions(bundle.getId()));
         }
 
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();        
-        for (Subscription subscription: subscriptions) {
-        	for (SubscriptionTransition transition : subscription.getAllTransitions()) {
+        for (final Subscription subscription: subscriptions) {
+        	for (final SubscriptionTransition transition : subscription.getAllTransitions()) {
         		try {
         			result.add(new DefaultBillingEvent(transition, subscription, calculateBCD(transition, accountId)));
         		} catch (CatalogApiException e) {
@@ -83,8 +84,13 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         }
         return result;
     }
-    
-    private int calculateBCD(SubscriptionTransition transition, UUID accountId) throws CatalogApiException {
+
+    @Override
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+        return dao.getAccountIdFromSubscriptionId(subscriptionId);
+    }
+
+    private int calculateBCD(final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException {
     	Catalog catalog = catalogService.getFullCatalog();
     	Plan plan = transition.getNextPlan();
     	Product product = plan.getProduct();
@@ -123,10 +129,10 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     
 
     @Override
-    public void setChargedThroughDate(UUID subscriptionId, DateTime ctd) {
+    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) throws EntitlementBillingApiException {
         SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionId);
         if (subscription == null) {
-            new EntitlementBillingApiException(String.format("Unknown subscription %s", subscriptionId));
+            throw new EntitlementBillingApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, subscriptionId.toString());
         }
 
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)

@@ -43,6 +43,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -127,8 +128,13 @@ public class TestDefaultEntitlementBillingApi {
 				return subscription;
 
 			}
-			
-			@Override
+
+            @Override
+            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
 			public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
 				return bundle;
 			}
@@ -145,8 +151,13 @@ public class TestDefaultEntitlementBillingApi {
 					UUID accountId) {
 				return new ArrayList<SubscriptionBundle>();
 			}
-			
-		};
+
+            @Override
+            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+                throw new UnsupportedOperationException();
+            }
+
+        };
 		AccountUserApi accountApi = new BrainDeadAccountUserApi() ;
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));

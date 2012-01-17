@@ -38,7 +38,8 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
-    private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceGenerator.class); 
+    private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceGenerator.class);
+
     @Override
     public Invoice generateInvoice(final UUID accountId, final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
         if (events == null) {return new DefaultInvoice(accountId, targetDate, targetCurrency);}

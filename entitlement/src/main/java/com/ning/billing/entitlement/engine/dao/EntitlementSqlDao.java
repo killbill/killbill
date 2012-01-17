@@ -23,10 +23,13 @@ import java.util.List;
 import java.util.UUID;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -66,7 +69,8 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final NotificationQueueService notificationQueueService;
 
     @Inject
-    public EntitlementSqlDao(DBI dbi, Clock clock, SubscriptionFactory factory, NotificationQueueService notificationQueueService) {
+    public EntitlementSqlDao(final DBI dbi, final Clock clock, final SubscriptionFactory factory,
+                             final NotificationQueueService notificationQueueService) {
         this.clock = clock;
         this.factory = factory;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
@@ -76,18 +80,18 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey) {
+    public SubscriptionBundle getSubscriptionBundleFromKey(final String bundleKey) {
         return bundlesDao.getBundleFromKey(bundleKey);
     }
 
     @Override
     public List<SubscriptionBundle> getSubscriptionBundleForAccount(
-            UUID accountId) {
+            final UUID accountId) {
         return bundlesDao.getBundleFromAccount(accountId.toString());
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
+    public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
         return bundlesDao.getBundleFromId(bundleId.toString());
     }
 
@@ -103,8 +107,23 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public Subscription getSubscriptionFromId(UUID subscriptionId) {
+    public Subscription getSubscriptionFromId(final UUID subscriptionId) {
         return buildSubscription(subscriptionsDao.getSubscriptionFromId(subscriptionId.toString()));
+    }
+
+    @Override
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+        UUID bundleId = subscriptionsDao.getSubscriptionFromId(subscriptionId.toString()).getBundleId();
+        if (bundleId == null) {
+            throw new EntitlementBillingApiException(ErrorCode.ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION, subscriptionId.toString());
+        }
+
+        SubscriptionBundle bundle = bundlesDao.getBundleFromId(bundleId.toString());
+        if (bundle == null) {
+            throw new EntitlementBillingApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_ID, bundleId.toString());
+        }
+
+        return bundle.getAccountId();
     }
 
     @Override

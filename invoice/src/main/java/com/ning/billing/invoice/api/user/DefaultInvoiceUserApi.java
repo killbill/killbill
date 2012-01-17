@@ -19,6 +19,7 @@ package com.ning.billing.invoice.api.user;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -34,32 +35,38 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final InvoiceDao dao;
 
     @Inject
-    public DefaultInvoiceUserApi(InvoiceDao dao) {
+    public DefaultInvoiceUserApi(final InvoiceDao dao) {
         this.dao = dao;
     }
 
     @Override
-    public List<UUID> getInvoicesForPayment(DateTime targetDate, int numberOfDays) {
+    public List<UUID> getInvoicesForPayment(final DateTime targetDate, final int numberOfDays) {
         return dao.getInvoicesForPayment(targetDate.toDate(), numberOfDays);
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(UUID accountId) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId) {
         return dao.getInvoicesByAccount(accountId.toString());
     }
 
     @Override
-    public Invoice getInvoice(UUID invoiceId) {
+    public List<InvoiceItem> getInvoiceItemsByAccount(final UUID accountId) {
+        return dao.getInvoiceItemsByAccount(accountId.toString());
+    }
+
+    @Override
+    public Invoice getInvoice(final UUID invoiceId) {
         return dao.getById(invoiceId.toString());
     }
 
     @Override
-    public void paymentAttemptFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate) {
+    public void paymentAttemptFailed(final UUID invoiceId, final UUID paymentId, final DateTime paymentAttemptDate) {
         dao.notifyFailedPayment(invoiceId.toString(), paymentId.toString(), paymentAttemptDate.toDate());
     }
 
     @Override
-    public void paymentAttemptSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId, DateTime paymentDate) {
+    public void paymentAttemptSuccessful(final UUID invoiceId, final BigDecimal amount, final Currency currency,
+                                         final UUID paymentId, final DateTime paymentDate) {
         dao.notifySuccessfulPayment(invoiceId.toString(), amount, currency.toString(), paymentId.toString(), paymentDate.toDate());
     }
 }

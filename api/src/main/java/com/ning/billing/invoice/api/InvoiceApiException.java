@@ -14,23 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.billing;
+package com.ning.billing.invoice.api;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 
-public class EntitlementBillingApiException extends BillingExceptionBase {
-    private static final long serialVersionUID = 127392038L;
-
-    public EntitlementBillingApiException(Throwable cause, int code, final String msg) {
+public class InvoiceApiException extends BillingExceptionBase {
+    public InvoiceApiException(Throwable cause, int code, final String msg) {
         super(cause, code, msg);
     }
 
-    public EntitlementBillingApiException(Throwable cause, ErrorCode code, final Object... args) {
+    public InvoiceApiException(Throwable cause, ErrorCode code, final Object... args) {
         super(cause, code, args);
     }
 
-    public EntitlementBillingApiException(ErrorCode code, final Object... args) {
+    public InvoiceApiException(ErrorCode code, final Object... args) {
         super(code, args);
     }
 }
