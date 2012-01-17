@@ -89,7 +89,7 @@ public abstract class NotificationQueueBase implements NotificationQueue {
 
     @Override
     public void processReadyNotification() {
-        // STEPH to be implemented
+        doProcessEvents(sequenceId.incrementAndGet());
     }
 
 
