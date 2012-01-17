@@ -14,14 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
-
-import com.ning.billing.util.eventbus.BusEvent;
+package com.ning.billing.invoice.notification;
 
 import java.util.UUID;
 
-public interface AccountCreationNotification extends BusEvent {
-    public UUID getId();
+import com.ning.billing.util.eventbus.BusEvent;
 
-    public AccountData getData();
+public class NextBillingDateEvent implements BusEvent{
+	private final UUID subscriptionId;
+
+	public NextBillingDateEvent(UUID subscriptionId) {
+		super();
+		this.subscriptionId = subscriptionId;
+	}
+
+	public UUID getSubscriptionId() {
+		return subscriptionId;
+	}
 }

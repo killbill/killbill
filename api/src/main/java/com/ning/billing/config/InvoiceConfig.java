@@ -14,14 +14,26 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.config;
 
-import com.ning.billing.util.eventbus.BusEvent;
+import org.skife.config.Config;
+import org.skife.config.Default;
 
-import java.util.UUID;
+public interface InvoiceConfig {
 
-public interface AccountCreationNotification extends BusEvent {
-    public UUID getId();
+    @Config("killbill.invoice.dao.claim.time")
+    @Default("60000")
+    public long getDaoClaimTimeMs();
 
-    public AccountData getData();
+    @Config("killbill.invoice.dao.ready.max")
+    @Default("10")
+    public int getDaoMaxReadyEvents();
+
+    @Config("killbill.invoice.engine.notifications.sleep")
+    @Default("500")
+    public long getNotificationSleepTimeMs();
+
+    @Config("killbill.invoice.engine.events.off")
+    @Default("false")
+    public boolean isEventProcessingOff();
 }

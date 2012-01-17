@@ -40,6 +40,8 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
         this.dao = dbi.onDemand(NotificationSqlDao.class);
     }
 
+
+
     @Override
     protected void doProcessEvents(int sequenceId) {
         List<Notification> notifications = getReadyNotifications(sequenceId);
@@ -116,4 +118,5 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
         }
         return result;
     }
+    
 }

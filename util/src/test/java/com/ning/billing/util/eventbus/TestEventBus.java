@@ -28,7 +28,7 @@ public class TestEventBus {
 
     private static final Logger log = LoggerFactory.getLogger(TestEventBus.class);
 
-    private EventBus eventBus;
+    private Bus eventBus;
 
 
     @BeforeClass
@@ -42,7 +42,7 @@ public class TestEventBus {
         eventBus.stop();
     }
 
-    public static final class MyEvent implements EventBusNotification {
+    public static final class MyEvent implements BusEvent {
         String name;
         Long value;
 

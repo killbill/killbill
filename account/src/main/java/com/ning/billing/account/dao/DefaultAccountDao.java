@@ -30,16 +30,16 @@ import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.FieldStoreDao;
-import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.Bus;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagStoreDao;
 
 public class DefaultAccountDao implements AccountDao {
     private final AccountSqlDao accountDao;
-    private final EventBus eventBus;
+    private final Bus eventBus;
 
     @Inject
-    public DefaultAccountDao(IDBI dbi, EventBus eventBus) {
+    public DefaultAccountDao(IDBI dbi, Bus eventBus) {
         this.eventBus = eventBus;
         this.accountDao = dbi.onDemand(AccountSqlDao.class);
     }

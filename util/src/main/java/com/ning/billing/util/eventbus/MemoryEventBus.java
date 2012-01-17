@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MemoryEventBus implements EventBus {
+public class MemoryEventBus implements Bus {
 
     // STEPH config ?
     private final static int MAX_EVENT_THREADS = 1;
@@ -92,13 +92,13 @@ public class MemoryEventBus implements EventBus {
     }
 
     @Override
-    public void post(EventBusNotification event) throws EventBusException {
+    public void post(BusEvent event) throws EventBusException {
         checkInitialized("post");
         delegate.post(event);
     }
 
     @Override
-    public void postFromTransaction(EventBusNotification event, Transmogrifier dao) throws EventBusException {
+    public void postFromTransaction(BusEvent event, Transmogrifier dao) throws EventBusException {
         checkInitialized("postFromTransaction");
         delegate.post(event);
     }

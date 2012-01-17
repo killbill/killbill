@@ -22,7 +22,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.Bus;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 

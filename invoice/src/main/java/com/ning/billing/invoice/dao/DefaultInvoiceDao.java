@@ -23,7 +23,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
-import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.Bus;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -38,11 +38,11 @@ import java.util.UUID;
 public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceDao;
 
-    private final EventBus eventBus;
+    private final Bus eventBus;
     private final static Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
 
     @Inject
-    public DefaultInvoiceDao(final IDBI dbi, final EventBus eventBus) {
+    public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus) {
         this.invoiceDao = dbi.onDemand(InvoiceSqlDao.class);
         this.eventBus = eventBus;
     }

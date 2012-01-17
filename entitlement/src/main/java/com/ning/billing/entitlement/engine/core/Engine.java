@@ -18,7 +18,6 @@ package com.ning.billing.entitlement.engine.core;
 
 import java.util.UUID;
 
-
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +45,8 @@ import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBus.EventBusException;
+import com.ning.billing.util.eventbus.Bus;
+import com.ning.billing.util.eventbus.Bus.EventBusException;
 import com.ning.billing.util.notificationq.NotificationConfig;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -59,10 +58,6 @@ public class Engine implements EventListener, EntitlementService {
     public static final String NOTIFICATION_QUEUE_NAME = "subscription-events";
     public static final String ENTITLEMENT_SERVICE_NAME = "entitlement-service";
 
-    private final long MAX_NOTIFICATION_THREAD_WAIT_MS = 10000; // 10 secs
-    private final long NOTIFICATION_THREAD_WAIT_INCREMENT_MS = 1000; // 1 sec
-    private final long NANO_TO_MS = (1000 * 1000);
-
     private final static Logger log = LoggerFactory.getLogger(Engine.class);
 
     private final Clock clock;
@@ -72,19 +67,17 @@ public class Engine implements EventListener, EntitlementService {
     private final EntitlementBillingApi billingApi;
     private final EntitlementTestApi testApi;
     private final EntitlementMigrationApi migrationApi;
-    private final EventBus eventBus;
+    private final Bus eventBus;
     private final EntitlementConfig config;
     private final NotificationQueueService notificationQueueService;
 
-    private boolean startedNotificationThread;
-    private boolean stoppedNotificationThread;
     private NotificationQueue subscritionEventQueue;
 
     @Inject
     public Engine(Clock clock, EntitlementDao dao, PlanAligner planAligner,
             EntitlementConfig config, DefaultEntitlementUserApi userApi,
             DefaultEntitlementBillingApi billingApi, DefaultEntitlementTestApi testApi,
-            DefaultEntitlementMigrationApi migrationApi, EventBus eventBus,
+            DefaultEntitlementMigrationApi migrationApi, Bus eventBus,
             NotificationQueueService notificationQueueService) {
         super();
         this.clock = clock;
@@ -108,8 +101,6 @@ public class Engine implements EventListener, EntitlementService {
     public void initialize() {
 
         try {
-            this.stoppedNotificationThread = false;
-            this.startedNotificationThread = false;
             subscritionEventQueue = notificationQueueService.createNotificationQueue(ENTITLEMENT_SERVICE_NAME,
                     NOTIFICATION_QUEUE_NAME,
                     new NotificationQueueHandler() {
@@ -120,21 +111,6 @@ public class Engine implements EventListener, EntitlementService {
                         log.warn("Failed to extract event for notification key {}", notificationKey);
                     } else {
                         processEventReady(event);
-                    }
-                }
-
-                @Override
-                public void completedQueueStop() {
-                    synchronized (this) {
-                        stoppedNotificationThread = true;
-                        this.notifyAll();
-                    }
-                }
-                @Override
-                public void completedQueueStart() {
-                    synchronized (this) {
-                        startedNotificationThread = true;
-                        this.notifyAll();
                     }
                 }
             },
@@ -164,16 +140,13 @@ public class Engine implements EventListener, EntitlementService {
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
         subscritionEventQueue.startQueue();
-        waitForNotificationStartCompletion();
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() {
         if (subscritionEventQueue != null) {
             subscritionEventQueue.stopQueue();
-            waitForNotificationStopCompletion();
-        }
-        startedNotificationThread = false;
+         }
     }
 
     @Override
@@ -215,43 +188,6 @@ public class Engine implements EventListener, EntitlementService {
             eventBus.post(subscription.getTransitionFromEvent(event));
         } catch (EventBusException e) {
             log.warn("Failed to post entitlement event " + event, e);
-        }
-    }
-
-    private void waitForNotificationStartCompletion() {
-        waitForNotificationEventCompletion(true);
-    }
-
-    private void waitForNotificationStopCompletion() {
-        waitForNotificationEventCompletion(false);
-    }
-
-    private void waitForNotificationEventCompletion(boolean startEvent) {
-
-        long ini = System.nanoTime();
-        synchronized(this) {
-            do {
-                if ((startEvent ? startedNotificationThread : stoppedNotificationThread)) {
-                    break;
-                }
-                try {
-                    this.wait(NOTIFICATION_THREAD_WAIT_INCREMENT_MS);
-                } catch (InterruptedException e ) {
-                    Thread.currentThread().interrupt();
-                    throw new EntitlementError(e);
-                }
-            } while (!(startEvent ? startedNotificationThread : stoppedNotificationThread) &&
-                    (System.nanoTime() - ini) / NANO_TO_MS < MAX_NOTIFICATION_THREAD_WAIT_MS);
-
-            if (!(startEvent ? startedNotificationThread : stoppedNotificationThread)) {
-                log.error("Could not {} notification thread in {} msec !!!",
-                        (startEvent ? "start" : "stop"),
-                        MAX_NOTIFICATION_THREAD_WAIT_MS);
-                throw new EntitlementError("Failed to start service!!");
-            }
-            log.info("Notification thread has been {} in {} ms",
-                    (startEvent ? "started" : "stopped"),
-                    (System.nanoTime() - ini) / NANO_TO_MS);
         }
     }
 

@@ -21,7 +21,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.account.glue.AccountModuleMock;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.EventBusService;
+import com.ning.billing.util.eventbus.BusService;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.AfterClass;
@@ -56,7 +56,7 @@ public abstract class AccountDaoTestBase {
             accountDao = injector.getInstance(AccountDao.class);
             accountDao.test();
 
-            EventBusService busService = injector.getInstance(EventBusService.class);
+            BusService busService = injector.getInstance(BusService.class);
             ((DefaultEventBusService) busService).startBus();
         }
         catch (Throwable t) {
