@@ -48,11 +48,11 @@ public class MigrationPlanAligner {
 
         try {
             TimedMigration [] events = null;
-            Plan plan0 = catalogService.getCatalog().findPlan(input[0].getPlanPhaseSpecifer().getProductName(),
-                    input[0].getPlanPhaseSpecifer().getBillingPeriod(), input[0].getPlanPhaseSpecifer().getPriceListName());
+            Plan plan0 = catalogService.getFullCatalog().findPlan(input[0].getPlanPhaseSpecifer().getProductName(),
+                    input[0].getPlanPhaseSpecifer().getBillingPeriod(), input[0].getPlanPhaseSpecifer().getPriceListName(), now);
 
-            Plan plan1 = (input.length > 1) ? catalogService.getCatalog().findPlan(input[1].getPlanPhaseSpecifer().getProductName(),
-                    input[1].getPlanPhaseSpecifer().getBillingPeriod(), input[1].getPlanPhaseSpecifer().getPriceListName()) :
+            Plan plan1 = (input.length > 1) ? catalogService.getFullCatalog().findPlan(input[1].getPlanPhaseSpecifer().getProductName(),
+                    input[1].getPlanPhaseSpecifer().getBillingPeriod(), input[1].getPlanPhaseSpecifer().getPriceListName(), now) :
                         null;
 
             DateTime migrationStartDate = now;

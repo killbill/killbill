@@ -16,25 +16,24 @@
 
 package com.ning.billing.catalog;
 
-import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.*;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationError;
-import com.ning.billing.util.config.ValidationErrors;
+import java.math.BigDecimal;
+import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.Date;
+
+import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.CurrencyValueNull;
+import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.Price;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalog> implements InternationalPrice {
-
-	//TODO MDW Validation - effectiveDateForExistingSubscriptons > catalog effectiveDate 
-	@XmlElement(required=false)
-	private Date effectiveDateForExistingSubscriptons;
 
 	//TODO: Must have a price point for every configured currency
 	//TODO: No prices is a zero cost plan
@@ -50,13 +49,7 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
 		return prices;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IInternationalPrice#getEffectiveDateForExistingSubscriptons()
-	 */
-	@Override
-	public Date getEffectiveDateForExistingSubscriptons() {
-		return effectiveDateForExistingSubscriptons;
-	}
+
 
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IInternationalPrice#getPrice(com.ning.billing.catalog.api.Currency)
@@ -71,12 +64,6 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
 		throw new CatalogApiException(ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency);
 	}
 
-
-	protected void setEffectiveDateForExistingSubscriptons(
-			Date effectiveDateForExistingSubscriptons) {
-		this.effectiveDateForExistingSubscriptons = effectiveDateForExistingSubscriptons;
-	}
-
 	protected DefaultInternationalPrice setPrices(DefaultPrice[] prices) {
 		this.prices = prices;
 		return this;
@@ -85,7 +72,7 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
 
 	@Override
 	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors)  {
-		Currency[] supportedCurrencies = catalog.getSupportedCurrencies();
+		Currency[] supportedCurrencies = catalog.getCurrentSupportedCurrencies();
 		for (Price p : prices) {
 			Currency currency = p.getCurrency();
 			if(!currencyIsSupported(currency, supportedCurrencies)) {
@@ -99,14 +86,6 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
 				// No currency => nothing to check, ignore exception
 			}
 		}
-		if(effectiveDateForExistingSubscriptons != null &&
-				catalog.getEffectiveDate().getTime() > effectiveDateForExistingSubscriptons.getTime()) {
-			errors.add(new ValidationError(String.format("Price effective date %s is before catalog effective date '%s'",
-					effectiveDateForExistingSubscriptons,
-					catalog.getEffectiveDate().getTime()), 
-					catalog.getCatalogURI(), DefaultInternationalPrice.class, ""));
-		}
-		
 		return errors;
 	}
 	
@@ -129,7 +108,7 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
 	}
 
 	private synchronized DefaultPrice[] getZeroPrice(StandaloneCatalog root) {
-		Currency[] currencies = root.getSupportedCurrencies();
+		Currency[] currencies = root.getCurrentSupportedCurrencies();
 		DefaultPrice[] zeroPrice = new DefaultPrice[currencies.length];
 		for(int i = 0; i < currencies.length; i++) {
 			zeroPrice[i] = new DefaultPrice();

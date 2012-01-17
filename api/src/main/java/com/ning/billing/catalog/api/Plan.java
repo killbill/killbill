@@ -16,6 +16,7 @@
 
 package com.ning.billing.catalog.api;
 
+import java.util.Date;
 import java.util.Iterator;
 
 public interface Plan {
@@ -26,6 +27,8 @@ public interface Plan {
 
 	public abstract String getName();
 
+	public abstract boolean isRetired();
+
 	public abstract Iterator<PlanPhase> getInitialPhaseIterator();
 
 	public abstract PlanPhase getFinalPhase();
@@ -35,4 +38,8 @@ public interface Plan {
 	public abstract int getPlansAllowedInBundle();
 
 	public abstract PlanPhase[] getAllPhases();
+
+	public abstract Date getEffectiveDateForExistingSubscriptons();
+
+	public abstract PlanPhase findPhase(String name) throws CatalogApiException;
 }

@@ -21,6 +21,8 @@ public interface Product {
 
 	public abstract String getName();
 
+	public abstract boolean isRetired();
+
 	public abstract Product[] getAvailable();
 
 	public abstract Product[] getIncluded();
@@ -28,5 +30,6 @@ public interface Product {
 	public abstract ProductCategory getCategory();
 
 	public abstract String getCatalogName();
+
 
 }

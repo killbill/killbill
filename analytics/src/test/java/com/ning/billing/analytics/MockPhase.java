@@ -53,12 +53,7 @@ public class MockPhase implements PlanPhase
                 return BigDecimal.valueOf(price);
             }
 
-            @Override
-            public Date getEffectiveDateForExistingSubscriptons()
-            {
-                return new Date();
-            }
-        };
+         };
     }
 
     @Override
@@ -78,11 +73,6 @@ public class MockPhase implements PlanPhase
                 return BigDecimal.valueOf(price);
             }
 
-            @Override
-            public Date getEffectiveDateForExistingSubscriptons()
-            {
-                return new Date();
-            }
         };
     }
 

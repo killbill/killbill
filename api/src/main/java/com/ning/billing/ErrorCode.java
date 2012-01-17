@@ -67,7 +67,8 @@ public enum ErrorCode {
 
     /* Price value explicitly set to NULL meaning there is no price available in that currency */
     CAT_PRICE_VALUE_NULL_FOR_CURRENCY(2011, "The value for the currency '%s' is NULL. This plan cannot be bought in this currnency."),
-
+    CAT_NULL_PRICE_LIST_NAME(2012,"Price list name was null"),
+    CAT_PRICE_LIST_NOT_FOUND(2013, "Could not find a pricelist with name '%s'"),
     /*
      * Plans
      */
@@ -77,13 +78,24 @@ public enum ErrorCode {
     /*
      * Products
      */
-    CAT_NO_SUCH_PRODUCT(2030,"Could not find any plans named '%s'"),
-
+    CAT_NO_SUCH_PRODUCT(2030,"Could not find any product named '%s'"),
+    CAT_NULL_PRODUCT_NAME(2031,"Product name was null"),
     /*
      * Phases
      */
     CAT_NO_SUCH_PHASE(2040,"Could not find any phases named '%s'"),
-
+    CAT_BAD_PHASE_NAME(2041,"Bad phase name '%s'"),
+    /*
+     * Versioned Catalog
+     */
+    CAT_NO_CATALOG_FOR_GIVEN_DATE(2050, "There is no catalog version that applies for the given date '%s'"),
+    CAT_NO_CATALOG_ENTRIES_FOR_GIVEN_DATE(2051, "The are no catalog entries that apply for the given date '%s'"),
+    CAT_CATALOG_NAME_MISMATCH(2052, "The catalog name '%s' does not match the name of the catalog we are trying to add '%s'"),  
+    /*
+     * Billing Alignment
+     */
+    CAT_INVALID_BILLING_ALIGNMENT(2060, "Invalid billing alignment '%s'"),
+    
    /*
     *
     * Range 3000 : ACCOUNT
@@ -91,8 +103,8 @@ public enum ErrorCode {
     */
     ACCOUNT_ALREADY_EXISTS(3000, "Account already exists for key %s"),
     ACCOUNT_INVALID_NAME(3001, "An invalid name was specified when creating or updating an account.")
-    ;
 
+    ;
     private int code;
     private String format;
 

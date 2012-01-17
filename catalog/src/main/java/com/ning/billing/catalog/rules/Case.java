@@ -47,10 +47,10 @@ public abstract class Case<T> extends ValidatingConfig<StandaloneCatalog> {
 	}
 	
 	protected boolean satisfiesCase(PlanSpecifier planPhase, StandaloneCatalog c) throws CatalogApiException {
-		return (getProduct()         == null || getProduct().equals(c.findProduct(planPhase.getProductName()))) &&
+		return (getProduct()         == null || getProduct().equals(c.findCurrentProduct(planPhase.getProductName()))) &&
 		(getProductCategory() == null || getProductCategory().equals(planPhase.getProductCategory())) &&
 		(getBillingPeriod()   == null || getBillingPeriod().equals(planPhase.getBillingPeriod())) &&
-		(getPriceList()       == null || getPriceList().equals(c.getPriceListFromName(planPhase.getPriceListName())));
+		(getPriceList()       == null || getPriceList().equals(c.findCurrentPriceList(planPhase.getPriceListName())));
 	}
 
 	public static <K> K getResult(Case<K>[] cases, PlanSpecifier planSpec, StandaloneCatalog catalog) throws CatalogApiException {

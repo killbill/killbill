@@ -17,6 +17,8 @@
 package com.ning.billing.catalog;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.util.config.ValidationErrors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,5 +46,37 @@ public class TestPlanPhase {
 		errors = pp.validate(new MockCatalog(), new ValidationErrors());
 		errors.log(log);
 		Assert.assertEquals(errors.size(), 1);
-}
+	}
+	
+	@Test
+	public void testPhaseNames() throws CatalogApiException {
+		String planName = "Foo";
+		String planNameExt = planName + "-";
+		
+		DefaultPlan p = new MockPlan().setName(planName);
+		DefaultPlanPhase ppDiscount = new MockPlanPhase().setPhaseType(PhaseType.DISCOUNT).setPlan(p);
+		DefaultPlanPhase ppTrial = new MockPlanPhase().setPhaseType(PhaseType.TRIAL).setPlan(p);
+		DefaultPlanPhase ppEvergreen = new MockPlanPhase().setPhaseType(PhaseType.EVERGREEN).setPlan(p);
+		DefaultPlanPhase ppFixedterm = new MockPlanPhase().setPhaseType(PhaseType.FIXEDTERM).setPlan(p);
+		
+		String ppnDiscount = DefaultPlanPhase.phaseName(p, ppDiscount);
+		String ppnTrial = DefaultPlanPhase.phaseName(p, ppTrial);
+		String ppnEvergreen = DefaultPlanPhase.phaseName(p, ppEvergreen);
+		String ppnFixedterm = DefaultPlanPhase.phaseName(p, ppFixedterm);
+		
+		Assert.assertEquals(ppnTrial, planNameExt + "trial");
+		Assert.assertEquals(ppnEvergreen, planNameExt + "evergreen");
+		Assert.assertEquals(ppnFixedterm, planNameExt + "fixedterm");
+		Assert.assertEquals(ppnDiscount, planNameExt + "discount");
+		
+		
+		Assert.assertEquals(DefaultPlanPhase.planName(ppnDiscount),planName);
+		Assert.assertEquals(DefaultPlanPhase.planName(ppnTrial),planName);
+		Assert.assertEquals(DefaultPlanPhase.planName(ppnEvergreen), planName);
+		Assert.assertEquals(DefaultPlanPhase.planName(ppnFixedterm), planName);
+		
+		
+		
+		
+	}
 }

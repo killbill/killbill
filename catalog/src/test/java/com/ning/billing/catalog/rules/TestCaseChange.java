@@ -16,11 +16,14 @@
 
 package com.ning.billing.catalog.rules;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.rules.TestCase.CaseResult;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -60,13 +63,13 @@ public class TestCaseChange {
 		}
 	}
 	@Test(enabled=true)
-	public void testBasic(){
+	public void testBasic() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -86,14 +89,14 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				 cat.getProducts()[1].getName(), product2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(),  cat.getProducts()[1].getName(), 
+				product1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -127,18 +130,18 @@ public class TestCaseChange {
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				 cat.getProducts()[1].getName(), priceList2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(),  cat.getProducts()[1].getName(), 
+				priceList1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -150,13 +153,13 @@ public class TestCaseChange {
 	}
 	
 	@Test(enabled=true)
-	public void testWildcardFromProduct(){
+	public void testWildcardFromProduct()throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -176,7 +179,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertion(Result.FOO,cr, 
-				 cat.getProducts()[1].getName(), product2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -197,7 +200,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 
 		assertionNull(cr, 
-				product1.getName(),  cat.getProducts()[1].getName(), 
+				product1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.ANNUAL, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -210,18 +213,18 @@ public class TestCaseChange {
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				 cat.getProducts()[1].getName(), priceList2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(),  cat.getProducts()[1].getName(), 
+				priceList1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -233,13 +236,13 @@ public class TestCaseChange {
 	}
 	
 	@Test(enabled=true)
-	public void testWildcardToProduct(){
+	public void testWildcardToProduct() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -259,7 +262,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				 cat.getProducts()[1].getName(), product2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -280,7 +283,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertion(Result.FOO, cr, 
-				product1.getName(),  cat.getProducts()[1].getName(), 
+				product1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -300,18 +303,18 @@ public class TestCaseChange {
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				 cat.getProducts()[1].getName(), priceList2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(),  cat.getProducts()[1].getName(), 
+				priceList1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -323,13 +326,13 @@ public class TestCaseChange {
 	}
 	
 	@Test(enabled=true)
-	public void testWildcardFromProductCategory(){
+	public void testWildcardFromProductCategory() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -349,14 +352,14 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				 cat.getProducts()[1].getName(), product2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(),  cat.getProducts()[1].getName(), 
+				product1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -390,18 +393,18 @@ public class TestCaseChange {
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				 cat.getProducts()[1].getName(), priceList2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(),  cat.getProducts()[1].getName(), 
+				priceList1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -413,13 +416,13 @@ public class TestCaseChange {
 	}
 	
 	@Test(enabled=true)
-	public void testWildcardToProductCategory(){
+	public void testWildcardToProductCategory() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -439,14 +442,14 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				 cat.getProducts()[1].getName(), product2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(),  cat.getProducts()[1].getName(), 
+				product1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -480,18 +483,18 @@ public class TestCaseChange {
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				 cat.getProducts()[1].getName(), priceList2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(),  cat.getProducts()[1].getName(), 
+				priceList1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -503,13 +506,13 @@ public class TestCaseChange {
 	}
 	
 	@Test(enabled=true)
-	public void testWildcardFromBillingPeriod(){
+	public void testWildcardFromBillingPeriod() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -529,7 +532,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				 cat.getProducts()[1].getName(), product2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -550,7 +553,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(),  cat.getProducts()[1].getName(), 
+				product1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -570,18 +573,18 @@ public class TestCaseChange {
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				 cat.getProducts()[1].getName(), priceList2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(),  cat.getProducts()[1].getName(), 
+				priceList1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -594,13 +597,13 @@ public class TestCaseChange {
 	
 	
 	@Test(enabled=true)
-	public void testWildCardToBillingPeriod(){
+	public void testWildCardToBillingPeriod() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -620,7 +623,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				 cat.getProducts()[1].getName(), product2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -641,7 +644,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(),  cat.getProducts()[1].getName(), 
+				product1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -661,18 +664,18 @@ public class TestCaseChange {
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				 cat.getProducts()[1].getName(), priceList2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(),  cat.getProducts()[1].getName(), 
+				priceList1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -684,13 +687,13 @@ public class TestCaseChange {
 	}
 	
 	@Test(enabled=true)
-	public void testWildCardFromPriceList(){
+	public void testWildCardFromPriceList() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -710,7 +713,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				 cat.getProducts()[1].getName(), product2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -731,7 +734,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(),  cat.getProducts()[1].getName(), 
+				product1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -755,14 +758,14 @@ public class TestCaseChange {
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				 cat.getProducts()[1].getName(), priceList2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(),  cat.getProducts()[1].getName(), 
+				priceList1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -774,13 +777,13 @@ public class TestCaseChange {
 	}
 	
 	@Test(enabled=true)
-	public void testWildcardToPriceList(){
+	public void testWildcardToPriceList() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -800,7 +803,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				 cat.getProducts()[1].getName(), product2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -821,7 +824,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(),  cat.getProducts()[1].getName(), 
+				product1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -841,18 +844,18 @@ public class TestCaseChange {
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				 cat.getProducts()[1].getName(), priceList2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertion(Result.FOO,cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(),  cat.getProducts()[1].getName(), 
+				priceList1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
@@ -864,13 +867,13 @@ public class TestCaseChange {
 	}
 	
 	@Test(enabled=true)
-	public void testWildcardPlanPhase(){
+	public void testWildcardPlanPhase() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -890,7 +893,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				 cat.getProducts()[1].getName(), product2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -911,7 +914,7 @@ public class TestCaseChange {
 				PhaseType.EVERGREEN, cat);
 		
 		assertionNull(cr, 
-				product1.getName(),  cat.getProducts()[1].getName(), 
+				product1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
 				priceList1.getName(), priceList2.getName(), 
@@ -931,18 +934,18 @@ public class TestCaseChange {
 				priceList1.getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				 cat.getProducts()[1].getName(), priceList2.getName(), 
+				 cat.getCurrentProducts()[1].getName(), priceList2.getName(), 
 				PhaseType.EVERGREEN, cat);
 		
-		assertionNull(cr, 
+		assertionException(cr, 
 				product1.getName(), product2.getName(), 
 				ProductCategory.BASE, ProductCategory.BASE,
 				BillingPeriod.MONTHLY, BillingPeriod.MONTHLY, 
-				priceList1.getName(),  cat.getProducts()[1].getName(), 
+				priceList1.getName(),  cat.getCurrentProducts()[1].getName(), 
 				PhaseType.EVERGREEN, cat);
 		
 		assertion(Result.FOO,cr, 
@@ -958,10 +961,10 @@ public class TestCaseChange {
 	public void testOrder() throws CatalogApiException{
 		MockCatalog cat = new MockCatalog();
 
-		DefaultProduct product1 = cat.getProducts()[0];
-		DefaultPriceList priceList1 = cat.getPriceListFromName(PriceListSet.DEFAULT_PRICELIST_NAME);
+		DefaultProduct product1 = cat.getCurrentProducts()[0];
+		DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-		DefaultProduct product2 = cat.getProducts()[2];
+		DefaultProduct product2 = cat.getCurrentProducts()[2];
 		DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
 
 
@@ -1033,7 +1036,20 @@ public class TestCaseChange {
 			Assert.fail("", e);
 		}
 	}
-
+	   protected void assertionException(CaseChangeResult cr, 
+				String fromProductName, String toProductName,
+				ProductCategory fromProductCategory, ProductCategory toProductCategory, 
+				BillingPeriod fromBp, BillingPeriod toBp,
+				String fromPriceListName, String toPriceListName,
+				PhaseType phaseType, StandaloneCatalog cat){
+	        try{
+	        	cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory, fromBp, fromPriceListName, phaseType), 
+						new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName),cat);	
+	        	Assert.fail("Expecting an exception");
+	        } catch (CatalogApiException e) {
+	        	Assert.assertEquals(e.getCode(), ErrorCode.CAT_PRICE_LIST_NOT_FOUND.getCode());
+	        }
+	    }
 	protected void assertion(Result result, CaseChangeResult cr, 
 			String fromProductName, String toProductName,
 			ProductCategory fromProductCategory, ProductCategory toProductCategory, 
