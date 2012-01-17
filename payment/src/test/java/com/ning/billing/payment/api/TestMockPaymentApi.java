@@ -19,9 +19,11 @@ package com.ning.billing.payment.api;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.glue.AccountModuleWithMocks;
+import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 
-@Guice(modules = PaymentTestModuleWithMocks.class)
+@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
 @Test(groups = "fast")
 public class TestMockPaymentApi extends TestPaymentApi {
 
