@@ -25,56 +25,43 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.MockAccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.MockInvoicePaymentApi;
-import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
+import com.ning.billing.payment.TestHelper;
+import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
 public abstract class TestPaymentApi {
     @Inject
-    protected MockInvoicePaymentApi invoicePaymentApi;
-    @Inject
-    protected MockAccountUserApi accountUserApi;
+    private EventBus eventBus;
     @Inject
     protected PaymentApi paymentApi;
+    @Inject
+    protected TestHelper testHelper;
 
-    protected Account createAccount() {
-        String name = "First" + RandomStringUtils.random(5) + " " + "Last" + RandomStringUtils.random(5);
-        String externalKey = "12345";
-        return accountUserApi.createAccount(UUID.randomUUID(),
-                                            externalKey,
-                                            "user@example.com",
-                                            name,
-                                            name.length(),
-                                            "123-456-7890",
-                                            Currency.USD,
-                                            1,
-                                            null,
-                                            BigDecimal.ZERO);
+    @BeforeMethod(alwaysRun = true)
+    public void setUp() throws EventBusException {
+        eventBus.start();
     }
 
-    protected Invoice createInvoice(Account account,
-                                    DateTime targetDate,
-                                    Currency currency) {
-        Invoice invoice = new DefaultInvoice(account.getId(), targetDate, currency);
-
-        invoicePaymentApi.add(invoice);
-        return invoice;
+    @AfterMethod(alwaysRun = true)
+    public void tearDown() throws EventBusException {
+        eventBus.stop();
     }
 
     @Test
     public void testCreatePayment() {
         final DateTime now = new DateTime();
-        final Account account = createAccount();
-        final Invoice invoice = createInvoice(account, now, Currency.USD);
+        final Account account = testHelper.createTestAccount();
+        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();
 
