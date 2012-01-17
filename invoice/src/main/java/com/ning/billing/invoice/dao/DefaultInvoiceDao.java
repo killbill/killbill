@@ -136,16 +136,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
         return invoiceDao.getInvoicesForPayment(targetDate, numberOfDays);
     }
 
-//    @Override
-//    public void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentId, Date paymentDate) {
-//        invoiceDao.notifySuccessfulPayment(invoiceId, paymentAmount, currency, paymentId, paymentDate);
-//    }
-//
-//    @Override
-//    public void notifyFailedPayment(String invoiceId, String paymentId, Date paymentAttemptDate) {
-//        invoiceDao.notifyFailedPayment(invoiceId, paymentId, paymentAttemptDate);
-//    }
-
     @Override
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
         invoiceDao.notifyOfPaymentAttempt(invoicePayment);

@@ -57,6 +57,7 @@ public abstract class TestPaymentApi {
         eventBus.stop();
     }
 
+//    @Test(groups = "fast")
     @Test
     public void testCreatePayment() {
         final DateTime now = new DateTime();

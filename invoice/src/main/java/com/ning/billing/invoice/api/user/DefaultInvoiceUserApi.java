@@ -55,13 +55,4 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         dao.notifyOfPaymentAttempt(invoicePayment);
     }
 
-//    @Override
-//    public void paymentAttemptFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate) {
-//        dao.notifyFailedPayment(invoiceId.toString(), paymentId.toString(), paymentAttemptDate.toDate());
-//    }
-//
-//    @Override
-//    public void paymentAttemptSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId, DateTime paymentDate) {
-//        dao.notifySuccessfulPayment(invoiceId.toString(), amount, currency.toString(), paymentId.toString(), paymentDate.toDate());
-//    }
 }

@@ -37,16 +37,6 @@ public interface InvoiceDao {
     List<UUID> getInvoicesForPayment(final Date targetDate,
                                      final int numberOfDays);
 
-//    void notifySuccessfulPayment(final String invoiceId,
-//                                 final BigDecimal paymentAmount,
-//                                 final String currency,
-//                                 final String paymentId,
-//                                 final Date paymentDate);
-//
-//    void notifyFailedPayment(final String invoiceId,
-//                             final String paymentId,
-//                             final Date paymentAttemptDate);
-
     String getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId);
 
     void test();

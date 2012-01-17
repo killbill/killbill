@@ -164,25 +164,6 @@ public class MockInvoiceDao implements InvoiceDao {
         return new ArrayList<UUID>(result);
     }
 
-//    @Override
-//    public void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentAttemptId, Date paymentAttemptDate) {
-//        synchronized (monitor) {
-//            invoicePayments.put(UUID.fromString(paymentAttemptId),
-//                                new InvoicePayment(UUID.fromString(invoiceId), paymentAmount, Currency.valueOf(currency), UUID.fromString(paymentAttemptId), new DateTime(paymentAttemptDate)));
-//        }
-//    }
-//
-//    @Override
-//    public void notifyFailedPayment(String invoiceId,
-//                                    String paymentAttemptId,
-//                                    Date paymentAttemptDate) {
-//        synchronized (monitor) {
-//            invoicePayments.put(UUID.fromString(paymentAttemptId),
-//                                new InvoicePayment(UUID.fromString(invoiceId), null, null, UUID.fromString(paymentAttemptId), new DateTime(paymentAttemptDate)));
-//
-//        }
-//    }
-
     @Override
     public void test() {
     }

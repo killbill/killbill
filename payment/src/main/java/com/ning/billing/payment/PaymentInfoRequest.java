@@ -36,4 +36,10 @@ public class PaymentInfoRequest implements EventBusNotification {
     public String getPaymentId() {
         return paymentId;
     }
+
+    @Override
+    public String toString() {
+        return "PaymentInfoRequest [accountId=" + accountId + ", paymentId=" + paymentId + "]";
+    }
+
 }

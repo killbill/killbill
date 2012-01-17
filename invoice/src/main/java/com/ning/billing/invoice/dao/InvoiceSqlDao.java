@@ -82,10 +82,6 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     @SqlQuery
     InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") UUID paymentAttemptId);
 
-//    void notifySuccessfulPayment(@Bind(binder = InvoicePaymentBinder.class) InvoicePayment invoicePayment);
-
-//    void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentId, Date paymentDate);
-
     @SqlUpdate
     void notifyOfPaymentAttempt(@Bind(binder = InvoicePaymentBinder.class) InvoicePayment invoicePayment);
 

@@ -63,7 +63,7 @@ public class RequestProcessor {
             final Account account = accountUserApi.getAccountById(event.getAccountId());
 
             if (account == null) {
-                // TODO: log a warning
+                log.info("could not process invoice payment: could not find a valid account for event {}", event);
             }
             else {
                 List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()));
@@ -78,7 +78,7 @@ public class RequestProcessor {
             }
         }
         catch (EventBusException ex) {
-            //  TODO: log
+            throw new RuntimeException(ex);
         }
     }
 
@@ -86,7 +86,7 @@ public class RequestProcessor {
     public void receivePaymentInfoRequest(PaymentInfoRequest paymentInfoRequest) throws EventBusException {
         final Account account = accountUserApi.getAccountById(paymentInfoRequest.getAccountId());
         if (account == null) {
-            // TODO: log a warning ?
+            log.info("could not process payment info request: could not find a valid account for event {}", paymentInfoRequest);
         }
         else {
             final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
