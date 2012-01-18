@@ -20,14 +20,14 @@ import com.google.inject.Inject;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
-public class DefaultEventBusService implements EventBusService {
+public class DefaultEventBusService implements BusService {
 
     private final static String EVENT_BUS_SERVICE = "eventbus-service";
 
-    private final EventBus eventBus;
+    private final Bus eventBus;
 
     @Inject
-    public DefaultEventBusService(EventBus eventBus) {
+    public DefaultEventBusService(Bus eventBus) {
         this.eventBus = eventBus;
     }
 
@@ -47,7 +47,7 @@ public class DefaultEventBusService implements EventBusService {
     }
 
     @Override
-    public EventBus getEventBus() {
+    public Bus getBus() {
         return eventBus;
     }
 

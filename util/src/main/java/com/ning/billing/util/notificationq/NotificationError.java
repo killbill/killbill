@@ -14,8 +14,25 @@
  * under the License.
  */
 
-package com.ning.billing.util.eventbus;
+package com.ning.billing.util.notificationq;
 
-public interface EventBusNotification {
+public class NotificationError extends Error {
 
+    private static final long serialVersionUID = 131398536;
+
+    public NotificationError() {
+        super();
+    }
+
+    public NotificationError(String msg, Throwable arg1) {
+        super(msg, arg1);
+    }
+
+    public NotificationError(String msg) {
+        super(msg);
+    }
+
+    public NotificationError(Throwable msg) {
+        super(msg);
+    }
 }

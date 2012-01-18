@@ -14,17 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance;
+package com.ning.billing.invoice.api;
 
-import com.ning.billing.invoice.model.BillingMode;
-import com.ning.billing.invoice.model.InAdvanceBillingMode;
-import com.ning.billing.invoice.tests.ProRationTestBase;
-import org.testng.annotations.Test;
+import java.math.BigDecimal;
+import java.util.UUID;
+import org.joda.time.DateTime;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.entity.Entity;
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public abstract class ProRationInAdvanceTestBase extends ProRationTestBase {
-    @Override
-    protected BillingMode getBillingMode() {
-        return new InAdvanceBillingMode();
-    }
+public interface InvoicePayment extends Entity {
+    UUID getInvoiceId();
+
+    DateTime getPaymentDate();
+
+    BigDecimal getAmount();
+
+    Currency getCurrency();
 }

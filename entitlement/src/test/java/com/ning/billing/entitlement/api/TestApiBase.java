@@ -62,7 +62,7 @@ import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.EventBusService;
+import com.ning.billing.util.eventbus.BusService;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -86,7 +86,7 @@ public abstract class TestApiBase {
     protected EntitlementConfig config;
     protected EntitlementDao dao;
     protected ClockMock clock;
-    protected EventBusService busService;
+    protected BusService busService;
 
     protected AccountData accountData;
     protected Catalog catalog;
@@ -108,7 +108,7 @@ public abstract class TestApiBase {
     @AfterClass(groups={"setup"})
     public void tearDown() {
         try {
-            busService.getEventBus().register(testListener);
+            busService.getBus().register(testListener);
             ((DefaultEventBusService) busService).stopBus();
         } catch (Exception e) {
             log.warn("Failed to tearDown test properly ", e);
@@ -124,7 +124,7 @@ public abstract class TestApiBase {
 
         entitlementService = g.getInstance(EntitlementService.class);
         catalogService = g.getInstance(CatalogService.class);
-        busService = g.getInstance(EventBusService.class);
+        busService = g.getInstance(BusService.class);
         config = g.getInstance(EntitlementConfig.class);
         dao = g.getInstance(EntitlementDao.class);
         clock = (ClockMock) g.getInstance(Clock.class);
@@ -151,7 +151,7 @@ public abstract class TestApiBase {
         assertNotNull(catalog);
 
 
-        testListener = new ApiTestListener(busService.getEventBus());
+        testListener = new ApiTestListener(busService.getBus());
         entitlementApi = entitlementService.getUserApi();
         billingApi = entitlementService.getBillingApi();
         migrationApi = entitlementService.getMigrationApi();
@@ -169,7 +169,7 @@ public abstract class TestApiBase {
         clock.resetDeltaFromReality();
         ((MockEntitlementDao) dao).reset();
         try {
-            busService.getEventBus().register(testListener);
+            busService.getBus().register(testListener);
             UUID accountId = UUID.randomUUID();
             bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle");
         } catch (Exception e) {

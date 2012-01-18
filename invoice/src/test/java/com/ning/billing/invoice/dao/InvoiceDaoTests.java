@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
-import org.joda.time.Days;
 import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
@@ -67,15 +66,15 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime startDate = new DateTime(2010, 1, 1, 0, 0, 0, 0);
         DateTime endDate = new DateTime(2010, 4, 1, 0, 0, 0, 0);
         InvoiceItem invoiceItem = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, "test", new BigDecimal("21.00"), new BigDecimal("7.00"), Currency.USD);
-        invoice.add(invoiceItem);
+        invoice.addInvoiceItem(invoiceItem);
         invoiceDao.create(invoice);
 
         Invoice savedInvoice = invoiceDao.getById(invoiceId.toString());
         assertNotNull(savedInvoice);
         assertEquals(savedInvoice.getTotalAmount().compareTo(new BigDecimal("21.00")), 0);
-        assertEquals(savedInvoice.getAmountOutstanding().compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(savedInvoice.getBalance().compareTo(new BigDecimal("21.00")), 0);
         assertEquals(savedInvoice.getAmountPaid(), BigDecimal.ZERO);
-        assertEquals(savedInvoice.getItems().size(), 1);
+        assertEquals(savedInvoice.getInvoiceItems().size(), 1);
 
         BigDecimal paymentAmount = new BigDecimal("11.00");
         String paymentId = UUID.randomUUID().toString();
@@ -83,9 +82,9 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         Invoice retrievedInvoice = invoiceDao.getById(invoiceId.toString());
         assertNotNull(retrievedInvoice);
-        assertEquals(retrievedInvoice.getItems().size(), 1);
+        assertEquals(retrievedInvoice.getInvoiceItems().size(), 1);
         assertEquals(retrievedInvoice.getTotalAmount().compareTo(new BigDecimal("21.00")), 0);
-        assertEquals(retrievedInvoice.getAmountOutstanding().compareTo(new BigDecimal("10.00")), 0);
+        assertEquals(retrievedInvoice.getBalance().compareTo(new BigDecimal("10.00")), 0);
         assertEquals(retrievedInvoice.getAmountPaid().compareTo(new BigDecimal("11.00")), 0);
     }
 
@@ -111,6 +110,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoice = invoiceDao.getById(invoice.getId().toString());
         assertEquals(invoice.getAmountPaid().compareTo(paymentAmount), 0);
         assertTrue(invoice.getLastPaymentAttempt().equals(paymentAttemptDate));
+        assertEquals(invoice.getNumberOfPayments(), 1);
     }
 
     @Test
@@ -162,7 +162,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal amount = rate.multiply(new BigDecimal("3.0"));
 
         DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, targetDate, endDate, "test", amount, rate, Currency.USD);
-        invoice.add(item);
+        invoice.addInvoiceItem(item);
         invoiceDao.create(invoice);
 
         // ensure that the number of invoices for payment has increased by 1

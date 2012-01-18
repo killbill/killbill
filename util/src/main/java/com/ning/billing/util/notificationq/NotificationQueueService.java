@@ -23,21 +23,12 @@ public interface NotificationQueueService {
 
     public interface NotificationQueueHandler {
         /**
-         * Called when the Notification thread has been started
-         */
-        public void completedQueueStart();
-
-        /**
          * Called for each notification ready
          *
          * @param key the notification key associated to that notification entry
          */
         public void handleReadyNotification(String notificationKey);
-        /**
-         * Called right before the Notification thread is about to exit
-         */
-        public void completedQueueStop();
-    }
+     }
 
     public static final class NotficationQueueAlreadyExists extends Exception {
         private static final long serialVersionUID = 1541281L;

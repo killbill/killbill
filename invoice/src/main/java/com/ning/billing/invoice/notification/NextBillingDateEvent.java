@@ -14,17 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance;
+package com.ning.billing.invoice.notification;
 
-import com.ning.billing.invoice.model.BillingMode;
-import com.ning.billing.invoice.model.InAdvanceBillingMode;
-import com.ning.billing.invoice.tests.ProRationTestBase;
-import org.testng.annotations.Test;
+import java.util.UUID;
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public abstract class ProRationInAdvanceTestBase extends ProRationTestBase {
-    @Override
-    protected BillingMode getBillingMode() {
-        return new InAdvanceBillingMode();
-    }
+import com.ning.billing.util.eventbus.BusEvent;
+
+public class NextBillingDateEvent implements BusEvent{
+	private final UUID subscriptionId;
+
+	public NextBillingDateEvent(UUID subscriptionId) {
+		super();
+		this.subscriptionId = subscriptionId;
+	}
+
+	public UUID getSubscriptionId() {
+		return subscriptionId;
+	}
 }

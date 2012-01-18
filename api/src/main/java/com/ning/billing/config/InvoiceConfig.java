@@ -14,17 +14,26 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance;
+package com.ning.billing.config;
 
-import com.ning.billing.invoice.model.BillingMode;
-import com.ning.billing.invoice.model.InAdvanceBillingMode;
-import com.ning.billing.invoice.tests.ProRationTestBase;
-import org.testng.annotations.Test;
+import org.skife.config.Config;
+import org.skife.config.Default;
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public abstract class ProRationInAdvanceTestBase extends ProRationTestBase {
-    @Override
-    protected BillingMode getBillingMode() {
-        return new InAdvanceBillingMode();
-    }
+public interface InvoiceConfig {
+
+    @Config("killbill.invoice.dao.claim.time")
+    @Default("60000")
+    public long getDaoClaimTimeMs();
+
+    @Config("killbill.invoice.dao.ready.max")
+    @Default("10")
+    public int getDaoMaxReadyEvents();
+
+    @Config("killbill.invoice.engine.notifications.sleep")
+    @Default("500")
+    public long getNotificationSleepTimeMs();
+
+    @Config("killbill.invoice.engine.events.off")
+    @Default("false")
+    public boolean isEventProcessingOff();
 }

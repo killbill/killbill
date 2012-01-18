@@ -24,7 +24,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.invoice.glue.InvoiceModuleMock;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.EventBusService;
+import com.ning.billing.util.eventbus.BusService;
 
 import static org.testng.Assert.fail;
 
@@ -47,7 +47,7 @@ public abstract class InvoiceDaoTestBase {
 
             invoiceItemDao = module.getInvoiceItemDao();
 
-            EventBusService busService = injector.getInstance(EventBusService.class);
+            BusService busService = injector.getInstance(BusService.class);
             ((DefaultEventBusService) busService).startBus();
         }
         catch (Throwable t) {

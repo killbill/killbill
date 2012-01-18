@@ -14,17 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance;
+package com.ning.billing.util.eventbus;
 
-import com.ning.billing.invoice.model.BillingMode;
-import com.ning.billing.invoice.model.InAdvanceBillingMode;
-import com.ning.billing.invoice.tests.ProRationTestBase;
-import org.testng.annotations.Test;
+public interface BusEvent {
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public abstract class ProRationInAdvanceTestBase extends ProRationTestBase {
-    @Override
-    protected BillingMode getBillingMode() {
-        return new InAdvanceBillingMode();
-    }
 }

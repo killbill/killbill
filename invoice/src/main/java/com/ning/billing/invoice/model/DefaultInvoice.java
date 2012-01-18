@@ -19,6 +19,7 @@ package com.ning.billing.invoice.model;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 
@@ -28,55 +29,65 @@ import java.util.List;
 import java.util.UUID;
 
 public class DefaultInvoice implements Invoice {
-    private final InvoiceItemList items = new InvoiceItemList();
+    private final InvoiceItemList invoiceItems = new InvoiceItemList();
+    private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
     private final UUID id;
     private UUID accountId;
     private final DateTime invoiceDate;
     private final DateTime targetDate;
     private Currency currency;
-    private BigDecimal amountPaid;
-    private DateTime lastPaymentAttempt;
 
     public DefaultInvoice(UUID accountId, DateTime targetDate, Currency currency) {
-        this(UUID.randomUUID(), accountId, new DefaultClock().getUTCNow(), targetDate, currency, null, BigDecimal.ZERO, new ArrayList<InvoiceItem>());
+        this(UUID.randomUUID(), accountId, new DefaultClock().getUTCNow(), targetDate, currency);
     }
 
     public DefaultInvoice(UUID invoiceId, UUID accountId, DateTime invoiceDate, DateTime targetDate,
-                          Currency currency, DateTime lastPaymentAttempt, BigDecimal amountPaid) {
-        this(invoiceId, accountId, invoiceDate, targetDate, currency, lastPaymentAttempt, amountPaid, new ArrayList<InvoiceItem>());
-    }
-
-    public DefaultInvoice(UUID invoiceId, UUID accountId, DateTime invoiceDate, DateTime targetDate,
-                          Currency currency, DateTime lastPaymentAttempt, BigDecimal amountPaid,
-                          List<InvoiceItem> invoiceItems) {
+                          Currency currency) {
         this.id = invoiceId;
         this.accountId = accountId;
         this.invoiceDate = invoiceDate;
         this.targetDate = targetDate;
         this.currency = currency;
-        this.lastPaymentAttempt= lastPaymentAttempt;
-        this.amountPaid = amountPaid;
-        this.items.addAll(invoiceItems);
     }
 
     @Override
-    public boolean add(InvoiceItem item) {
-        return items.add(item);
+    public boolean addInvoiceItem(final InvoiceItem item) {
+        return invoiceItems.add(item);
     }
 
     @Override
-    public boolean add(List<InvoiceItem> items) {
-        return this.items.addAll(items);
+    public boolean addInvoiceItems(final List<InvoiceItem> items) {
+        return this.invoiceItems.addAll(items);
     }
 
     @Override
-    public List<InvoiceItem> getItems() {
-        return items;
+    public List<InvoiceItem> getInvoiceItems() {
+        return invoiceItems;
     }
 
     @Override
     public int getNumberOfItems() {
-        return items.size();
+        return invoiceItems.size();
+    }
+
+    @Override
+    public boolean addPayment(final InvoicePayment payment) {
+        return payments.add(payment);
+    }
+
+    @Override
+    public boolean addPayments(final List<InvoicePayment> payments) {
+        return this.payments.addAll(payments);
+    }
+
+    @Override
+    public List<InvoicePayment> getPayments() {
+        return payments;
+    }
+
+    @Override
+    public int getNumberOfPayments() {
+        return payments.size();
     }
 
     @Override
@@ -106,21 +117,40 @@ public class DefaultInvoice implements Invoice {
 
     @Override
     public DateTime getLastPaymentAttempt() {
+        DateTime lastPaymentAttempt = null;
+
+        for (final InvoicePayment paymentAttempt : payments) {
+            DateTime paymentAttemptDate = paymentAttempt.getPaymentDate();
+            if (lastPaymentAttempt == null) {
+                lastPaymentAttempt = paymentAttemptDate;
+            }
+
+            if (lastPaymentAttempt.isBefore(paymentAttemptDate)) {
+                lastPaymentAttempt = paymentAttemptDate;
+            }
+        }
+
         return lastPaymentAttempt;
     }
 
     @Override
     public BigDecimal getAmountPaid() {
+        BigDecimal amountPaid = BigDecimal.ZERO;
+        for (final InvoicePayment payment : payments) {
+            if (payment.getAmount() != null) {
+                amountPaid = amountPaid.add(payment.getAmount());
+            }
+        }
         return amountPaid;
     }
 
     @Override
     public BigDecimal getTotalAmount() {
-        return items.getTotalAmount();
+        return invoiceItems.getTotalAmount();
     }
 
     @Override
-    public BigDecimal getAmountOutstanding() {
+    public BigDecimal getBalance() {
         return getTotalAmount().subtract(getAmountPaid());
     }
 
@@ -130,6 +160,7 @@ public class DefaultInvoice implements Invoice {
             return false;
         }
 
+        DateTime lastPaymentAttempt = getLastPaymentAttempt();
         if (lastPaymentAttempt == null) {
             return true;
         }

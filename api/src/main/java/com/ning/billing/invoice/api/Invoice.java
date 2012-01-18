@@ -25,13 +25,21 @@ import java.util.List;
 import java.util.UUID;
 
 public interface Invoice extends Entity {
-    boolean add(InvoiceItem item);
+    boolean addInvoiceItem(InvoiceItem item);
 
-    boolean add(List<InvoiceItem> items);
+    boolean addInvoiceItems(List<InvoiceItem> items);
 
-    List<InvoiceItem> getItems();
+    List<InvoiceItem> getInvoiceItems();
 
     int getNumberOfItems();
+
+    boolean addPayment(InvoicePayment payment);
+
+    boolean addPayments(List<InvoicePayment> payments);
+
+    List<InvoicePayment> getPayments();
+
+    int getNumberOfPayments();
 
     UUID getAccountId();
 
@@ -47,7 +55,7 @@ public interface Invoice extends Entity {
 
     BigDecimal getTotalAmount();
 
-    BigDecimal getAmountOutstanding();
+    BigDecimal getBalance();
 
     boolean isDueForPayment(DateTime targetDate, int numberOfDays);
 }
