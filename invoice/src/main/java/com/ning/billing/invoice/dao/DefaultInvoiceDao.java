@@ -17,13 +17,14 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import com.google.inject.Inject;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -45,33 +46,39 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final String accountId) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId) {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
-             @Override
-             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                 List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
+            @Override
+            public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+                List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId.toString());
 
-                 InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
-                 for (final Invoice invoice : invoices) {
-                     List<InvoiceItem> invoiceItems = invoiceItemDao.getInvoiceItemsByInvoice(invoice.getId().toString());
-                     invoice.addInvoiceItems(invoiceItems);
-                 }
+                getInvoiceItemsWithinTransaction(invoices, invoiceDao);
 
-                 InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
-                 for (final Invoice invoice : invoices) {
-                     String invoiceId = invoice.getId().toString();
-                     List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId);
-                     invoice.addPayments(invoicePayments);
-                 }
+                getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
 
-                 return invoices;
-             }
+                return invoices;
+            }
         });
     }
 
     @Override
-    public List<InvoiceItem> getInvoiceItemsByAccount(final String accountId) {
-        return invoiceItemSqlDao.getInvoiceItemsByAccount(accountId);
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final DateTime fromDate) {
+        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+            @Override
+            public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+                List<Invoice> invoices = invoiceDao.getInvoicesByAccountAfterDate(accountId.toString(), fromDate.toDate());
+
+                getInvoiceItemsWithinTransaction(invoices, invoiceDao);
+                getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
+
+                return invoices;
+            }
+        });
+    }
+
+    @Override
+    public List<InvoiceItem> getInvoiceItemsByAccount(final UUID accountId) {
+        return invoiceItemSqlDao.getInvoiceItemsByAccount(accountId.toString());
     }
 
     @Override
@@ -81,18 +88,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
              public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                  List<Invoice> invoices = invoiceDao.get();
 
-                 InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
-                 for (final Invoice invoice : invoices) {
-                     List<InvoiceItem> invoiceItems = invoiceItemDao.getInvoiceItemsByInvoice(invoice.getId().toString());
-                     invoice.addInvoiceItems(invoiceItems);
-                 }
-
-                 InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
-                 for (final Invoice invoice : invoices) {
-                     String invoiceId = invoice.getId().toString();
-                     List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId);
-                     invoice.addPayments(invoicePayments);
-                 }
+                 getInvoiceItemsWithinTransaction(invoices, invoiceDao);
+                 getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
 
                  return invoices;
              }
@@ -100,19 +97,19 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public Invoice getById(final String invoiceId) {
+    public Invoice getById(final UUID invoiceId) {
         return invoiceSqlDao.inTransaction(new Transaction<Invoice, InvoiceSqlDao>() {
              @Override
              public Invoice inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                 Invoice invoice = invoiceDao.getById(invoiceId);
+                 Invoice invoice = invoiceDao.getById(invoiceId.toString());
 
                  if (invoice != null) {
                      InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
-                     List<InvoiceItem> invoiceItems = invoiceItemDao.getInvoiceItemsByInvoice(invoiceId);
+                     List<InvoiceItem> invoiceItems = invoiceItemDao.getInvoiceItemsByInvoice(invoiceId.toString());
                      invoice.addInvoiceItems(invoiceItems);
 
                      InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
-                     List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId);
+                     List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId.toString());
                      invoice.addPayments(invoicePayments);
                  }
 
@@ -152,24 +149,14 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getInvoicesBySubscription(final String subscriptionId) {
+    public List<Invoice> getInvoicesBySubscription(final UUID subscriptionId) {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                List<Invoice> invoices = invoiceDao.getInvoicesBySubscription(subscriptionId);
+                List<Invoice> invoices = invoiceDao.getInvoicesBySubscription(subscriptionId.toString());
 
-                InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
-                for (final Invoice invoice : invoices) {
-                    List<InvoiceItem> invoiceItems = invoiceItemDao.getInvoiceItemsByInvoice(invoice.getId().toString());
-                    invoice.addInvoiceItems(invoiceItems);
-                }
-
-                InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
-                for (final Invoice invoice : invoices) {
-                    String invoiceId = invoice.getId().toString();
-                    List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId);
-                    invoice.addPayments(invoicePayments);
-                }
+                getInvoiceItemsWithinTransaction(invoices, invoiceDao);
+                getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
 
                 return invoices;
             }
@@ -177,23 +164,41 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<UUID> getInvoicesForPayment(final Date targetDate, final int numberOfDays) {
-        return invoiceSqlDao.getInvoicesForPayment(targetDate, numberOfDays);
+    public List<UUID> getInvoicesForPayment(final DateTime targetDate, final int numberOfDays) {
+        return invoiceSqlDao.getInvoicesForPayment(targetDate.toDate(), numberOfDays);
     }
 
     @Override
-    public void notifySuccessfulPayment(final String invoiceId, final BigDecimal paymentAmount,
-                                        final String currency, final String paymentId, final Date paymentDate) {
-        invoiceSqlDao.notifySuccessfulPayment(invoiceId, paymentAmount, currency, paymentId, paymentDate);
+    public void notifySuccessfulPayment(final UUID invoiceId, final BigDecimal paymentAmount,
+                                        final Currency currency, final UUID paymentId, final DateTime paymentDate) {
+        invoiceSqlDao.notifySuccessfulPayment(invoiceId.toString(), paymentAmount, currency.toString(),
+                                              paymentId.toString(), paymentDate.toDate());
     }
 
     @Override
-    public void notifyFailedPayment(final String invoiceId, final String paymentId, final Date paymentAttemptDate) {
-        invoiceSqlDao.notifyFailedPayment(invoiceId, paymentId, paymentAttemptDate);
+    public void notifyFailedPayment(final UUID invoiceId, final UUID paymentId, final DateTime paymentAttemptDate) {
+        invoiceSqlDao.notifyFailedPayment(invoiceId.toString(), paymentId.toString(), paymentAttemptDate.toDate());
     }
 
     @Override
     public void test() {
         invoiceSqlDao.test();
+    }
+
+    private void getInvoiceItemsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao) {
+        InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
+        for (final Invoice invoice : invoices) {
+            List<InvoiceItem> invoiceItems = invoiceItemDao.getInvoiceItemsByInvoice(invoice.getId().toString());
+            invoice.addInvoiceItems(invoiceItems);
+        }
+    }
+
+    private void getInvoicePaymentsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao) {
+        InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
+        for (final Invoice invoice : invoices) {
+            String invoiceId = invoice.getId().toString();
+            List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId);
+            invoice.addPayments(invoicePayments);
+        }
     }
 }

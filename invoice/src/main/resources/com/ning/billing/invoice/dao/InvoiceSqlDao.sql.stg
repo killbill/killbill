@@ -19,6 +19,17 @@ getInvoicesByAccount() ::= <<
   ORDER BY i.invoice_date ASC;
 >>
 
+getInvoicesByAccountAfterDate() ::= <<
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount
+  FROM invoices i
+  LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
+  LEFT JOIN invoice_items ii ON ii.invoice_id = i.id
+  WHERE i.account_id = :accountId
+  AND i.target_date >= :fromDate
+  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
+  ORDER BY i.invoice_date ASC;
+>>
+
 getInvoicesBySubscription() ::= <<
   SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount
   FROM invoices i

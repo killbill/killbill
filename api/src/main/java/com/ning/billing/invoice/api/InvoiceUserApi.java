@@ -28,6 +28,8 @@ public interface InvoiceUserApi {
 
     public List<Invoice> getInvoicesByAccount(UUID accountId);
 
+    public List<Invoice> getInvoicesByAccount(UUID accountId, DateTime fromDate);
+
     public List<InvoiceItem> getInvoiceItemsByAccount(UUID accountId);
 
     public Invoice getInvoice(UUID invoiceId);

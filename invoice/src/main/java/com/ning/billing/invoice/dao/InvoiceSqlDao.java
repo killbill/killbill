@@ -64,6 +64,10 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     List<Invoice> getInvoicesByAccount(@Bind("accountId") final String accountId);
 
     @SqlQuery
+    List<Invoice> getInvoicesByAccountAfterDate(@Bind("accountId") final String accountId,
+                                                @Bind("fromDate") final Date fromDate);
+
+    @SqlQuery
     List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId);
 
     @SqlQuery
