@@ -16,9 +16,13 @@
 
 package com.ning.billing.invoice.notification;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -41,7 +45,6 @@ import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.eventbus.Bus;
-import com.ning.billing.util.eventbus.Bus.EventBusException;
 import com.ning.billing.util.eventbus.MemoryEventBus;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.DummySqlTest;
@@ -62,7 +65,6 @@ public class TestNextBillingDateNotifier {
         final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
 			protected void configure() {
 				 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-				 bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
 				 bind(Bus.class).to(MemoryEventBus.class).asEagerSingleton();
 				 bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
 				 final InvoiceConfig config = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
@@ -75,12 +77,12 @@ public class TestNextBillingDateNotifier {
 			}  	
         });
 
-        notifier = (DefaultNextBillingDateNotifier) g.getInstance(NextBillingDateNotifier.class);
         clock = g.getInstance(Clock.class);
         DBI dbi = g.getInstance(DBI.class);
         dao = dbi.onDemand(DummySqlTest.class);
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);
+        notifier = new DefaultNextBillingDateNotifier(g.getInstance(NotificationQueueService.class), eventBus, g.getInstance(InvoiceConfig.class));
         startMysql();
 	}
 	
@@ -107,12 +109,12 @@ public class TestNextBillingDateNotifier {
 	}
 	
 	@Test(enabled=true, groups="slow")
-	public void test() throws EventBusException, InterruptedException {
+	public void test() throws Exception {
 		final UUID subscriptionId = new UUID(0L,1L);
 		final DateTime now = new DateTime();
 		final DateTime readyTime = now.plusMillis(2000);
 
-		NextBillingEventListener listener = new NextBillingEventListener();
+		final NextBillingEventListener listener = new NextBillingEventListener();
 		eventBus.start();
 		notifier.initialize();
 		notifier.start();
@@ -130,8 +132,15 @@ public class TestNextBillingDateNotifier {
 
 		// Move time in the future after the notification effectiveDate
 		((ClockMock) clock).setDeltaFromReality(3000);
-		Thread.sleep(1000); //Ugly - waiting for thread to be scheduled. hmmm.
-		
+
+
+	    await().atMost(1, MINUTES).until(new Callable<Boolean>() {
+	            @Override
+	            public Boolean call() throws Exception {
+	                return listener.getEventCount() == 1;
+	            }
+	        });
+
 		Assert.assertEquals(listener.getEventCount(), 1);
 	}
 }
