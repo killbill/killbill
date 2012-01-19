@@ -73,6 +73,11 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-invoice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-catalog</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -327,6 +332,7 @@
                                 <exclude>**/.project</exclude>
                                 <exclude>.git/**</exclude>
                                 <exclude>.gitignore</exclude>
+                                <exclude>ignore/**</exclude>
                                 <exclude>API.txt</exclude>
                                 <exclude>RELEASE.sh</exclude>
                                 <exclude>deploy.sh</exclude>

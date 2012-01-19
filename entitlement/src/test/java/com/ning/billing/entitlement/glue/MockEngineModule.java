@@ -25,14 +25,11 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 
 public class MockEngineModule extends EntitlementModule {
 
-    @Override
-    protected void installClock() {
-        bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-    }
 
     @Override
     protected void configure() {
         super.configure();
+        bind(Clock.class).to(ClockMock.class).asEagerSingleton();
         install(new EventBusModule());
         install(new CatalogModule());
         install(new AccountModuleMock());
