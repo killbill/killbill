@@ -43,7 +43,7 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
     @Override
     public NotificationQueue createNotificationQueue(String svcName,
             String queueName, NotificationQueueHandler handler,
-            NotificationConfig config) throws NotficationQueueAlreadyExists {
+            NotificationConfig config) throws NotificationQueueAlreadyExists {
         if (svcName == null || queueName == null || handler == null || config == null) {
             throw new RuntimeException("Need to specify all parameters");
         }
@@ -53,7 +53,7 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         synchronized(queues) {
             result = queues.get(compositeName);
             if (result != null) {
-                throw new NotficationQueueAlreadyExists(String.format("Queue for svc %s and name %s already exist",
+                throw new NotificationQueueAlreadyExists(String.format("Queue for svc %s and name %s already exist",
                         svcName, queueName));
             }
             result = createNotificationQueueInternal(svcName, queueName, handler, config);

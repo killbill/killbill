@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice;
 
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 import org.joda.time.DateTime;
@@ -34,6 +35,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.invoice.api.BillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
@@ -96,7 +98,8 @@ public class InvoiceListener {
         DateTime targetDate = new DateTime();
         Currency targetCurrency = account.getCurrency();
 
-        InvoiceItemList invoiceItemList = (InvoiceItemList) invoiceUserApi.getInvoiceItemsByAccount(accountId);
+        List<InvoiceItem> items = invoiceUserApi.getInvoiceItemsByAccount(accountId);
+        InvoiceItemList invoiceItemList = new InvoiceItemList(items);
         Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoiceItemList, targetDate, targetCurrency);
 
         if (invoice != null) {

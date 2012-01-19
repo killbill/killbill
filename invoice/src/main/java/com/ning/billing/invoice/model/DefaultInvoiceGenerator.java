@@ -22,12 +22,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
@@ -50,6 +48,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, targetCurrency);
         InvoiceItemList currentItems = generateInvoiceItems(events, invoice.getId(), targetDate, targetCurrency);
         InvoiceItemList itemsToPost = reconcileInvoiceItems(invoice.getId(), currentItems, existingItems);
+
         invoice.addInvoiceItems(itemsToPost);
 
         return invoice;

@@ -30,19 +30,22 @@ import com.ning.billing.invoice.api.InvoiceCreationNotification;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
+import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.util.eventbus.Bus;
 
 public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
+    private final NextBillingDateNotifier notifier;
 
     private final Bus eventBus;
 
     @Inject
-    public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus) {
+    public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus, final NextBillingDateNotifier notifier) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.eventBus = eventBus;
+        this.notifier = notifier;
     }
 
     @Override
@@ -132,6 +135,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
                     invoiceItemDao.create(invoiceItems);
 
+                    notifyOfChargeThroughDate(invoiceSqlDao, invoiceItems);
+
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
                     InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
                     invoicePaymentSqlDao.create(invoicePayments);
@@ -199,6 +204,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
             String invoiceId = invoice.getId().toString();
             List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId);
             invoice.addPayments(invoicePayments);
+        }
+    }
+
+    private void notifyOfChargeThroughDate(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
+        for (final InvoiceItem item : invoiceItems) {
+            notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
         }
     }
 }

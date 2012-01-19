@@ -16,16 +16,24 @@
 
 package com.ning.billing.invoice.glue;
 
+import org.skife.config.ConfigurationObjectFactory;
 import com.google.inject.AbstractModule;
+import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
-import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
+import com.ning.billing.invoice.notification.NextBillingDateNotifier;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService;
 
 public class InvoiceModule extends AbstractModule {
-    private void installInvoiceDao() {
+    protected void installInvoiceDao() {
         bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
     }
 
@@ -37,8 +45,19 @@ public class InvoiceModule extends AbstractModule {
         bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
     }
 
+    protected void installNextBillingDateNotification() {
+        final InvoiceConfig config = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
+        bind(InvoiceConfig.class).toInstance(config);
+
+        bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
+
+        bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
+        bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
+        installNextBillingDateNotification();
         installInvoiceDao();
         installInvoiceUserApi();
         installInvoicePaymentApi();

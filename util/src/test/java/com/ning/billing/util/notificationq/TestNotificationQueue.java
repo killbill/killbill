@@ -16,19 +16,17 @@
 
 package com.ning.billing.util.notificationq;
 
-import static org.testng.Assert.assertEquals;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
-
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -36,7 +34,6 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
-
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.AbstractModule;
@@ -47,10 +44,12 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
+import static org.testng.Assert.assertEquals;
+
 @Guice(modules = TestNotificationQueue.TestNotificationQueueModule.class)
 public class TestNotificationQueue {
 	@Inject
-	private DBI dbi;
+	private IDBI dbi;
 
 	@Inject
 	MysqlTestingHelper helper;
@@ -266,8 +265,8 @@ public class TestNotificationQueue {
 
 			final MysqlTestingHelper helper = new MysqlTestingHelper();
 			bind(MysqlTestingHelper.class).toInstance(helper);
-			DBI dbi = helper.getDBI();
-			bind(DBI.class).toInstance(dbi);
+			IDBI dbi = helper.getDBI();
+			bind(IDBI.class).toInstance(dbi);
 			/*
             bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);

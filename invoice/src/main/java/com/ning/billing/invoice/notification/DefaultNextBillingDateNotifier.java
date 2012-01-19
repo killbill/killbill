@@ -34,7 +34,7 @@ import com.ning.billing.util.notificationq.NotificationConfig;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotficationQueueAlreadyExists;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public class DefaultNextBillingDateNotifier implements KillbillService, NextBillingDateNotifier {
@@ -93,7 +93,7 @@ public class DefaultNextBillingDateNotifier implements KillbillService, NextBill
                     return config.getDaoMaxReadyEvents();
                 }
             });
-        } catch (NotficationQueueAlreadyExists e) {
+        } catch (NotificationQueueAlreadyExists e) {
             throw new RuntimeException(e);
         }
     }
@@ -125,11 +125,12 @@ public class DefaultNextBillingDateNotifier implements KillbillService, NextBill
     
     @Override
     public void insertNextBillingNotification(Transmogrifier transactionalDao, final UUID subscriptionId, DateTime futureNotificationTime) {
-    	nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
-    		public String toString() {
-    			return subscriptionId.toString();
-    		}
-    	});
+        if (nextBillingQueue != null) {
+    	    nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
+    		    public String toString() {
+    			    return subscriptionId.toString();
+    		    }
+    	    });
+        }
     }
-
 }

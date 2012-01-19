@@ -16,24 +16,19 @@
 
 package com.ning.billing.invoice.notification;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.MINUTES;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -50,6 +45,9 @@ import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class TestNextBillingDateNotifier {
 
@@ -71,14 +69,14 @@ public class TestNextBillingDateNotifier {
 				 bind(InvoiceConfig.class).toInstance(config);
 				 final MysqlTestingHelper helper = new MysqlTestingHelper();
 				 bind(MysqlTestingHelper.class).toInstance(helper);
-				 DBI dbi = helper.getDBI();
-				 bind(DBI.class).toInstance(dbi);
+				 IDBI dbi = helper.getDBI();
+				 bind(IDBI.class).toInstance(dbi);
 
 			}  	
         });
 
         clock = g.getInstance(Clock.class);
-        DBI dbi = g.getInstance(DBI.class);
+        IDBI dbi = g.getInstance(IDBI.class);
         dao = dbi.onDemand(DummySqlTest.class);
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);

@@ -16,12 +16,11 @@
 
 package com.ning.billing.invoice.glue;
 
+import java.io.IOException;
+import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.util.glue.EventBusModule;
-import org.skife.jdbi.v2.IDBI;
-
-import java.io.IOException;
 
 public class InvoiceModuleMock extends InvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
@@ -40,7 +39,9 @@ public class InvoiceModuleMock extends InvoiceModule {
     public void configure() {
         dbi = helper.getDBI();
         bind(IDBI.class).toInstance(dbi);
+
         super.configure();
+
         install(new EventBusModule());
     }
 }

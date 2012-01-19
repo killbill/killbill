@@ -16,6 +16,7 @@
 
 package com.ning.billing.analytics;
 
+import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -24,8 +25,6 @@ import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.util.glue.EventBusModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.IDBI;
 
 public class AnalyticsTestModule extends AnalyticsModule
 {
@@ -45,8 +44,7 @@ public class AnalyticsTestModule extends AnalyticsModule
         // Install the Dao layer
         final MysqlTestingHelper helper = new MysqlTestingHelper();
         bind(MysqlTestingHelper.class).toInstance(helper);
-        final DBI dbi = helper.getDBI();
+        final IDBI dbi = helper.getDBI();
         bind(IDBI.class).toInstance(dbi);
-        bind(DBI.class).toInstance(dbi);
     }
 }
