@@ -24,6 +24,14 @@ import com.ning.billing.invoice.api.InvoiceItem;
 public class InvoiceItemList extends ArrayList<InvoiceItem> {
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
 
+
+    public InvoiceItemList() {
+    }
+
+    public InvoiceItemList(List<InvoiceItem> items) {
+        addAll(items);
+    }
+
     public BigDecimal getTotalAmount() {
         // TODO: Jeff -- naive implementation, assumes all invoice items share the same currency
         BigDecimal total = new BigDecimal("0");

@@ -41,7 +41,7 @@ public class DefaultBillingEvent implements BillingEvent {
     final private String description;
     final private BillingModeType billingModeType;
     final private BillingPeriod billingPeriod;
-    
+
     public DefaultBillingEvent(SubscriptionTransition transition, Subscription subscription, int billCycleDay) {
         this.billCycleDay = billCycleDay;
         this.subscription = subscription;
@@ -53,7 +53,7 @@ public class DefaultBillingEvent implements BillingEvent {
         description = transition.getTransitionType().toString();
         billingModeType=BillingModeType.IN_ADVANCE;
         billingPeriod = transition.getNextPhase().getBillingPeriod();
-        
+
     }
 
     // Intended for test only
@@ -135,12 +135,12 @@ public class DefaultBillingEvent implements BillingEvent {
     }
     @Override
     public BigDecimal getFixedPrice(Currency currency) throws CatalogApiException {
-        return fixedPrice.getPrice(currency);
+        return  fixedPrice != null ? fixedPrice.getPrice(currency) : new BigDecimal(0);
     }
 
     @Override
     public BigDecimal getRecurringPrice(Currency currency) throws CatalogApiException {
-        return recurringPrice.getPrice(currency);
+        return  recurringPrice != null ? recurringPrice.getPrice(currency) : new BigDecimal(0);
     }
-    
+
 }

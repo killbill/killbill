@@ -40,7 +40,10 @@ import org.testng.annotations.Test;
 
 
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountService;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.beatrix.integration.inv_ent.TestBusHandler.NextEvent;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -81,10 +84,15 @@ public class TestBasic {
     @Inject
     private InvoiceService invoiceService;
 
+    @Inject
+    private AccountService accountService;
+
 
     private EntitlementUserApi entitlementUserApi;
 
     private InvoiceUserApi invoiceUserApi;
+
+    private AccountUserApi accountUserApi;
 
     private TestBusHandler busHandler;
 
@@ -106,6 +114,7 @@ public class TestBasic {
          */
         entitlementUserApi = entitlementService.getUserApi();
         invoiceUserApi = invoiceService.getUserApi();
+        accountUserApi = accountService.getAccountUserApi();
     }
 
     @AfterSuite(alwaysRun = true)
@@ -163,8 +172,10 @@ public class TestBasic {
     @Test(groups = "fast", enabled = false)
     public void testSimple() throws Exception {
 
-        UUID accountId = UUID.randomUUID();
-        SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(accountId, "whatever");
+        Account account = accountUserApi.createAccount(getAccountData(), null, null);
+        assertNotNull(account);
+
+        SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever");
 
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;
@@ -178,7 +189,7 @@ public class TestBasic {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
         assertNotNull(subscription);
-        assertTrue(busHandler.isCompleted(5000));
+        assertTrue(busHandler.isCompleted(5000 * 1000));
 
         //
         // VERIFY CTD HAS BEEN SET
