@@ -1,8 +1,7 @@
 group InvoiceDao;
 
 get() ::= <<
-  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount
   FROM invoices i
   LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
   LEFT JOIN invoice_items ii ON ii.invoice_id = i.id
@@ -11,8 +10,7 @@ get() ::= <<
 >>
 
 getInvoicesByAccount() ::= <<
-  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount
   FROM invoices i
   LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
   LEFT JOIN invoice_items ii ON ii.invoice_id = i.id
@@ -21,9 +19,19 @@ getInvoicesByAccount() ::= <<
   ORDER BY i.invoice_date ASC;
 >>
 
+getInvoicesByAccountAfterDate() ::= <<
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount
+  FROM invoices i
+  LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
+  LEFT JOIN invoice_items ii ON ii.invoice_id = i.id
+  WHERE i.account_id = :accountId
+  AND i.target_date >= :fromDate
+  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
+  ORDER BY i.invoice_date ASC;
+>>
+
 getInvoicesBySubscription() ::= <<
-  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount
   FROM invoices i
   LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
   LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
@@ -43,8 +51,7 @@ getInvoicesForPayment() ::= <<
 >>
 
 getById() ::= <<
-  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount
   FROM invoices i
   LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
   LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id

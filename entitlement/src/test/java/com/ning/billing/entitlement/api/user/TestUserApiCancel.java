@@ -22,6 +22,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertFalse;
 
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -80,7 +81,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
     }
 
 
-    protected void testCancelSubscriptionEOTWithChargeThroughDate() {
+    protected void testCancelSubscriptionEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         log.info("Starting testCancelSubscriptionEOTWithChargeThroughDate");
 
         try {
@@ -176,7 +177,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
     // Similar test to testCancelSubscriptionEOTWithChargeThroughDate except we uncancel and check things
     // are as they used to be and we can move forward without hitting cancellation
     //
-    protected void testUncancel() {
+    protected void testUncancel() throws EntitlementBillingApiException {
 
         log.info("Starting testUncancel");
 

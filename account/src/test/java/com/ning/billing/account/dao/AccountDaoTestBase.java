@@ -16,18 +16,17 @@
 
 package com.ning.billing.account.dao;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
-import com.ning.billing.account.glue.AccountModuleMock;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.BusService;
+import java.io.IOException;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-
-import java.io.IOException;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
+import com.ning.billing.account.glue.AccountModuleMock;
+import com.ning.billing.util.eventbus.BusService;
+import com.ning.billing.util.eventbus.DefaultEventBusService;
 
 import static org.testng.Assert.fail;
 
@@ -42,12 +41,10 @@ public abstract class AccountDaoTestBase {
         try {
             module = new AccountModuleMock();
             final String accountDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-            final String invoiceDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             final String utilDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
             module.startDb();
             module.initDb(accountDdl);
-            module.initDb(invoiceDdl);
             module.initDb(utilDdl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);

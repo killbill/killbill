@@ -31,27 +31,28 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     private final InvoiceDao dao;
 
     @Inject
-    public DefaultInvoicePaymentApi(InvoiceDao dao) {
+    public DefaultInvoicePaymentApi(final InvoiceDao dao) {
         this.dao = dao;
     }
 
     @Override
-    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId, DateTime paymentAttemptDate) {
-        dao.notifySuccessfulPayment(invoiceId.toString(), amount, currency.toString(), paymentId.toString(), paymentAttemptDate.toDate());
+    public void paymentSuccessful(final UUID invoiceId, final BigDecimal amount, final Currency currency,
+                                  final UUID paymentId, final DateTime paymentAttemptDate) {
+        dao.notifySuccessfulPayment(invoiceId, amount, currency, paymentId, paymentAttemptDate);
     }
 
     @Override
-    public void paymentFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate) {
-        dao.notifyFailedPayment(invoiceId.toString(), paymentId.toString(), paymentAttemptDate.toDate());
+    public void paymentFailed(final UUID invoiceId, final UUID paymentId, final DateTime paymentAttemptDate) {
+        dao.notifyFailedPayment(invoiceId, paymentId, paymentAttemptDate);
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(UUID accountId) {
-        return dao.getInvoicesByAccount(accountId.toString());
+    public List<Invoice> getInvoicesByAccount(final UUID accountId) {
+        return dao.getInvoicesByAccount(accountId);
     }
 
     @Override
-    public Invoice getInvoice(UUID invoiceId) {
-        return dao.getById(invoiceId.toString());
+    public Invoice getInvoice(final UUID invoiceId) {
+        return dao.getById(invoiceId);
     }
 }

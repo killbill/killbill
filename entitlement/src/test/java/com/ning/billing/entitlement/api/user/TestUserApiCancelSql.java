@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api.user;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import org.testng.annotations.Test;
 
@@ -33,7 +34,7 @@ public class TestUserApiCancelSql extends TestUserApiCancel {
     }
 
     @Test(enabled= false, groups={"stress"})
-    public void stressTest() {
+    public void stressTest() throws EntitlementBillingApiException {
         for (int i = 0; i < MAX_STRESS_ITERATIONS; i++) {
             cleanupTest();
             setupTest();
@@ -55,7 +56,7 @@ public class TestUserApiCancelSql extends TestUserApiCancel {
 
     @Override
     @Test(enabled=true, groups={"sql"})
-    public void testCancelSubscriptionEOTWithChargeThroughDate() {
+    public void testCancelSubscriptionEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testCancelSubscriptionEOTWithChargeThroughDate();
     }
 
@@ -67,7 +68,7 @@ public class TestUserApiCancelSql extends TestUserApiCancel {
 
     @Override
     @Test(enabled=true, groups={"sql"})
-    public void testUncancel() {
+    public void testUncancel() throws EntitlementBillingApiException {
         super.testUncancel();
     }
 

@@ -16,11 +16,10 @@
 
 package com.ning.billing.invoice.model;
 
-import com.ning.billing.invoice.api.InvoiceItem;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import com.ning.billing.invoice.api.InvoiceItem;
 
 public class InvoiceItemList extends ArrayList<InvoiceItem> {
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();

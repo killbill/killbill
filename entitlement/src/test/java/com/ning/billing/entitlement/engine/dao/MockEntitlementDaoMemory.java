@@ -16,20 +16,30 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TreeSet;
+import java.util.UUID;
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
-
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory;
-
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.events.EntitlementEvent;
@@ -38,19 +48,9 @@ import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationKey;
-import com.ning.billing.util.notificationq.NotificationLifecycle;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlementDao {
 
@@ -65,7 +65,9 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     private final NotificationQueueService notificationQueueService;
 
     @Inject
-    public MockEntitlementDaoMemory(Clock clock, EntitlementConfig config, SubscriptionFactory factory, NotificationQueueService notificationQueueService) {
+    public MockEntitlementDaoMemory(final Clock clock, final EntitlementConfig config,
+                                    final SubscriptionFactory factory,
+                                    final NotificationQueueService notificationQueueService) {
         super();
         this.clock = clock;
         this.config = config;
@@ -84,9 +86,9 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public List<SubscriptionBundle> getSubscriptionBundleForAccount(UUID accountId) {
+    public List<SubscriptionBundle> getSubscriptionBundleForAccount(final UUID accountId) {
         List<SubscriptionBundle> results = new ArrayList<SubscriptionBundle>();
-        for (SubscriptionBundle cur : bundles) {
+        for (final SubscriptionBundle cur : bundles) {
             if (cur.getAccountId().equals(accountId)) {
                 results.add(cur);
             }
@@ -95,8 +97,8 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
-        for (SubscriptionBundle cur : bundles) {
+    public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
+        for (final SubscriptionBundle cur : bundles) {
             if (cur.getId().equals(bundleId)) {
                 return cur;
             }
@@ -105,8 +107,8 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey) {
-        for (SubscriptionBundle cur : bundles) {
+    public SubscriptionBundle getSubscriptionBundleFromKey(final String bundleKey) {
+        for (final SubscriptionBundle cur : bundles) {
             if (cur.getKey().equals(bundleKey)) {
                 return cur;
             }
@@ -116,14 +118,14 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
 
     @Override
-    public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle) {
+    public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle) {
         bundles.add(bundle);
         return getSubscriptionBundleFromId(bundle.getId());
     }
 
     @Override
-    public Subscription getSubscriptionFromId(UUID subscriptionId) {
-        for (Subscription cur : subscriptions) {
+    public Subscription getSubscriptionFromId(final UUID subscriptionId) {
+        for (final Subscription cur : subscriptions) {
             if (cur.getId().equals(subscriptionId)) {
                 return buildSubscription((SubscriptionData) cur);
             }
@@ -132,9 +134,14 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(String bundleKey) {
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+        throw new UnsupportedOperationException();
+    }
 
-        for (SubscriptionBundle cur : bundles) {
+    @Override
+    public List<Subscription> getSubscriptionsForKey(final String bundleKey) {
+
+        for (final SubscriptionBundle cur : bundles) {
             if (cur.getKey().equals(bundleKey)) {
                 return getSubscriptions(cur.getId());
             }
@@ -144,11 +151,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
 
     @Override
-    public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initalEvents) {
+    public void createSubscription(final SubscriptionData subscription, final List<EntitlementEvent> initialEvents) {
 
         synchronized(events) {
-            events.addAll(initalEvents);
-            for (final EntitlementEvent cur : initalEvents) {
+            events.addAll(initialEvents);
+            for (final EntitlementEvent cur : initialEvents) {
                 recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new NotificationKey() {
                     @Override
                     public String toString() {
@@ -162,10 +169,10 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public List<Subscription> getSubscriptions(UUID bundleId) {
+    public List<Subscription> getSubscriptions(final UUID bundleId) {
 
         List<Subscription> results = new ArrayList<Subscription>();
-        for (Subscription cur : subscriptions) {
+        for (final Subscription cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId)) {
                 results.add(buildSubscription((SubscriptionData) cur));
             }
@@ -174,10 +181,10 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public List<EntitlementEvent> getEventsForSubscription(UUID subscriptionId) {
+    public List<EntitlementEvent> getEventsForSubscription(final UUID subscriptionId) {
         synchronized(events) {
             List<EntitlementEvent> results = new LinkedList<EntitlementEvent>();
-            for (EntitlementEvent cur : events) {
+            for (final EntitlementEvent cur : events) {
                 if (cur.getSubscriptionId().equals(subscriptionId)) {
                     results.add(cur);
                 }
@@ -187,10 +194,10 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public List<EntitlementEvent> getPendingEventsForSubscription(UUID subscriptionId) {
+    public List<EntitlementEvent> getPendingEventsForSubscription(final UUID subscriptionId) {
         synchronized(events) {
             List<EntitlementEvent> results = new LinkedList<EntitlementEvent>();
-            for (EntitlementEvent cur : events) {
+            for (final EntitlementEvent cur : events) {
                 if (cur.isActive() &&
                         cur.getEffectiveDate().isAfter(clock.getUTCNow()) &&
                             cur.getSubscriptionId().equals(subscriptionId)) {
@@ -203,8 +210,8 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
 
     @Override
-    public Subscription getBaseSubscription(UUID bundleId) {
-        for (Subscription cur : subscriptions) {
+    public Subscription getBaseSubscription(final UUID bundleId) {
+        for (final Subscription cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId) &&
                     cur.getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) {
                 return buildSubscription((SubscriptionData) cur);
@@ -214,19 +221,19 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void createNextPhaseEvent(UUID subscriptionId, EntitlementEvent nextPhase) {
+    public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase) {
         cancelNextPhaseEvent(subscriptionId);
         insertEvent(nextPhase);
     }
 
 
 
-    private Subscription buildSubscription(SubscriptionData in) {
+    private Subscription buildSubscription(final SubscriptionData in) {
         return factory.createSubscription(new SubscriptionBuilder(in), getEventsForSubscription(in.getId()));
     }
 
     @Override
-    public void updateSubscription(SubscriptionData subscription) {
+    public void updateSubscription(final SubscriptionData subscription) {
 
         boolean found = false;
         Iterator<Subscription> it = subscriptions.iterator();
@@ -244,7 +251,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void cancelSubscription(UUID subscriptionId, EntitlementEvent cancelEvent) {
+    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent) {
         synchronized (cancelEvent) {
             cancelNextPhaseEvent(subscriptionId);
             insertEvent(cancelEvent);
@@ -252,7 +259,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void changePlan(UUID subscriptionId, List<EntitlementEvent> changeEvents) {
+    public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents) {
         synchronized(events) {
             cancelNextChangeEvent(subscriptionId);
             cancelNextPhaseEvent(subscriptionId);
@@ -280,7 +287,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         }
     }
 
-    private void cancelNextPhaseEvent(UUID subscriptionId) {
+    private void cancelNextPhaseEvent(final UUID subscriptionId) {
 
         Subscription curSubscription = getSubscriptionFromId(subscriptionId);
         if (curSubscription.getCurrentPhase() == null ||
@@ -307,7 +314,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
 
-    private void cancelNextChangeEvent(UUID subscriptionId) {
+    private void cancelNextChangeEvent(final UUID subscriptionId) {
 
         synchronized(events) {
 
@@ -328,7 +335,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void uncancelSubscription(UUID subscriptionId, List<EntitlementEvent> uncancelEvents) {
+    public void uncancelSubscription(final UUID subscriptionId, final List<EntitlementEvent> uncancelEvents) {
 
         synchronized (events) {
             boolean foundCancel = false;
@@ -346,7 +353,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
                 }
             }
             if (foundCancel) {
-                for (EntitlementEvent cur : uncancelEvents) {
+                for (final EntitlementEvent cur : uncancelEvents) {
                     insertEvent(cur);
                 }
             }
@@ -360,9 +367,9 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
             undoMigration(accountId);
 
-            for (BundleMigrationData curBundle : accountData.getData()) {
+            for (final BundleMigrationData curBundle : accountData.getData()) {
                 SubscriptionBundleData bundleData = curBundle.getData();
-                for (SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
+                for (final SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
                     SubscriptionData subData = curSubscription.getData();
                     for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
                         events.add(curEvent);
@@ -382,15 +389,15 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void undoMigration(UUID accountId) {
+    public void undoMigration(final UUID accountId) {
         synchronized(events) {
 
             List<SubscriptionBundle> allBundles = getSubscriptionBundleForAccount(accountId);
-            for (SubscriptionBundle bundle : allBundles) {
+            for (final SubscriptionBundle bundle : allBundles) {
                 List<Subscription> allSubscriptions = getSubscriptions(bundle.getId());
-                for (Subscription subscription : allSubscriptions) {
+                for (final Subscription subscription : allSubscriptions) {
                     List<EntitlementEvent> allEvents = getEventsForSubscription(subscription.getId());
-                    for (EntitlementEvent event : allEvents) {
+                    for (final EntitlementEvent event : allEvents) {
                         events.remove(event);
                     }
                     subscriptions.remove(subscription);
@@ -402,9 +409,9 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public EntitlementEvent getEventById(UUID eventId) {
+    public EntitlementEvent getEventById(final UUID eventId) {
         synchronized(events) {
-            for (EntitlementEvent cur : events) {
+            for (final EntitlementEvent cur : events) {
                 if (cur.getId().equals(eventId)) {
                     return cur;
                 }

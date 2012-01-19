@@ -26,6 +26,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
@@ -42,7 +43,7 @@ public class TestUserApiScenarios extends TestApiBase {
     }
 
     @Test(enabled=true)
-    public void testChangeIMMCancelUncancelChangeEOT() {
+    public void testChangeIMMCancelUncancelChangeEOT() throws EntitlementBillingApiException {
 
         log.info("Starting testChangeIMMCancelUncancelChangeEOT");
 

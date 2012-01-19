@@ -41,21 +41,22 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     private final BigDecimal balance;
     private final DefaultTagStore tags;
 
-    public DefaultAccount(AccountData data) {
+    public DefaultAccount(final AccountData data) {
         this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
                 data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
                 data.getPaymentProviderName(), BigDecimal.ZERO);
     }
 
-    public DefaultAccount(UUID id, AccountData data) {
+    public DefaultAccount(final UUID id, final AccountData data) {
         this(id, data.getExternalKey(), data.getEmail(), data.getName(),
                 data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
                 data.getPaymentProviderName(), BigDecimal.ZERO);
     }
 
-    public DefaultAccount(UUID id, String externalKey, String email, String name, int firstNameLength,
-                          String phone, Currency currency, int billCycleDay, String paymentProviderName,
-                          BigDecimal balance) {
+    public DefaultAccount(final UUID id, final String externalKey, final String email,
+                          final String name, final int firstNameLength,
+                          final String phone, final Currency currency, final int billCycleDay, final String paymentProviderName,
+                          final BigDecimal balance) {
         super(id);
         this.externalKey = externalKey;
         this.email = email;
@@ -121,18 +122,18 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
-    public boolean hasTag(String tagName) {
+    public boolean hasTag(final String tagName) {
         return tags.containsTag(tagName);
     }
 
     @Override
-    public void addTag(TagDescription description, String addedBy, DateTime dateAdded) {
+    public void addTag(final TagDescription description, final String addedBy, final DateTime dateAdded) {
         Tag tag = new DefaultTag(description, addedBy, dateAdded);
         tags.add(tag) ;
     }
 
     @Override
-    public void addTags(List<Tag> tags) {
+    public void addTags(final List<Tag> tags) {
         if (tags != null) {
             this.tags.add(tags);
         }
@@ -144,7 +145,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
-    public void removeTag(TagDescription description) {
+    public void removeTag(final TagDescription description) {
         tags.remove(description.getName());
     }
 

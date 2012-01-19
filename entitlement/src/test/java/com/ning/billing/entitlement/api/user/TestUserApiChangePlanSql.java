@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api.user;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import org.testng.annotations.Test;
 
@@ -32,7 +33,7 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
     }
 
     @Test(enabled= true, groups={"stress"})
-    public void stressTest() {
+    public void stressTest() throws EntitlementBillingApiException {
         for (int i = 0; i < MAX_STRESS_ITERATIONS; i++) {
             cleanupTest();
             setupTest();
@@ -60,7 +61,7 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
 
     @Override
     @Test(enabled=true, groups={"sql"})
-    public void testChangePlanBundleAlignEOTWithChargeThroughDate() {
+    public void testChangePlanBundleAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testChangePlanBundleAlignEOTWithChargeThroughDate();
     }
 
@@ -72,20 +73,20 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
 
     @Override
     @Test(enabled=true, groups={"sql"})
-    public void testMultipleChangeLastIMM() {
+    public void testMultipleChangeLastIMM() throws EntitlementBillingApiException {
         super.testMultipleChangeLastIMM();
     }
 
     @Override
     @Test(enabled=true, groups={"sql"})
-    public void testMultipleChangeLastEOT() {
+    public void testMultipleChangeLastEOT() throws EntitlementBillingApiException {
         super.testMultipleChangeLastEOT();
     }
 
     // rescue not implemented yet
     @Override
     @Test(enabled=false, groups={"sql"})
-    public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() {
+    public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testChangePlanChangePlanAlignEOTWithChargeThroughDate();
     }
 

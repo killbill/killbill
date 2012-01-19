@@ -1,0 +1,34 @@
+group InvoicePayment;
+
+create() ::= <<
+  INSERT INTO invoice_payments(invoice_id, payment_id, payment_date, amount, currency)
+  VALUES(:invoiceId, :paymentId, :paymentDate, :amount, :currency)
+>>
+
+update() ::= <<
+  UPDATE invoice_payments
+  SET payment_date = :paymentDate, amount = :amount, currency = :currency
+  WHERE invoice_id = :invoiceId, payment_id = :paymentId
+>>
+
+getById() ::= <<
+  SELECT invoice_id, payment_id, payment_date, amount, currency
+  FROM invoice_payments
+  WHERE payment_id = :id
+>>
+
+get() ::= <<
+  SELECT invoice_id, payment_id, payment_date, amount, currency
+  FROM invoice_payments
+>>
+
+getPaymentsForInvoice() ::= <<
+  SELECT invoice_id, payment_id, payment_date, amount, currency
+  FROM invoice_payments
+  WHERE invoice_id = :invoiceId
+>>
+
+test() ::= <<
+  SELECT 1 FROM invoice_payments;
+>>
+;

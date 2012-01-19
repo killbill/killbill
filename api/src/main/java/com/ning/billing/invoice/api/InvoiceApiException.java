@@ -14,17 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance;
+package com.ning.billing.invoice.api;
 
-import com.ning.billing.invoice.model.BillingMode;
-import com.ning.billing.invoice.model.InAdvanceBillingMode;
-import com.ning.billing.invoice.tests.ProRationTestBase;
-import org.testng.annotations.Test;
+import com.ning.billing.BillingExceptionBase;
+import com.ning.billing.ErrorCode;
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public abstract class ProRationInAdvanceTestBase extends ProRationTestBase {
-    @Override
-    protected BillingMode getBillingMode() {
-        return new InAdvanceBillingMode();
+public class InvoiceApiException extends BillingExceptionBase {
+    public InvoiceApiException(Throwable cause, int code, final String msg) {
+        super(cause, code, msg);
+    }
+
+    public InvoiceApiException(Throwable cause, ErrorCode code, final Object... args) {
+        super(cause, code, args);
+    }
+
+    public InvoiceApiException(ErrorCode code, final Object... args) {
+        super(code, args);
     }
 }

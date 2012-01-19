@@ -19,6 +19,7 @@ package com.ning.billing.invoice.dao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.util.UuidMapper;
 import com.ning.billing.util.entity.EntityDao;
@@ -63,6 +64,10 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     List<Invoice> getInvoicesByAccount(@Bind("accountId") final String accountId);
 
     @SqlQuery
+    List<Invoice> getInvoicesByAccountAfterDate(@Bind("accountId") final String accountId,
+                                                @Bind("fromDate") final Date fromDate);
+
+    @SqlQuery
     List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId);
 
     @SqlQuery
@@ -93,10 +98,6 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
                         q.bind("accountId", invoice.getAccountId().toString());
                         q.bind("invoiceDate", invoice.getInvoiceDate().toDate());
                         q.bind("targetDate", invoice.getTargetDate().toDate());
-                        q.bind("amountPaid", invoice.getAmountPaid());
-                        q.bind("amountOutstanding", invoice.getAmountOutstanding());
-                        DateTime last_payment_date = invoice.getLastPaymentAttempt();
-                        q.bind("lastPaymentAttempt", last_payment_date == null ? null : last_payment_date.toDate());
                         q.bind("currency", invoice.getCurrency().toString());
                     }
                 };
@@ -111,15 +112,9 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             UUID accountId = UUID.fromString(result.getString("account_id"));
             DateTime invoiceDate = new DateTime(result.getTimestamp("invoice_date"));
             DateTime targetDate = new DateTime(result.getTimestamp("target_date"));
-            BigDecimal amountPaid = result.getBigDecimal("amount_paid");
-            if (amountPaid == null) {
-                amountPaid = BigDecimal.ZERO;
-            }
-            Timestamp lastPaymentAttemptTimeStamp = result.getTimestamp("last_payment_attempt");
-            DateTime lastPaymentAttempt = lastPaymentAttemptTimeStamp == null ? null : new DateTime(lastPaymentAttemptTimeStamp);
             Currency currency = Currency.valueOf(result.getString("currency"));
 
-            return new DefaultInvoice(id, accountId, invoiceDate, targetDate, currency, lastPaymentAttempt, amountPaid, new ArrayList<InvoiceItem>());
+            return new DefaultInvoice(id, accountId, invoiceDate, targetDate, currency);
         }
     }
 }
