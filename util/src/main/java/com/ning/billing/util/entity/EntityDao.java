@@ -16,15 +16,14 @@
 
 package com.ning.billing.util.entity;
 
+import java.util.List;
+
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-import java.util.List;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.util.eventbus.EventBus;
 
 public interface EntityDao<T extends Entity> {
     @SqlUpdate

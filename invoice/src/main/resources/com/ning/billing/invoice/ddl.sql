@@ -27,17 +27,19 @@ CREATE INDEX invoices_account_id ON invoices(account_id ASC);
 DROP TABLE IF EXISTS invoice_payments;
 CREATE TABLE invoice_payments (
   invoice_id char(36) NOT NULL,
-  payment_id char(36) NOT NULL,
-  payment_date datetime NOT NULL,
+  payment_attempt_id char(36) COLLATE utf8_bin NOT NULL,
+  payment_attempt_date datetime,
   amount numeric(10,4),
   currency char(3),
-  PRIMARY KEY(invoice_id, payment_id)
+  created_date datetime NOT NULL,
+  updated_date datetime NOT NULL,
+  PRIMARY KEY(invoice_id, payment_attempt_id)
 ) ENGINE=innodb;
-CREATE UNIQUE INDEX invoice_payments_unique ON invoice_payments(invoice_id, payment_id);
+CREATE UNIQUE INDEX invoice_payments_unique ON invoice_payments(invoice_id, payment_attempt_id);
 
 DROP VIEW IF EXISTS invoice_payment_summary;
 CREATE VIEW invoice_payment_summary AS
-SELECT invoice_id, SUM(amount) AS total_paid, MAX(payment_date) AS last_payment_date
+SELECT invoice_id, SUM(amount) AS total_paid, MAX(payment_attempt_date) AS last_payment_date
 FROM invoice_payments
 GROUP BY invoice_id;
 

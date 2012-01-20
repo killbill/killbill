@@ -16,13 +16,22 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.util.UuidMapper;
-import com.ning.billing.util.entity.EntityDao;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -38,15 +47,13 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.lang.annotation.*;
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.payment.api.InvoicePayment;
+import com.ning.billing.util.UuidMapper;
+import com.ning.billing.util.entity.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper({UuidMapper.class, InvoiceSqlDao.InvoiceMapper.class})
@@ -66,29 +73,28 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId);
 
     @SqlQuery
+    String getInvoiceIdByPaymentAttemptId(@Bind("paymentAttemptId") final String paymentAttemptId);
+
+    @SqlQuery
     List<UUID> getInvoicesForPayment(@Bind("targetDate") final Date targetDate,
                                      @Bind("numberOfDays") final int numberOfDays);
 
-    @SqlUpdate
-    void notifySuccessfulPayment(@Bind("invoiceId") final String invoiceId,
-                                 @Bind("amount") final BigDecimal paymentAmount,
-                                 @Bind("currency") final String currency,
-                                 @Bind("paymentId") final String paymentId,
-                                 @Bind("paymentDate") final Date paymentDate);
+    @SqlQuery
+    InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") UUID paymentAttemptId);
 
     @SqlUpdate
-    void notifyFailedPayment(@Bind("invoiceId") final String invoiceId,
-                             @Bind("paymentId") final String paymentId,
-                             @Bind("paymentAttemptDate") final Date paymentAttemptDate);
+    void notifyOfPaymentAttempt(@Bind(binder = InvoicePaymentBinder.class) InvoicePayment invoicePayment);
 
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
     public @interface InvoiceBinder {
         public static class InvoiceBinderFactory implements BinderFactory {
-            public Binder build(Annotation annotation) {
+            @Override
+            public Binder<InvoiceBinder, Invoice> build(Annotation annotation) {
                 return new Binder<InvoiceBinder, Invoice>() {
-                    public void bind(SQLStatement q, InvoiceBinder bind, Invoice invoice) {
+                    @Override
+                    public void bind(@SuppressWarnings("rawtypes") SQLStatement q, InvoiceBinder bind, Invoice invoice) {
                         q.bind("id", invoice.getId().toString());
                         q.bind("accountId", invoice.getAccountId().toString());
                         q.bind("invoiceDate", invoice.getInvoiceDate().toDate());
@@ -120,6 +126,42 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             Currency currency = Currency.valueOf(result.getString("currency"));
 
             return new DefaultInvoice(id, accountId, invoiceDate, targetDate, currency, lastPaymentAttempt, amountPaid, new ArrayList<InvoiceItem>());
+        }
+    }
+
+    @SqlUpdate
+    void notifyFailedPayment(@Bind(binder = InvoicePaymentBinder.class) InvoicePayment invoicePayment);
+
+    public static final class InvoicePaymentBinder implements Binder<Bind, InvoicePayment> {
+
+        @Override
+        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, InvoicePayment invoicePayment) {
+            stmt.bind("invoice_id", invoicePayment.getInvoiceId().toString());
+            stmt.bind("amount", invoicePayment.getAmount());
+            stmt.bind("currency", invoicePayment.getCurrency().toString());
+            stmt.bind("payment_attempt_id", invoicePayment.getPaymentAttemptId().toString());
+            stmt.bind("payment_attempt_date", invoicePayment.getPaymentAttemptDate() == null ? null : invoicePayment.getPaymentAttemptDate().toDate());
+        }
+    }
+
+
+    public static class InvoicePaymentMapper implements ResultSetMapper<InvoicePayment> {
+
+        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
+            final Timestamp resultStamp = rs.getTimestamp(fieldName);
+            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
+        }
+
+        @Override
+        public InvoicePayment map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
+
+            UUID invoiceId = UUID.fromString(rs.getString("invoice_id"));
+            BigDecimal amount = rs.getBigDecimal("amount");
+            Currency currency = Currency.valueOf(rs.getString("currency"));
+            UUID paymentAttemptId = UUID.fromString(rs.getString("payment_attempt_id"));
+            DateTime paymentAttemptDate = getDate(rs, "payment_attempt_date");
+
+            return new InvoicePayment(invoiceId, amount, currency, paymentAttemptId, paymentAttemptDate);
         }
     }
 }
