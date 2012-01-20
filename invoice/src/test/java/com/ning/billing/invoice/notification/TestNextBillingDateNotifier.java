@@ -56,7 +56,7 @@ public class TestNextBillingDateNotifier {
 	private DummySqlTest dao;
 	private Bus eventBus;
 	private MysqlTestingHelper helper;
-	
+
 	@BeforeClass(groups={"setup"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
@@ -72,7 +72,7 @@ public class TestNextBillingDateNotifier {
 				 IDBI dbi = helper.getDBI();
 				 bind(IDBI.class).toInstance(dbi);
 
-			}  	
+			}
         });
 
         clock = g.getInstance(Clock.class);
@@ -83,7 +83,7 @@ public class TestNextBillingDateNotifier {
         notifier = new DefaultNextBillingDateNotifier(g.getInstance(NotificationQueueService.class), eventBus, g.getInstance(InvoiceConfig.class));
         startMysql();
 	}
-	
+
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {
 		final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 		final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
@@ -105,7 +105,7 @@ public class TestNextBillingDateNotifier {
 			//log.debug("Got event {} {}", event.name, event.value);
 		}
 	}
-	
+
 	@Test(enabled=true, groups="slow")
 	public void test() throws Exception {
 		final UUID subscriptionId = new UUID(0L,1L);
@@ -116,7 +116,7 @@ public class TestNextBillingDateNotifier {
 		eventBus.start();
 		notifier.initialize();
 		notifier.start();
-		
+
         eventBus.register(listener);
 		dao.inTransaction(new Transaction<Void, DummySqlTest>() {
 			@Override

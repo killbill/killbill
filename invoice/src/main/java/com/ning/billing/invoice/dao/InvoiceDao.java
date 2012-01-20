@@ -42,6 +42,8 @@ public interface InvoiceDao {
     List<UUID> getInvoicesForPayment(final DateTime targetDate,
                                      final int numberOfDays);
 
+    BigDecimal getAccountBalance(final UUID accountId);
+
     void notifySuccessfulPayment(final UUID invoiceId,
                                  final BigDecimal paymentAmount,
                                  final Currency currency,

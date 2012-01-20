@@ -92,20 +92,4 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      * @return the recurring price for the phase
      */
     public InternationalPrice getRecurringPrice();
-
-    /**
-     * Syntactic sugar to wrap currency access call
-     * 
-     * @param currency
-     * @return price value
-     */
-    public BigDecimal getRecurringPrice(Currency currency) throws CatalogApiException ;
-
-    /**
-     * Syntactic sugar to wrap currency access call
-     * 
-     * @param currency
-     * @return price value
-     */
-    public BigDecimal getFixedPrice(Currency currency) throws CatalogApiException ;
 }

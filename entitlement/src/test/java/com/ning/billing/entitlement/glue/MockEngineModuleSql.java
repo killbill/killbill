@@ -35,10 +35,6 @@ public class MockEngineModuleSql extends MockEngineModule {
         bind(EntitlementDao.class).to(MockEntitlementDaoSql.class).asEagerSingleton();
     }
 
-    @Override
-    protected void installClock() {
-        bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-    }
 
     protected void installDBI() {
         bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();

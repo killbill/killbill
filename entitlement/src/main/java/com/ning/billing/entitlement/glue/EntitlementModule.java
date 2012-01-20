@@ -43,10 +43,6 @@ import org.skife.config.ConfigurationObjectFactory;
 public class EntitlementModule extends AbstractModule {
 
 
-    protected void installClock() {
-        bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
-    }
-
     protected void installConfig() {
         final EntitlementConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EntitlementConfig.class);
         bind(EntitlementConfig.class).toInstance(config);
@@ -71,7 +67,6 @@ public class EntitlementModule extends AbstractModule {
     @Override
     protected void configure() {
         installConfig();
-        installClock();
         installEntitlementDao();
         installEntitlementCore();
     }

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.invoice.api.BillingEventSet;
@@ -126,7 +127,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                               final DateTime targetDate, final Currency targetCurrency) {
     	try {
     		//TODO: Jeff getPrice() -> getRecurringPrice()
-    		BigDecimal rate = event.getRecurringPrice(targetCurrency);
+            InternationalPrice recurringPrice = event.getRecurringPrice();
+    		BigDecimal rate = recurringPrice.getPrice(targetCurrency);
     		BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(event, targetDate, rate);
     		BillingMode billingMode = getBillingMode(event.getBillingMode());
     		DateTime billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
@@ -143,15 +145,19 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                final List<InvoiceItem> items, final DateTime targetDate, final Currency targetCurrency) {
     	//TODO: Jeff getPrice() -> getRecurringPrice()
     	try {
-    		BigDecimal rate = firstEvent.getRecurringPrice(targetCurrency);
-    		BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
-    		BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
-    		DateTime billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
+            InternationalPrice recurringPrice = firstEvent.getRecurringPrice();
 
-    		addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
+            if (recurringPrice != null) {
+                BigDecimal rate = recurringPrice.getPrice(targetCurrency);
+                BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
+                BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
+                DateTime billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
+
+                addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
+            }
     	} catch (CatalogApiException e) {
-    		log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s", 
-                    invoiceId.toString(), 
+    		log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s",
+                    invoiceId.toString(),
                     ISODateTimeFormat.basicDateTime().print(firstEvent.getEffectiveDate())), e);
         }
     }

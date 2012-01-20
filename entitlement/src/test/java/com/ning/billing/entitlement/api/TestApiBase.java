@@ -129,7 +129,6 @@ public abstract class TestApiBase {
         dao = g.getInstance(EntitlementDao.class);
         clock = (ClockMock) g.getInstance(Clock.class);
         try {
-
             ((DefaultCatalogService) catalogService).loadCatalog();
             ((DefaultEventBusService) busService).startBus();
             ((Engine) entitlementService).initialize();

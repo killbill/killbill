@@ -128,7 +128,7 @@ public class TestDefaultEntitlementBillingApi {
 			}
 
             @Override
-            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
                 throw new UnsupportedOperationException();
             }
 
@@ -149,7 +149,7 @@ public class TestDefaultEntitlementBillingApi {
 			}
 
             @Override
-            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
                 throw new UnsupportedOperationException();
             }
 

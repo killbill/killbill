@@ -134,7 +134,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
         throw new UnsupportedOperationException();
     }
 

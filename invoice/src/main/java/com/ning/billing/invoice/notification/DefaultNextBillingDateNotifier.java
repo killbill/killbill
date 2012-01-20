@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
@@ -37,29 +38,30 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
-public class DefaultNextBillingDateNotifier implements KillbillService, NextBillingDateNotifier {
+public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier {
+
     private final static Logger log = LoggerFactory.getLogger(DefaultNextBillingDateNotifier.class);
 
-    private static final String NEXT_BILLING_DATE_NOTIFIER_SERVICE_NAME = "next-billing-date-notifier";
     private static final String NEXT_BILLING_DATE_NOTIFIER_QUEUE = "next-billing-date-queue";
-    
+
     private final Bus eventBus;
     private final NotificationQueueService notificationQueueService;
-    private NotificationQueue nextBillingQueue;
-	private InvoiceConfig config;
+	private final InvoiceConfig config;
 
-	@Inject
+    private NotificationQueue nextBillingQueue;
+
+    @Inject
 	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService, Bus eventBus, InvoiceConfig config){
 		this.notificationQueueService = notificationQueueService;
 		this.config = config;
 		this.eventBus = eventBus;
 	}
-	
-	
-	@LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
+
+
+    @Override
     public void initialize() {
 		try {
-            nextBillingQueue = notificationQueueService.createNotificationQueue(NEXT_BILLING_DATE_NOTIFIER_SERVICE_NAME,
+            nextBillingQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
             		NEXT_BILLING_DATE_NOTIFIER_QUEUE,
                     new NotificationQueueHandler() {
                 @Override
@@ -71,7 +73,7 @@ public class DefaultNextBillingDateNotifier implements KillbillService, NextBill
                 		log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID",e);
                 		return;
                 	}
-                    
+
                     processEvent(subscriptionId);
                 }
             },
@@ -98,23 +100,18 @@ public class DefaultNextBillingDateNotifier implements KillbillService, NextBill
         }
     }
 
-    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
+    @Override
     public void start() {
     	nextBillingQueue.startQueue();
     }
 
-    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    @Override
     public void stop() {
         if (nextBillingQueue != null) {
         	nextBillingQueue.stopQueue();
         }
     }
-     
-	@Override
-	public String getName() {
-		return NEXT_BILLING_DATE_NOTIFIER_SERVICE_NAME;
-	}
-	
+
     private void processEvent(UUID subscriptionId) {
         try {
             eventBus.post(new NextBillingDateEvent(subscriptionId));
@@ -122,14 +119,15 @@ public class DefaultNextBillingDateNotifier implements KillbillService, NextBill
             log.error("Failed to post entitlement event " + subscriptionId, e);
         }
     }
-    
+
     @Override
     public void insertNextBillingNotification(Transmogrifier transactionalDao, final UUID subscriptionId, DateTime futureNotificationTime) {
-        if (nextBillingQueue != null) {
-    	    nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
-    		    public String toString() {
-    			    return subscriptionId.toString();
-    		    }
+    	if (nextBillingQueue != null) {
+            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
+                @Override
+                public String toString() {
+                    return subscriptionId.toString();
+                }
     	    });
         }
     }

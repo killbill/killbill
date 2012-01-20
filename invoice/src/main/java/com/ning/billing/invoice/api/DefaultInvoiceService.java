@@ -17,18 +17,30 @@
 package com.ning.billing.invoice.api;
 
 import com.google.inject.Inject;
+import com.ning.billing.invoice.InvoiceListener;
+import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.util.eventbus.Bus;
 
 public class DefaultInvoiceService implements InvoiceService {
-    private static final String INVOICE_SERVICE_NAME = "invoice-service";
+
+    public static final String INVOICE_SERVICE_NAME = "invoice-service";
     private final InvoiceUserApi userApi;
     private final InvoicePaymentApi paymentApi;
+    private final NextBillingDateNotifier dateNotifier;
+    private final InvoiceListener invoiceListener;
+    private final Bus eventBus;
 
     @Inject
-    public DefaultInvoiceService(InvoiceUserApi userApi, InvoicePaymentApi paymentApi) {
+    public DefaultInvoiceService(InvoiceListener invoiceListener, Bus eventBus, InvoiceUserApi userApi, InvoicePaymentApi paymentApi, NextBillingDateNotifier dateNotifier) {
+        this.invoiceListener = invoiceListener;
+        this.eventBus = eventBus;
         this.userApi = userApi;
         this.paymentApi = paymentApi;
+        this.dateNotifier = dateNotifier;
     }
+
 
     @Override
     public String getName() {
@@ -47,5 +59,34 @@ public class DefaultInvoiceService implements InvoiceService {
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.INIT_SERVICE)
     public void initialize() {
+        dateNotifier.initialize();
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
+    public void start() {
+        dateNotifier.start();
+    }
+
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
+    public void registerForNotifications() {
+        try {
+            eventBus.register(invoiceListener);
+        } catch (Bus.EventBusException e) {
+            throw new RuntimeException("Unable to register to the EventBus!", e);
+        }
+    }
+
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.UNREGISTER_EVENTS)
+    public void unregisterForNotifications() {
+        try {
+            eventBus.unregister(invoiceListener);
+        } catch (Bus.EventBusException e) {
+            throw new RuntimeException("Unable to unregister to the EventBus!", e);
+        }
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    public void stop() {
+        dateNotifier.stop();
     }
 }

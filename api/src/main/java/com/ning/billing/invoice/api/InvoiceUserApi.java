@@ -30,6 +30,8 @@ public interface InvoiceUserApi {
 
     public List<Invoice> getInvoicesByAccount(UUID accountId, DateTime fromDate);
 
+    public BigDecimal getAccountBalance(UUID accountId);
+
     public List<InvoiceItem> getInvoiceItemsByAccount(UUID accountId);
 
     public Invoice getInvoice(UUID invoiceId);

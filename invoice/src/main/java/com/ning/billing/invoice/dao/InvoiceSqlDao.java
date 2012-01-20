@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper({UuidMapper.class, InvoiceSqlDao.InvoiceMapper.class})
+@RegisterMapper(InvoiceSqlDao.InvoiceMapper.class)
 public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<InvoiceSqlDao>, Transmogrifier, CloseMe {
     @Override
     @SqlUpdate
@@ -71,8 +71,13 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId);
 
     @SqlQuery
+    @RegisterMapper(UuidMapper.class)
     List<UUID> getInvoicesForPayment(@Bind("targetDate") final Date targetDate,
                                      @Bind("numberOfDays") final int numberOfDays);
+
+    @SqlQuery
+    @RegisterMapper(BalanceMapper.class)
+    BigDecimal getAccountBalance(@Bind("accountId") final String accountId);
 
     @SqlUpdate
     void notifySuccessfulPayment(@Bind("invoiceId") final String invoiceId,
@@ -107,7 +112,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
 
     public static class InvoiceMapper implements ResultSetMapper<Invoice> {
         @Override
-        public Invoice map(int index, ResultSet result, StatementContext context) throws SQLException {
+        public Invoice map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             UUID id = UUID.fromString(result.getString("id"));
             UUID accountId = UUID.fromString(result.getString("account_id"));
             DateTime invoiceDate = new DateTime(result.getTimestamp("invoice_date"));
@@ -116,6 +121,24 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
 
             return new DefaultInvoice(id, accountId, invoiceDate, targetDate, currency);
         }
+    }
+
+    public static class BalanceMapper implements ResultSetMapper<BigDecimal> {
+        @Override
+        public BigDecimal map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
+            BigDecimal amount_invoiced = result.getBigDecimal("amount_invoiced");
+            BigDecimal amount_paid = result.getBigDecimal("amount_paid");
+
+            if (amount_invoiced == null) {
+                amount_invoiced = BigDecimal.ZERO;
+            }
+
+            if (amount_paid == null) {
+                amount_paid = BigDecimal.ZERO;
+            }
+
+            return amount_invoiced.subtract(amount_paid);
+        };
     }
 }
 

@@ -56,7 +56,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId.toString());
 
                 getInvoiceItemsWithinTransaction(invoices, invoiceDao);
-
                 getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
 
                 return invoices;
@@ -145,7 +144,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
                                                                   invoice.getBalance(), invoice.getCurrency(),
                                                                   invoice.getInvoiceDate());
-                    eventBus.post(event);
+                    eventBus.postFromTransaction(event, invoiceDao);
                 }
 
                 return null;
@@ -171,6 +170,11 @@ public class DefaultInvoiceDao implements InvoiceDao {
     @Override
     public List<UUID> getInvoicesForPayment(final DateTime targetDate, final int numberOfDays) {
         return invoiceSqlDao.getInvoicesForPayment(targetDate.toDate(), numberOfDays);
+    }
+
+    @Override
+    public BigDecimal getAccountBalance(final UUID accountId) {
+        return invoiceSqlDao.getAccountBalance(accountId.toString());
     }
 
     @Override

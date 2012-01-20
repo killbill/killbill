@@ -31,6 +31,7 @@ import static org.testng.Assert.fail;
 public abstract class InvoiceDaoTestBase {
     protected InvoiceDao invoiceDao;
     protected InvoiceItemSqlDao invoiceItemDao;
+    protected InvoicePaymentSqlDao invoicePaymentDao;
 
     @BeforeClass()
     protected void setup() throws IOException {
@@ -46,6 +47,8 @@ public abstract class InvoiceDaoTestBase {
             invoiceDao.test();
 
             invoiceItemDao = module.getInvoiceItemDao();
+
+            invoicePaymentDao = module.getIDBI().onDemand(InvoicePaymentSqlDao.class);
 
             BusService busService = injector.getInstance(BusService.class);
             ((DefaultEventBusService) busService).startBus();

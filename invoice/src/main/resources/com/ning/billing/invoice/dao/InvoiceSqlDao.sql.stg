@@ -59,6 +59,15 @@ getById() ::= <<
   GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency;
 >>
 
+getAccountBalance() ::= <<
+  SELECT SUM(iis.total_amount) AS amount_invoiced, SUM(ips.total_paid) AS amount_paid
+  FROM invoices i
+  LEFT JOIN invoice_payment_summary ips ON ips.invoice_id = i.id
+  LEFT JOIN invoice_item_summary iis ON iis.invoice_id = i.id
+  GROUP BY i.account_id
+  WHERE i.account_id = :accountId;
+>>
+
 create() ::= <<
   INSERT INTO invoices(id, account_id, invoice_date, target_date, currency)
   VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency);

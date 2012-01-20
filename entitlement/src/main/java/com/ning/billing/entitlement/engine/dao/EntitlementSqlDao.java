@@ -109,15 +109,17 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
         UUID bundleId = subscriptionsDao.getSubscriptionFromId(subscriptionId.toString()).getBundleId();
         if (bundleId == null) {
-            throw new EntitlementBillingApiException(ErrorCode.ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION, subscriptionId.toString());
+            log.error(String.format(ErrorCode.ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION.getFormat(), subscriptionId.toString()));
+            return null;
         }
 
         SubscriptionBundle bundle = bundlesDao.getBundleFromId(bundleId.toString());
         if (bundle == null) {
-            throw new EntitlementBillingApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_ID, bundleId.toString());
+            log.error(String.format(ErrorCode.ENT_GET_INVALID_BUNDLE_ID.getFormat(), bundleId.toString()));
+            return null;
         }
 
         return bundle.getAccountId();

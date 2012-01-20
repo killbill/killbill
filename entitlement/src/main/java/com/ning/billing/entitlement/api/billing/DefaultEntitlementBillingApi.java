@@ -86,7 +86,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
         return dao.getAccountIdFromSubscriptionId(subscriptionId);
     }
 
