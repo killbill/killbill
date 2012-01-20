@@ -16,8 +16,6 @@
 
 package com.ning.billing.account.api;
 
-import org.joda.time.DateTime;
-
 import com.ning.billing.catalog.api.Currency;
 
 public interface AccountData {
@@ -37,9 +35,5 @@ public interface AccountData {
     public Currency getCurrency();
 
     public String getPaymentProviderName();
-
-    public DateTime getCreatedDate();
-
-    public DateTime getUpdatedDate();
 
 }

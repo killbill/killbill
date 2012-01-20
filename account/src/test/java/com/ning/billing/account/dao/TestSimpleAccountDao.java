@@ -199,15 +199,6 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                 return account.getPaymentProviderName();
             }
 
-            @Override
-            public DateTime getCreatedDate() {
-                return new DateTime(DateTimeZone.UTC);
-            }
-
-            @Override
-            public DateTime getUpdatedDate() {
-                return new DateTime(DateTimeZone.UTC);
-            }
         };
 
         Account updatedAccount = new DefaultAccount(account.getId(), accountData);
