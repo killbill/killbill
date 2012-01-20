@@ -16,13 +16,9 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import java.math.BigDecimal;
-
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;

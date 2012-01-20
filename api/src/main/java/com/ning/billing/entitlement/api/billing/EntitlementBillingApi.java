@@ -16,14 +16,10 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
-import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
 public interface EntitlementBillingApi {
 

@@ -16,14 +16,9 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import java.math.BigDecimal;
-import java.util.UUID;
-
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -48,8 +43,10 @@ public class DefaultBillingEvent implements BillingEvent {
         effectiveDate = transition.getEffectiveTransitionTime();
         planPhase = transition.getNextPhase();
         plan = transition.getNextPlan();
-        fixedPrice = transition.getNextPhase().getFixedPrice();
-        recurringPrice = transition.getNextPhase().getRecurringPrice();
+        fixedPrice = (transition.getNextPhase() == null) ? null : 
+        		transition.getNextPhase().getFixedPrice();
+        recurringPrice = (transition.getNextPhase() == null) ? null :
+        	transition.getNextPhase().getRecurringPrice();
         description = transition.getTransitionType().toString();
         billingModeType=BillingModeType.IN_ADVANCE;
         billingPeriod = transition.getNextPhase().getBillingPeriod();
