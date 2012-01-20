@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -315,16 +314,6 @@ public abstract class TestApiBase {
             @Override
             public String getPaymentProviderName() {
                 return "Paypal";
-            }
-
-            @Override
-            public DateTime getCreatedDate() {
-                return new DateTime(DateTimeZone.UTC);
-            }
-
-            @Override
-            public DateTime getUpdatedDate() {
-                return new DateTime(DateTimeZone.UTC);
             }
         };
         return accountData;
