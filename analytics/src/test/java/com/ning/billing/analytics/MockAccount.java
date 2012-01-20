@@ -16,14 +16,16 @@
 
 package com.ning.billing.analytics;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
@@ -166,5 +168,15 @@ public class MockAccount implements Account
     @Override
     public BigDecimal getBalance() {
         return BigDecimal.ZERO;
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        return new DateTime(DateTimeZone.UTC);
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return new DateTime(DateTimeZone.UTC);
     }
 }

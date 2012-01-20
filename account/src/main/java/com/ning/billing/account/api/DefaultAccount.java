@@ -19,7 +19,10 @@ package com.ning.billing.account.api;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomizableEntityBase;
 import com.ning.billing.util.tag.DefaultTag;
@@ -40,22 +43,46 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     private final String paymentProviderName;
     private final BigDecimal balance;
     private final DefaultTagStore tags;
+    private final DateTime createdDate;
+    private final DateTime updatedDate;
 
     public DefaultAccount(AccountData data) {
         this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
                 data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
-                data.getPaymentProviderName(), BigDecimal.ZERO);
+                data.getPaymentProviderName(), BigDecimal.ZERO, null, null);
     }
 
     public DefaultAccount(UUID id, AccountData data) {
         this(id, data.getExternalKey(), data.getEmail(), data.getName(),
                 data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
-                data.getPaymentProviderName(), BigDecimal.ZERO);
+                data.getPaymentProviderName(), BigDecimal.ZERO, null, null);
     }
 
-    public DefaultAccount(UUID id, String externalKey, String email, String name, int firstNameLength,
-                          String phone, Currency currency, int billCycleDay, String paymentProviderName,
+    public DefaultAccount(UUID id,
+                          String externalKey,
+                          String email,
+                          String name,
+                          int firstNameLength,
+                          String phone,
+                          Currency currency,
+                          int billCycleDay,
+                          String paymentProviderName,
                           BigDecimal balance) {
+        this(id, externalKey, email, name, firstNameLength, phone, currency, billCycleDay, paymentProviderName, balance, null, null);
+    }
+
+    public DefaultAccount(UUID id,
+                          String externalKey,
+                          String email,
+                          String name,
+                          int firstNameLength,
+                          String phone,
+                          Currency currency,
+                          int billCycleDay,
+                          String paymentProviderName,
+                          BigDecimal balance,
+                          DateTime createdDate,
+                          DateTime updatedDate) {
         super(id);
         this.externalKey = externalKey;
         this.email = email;
@@ -66,6 +93,8 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
         this.billCycleDay = billCycleDay;
         this.paymentProviderName = paymentProviderName;
         this.balance = balance;
+        this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
+        this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
 
         this.tags = new DefaultTagStore(id, getObjectName());
     }
@@ -88,6 +117,20 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     @Override
     public String getEmail() {
         return email;
+    }
+
+    public DefaultTagStore getTags() {
+        return tags;
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return updatedDate;
     }
 
     @Override
@@ -162,4 +205,10 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     public BigDecimal getBalance() {
         return balance;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultAccount [externalKey=" + externalKey + ", email=" + email + ", name=" + name + ", firstNameLength=" + firstNameLength + ", phone=" + phone + ", currency=" + currency + ", billCycleDay=" + billCycleDay + ", paymentProviderName=" + paymentProviderName + ", balance=" + balance + ", tags=" + tags + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
+    }
+
 }

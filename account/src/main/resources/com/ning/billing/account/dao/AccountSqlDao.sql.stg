@@ -1,45 +1,62 @@
 group AccountDaoSql;
 
+accountFields(prefix) ::= <<
+    <prefix>id,
+    <prefix>external_key,
+    <prefix>email,
+    <prefix>name,
+    <prefix>first_name_length,
+    <prefix>phone,
+    <prefix>currency,
+    <prefix>billing_cycle_day,
+    <prefix>payment_provider_name,
+    <prefix>created_dt,
+    <prefix>updated_dt
+>>
+
+
 create() ::= <<
-    INSERT INTO accounts
-    (id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name)
-    VALUES
-    (:id, :externalKey, :email, :name, :firstNameLength, :phone, :currency, :billingCycleDay, :paymentProviderName);
+    INSERT INTO accounts (<accountFields()>)
+    VALUES (:id, :externalKey, :email, :name, :firstNameLength, :phone, :currency, :billingCycleDay, :paymentProviderName, :createdDate, :updatedDate);
 >>
 
 update() ::= <<
     UPDATE accounts
-    SET email = :email, name = :name, first_name_length = :firstNameLength, phone = :phone,
-        currency = :currency, billing_cycle_day = :billingCycleDay, payment_provider_name = :paymentProviderName
+    SET email = :email, 
+        name = :name, 
+        first_name_length = :firstNameLength, 
+        phone = :phone,
+        currency = :currency, 
+        billing_cycle_day = :billingCycleDay, 
+        payment_provider_name = :paymentProviderName,
+        updated_dt = NOW()
     WHERE id = :id;
 >>
 
 getAccountByKey() ::= <<
-    select id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name
+    select <accountFields()>
     from accounts
     where external_key = :externalKey;
 >>
 
 getById() ::= <<
-    select
-      a.id, a.external_key, a.email, a.name, a.first_name_length,
-      a.phone, a.currency, a.billing_cycle_day, a.payment_provider_name
-    from accounts a
-    where a.id = :id;
+    SELECT <accountFields()>
+      FROM accounts
+     WHERE id = :id;
 >>
 
 get() ::= <<
-    select id, external_key, email, name, first_name_length, phone, currency, billing_cycle_day, payment_provider_name
-    from accounts;
+    SELECT <accountFields()>
+      FROM accounts;
 >>
 
 getIdFromKey() ::= <<
-    select id
-    from accounts
-    where external_key = :externalKey;
+    SELECT id
+      FROM accounts
+     WHERE external_key = :externalKey;
 >>
 
 test() ::= <<
-    select 1 from accounts;
+    SELECT 1 FROM accounts;
 >>
 ;

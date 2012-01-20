@@ -55,7 +55,7 @@ public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
                                    Boolean defaultMethod,
                                    String baid,
                                    String email) {
-        super(id, accountId, defaultMethod, "paypal");
+        super(id, accountId, defaultMethod, "PayPal");
 
         if (Strings.isNullOrEmpty(accountId) || Strings.isNullOrEmpty(baid) || Strings.isNullOrEmpty(email)) {
             throw new IllegalArgumentException("accountId, baid and email should be present");
