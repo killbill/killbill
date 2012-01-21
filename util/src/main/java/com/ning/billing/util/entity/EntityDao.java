@@ -40,4 +40,7 @@ public interface EntityDao<T extends Entity> {
 
     @SqlUpdate
     public void test();
+
+    @SqlUpdate
+    public void deleteByKey(String key) throws AccountApiException;
 }

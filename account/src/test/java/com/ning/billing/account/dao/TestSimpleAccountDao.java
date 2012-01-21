@@ -341,4 +341,23 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                                     null, null, null, null, null, null, null, null, null, null);
         accountDao.update(updatedAccount);
     }
+    
+    @Test(groups={"slow"},enabled=true)
+    public void testDelete() throws AccountApiException {
+
+        Account a = createTestAccount();
+        accountDao.create(a);
+        String key = a.getExternalKey();
+
+        Account r = accountDao.getAccountByKey(key);
+        assertNotNull(r);
+        assertEquals(r.getExternalKey(), a.getExternalKey());
+        
+        accountDao.deleteByKey(key);
+        
+        Account s = accountDao.getAccountByKey(key);
+        assertTrue(s==null);
+
+    }
+
 }

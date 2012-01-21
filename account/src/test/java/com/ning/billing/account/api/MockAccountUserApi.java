@@ -105,4 +105,15 @@ public class MockAccountUserApi implements AccountUserApi {
     public void updateAccount(Account account) {
         throw new UnsupportedOperationException();
     }
+
+	@Override
+	public void deleteAccountByKey(String externalKey)
+			throws AccountApiException {
+		for (Account account : accounts) {
+            if (externalKey.equals(account.getExternalKey())) {
+                accounts.remove(account.getId());
+            }
+        }	
+		
+	}
 }

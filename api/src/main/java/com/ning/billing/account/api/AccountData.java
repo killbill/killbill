@@ -16,10 +16,9 @@
 
 package com.ning.billing.account.api;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.entity.Entity;
 
 public interface AccountData {
 

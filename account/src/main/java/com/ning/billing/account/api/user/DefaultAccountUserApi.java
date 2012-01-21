@@ -71,4 +71,9 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     public void updateAccount(final Account account) throws AccountApiException {
         dao.update(account);
     }
+
+	@Override
+	public void deleteAccountByKey(String externalKey) throws AccountApiException {
+		dao.deleteByKey(externalKey);
+	}
 }

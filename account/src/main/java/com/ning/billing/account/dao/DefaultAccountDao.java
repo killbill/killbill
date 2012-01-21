@@ -157,6 +157,27 @@ public class DefaultAccountDao implements AccountDao {
             }
         }
     }
+    
+    @Override
+	public void deleteByKey(final String externalKey) throws AccountApiException {
+    	try {
+            accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+                @Override
+                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, EventBus.EventBusException {
+
+                    accountSqlDao.deleteByKey(externalKey);
+
+                    return null;
+                }
+            });
+        } catch (RuntimeException re) {
+            if (re.getCause() instanceof AccountApiException) {
+                throw (AccountApiException) re.getCause();
+            } else {
+                throw re;
+            }
+        }
+	}
 
     @Override
     public void test() {
@@ -212,4 +233,6 @@ public class DefaultAccountDao implements AccountDao {
             fieldStoreDao.save(accountId, objectType, fieldList);
         }
     }
+
+	
 }

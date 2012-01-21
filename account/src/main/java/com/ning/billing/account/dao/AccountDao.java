@@ -31,4 +31,6 @@ public interface AccountDao extends EntityDao<Account> {
      * @throws AccountApiException when externalKey is null
      */
     public UUID getIdFromKey(String externalKey) throws AccountApiException;
+
+	public void deleteByKey(String externalKey) throws AccountApiException;
 }

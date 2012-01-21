@@ -21,6 +21,12 @@ update() ::= <<
     WHERE id = :id;
 >>
 
+deleteByKey() ::= <<
+    DELETE FROM accounts
+    WHERE external_key = :externalKey;
+>>
+
+
 getAccountByKey() ::= <<
     select id, external_key, email, name, first_name_length, currency, billing_cycle_day,
       payment_provider_name, time_zone, locale,

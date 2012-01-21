@@ -16,7 +16,6 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 

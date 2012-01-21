@@ -16,12 +16,15 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.user.AccountBuilder;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.UuidMapper;
-import com.ning.billing.util.entity.EntityDao;
-import org.joda.time.DateTime;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.UUID;
+
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -37,15 +40,11 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.UUID;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.user.AccountBuilder;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.UuidMapper;
+import com.ning.billing.util.entity.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper({UuidMapper.class, AccountSqlDao.AccountMapper.class})
@@ -63,6 +62,10 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     @Override
     @SqlUpdate
     public void update(@AccountBinder Account account);
+
+    @Override
+    @SqlUpdate
+    public void deleteByKey(@Bind("externalKey") final String key);
 
     public static class AccountMapper implements ResultSetMapper<Account> {
         @Override
@@ -112,7 +115,7 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     @Target({ElementType.PARAMETER})
     public @interface AccountBinder {
         public static class AccountBinderFactory implements BinderFactory {
-            public Binder build(Annotation annotation) {
+            public Binder<AccountBinder, Account> build(Annotation annotation) {
                 return new Binder<AccountBinder, Account>() {
                     public void bind(SQLStatement q, AccountBinder bind, Account account) {
                         q.bind("id", account.getId().toString());
