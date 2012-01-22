@@ -42,4 +42,5 @@ public interface EntitlementUserApi {
     public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate)
         throws EntitlementUserApiException;
 
+    public DateTime getNextBillingDate(UUID account);
 }
