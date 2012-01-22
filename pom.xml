@@ -29,7 +29,7 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git://github.com/stephane/killbill.git</connection>
+        <connection>scm:git:git://github.com/ning/killbill.git</connection>
         <developerConnection>scm:git:git@github.com:ning/killbill.git</developerConnection>
         <url>http://github.com/ning/killbill/tree/master</url>
     </scm>
