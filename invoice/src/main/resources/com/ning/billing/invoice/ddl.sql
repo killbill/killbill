@@ -45,6 +45,6 @@ GROUP BY invoice_id;
 
 DROP VIEW IF EXISTS invoice_item_summary;
 CREATE VIEW invoice_item_summary AS
-SELECT invoice_id, SUM(amount) AS total_amount
-FROM invoice_items
-GROUP BY invoice_id;
+select invoice_id, sum(amount) AS total_amount
+from invoice_items
+group by invoice_id;

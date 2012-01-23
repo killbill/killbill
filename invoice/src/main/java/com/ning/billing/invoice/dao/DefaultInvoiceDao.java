@@ -17,8 +17,11 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -37,15 +40,18 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
     private final NextBillingDateNotifier notifier;
+    private final EntitlementBillingApi entitlementBillingApi;
 
     private final Bus eventBus;
 
     @Inject
-    public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus, final NextBillingDateNotifier notifier) {
+    public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus,
+                             final NextBillingDateNotifier notifier, final EntitlementBillingApi entitlementBillingApi) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.eventBus = eventBus;
         this.notifier = notifier;
+        this.entitlementBillingApi = entitlementBillingApi;
     }
 
     @Override
@@ -134,7 +140,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
                     invoiceItemDao.create(invoiceItems);
 
-                    notifyOfChargeThroughDate(invoiceSqlDao, invoiceItems);
+                    notifyOfFutureBillingEvents(invoiceSqlDao, invoiceItems);
+                    setChargedThroughDates(invoiceSqlDao, invoiceItems);
 
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
                     InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
@@ -211,9 +218,15 @@ public class DefaultInvoiceDao implements InvoiceDao {
         }
     }
 
-    private void notifyOfChargeThroughDate(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
+    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
         for (final InvoiceItem item : invoiceItems) {
             notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
+        }
+    }
+
+    private void setChargedThroughDates(final InvoiceSqlDao dao, final Collection<InvoiceItem> invoiceItems) {
+        for (InvoiceItem invoiceItem : invoiceItems) {
+            entitlementBillingApi.setChargedThroughDateFromTransaction(dao, invoiceItem.getSubscriptionId(), invoiceItem.getEndDate());
         }
     }
 }

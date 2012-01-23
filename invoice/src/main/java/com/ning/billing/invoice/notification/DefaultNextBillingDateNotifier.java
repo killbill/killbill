@@ -123,12 +123,15 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
     @Override
     public void insertNextBillingNotification(Transmogrifier transactionalDao, final UUID subscriptionId, DateTime futureNotificationTime) {
     	if (nextBillingQueue != null) {
+            log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
             nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
                 @Override
                 public String toString() {
                     return subscriptionId.toString();
                 }
     	    });
+        } else {
+            log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).");
         }
     }
 }

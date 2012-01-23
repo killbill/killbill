@@ -16,35 +16,24 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.catalog.api.BillingAlignment;
-import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.Product;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
@@ -127,17 +116,25 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     		
     }
     
-
     @Override
-    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) throws EntitlementBillingApiException {
+    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
         SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionId);
-        if (subscription == null) {
-            throw new EntitlementBillingApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, subscriptionId.toString());
-        }
 
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
             .setChargedThroughDate(ctd)
             .setPaidThroughDate(subscription.getPaidThroughDate());
+
         dao.updateSubscription(new SubscriptionData(builder));
+    }
+
+    @Override
+    public void setChargedThroughDateFromTransaction(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime ctd) {
+        SubscriptionSqlDao subscriptionSqlDao = transactionalDao.become(SubscriptionSqlDao.class);
+        SubscriptionData subscription = (SubscriptionData) subscriptionSqlDao.getSubscriptionFromId(subscriptionId.toString());
+
+        Date paidThroughDate = (subscription.getPaidThroughDate() == null) ? null : subscription.getPaidThroughDate().toDate();
+
+        subscriptionSqlDao.updateSubscription(subscriptionId.toString(), subscription.getActiveVersion(),
+                                              ctd.toDate(), paidThroughDate);
     }
 }

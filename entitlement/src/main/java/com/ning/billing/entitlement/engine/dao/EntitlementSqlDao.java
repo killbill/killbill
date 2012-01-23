@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +53,7 @@ import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import sun.jkernel.Bundle;
 
 
 public class EntitlementSqlDao implements EntitlementDao {
@@ -110,7 +112,13 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     @Override
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
-        UUID bundleId = subscriptionsDao.getSubscriptionFromId(subscriptionId.toString()).getBundleId();
+        Subscription subscription = subscriptionsDao.getSubscriptionFromId(subscriptionId.toString());
+        if (subscription == null) {
+            log.error(String.format(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getFormat(), subscriptionId.toString()));
+            return null;
+        }
+
+        UUID bundleId = subscription.getBundleId();
         if (bundleId == null) {
             log.error(String.format(ErrorCode.ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION.getFormat(), subscriptionId.toString()));
             return null;

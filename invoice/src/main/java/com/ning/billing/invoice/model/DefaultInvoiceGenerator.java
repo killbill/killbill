@@ -85,7 +85,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         existingItems.removeCancellingPairs();
 
         // remove zero-dollar invoice items
-        currentItems.removeZeroDollarItems();
+        //currentItems.removeZeroDollarItems();
 
         // add existing items that aren't covered by current items as credit items
         for (final InvoiceItem existingItem : existingItems) {
@@ -128,7 +128,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     	try {
     		//TODO: Jeff getPrice() -> getRecurringPrice()
             InternationalPrice recurringPrice = event.getRecurringPrice();
-    		BigDecimal rate = recurringPrice.getPrice(targetCurrency);
+    		BigDecimal rate = (recurringPrice == null) ? BigDecimal.ZERO : recurringPrice.getPrice(targetCurrency);
+
     		BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(event, targetDate, rate);
     		BillingMode billingMode = getBillingMode(event.getBillingMode());
     		DateTime billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
@@ -146,15 +147,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     	//TODO: Jeff getPrice() -> getRecurringPrice()
     	try {
             InternationalPrice recurringPrice = firstEvent.getRecurringPrice();
+            BigDecimal rate = (recurringPrice == null) ? BigDecimal.ZERO : recurringPrice.getPrice(targetCurrency);
 
-            if (recurringPrice != null) {
-                BigDecimal rate = recurringPrice.getPrice(targetCurrency);
-                BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
-                BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
-                DateTime billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
+            BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
+            BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
+            DateTime billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
 
-                addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
-            }
+            addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
     	} catch (CatalogApiException e) {
     		log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s",
                     invoiceId.toString(),
@@ -165,10 +164,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private void addInvoiceItem(final UUID invoiceId, final List<InvoiceItem> items, final BillingEvent event,
                                 final DateTime billThroughDate, final BigDecimal amount, final BigDecimal rate,
                                 final Currency currency) {
-        if (!(amount.compareTo(BigDecimal.ZERO) == 0)) {
+        //if (!(amount.compareTo(BigDecimal.ZERO) == 0)) {
             DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, event.getSubscription().getId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
             items.add(item);
-        }
+        //}
     }
 
     private BigDecimal calculateInvoiceItemAmount(final BillingEvent event, final DateTime targetDate,

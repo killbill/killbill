@@ -50,6 +50,10 @@ public class InvoiceModuleMock extends InvoiceModule {
         helper.initDb(ddl);
     }
 
+    public void stopDb() {
+        helper.stopMysql();
+    }
+
     public IDBI getIDBI() {
         return dbi;
     }

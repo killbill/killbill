@@ -208,7 +208,6 @@ public class TestBasic {
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
         assertTrue(busHandler.isCompleted(5000));
 
-
         //
         // VERIFY AGAIN CTD HAS BEEN SET
         //

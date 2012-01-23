@@ -16,18 +16,8 @@
 
 package com.ning.billing.invoice.tests;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
-import java.math.BigDecimal;
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-import org.testng.annotations.Test;
-
 import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -44,6 +34,14 @@ import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceItemList;
+import org.joda.time.DateTime;
+import org.testng.annotations.Test;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 @Test(groups = {"fast", "invoicing", "invoiceGenerator"})
 public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
@@ -53,7 +51,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     @Test
     public void testWithNullEventSetAndNullInvoiceSet() {
         UUID accountId = UUID.randomUUID();
-        Invoice invoice = generator.generateInvoice(accountId, null, null, new DateTime(), Currency.USD);
+        Invoice invoice = generator.generateInvoice(accountId, new BillingEventSet(), new InvoiceItemList(), new DateTime(), Currency.USD);
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 0);
@@ -98,6 +96,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 1);
         assertEquals(invoice.getTotalAmount(), TWENTY);
+        assertEquals(invoice.getInvoiceItems().get(0).getSubscriptionId(), sub.getId());
     }
 
     @Test

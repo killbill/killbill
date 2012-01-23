@@ -20,6 +20,8 @@ import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 public interface EntitlementBillingApi {
 
@@ -34,6 +36,8 @@ public interface EntitlementBillingApi {
 
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId);
 
-    public void setChargedThroughDate(UUID subscriptionId, DateTime ctd) throws EntitlementBillingApiException;
+    public void setChargedThroughDate(UUID subscriptionId, DateTime ctd);
+
+    public void setChargedThroughDateFromTransaction(Transmogrifier transactionalDao, UUID subscriptionId, DateTime ctd);
 
 }

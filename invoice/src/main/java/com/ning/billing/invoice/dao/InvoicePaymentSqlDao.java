@@ -105,7 +105,7 @@ public interface InvoicePaymentSqlDao extends EntityDao<InvoicePayment> {
                     public void bind(SQLStatement q, InvoicePaymentBinder bind, InvoicePayment payment) {
                         q.bind("invoiceId", payment.getInvoiceId().toString());
                         q.bind("paymentId", payment.getId().toString());
-                        q.bind("paymentDate", payment.getAmount());
+                        q.bind("paymentDate", payment.getPaymentDate().toDate());
                         q.bind("amount", payment.getAmount());
                         Currency currency = payment.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());

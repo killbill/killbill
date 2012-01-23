@@ -19,6 +19,8 @@ package com.ning.billing.invoice;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
+
+import com.ning.billing.invoice.notification.NextBillingDateEvent;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +66,17 @@ public class InvoiceListener {
 
     @Subscribe
     public void handleSubscriptionTransition(final SubscriptionTransition transition) {
-        UUID subscriptionId = transition.getSubscriptionId();
+        processSubscription(transition.getSubscriptionId(), transition.getEffectiveTransitionTime());
+    }
+
+    @Subscribe
+    public void handleNextBillingDateEvent(final NextBillingDateEvent event) {
+        processSubscription(event.getSubscriptionId(), new DateTime());
+    }
+
+    private void processSubscription(final UUID subscriptionId, final DateTime targetDate) {
+        log.info("Got subscription transition from InvoiceListener.");
+
         if (subscriptionId == null) {
             log.error("Failed handling entitlement change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
             return;
@@ -85,10 +97,8 @@ public class InvoiceListener {
         }
 
         SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccount(accountId);
-        BillingEventSet billingEvents = new BillingEventSet();
-        billingEvents.addAll(events);
+        BillingEventSet billingEvents = new BillingEventSet(events);
 
-        DateTime targetDate = transition.getEffectiveTransitionTime();
         Currency targetCurrency = account.getCurrency();
 
         List<InvoiceItem> items = invoiceDao.getInvoiceItemsByAccount(accountId);
@@ -96,9 +106,9 @@ public class InvoiceListener {
         Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoiceItemList, targetDate, targetCurrency);
 
         if (invoice != null) {
-            if (invoice.getNumberOfItems() > 0) {
+            //if (invoice.getNumberOfItems() > 0) {
                 invoiceDao.create(invoice);
-            }
+            //}
         }
     }
 }

@@ -114,7 +114,12 @@ public class InAdvanceBillingMode extends BillingModeBase {
         DateTime nextBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
         DateTime previousBillingCycleDate = nextBillingCycleDate.plusMonths(-billingPeriod.getNumberOfMonths());
 
-        BigDecimal daysInPeriod = new BigDecimal(Days.daysBetween(previousBillingCycleDate, nextBillingCycleDate).getDays());
+        int daysBetween = Days.daysBetween(previousBillingCycleDate, nextBillingCycleDate).getDays();
+        if (daysBetween == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal daysInPeriod = new BigDecimal(daysBetween);
         BigDecimal days = new BigDecimal(Days.daysBetween(startDate, nextBillingCycleDate).getDays());
 
         return days.divide(daysInPeriod, NUMBER_OF_DECIMALS, ROUNDING_METHOD);

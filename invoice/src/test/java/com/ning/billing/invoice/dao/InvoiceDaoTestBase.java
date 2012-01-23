@@ -18,6 +18,7 @@ package com.ning.billing.invoice.dao;
 
 import java.io.IOException;
 import org.apache.commons.io.IOUtils;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -25,19 +26,22 @@ import com.google.inject.Stage;
 import com.ning.billing.invoice.glue.InvoiceModuleMock;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
 import com.ning.billing.util.eventbus.BusService;
+import sun.jvm.hotspot.utilities.Assert;
 
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public abstract class InvoiceDaoTestBase {
     protected InvoiceDao invoiceDao;
     protected InvoiceItemSqlDao invoiceItemDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
+    protected InvoiceModuleMock module;
 
-    @BeforeClass()
+    @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
-            InvoiceModuleMock module = new InvoiceModuleMock();
+            module = new InvoiceModuleMock();
             final String ddl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             module.createDb(ddl);
 
@@ -52,9 +56,17 @@ public abstract class InvoiceDaoTestBase {
 
             BusService busService = injector.getInstance(BusService.class);
             ((DefaultEventBusService) busService).startBus();
+
+            assertTrue(true);
         }
         catch (Throwable t) {
             fail(t.toString());
         }
+    }
+
+    @AfterClass(alwaysRun = true)
+    protected void tearDown() {
+        module.stopDb();
+        assertTrue(true);
     }
 }
