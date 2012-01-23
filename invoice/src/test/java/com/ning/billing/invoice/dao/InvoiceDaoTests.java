@@ -305,5 +305,74 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         List<Invoice> items4 = invoiceDao.getInvoicesBySubscription(subscriptionId4.toString());
         assertEquals(items4.size(), 1);
     }
+    
+    @Test
+    public void testAccountBalance() {
+        UUID accountId = UUID.randomUUID();
+        DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
+        Invoice invoice1 = new DefaultInvoice(accountId, targetDate1, Currency.USD);
+        invoiceDao.create(invoice1);
 
+        DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
+        DateTime endDate = startDate.plusMonths(1);
+
+        BigDecimal rate1 = new BigDecimal("17.0");
+        BigDecimal rate2 = new BigDecimal("42.0");
+
+        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        invoiceItemDao.create(item1);
+
+        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        invoiceItemDao.create(item2);
+
+        BigDecimal payment1 = new BigDecimal("48.0");
+        
+        // TODO - reenable when DefaultInvoicePayement is visible in this branch
+        //InvoicePayment payment = new DefaultInvoicePayment(invoice1.getId(), new DateTime(), payment1, Currency.USD);
+        //invoicePaymentDao.create(payment);
+        //
+        //BigDecimal balance = invoiceDao.getAccountBalance(accountId);
+        //assertEquals(balance.compareTo(rate1.add(rate2).subtract(payment1)), 0);
+
+    }
+    
+    @Test
+    public void testAccountBalanceWithNoPayments() {
+        UUID accountId = UUID.randomUUID();
+        DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
+        Invoice invoice1 = new DefaultInvoice(accountId, targetDate1, Currency.USD);
+        invoiceDao.create(invoice1);
+
+        DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
+        DateTime endDate = startDate.plusMonths(1);
+
+        BigDecimal rate1 = new BigDecimal("17.0");
+        BigDecimal rate2 = new BigDecimal("42.0");
+
+        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        invoiceItemDao.create(item1);
+
+        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        invoiceItemDao.create(item2);
+
+        BigDecimal balance = invoiceDao.getAccountBalance(accountId);
+        assertEquals(balance.compareTo(rate1.add(rate2)), 0);
+    }
+
+
+    @Test
+    public void testAccountBalanceWithNoInvoiceItems() {
+        UUID accountId = UUID.randomUUID();
+        DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
+        Invoice invoice1 = new DefaultInvoice(accountId, targetDate1, Currency.USD);
+        invoiceDao.create(invoice1);
+
+        // TODO - reenable when DefaultInvoicePayement is visible in this branch
+        //BigDecimal payment1 = new BigDecimal("48.0");
+        //InvoicePayment payment = new DefaultInvoicePayment(invoice1.getId(), new DateTime(), payment1, Currency.USD);
+        //invoicePaymentDao.create(payment);
+        //
+        //BigDecimal balance = invoiceDao.getAccountBalance(accountId);
+        //assertEquals(balance.compareTo(BigDecimal.ZERO.subtract(payment1)), 0);
+    }
 }

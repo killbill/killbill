@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.dao;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -155,5 +156,10 @@ public class DefaultInvoiceDao implements InvoiceDao {
     public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
         return invoiceDao.getInvoicePayment(paymentAttemptId);
     }
+
+	@Override
+	public BigDecimal getAccountBalance(UUID accountId) {
+		return invoiceDao.getAccountBalance(accountId.toString());
+	}
 
 }

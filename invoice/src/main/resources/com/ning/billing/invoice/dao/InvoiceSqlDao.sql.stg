@@ -81,6 +81,15 @@ getInvoicePayment() ::= <<
      WHERE payment_id = :payment_id
 >>
 
+getAccountBalance() ::= <<
+  SELECT SUM(iis.total_amount) AS amount_invoiced, SUM(ips.total_paid) AS amount_paid
+  FROM invoices i
+  LEFT JOIN invoice_payment_summary ips ON i.id = ips.invoice_id
+  LEFT JOIN invoice_item_summary iis ON i.id = iis.invoice_id
+  WHERE i.account_id = :accountId
+  GROUP BY i.account_id;
+>>
+
 test() ::= <<
   SELECT 1
   FROM invoices;

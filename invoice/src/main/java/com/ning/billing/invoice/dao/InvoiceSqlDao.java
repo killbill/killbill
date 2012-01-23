@@ -84,6 +84,28 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
 
     @SqlUpdate
     void notifyOfPaymentAttempt(@Bind(binder = InvoicePaymentBinder.class) InvoicePayment invoicePayment);
+    
+    @SqlQuery
+    @RegisterMapper(BalanceMapper.class)
+    BigDecimal getAccountBalance(@Bind("accountId") final String accountId);
+
+    public static class BalanceMapper implements ResultSetMapper<BigDecimal> {
+        @Override
+        public BigDecimal map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
+            BigDecimal amount_invoiced = result.getBigDecimal("amount_invoiced");
+            BigDecimal amount_paid = result.getBigDecimal("amount_paid");
+
+            if (amount_invoiced == null) {
+                amount_invoiced = BigDecimal.ZERO;
+            }
+
+            if (amount_paid == null) {
+                amount_paid = BigDecimal.ZERO;
+            }
+
+            return amount_invoiced.subtract(amount_paid);
+        };
+    }
 
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
@@ -164,5 +186,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             return new InvoicePayment(invoiceId, amount, currency, paymentAttemptId, paymentAttemptDate);
         }
     }
+
+
 }
 
