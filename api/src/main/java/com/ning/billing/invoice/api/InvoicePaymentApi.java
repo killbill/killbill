@@ -16,19 +16,28 @@
 
 package com.ning.billing.invoice.api;
 
-import com.ning.billing.catalog.api.Currency;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
 
-public interface InvoicePaymentApi {
-    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId, DateTime paymentAttemptDate);
+import com.ning.billing.catalog.api.Currency;
 
-    public void paymentFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate);
+public interface InvoicePaymentApi {
 
     public List<Invoice> getInvoicesByAccount(UUID accountId);
 
     public Invoice getInvoice(UUID invoiceId);
+
+    public Invoice getInvoiceForPaymentAttemptId(UUID paymentAttemptId);
+
+    public InvoicePayment getInvoicePayment(UUID paymentAttemptId);
+
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
+
+    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate);
+
+    public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate);
+
 }

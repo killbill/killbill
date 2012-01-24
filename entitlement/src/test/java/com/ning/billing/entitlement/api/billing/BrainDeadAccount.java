@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
@@ -148,7 +149,17 @@ public class BrainDeadAccount implements Account {
 	@Override
 	public void addFields(List<CustomField> fields) {
 		throw new UnsupportedOperationException();
-		
+
 	}
+
+    @Override
+    public DateTime getCreatedDate() {
+        return new DateTime(DateTimeZone.UTC);
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return new DateTime(DateTimeZone.UTC);
+    }
 
 }

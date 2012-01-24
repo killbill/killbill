@@ -19,7 +19,7 @@ package com.ning.billing.invoice.dao;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.invoice.glue.InvoiceModuleMock;
+import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.util.eventbus.BusService;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
 import org.apache.commons.io.IOUtils;
@@ -35,13 +35,13 @@ public abstract class InvoiceDaoTestBase {
     protected InvoiceDao invoiceDao;
     protected InvoiceItemSqlDao invoiceItemDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
-    protected InvoiceModuleMock module;
+    protected InvoiceModuleWithEmbeddedDb module;
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
-            module = new InvoiceModuleMock();
+            module = new InvoiceModuleWithEmbeddedDb();
             final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             final String entitlementDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 

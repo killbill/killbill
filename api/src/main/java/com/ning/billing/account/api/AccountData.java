@@ -17,7 +17,6 @@
 package com.ning.billing.account.api;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.entity.Entity;
 
 public interface AccountData {
 
@@ -36,4 +35,5 @@ public interface AccountData {
     public Currency getCurrency();
 
     public String getPaymentProviderName();
+
 }

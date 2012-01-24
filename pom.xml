@@ -17,7 +17,7 @@
     <groupId>com.ning.billing</groupId>
     <artifactId>killbill</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.1.3-SNAPSHOT</version>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
     <url>http://github.com/ning/killbill</url>
@@ -29,7 +29,7 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git://github.com/stephane/killbill.git</connection>
+        <connection>scm:git:git://github.com/ning/killbill.git</connection>
         <developerConnection>scm:git:git@github.com:ning/killbill.git</developerConnection>
         <url>http://github.com/ning/killbill/tree/master</url>
     </scm>
@@ -56,6 +56,12 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-api</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-account</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -64,7 +70,6 @@
                 <artifactId>killbill-account</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
@@ -73,47 +78,57 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-entitlement</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-catalog</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-catalog</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-invoice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
-                <artifactId>killbill-catalog</artifactId>
+                <artifactId>killbill-invoice</artifactId>
                 <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
-                <artifactId>killbill-catalog</artifactId>
+                <artifactId>killbill-util</artifactId>
                 <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-util</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.ning.billing</groupId>
-                <artifactId>killbill-util</artifactId>
-                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-core-asl</artifactId>
-                <version>1.9.0</version>
+                <version>1.9.2</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-jaxrs</artifactId>
-                <version>1.9.0</version>
+                <version>1.9.2</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-mapper-asl</artifactId>
-                <version>1.9.0</version>
+                <version>1.9.2</version>
             </dependency>
             <dependency>
                 <groupId>com.jolbox</groupId>
@@ -139,9 +154,15 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>com.google.inject.extensions</groupId>
+                <artifactId>guice-multibindings</artifactId>
+                <version>3.0</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <groupId>com.mogwee</groupId>
                 <artifactId>mogwee-executors</artifactId>
-                <version>1.1.0</version>
+                <version>1.2.0</version>
             </dependency>
             <dependency>
                 <groupId>com.mysql</groupId>
@@ -179,6 +200,11 @@
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
                 <version>2.5</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>3.2.1</version>
             </dependency>
             <dependency>
                 <groupId>joda-time</groupId>
@@ -236,10 +262,10 @@
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
-                <version>6.0</version>
+                <version>6.3.1</version>
                 <scope>test</scope>
             </dependency>
-             <dependency>
+            <dependency>
                 <groupId>com.jayway.awaitility</groupId>
                 <artifactId>awaitility</artifactId>
                 <version>1.3.3</version>
@@ -293,6 +319,18 @@
                     <source>1.6</source>
                     <target>1.6</target>
                 </configuration>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-jar-plugin</artifactId>
+              <version>2.2</version>
+              <executions>
+                <execution>
+                  <goals>
+                    <goal>test-jar</goal>
+                  </goals>
+               </execution>
+              </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -402,6 +440,21 @@
                 <configuration>
                     <attachClasses>true</attachClasses>
                 </configuration>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-source-plugin</artifactId>
+              <version>2.1.2</version>
+              <executions>
+                <execution>
+                  <id>attach-sources</id>
+                  <phase>verify</phase>
+                  <goals>
+                    <goal>jar</goal>
+                    <goal>test-jar</goal>
+                  </goals>
+                </execution>
+              </executions>
             </plugin>
         </plugins>
     </build>

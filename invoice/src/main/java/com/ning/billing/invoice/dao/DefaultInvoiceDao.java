@@ -27,7 +27,6 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -39,6 +38,7 @@ import com.ning.billing.util.eventbus.Bus;
 public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
+    private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final NextBillingDateNotifier notifier;
     private final EntitlementBillingApi entitlementBillingApi;
 
@@ -49,6 +49,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                              final NextBillingDateNotifier notifier, final EntitlementBillingApi entitlementBillingApi) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
+        this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.eventBus = eventBus;
         this.notifier = notifier;
         this.entitlementBillingApi = entitlementBillingApi;
@@ -183,17 +184,10 @@ public class DefaultInvoiceDao implements InvoiceDao {
     public BigDecimal getAccountBalance(final UUID accountId) {
         return invoiceSqlDao.getAccountBalance(accountId.toString());
     }
-
+    
     @Override
-    public void notifySuccessfulPayment(final UUID invoiceId, final BigDecimal paymentAmount,
-                                        final Currency currency, final UUID paymentId, final DateTime paymentDate) {
-        invoiceSqlDao.notifySuccessfulPayment(invoiceId.toString(), paymentAmount, currency.toString(),
-                                              paymentId.toString(), paymentDate.toDate());
-    }
-
-    @Override
-    public void notifyFailedPayment(final UUID invoiceId, final UUID paymentId, final DateTime paymentAttemptDate) {
-        invoiceSqlDao.notifyFailedPayment(invoiceId.toString(), paymentId.toString(), paymentAttemptDate.toDate());
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
+        invoicePaymentSqlDao.notifyOfPaymentAttempt(invoicePayment);
     }
 
     @Override
@@ -201,7 +195,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                List<Invoice> invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId.toString(), upToDate.toDate());
+                List<Invoice> invoices = invoiceSqlDao.getUnpaidInvoicesByAccountId(accountId.toString(), upToDate.toDate());
 
                 getInvoiceItemsWithinTransaction(invoices, invoiceDao);
                 getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
@@ -209,6 +203,16 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 return invoices;
             }
         });
+    }
+    
+    @Override
+    public UUID getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
+        return invoiceSqlDao.getInvoiceIdByPaymentAttemptId(paymentAttemptId.toString());
+    }
+
+    @Override
+    public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
+        return invoicePaymentSqlDao.getInvoicePayment(paymentAttemptId);
     }
 
     @Override

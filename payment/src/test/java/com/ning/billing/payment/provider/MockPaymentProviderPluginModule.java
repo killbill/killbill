@@ -14,33 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.account.glue;
+package com.ning.billing.payment.provider;
 
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.glue.EventBusModule;
-import org.skife.jdbi.v2.IDBI;
+import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
-import java.io.IOException;
+public class MockPaymentProviderPluginModule extends AbstractModule {
+    private final String instanceName;
 
-public class AccountModuleMock extends AccountModule {
-    private final MysqlTestingHelper helper = new MysqlTestingHelper();
-
-    public void startDb() throws IOException {
-        helper.startMysql();
-    }
-
-    public void initDb(String ddl) throws IOException {
-        helper.initDb(ddl);
-    }
-
-    public void stopDb() {
-        helper.stopMysql();
+    public MockPaymentProviderPluginModule(String instanceName) {
+        this.instanceName = instanceName;
     }
 
     @Override
     protected void configure() {
-        bind(IDBI.class).toInstance(helper.getDBI());
-        super.configure();
-        install(new EventBusModule());
+        bind(MockPaymentProviderPlugin.class)
+            .annotatedWith(Names.named(instanceName))
+            .toProvider(new MockPaymentProviderPluginProvider(instanceName))
+            .asEagerSingleton();
     }
 }

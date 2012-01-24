@@ -9,6 +9,8 @@ CREATE TABLE accounts (
     currency char(3) DEFAULT NULL,
     billing_cycle_day int DEFAULT NULL,
     payment_provider_name varchar(20) DEFAULT NULL,
+    created_dt datetime,
+    updated_dt datetime,
     PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key);

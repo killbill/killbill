@@ -24,7 +24,12 @@ import com.ning.billing.util.entity.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.sqlobject.*;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
@@ -32,7 +37,11 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -62,42 +71,40 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId);
 
     @SqlQuery
-    List<Invoice> getUnpaidInvoicesByAccountId(@Bind("accountId") final String accountId,
-                                               @Bind("upToDate") final Date upToDate);
+    @RegisterMapper(UuidMapper.class)
+    UUID getInvoiceIdByPaymentAttemptId(@Bind("paymentAttemptId") final String paymentAttemptId);
 
     @SqlQuery
     @RegisterMapper(UuidMapper.class)
     List<UUID> getInvoicesForPayment(@Bind("targetDate") final Date targetDate,
-                                     @Bind("numberOfDays") final int numberOfDays);
-
+                                    @Bind("numberOfDays") final int numberOfDays);
+    
     @SqlQuery
     @RegisterMapper(BalanceMapper.class)
     BigDecimal getAccountBalance(@Bind("accountId") final String accountId);
 
-    @SqlUpdate
-    void notifySuccessfulPayment(@Bind("invoiceId") final String invoiceId,
-                                 @Bind("amount") final BigDecimal paymentAmount,
-                                 @Bind("currency") final String currency,
-                                 @Bind("paymentId") final String paymentId,
-                                 @Bind("paymentDate") final Date paymentDate);
-
-    @SqlUpdate
-    void notifyFailedPayment(@Bind("invoiceId") final String invoiceId,
-                             @Bind("paymentId") final String paymentId,
-                             @Bind("paymentAttemptDate") final Date paymentAttemptDate);
-
+    @SqlQuery
+    List<Invoice> getUnpaidInvoicesByAccountId(@Bind("accountId") final String accountId,
+                                               @Bind("upToDate") final Date upToDate);
+    
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
     public @interface InvoiceBinder {
         public static class InvoiceBinderFactory implements BinderFactory {
-            public Binder build(Annotation annotation) {
+            @Override
+            public Binder<InvoiceBinder, Invoice> build(Annotation annotation) {
                 return new Binder<InvoiceBinder, Invoice>() {
-                    public void bind(SQLStatement q, InvoiceBinder bind, Invoice invoice) {
+                    @Override
+                    public void bind(@SuppressWarnings("rawtypes") SQLStatement q, InvoiceBinder bind, Invoice invoice) {
                         q.bind("id", invoice.getId().toString());
                         q.bind("accountId", invoice.getAccountId().toString());
                         q.bind("invoiceDate", invoice.getInvoiceDate().toDate());
                         q.bind("targetDate", invoice.getTargetDate().toDate());
+                        q.bind("amountPaid", invoice.getAmountPaid());
+                        q.bind("amountOutstanding", invoice.getBalance());
+                        DateTime last_payment_date = invoice.getLastPaymentAttempt();
+                        q.bind("lastPaymentAttempt", last_payment_date == null ? null : last_payment_date.toDate());
                         q.bind("currency", invoice.getCurrency().toString());
                     }
                 };
@@ -107,7 +114,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
 
     public static class InvoiceMapper implements ResultSetMapper<Invoice> {
         @Override
-        public Invoice map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
+        public Invoice map(int index, ResultSet result, StatementContext context) throws SQLException {
             UUID id = UUID.fromString(result.getString("id"));
             UUID accountId = UUID.fromString(result.getString("account_id"));
             DateTime invoiceDate = new DateTime(result.getTimestamp("invoice_date"));
@@ -117,7 +124,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             return new DefaultInvoice(id, accountId, invoiceDate, targetDate, currency);
         }
     }
-
+      
     public static class BalanceMapper implements ResultSetMapper<BigDecimal> {
         @Override
         public BigDecimal map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
@@ -133,7 +140,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             }
 
             return amount_invoiced.subtract(amount_paid);
-        };
+        }
     }
 }
 

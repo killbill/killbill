@@ -16,12 +16,19 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.user.AccountBuilder;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.UuidMapper;
-import com.ning.billing.util.entity.EntityDao;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -36,15 +43,11 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.UUID;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.user.AccountBuilder;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.UuidMapper;
+import com.ning.billing.util.entity.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper({UuidMapper.class, AccountSqlDao.AccountMapper.class})
@@ -64,8 +67,15 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     public void update(@AccountBinder Account account);
 
     public static class AccountMapper implements ResultSetMapper<Account> {
+
+        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
+            final Timestamp resultStamp = rs.getTimestamp(fieldName);
+            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
+        }
+
         @Override
         public Account map(int index, ResultSet result, StatementContext context) throws SQLException {
+
             UUID id = UUID.fromString(result.getString("id"));
             String externalKey = result.getString("external_key");
             String email = result.getString("email");
@@ -76,12 +86,16 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
             String currencyString = result.getString("currency");
             Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
             String paymentProviderName = result.getString("payment_provider_name");
+            DateTime createdDate = getDate(result, "created_dt");
+            DateTime updatedDate = getDate(result, "updated_dt");
 
             return new AccountBuilder(id).externalKey(externalKey).email(email)
                                          .name(name).firstNameLength(firstNameLength)
                                          .phone(phone).currency(currency)
                                          .billingCycleDay(billingCycleDay)
                                          .paymentProviderName(paymentProviderName)
+                                         .createdDate(createdDate)
+                                         .updatedDate(updatedDate)
                                          .build();
         }
     }
@@ -91,8 +105,14 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     @Target({ElementType.PARAMETER})
     public @interface AccountBinder {
         public static class AccountBinderFactory implements BinderFactory {
+            @Override
             public Binder build(Annotation annotation) {
                 return new Binder<AccountBinder, Account>() {
+                    private Date getDate(DateTime dateTime) {
+                        return dateTime == null ? null : dateTime.toDate();
+                    }
+
+                    @Override
                     public void bind(SQLStatement q, AccountBinder bind, Account account) {
                         q.bind("id", account.getId().toString());
                         q.bind("externalKey", account.getExternalKey());
@@ -104,6 +124,8 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
                         q.bind("currency", (currency == null) ? null : currency.toString());
                         q.bind("billingCycleDay", account.getBillCycleDay());
                         q.bind("paymentProviderName", account.getPaymentProviderName());
+                        q.bind("createdDate", getDate(account.getCreatedDate()));
+                        q.bind("updatedDate", getDate(account.getUpdatedDate()));
                     }
                 };
             }

@@ -22,7 +22,6 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import com.ning.billing.catalog.api.Currency;
 
 public interface InvoiceUserApi {
     public List<UUID> getInvoicesForPayment(DateTime targetDate, int numberOfDays);
@@ -37,10 +36,7 @@ public interface InvoiceUserApi {
 
     public Invoice getInvoice(UUID invoiceId);
 
-    public void paymentAttemptFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate);
-
-    public void paymentAttemptSuccessful(UUID invoiceId, BigDecimal amount, Currency currency,
-                                         UUID paymentId, DateTime paymentDate);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
 
     public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate);
 }

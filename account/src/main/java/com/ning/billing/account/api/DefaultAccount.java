@@ -19,6 +19,9 @@ package com.ning.billing.account.api;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
+import com.google.inject.Inject;
+import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomizableEntityBase;
@@ -40,23 +43,41 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     private final String paymentProviderName;
     private final BigDecimal balance;
     private final DefaultTagStore tags;
+    private final DateTime createdDate;
+    private final DateTime updatedDate;
+
+    @Inject
+    private Clock clock;
 
     public DefaultAccount(final AccountData data) {
         this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
                 data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
-                data.getPaymentProviderName(), BigDecimal.ZERO);
+                data.getPaymentProviderName(), BigDecimal.ZERO, null, null);
     }
 
     public DefaultAccount(final UUID id, final AccountData data) {
         this(id, data.getExternalKey(), data.getEmail(), data.getName(),
                 data.getFirstNameLength(), data.getPhone(), data.getCurrency(), data.getBillCycleDay(),
-                data.getPaymentProviderName(), BigDecimal.ZERO);
+                data.getPaymentProviderName(), BigDecimal.ZERO, null, null);
+    }
+
+    public DefaultAccount(UUID id,
+                          String externalKey,
+                          String email,
+                          String name,
+                          int firstNameLength,
+                          String phone,
+                          Currency currency,
+                          int billCycleDay,
+                          String paymentProviderName,
+                          BigDecimal balance) {
+        this(id, externalKey, email, name, firstNameLength, phone, currency, billCycleDay, paymentProviderName, balance, null, null);
     }
 
     public DefaultAccount(final UUID id, final String externalKey, final String email,
                           final String name, final int firstNameLength,
                           final String phone, final Currency currency, final int billCycleDay, final String paymentProviderName,
-                          final BigDecimal balance) {
+                          final BigDecimal balance, final DateTime createdDate, final DateTime updatedDate) {
         super(id);
         this.externalKey = externalKey;
         this.email = email;
@@ -67,6 +88,8 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
         this.billCycleDay = billCycleDay;
         this.paymentProviderName = paymentProviderName;
         this.balance = balance;
+        this.createdDate = (createdDate == null) ? clock.getUTCNow() : createdDate;
+        this.updatedDate = (updatedDate == null) ? clock.getUTCNow() : updatedDate;
 
         this.tags = new DefaultTagStore(id, getObjectName());
     }
@@ -117,6 +140,16 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     }
 
     @Override
+    public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
+    @Override
     public List<Tag> getTagList() {
         return tags.getEntityList();
     }
@@ -162,5 +195,10 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     @Override
     public BigDecimal getBalance() {
         return balance;
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultAccount [externalKey=" + externalKey + ", email=" + email + ", name=" + name + ", firstNameLength=" + firstNameLength + ", phone=" + phone + ", currency=" + currency + ", billCycleDay=" + billCycleDay + ", paymentProviderName=" + paymentProviderName + ", balance=" + balance + ", tags=" + tags + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
     }
 }

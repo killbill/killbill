@@ -16,8 +16,12 @@
 
 package com.ning.billing.dbi;
 
-import com.mysql.management.MysqldResource;
-import com.mysql.management.MysqldResourceI;
+import java.io.File;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
@@ -27,11 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.util.HashMap;
-import java.util.Map;
+import com.mysql.management.MysqldResource;
+import com.mysql.management.MysqldResourceI;
 
 /**
  * Utility class to embed MySQL for testing purposes
@@ -73,7 +74,7 @@ public class MysqlTestingHelper
         dbOpts.put(MysqldResourceI.PORT, Integer.toString(port));
         dbOpts.put(MysqldResourceI.INITIALIZE_USER, "true");
         dbOpts.put(MysqldResourceI.INITIALIZE_USER_NAME, USERNAME);
-        dbOpts.put(MysqldResourceI.INITIALIZE_PASSWORD, PASSWORD);
+        dbOpts.put("default-time-zone", "+00:00");
 
         mysqldResource.start("test-mysqld-thread", dbOpts);
         if (!mysqldResource.isRunning()) {

@@ -16,22 +16,24 @@
 
 package com.ning.billing.account.dao;
 
+import static org.testng.Assert.fail;
+
 import java.io.IOException;
+
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.account.glue.AccountModuleMock;
-import com.ning.billing.util.eventbus.BusService;
+import com.ning.billing.account.glue.AccountModuleWithEmbeddedDb;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
-
-import static org.testng.Assert.fail;
+import com.ning.billing.util.eventbus.BusService;
 
 public abstract class AccountDaoTestBase {
-    protected AccountModuleMock module;
+    protected AccountModuleWithEmbeddedDb module;
     protected AccountDao accountDao;
     protected IDBI dbi;
 
@@ -39,7 +41,7 @@ public abstract class AccountDaoTestBase {
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
-            module = new AccountModuleMock();
+            module = new AccountModuleWithEmbeddedDb();
             final String accountDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
             final String utilDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 

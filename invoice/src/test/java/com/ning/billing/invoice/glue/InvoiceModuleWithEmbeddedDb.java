@@ -41,7 +41,7 @@ import com.ning.billing.util.glue.EventBusModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
-public class InvoiceModuleMock extends InvoiceModule {
+public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private IDBI dbi;
 

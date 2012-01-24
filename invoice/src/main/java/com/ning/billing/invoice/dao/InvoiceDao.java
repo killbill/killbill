@@ -16,9 +16,9 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -43,17 +43,13 @@ public interface InvoiceDao {
     List<UUID> getInvoicesForPayment(final DateTime targetDate,
                                      final int numberOfDays);
 
+    UUID getInvoiceIdByPaymentAttemptId(final UUID paymentAttemptId);
+
+    InvoicePayment getInvoicePayment(final UUID paymentAttemptId);
+
+    void notifyOfPaymentAttempt(final InvoicePayment invoicePayment);
+
     BigDecimal getAccountBalance(final UUID accountId);
-
-    void notifySuccessfulPayment(final UUID invoiceId,
-                                 final BigDecimal paymentAmount,
-                                 final Currency currency,
-                                 final UUID paymentId,
-                                 final DateTime paymentDate);
-
-    void notifyFailedPayment(final UUID invoiceId,
-                             final UUID paymentId,
-                             final DateTime paymentAttemptDate);
 
     List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate);
 
