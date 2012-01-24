@@ -132,9 +132,13 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         SubscriptionSqlDao subscriptionSqlDao = transactionalDao.become(SubscriptionSqlDao.class);
         SubscriptionData subscription = (SubscriptionData) subscriptionSqlDao.getSubscriptionFromId(subscriptionId.toString());
 
-        Date paidThroughDate = (subscription.getPaidThroughDate() == null) ? null : subscription.getPaidThroughDate().toDate();
+        if (subscription == null) {
+            log.warn("Subscription not found when setting CTD.");
+        } else {
+            Date paidThroughDate = (subscription.getPaidThroughDate() == null) ? null : subscription.getPaidThroughDate().toDate();
 
-        subscriptionSqlDao.updateSubscription(subscriptionId.toString(), subscription.getActiveVersion(),
-                                              ctd.toDate(), paidThroughDate);
+            subscriptionSqlDao.updateSubscription(subscriptionId.toString(), subscription.getActiveVersion(),
+                                                  ctd.toDate(), paidThroughDate);
+        }
     }
 }

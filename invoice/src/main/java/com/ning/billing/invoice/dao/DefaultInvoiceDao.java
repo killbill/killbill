@@ -197,6 +197,21 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
+        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+            @Override
+            public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+                List<Invoice> invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId.toString(), upToDate.toDate());
+
+                getInvoiceItemsWithinTransaction(invoices, invoiceDao);
+                getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
+
+                return invoices;
+            }
+        });
+    }
+
+    @Override
     public void test() {
         invoiceSqlDao.test();
     }

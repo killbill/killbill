@@ -18,6 +18,7 @@ package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
@@ -380,7 +381,6 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         assertEquals(balance.compareTo(rate1.add(rate2)), 0);
     }
 
-
     @Test
     public void testAccountBalanceWithNoInvoiceItems() {
         UUID accountId = UUID.randomUUID();
@@ -394,5 +394,56 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         BigDecimal balance = invoiceDao.getAccountBalance(accountId);
         assertEquals(balance.compareTo(BigDecimal.ZERO.subtract(payment1)), 0);
+    }
+    
+    @Test
+    public void testGetUnpaidInvoicesByAccountId() {
+        UUID accountId = UUID.randomUUID();
+        DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
+        Invoice invoice1 = new DefaultInvoice(accountId, targetDate1, Currency.USD);
+        invoiceDao.create(invoice1);
+
+        DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
+        DateTime endDate = startDate.plusMonths(1);
+
+        BigDecimal rate1 = new BigDecimal("17.0");
+        BigDecimal rate2 = new BigDecimal("42.0");
+
+        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        invoiceItemDao.create(item1);
+
+        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        invoiceItemDao.create(item2);
+
+        DateTime upToDate;
+        Collection<Invoice> invoices;
+        
+        upToDate = new DateTime(2011, 1, 1, 0, 0, 0, 0);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate);
+        assertEquals(invoices.size(), 0);
+        
+        upToDate = new DateTime(2012, 1, 1, 0, 0, 0, 0);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate);
+        assertEquals(invoices.size(), 1);
+
+        DateTime targetDate2 = new DateTime(2011, 7, 1, 0, 0, 0, 0);
+        Invoice invoice2 = new DefaultInvoice(accountId, targetDate2, Currency.USD);
+        invoiceDao.create(invoice2);
+
+        DateTime startDate2 = new DateTime(2011, 6, 1, 0, 0, 0, 0);
+        DateTime endDate2 = startDate2.plusMonths(3);
+
+        BigDecimal rate3 = new BigDecimal("21.0");
+
+        DefaultInvoiceItem item3 = new DefaultInvoiceItem(invoice2.getId(), UUID.randomUUID(), startDate2, endDate2, "test C", rate3, rate3, Currency.USD);
+        invoiceItemDao.create(item3);
+
+        upToDate = new DateTime(2011, 1, 1, 0, 0, 0, 0);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate);
+        assertEquals(invoices.size(), 0);
+
+        upToDate = new DateTime(2012, 1, 1, 0, 0, 0, 0);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate);
+        assertEquals(invoices.size(), 2);
     }
 }

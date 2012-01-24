@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.api.user;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.joda.time.DateTime;
@@ -74,5 +75,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public void paymentAttemptSuccessful(final UUID invoiceId, final BigDecimal amount, final Currency currency,
                                          final UUID paymentId, final DateTime paymentDate) {
         dao.notifySuccessfulPayment(invoiceId, amount, currency, paymentId, paymentDate);
+    }
+
+    @Override
+    public Collection<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
+        return dao.getUnpaidInvoicesByAccountId(accountId, upToDate);
     }
 }

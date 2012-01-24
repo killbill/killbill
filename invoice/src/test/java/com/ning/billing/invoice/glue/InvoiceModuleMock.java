@@ -45,8 +45,11 @@ public class InvoiceModuleMock extends InvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private IDBI dbi;
 
-    public void createDb(final String ddl) throws IOException {
+    public void startDb() throws IOException {
         helper.startMysql();
+    }
+
+    public void initDb(final String ddl) throws IOException {
         helper.initDb(ddl);
     }
 

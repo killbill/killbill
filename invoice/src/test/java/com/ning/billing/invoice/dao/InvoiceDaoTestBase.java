@@ -16,17 +16,17 @@
 
 package com.ning.billing.invoice.dao;
 
-import java.io.IOException;
-import org.apache.commons.io.IOUtils;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.invoice.glue.InvoiceModuleMock;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
 import com.ning.billing.util.eventbus.BusService;
-import sun.jvm.hotspot.utilities.Assert;
+import com.ning.billing.util.eventbus.DefaultEventBusService;
+import org.apache.commons.io.IOUtils;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+
+import java.io.IOException;
 
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -42,8 +42,12 @@ public abstract class InvoiceDaoTestBase {
         // Health check test to make sure MySQL is setup properly
         try {
             module = new InvoiceModuleMock();
-            final String ddl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-            module.createDb(ddl);
+            final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+            final String entitlementDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+
+            module.startDb();
+            module.initDb(invoiceDdl);
+            module.initDb(entitlementDdl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 

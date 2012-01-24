@@ -19,6 +19,7 @@ package com.ning.billing.invoice.api;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import com.ning.billing.catalog.api.Currency;
@@ -40,4 +41,6 @@ public interface InvoiceUserApi {
 
     public void paymentAttemptSuccessful(UUID invoiceId, BigDecimal amount, Currency currency,
                                          UUID paymentId, DateTime paymentDate);
+
+    public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate);
 }

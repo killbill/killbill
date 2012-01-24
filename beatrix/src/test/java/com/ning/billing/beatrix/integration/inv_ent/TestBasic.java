@@ -169,7 +169,7 @@ public class TestBasic {
         return ctd;
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testSimple() throws Exception {
 
         Account account = accountUserApi.createAccount(getAccountData(), null, null);
