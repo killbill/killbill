@@ -58,7 +58,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
 	@Override
 	public BigDecimal getAccountBalance(UUID accountId) {
-		return dao.getAccountBalance(accountId);
+		BigDecimal result = dao.getAccountBalance(accountId);
+		return result == null ? BigDecimal.ZERO : result;
 	}
 
 }
