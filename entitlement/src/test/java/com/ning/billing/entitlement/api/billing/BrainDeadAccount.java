@@ -186,7 +186,17 @@ public class BrainDeadAccount implements Account {
 	@Override
 	public void addFields(List<CustomField> fields) {
 		throw new UnsupportedOperationException();
-		
+
 	}
+
+    @Override
+    public DateTime getCreatedDate() {
+        return new DateTime(DateTimeZone.UTC);
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return new DateTime(DateTimeZone.UTC);
+    }
 
 }

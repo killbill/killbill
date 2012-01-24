@@ -69,7 +69,7 @@ public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
                                    String cardType,
                                    String expirationDate,
                                    String maskNumber) {
-      super(id, accountId, defaultMethod, "creditCard");
+      super(id, accountId, defaultMethod, "CreditCard");
       this.cardHolderName = cardHolderName;
       this.cardType = cardType;
       this.expirationDate = expirationDate;

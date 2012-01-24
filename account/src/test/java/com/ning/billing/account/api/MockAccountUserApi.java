@@ -54,7 +54,7 @@ public class MockAccountUserApi implements AccountUserApi {
 		Account result = new DefaultAccount(id, externalKey, email, name,
 				firstNameLength, currency, billCycleDay, paymentProviderName,
 				timeZone, locale, address1, address2, companyName, city,
-				stateOrProvince, country, postalCode, phone);
+				stateOrProvince, country, postalCode, phone, null, null);
 		accounts.add(result);
 		return result;
 	}

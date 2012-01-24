@@ -16,9 +16,15 @@
 
 package com.ning.billing.account.api;
 
-import java.math.BigDecimal;
+import org.joda.time.DateTime;
+
 import com.ning.billing.util.customfield.CustomizableEntity;
 import com.ning.billing.util.tag.Taggable;
 
 public interface Account extends AccountData, CustomizableEntity, Taggable {
+
+    public DateTime getCreatedDate();
+
+    public DateTime getUpdatedDate();
+
 }

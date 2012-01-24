@@ -1,14 +1,37 @@
 group AccountDaoSql;
 
+accountFields(prefix) ::= <<
+    <prefix>id,
+    <prefix>external_key,
+    <prefix>email,
+    <prefix>name,
+    <prefix>first_name_length,
+    <prefix>currency,
+    <prefix>billing_cycle_day,
+    <prefix>payment_provider_name,
+    <prefix>time_zone, 
+    <prefix>locale,
+    <prefix>address1, 
+    <prefix>address2, 
+    <prefix>company_name, 
+    <prefix>city, 
+	<prefix>state_or_province, 
+    <prefix>country, 
+    <prefix>postal_code,
+    <prefix>phone,	
+    <prefix>created_dt,
+    <prefix>updated_dt
+>>
+
+
 create() ::= <<
     INSERT INTO accounts
-      (id, external_key, email, name, first_name_length, currency, billing_cycle_day,
-      payment_provider_name, time_zone, locale,
-      address1, address2, company_name, city, state_or_province, country, postal_code, phone)
+      (<accountFields()>)
     VALUES
       (:id, :externalKey, :email, :name, :firstNameLength, :currency, :billingCycleDay,
       :paymentProviderName, :timeZone, :locale,
-      :address1, :address2, :companyName, :city, :stateOrProvince, :country, :postalCode, :phone);
+      :address1, :address2, :companyName, :city, :stateOrProvince, :country, :postalCode, :phone,
+      :createdDate, :updatedDate);
 >>
 
 update() ::= <<
@@ -17,7 +40,8 @@ update() ::= <<
         currency = :currency, billing_cycle_day = :billingCycleDay, payment_provider_name = :paymentProviderName,
         time_zone = :timeZone, locale = :locale,
         address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
-        country = :country, postal_code = :postalCode, phone = :phone
+        country = :country, postal_code = :postalCode, phone = :phone,
+        updated_dt = NOW()
     WHERE id = :id;
 >>
 
@@ -28,35 +52,29 @@ deleteByKey() ::= <<
 
 
 getAccountByKey() ::= <<
-    select id, external_key, email, name, first_name_length, currency, billing_cycle_day,
-      payment_provider_name, time_zone, locale,
-      address1, address2, company_name, city, state_or_province, country, postal_code, phone
+    select <accountFields()>
     from accounts
     where external_key = :externalKey;
 >>
 
 getById() ::= <<
-    select id, external_key, email, name, first_name_length, currency, billing_cycle_day,
-      payment_provider_name, time_zone, locale,
-      address1, address2, company_name, city, state_or_province, country, postal_code, phone
-    from accounts
-    where id = :id;
+    SELECT <accountFields()>
+      FROM accounts
+     WHERE id = :id;
 >>
 
 get() ::= <<
-    select id, external_key, email, name, first_name_length, currency, billing_cycle_day,
-      payment_provider_name, time_zone, locale,
-      address1, address2, company_name, city, state_or_province, country, postal_code, phone
-    from accounts;
+    SELECT <accountFields()>
+      FROM accounts;
 >>
 
 getIdFromKey() ::= <<
-    select id
-    from accounts
-    where external_key = :externalKey;
+    SELECT id
+      FROM accounts
+     WHERE external_key = :externalKey;
 >>
 
 test() ::= <<
-    select 1 from accounts;
+    SELECT 1 FROM accounts;
 >>
 ;

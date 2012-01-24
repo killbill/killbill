@@ -16,16 +16,16 @@
 
 package com.ning.billing.account.api.user;
 
-import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.catalog.api.Currency;
-
-import java.math.BigDecimal;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.catalog.api.Currency;
+
 public class AccountBuilder {
-    private UUID id;
+    private final UUID id;
     private String externalKey;
     private String email;
     private String name;
@@ -43,7 +43,8 @@ public class AccountBuilder {
     private String country;
     private String postalCode;
     private String phone;
-
+    private DateTime createdDate;
+    private DateTime updatedDate;
 
     public AccountBuilder() {
         this(UUID.randomUUID());
@@ -138,11 +139,22 @@ public class AccountBuilder {
         return this;
     }
 
+    public AccountBuilder createdDate(DateTime createdDate) {
+        this.createdDate = createdDate;
+        return this;
+    }
+
+    public AccountBuilder updatedDate(DateTime updatedDate) {
+        this.updatedDate = updatedDate;
+        return this;
+    }
+
     public DefaultAccount build() {
         return new DefaultAccount(id, externalKey, email, name, firstNameLength,
                                   currency, billingCycleDay, paymentProviderName,
                                   timeZone, locale,
                                   address1, address2, companyName, city, stateOrProvince, country,
-                                  postalCode, phone);
+                                  postalCode, phone,
+                                  createdDate, updatedDate);
     }
 }

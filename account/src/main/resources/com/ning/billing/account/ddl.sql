@@ -18,6 +18,8 @@ CREATE TABLE accounts (
     country varchar(50) DEFAULT NULL,
     postal_code varchar(11) DEFAULT NULL,
     phone varchar(13) DEFAULT NULL,
+    created_dt datetime,
+    updated_dt datetime,
     PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key);

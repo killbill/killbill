@@ -16,27 +16,29 @@
 
 package com.ning.billing.account.dao;
 
-import java.util.List;
-import java.util.UUID;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.testng.annotations.Test;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.util.tag.DefaultTagDefinition;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.account.api.user.AccountBuilder;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.testng.annotations.Test;
+
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.user.AccountBuilder;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.tag.DefaultTagDefinition;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
+import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
 @Test(groups = {"account-dao"})
 public class TestSimpleAccountDao extends AccountDaoTestBase {
@@ -50,10 +52,21 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         String locale = "EN-US";
         DateTimeZone timeZone = DateTimeZone.forID("America/Los_Angeles");
 
+        DateTime createdDate = new DateTime(DateTimeZone.UTC);
+        DateTime updatedDate = new DateTime(DateTimeZone.UTC);
+
         int firstNameLength = firstName.length();
-        return new AccountBuilder().externalKey(thisKey).name(name).phone(phone).firstNameLength(firstNameLength)
-                                   .email(thisEmail).currency(Currency.USD).locale(locale)
-                                   .timeZone(timeZone).build();
+        return new AccountBuilder().externalKey(thisKey)
+                                   .name(name)
+                                   .phone(phone)
+                                   .firstNameLength(firstNameLength)
+                                   .email(thisEmail)
+                                   .currency(Currency.USD)
+                                   .locale(locale)
+                                   .timeZone(timeZone)
+                                   .createdDate(createdDate)
+                                   .updatedDate(updatedDate)
+                                   .build();
     }
 
     public void testBasic() throws AccountApiException {
@@ -159,30 +172,37 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
             public String getExternalKey() {
                 return account.getExternalKey();
             }
+
             @Override
             public String getName() {
                 return "Jane Doe";
             }
+
             @Override
             public int getFirstNameLength() {
                 return 4;
             }
+
             @Override
             public String getEmail() {
                 return account.getEmail();
             }
+
             @Override
             public String getPhone() {
                 return account.getPhone();
             }
+
             @Override
             public int getBillCycleDay() {
                 return account.getBillCycleDay();
             }
+
             @Override
             public Currency getCurrency() {
                 return account.getCurrency();
             }
+
             @Override
             public String getPaymentProviderName() {
                 return account.getPaymentProviderName();
@@ -232,7 +252,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
             }
         };
 
-        Account updatedAccount = new DefaultAccount(account.getId(), accountData);
+        Account updatedAccount = new DefaultAccount(account.getId(), accountData, null, null);
         accountDao.update(updatedAccount);
 
         Account savedAccount = accountDao.getAccountByKey(account.getExternalKey());
@@ -260,7 +280,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         DefaultAccount account = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null,null,null);
         accountDao.create(account);
 
         String address1 = "123 address 1";
@@ -276,7 +296,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     address1, address2, companyName, city, stateOrProvince, country,
-                                                    postalCode, phone);
+                                                    postalCode, phone, null,null);
 
         accountDao.update(updatedAccount);
 
@@ -302,13 +322,13 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     "123 address 1", "456 address 2", null, "Cambridge Bay",
-                                                    "Nunavut", "Canada", "X0B 0C0", "18001112222");
+                                                    "Nunavut", "Canada", "X0B 0C0", "18001112222", null, null);
         accountDao.create(account);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null, null, null);
 
         accountDao.update(updatedAccount);
 
@@ -333,12 +353,12 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
 
         DefaultAccount account = new DefaultAccount(accountId, originalExternalKey, "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
-                                                    null, null, null, null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null, null, null, null, null);
         accountDao.create(account);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey1338", "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
-                                                    null, null, null, null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null, null, null,null, null);
         accountDao.update(updatedAccount);
     }
     

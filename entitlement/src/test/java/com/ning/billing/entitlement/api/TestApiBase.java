@@ -16,11 +16,16 @@
 
 package com.ning.billing.entitlement.api;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.List;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -30,6 +35,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+
 import com.google.inject.Injector;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.DefaultCatalogService;
@@ -44,7 +50,6 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
@@ -64,11 +69,6 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.eventbus.DefaultEventBusService;
 import com.ning.billing.util.eventbus.EventBusService;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 
 public abstract class TestApiBase {
@@ -291,22 +291,27 @@ public abstract class TestApiBase {
             public String getEmail() {
                 return "accountName@yahoo.com";
             }
+
             @Override
             public String getPhone() {
                 return "4152876341";
             }
+
             @Override
             public String getExternalKey() {
                 return "k123456";
             }
+
             @Override
             public int getBillCycleDay() {
                 return 1;
             }
+
             @Override
             public Currency getCurrency() {
                 return Currency.USD;
             }
+
             @Override
             public String getPaymentProviderName() {
                 return "Paypal";

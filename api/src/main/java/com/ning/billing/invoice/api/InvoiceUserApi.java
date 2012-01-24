@@ -39,4 +39,5 @@ public interface InvoiceUserApi {
 //                                         UUID paymentId, DateTime paymentDate);
     
     public BigDecimal getAccountBalance(UUID accountId);
+
 }

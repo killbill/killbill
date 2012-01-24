@@ -23,8 +23,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -68,8 +71,15 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     public void deleteByKey(@Bind("externalKey") final String key);
 
     public static class AccountMapper implements ResultSetMapper<Account> {
+
+        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
+            final Timestamp resultStamp = rs.getTimestamp(fieldName);
+            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
+        }
+
         @Override
         public Account map(int index, ResultSet result, StatementContext context) throws SQLException {
+
             UUID id = UUID.fromString(result.getString("id"));
             String externalKey = result.getString("external_key");
             String email = result.getString("email");
@@ -81,6 +91,8 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
             Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
 
             String paymentProviderName = result.getString("payment_provider_name");
+            DateTime createdDate = getDate(result, "created_dt");
+            DateTime updatedDate = getDate(result, "updated_dt");
 
             String timeZoneId = result.getString("time_zone");
             DateTimeZone timeZone = (timeZoneId == null) ? null : DateTimeZone.forID(timeZoneId);
@@ -106,6 +118,8 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
                                          .companyName(companyName)
                                          .city(city).stateOrProvince(stateOrProvince)
                                          .postalCode(postalCode).country(country)
+                                         .createdDate(createdDate)
+                                         .updatedDate(updatedDate)
                                          .build();
         }
     }
@@ -115,25 +129,27 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     @Target({ElementType.PARAMETER})
     public @interface AccountBinder {
         public static class AccountBinderFactory implements BinderFactory {
+            @Override
             public Binder<AccountBinder, Account> build(Annotation annotation) {
                 return new Binder<AccountBinder, Account>() {
-                    public void bind(SQLStatement q, AccountBinder bind, Account account) {
+                    private Date getDate(DateTime dateTime) {
+                        return dateTime == null ? null : dateTime.toDate();
+                    }
+
+                    @Override
+                    public void bind(@SuppressWarnings("rawtypes") SQLStatement q, AccountBinder bind, Account account) {
                         q.bind("id", account.getId().toString());
                         q.bind("externalKey", account.getExternalKey());
                         q.bind("email", account.getEmail());
                         q.bind("name", account.getName());
                         q.bind("firstNameLength", account.getFirstNameLength());
-
                         Currency currency = account.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());
-
                         q.bind("billingCycleDay", account.getBillCycleDay());
                         q.bind("paymentProviderName", account.getPaymentProviderName());
-
                         DateTimeZone timeZone = account.getTimeZone();
                         q.bind("timeZone", (timeZone == null) ? null : timeZone.toString());
                         q.bind("locale", account.getLocale());
-
                         q.bind("address1", account.getAddress1());
                         q.bind("address2", account.getAddress2());
                         q.bind("companyName", account.getCompanyName());
@@ -142,6 +158,8 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
                         q.bind("country", account.getCountry());
                         q.bind("postalCode", account.getPostalCode());
                         q.bind("phone", account.getPhone());
+                        q.bind("createdDate", getDate(account.getCreatedDate()));
+                        q.bind("updatedDate", getDate(account.getUpdatedDate()));
                     }
                 };
             }
