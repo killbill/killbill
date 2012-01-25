@@ -66,6 +66,10 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     @SqlUpdate
     public void update(@AccountBinder Account account);
 
+    @Override
+    @SqlUpdate
+    public void deleteByKey(@Bind("externalKey") final String key);
+
     public static class AccountMapper implements ResultSetMapper<Account> {
 
         private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
@@ -81,19 +85,39 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
             String email = result.getString("email");
             String name = result.getString("name");
             int firstNameLength = result.getInt("first_name_length");
-            String phone = result.getString("phone");
             int billingCycleDay = result.getInt("billing_cycle_day");
+
             String currencyString = result.getString("currency");
             Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
+
             String paymentProviderName = result.getString("payment_provider_name");
             DateTime createdDate = getDate(result, "created_dt");
             DateTime updatedDate = getDate(result, "updated_dt");
+
+            String timeZoneId = result.getString("time_zone");
+            DateTimeZone timeZone = (timeZoneId == null) ? null : DateTimeZone.forID(timeZoneId);
+
+            String locale = result.getString("locale");
+
+            String address1 = result.getString("address1");
+            String address2 = result.getString("address2");
+            String companyName = result.getString("company_name");
+            String city = result.getString("city");
+            String stateOrProvince = result.getString("state_or_province");
+            String postalCode = result.getString("postal_code");
+            String country = result.getString("country");
+            String phone = result.getString("phone");
 
             return new AccountBuilder(id).externalKey(externalKey).email(email)
                                          .name(name).firstNameLength(firstNameLength)
                                          .phone(phone).currency(currency)
                                          .billingCycleDay(billingCycleDay)
                                          .paymentProviderName(paymentProviderName)
+                                         .timeZone(timeZone).locale(locale)
+                                         .address1(address1).address2(address2)
+                                         .companyName(companyName)
+                                         .city(city).stateOrProvince(stateOrProvince)
+                                         .postalCode(postalCode).country(country)
                                          .createdDate(createdDate)
                                          .updatedDate(updatedDate)
                                          .build();
@@ -106,24 +130,34 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     public @interface AccountBinder {
         public static class AccountBinderFactory implements BinderFactory {
             @Override
-            public Binder build(Annotation annotation) {
+            public Binder<AccountBinder, Account> build(Annotation annotation) {
                 return new Binder<AccountBinder, Account>() {
                     private Date getDate(DateTime dateTime) {
                         return dateTime == null ? null : dateTime.toDate();
                     }
 
                     @Override
-                    public void bind(SQLStatement q, AccountBinder bind, Account account) {
+                    public void bind(@SuppressWarnings("rawtypes") SQLStatement q, AccountBinder bind, Account account) {
                         q.bind("id", account.getId().toString());
                         q.bind("externalKey", account.getExternalKey());
                         q.bind("email", account.getEmail());
                         q.bind("name", account.getName());
                         q.bind("firstNameLength", account.getFirstNameLength());
-                        q.bind("phone", account.getPhone());
                         Currency currency = account.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());
                         q.bind("billingCycleDay", account.getBillCycleDay());
                         q.bind("paymentProviderName", account.getPaymentProviderName());
+                        DateTimeZone timeZone = account.getTimeZone();
+                        q.bind("timeZone", (timeZone == null) ? null : timeZone.toString());
+                        q.bind("locale", account.getLocale());
+                        q.bind("address1", account.getAddress1());
+                        q.bind("address2", account.getAddress2());
+                        q.bind("companyName", account.getCompanyName());
+                        q.bind("city", account.getCity());
+                        q.bind("stateOrProvince", account.getStateOrProvince());
+                        q.bind("country", account.getCountry());
+                        q.bind("postalCode", account.getPostalCode());
+                        q.bind("phone", account.getPhone());
                         q.bind("createdDate", getDate(account.getCreatedDate()));
                         q.bind("updatedDate", getDate(account.getUpdatedDate()));
                     }

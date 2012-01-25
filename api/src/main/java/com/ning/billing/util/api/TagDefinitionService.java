@@ -14,21 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag;
+package com.ning.billing.util.api;
 
-import org.joda.time.DateTime;
-import com.ning.billing.util.entity.Entity;
+import com.ning.billing.lifecycle.KillbillService;
 
-public interface TagDescription extends Entity {
-    String getName();
-
-    String getCreatedBy();
-
-    DateTime getCreationDate();
-
-    String getDescription();
-
-    boolean getGenerateInvoice();
-
-    boolean getProcessPayment();
+public interface TagDefinitionService extends KillbillService {
+    public TagDefinitionUserApi getTagDefinitionUserApi();
 }

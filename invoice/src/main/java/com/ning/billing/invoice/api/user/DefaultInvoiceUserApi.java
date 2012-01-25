@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.api.user;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,5 +55,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
         dao.notifyOfPaymentAttempt(invoicePayment);
     }
+
+	@Override
+	public BigDecimal getAccountBalance(UUID accountId) {
+		BigDecimal result = dao.getAccountBalance(accountId);
+		return result == null ? BigDecimal.ZERO : result;
+	}
 
 }

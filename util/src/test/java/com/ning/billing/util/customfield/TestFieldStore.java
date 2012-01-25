@@ -14,18 +14,60 @@
  * under the License.
  */
 
-package com.ning.billing.account.dao;
+package com.ning.billing.util.customfield;
 
+import java.io.IOException;
 import java.util.UUID;
+import org.apache.commons.io.IOUtils;
+import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.customfield.DefaultFieldStore;
 import com.ning.billing.util.customfield.FieldStore;
 import com.ning.billing.util.customfield.dao.FieldStoreDao;
+import com.ning.billing.util.eventbus.DefaultEventBusService;
+import com.ning.billing.util.eventbus.EventBusService;
+import com.ning.billing.util.glue.EventBusModule;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
-@Test(groups={"account-dao"})
-public class TestFieldStore extends AccountDaoTestBase {
+@Test(groups={"util"})
+public class TestFieldStore {
+    Logger log = LoggerFactory.getLogger(TestFieldStore.class);
+    private final MysqlTestingHelper helper = new MysqlTestingHelper();
+    private IDBI dbi;
+
+    @BeforeClass(alwaysRun = true)
+    protected void setup() throws IOException {
+        // Health check test to make sure MySQL is setup properly
+        try {
+            final String utilDdl = IOUtils.toString(TestFieldStore.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+
+            helper.startMysql();
+            helper.initDb(utilDdl);
+
+            dbi = helper.getDBI();
+        }
+        catch (Throwable t) {
+            log.error("Setup failed", t);
+            fail(t.toString());
+        }
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void stopMysql()
+    {
+        helper.stopMysql();
+    }
+
     @Test
     public void testFieldStore() {
         UUID id = UUID.randomUUID();

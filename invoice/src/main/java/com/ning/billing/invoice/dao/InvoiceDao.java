@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.dao;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -44,5 +45,7 @@ public interface InvoiceDao {
     InvoicePayment getInvoicePayment(UUID paymentAttemptId);
 
     void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
+
+    BigDecimal getAccountBalance(UUID accountId);
 
 }

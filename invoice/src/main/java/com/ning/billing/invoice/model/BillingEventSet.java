@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.invoice.model;
 
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 

@@ -193,4 +193,14 @@ public class MockInvoiceDao implements InvoiceDao {
           invoicePayments.put(invoicePayment.getPaymentAttemptId(), invoicePayment);
       }
     }
+
+	@Override
+	public BigDecimal getAccountBalance(UUID accountId) {
+		List<Invoice> invoices = getInvoicesByAccount(accountId.toString());
+		BigDecimal result = BigDecimal.ZERO;
+		for(Invoice invoice : invoices) {
+			result = result.add(invoice.getAmountOutstanding());
+		}
+		return result;
+	}
 }

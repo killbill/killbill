@@ -20,28 +20,22 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import com.ning.billing.util.entity.EntityBase;
 
-public class DefaultTagDescription extends EntityBase implements TagDescription {
+public class DefaultTagDefinition extends EntityBase implements TagDefinition {
     private String name;
     private String description;
-    private boolean generateInvoice;
-    private boolean processPayment;
     private String createdBy;
     private DateTime creationDate;
 
-    public DefaultTagDescription(String name, String description,
-                                 boolean processPayment, boolean generateInvoice,
-                                 String createdBy, DateTime creationDate) {
-        this(UUID.randomUUID(), name, description, processPayment, generateInvoice, createdBy, creationDate);
+    public DefaultTagDefinition(String name, String description,
+                                String createdBy, DateTime creationDate) {
+        this(UUID.randomUUID(), name, description, createdBy, creationDate);
     }
 
-    public DefaultTagDescription(UUID id, String name, String description,
-                                 boolean processPayment, boolean generateInvoice,
-                                 String createdBy, DateTime creationDate) {
+    public DefaultTagDefinition(UUID id, String name, String description,
+                                String createdBy, DateTime creationDate) {
         super(id);
         this.name = name;
         this.description = description;
-        this.processPayment = processPayment;
-        this.generateInvoice = generateInvoice;
         this.createdBy = createdBy;
         this.creationDate = creationDate;
     }
@@ -64,15 +58,5 @@ public class DefaultTagDescription extends EntityBase implements TagDescription 
     @Override
     public String getDescription() {
         return description;
-    }
-
-    @Override
-    public boolean getGenerateInvoice() {
-        return generateInvoice;
-    }
-
-    @Override
-    public boolean getProcessPayment() {
-        return processPayment;
     }
 }

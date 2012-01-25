@@ -10,28 +10,26 @@ CREATE TABLE custom_fields (
 CREATE INDEX custom_fields_object_id_object_type ON custom_fields(object_id, object_type);
 CREATE UNIQUE INDEX custom_fields_unique ON custom_fields(object_id, object_type, field_name);
 
-DROP TABLE IF EXISTS tag_descriptions;
-CREATE TABLE tag_descriptions (
+DROP TABLE IF EXISTS tag_definitions;
+CREATE TABLE tag_definitions (
   id char(36) NOT NULL,
   name varchar(20) NOT NULL,
   created_by varchar(50) NOT NULL,
   creation_date datetime NOT NULL,
   description varchar(200) NOT NULL,
-  generate_invoice boolean DEFAULT false,
-  process_payment boolean DEFAULT false,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
-CREATE UNIQUE INDEX tag_descriptions_name ON tag_descriptions(name);
+CREATE UNIQUE INDEX tag_definitions_name ON tag_definitions(name);
 
 DROP TABLE IF EXISTS tags;
 CREATE TABLE tags (
   id char(36) NOT NULL,
-  tag_description_id char(36) NOT NULL,
+  tag_definition_name varchar(20) NOT NULL,
   object_id char(36) NOT NULL,
   object_type varchar(30) NOT NULL,
-  date_added datetime NOT NULL,
+  added_date datetime NOT NULL,
   added_by varchar(50) NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE = innodb;
 CREATE INDEX tags_by_object ON tags(object_id);
-CREATE UNIQUE INDEX tags_unique ON tags(tag_description_id, object_id);
+CREATE UNIQUE INDEX tags_unique ON tags(tag_definition_name, object_id);

@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.joda.time.DateTimeZone;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
@@ -34,15 +36,28 @@ public class MockAccountUserApi implements AccountUserApi {
                                  String email,
                                  String name,
                                  int firstNameLength,
-                                 String phone,
                                  Currency currency,
                                  int billCycleDay,
                                  String paymentProviderName,
-                                 BigDecimal balance) {
-        Account result = new DefaultAccount(id, externalKey, email, name, firstNameLength, phone, currency, billCycleDay, paymentProviderName, balance);
-        accounts.add(result);
-        return result;
-    }
+                                 BigDecimal balance,
+                                 final DateTimeZone timeZone, 
+                                 final String locale,
+                                 final String address1, 
+                                 final String address2, 
+                                 final String companyName,
+                                 final String city,
+                                 final String stateOrProvince, 
+                                 final String country, 
+                                 final String postalCode, 
+                                 final String phone) {
+
+		Account result = new DefaultAccount(id, externalKey, email, name,
+				firstNameLength, currency, billCycleDay, paymentProviderName,
+				timeZone, locale, address1, address2, companyName, city,
+				stateOrProvince, country, postalCode, phone, null, null);
+		accounts.add(result);
+		return result;
+	}
 
     @Override
     public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException {
@@ -90,4 +105,15 @@ public class MockAccountUserApi implements AccountUserApi {
     public void updateAccount(Account account) {
         throw new UnsupportedOperationException();
     }
+
+	@Override
+	public void deleteAccountByKey(String externalKey)
+			throws AccountApiException {
+		for (Account account : accounts) {
+            if (externalKey.equals(account.getExternalKey())) {
+                accounts.remove(account.getId());
+            }
+        }	
+		
+	}
 }

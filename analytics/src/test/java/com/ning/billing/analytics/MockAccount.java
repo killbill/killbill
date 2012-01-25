@@ -16,20 +16,18 @@
 
 package com.ning.billing.analytics;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDescription;
+import com.ning.billing.util.tag.TagDefinition;
 
 public class MockAccount implements Account
 {
@@ -90,6 +88,51 @@ public class MockAccount implements Account
     }
 
     @Override
+    public DateTimeZone getTimeZone() {
+        return DateTimeZone.forID("Pacific/Fiji");
+    }
+
+    @Override
+    public String getLocale() {
+        return "EN-US";
+    }
+
+    @Override
+    public String getAddress1() {
+        return null;
+    }
+
+    @Override
+    public String getAddress2() {
+        return null;
+    }
+
+    @Override
+    public String getCompanyName() {
+        return null;
+    }
+
+    @Override
+    public String getCity() {
+        return null;
+    }
+
+    @Override
+    public String getStateOrProvince() {
+        return null;
+    }
+
+    @Override
+    public String getPostalCode() {
+        return null;
+    }
+
+    @Override
+    public String getCountry() {
+        return null;
+    }
+
+    @Override
     public UUID getId()
     {
         return id;
@@ -136,7 +179,7 @@ public class MockAccount implements Account
     }
 
     @Override
-    public void addTag(TagDescription description, String addedBy, DateTime dateAdded) {
+    public void addTag(TagDefinition definition, String addedBy, DateTime dateAdded) {
         throw new NotImplementedException();
     }
 
@@ -151,7 +194,7 @@ public class MockAccount implements Account
     }
 
     @Override
-    public void removeTag(TagDescription description) {
+    public void removeTag(TagDefinition definition) {
         throw new NotImplementedException();
     }
 
@@ -166,11 +209,6 @@ public class MockAccount implements Account
     }
 
     @Override
-    public BigDecimal getBalance() {
-        return BigDecimal.ZERO;
-    }
-
-    @Override
     public DateTime getCreatedDate() {
         return new DateTime(DateTimeZone.UTC);
     }
@@ -179,4 +217,5 @@ public class MockAccount implements Account
     public DateTime getUpdatedDate() {
         return new DateTime(DateTimeZone.UTC);
     }
+
 }

@@ -16,10 +16,10 @@
 
 package com.ning.billing.account.api.user;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
@@ -30,11 +30,19 @@ public class AccountBuilder {
     private String email;
     private String name;
     private int firstNameLength;
-    private String phone;
     private Currency currency;
     private int billingCycleDay;
     private String paymentProviderName;
-    private BigDecimal balance;
+    private DateTimeZone timeZone;
+    private String locale;
+    private String address1;
+    private String address2;
+    private String companyName;
+    private String city;
+    private String stateOrProvince;
+    private String country;
+    private String postalCode;
+    private String phone;
     private DateTime createdDate;
     private DateTime updatedDate;
 
@@ -42,52 +50,92 @@ public class AccountBuilder {
         this(UUID.randomUUID());
     }
 
-    public AccountBuilder(UUID id) {
+    public AccountBuilder(final UUID id) {
         this.id = id;
     }
 
-    public AccountBuilder externalKey(String externalKey) {
+    public AccountBuilder externalKey(final String externalKey) {
         this.externalKey = externalKey;
         return this;
     }
 
-    public AccountBuilder email(String email) {
+    public AccountBuilder email(final String email) {
         this.email = email;
         return this;
     }
 
-    public AccountBuilder name(String name) {
+    public AccountBuilder name(final String name) {
         this.name = name;
         return this;
     }
 
-    public AccountBuilder firstNameLength(int firstNameLength) {
+    public AccountBuilder firstNameLength(final int firstNameLength) {
         this.firstNameLength = firstNameLength;
         return this;
     }
 
-    public AccountBuilder phone(String phone) {
-        this.phone = phone;
-        return this;
-    }
-
-    public AccountBuilder billingCycleDay(int billingCycleDay) {
+    public AccountBuilder billingCycleDay(final int billingCycleDay) {
         this.billingCycleDay = billingCycleDay;
         return this;
     }
 
-    public AccountBuilder currency(Currency currency) {
+    public AccountBuilder currency(final Currency currency) {
         this.currency = currency;
         return this;
     }
 
-    public AccountBuilder paymentProviderName(String paymentProviderName) {
+    public AccountBuilder paymentProviderName(final String paymentProviderName) {
         this.paymentProviderName = paymentProviderName;
         return this;
     }
 
-    public AccountBuilder balance(BigDecimal balance) {
-        this.balance = balance;
+    public AccountBuilder timeZone(final DateTimeZone timeZone) {
+        this.timeZone = timeZone;
+        return this;
+    }
+
+    public AccountBuilder locale(final String locale) {
+        this.locale = locale;
+        return this;
+    }
+
+    public AccountBuilder address1(final String address1) {
+        this.address1 = address1;
+        return this;
+    }
+
+    public AccountBuilder address2(final String address2) {
+        this.address2 = address2;
+        return this;
+    }
+
+    public AccountBuilder companyName(final String companyName) {
+        this.companyName = companyName;
+        return this;
+    }
+
+    public AccountBuilder city(final String city) {
+        this.city = city;
+        return this;
+    }
+
+    public AccountBuilder stateOrProvince(final String stateOrProvince) {
+        this.stateOrProvince = stateOrProvince;
+        return this;
+    }
+
+    public AccountBuilder postalCode(final String postalCode) {
+        this.postalCode = postalCode;
+        return this;
+    }
+
+    public AccountBuilder country(final String country) {
+        this.country = country;
+        return this;
+    }
+
+    public AccountBuilder phone(final String phone) {
+        this.phone = phone;
         return this;
     }
 
@@ -103,7 +151,10 @@ public class AccountBuilder {
 
     public DefaultAccount build() {
         return new DefaultAccount(id, externalKey, email, name, firstNameLength,
-                                  phone, currency, billingCycleDay, paymentProviderName,
-                                  balance, createdDate, updatedDate);
+                                  currency, billingCycleDay, paymentProviderName,
+                                  timeZone, locale,
+                                  address1, address2, companyName, city, stateOrProvince, country,
+                                  postalCode, phone,
+                                  createdDate, updatedDate);
     }
 }

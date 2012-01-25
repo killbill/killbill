@@ -32,6 +32,10 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         helper.initDb(ddl);
     }
 
+    public void stopDb() {
+        helper.stopMysql();
+    }
+
     public InvoiceItemSqlDao getInvoiceItemDao() {
         return dbi.onDemand(InvoiceItemSqlDao.class);
     }

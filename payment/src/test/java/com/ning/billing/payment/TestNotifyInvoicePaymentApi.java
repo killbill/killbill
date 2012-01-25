@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
@@ -61,7 +62,7 @@ public class TestNotifyInvoicePaymentApi {
     }
 
     @Test
-    public void testNotifyPaymentSuccess() {
+    public void testNotifyPaymentSuccess() throws AccountApiException {
         final Account account = testHelper.createTestAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
@@ -79,7 +80,7 @@ public class TestNotifyInvoicePaymentApi {
     }
 
     @Test
-    public void testNotifyPaymentFailure() {
+    public void testNotifyPaymentFailure() throws AccountApiException {
         final Account account = testHelper.createTestAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 

@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.api;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,5 +32,12 @@ public interface InvoiceUserApi {
     public Invoice getInvoice(UUID invoiceId);
 
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
+
+//    public void paymentAttemptFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate);
+//
+//    public void paymentAttemptSuccessful(UUID invoiceId, BigDecimal amount, Currency currency,
+//                                         UUID paymentId, DateTime paymentDate);
+    
+    public BigDecimal getAccountBalance(UUID accountId);
 
 }
