@@ -113,7 +113,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         invoice = invoiceDao.getById(invoice.getId());
         assertEquals(invoice.getAmountPaid().compareTo(paymentAmount), 0);
-        assertTrue(invoice.getLastPaymentAttempt().equals(paymentAttemptDate));
+        assertEquals(invoice.getLastPaymentAttempt().compareTo(paymentAttemptDate), 0);
         assertEquals(invoice.getNumberOfPayments(), 1);
     }
 
@@ -129,7 +129,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(invoice.getId(), paymentAttemptDate));
 
         invoice = invoiceDao.getById(invoice.getId());
-        assertTrue(invoice.getLastPaymentAttempt().equals(paymentAttemptDate));
+        assertEquals(invoice.getLastPaymentAttempt().compareTo(paymentAttemptDate), 0);
     }
 
     @Test

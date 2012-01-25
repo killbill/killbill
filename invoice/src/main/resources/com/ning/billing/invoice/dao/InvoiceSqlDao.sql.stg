@@ -29,8 +29,7 @@ getInvoicesByAccountAfterDate() ::= <<
 >>
 
 getInvoicesBySubscription() ::= <<
-  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+  SELECT <invoiceFields("i.")>
   FROM invoices i
   LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
   WHERE ii.subscription_id = :subscriptionId
@@ -79,17 +78,6 @@ update() ::= <<
   UPDATE invoices
   SET account_id = :accountId, invoice_date = :invoiceDate, target_date = :targetDate, currency = :currency
   WHERE id = :id;
->>
-
-notifyOfPaymentAttempt() ::= <<
-  INSERT INTO invoice_payments(invoice_id, payment_attempt_id, payment_attempt_date, amount, currency, created_date, updated_date)
-  VALUES(:invoice_id, :payment_attempt_id, :payment_attempt_date, :amount, :currency, NOW(), NOW());
->>
-
-getInvoicePayment() ::= <<
-    SELECT invoice_id, payment_attempt_id, payment_attempt_date, amount, currency, created_date, updated_date
-      FROM invoice_payments
-     WHERE payment_id = :payment_id
 >>
 
 getUnpaidInvoicesByAccountId() ::= <<

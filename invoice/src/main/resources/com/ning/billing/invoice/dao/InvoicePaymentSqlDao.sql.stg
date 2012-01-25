@@ -1,6 +1,6 @@
 group InvoicePayment;
 
-invoicePaymentFields(prefix) :== <<
+invoicePaymentFields(prefix) ::= <<
   <prefix>invoice_id,
   <prefix>payment_attempt_id,
   <prefix>payment_attempt_date,
@@ -12,30 +12,41 @@ invoicePaymentFields(prefix) :== <<
 
 create() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:invoiceId, :paymentAttemptId, :paymentDate, :amount, :currency, :createdDate, :updatedDate)
+  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, :createdDate, :updatedDate);
 >>
 
 update() ::= <<
   UPDATE invoice_payments
-  SET payment_date = :paymentDate, amount = :amount, currency = :currency, created_date = :createdDate, updated_date = :updatedDate
-  WHERE invoice_id = :invoiceId, payment_attempt_id = :paymentAttemptId
+  SET payment_date = :paymentAttemptDate, amount = :amount, currency = :currency, created_date = :createdDate, updated_date = :updatedDate
+  WHERE invoice_id = :invoiceId, payment_attempt_id = :paymentAttemptId;
 >>
 
 getByPaymentAttemptId() ::= <<
-  SELECT invoice_payments(<invoicePaymentFields()>)
+  SELECT <invoicePaymentFields()>
   FROM invoice_payments
-  WHERE payment_id = :paymentAttemptId
+  WHERE payment_id = :paymentAttemptId;
 >>
 
 get() ::= <<
-  SELECT invoice_payments(<invoicePaymentFields()>)
-  FROM invoice_payments
+  SELECT <invoicePaymentFields()>
+  FROM invoice_payments;
 >>
 
 getPaymentsForInvoice() ::= <<
-  SELECT invoice_payments(<invoicePaymentFields()>)
+  SELECT <invoicePaymentFields()>
   FROM invoice_payments
-  WHERE invoice_id = :invoiceId
+  WHERE invoice_id = :invoiceId;
+>>
+
+notifyOfPaymentAttempt() ::= <<
+  INSERT INTO invoice_payments(<invoicePaymentFields()>)
+  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, NOW(), NOW());
+>>
+
+getInvoicePayment() ::= <<
+    SELECT <invoicePaymentFields()>
+    FROM invoice_payments
+    WHERE payment_id = :payment_id;
 >>
 
 test() ::= <<

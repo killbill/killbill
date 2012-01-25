@@ -213,7 +213,7 @@ public class BusinessAccount
         if (key != null ? !key.equals(that.key) : that.key != null) {
             return false;
         }
-        if (lastInvoiceDate != null ? !lastInvoiceDate.equals(that.lastInvoiceDate) : that.lastInvoiceDate != null) {
+        if (lastInvoiceDate != null ? lastInvoiceDate.compareTo(that.lastInvoiceDate) != 0 : that.lastInvoiceDate != null) {
             return false;
         }
         if (lastPaymentStatus != null ? !lastPaymentStatus.equals(that.lastPaymentStatus) : that.lastPaymentStatus != null) {
@@ -228,7 +228,7 @@ public class BusinessAccount
         if (totalInvoiceBalance != null ? !(Rounder.round(totalInvoiceBalance) == Rounder.round(that.totalInvoiceBalance)) : that.totalInvoiceBalance != null) {
             return false;
         }
-        if (updatedDt != null ? !updatedDt.equals(that.updatedDt) : that.updatedDt != null) {
+        if (updatedDt != null ? updatedDt.compareTo(that.updatedDt) != 0 : that.updatedDt != null) {
             return false;
         }
 

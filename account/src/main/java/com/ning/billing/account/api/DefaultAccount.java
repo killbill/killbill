@@ -29,6 +29,7 @@ import com.ning.billing.util.tag.DefaultTag;
 import com.ning.billing.util.tag.DefaultTagStore;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDescription;
+import org.joda.time.DateTimeZone;
 
 public class DefaultAccount extends CustomizableEntityBase implements Account {
     public final static String OBJECT_TYPE = "Account";
@@ -45,9 +46,6 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
     private final DefaultTagStore tags;
     private final DateTime createdDate;
     private final DateTime updatedDate;
-
-    @Inject
-    private Clock clock;
 
     public DefaultAccount(final AccountData data) {
         this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(),
@@ -88,8 +86,9 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
         this.billCycleDay = billCycleDay;
         this.paymentProviderName = paymentProviderName;
         this.balance = balance;
-        this.createdDate = (createdDate == null) ? clock.getUTCNow() : createdDate;
-        this.updatedDate = (updatedDate == null) ? clock.getUTCNow() : updatedDate;
+        DateTime now = new DateTime(DateTimeZone.UTC);
+        this.createdDate = (createdDate == null) ? now : createdDate;
+        this.updatedDate = (updatedDate == null) ? now : updatedDate;
 
         this.tags = new DefaultTagStore(id, getObjectName());
     }

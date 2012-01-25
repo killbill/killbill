@@ -129,7 +129,7 @@ public interface InvoicePaymentSqlDao {
                     public void bind(SQLStatement q, InvoicePaymentBinder bind, InvoicePayment payment) {
                         q.bind("invoiceId", payment.getInvoiceId().toString());
                         q.bind("paymentAttemptId", payment.getPaymentAttemptId().toString());
-                        q.bind("paymentDate", payment.getPaymentAttemptDate().toDate());
+                        q.bind("paymentAttemptDate", payment.getPaymentAttemptDate().toDate());
                         q.bind("amount", payment.getAmount());
                         Currency currency = payment.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());

@@ -32,7 +32,7 @@
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-invoice</artifactId>
         </dependency>
-       <dependency>
+        <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-catalog</artifactId>
         </dependency>

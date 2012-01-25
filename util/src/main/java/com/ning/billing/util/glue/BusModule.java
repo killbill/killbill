@@ -22,7 +22,7 @@ import com.ning.billing.util.eventbus.Bus;
 import com.ning.billing.util.eventbus.BusService;
 import com.ning.billing.util.eventbus.MemoryEventBus;
 
-public class EventBusModule extends AbstractModule {
+public class BusModule extends AbstractModule {
 
     @Override
     protected void configure() {

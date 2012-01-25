@@ -20,8 +20,7 @@ import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.glue.EventBusModule;
-import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.glue.BusModule;
 
 public class MockEngineModule extends EntitlementModule {
 
@@ -30,7 +29,7 @@ public class MockEngineModule extends EntitlementModule {
     protected void configure() {
         super.configure();
         bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-        install(new EventBusModule());
+        install(new BusModule());
         install(new CatalogModule());
         install(new AccountModuleWithMocks());
     }

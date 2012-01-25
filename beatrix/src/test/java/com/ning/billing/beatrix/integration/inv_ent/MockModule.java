@@ -45,7 +45,7 @@ import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.eventbus.BusService;
-import com.ning.billing.util.glue.EventBusModule;
+import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
 
@@ -62,7 +62,7 @@ public class MockModule extends AbstractModule {
         bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
         final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
         bind(DbiConfig.class).toInstance(config);
-        install(new EventBusModule());
+        install(new BusModule());
         install(new NotificationQueueModule());
         install(new AccountModule());
         install(new CatalogModule());

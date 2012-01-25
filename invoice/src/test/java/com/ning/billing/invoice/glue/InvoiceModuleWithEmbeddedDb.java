@@ -17,27 +17,16 @@
 package com.ning.billing.invoice.glue;
 
 import java.io.IOException;
-import org.skife.config.ConfigurationObjectFactory;
+
 import org.skife.jdbi.v2.IDBI;
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.user.DefaultAccountUserApi;
-import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.DefaultAccountDao;
 import com.ning.billing.account.glue.AccountModule;
-import com.ning.billing.catalog.DefaultCatalogService;
-import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.glue.EventBusModule;
+import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
@@ -82,6 +71,6 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
 
         super.configure();
 
-        install(new EventBusModule());
+        install(new BusModule());
     }
 }

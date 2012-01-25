@@ -24,7 +24,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.glue.EventBusModule;
+import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
@@ -38,7 +38,7 @@ public class AnalyticsTestModule extends AnalyticsModule
         // Need to configure a few more things for the EventBus
         install(new AccountModule());
         install(new CatalogModule());
-        install(new EventBusModule());
+        install(new BusModule());
         install(new EntitlementModule());
         install(new TagStoreModule());
         install(new NotificationQueueModule());
