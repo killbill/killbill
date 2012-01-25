@@ -154,7 +154,7 @@ public class TestBasic {
                 h.execute("truncate table claimed_notifications");
                 h.execute("truncate table invoices");
                 h.execute("truncate table invoice_items");
-                h.execute("truncate table tag_descriptions");
+                h.execute("truncate table tag_definitions");
                 h.execute("truncate table tags");
                 return null;
             }
@@ -170,7 +170,7 @@ public class TestBasic {
         return ctd;
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testSimple() throws Exception {
 
         Account account = accountUserApi.createAccount(getAccountData(), null, null);

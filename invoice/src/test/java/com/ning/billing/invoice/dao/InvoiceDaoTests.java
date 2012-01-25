@@ -303,13 +303,6 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         List<Invoice> items4 = invoiceDao.getInvoicesBySubscription(subscriptionId4);
         assertEquals(items4.size(), 1);
     }
-    
-    @Test
-    public void testAccountBalance() {
-        UUID accountId = UUID.randomUUID();
-        DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
-        Invoice invoice1 = new DefaultInvoice(accountId, targetDate1, Currency.USD);
-        invoiceDao.create(invoice1);
 
     @Test
     public void testGetInvoicesForAccountAfterDate() {
