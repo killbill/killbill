@@ -94,6 +94,7 @@ public class TestNextBillingDateNotifier {
 
 	public static class NextBillingEventListener {
 		private int eventCount=0;
+		private NextBillingDateEvent event;
 
 		public int getEventCount() {
 			return eventCount;
@@ -102,13 +103,18 @@ public class TestNextBillingDateNotifier {
 		@Subscribe
 		public synchronized void processEvent(NextBillingDateEvent event) {
 			eventCount++;
+			this.event = event;
 			//log.debug("Got event {} {}", event.name, event.value);
+		}
+		
+		public NextBillingDateEvent getLatestEvent() {
+			return event;
 		}
 	}
 
 	@Test(enabled=true, groups="slow")
 	public void test() throws Exception {
-		final UUID subscriptionId = new UUID(0L,1L);
+		final UUID subscriptionId = new UUID(0L,1000L);
 		final DateTime now = new DateTime();
 		final DateTime readyTime = now.plusMillis(2000);
 
@@ -140,5 +146,6 @@ public class TestNextBillingDateNotifier {
 	        });
 
 		Assert.assertEquals(listener.getEventCount(), 1);
+		Assert.assertEquals(listener.getLatestEvent().getSubscriptionId(), subscriptionId);
 	}
 }
