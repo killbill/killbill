@@ -252,7 +252,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
             }
         };
 
-        Account updatedAccount = new DefaultAccount(account.getId(), accountData, null, null);
+        Account updatedAccount = new DefaultAccount(account.getId(), accountData);
         accountDao.update(updatedAccount);
 
         Account savedAccount = accountDao.getAccountByKey(account.getExternalKey());

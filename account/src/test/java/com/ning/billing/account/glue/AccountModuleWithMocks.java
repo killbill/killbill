@@ -18,11 +18,17 @@ package com.ning.billing.account.glue;
 
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.MockAccountDao;
+import com.ning.billing.util.glue.MockClockModule;
 
 public class AccountModuleWithMocks extends AccountModule {
     @Override
     protected void installAccountDao() {
         bind(MockAccountDao.class).asEagerSingleton();
         bind(AccountDao.class).to(MockAccountDao.class);
+    }
+    
+    @Override
+    protected void installClock() {
+        install(new MockClockModule());
     }
 }

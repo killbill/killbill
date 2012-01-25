@@ -24,6 +24,7 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 
@@ -31,11 +32,13 @@ public class MockIAccountUserApi implements AccountUserApi
 {
     private final AccountData account;
     private final UUID id;
+	private Clock clock;
 
-    public MockIAccountUserApi(final String accountKey, final Currency currency)
+    public MockIAccountUserApi(final String accountKey, final Currency currency, final Clock clock)
     {
         this.id = UUID.randomUUID();
         account = new MockAccount(id, accountKey, currency);
+        this.clock = clock;
     }
 
     @Override
@@ -57,7 +60,7 @@ public class MockIAccountUserApi implements AccountUserApi
 
     @Override
     public Account getAccountById(final UUID uid) {
-        return new DefaultAccount(account);
+        return new DefaultAccount(account, clock.getUTCNow());
     }
 
     @Override

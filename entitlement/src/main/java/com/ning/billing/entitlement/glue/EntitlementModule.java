@@ -16,6 +16,8 @@
 
 package com.ning.billing.entitlement.glue;
 
+import org.skife.config.ConfigurationObjectFactory;
+
 import com.google.inject.AbstractModule;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
@@ -35,22 +37,19 @@ import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.core.EventNotifier;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
-import org.skife.config.ConfigurationObjectFactory;
+import com.ning.billing.util.glue.ClockModule;
 
 
 
 public class EntitlementModule extends AbstractModule {
 
-
-    protected void installClock() {
-        bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
-    }
-
     protected void installConfig() {
         final EntitlementConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EntitlementConfig.class);
         bind(EntitlementConfig.class).toInstance(config);
+    }
+    
+    protected void installClock() {
+    	install(new ClockModule());
     }
 
     protected void installApiEventProcessor() {
@@ -76,9 +75,9 @@ public class EntitlementModule extends AbstractModule {
     @Override
     protected void configure() {
         installConfig();
-        installClock();
         installApiEventProcessor();
         installEntitlementDao();
         installEntitlementCore();
+        installClock();
     }
 }

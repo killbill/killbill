@@ -23,6 +23,7 @@ import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.util.glue.ClockModule;
 
 public class InvoiceModule extends AbstractModule {
     protected void installInvoiceDao() {
@@ -35,6 +36,10 @@ public class InvoiceModule extends AbstractModule {
 
     protected void installInvoicePaymentApi() {
         bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
+    }
+    
+    protected void installClock() {
+    	install(new ClockModule());
     }
 
     @Override

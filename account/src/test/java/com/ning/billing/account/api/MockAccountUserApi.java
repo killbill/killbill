@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
@@ -61,7 +62,7 @@ public class MockAccountUserApi implements AccountUserApi {
 
     @Override
     public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException {
-        Account result = new DefaultAccount(data);
+        Account result = new DefaultAccount(data, new DateTime());
         accounts.add(result);
         return result;
     }
