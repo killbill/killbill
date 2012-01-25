@@ -51,11 +51,23 @@ public class InvoiceModule extends AbstractModule {
         bind(InvoiceConfig.class).toInstance(config);
     }
 
+    protected void installInvoiceService() {
+        bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
+    }
+
+    protected void installNotifier() {
+        bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
+    }
+
+    protected void installInvoiceListener() {
+        bind(InvoiceListener.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
-        bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
-        bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
-        bind(InvoiceListener.class).asEagerSingleton();
+        installInvoiceService();
+        installNotifier();
+        installInvoiceListener();
         bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
         installConfig();
         installInvoiceDao();

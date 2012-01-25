@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
@@ -59,7 +60,7 @@ public abstract class TestPaymentApi {
 
 //    @Test(groups = "fast")
     @Test
-    public void testCreatePayment() {
+    public void testCreatePayment() throws AccountApiException {
         final DateTime now = new DateTime();
         final Account account = testHelper.createTestAccount();
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);

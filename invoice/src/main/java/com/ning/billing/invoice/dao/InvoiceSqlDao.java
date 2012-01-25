@@ -142,5 +142,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             return amount_invoiced.subtract(amount_paid);
         }
     }
+
+
 }
 

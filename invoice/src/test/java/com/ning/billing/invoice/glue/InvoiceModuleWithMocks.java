@@ -25,4 +25,19 @@ public class InvoiceModuleWithMocks extends InvoiceModule {
         bind(MockInvoiceDao.class).asEagerSingleton();
         bind(InvoiceDao.class).to(MockInvoiceDao.class);
     }
+
+    @Override
+    protected void installInvoiceListener() {
+
+    }
+
+    @Override
+    protected void installNotifier() {
+
+    }
+
+    @Override
+    protected void installInvoiceService() {
+
+    }
 }

@@ -11,7 +11,6 @@ CREATE TABLE invoice_items (
   currency char(3) NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
-
 CREATE INDEX invoice_items_subscription_id ON invoice_items(subscription_id ASC);
 
 DROP TABLE IF EXISTS invoices;
@@ -23,7 +22,6 @@ CREATE TABLE invoices (
   currency char(3) NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
-
 CREATE INDEX invoices_account_id ON invoices(account_id ASC);
 
 DROP TABLE IF EXISTS invoice_payments;

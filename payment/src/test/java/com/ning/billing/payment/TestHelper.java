@@ -25,6 +25,7 @@ import org.joda.time.DateTimeZone;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.catalog.api.Currency;
@@ -44,7 +45,7 @@ public class TestHelper {
         this.invoiceDao = invoiceDao;
     }
 
-    public Account createTestAccount() {
+    public Account createTestAccount() throws AccountApiException {
         final String name = "First" + RandomStringUtils.random(5) + " " + "Last" + RandomStringUtils.random(5);
         final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
                                                                      .firstNameLength(name.length())

@@ -6,32 +6,50 @@ accountFields(prefix) ::= <<
     <prefix>email,
     <prefix>name,
     <prefix>first_name_length,
-    <prefix>phone,
     <prefix>currency,
     <prefix>billing_cycle_day,
     <prefix>payment_provider_name,
+    <prefix>time_zone, 
+    <prefix>locale,
+    <prefix>address1, 
+    <prefix>address2, 
+    <prefix>company_name, 
+    <prefix>city, 
+	<prefix>state_or_province, 
+    <prefix>country, 
+    <prefix>postal_code,
+    <prefix>phone,	
     <prefix>created_dt,
     <prefix>updated_dt
 >>
 
 
 create() ::= <<
-    INSERT INTO accounts (<accountFields()>)
-    VALUES (:id, :externalKey, :email, :name, :firstNameLength, :phone, :currency, :billingCycleDay, :paymentProviderName, :createdDate, :updatedDate);
+    INSERT INTO accounts
+      (<accountFields()>)
+    VALUES
+      (:id, :externalKey, :email, :name, :firstNameLength, :currency, :billingCycleDay,
+      :paymentProviderName, :timeZone, :locale,
+      :address1, :address2, :companyName, :city, :stateOrProvince, :country, :postalCode, :phone,
+      :createdDate, :updatedDate);
 >>
 
 update() ::= <<
     UPDATE accounts
-    SET email = :email, 
-        name = :name, 
-        first_name_length = :firstNameLength, 
-        phone = :phone,
-        currency = :currency, 
-        billing_cycle_day = :billingCycleDay, 
-        payment_provider_name = :paymentProviderName,
+    SET external_key = :externalKey, email = :email, name = :name, first_name_length = :firstNameLength,
+        currency = :currency, billing_cycle_day = :billingCycleDay, payment_provider_name = :paymentProviderName,
+        time_zone = :timeZone, locale = :locale,
+        address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
+        country = :country, postal_code = :postalCode, phone = :phone,
         updated_dt = NOW()
     WHERE id = :id;
 >>
+
+deleteByKey() ::= <<
+    DELETE FROM accounts
+    WHERE external_key = :externalKey;
+>>
+
 
 getAccountByKey() ::= <<
     select <accountFields()>

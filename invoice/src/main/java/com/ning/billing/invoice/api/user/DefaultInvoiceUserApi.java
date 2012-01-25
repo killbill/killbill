@@ -17,7 +17,6 @@
 package com.ning.billing.invoice.api.user;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,9 +57,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
     
     @Override
-    public BigDecimal getAccountBalance(final UUID accountId) {
-        return dao.getAccountBalance(accountId);
-    }
+	public BigDecimal getAccountBalance(UUID accountId) {
+		BigDecimal result = dao.getAccountBalance(accountId);
+		return result == null ? BigDecimal.ZERO : result;
+	}
 
     @Override
     public List<InvoiceItem> getInvoiceItemsByAccount(final UUID accountId) {
@@ -73,7 +73,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public Collection<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
         return dao.getUnpaidInvoicesByAccountId(accountId, upToDate);
     }
 }

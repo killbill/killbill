@@ -60,44 +60,6 @@ public class MockInvoiceDao implements InvoiceDao {
         }
     }
 
-//    private Invoice munge(Invoice invoice) {
-//        if (invoice == null) {
-//            return null;
-//        }
-//
-//        DateTime lastPaymentDate = null;
-//        BigDecimal amountPaid = new BigDecimal("0");
-//
-//        for (InvoicePayment invoicePayment : invoicePayments.values()) {
-//            if (invoicePayment.getInvoiceId().equals(invoice.getId())) {
-//                if (lastPaymentDate == null || lastPaymentDate.isBefore(invoicePayment.getPaymentAttemptDate())) {
-//                    lastPaymentDate = invoicePayment.getPaymentAttemptDate();
-//                }
-//                if (invoicePayment.getAmount() != null) {
-//                    amountPaid = amountPaid.add(invoicePayment.getAmount());
-//                }
-//            }
-//        }
-//
-//        Invoice newInvoice = new DefaultInvoice(invoice.getId(),
-//                                                invoice.getAccountId(),
-//                                                invoice.getInvoiceDate(),
-//                                                invoice.getTargetDate(),
-//                                                invoice.getCurrency());
-//        newInvoice.addInvoiceItems(invoice.getInvoiceItems());
-//        newInvoice.addPayments(invoice.getPayments());
-//
-//        return newInvoice;
-//    }
-//
-//    private List<Invoice> munge(Collection<Invoice> invoices) {
-//        List<Invoice> result = new ArrayList<Invoice>();
-//        for (Invoice invoice : invoices) {
-//            result.add(munge(invoice));
-//        }
-//        return result;
-//    }
-
     @Override
     public Invoice getById(UUID id) {
         synchronized (monitor) {

@@ -14,26 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.util.api;
 
-import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.lifecycle.KillbillService;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
-public class BillingEventSet extends ArrayList<BillingEvent> {
-    public BillingEventSet() {
-        super();
-    }
-
-    public BillingEventSet(Collection<BillingEvent> events) {
-        super();
-        addAll(events);
-    }
-
-    public BillingEvent getLast() {
-        if (this.size() == 0) {return null;}
-
-        return this.get(this.size() - 1);
-    }
+public interface TagDefinitionService extends KillbillService {
+    public TagDefinitionUserApi getTagDefinitionUserApi();
 }

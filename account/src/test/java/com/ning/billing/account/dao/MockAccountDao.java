@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
@@ -95,4 +96,13 @@ public class MockAccountDao implements AccountDao {
             }
         }
     }
+
+	@Override
+	public void deleteByKey(String externalKey) throws AccountApiException {
+		for (Account account : accounts.values()) {
+            if (externalKey.equals(account.getExternalKey())) {
+                accounts.remove(account.getId());
+            }
+        }		
+	}
 }

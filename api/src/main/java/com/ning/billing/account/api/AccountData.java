@@ -16,6 +16,8 @@
 
 package com.ning.billing.account.api;
 
+import org.joda.time.DateTimeZone;
+
 import com.ning.billing.catalog.api.Currency;
 
 public interface AccountData {
@@ -28,12 +30,29 @@ public interface AccountData {
 
     public String getEmail();
 
-    public String getPhone();
-
     public int getBillCycleDay();
 
     public Currency getCurrency();
 
     public String getPaymentProviderName();
 
+    public DateTimeZone getTimeZone();
+
+    public String getLocale();
+
+    public String getAddress1();
+
+    public String getAddress2();
+
+    public String getCompanyName();
+
+    public String getCity();
+
+    public String getStateOrProvince();
+
+    public String getPostalCode();
+
+    public String getCountry();
+
+    public String getPhone();
 }

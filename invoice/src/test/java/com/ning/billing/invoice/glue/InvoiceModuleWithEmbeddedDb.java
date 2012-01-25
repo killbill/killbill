@@ -18,6 +18,7 @@ package com.ning.billing.invoice.glue;
 
 import java.io.IOException;
 
+import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -46,12 +47,12 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         helper.stopMysql();
     }
 
-    public IDBI getIDBI() {
-        return dbi;
+    public InvoiceItemSqlDao getInvoiceItemSqlDao() {
+        return dbi.onDemand(InvoiceItemSqlDao.class);
     }
 
-    public InvoiceItemSqlDao getInvoiceItemDao() {
-        return dbi.onDemand(InvoiceItemSqlDao.class);
+    public InvoicePaymentSqlDao getInvoicePaymentSqlDao() {
+        return dbi.onDemand(InvoicePaymentSqlDao.class);
     }
 
     private void installNotificationQueue() {

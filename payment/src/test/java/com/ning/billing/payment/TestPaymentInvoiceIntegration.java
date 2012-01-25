@@ -26,7 +26,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import org.apache.commons.io.IOUtils;
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -44,7 +46,6 @@ import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentError;
@@ -95,7 +96,7 @@ public class TestPaymentInvoiceIntegration {
     public void setUp() throws EventBusException {
         Injector injector = Guice.createInjector(new PaymentTestModuleWithEmbeddedDb(),
                                                  new AccountModule(),
-                                                 new InvoiceModule(),
+                                                 new InvoiceModuleWithMocks(),
                                                  new AbstractModule() {
                                                     @Override
                                                     protected void configure() {
@@ -145,8 +146,12 @@ public class TestPaymentInvoiceIntegration {
         Assert.assertNotNull(invoiceForPayment);
         Assert.assertEquals(invoiceForPayment.getId(), invoice.getId());
         Assert.assertEquals(invoiceForPayment.getAccountId(), account.getId());
-        Assert.assertTrue(invoiceForPayment.getLastPaymentAttempt().isEqual(paymentAttempt.getPaymentAttemptDate()));
+
+        DateTime invoicePaymentAttempt = invoiceForPayment.getLastPaymentAttempt();
+        DateTime correctedDate = invoicePaymentAttempt.minus(invoicePaymentAttempt.millisOfSecond().get());
+        Assert.assertTrue(correctedDate.isEqual(paymentAttempt.getPaymentAttemptDate()));
+
         Assert.assertEquals(invoiceForPayment.getBalance().floatValue(), new BigDecimal("0").floatValue());
-        Assert.assertEquals(invoiceForPayment.getAmountPaid().floatValue(), invoice.getBalance().floatValue());
+        Assert.assertEquals(invoiceForPayment.getAmountPaid().floatValue(), invoice.getAmountPaid().floatValue());
     }
 }

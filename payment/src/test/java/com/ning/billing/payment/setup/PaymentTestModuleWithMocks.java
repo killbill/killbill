@@ -29,7 +29,7 @@ import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.eventbus.Bus;
 import com.ning.billing.util.eventbus.MemoryEventBus;
 
-public class PaymentTestModuleWithMocks extends PaymentModuleTestBase {
+public class PaymentTestModuleWithMocks extends PaymentModule {
     public PaymentTestModuleWithMocks() {
         super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock")));
     }

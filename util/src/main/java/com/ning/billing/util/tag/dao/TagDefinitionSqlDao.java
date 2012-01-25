@@ -25,59 +25,69 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 import com.ning.billing.util.entity.EntityDao;
-import com.ning.billing.util.tag.DefaultTagDescription;
-import com.ning.billing.util.tag.TagDescription;
+import com.ning.billing.util.tag.DefaultTagDefinition;
+import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 @ExternalizedSqlViaStringTemplate3
-@RegisterMapper(TagDescriptionDao.TagDescriptionMapper.class)
-public interface TagDescriptionDao extends EntityDao<TagDescription> {
+@RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
+public interface TagDefinitionSqlDao extends EntityDao<TagDefinition> {
     @Override
     @SqlUpdate
-    public void create(@TagDescriptionBinder TagDescription entity);
+    public void create(@TagDefinitionBinder final TagDefinition entity);
 
     @Override
     @SqlUpdate
-    public void update(@TagDescriptionBinder TagDescription entity);
+    public void update(@TagDefinitionBinder final TagDefinition entity);
 
-    public class TagDescriptionMapper implements ResultSetMapper<TagDescription> {
+    @SqlUpdate
+    public void deleteAllTagsForDefinition(@Bind("name") final String definitionName);
+
+    @SqlUpdate
+    public void deleteTagDefinition(@Bind("name") final String definitionName);
+
+    @SqlQuery
+    public int tagDefinitionUsageCount(@Bind("name") final String definitionName);
+
+    @SqlQuery
+    public TagDefinition getByName(@Bind("name") final String definitionName);
+
+    public class TagDefinitionMapper implements ResultSetMapper<TagDefinition> {
         @Override
-        public TagDescription map(int index, ResultSet result, StatementContext context) throws SQLException {
+        public TagDefinition map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             UUID id = UUID.fromString(result.getString("id"));
             String name = result.getString("name");
             String description = result.getString("description");
-            boolean processPayment = result.getBoolean("process_payment");
-            boolean generateInvoice = result.getBoolean("generate_invoice");
             String createdBy = result.getString("created_by");
             DateTime creationDate = new DateTime(result.getTimestamp("creation_date"));
-            return new DefaultTagDescription(id, name, description, processPayment, generateInvoice, createdBy, creationDate);
+            return new DefaultTagDefinition(id, name, description, createdBy, creationDate);
         }
     }
 
-    @BindingAnnotation(TagDescriptionBinder.TagDescriptionBinderFactory.class)
+    @BindingAnnotation(TagDefinitionBinder.TagDefinitionBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
-    public @interface TagDescriptionBinder {
-        public static class TagDescriptionBinderFactory implements BinderFactory {
-            public Binder build(Annotation annotation) {
-                return new Binder<TagDescriptionBinder, TagDescription>() {
-                    public void bind(SQLStatement q, TagDescriptionBinder bind, TagDescription tagDescription) {
-                        q.bind("id", tagDescription.getId().toString());
-                        q.bind("name", tagDescription.getName());
-                        q.bind("createdBy", tagDescription.getCreatedBy());
-                        q.bind("creationDate", tagDescription.getCreationDate().toDate());
-                        q.bind("description", tagDescription.getDescription());
-                        q.bind("generateInvoice", tagDescription.getGenerateInvoice());
-                        q.bind("processPayment", tagDescription.getProcessPayment());
+    public @interface TagDefinitionBinder {
+        public static class TagDefinitionBinderFactory implements BinderFactory {
+            public Binder build(final Annotation annotation) {
+                return new Binder<TagDefinitionBinder, TagDefinition>() {
+                    public void bind(final SQLStatement q, final TagDefinitionBinder bind, final TagDefinition tagDefinition) {
+                        q.bind("id", tagDefinition.getId().toString());
+                        q.bind("name", tagDefinition.getName());
+                        q.bind("createdBy", tagDefinition.getCreatedBy());
+                        q.bind("creationDate", tagDefinition.getCreationDate().toDate());
+                        q.bind("description", tagDefinition.getDescription());
                     }
                 };
             }

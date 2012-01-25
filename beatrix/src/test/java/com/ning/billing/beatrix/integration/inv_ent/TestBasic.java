@@ -22,6 +22,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -289,6 +290,51 @@ public class TestBasic {
             @Override
             public String getPaymentProviderName() {
                 return "Paypal";
+            }
+
+            @Override
+            public DateTimeZone getTimeZone() {
+                return null;
+            }
+
+            @Override
+            public String getLocale() {
+                return null;
+            }
+
+            @Override
+            public String getAddress1() {
+                return null;
+            }
+
+            @Override
+            public String getAddress2() {
+                return null;
+            }
+
+            @Override
+            public String getCompanyName() {
+                return null;
+            }
+
+            @Override
+            public String getCity() {
+                return null;
+            }
+
+            @Override
+            public String getStateOrProvince() {
+                return null;
+            }
+
+            @Override
+            public String getPostalCode() {
+                return null;
+            }
+
+            @Override
+            public String getCountry() {
+                return null;
             }
         };
         return accountData;

@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.eventbus.MemoryEventBus;
 
-public class PaymentTestModuleWithEmbeddedDb extends PaymentModuleTestBase {
+public class PaymentTestModuleWithEmbeddedDb extends PaymentModule {
     public PaymentTestModuleWithEmbeddedDb() {
         super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock")));
     }

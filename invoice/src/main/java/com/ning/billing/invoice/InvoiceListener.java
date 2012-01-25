@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.notification.NextBillingDateEvent;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -32,13 +33,10 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.invoice.api.BillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceItemList;
@@ -51,17 +49,15 @@ public class InvoiceListener {
     private final EntitlementBillingApi entitlementBillingApi;
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
-    private final Clock clock;
 
     @Inject
     public InvoiceListener(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
                            final EntitlementBillingApi entitlementBillingApi,
-                           final InvoiceDao invoiceDao, final Clock clock) {
+                           final InvoiceDao invoiceDao) {
         this.generator = generator;
         this.entitlementBillingApi = entitlementBillingApi;
         this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
-        this.clock = clock;
     }
 
     @Subscribe

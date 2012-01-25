@@ -14,21 +14,26 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag;
+package com.ning.billing.invoice.model;
 
-import org.joda.time.DateTime;
-import com.ning.billing.util.entity.Entity;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
 
-public interface TagDescription extends Entity {
-    String getName();
+import java.util.ArrayList;
+import java.util.Collection;
 
-    String getCreatedBy();
+public class BillingEventSet extends ArrayList<BillingEvent> {
+    public BillingEventSet() {
+        super();
+    }
 
-    DateTime getCreationDate();
+    public BillingEventSet(Collection<BillingEvent> events) {
+        super();
+        addAll(events);
+    }
 
-    String getDescription();
+    public BillingEvent getLast() {
+        if (this.size() == 0) {return null;}
 
-    boolean getGenerateInvoice();
-
-    boolean getProcessPayment();
+        return this.get(this.size() - 1);
+    }
 }

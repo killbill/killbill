@@ -19,7 +19,6 @@ package com.ning.billing.account.api.user;
 import java.util.List;
 import java.util.UUID;
 import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
@@ -38,19 +37,12 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 
     @Override
     public Account createAccount(final AccountData data, final List<CustomField> fields, List<Tag> tags) throws AccountApiException {
-        String key = data.getExternalKey();
-        Account existingAccount = dao.getAccountByKey(key);
+        Account account = new DefaultAccount(data);
+        account.addFields(fields);
+        account.addTags(tags);
 
-        if (existingAccount == null) {
-            Account account = new DefaultAccount(data);
-            account.addFields(fields);
-            account.addTags(tags);
-
-            dao.create(account);
-            return account;
-        } else {
-            throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
-        }
+        dao.create(account);
+        return account;
     }
 
     @Override
@@ -69,12 +61,17 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
-    public UUID getIdFromKey(final String externalKey) {
+    public UUID getIdFromKey(final String externalKey) throws AccountApiException {
         return dao.getIdFromKey(externalKey);
     }
 
     @Override
-    public void updateAccount(final Account account) {
+    public void updateAccount(final Account account) throws AccountApiException {
         dao.update(account);
     }
+
+	@Override
+	public void deleteAccountByKey(String externalKey) throws AccountApiException {
+		dao.deleteByKey(externalKey);
+	}
 }

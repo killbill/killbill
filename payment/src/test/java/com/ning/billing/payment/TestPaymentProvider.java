@@ -58,6 +58,8 @@ public class TestPaymentProvider {
         eventBus.start();
         eventBus.register(invoiceProcessor);
         eventBus.register(paymentInfoReceiver);
+
+        assertTrue(true);
     }
 
     @AfterMethod(alwaysRun = true)
@@ -65,6 +67,8 @@ public class TestPaymentProvider {
         eventBus.unregister(invoiceProcessor);
         eventBus.unregister(paymentInfoReceiver);
         eventBus.stop();
+
+        assertTrue(true);
     }
 
     @Test

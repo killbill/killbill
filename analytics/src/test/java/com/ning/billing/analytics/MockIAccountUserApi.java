@@ -16,12 +16,10 @@
 
 package com.ning.billing.analytics;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.util.List;
 import java.util.UUID;
+
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccount;
@@ -72,4 +70,9 @@ public class MockIAccountUserApi implements AccountUserApi
     public UUID getIdFromKey(String externalKey) {
         return id;
     }
+
+	@Override
+	public void deleteAccountByKey(String externalKey) {
+		throw new UnsupportedOperationException();
+	}
 }
