@@ -171,15 +171,15 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(PaymentProviderAccount account) {
+    public Either<PaymentError, String> createPaymentProviderAccount(Account account) {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin((Account)null);
         return plugin.createPaymentProviderAccount(account);
     }
 
     @Override
-    public Either<PaymentError, PaymentProviderAccount> updatePaymentProviderAccount(PaymentProviderAccount account) {
-        //TODO
-        throw new UnsupportedOperationException();
+    public Either<PaymentError, PaymentProviderAccount> updatePaymentProviderAccount(Account account) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+        return plugin.updatePaymentProviderAccount(account);
     }
 
     @Override
