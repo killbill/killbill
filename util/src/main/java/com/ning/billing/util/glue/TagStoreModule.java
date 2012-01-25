@@ -31,10 +31,14 @@ public class TagStoreModule extends AbstractModule
     @Override
     protected void configure()
     {
-        bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
+        configureClock();
         bind(TagDefinitionSqlDao.class).toProvider(TagDescriptionDaoProvider.class).asEagerSingleton();
         bind(TagDefinitionDao.class).to(DefaultTagDefinitionDao.class).asEagerSingleton();
         bind(TagStoreSqlDao.class).toProvider(TagStoreDaoProvider.class).asEagerSingleton();
         bind(TagDefinitionUserApi.class).to(DefaultTagDefinitionUserApi.class).asEagerSingleton();
+    }
+    
+    protected void configureClock() {
+    	install(new ClockModule());
     }
 }
