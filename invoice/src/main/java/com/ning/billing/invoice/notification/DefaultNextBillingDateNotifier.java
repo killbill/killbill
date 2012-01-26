@@ -18,6 +18,8 @@ package com.ning.billing.invoice.notification;
 
 import java.util.UUID;
 
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
@@ -26,9 +28,6 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
-import com.ning.billing.lifecycle.KillbillService;
-import com.ning.billing.lifecycle.LifecycleHandlerType;
-import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.eventbus.Bus;
 import com.ning.billing.util.eventbus.Bus.EventBusException;
 import com.ning.billing.util.notificationq.NotificationConfig;
@@ -47,16 +46,18 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
     private final Bus eventBus;
     private final NotificationQueueService notificationQueueService;
 	private final InvoiceConfig config;
+    private final EntitlementDao entitlementDao;
 
     private NotificationQueue nextBillingQueue;
 
     @Inject
-	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService, Bus eventBus, InvoiceConfig config){
+	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService, Bus eventBus,
+                                          InvoiceConfig config, EntitlementDao entitlementDao){
 		this.notificationQueueService = notificationQueueService;
 		this.config = config;
 		this.eventBus = eventBus;
+        this.entitlementDao = entitlementDao;
 	}
-
 
     @Override
     public void initialize() {
@@ -68,13 +69,18 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
                 public void handleReadyNotification(String notificationKey) {
                 	UUID subscriptionId;
                 	try {
-                		subscriptionId = UUID.fromString(notificationKey);
+                 		UUID key = UUID.fromString(notificationKey);
+                        Subscription subscription = entitlementDao.getSubscriptionFromId(key);
+                        if (subscription == null) {
+                            log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")" );
+                        } else {
+                            processEvent(key);
+                        }
                 	} catch (IllegalArgumentException e) {
-                		log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID",e);
+                		log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
                 		return;
                 	}
 
-                    processEvent(subscriptionId);
                 }
             },
             new NotificationConfig() {
@@ -121,9 +127,10 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
     }
 
     @Override
-    public void insertNextBillingNotification(Transmogrifier transactionalDao, final UUID subscriptionId, DateTime futureNotificationTime) {
+    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime futureNotificationTime) {
     	if (nextBillingQueue != null) {
             log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
+
             nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
                 @Override
                 public String toString() {
