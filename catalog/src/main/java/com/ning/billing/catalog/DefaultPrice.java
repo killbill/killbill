@@ -35,6 +35,16 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
 	@XmlElement(required=true,nillable=true)
 	private BigDecimal value;
 
+    public DefaultPrice() {
+        // for serialization support
+    }
+
+    public DefaultPrice(final BigDecimal value, final Currency currency) {
+        // for sanity support
+        this.value = value;
+        this.currency = currency;
+    }
+
 	/* (non-Javadoc)
 	 * @see com.ning.billing.catalog.IPrice#getCurrency()
 	 */
