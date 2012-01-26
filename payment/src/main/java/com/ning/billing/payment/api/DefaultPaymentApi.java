@@ -65,7 +65,12 @@ public class DefaultPaymentApi implements PaymentApi {
 
         if (accountKey != null) {
             final Account account = accountUserApi.getAccountByKey(accountKey);
-            return getPaymentProviderPlugin(account);
+            if (account != null) {
+                return getPaymentProviderPlugin(account);
+            }
+            else {
+                throw new IllegalArgumentException("Did not find account with accountKey " + accountKey);
+            }
         }
 
         return pluginRegistry.getPlugin(paymentProviderName);
