@@ -20,8 +20,8 @@ import javax.annotation.Nullable;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AbstractFuture;
-import com.ning.billing.util.eventbus.Bus;
-import com.ning.billing.util.eventbus.Bus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 public class EventBusFuture<T, V extends EventBusResponse<T>> extends AbstractFuture<V> {
     public static <V, W extends EventBusRequest<V>, X extends EventBusResponse<V>> EventBusFuture<V, X> post(final Bus eventBus, final W event) throws EventBusException {

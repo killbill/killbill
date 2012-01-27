@@ -220,9 +220,9 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                 dao.insertSubscription(subscription);
                 // STEPH batch as well
-                EventSqlDao eventsDaoFromSameTranscation = dao.become(EventSqlDao.class);
+                EventSqlDao eventsDaoFromSameTransaction = dao.become(EventSqlDao.class);
                 for (final EntitlementEvent cur : initialEvents) {
-                    eventsDaoFromSameTranscation.insertEvent(cur);
+                    eventsDaoFromSameTransaction.insertEvent(cur);
                     recordFutureNotificationFromTransaction(dao,
                             cur.getEffectiveDate(),
                             new NotificationKey() {
@@ -443,9 +443,9 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     private void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime effectiveDate, final NotificationKey notificationKey) {
         try {
-            NotificationQueue subscritionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
+            NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
                 Engine.NOTIFICATION_QUEUE_NAME);
-            subscritionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
+            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         }

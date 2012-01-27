@@ -33,7 +33,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
-import com.ning.billing.util.eventbus.Bus;
+import com.ning.billing.util.bus.Bus;
 
 public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceSqlDao;

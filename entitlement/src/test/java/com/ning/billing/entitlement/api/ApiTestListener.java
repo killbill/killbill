@@ -19,7 +19,7 @@ package com.ning.billing.entitlement.api;
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.util.eventbus.Bus;
+import com.ning.billing.util.bus.Bus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

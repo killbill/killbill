@@ -14,8 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.util.eventbus;
+package com.ning.billing.util.bus;
 
-public interface BusEvent {
+import com.ning.billing.lifecycle.KillbillService;
 
+public interface BusService extends KillbillService {
+
+    public Bus getBus();
 }

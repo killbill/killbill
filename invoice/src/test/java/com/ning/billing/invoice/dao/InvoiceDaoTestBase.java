@@ -21,6 +21,7 @@ import static org.testng.Assert.fail;
 
 import java.io.IOException;
 
+import com.ning.billing.invoice.tests.InvoicingTestBase;
 import org.apache.commons.io.IOUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -29,10 +30,10 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
-import com.ning.billing.util.eventbus.BusService;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
+import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.bus.DefaultBusService;
 
-public abstract class InvoiceDaoTestBase {
+public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected InvoiceDao invoiceDao;
     protected InvoiceItemSqlDao invoiceItemDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
@@ -60,7 +61,7 @@ public abstract class InvoiceDaoTestBase {
             invoicePaymentDao = module.getInvoicePaymentSqlDao();
 
             BusService busService = injector.getInstance(BusService.class);
-            ((DefaultEventBusService) busService).startBus();
+            ((DefaultBusService) busService).startBus();
 
             assertTrue(true);
         }

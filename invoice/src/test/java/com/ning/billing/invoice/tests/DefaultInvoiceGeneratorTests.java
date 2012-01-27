@@ -42,6 +42,7 @@ import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 @Test(groups = {"fast", "invoicing", "invoiceGenerator"})
 public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
@@ -53,9 +54,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         UUID accountId = UUID.randomUUID();
         Invoice invoice = generator.generateInvoice(accountId, new BillingEventSet(), new InvoiceItemList(), new DateTime(), Currency.USD);
 
-        assertNotNull(invoice);
-        assertEquals(invoice.getNumberOfItems(), 0);
-        assertEquals(invoice.getTotalAmount(), ZERO);
+        assertNull(invoice);
     }
 
     @Test
@@ -66,9 +65,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         UUID accountId = UUID.randomUUID();
         Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, new DateTime(), Currency.USD);
 
-        assertNotNull(invoice);
-        assertEquals(invoice.getNumberOfItems(), 0);
-        assertEquals(invoice.getTotalAmount(), ZERO);
+        assertNull(invoice);
     }
 
     @Test
@@ -457,11 +454,11 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Currency currency = Currency.USD;
         UUID accountId = UUID.randomUUID();
         Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, targetDate, currency);
-        existingInvoiceItems.addAll(invoice.getInvoiceItems());
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), expectedNumberOfItems);
+
+        existingInvoiceItems.addAll(invoice.getInvoiceItems());
         assertEquals(invoice.getTotalAmount(), expectedAmount);
     }
-
     // TODO: Jeff C -- how do we ensure that an annual add-on is properly aligned *at the end* with the base plan?
-}
+}                      

@@ -20,12 +20,21 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+
+import com.ning.billing.catalog.DefaultCatalogService;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.config.CatalogConfig;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
+import com.ning.billing.util.bus.InMemoryBus;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -39,8 +48,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.eventbus.Bus;
-import com.ning.billing.util.eventbus.MemoryEventBus;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -50,7 +58,7 @@ import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class TestNextBillingDateNotifier {
-
+    private static Logger log = LoggerFactory.getLogger(TestNextBillingDateNotifier.class);
 	private Clock clock;
 	private DefaultNextBillingDateNotifier notifier;
 	private DummySqlTest dao;
@@ -63,15 +71,18 @@ public class TestNextBillingDateNotifier {
         final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
 			protected void configure() {
 				 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-				 bind(Bus.class).to(MemoryEventBus.class).asEagerSingleton();
+				 bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
 				 bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
-				 final InvoiceConfig config = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
-				 bind(InvoiceConfig.class).toInstance(config);
-				 final MysqlTestingHelper helper = new MysqlTestingHelper();
+				 final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
+				 bind(InvoiceConfig.class).toInstance(invoiceConfig);
+				 final CatalogConfig catalogConfig = new ConfigurationObjectFactory(System.getProperties()).build(CatalogConfig.class);
+                 bind(CatalogConfig.class).toInstance(catalogConfig);
+                 bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
+                 final MysqlTestingHelper helper = new MysqlTestingHelper();
 				 bind(MysqlTestingHelper.class).toInstance(helper);
 				 IDBI dbi = helper.getDBI();
 				 bind(IDBI.class).toInstance(dbi);
-
+                 bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
 			}
         });
 
@@ -80,16 +91,18 @@ public class TestNextBillingDateNotifier {
         dao = dbi.onDemand(DummySqlTest.class);
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);
-        notifier = new DefaultNextBillingDateNotifier(g.getInstance(NotificationQueueService.class), eventBus, g.getInstance(InvoiceConfig.class));
+        notifier = new DefaultNextBillingDateNotifier(g.getInstance(NotificationQueueService.class), eventBus, g.getInstance(InvoiceConfig.class), g.getInstance(EntitlementDao.class));
         startMysql();
 	}
 
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {
 		final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 		final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
+		final String entitlementDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 		helper.startMysql();
 		helper.initDb(ddl);
 		helper.initDb(testDdl);
+        helper.initDb(entitlementDdl);
 	}
 
 	public static class NextBillingEventListener {
@@ -112,7 +125,7 @@ public class TestNextBillingDateNotifier {
 		}
 	}
 
-	@Test(enabled=true, groups="slow")
+	@Test(enabled=false, groups="slow")
 	public void test() throws Exception {
 		final UUID subscriptionId = new UUID(0L,1000L);
 		final DateTime now = new DateTime();

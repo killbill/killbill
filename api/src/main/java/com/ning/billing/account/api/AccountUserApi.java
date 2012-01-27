@@ -19,7 +19,6 @@ package com.ning.billing.account.api;
 import java.util.List;
 import java.util.UUID;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.eventbus.Bus;
 import com.ning.billing.util.tag.Tag;
 
 public interface AccountUserApi {

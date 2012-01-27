@@ -38,6 +38,12 @@ public class PaymentProviderPluginRegistry {
     }
 
     public PaymentProviderPlugin getPlugin(String name) {
-        return pluginsByName.get(StringUtils.defaultIfEmpty(name, defaultPlugin).toLowerCase());
+        PaymentProviderPlugin plugin = pluginsByName.get(StringUtils.defaultIfEmpty(name, defaultPlugin).toLowerCase());
+
+        if (plugin == null) {
+            throw new IllegalArgumentException("No payment provider plugin is configured for " + name);
+        }
+
+        return plugin;
     }
 }

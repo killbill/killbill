@@ -18,16 +18,13 @@ package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.util.eventbus.Bus;
+import com.ning.billing.util.bus.Bus;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;

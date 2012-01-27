@@ -51,8 +51,8 @@ import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.setup.PaymentTestModuleWithEmbeddedDb;
-import com.ning.billing.util.eventbus.Bus;
-import com.ning.billing.util.eventbus.Bus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 public class TestPaymentInvoiceIntegration {
     // create payment for received invoice and save it -- positive and negative

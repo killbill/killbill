@@ -19,7 +19,7 @@ package com.ning.billing.analytics.api;
 import com.google.inject.Inject;
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
-import com.ning.billing.util.eventbus.Bus;
+import com.ning.billing.util.bus.Bus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -23,7 +23,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
 
 import com.google.common.base.Objects;
-import com.ning.billing.util.eventbus.BusEvent;
+import com.ning.billing.util.bus.BusEvent;
 
 public class PaymentInfo implements BusEvent {
     private final String paymentId;

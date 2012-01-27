@@ -23,7 +23,6 @@ import java.net.URL;
 import java.util.Set;
 
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +43,7 @@ import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.eventbus.BusService;
+import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 

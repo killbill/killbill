@@ -16,7 +16,7 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.util.eventbus.BusEvent;
+import com.ning.billing.util.bus.BusEvent;
 
 import java.util.UUID;
 

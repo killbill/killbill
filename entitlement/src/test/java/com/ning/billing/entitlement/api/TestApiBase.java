@@ -67,8 +67,8 @@ import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.BusService;
+import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.bus.BusService;
 
 
 public abstract class TestApiBase {
@@ -110,7 +110,7 @@ public abstract class TestApiBase {
     public void tearDown() {
         try {
             busService.getBus().register(testListener);
-            ((DefaultEventBusService) busService).stopBus();
+            ((DefaultBusService) busService).stopBus();
         } catch (Exception e) {
             log.warn("Failed to tearDown test properly ", e);
         }
@@ -131,7 +131,7 @@ public abstract class TestApiBase {
         clock = (ClockMock) g.getInstance(Clock.class);
         try {
             ((DefaultCatalogService) catalogService).loadCatalog();
-            ((DefaultEventBusService) busService).startBus();
+            ((DefaultBusService) busService).startBus();
             ((Engine) entitlementService).initialize();
             init();
         } catch (EntitlementUserApiException e) {

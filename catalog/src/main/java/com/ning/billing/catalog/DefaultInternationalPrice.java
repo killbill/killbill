@@ -42,7 +42,7 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
 
 
 	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IInternationalPrice#getPrices()
+	 * @see com.ning.billing.catalog.InternationalPrice#getPrices()
 	 */
 	@Override
 	public Price[] getPrices() {

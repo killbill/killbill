@@ -22,7 +22,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.eventbus.BusEvent;
+import com.ning.billing.util.bus.BusEvent;
 
 public interface InvoiceCreationNotification extends BusEvent {
     public UUID getInvoiceId();

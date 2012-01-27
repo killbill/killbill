@@ -31,7 +31,7 @@ import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.FieldStoreDao;
-import com.ning.billing.util.eventbus.Bus;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 

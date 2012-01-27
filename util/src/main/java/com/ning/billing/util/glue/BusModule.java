@@ -17,17 +17,17 @@
 package com.ning.billing.util.glue;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.Bus;
-import com.ning.billing.util.eventbus.BusService;
-import com.ning.billing.util.eventbus.MemoryEventBus;
+import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.bus.InMemoryBus;
 
 public class BusModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(BusService.class).to(DefaultEventBusService.class);
-        bind(Bus.class).to(MemoryEventBus.class).asEagerSingleton();
+        bind(BusService.class).to(DefaultBusService.class);
+        bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
 
     }
 

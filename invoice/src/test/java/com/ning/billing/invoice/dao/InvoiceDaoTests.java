@@ -16,13 +16,31 @@
 
 package com.ning.billing.invoice.dao;
 
+import com.ning.billing.catalog.DefaultPrice;
+import com.ning.billing.catalog.MockInternationalPrice;
+import com.ning.billing.catalog.MockPlan;
+import com.ning.billing.catalog.MockPlanPhase;
+import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.entitlement.api.billing.BillingModeType;
+import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
+import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.invoice.model.InvoiceItemList;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
@@ -35,6 +53,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 @Test(groups = {"invoicing", "invoicing-invoiceDao"})
 public class InvoiceDaoTests extends InvoiceDaoTestBase {
@@ -447,5 +466,190 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         upToDate = new DateTime(2012, 1, 1, 0, 0, 0, 0);
         invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate);
         assertEquals(invoices.size(), 2);
+    }
+
+    /*
+     *
+     * this test verifies that immediate changes give the correct results
+     *
+     */
+    @Test
+    public void testInvoiceGenerationForImmediateChanges() {
+        InvoiceGenerator generator = new DefaultInvoiceGenerator();
+
+        UUID accountId = UUID.randomUUID();
+        InvoiceItemList invoiceItemList = new InvoiceItemList();
+        DateTime targetDate = new DateTime(2011, 2, 16, 0, 0, 0, 0);
+
+        // generate first invoice
+        DefaultPrice price1 = new DefaultPrice(TEN, Currency.USD);
+        MockInternationalPrice recurringPrice = new MockInternationalPrice(price1);
+        MockPlanPhase phase1 = new MockPlanPhase(recurringPrice, null, BillingPeriod.MONTHLY, PhaseType.TRIAL);
+        MockPlan plan1 = new MockPlan(phase1);
+
+        Subscription subscription = new MockSubscription();
+        DateTime effectiveDate1 = new DateTime(2011, 2, 1, 0, 0, 0, 0);
+        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan1, phase1, null,
+                                                      recurringPrice, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                                                      "testEvent1");
+
+        BillingEventSet events = new BillingEventSet();
+        events.add(event1);
+
+        Invoice invoice1 = generator.generateInvoice(accountId, events, invoiceItemList, targetDate, Currency.USD);
+        assertEquals(invoice1.getBalance(), TEN);
+        invoiceItemList.addAll(invoice1.getInvoiceItems());
+
+        // generate second invoice
+        DefaultPrice price2 = new DefaultPrice(TWENTY, Currency.USD);
+        MockInternationalPrice recurringPrice2 = new MockInternationalPrice(price2);
+        MockPlanPhase phase2 = new MockPlanPhase(recurringPrice, null, BillingPeriod.MONTHLY, PhaseType.TRIAL);
+        MockPlan plan2 = new MockPlan(phase2);
+
+        DateTime effectiveDate2 = new DateTime(2011, 2, 15, 0, 0, 0, 0);
+        BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan2, phase2, null,
+                                                      recurringPrice2, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                                                      "testEvent2");
+        events.add(event2);
+
+        // second invoice should be for one half (14/28 days) the difference between the rate plans
+        // this is a temporary state, since it actually contains an adjusting item that properly belong to invoice 1
+        Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceItemList, targetDate, Currency.USD);
+        assertEquals(invoice2.getBalance(), FIVE);
+        invoiceItemList.addAll(invoice2.getInvoiceItems());
+
+        invoiceDao.create(invoice1);
+        invoiceDao.create(invoice2);
+
+        Invoice savedInvoice1 = invoiceDao.getById(invoice1.getId());
+        assertEquals(savedInvoice1.getTotalAmount(), ZERO);
+
+        Invoice savedInvoice2 = invoiceDao.getById(invoice2.getId());
+        assertEquals(savedInvoice2.getTotalAmount(), FIFTEEN);
+    }
+
+    @Test
+    public void testInvoiceForFreeTrial() {
+        DefaultPrice price = new DefaultPrice(BigDecimal.ZERO, Currency.USD);
+        MockInternationalPrice recurringPrice = new MockInternationalPrice(price);
+        MockPlanPhase phase = new MockPlanPhase(recurringPrice, null);
+        MockPlan plan = new MockPlan(phase);
+
+        Subscription subscription = new MockSubscription();
+        DateTime effectiveDate = buildDateTime(2011, 1, 1);
+
+        BillingEvent event = new DefaultBillingEvent(subscription, effectiveDate, plan, phase, null,
+                                                     recurringPrice, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
+                                                     "testEvent");
+        BillingEventSet events = new BillingEventSet();
+        events.add(event);
+
+        DateTime targetDate = buildDateTime(2011, 1, 15);
+        InvoiceGenerator generator = new DefaultInvoiceGenerator();
+        Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
+        assertEquals(invoice.getNumberOfItems(), 1);
+        assertEquals(invoice.getTotalAmount().compareTo(ZERO), 0);
+    }
+
+    @Test
+    public void testInvoiceForEmptyEventSet() {
+        InvoiceGenerator generator = new DefaultInvoiceGenerator();
+        BillingEventSet events = new BillingEventSet();
+        Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new DateTime(), Currency.USD);
+        assertNull(invoice);
+    }
+
+    private class MockSubscription implements Subscription {
+        private UUID subscriptionId = UUID.randomUUID();
+
+        @Override
+        public void cancel(DateTime requestedDate, boolean eot) throws EntitlementUserApiException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void uncancel() throws EntitlementUserApiException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate) throws EntitlementUserApiException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void pause() throws EntitlementUserApiException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void resume() throws EntitlementUserApiException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public UUID getId() {
+            return subscriptionId;
+        }
+
+        @Override
+        public UUID getBundleId() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public SubscriptionState getState() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public DateTime getStartDate() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public DateTime getEndDate() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Plan getCurrentPlan() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getCurrentPriceList() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public PlanPhase getCurrentPhase() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public DateTime getChargedThroughDate() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public DateTime getPaidThroughDate() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<SubscriptionTransition> getActiveTransitions() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<SubscriptionTransition> getAllTransitions() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public SubscriptionTransition getPendingTransition() {
+            throw new UnsupportedOperationException();
+        }
     }
 }

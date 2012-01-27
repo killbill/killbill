@@ -60,7 +60,7 @@ import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.eventbus.BusService;
+import com.ning.billing.util.bus.BusService;
 
 @Guice(modules = {MockModule.class})
 public class TestBasic {
@@ -191,6 +191,7 @@ public class TestBasic {
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
         assertNotNull(subscription);
         assertTrue(busHandler.isCompleted(5000));
+        log.info("testSimple passed first busHandler checkpoint.");
 
         //
         // VERIFY CTD HAS BEEN SET
@@ -208,6 +209,7 @@ public class TestBasic {
         String newProductName = "Assault-Rifle";
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
         assertTrue(busHandler.isCompleted(5000));
+        log.info("testSimple passed second busHandler checkpoint.");
 
         //
         // VERIFY AGAIN CTD HAS BEEN SET
@@ -230,6 +232,7 @@ public class TestBasic {
         clock.setDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
         //clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
         assertTrue(busHandler.isCompleted(5000));
+        log.info("testSimple passed third busHandler checkpoint.");
 
         //
         // MOVE TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE
@@ -238,6 +241,7 @@ public class TestBasic {
         DateTime lastCtd = null;
         do {
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
+            busHandler.pushExpectedEvent(NextEvent.INVOICE);
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
             assertTrue(busHandler.isCompleted(5000));
             lastCtd = checkAndGetCTD(subscription.getId());

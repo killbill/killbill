@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.eventbus;
+package com.ning.billing.util.bus;
 
 import com.google.common.eventbus.Subscribe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;

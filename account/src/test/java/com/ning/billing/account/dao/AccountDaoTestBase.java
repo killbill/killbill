@@ -29,8 +29,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.account.glue.AccountModuleWithEmbeddedDb;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.BusService;
+import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.bus.BusService;
 
 public abstract class AccountDaoTestBase {
     protected AccountModuleWithEmbeddedDb module;
@@ -56,7 +56,7 @@ public abstract class AccountDaoTestBase {
             accountDao.test();
 
             BusService busService = injector.getInstance(BusService.class);
-            ((DefaultEventBusService) busService).startBus();
+            ((DefaultBusService) busService).startBus();
         }
         catch (Throwable t) {
             fail(t.toString());
