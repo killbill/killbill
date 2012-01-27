@@ -23,7 +23,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 
 public class InvoiceItemList extends ArrayList<InvoiceItem> {
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
-
+    private static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMethod();
     public InvoiceItemList() {
         super();
     }
@@ -41,19 +41,7 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
             total = total.add(item.getAmount());
         }
 
-        return total.setScale(NUMBER_OF_DECIMALS);
-    }
-
-    public void removeZeroDollarItems() {
-        List<InvoiceItem> itemsToRemove = new ArrayList<InvoiceItem>();
-
-        for (InvoiceItem item : this) {
-            if (item.getAmount().compareTo(BigDecimal.ZERO) == 0) {
-                itemsToRemove.add(item);
-            }
-        }
-
-        this.removeAll(itemsToRemove);
+        return total.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 
     public void removeCancellingPairs() {
