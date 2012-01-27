@@ -483,7 +483,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice1.getBalance(), FIFTEEN);
         invoiceItemList.addAll(invoice2.getInvoiceItems());
 
-
+        fail();
     }
 
     @Test

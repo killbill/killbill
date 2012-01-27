@@ -26,6 +26,7 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
+import com.ning.billing.util.bus.InMemoryBus;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
@@ -47,8 +48,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.eventbus.Bus;
-import com.ning.billing.util.eventbus.MemoryEventBus;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -71,7 +71,7 @@ public class TestNextBillingDateNotifier {
         final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
 			protected void configure() {
 				 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-				 bind(Bus.class).to(MemoryEventBus.class).asEagerSingleton();
+				 bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
 				 bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
 				 final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
 				 bind(InvoiceConfig.class).toInstance(invoiceConfig);

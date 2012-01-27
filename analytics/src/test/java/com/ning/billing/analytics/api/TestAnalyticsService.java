@@ -47,7 +47,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.util.eventbus.Bus;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.Tag;

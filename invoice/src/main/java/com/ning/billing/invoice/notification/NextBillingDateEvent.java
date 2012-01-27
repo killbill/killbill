@@ -18,7 +18,7 @@ package com.ning.billing.invoice.notification;
 
 import java.util.UUID;
 
-import com.ning.billing.util.eventbus.BusEvent;
+import com.ning.billing.util.bus.BusEvent;
 
 public class NextBillingDateEvent implements BusEvent{
 	private final UUID subscriptionId;

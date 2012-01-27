@@ -37,8 +37,8 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import com.ning.billing.payment.TestHelper;
-import com.ning.billing.util.eventbus.Bus;
-import com.ning.billing.util.eventbus.Bus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 public abstract class TestPaymentApi {
     @Inject

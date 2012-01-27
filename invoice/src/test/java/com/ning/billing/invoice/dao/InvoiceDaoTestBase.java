@@ -29,8 +29,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
-import com.ning.billing.util.eventbus.BusService;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
+import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.bus.DefaultBusService;
 
 public abstract class InvoiceDaoTestBase {
     protected InvoiceDao invoiceDao;
@@ -60,7 +60,7 @@ public abstract class InvoiceDaoTestBase {
             invoicePaymentDao = module.getInvoicePaymentSqlDao();
 
             BusService busService = injector.getInstance(BusService.class);
-            ((DefaultEventBusService) busService).startBus();
+            ((DefaultBusService) busService).startBus();
 
             assertTrue(true);
         }

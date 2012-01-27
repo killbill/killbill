@@ -37,8 +37,8 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
-import com.ning.billing.util.eventbus.Bus;
-import com.ning.billing.util.eventbus.Bus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 @Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
 public class TestPaymentProvider {

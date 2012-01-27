@@ -60,7 +60,7 @@ import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.eventbus.BusService;
+import com.ning.billing.util.bus.BusService;
 
 @Guice(modules = {MockModule.class})
 public class TestBasic {
