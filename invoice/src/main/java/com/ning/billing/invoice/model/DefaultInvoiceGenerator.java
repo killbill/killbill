@@ -59,6 +59,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     private InvoiceItemList reconcileInvoiceItems(final UUID invoiceId, final InvoiceItemList currentInvoiceItems,
                                                   final InvoiceItemList existingInvoiceItems) {
+        if (existingInvoiceItems == null) {
+            return currentInvoiceItems;
+        }
+
         InvoiceItemList currentItems = new InvoiceItemList();
         for (final InvoiceItem item : currentInvoiceItems) {
             currentItems.add(new DefaultInvoiceItem(item, invoiceId));
@@ -80,7 +84,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 }
             }
         }
-
         existingItems.removeAll(existingItemsToRemove);
 
         // remove cancelling pairs of invoice items
@@ -88,7 +91,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         // add existing items that aren't covered by current items as credit items
         for (final InvoiceItem existingItem : existingItems) {
-            currentItems.add(existingItem.asCredit(invoiceId));
+            currentItems.add(existingItem.asCredit(existingItem.getInvoiceId()));
         }
 
         return currentItems;

@@ -16,24 +16,17 @@
 
 package com.ning.billing.invoice.tests;
 
-import com.ning.billing.catalog.DefaultPrice;
 import com.ning.billing.catalog.MockCatalog;
-import com.ning.billing.catalog.MockInternationalPrice;
-import com.ning.billing.catalog.MockPlan;
-import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.BillingEventSet;
@@ -45,14 +38,11 @@ import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 @Test(groups = {"fast", "invoicing", "invoiceGenerator"})
 public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
@@ -437,82 +427,6 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         testInvoiceGeneration(events, invoiceItems, buildDateTime(2011, 10, 10), 1, expectedAmount);
     }
 
-    /*
-     *
-     * this test verifies that immediate changes give the correct results
-     *
-     */
-    @Test
-    public void testInvoiceGenerationForImmediateChanges() {
-        UUID accountId = UUID.randomUUID();
-        InvoiceItemList invoiceItemList = new InvoiceItemList();
-        DateTime targetDate = new DateTime(2011, 2, 16, 0, 0, 0, 0);
-
-        // generate first invoice
-        DefaultPrice price1 = new DefaultPrice(TEN, Currency.USD);
-        MockInternationalPrice recurringPrice = new MockInternationalPrice(price1);
-        MockPlanPhase phase1 = new MockPlanPhase(recurringPrice, null, BillingPeriod.MONTHLY, PhaseType.TRIAL);
-        MockPlan plan1 = new MockPlan(phase1);
-
-        Subscription subscription = new MockSubscription();
-        DateTime effectiveDate1 = new DateTime(2011, 2, 1, 0, 0, 0, 0);
-        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan1, phase1, null,
-                                                      recurringPrice, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
-                                                      "testEvent");
-
-        BillingEventSet events = new BillingEventSet();
-        events.add(event1);
-
-        Invoice invoice1 = generator.generateInvoice(accountId, events, invoiceItemList, targetDate, Currency.USD);
-        assertEquals(invoice1.getBalance(), TEN);
-        invoiceItemList.addAll(invoice1.getInvoiceItems());
-
-        // generate second invoice
-        DefaultPrice price2 = new DefaultPrice(TWENTY, Currency.USD);
-        MockInternationalPrice recurringPrice2 = new MockInternationalPrice(price2);
-        MockPlanPhase phase2 = new MockPlanPhase(recurringPrice, null, BillingPeriod.MONTHLY, PhaseType.TRIAL);
-        MockPlan plan2 = new MockPlan(phase2);
-
-        DateTime effectiveDate2 = new DateTime(2011, 2, 15, 0, 0, 0, 0);
-        BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan2, phase2, null,
-                                                      recurringPrice, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
-                                                      "testEvent");
-        events.add(event2);
-
-        Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceItemList, targetDate, Currency.USD);
-        assertEquals(invoice1.getBalance(), FIFTEEN);
-        invoiceItemList.addAll(invoice2.getInvoiceItems());
-
-        fail();
-    }
-
-    @Test
-    public void testInvoiceForFreeTrial() {
-        DefaultPrice price = new DefaultPrice(BigDecimal.ZERO, Currency.USD);
-        MockInternationalPrice recurringPrice = new MockInternationalPrice(price);
-        MockPlanPhase phase = new MockPlanPhase(recurringPrice, null);
-        MockPlan plan = new MockPlan(phase);
-
-        Subscription subscription = new MockSubscription();
-        DateTime effectiveDate = new DateTime(2011, 1, 1, 0, 0, 0, 0);
-
-        BillingEvent event = new DefaultBillingEvent(subscription, effectiveDate, plan, phase, null,
-                                                     recurringPrice, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
-                                                     "testEvent");
-
-        fail();
-    }
-
-    @Test
-    public void testInvoiceForNoCurrentItems() {
-        fail();
-    }
-
-    @Test
-    public void testInvoiceForEmptyEventSet() {
-        fail();
-    }
-
     private DefaultBillingEvent createBillingEvent(final UUID subscriptionId, final DateTime startDate,
                                                    final Plan plan, final PlanPhase planPhase,
                                                    final BigDecimal rate, final int billCycleDay) {
@@ -545,100 +459,6 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         existingInvoiceItems.addAll(invoice.getInvoiceItems());
         assertEquals(invoice.getTotalAmount(), expectedAmount);
-    }   
-    
-    private class MockSubscription implements Subscription {
-        private UUID subscriptionId = UUID.randomUUID();
-
-        @Override
-        public void cancel(DateTime requestedDate, boolean eot) throws EntitlementUserApiException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void uncancel() throws EntitlementUserApiException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate) throws EntitlementUserApiException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void pause() throws EntitlementUserApiException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void resume() throws EntitlementUserApiException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public UUID getId() {
-            return subscriptionId;
-        }
-
-        @Override
-        public UUID getBundleId() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public SubscriptionState getState() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DateTime getStartDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DateTime getEndDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Plan getCurrentPlan() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public String getCurrentPriceList() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public PlanPhase getCurrentPhase() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DateTime getChargedThroughDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DateTime getPaidThroughDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<SubscriptionTransition> getActiveTransitions() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<SubscriptionTransition> getAllTransitions() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public SubscriptionTransition getPendingTransition() {
-            throw new UnsupportedOperationException();
-        }
     }
     // TODO: Jeff C -- how do we ensure that an annual add-on is properly aligned *at the end* with the base plan?
 }                      
