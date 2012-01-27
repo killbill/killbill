@@ -28,4 +28,8 @@ public interface Notification extends NotificationLifecycle {
     public String getNotificationKey();
 
     public DateTime getEffectiveDate();
+    
+    public String getQueueName();
+    
+
 }

@@ -103,12 +103,12 @@ public class TestNotificationSqlDao {
 
         String notificationKey = UUID.randomUUID().toString();
         DateTime effDt = new DateTime();
-        Notification notif = new DefaultNotification(notificationKey, effDt);
+        Notification notif = new DefaultNotification("testBasic",notificationKey, effDt);
         dao.insertNotification(notif);
 
         Thread.sleep(1000);
         DateTime now = new DateTime();
-        List<Notification> notifications = dao.getReadyNotifications(now.toDate(), 3);
+        List<Notification> notifications = dao.getReadyNotifications(now.toDate(), 3, "testBasic");
         assertNotNull(notifications);
         assertEquals(notifications.size(), 1);
 
@@ -152,6 +152,7 @@ public class TestNotificationSqlDao {
                 		", notification_key" +
                 		", created_dt" +
                 		", effective_dt" +
+                		", queue_name" +
                 		", processing_owner" +
                 		", processing_available_dt" +
                 		", processing_state" +

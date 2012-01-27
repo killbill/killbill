@@ -16,24 +16,34 @@
 
 package com.ning.billing.util.notificationq;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.testng.Assert.assertEquals;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.AbstractModule;
@@ -44,10 +54,9 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
-import static org.testng.Assert.assertEquals;
-
 @Guice(modules = TestNotificationQueue.TestNotificationQueueModule.class)
 public class TestNotificationQueue {
+	Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
 	@Inject
 	private IDBI dbi;
 
@@ -58,6 +67,8 @@ public class TestNotificationQueue {
 	private Clock clock;
 
 	private DummySqlTest dao;
+	
+	private int eventsReceived;
 
 	// private NotificationQueue queue;
 
@@ -96,11 +107,10 @@ public class TestNotificationQueue {
 	/**
 	 * Test that we can post a notification in the future from a transaction and get the notification
 	 * callback with the correct key when the time is ready
-	 *
-	 * @throws InterruptedException
+	 * @throws Exception 
 	 */
-	@Test
-	public void testSimpleNotification() throws InterruptedException {
+	@Test(groups={"fast"}, enabled = true)
+	public void testSimpleNotification() throws Exception {
 
 		final Map<String, Boolean> expectedNotifications = new TreeMap<String, Boolean>();
 
@@ -109,7 +119,9 @@ public class TestNotificationQueue {
 			@Override
 			public void handleReadyNotification(String notificationKey) {
 				synchronized (expectedNotifications) {
-					expectedNotifications.put(notificationKey, Boolean.TRUE);
+	            	log.info("Handler received key: " + notificationKey);
+
+					expectedNotifications.put(notificationKey.toString(), Boolean.TRUE);
 					expectedNotifications.notify();
 				}
 			}
@@ -141,6 +153,8 @@ public class TestNotificationQueue {
 				transactional.insertDummy(obj);
 				queue.recordFutureNotificationFromTransaction(transactional,
 						readyTime, notificationKey);
+            	log.info("Posted key: " + notificationKey);
+
 				return null;
 			}
 		});
@@ -149,7 +163,14 @@ public class TestNotificationQueue {
 		((ClockMock) clock).setDeltaFromReality(3000);
 
 		// Notification should have kicked but give it at least a sec' for thread scheduling
-		  
+	    await().atMost(1, MINUTES).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return expectedNotifications.get(notificationKey.toString());
+            }
+        });
+
+	Assert.assertTrue(expectedNotifications.get(notificationKey.toString()));
 	}
 
 	@Test
@@ -232,6 +253,126 @@ public class TestNotificationQueue {
 		} while (nbTry-- > 0);
 		assertEquals(success, true);
 
+	}
+	
+	/**
+	 * Test that we can post a notification in the future from a transaction and get the notification
+	 * callback with the correct key when the time is ready
+	 * @throws Exception 
+	 */
+	@Test(groups={"fast"}, enabled = true)
+	public void testMultipleHandlerNotification() throws Exception {
+
+		final Map<String, Boolean> expectedNotificationsFred = new TreeMap<String, Boolean>();
+		final Map<String, Boolean> expectedNotificationsBarney = new TreeMap<String, Boolean>();
+		
+		NotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock);
+		
+		NotificationConfig config=new NotificationConfig() {
+            @Override
+            public boolean isNotificationProcessingOff() {
+                return false;
+            }
+            @Override
+            public long getNotificationSleepTimeMs() {
+                return 10;
+            }
+            @Override
+            public int getDaoMaxReadyEvents() {
+                return 1;
+            }
+            @Override
+            public long getDaoClaimTimeMs() {
+                return 60000;
+            }
+		};
+		
+		
+		final NotificationQueue queueFred = notificationQueueService.createNotificationQueue("UtilTest", "Fred", new NotificationQueueHandler() {
+                @Override
+                public void handleReadyNotification(String notificationKey) {
+                	log.info("Fred received key: " + notificationKey);
+                	expectedNotificationsFred.put(notificationKey, Boolean.TRUE);
+                	eventsReceived++;
+                }
+            },
+            config);
+		
+		final NotificationQueue queueBarney = notificationQueueService.createNotificationQueue("UtilTest", "Barney", new NotificationQueueHandler() {
+            @Override
+            public void handleReadyNotification(String notificationKey) {
+             	log.info("Barney received key: " + notificationKey);
+            	expectedNotificationsBarney.put(notificationKey, Boolean.TRUE);
+            	eventsReceived++;
+            }
+        },
+        config);
+
+		queueFred.startQueue();
+//		We don't start Barney so it can never pick up notifications
+		
+		
+		final UUID key = UUID.randomUUID();
+		final DummyObject obj = new DummyObject("foo", key);
+		final DateTime now = new DateTime();
+		final DateTime readyTime = now.plusMillis(2000);
+		final NotificationKey notificationKeyFred = new NotificationKey() {
+			@Override
+			public String toString() {
+				return "Fred" ;
+			}
+		};
+
+		
+		final NotificationKey notificationKeyBarney = new NotificationKey() {
+			@Override
+			public String toString() {
+				return "Barney" ;
+			}
+		};
+
+		expectedNotificationsFred.put(notificationKeyFred.toString(), Boolean.FALSE);
+		expectedNotificationsFred.put(notificationKeyBarney.toString(), Boolean.FALSE);
+
+
+		// Insert dummy to be processed in 2 sec'
+		dao.inTransaction(new Transaction<Void, DummySqlTest>() {
+			@Override
+			public Void inTransaction(DummySqlTest transactional,
+					TransactionStatus status) throws Exception {
+
+				transactional.insertDummy(obj);
+				queueFred.recordFutureNotificationFromTransaction(transactional,
+						readyTime, notificationKeyFred);
+				log.info("posted key: " + notificationKeyFred.toString());
+				queueBarney.recordFutureNotificationFromTransaction(transactional,
+						readyTime, notificationKeyBarney);
+				log.info("posted key: " + notificationKeyBarney.toString());
+
+				return null;
+			}
+		});
+
+		// Move time in the future after the notification effectiveDate
+		((ClockMock) clock).setDeltaFromReality(3000);
+
+		// Note the timeout is short on this test, but expected behaviour is that it times out.
+		// We are checking that the Fred queue does not pick up the Barney event
+		try {
+			await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return eventsReceived >= 2;
+				}
+			});
+			Assert.fail("There should only have been one event for the queue to pick up - it got more than that");
+		} catch (Exception e) {
+			// expected behavior
+		}
+
+		Assert.assertTrue(expectedNotificationsFred.get(notificationKeyFred.toString()));
+		Assert.assertFalse(expectedNotificationsFred.get(notificationKeyBarney.toString()));
+		  
 	}
 
 	NotificationConfig getNotificationConfig(final boolean off,

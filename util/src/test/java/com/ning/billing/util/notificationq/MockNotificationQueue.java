@@ -52,7 +52,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     public void recordFutureNotificationFromTransaction(
             Transmogrifier transactionalDao, DateTime futureNotificationTime,
             NotificationKey notificationKey) {
-        Notification notification = new DefaultNotification(notificationKey.toString(), futureNotificationTime);
+        Notification notification = new DefaultNotification("MockQueue", notificationKey.toString(), futureNotificationTime);
         synchronized(notifications) {
             notifications.add(notification);
         }
@@ -75,7 +75,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
             }
             for (Notification cur : readyNotifications) {
                 handler.handleReadyNotification(cur.getNotificationKey());
-                DefaultNotification processedNotification = new DefaultNotification(cur.getId(), hostname, clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
+                DefaultNotification processedNotification = new DefaultNotification(cur.getId(), hostname, "MockQueue", clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
                 oldNotifications.add(cur);
                 processedNotifications.add(processedNotification);
 

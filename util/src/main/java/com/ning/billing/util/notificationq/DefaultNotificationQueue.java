@@ -53,7 +53,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
             final DateTime futureNotificationTime, final NotificationKey notificationKey) {
         NotificationSqlDao transactionalNotificationDao =  transactionalDao.become(NotificationSqlDao.class);
-        Notification notification = new DefaultNotification(notificationKey.toString(), futureNotificationTime);
+        Notification notification = new DefaultNotification(getFullQName(), notificationKey.toString(), futureNotificationTime);
         transactionalNotificationDao.insertNotification(notification);
     }
 
@@ -92,7 +92,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
                     TransactionStatus status) throws Exception {
 
                 List<Notification> claimedNotifications = new ArrayList<Notification>();
-                List<Notification> input = transactionalDao.getReadyNotifications(now, config.getDaoMaxReadyEvents());
+                List<Notification> input = transactionalDao.getReadyNotifications(now, config.getDaoMaxReadyEvents(), getFullQName());
                 for (Notification cur : input) {
                     final boolean claimed = (transactionalDao.claimNotification(hostname, nextAvailable, cur.getId().toString(), now) == 1);
                     if (claimed) {

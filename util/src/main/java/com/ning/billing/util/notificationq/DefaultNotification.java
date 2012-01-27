@@ -24,26 +24,28 @@ public class DefaultNotification implements Notification {
 
     private final UUID id;
     private final String owner;
+    private final String queueName;
     private final DateTime nextAvailableDate;
     private final NotificationLifecycleState lifecycleState;
     private final String notificationKey;
     private final DateTime effectiveDate;
 
 
-    public DefaultNotification(UUID id, String owner, DateTime nextAvailableDate,
+    public DefaultNotification(UUID id, String owner, String queueName, DateTime nextAvailableDate,
             NotificationLifecycleState lifecycleState,
             String notificationKey, DateTime effectiveDate) {
         super();
         this.id = id;
         this.owner = owner;
+        this.queueName = queueName;
         this.nextAvailableDate = nextAvailableDate;
         this.lifecycleState = lifecycleState;
         this.notificationKey = notificationKey;
         this.effectiveDate = effectiveDate;
     }
 
-    public DefaultNotification(String notificationKey, DateTime effectiveDate) {
-        this(UUID.randomUUID(), null, null, NotificationLifecycleState.AVAILABLE, notificationKey, effectiveDate);
+    public DefaultNotification(String queueName, String notificationKey, DateTime effectiveDate) {
+        this(UUID.randomUUID(), null, queueName, null, NotificationLifecycleState.AVAILABLE, notificationKey, effectiveDate);
     }
 
     @Override
@@ -94,4 +96,9 @@ public class DefaultNotification implements Notification {
     public DateTime getEffectiveDate() {
         return effectiveDate;
     }
+
+	@Override
+	public String getQueueName() {
+		return queueName;
+	}
 }

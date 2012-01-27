@@ -42,7 +42,8 @@ CREATE TABLE notifications (
     created_dt datetime NOT NULL,
 	notification_key varchar(256) NOT NULL,
     effective_dt datetime NOT NULL,
-    processing_owner char(36) DEFAULT NULL,
+    queue_name char(64) NOT NULL,
+    processing_owner char(50) DEFAULT NULL,
     processing_available_dt datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
     PRIMARY KEY(id)
