@@ -42,9 +42,9 @@ public interface PaymentApi {
 
     Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
 
-    Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(PaymentProviderAccount account);
+    Either<PaymentError, String> createPaymentProviderAccount(Account account);
 
-    Either<PaymentError, PaymentProviderAccount> updatePaymentProviderAccount(PaymentProviderAccount account);
+    Either<PaymentError, PaymentProviderAccount> updatePaymentProviderAccount(Account account);
 
     PaymentAttempt getPaymentAttemptForPaymentId(String id);
 

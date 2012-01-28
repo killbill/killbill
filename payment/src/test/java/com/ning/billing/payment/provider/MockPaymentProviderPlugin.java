@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.joda.time.DateTime;
 
 import com.ning.billing.account.api.Account;
@@ -66,19 +67,25 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, PaymentProviderAccount> createPaymentProviderAccount(PaymentProviderAccount account) {
+    public Either<PaymentError, String> createPaymentProviderAccount(Account account) {
         if (account != null) {
-            PaymentProviderAccount paymentProviderAccount = accounts.put(account.getAccountName(),
-                                                                         new PaymentProviderAccount.Builder().setAccountName(account.getAccountName())
-                                                                                                             .setAccountNumber(account.getAccountName())
-                                                                                                             .setId(account.getId())
+            PaymentProviderAccount paymentProviderAccount = accounts.put(account.getExternalKey(),
+                                                                         new PaymentProviderAccount.Builder().setAccountNumber(String.valueOf(RandomUtils.nextInt(10)))
+                                                                                                             .setDefaultPaymentMethod(String.valueOf(RandomUtils.nextInt(10)))
+                                                                                                             .setId(String.valueOf(RandomUtils.nextInt(10)))
                                                                                                              .build());
 
-            return Either.right(paymentProviderAccount);
+            return Either.right(paymentProviderAccount.getId());
         }
         else {
             return Either.left(new PaymentError("unknown", "Did not get account to create payment provider account"));
         }
+    }
+
+    @Override
+    public Either<PaymentError, PaymentProviderAccount> updatePaymentProviderAccount(Account account) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
@@ -122,4 +129,5 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         // TODO
         return Either.left(new PaymentError("unknown", "Not implemented"));
     }
+
 }
