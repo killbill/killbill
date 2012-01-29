@@ -64,10 +64,13 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         for (final Subscription subscription: subscriptions) {
         	for (final SubscriptionTransition transition : subscription.getAllTransitions()) {
         		try {
-        			result.add(new DefaultBillingEvent(transition, subscription, calculateBCD(transition, accountId)));
+                    BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBCD(transition, accountId));
+        			result.add(event);
         		} catch (CatalogApiException e) {
         			log.error("Failing to identify catalog components while creating BillingEvent from transition: " + 
         					transition.getId().toString(), e);
+                } catch (Exception e) {
+                    log.warn("Failed while getting BillingEvent", e);
         		}
         	}
         }

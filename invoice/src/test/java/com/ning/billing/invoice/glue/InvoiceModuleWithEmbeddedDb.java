@@ -18,6 +18,8 @@ package com.ning.billing.invoice.glue;
 
 import java.io.IOException;
 
+import com.ning.billing.invoice.api.test.InvoiceTestApi;
+import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
@@ -71,6 +73,8 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         install(new EntitlementModule());
 
         super.configure();
+
+        bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
 
         install(new BusModule());
     }

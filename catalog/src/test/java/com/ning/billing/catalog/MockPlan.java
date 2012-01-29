@@ -34,6 +34,14 @@ public class MockPlan extends DefaultPlan {
 		setPlansAllowedInBundle(1);
 	}
 
+    public MockPlan(String planName) {
+		setName(planName);
+		setProduct(new MockProduct());
+		setFinalPhase(new MockPlanPhase(this));
+		setInitialPhases(null);
+		setPlansAllowedInBundle(1);
+	}
+
 	public MockPlan(MockPlanPhase mockPlanPhase) {
 		setName("test-plan");
 		setProduct(new MockProduct());

@@ -4,10 +4,11 @@ CREATE TABLE invoice_items (
   invoice_id char(36) NOT NULL,
   subscription_id char(36) NOT NULL,
   start_date datetime NOT NULL,
-  end_date datetime NOT NULL,
+  end_date datetime NULL,
   description varchar(100) NOT NULL,
-  amount numeric(10,4) NOT NULL,
-  rate numeric(10,4) NOT NULL,
+  recurring_amount numeric(10,4) NOT NULL,
+  recurring_rate numeric(10,4) NOT NULL,
+  fixed_amount numeric(10,4) NOT NULL,
   currency char(3) NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
@@ -45,6 +46,6 @@ GROUP BY invoice_id;
 
 DROP VIEW IF EXISTS invoice_item_summary;
 CREATE VIEW invoice_item_summary AS
-select invoice_id, sum(amount) AS total_amount
+select invoice_id, sum(recurring_amount) + SUM(fixed_amount) AS total_amount
 from invoice_items
 group by invoice_id;

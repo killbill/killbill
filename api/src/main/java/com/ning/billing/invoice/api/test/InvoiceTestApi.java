@@ -14,15 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.model;
+package com.ning.billing.invoice.api.test;
 
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
-import org.joda.time.DateTime;
 
-import javax.annotation.Nullable;
-import java.util.UUID;
-
-public interface InvoiceGenerator {
-    public Invoice generateInvoice(UUID accountId, BillingEventSet events, @Nullable InvoiceItemList items, DateTime targetDate, Currency targetCurrency);
+public interface InvoiceTestApi {
+    public void create(Invoice invoice);
 }

@@ -108,9 +108,9 @@ public class InvoiceListener {
         Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoiceItemList, targetDate, targetCurrency);
 
         if (invoice != null) {
-            //if (invoice.getNumberOfItems() > 0) {
+            if (invoice.getNumberOfItems() > 0) {
                 invoiceDao.create(invoice);
-            //}
+            }
         }
     }
 }

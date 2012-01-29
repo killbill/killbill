@@ -18,12 +18,14 @@ package com.ning.billing.invoice.model;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import com.ning.billing.invoice.api.InvoiceItem;
 
 public class InvoiceItemList extends ArrayList<InvoiceItem> {
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     private static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMethod();
+
     public InvoiceItemList() {
         super();
     }
@@ -34,11 +36,17 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
     }
 
     public BigDecimal getTotalAmount() {
-        // TODO: Jeff -- naive implementation, assumes all invoice items share the same currency
-        BigDecimal total = new BigDecimal("0");
+        // naive implementation, assumes all invoice items share the same currency
+        BigDecimal total = BigDecimal.ZERO.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         for (final InvoiceItem item : this) {
-            total = total.add(item.getAmount());
+            if (item.getRecurringAmount() != null) {
+                total = total.add(item.getRecurringAmount());
+            }
+
+            if (item.getFixedAmount() != null) {
+                total = total.add(item.getFixedAmount());
+            }
         }
 
         return total.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -59,5 +67,22 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         }
 
         this.removeAll(itemsToRemove);
+    }
+
+   /*
+    * removes items from the list that have a recurring amount of zero, but a recurring rate that is not zero
+    */
+    public void cleanupDuplicatedItems() {
+        Iterator<InvoiceItem> iterator = this.iterator();
+        while (iterator.hasNext()) {
+            InvoiceItem item = iterator.next();
+            Boolean hasZeroRecurringAmount = item.getRecurringAmount() == null || (item.getRecurringAmount().compareTo(BigDecimal.ZERO) == 0);
+            Boolean hasRecurringRate = item.getRecurringRate() == null || (item.getRecurringRate().compareTo(BigDecimal.ZERO) != 0);
+            Boolean hasZeroFixedAmount = item.getFixedAmount() == null || (item.getFixedAmount().compareTo(BigDecimal.ZERO) == 0);
+
+            if (hasZeroRecurringAmount && hasRecurringRate & hasZeroFixedAmount) {
+                iterator.remove();
+            }
+        }
     }
 }

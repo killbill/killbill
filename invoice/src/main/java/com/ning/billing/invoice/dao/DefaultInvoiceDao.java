@@ -239,13 +239,17 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
         for (final InvoiceItem item : invoiceItems) {
-            notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
+            if (item.getEndDate() != null) {
+                notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
+            }
         }
     }
 
     private void setChargedThroughDates(final InvoiceSqlDao dao, final Collection<InvoiceItem> invoiceItems) {
         for (InvoiceItem invoiceItem : invoiceItems) {
-            entitlementBillingApi.setChargedThroughDateFromTransaction(dao, invoiceItem.getSubscriptionId(), invoiceItem.getEndDate());
+            if (invoiceItem.getEndDate() != null) {
+                entitlementBillingApi.setChargedThroughDateFromTransaction(dao, invoiceItem.getSubscriptionId(), invoiceItem.getEndDate());
+            }
         }
     }
 }

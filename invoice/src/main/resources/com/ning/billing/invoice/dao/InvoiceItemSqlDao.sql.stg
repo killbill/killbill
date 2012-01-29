@@ -1,39 +1,54 @@
 group InvoiceItemDao;
 
+invoiceItemFields(prefix) ::= <<
+  <prefix>id,
+  <prefix>invoice_id,
+  <prefix>subscription_id,
+  <prefix>start_date,
+  <prefix>end_date,
+  <prefix>description,
+  <prefix>recurring_amount,
+  <prefix>recurring_rate,
+  <prefix>fixed_amount,
+  <prefix>currency
+>>
+
 getById() ::= <<
-  SELECT id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency
+  SELECT <invoiceItemFields()>
   FROM invoice_items
   WHERE id = :id;
 >>
 
 getInvoiceItemsByInvoice() ::= <<
-  SELECT id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency
+  SELECT <invoiceItemFields()>
   FROM invoice_items
   WHERE invoice_id = :invoiceId;
 >>
 
 getInvoiceItemsByAccount() ::= <<
-  SELECT ii.id, ii.invoice_id, ii.subscription_id, ii.start_date, ii.end_date, ii.description, ii.amount, ii.rate, ii.currency
+  SELECT <invoiceItemFields("ii.")>
   FROM invoice_items ii
   INNER JOIN invoices i ON i.id = ii.invoice_id
   WHERE i.account_id = :accountId;
 >>
 
 getInvoiceItemsBySubscription() ::= <<
-  SELECT id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency
+  SELECT <invoiceItemFields()>
   FROM invoice_items
   WHERE subscription_id = :subscriptionId;
 >>
 
 create() ::= <<
-  INSERT INTO invoice_items(id, invoice_id, subscription_id, start_date, end_date, description, amount, rate, currency)
-  VALUES(:id, :invoiceId, :subscriptionId, :startDate, :endDate, :description, :amount, :rate, :currency);
+  INSERT INTO invoice_items(<invoiceItemFields()>)
+  VALUES(:id, :invoiceId, :subscriptionId, :startDate, :endDate, :description,
+         :recurringAmount, :recurringRate, :fixedAmount, :currency);
 >>
 
 update() ::= <<
   UPDATE invoice_items
   SET invoice_id = :invoiceId, subscription_id = :subscriptionId, start_date = :startDate, end_date = :endDate,
-      description = :description, amount = :amount, rate = :rate, currency = :currency
+      description = :description, recurring_amount = :recurringAmount, recurring_rate = :recurringRate,
+      fixed_amount = :fixedAmount, currency = :currency
   WHERE id = :id;
 >>
 

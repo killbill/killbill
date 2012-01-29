@@ -14,15 +14,22 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.model;
+package com.ning.billing.invoice.api.test;
 
-import com.ning.billing.catalog.api.Currency;
+import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
-import org.joda.time.DateTime;
+import com.ning.billing.invoice.dao.InvoiceDao;
 
-import javax.annotation.Nullable;
-import java.util.UUID;
+public class DefaultInvoiceTestApi implements InvoiceTestApi {
+    private final InvoiceDao invoiceDao;
 
-public interface InvoiceGenerator {
-    public Invoice generateInvoice(UUID accountId, BillingEventSet events, @Nullable InvoiceItemList items, DateTime targetDate, Currency targetCurrency);
+    @Inject
+    public DefaultInvoiceTestApi(InvoiceDao invoiceDao) {
+        this.invoiceDao = invoiceDao;
+    }
+
+    @Override
+    public void create(Invoice invoice) {
+        invoiceDao.create(invoice);
+    }
 }

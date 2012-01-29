@@ -23,14 +23,10 @@ import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -87,7 +83,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         UUID subscriptionId = UUID.randomUUID();
         DateTime startDate = new DateTime(2010, 1, 1, 0, 0, 0, 0);
         DateTime endDate = new DateTime(2010, 4, 1, 0, 0, 0, 0);
-        InvoiceItem invoiceItem = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, "test", new BigDecimal("21.00"), new BigDecimal("7.00"), Currency.USD);
+        InvoiceItem invoiceItem = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, "test", new BigDecimal("21.00"), new BigDecimal("7.00"), null, Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
         invoiceDao.create(invoice);
 
@@ -184,7 +180,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal rate = new BigDecimal("9.0");
         BigDecimal amount = rate.multiply(new BigDecimal("3.0"));
 
-        DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, targetDate, endDate, "test", amount, rate, Currency.USD);
+        DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, targetDate, endDate, "test", amount, rate, null, Currency.USD);
         invoice.addInvoiceItem(item);
         invoiceDao.create(invoice);
 
@@ -279,16 +275,16 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
         DateTime endDate = startDate.plusMonths(1);
 
-        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoiceId1, subscriptionId1, startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoiceId1, subscriptionId1, startDate, endDate, "test A", rate1, rate1, null, Currency.USD);
         invoiceItemDao.create(item1);
 
-        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoiceId1, subscriptionId2, startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoiceId1, subscriptionId2, startDate, endDate, "test B", rate2, rate2, null, Currency.USD);
         invoiceItemDao.create(item2);
 
-        DefaultInvoiceItem item3 = new DefaultInvoiceItem(invoiceId1, subscriptionId3, startDate, endDate, "test C", rate3, rate3, Currency.USD);
+        DefaultInvoiceItem item3 = new DefaultInvoiceItem(invoiceId1, subscriptionId3, startDate, endDate, "test C", rate3, rate3, null, Currency.USD);
         invoiceItemDao.create(item3);
 
-        DefaultInvoiceItem item4 = new DefaultInvoiceItem(invoiceId1, subscriptionId4, startDate, endDate, "test D", rate4, rate4, Currency.USD);
+        DefaultInvoiceItem item4 = new DefaultInvoiceItem(invoiceId1, subscriptionId4, startDate, endDate, "test D", rate4, rate4, null, Currency.USD);
         invoiceItemDao.create(item4);
 
         // create invoice 2 (subscriptions 1-3)
@@ -300,13 +296,13 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         startDate = endDate;
         endDate = startDate.plusMonths(1);
 
-        DefaultInvoiceItem item5 = new DefaultInvoiceItem(invoiceId2, subscriptionId1, startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        DefaultInvoiceItem item5 = new DefaultInvoiceItem(invoiceId2, subscriptionId1, startDate, endDate, "test A", rate1, rate1, null, Currency.USD);
         invoiceItemDao.create(item5);
 
-        DefaultInvoiceItem item6 = new DefaultInvoiceItem(invoiceId2, subscriptionId2, startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        DefaultInvoiceItem item6 = new DefaultInvoiceItem(invoiceId2, subscriptionId2, startDate, endDate, "test B", rate2, rate2, null, Currency.USD);
         invoiceItemDao.create(item6);
 
-        DefaultInvoiceItem item7 = new DefaultInvoiceItem(invoiceId2, subscriptionId3, startDate, endDate, "test C", rate3, rate3, Currency.USD);
+        DefaultInvoiceItem item7 = new DefaultInvoiceItem(invoiceId2, subscriptionId3, startDate, endDate, "test C", rate3, rate3, null, Currency.USD);
         invoiceItemDao.create(item7);
 
         // check that each subscription returns the correct number of invoices
@@ -365,10 +361,10 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal rate1 = new BigDecimal("17.0");
         BigDecimal rate2 = new BigDecimal("42.0");
 
-        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, null, Currency.USD);
         invoiceItemDao.create(item1);
 
-        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, null, Currency.USD);
         invoiceItemDao.create(item2);
 
         BigDecimal payment1 = new BigDecimal("48.0");
@@ -392,10 +388,10 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal rate1 = new BigDecimal("17.0");
         BigDecimal rate2 = new BigDecimal("42.0");
 
-        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, null, Currency.USD);
         invoiceItemDao.create(item1);
 
-        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, null, Currency.USD);
         invoiceItemDao.create(item2);
 
         BigDecimal balance = invoiceDao.getAccountBalance(accountId);
@@ -430,10 +426,10 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal rate1 = new BigDecimal("17.0");
         BigDecimal rate2 = new BigDecimal("42.0");
 
-        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, null, Currency.USD);
         invoiceItemDao.create(item1);
 
-        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, null, Currency.USD);
         invoiceItemDao.create(item2);
 
         DateTime upToDate;
@@ -456,7 +452,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         BigDecimal rate3 = new BigDecimal("21.0");
 
-        DefaultInvoiceItem item3 = new DefaultInvoiceItem(invoice2.getId(), UUID.randomUUID(), startDate2, endDate2, "test C", rate3, rate3, Currency.USD);
+        DefaultInvoiceItem item3 = new DefaultInvoiceItem(invoice2.getId(), UUID.randomUUID(), startDate2, endDate2, "test C", rate3, rate3, null, Currency.USD);
         invoiceItemDao.create(item3);
 
         upToDate = new DateTime(2011, 1, 1, 0, 0, 0, 0);
@@ -557,99 +553,5 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BillingEventSet events = new BillingEventSet();
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new DateTime(), Currency.USD);
         assertNull(invoice);
-    }
-
-    private class MockSubscription implements Subscription {
-        private UUID subscriptionId = UUID.randomUUID();
-
-        @Override
-        public void cancel(DateTime requestedDate, boolean eot) throws EntitlementUserApiException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void uncancel() throws EntitlementUserApiException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate) throws EntitlementUserApiException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void pause() throws EntitlementUserApiException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void resume() throws EntitlementUserApiException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public UUID getId() {
-            return subscriptionId;
-        }
-
-        @Override
-        public UUID getBundleId() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public SubscriptionState getState() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DateTime getStartDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DateTime getEndDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Plan getCurrentPlan() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public String getCurrentPriceList() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public PlanPhase getCurrentPhase() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DateTime getChargedThroughDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DateTime getPaidThroughDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<SubscriptionTransition> getActiveTransitions() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<SubscriptionTransition> getAllTransitions() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public SubscriptionTransition getPendingTransition() {
-            throw new UnsupportedOperationException();
-        }
     }
 }

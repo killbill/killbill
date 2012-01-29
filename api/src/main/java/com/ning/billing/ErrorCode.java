@@ -69,7 +69,7 @@ public enum ErrorCode {
     CAT_NO_PRICE_FOR_CURRENCY(2010, "This price does not have a value for the currency '%s'."),
 
     /* Price value explicitly set to NULL meaning there is no price available in that currency */
-    CAT_PRICE_VALUE_NULL_FOR_CURRENCY(2011, "The value for the currency '%s' is NULL. This plan cannot be bought in this currnency."),
+    CAT_PRICE_VALUE_NULL_FOR_CURRENCY(2011, "The value for the currency '%s' is NULL. This plan cannot be bought in this currency."),
     CAT_NULL_PRICE_LIST_NAME(2012,"Price list name was null"),
     CAT_PRICE_LIST_NOT_FOUND(2013, "Could not find a pricelist with name '%s'"),
     /*
