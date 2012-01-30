@@ -59,6 +59,8 @@ import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
+import static org.testng.Assert.assertTrue;
+
 public class TestDefaultEntitlementBillingApi {
 	private static final UUID zeroId = new UUID(0L,0L);
 	private static final UUID oneId = new UUID(1L,0L);
@@ -128,7 +130,7 @@ public class TestDefaultEntitlementBillingApi {
 			}
 
             @Override
-            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
                 throw new UnsupportedOperationException();
             }
 
@@ -138,6 +140,7 @@ public class TestDefaultEntitlementBillingApi {
 			}
 		};
 
+        assertTrue(true);
 	}
 	
     @Test(enabled=true, groups="fast")
@@ -149,7 +152,7 @@ public class TestDefaultEntitlementBillingApi {
 			}
 
             @Override
-            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
                 throw new UnsupportedOperationException();
             }
 

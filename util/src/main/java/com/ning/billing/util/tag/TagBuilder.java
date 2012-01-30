@@ -21,10 +21,7 @@ import org.joda.time.DateTime;
 
 public class TagBuilder {
     private UUID id = UUID.randomUUID();
-    private UUID tagDescriptionId;
     private String name;
-    private boolean processPayment;
-    private boolean generateInvoice;
     private String addedBy;
     private DateTime dateAdded;
 
@@ -33,23 +30,8 @@ public class TagBuilder {
         return this;
     }
 
-    public TagBuilder tagDescriptionId(UUID tagDescriptionId) {
-        this.tagDescriptionId = tagDescriptionId;
-        return this;
-    }
-
-    public TagBuilder name(String name) {
-        this.name = name;
-        return this;
-    }
-
-    public TagBuilder processPayment(boolean processPayment) {
-        this.processPayment = processPayment;
-        return this;
-    }
-
-    public TagBuilder generateInvoice(boolean generateInvoice) {
-        this.generateInvoice = generateInvoice;
+    public TagBuilder tagDescriptionName(String tagDescriptionName) {
+        this.name = tagDescriptionName;
         return this;
     }
 
@@ -64,6 +46,6 @@ public class TagBuilder {
     }
 
     public Tag build() {
-        return new DefaultTag(id, tagDescriptionId, name, processPayment, generateInvoice, addedBy, dateAdded);
+        return new DescriptiveTag(id, name, addedBy, dateAdded);
     }
 }

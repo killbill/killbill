@@ -45,12 +45,12 @@ import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.eventbus.Bus;
-import com.ning.billing.util.eventbus.Bus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.notificationq.NotificationConfig;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotficationQueueAlreadyExists;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public class Engine implements EventListener, EntitlementService {
@@ -132,7 +132,7 @@ public class Engine implements EventListener, EntitlementService {
                     return config.getDaoMaxReadyEvents();
                 }
             });
-        } catch (NotficationQueueAlreadyExists e) {
+        } catch (NotificationQueueAlreadyExists e) {
             throw new RuntimeException(e);
         }
     }

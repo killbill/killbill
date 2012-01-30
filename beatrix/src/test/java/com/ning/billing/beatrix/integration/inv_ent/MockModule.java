@@ -23,7 +23,6 @@ import java.net.URL;
 import java.util.Set;
 
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.collect.ImmutableSet;
@@ -44,8 +43,8 @@ import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.eventbus.BusService;
-import com.ning.billing.util.glue.EventBusModule;
+import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
 
@@ -59,11 +58,10 @@ public class MockModule extends AbstractModule {
         bind(Clock.class).to(ClockMock.class).asEagerSingleton();
         bind(ClockMock.class).asEagerSingleton();
         bind(Lifecycle.class).to(SubsetDefaultLifecycle.class).asEagerSingleton();
-        bind(IDBI.class).to(DBI.class).asEagerSingleton();
-        bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
+        bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
         final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
         bind(DbiConfig.class).toInstance(config);
-        install(new EventBusModule());
+        install(new BusModule());
         install(new NotificationQueueModule());
         install(new AccountModule());
         install(new CatalogModule());

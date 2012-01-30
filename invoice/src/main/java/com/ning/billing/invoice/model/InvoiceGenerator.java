@@ -17,12 +17,12 @@
 package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.BillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import org.joda.time.DateTime;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 public interface InvoiceGenerator {
-    public Invoice generateInvoice(UUID accountId, BillingEventSet events, InvoiceItemList items, DateTime targetDate, Currency targetCurrency);
+    public Invoice generateInvoice(UUID accountId, BillingEventSet events, @Nullable InvoiceItemList items, DateTime targetDate, Currency targetCurrency);
 }

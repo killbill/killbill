@@ -49,7 +49,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     //
     @SqlQuery
     @Mapper(NotificationSqlMapper.class)
-    public List<Notification> getReadyNotifications(@Bind("now") Date now, @Bind("max") int max);
+    public List<Notification> getReadyNotifications(@Bind("now") Date now, @Bind("max") int max, @Bind("queue_name") String queueName);
 
     @SqlUpdate
     public int claimNotification(@Bind("owner") String owner, @Bind("next_available") Date nextAvailable, @Bind("notification_id") String eventId, @Bind("now") Date now);
@@ -75,8 +75,9 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             stmt.bind("created_dt", getDate(new DateTime()));
             stmt.bind("notification_key", evt.getNotificationKey());
             stmt.bind("effective_dt", getDate(evt.getEffectiveDate()));
+            stmt.bind("queue_name", evt.getQueueName());
             stmt.bind("processing_available_dt", getDate(evt.getNextAvailableDate()));
-            stmt.bind("processing_owner", (String) null);
+            stmt.bind("processing_owner", evt.getOwner());
             stmt.bind("processing_state", NotificationLifecycleState.AVAILABLE.toString());
         }
     }
@@ -95,12 +96,13 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
 
             final UUID id = UUID.fromString(r.getString("notification_id"));
             final String notificationKey = r.getString("notification_key");
+            final String queueName = r.getString("queue_name");
             final DateTime effectiveDate = getDate(r, "effective_dt");
             final DateTime nextAvailableDate = getDate(r, "processing_available_dt");
             final String processingOwner = r.getString("processing_owner");
             final NotificationLifecycleState processingState = NotificationLifecycleState.valueOf(r.getString("processing_state"));
 
-            return new DefaultNotification(id, processingOwner, nextAvailableDate,
+            return new DefaultNotification(id, processingOwner, queueName, nextAvailableDate,
                     processingState, notificationKey, effectiveDate);
 
         }

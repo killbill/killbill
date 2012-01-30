@@ -24,64 +24,80 @@ import java.lang.annotation.Target;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.catalog.api.Currency;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.*;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
-import com.ning.billing.catalog.api.Currency;
+
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.util.entity.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(InvoicePaymentSqlDao.InvoicePaymentMapper.class)
-public interface InvoicePaymentSqlDao extends EntityDao<InvoicePayment> {
-    @Override
-    @SqlUpdate
-    public void create(@InvoicePaymentBinder final InvoicePayment invoicePayment);
-
-    @SqlBatch
-    void create(@InvoicePaymentBinder final List<InvoicePayment> items);
-
-    @Override
-    @SqlUpdate
-    public void update(@InvoicePaymentBinder final InvoicePayment invoicePayment);
+public interface InvoicePaymentSqlDao {
+    @SqlQuery
+    public InvoicePayment getByPaymentAttemptId(@Bind("paymentAttempt") final String paymentAttemptId);
 
     @SqlQuery
-    public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId);
+    public List<InvoicePayment> get();
+
+    @SqlUpdate
+    public void create(@InvoicePaymentBinder  InvoicePayment invoicePayment);
+
+    @SqlBatch
+    void create(@InvoicePaymentBinder List<InvoicePayment> items);
+
+    @SqlUpdate
+    public void update(@InvoicePaymentBinder  InvoicePayment invoicePayment);
+
+    @SqlQuery
+    public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") String invoiceId);
+
+    @SqlQuery
+    InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") UUID paymentAttemptId);
+
+    @SqlUpdate
+    void notifyOfPaymentAttempt(@InvoicePaymentBinder InvoicePayment invoicePayment);
 
     public static class InvoicePaymentMapper implements ResultSetMapper<InvoicePayment> {
+        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
+            final Timestamp resultStamp = rs.getTimestamp(fieldName);
+            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
+        }
+
         @Override
         public InvoicePayment map(int index, ResultSet result, StatementContext context) throws SQLException {
-            final UUID id = UUID.fromString(result.getString("payment_id"));
+            final UUID paymentAttemptId = UUID.fromString(result.getString("payment_attempt_id"));
             final UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
-            final DateTime paymentDate = new DateTime(result.getTimestamp("payment_date"));
+            final DateTime paymentAttemptDate = getDate(result, "payment_attempt_date");
             final BigDecimal amount = result.getBigDecimal("amount");
             final String currencyString = result.getString("currency");
             final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
+            final DateTime createdDate = getDate(result, "created_date");
+            final DateTime updatedDate = getDate(result, "updated_date");
 
             return new InvoicePayment() {
+                private  DateTime now = new DateTime();
+
                 @Override
-                public UUID getId() {
-                    return id;
+                public UUID getPaymentAttemptId() {
+                    return paymentAttemptId;
                 }
                 @Override
                 public UUID getInvoiceId() {
                     return invoiceId;
                 }
                 @Override
-                public DateTime getPaymentDate() {
-                    return paymentDate;
+                public DateTime getPaymentAttemptDate() {
+                    return paymentAttemptDate;
                 }
                 @Override
                 public BigDecimal getAmount() {
@@ -90,6 +106,14 @@ public interface InvoicePaymentSqlDao extends EntityDao<InvoicePayment> {
                 @Override
                 public Currency getCurrency() {
                     return currency;
+                }
+                @Override
+                public DateTime getCreatedDate() {
+                    return createdDate ;
+                }
+                @Override
+                public DateTime getUpdatedDate() {
+                    return updatedDate;
                 }
             };
         }
@@ -104,11 +128,15 @@ public interface InvoicePaymentSqlDao extends EntityDao<InvoicePayment> {
                 return new Binder<InvoicePaymentBinder, InvoicePayment>() {
                     public void bind(SQLStatement q, InvoicePaymentBinder bind, InvoicePayment payment) {
                         q.bind("invoiceId", payment.getInvoiceId().toString());
-                        q.bind("paymentId", payment.getId().toString());
-                        q.bind("paymentDate", payment.getAmount());
+                        q.bind("paymentAttemptId", payment.getPaymentAttemptId().toString());
+                        q.bind("paymentAttemptDate", payment.getPaymentAttemptDate().toDate());
                         q.bind("amount", payment.getAmount());
                         Currency currency = payment.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());
+                        DateTime createdDate = payment.getCreatedDate();
+                        q.bind("createdDate", (createdDate == null) ? new DateTime().toDate() : createdDate.toDate());
+                        DateTime updatedDate = payment.getUpdatedDate();
+                        q.bind("updatedDate", (updatedDate == null) ? new DateTime().toDate() : updatedDate.toDate());
                     }
                 };
             }

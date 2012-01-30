@@ -130,5 +130,4 @@ public class DefaultBillingEvent implements BillingEvent {
     public InternationalPrice getRecurringPrice() {
         return recurringPrice;
     }
-
 }

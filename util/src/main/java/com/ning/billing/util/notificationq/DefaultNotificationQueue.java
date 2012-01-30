@@ -20,13 +20,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
@@ -35,15 +33,13 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
 
     protected final NotificationSqlDao dao;
 
-    public DefaultNotificationQueue(final DBI dbi, final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
+    public DefaultNotificationQueue(final IDBI dbi, final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
         super(clock, svcName, queueName, handler, config);
         this.dao = dbi.onDemand(NotificationSqlDao.class);
     }
 
-
-
     @Override
-    protected void doProcessEvents(int sequenceId) {
+    protected void doProcessEvents(final int sequenceId) {
         List<Notification> notifications = getReadyNotifications(sequenceId);
         for (Notification cur : notifications) {
             nbProcessedEvents.incrementAndGet();
@@ -57,7 +53,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
             final DateTime futureNotificationTime, final NotificationKey notificationKey) {
         NotificationSqlDao transactionalNotificationDao =  transactionalDao.become(NotificationSqlDao.class);
-        Notification notification = new DefaultNotification(notificationKey.toString(), futureNotificationTime);
+        Notification notification = new DefaultNotification(getFullQName(), notificationKey.toString(), futureNotificationTime);
         transactionalNotificationDao.insertNotification(notification);
     }
 
@@ -96,7 +92,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
                     TransactionStatus status) throws Exception {
 
                 List<Notification> claimedNotifications = new ArrayList<Notification>();
-                List<Notification> input = transactionalDao.getReadyNotifications(now, config.getDaoMaxReadyEvents());
+                List<Notification> input = transactionalDao.getReadyNotifications(now, config.getDaoMaxReadyEvents(), getFullQName());
                 for (Notification cur : input) {
                     final boolean claimed = (transactionalDao.claimNotification(hostname, nextAvailable, cur.getId().toString(), now) == 1);
                     if (claimed) {

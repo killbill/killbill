@@ -17,32 +17,42 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
-import com.ning.billing.util.eventbus.Bus;
+import com.ning.billing.invoice.notification.NextBillingDateNotifier;
+import com.ning.billing.util.bus.Bus;
 
 public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
+    private final InvoicePaymentSqlDao invoicePaymentSqlDao;
+    private final NextBillingDateNotifier notifier;
+    private final EntitlementBillingApi entitlementBillingApi;
 
     private final Bus eventBus;
 
     @Inject
-    public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus) {
+    public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus,
+                             final NextBillingDateNotifier notifier, final EntitlementBillingApi entitlementBillingApi) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
+        this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.eventBus = eventBus;
+        this.notifier = notifier;
+        this.entitlementBillingApi = entitlementBillingApi;
     }
 
     @Override
@@ -53,7 +63,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId.toString());
 
                 getInvoiceItemsWithinTransaction(invoices, invoiceDao);
-
                 getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
 
                 return invoices;
@@ -132,6 +141,9 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
                     invoiceItemDao.create(invoiceItems);
 
+                    notifyOfFutureBillingEvents(invoiceSqlDao, invoiceItems);
+                    setChargedThroughDates(invoiceSqlDao, invoiceItems);
+
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
                     InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
                     invoicePaymentSqlDao.create(invoicePayments);
@@ -140,7 +152,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
                                                                   invoice.getBalance(), invoice.getCurrency(),
                                                                   invoice.getInvoiceDate());
-                    eventBus.post(event);
+                    eventBus.postFromTransaction(event, invoiceDao);
                 }
 
                 return null;
@@ -169,15 +181,38 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifySuccessfulPayment(final UUID invoiceId, final BigDecimal paymentAmount,
-                                        final Currency currency, final UUID paymentId, final DateTime paymentDate) {
-        invoiceSqlDao.notifySuccessfulPayment(invoiceId.toString(), paymentAmount, currency.toString(),
-                                              paymentId.toString(), paymentDate.toDate());
+    public BigDecimal getAccountBalance(final UUID accountId) {
+        return invoiceSqlDao.getAccountBalance(accountId.toString());
+    }
+    
+    @Override
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
+        invoicePaymentSqlDao.notifyOfPaymentAttempt(invoicePayment);
     }
 
     @Override
-    public void notifyFailedPayment(final UUID invoiceId, final UUID paymentId, final DateTime paymentAttemptDate) {
-        invoiceSqlDao.notifyFailedPayment(invoiceId.toString(), paymentId.toString(), paymentAttemptDate.toDate());
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
+        return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+            @Override
+            public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+                List<Invoice> invoices = invoiceSqlDao.getUnpaidInvoicesByAccountId(accountId.toString(), upToDate.toDate());
+
+                getInvoiceItemsWithinTransaction(invoices, invoiceDao);
+                getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
+
+                return invoices;
+            }
+        });
+    }
+    
+    @Override
+    public UUID getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
+        return invoiceSqlDao.getInvoiceIdByPaymentAttemptId(paymentAttemptId.toString());
+    }
+
+    @Override
+    public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
+        return invoicePaymentSqlDao.getInvoicePayment(paymentAttemptId);
     }
 
     @Override
@@ -199,6 +234,22 @@ public class DefaultInvoiceDao implements InvoiceDao {
             String invoiceId = invoice.getId().toString();
             List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId);
             invoice.addPayments(invoicePayments);
+        }
+    }
+
+    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
+        for (final InvoiceItem item : invoiceItems) {
+            if (item.getEndDate() != null) {
+                notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
+            }
+        }
+    }
+
+    private void setChargedThroughDates(final InvoiceSqlDao dao, final Collection<InvoiceItem> invoiceItems) {
+        for (InvoiceItem invoiceItem : invoiceItems) {
+            if (invoiceItem.getEndDate() != null) {
+                entitlementBillingApi.setChargedThroughDateFromTransaction(dao, invoiceItem.getSubscriptionId(), invoiceItem.getEndDate());
+            }
         }
     }
 }

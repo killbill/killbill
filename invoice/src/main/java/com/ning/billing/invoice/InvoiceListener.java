@@ -19,6 +19,9 @@ package com.ning.billing.invoice;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
+
+import com.ning.billing.invoice.model.BillingEventSet;
+import com.ning.billing.invoice.notification.NextBillingDateEvent;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,16 +33,14 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.invoice.api.BillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceItemList;
+import com.ning.billing.util.clock.Clock;
 
 public class InvoiceListener {
     private final static Logger log = LoggerFactory.getLogger(InvoiceListener.class);
@@ -47,37 +48,43 @@ public class InvoiceListener {
     private final InvoiceGenerator generator;
     private final EntitlementBillingApi entitlementBillingApi;
     private final AccountUserApi accountUserApi;
-    private final InvoiceUserApi invoiceUserApi;
     private final InvoiceDao invoiceDao;
 
     @Inject
     public InvoiceListener(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
                            final EntitlementBillingApi entitlementBillingApi,
-                           final InvoiceUserApi invoiceUserApi,
                            final InvoiceDao invoiceDao) {
         this.generator = generator;
         this.entitlementBillingApi = entitlementBillingApi;
         this.accountUserApi = accountUserApi;
-        this.invoiceUserApi = invoiceUserApi;
         this.invoiceDao = invoiceDao;
     }
 
     @Subscribe
     public void handleSubscriptionTransition(final SubscriptionTransition transition) {
+        processSubscription(transition);
+    }
+
+    @Subscribe
+    public void handleNextBillingDateEvent(final NextBillingDateEvent event) {
+        processSubscription(event.getSubscriptionId(), new DateTime());
+    }
+
+    private void processSubscription(final SubscriptionTransition transition) {
         UUID subscriptionId = transition.getSubscriptionId();
+        DateTime targetDate = transition.getEffectiveTransitionTime();
+        log.info("Got subscription transition from InvoiceListener. id: " + subscriptionId.toString() + "; targetDate: " + targetDate.toString());
+        log.info("Transition type: " + transition.getTransitionType().toString());
+        processSubscription(subscriptionId, targetDate);
+    }
+
+    private void processSubscription(final UUID subscriptionId, final DateTime targetDate) {
         if (subscriptionId == null) {
             log.error("Failed handling entitlement change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
             return;
         }
 
-        UUID accountId = null;
-        try {
-            accountId = entitlementBillingApi.getAccountIdFromSubscriptionId(subscriptionId);
-        } catch (EntitlementBillingApiException e) {
-            log.error("Failed handling entitlement change.", e);
-            return;
-        }
-
+        UUID accountId = entitlementBillingApi.getAccountIdFromSubscriptionId(subscriptionId);
         if (accountId == null) {
             log.error("Failed handling entitlement change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
@@ -92,13 +99,12 @@ public class InvoiceListener {
         }
 
         SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccount(accountId);
-        BillingEventSet billingEvents = new BillingEventSet();
-        billingEvents.addAll(events);
+        BillingEventSet billingEvents = new BillingEventSet(events);
 
-        DateTime targetDate = new DateTime();
         Currency targetCurrency = account.getCurrency();
 
-        InvoiceItemList invoiceItemList = new InvoiceItemList(invoiceUserApi.getInvoiceItemsByAccount(accountId));
+        List<InvoiceItem> items = invoiceDao.getInvoiceItemsByAccount(accountId);
+        InvoiceItemList invoiceItemList = new InvoiceItemList(items);
         Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoiceItemList, targetDate, targetCurrency);
 
         if (invoice != null) {

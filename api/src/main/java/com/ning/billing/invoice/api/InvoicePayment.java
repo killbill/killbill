@@ -22,12 +22,18 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.Entity;
 
-public interface InvoicePayment extends Entity {
+public interface InvoicePayment {
+    UUID getPaymentAttemptId();
+
     UUID getInvoiceId();
 
-    DateTime getPaymentDate();
+    DateTime getPaymentAttemptDate();
 
     BigDecimal getAmount();
 
     Currency getCurrency();
+
+    DateTime getCreatedDate();
+
+    DateTime getUpdatedDate();
 }

@@ -6,12 +6,14 @@ getReadyNotifications(now, max) ::= <<
     , notification_key
       , created_dt
       , effective_dt
+      , queue_name
       , processing_owner
       , processing_available_dt
       , processing_state
     from notifications
     where
       effective_dt \<= :now
+      and queue_name = :queue_name
       and processing_state != 'PROCESSED'
       and (processing_owner IS NULL OR processing_available_dt \<= :now)
     order by
@@ -53,6 +55,7 @@ insertNotification() ::= <<
     , notification_key
       , created_dt
       , effective_dt
+      , queue_name
       , processing_owner
       , processing_available_dt
       , processing_state
@@ -61,6 +64,7 @@ insertNotification() ::= <<
       , :notification_key
       , :created_dt
       , :effective_dt
+      , :queue_name
       , :processing_owner
       , :processing_available_dt
       , :processing_state

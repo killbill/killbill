@@ -19,9 +19,10 @@ package com.ning.billing.invoice.api.user;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.invoice.api.InvoicePayment;
 import org.joda.time.DateTime;
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -51,6 +52,17 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
+        dao.notifyOfPaymentAttempt(invoicePayment);
+    }
+    
+    @Override
+	public BigDecimal getAccountBalance(UUID accountId) {
+		BigDecimal result = dao.getAccountBalance(accountId);
+		return result == null ? BigDecimal.ZERO : result;
+	}
+
+    @Override
     public List<InvoiceItem> getInvoiceItemsByAccount(final UUID accountId) {
         return dao.getInvoiceItemsByAccount(accountId);
     }
@@ -61,13 +73,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void paymentAttemptFailed(final UUID invoiceId, final UUID paymentId, final DateTime paymentAttemptDate) {
-        dao.notifyFailedPayment(invoiceId, paymentId, paymentAttemptDate);
-    }
-
-    @Override
-    public void paymentAttemptSuccessful(final UUID invoiceId, final BigDecimal amount, final Currency currency,
-                                         final UUID paymentId, final DateTime paymentDate) {
-        dao.notifySuccessfulPayment(invoiceId, amount, currency, paymentId, paymentDate);
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
+        return dao.getUnpaidInvoicesByAccountId(accountId, upToDate);
     }
 }

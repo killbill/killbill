@@ -1,4 +1,4 @@
-group IFieldStoreDao;
+group FieldStoreDao;
 
 save() ::= <<
   INSERT INTO custom_fields(id, object_id, object_type, field_name, field_value)

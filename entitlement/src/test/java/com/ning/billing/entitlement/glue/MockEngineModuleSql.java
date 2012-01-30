@@ -25,7 +25,7 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
 
 public class MockEngineModuleSql extends MockEngineModule {
 
@@ -37,7 +37,7 @@ public class MockEngineModuleSql extends MockEngineModule {
 
 
     protected void installDBI() {
-        bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
+        bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
         final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
         bind(DbiConfig.class).toInstance(config);
     }

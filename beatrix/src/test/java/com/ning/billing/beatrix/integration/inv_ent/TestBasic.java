@@ -22,6 +22,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -59,7 +60,7 @@ import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.eventbus.BusService;
+import com.ning.billing.util.bus.BusService;
 
 @Guice(modules = {MockModule.class})
 public class TestBasic {
@@ -153,7 +154,7 @@ public class TestBasic {
                 h.execute("truncate table claimed_notifications");
                 h.execute("truncate table invoices");
                 h.execute("truncate table invoice_items");
-                h.execute("truncate table tag_descriptions");
+                h.execute("truncate table tag_definitions");
                 h.execute("truncate table tags");
                 return null;
             }
@@ -190,6 +191,7 @@ public class TestBasic {
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
         assertNotNull(subscription);
         assertTrue(busHandler.isCompleted(5000));
+        log.info("testSimple passed first busHandler checkpoint.");
 
         //
         // VERIFY CTD HAS BEEN SET
@@ -207,7 +209,7 @@ public class TestBasic {
         String newProductName = "Assault-Rifle";
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
         assertTrue(busHandler.isCompleted(5000));
-
+        log.info("testSimple passed second busHandler checkpoint.");
 
         //
         // VERIFY AGAIN CTD HAS BEEN SET
@@ -237,6 +239,7 @@ public class TestBasic {
         clock.addDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
         //clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
         assertTrue(busHandler.isCompleted(5000));
+        log.info("testSimple passed third busHandler checkpoint.");
 
         //
         // MOVE TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE
@@ -246,12 +249,13 @@ public class TestBasic {
         do {
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
+            busHandler.pushExpectedEvent(NextEvent.INVOICE);
             assertTrue(busHandler.isCompleted(5000));
             lastCtd = checkAndGetCTD(subscription.getId());
         } while (maxCycles-- > 0);
 
         //
-        // FINALY CANCEL SUBSCRIPTION EOT
+        // FINALLY CANCEL SUBSCRIPTION EOT
         //
         subscription.cancel(clock.getUTCNow(), false);
 
@@ -304,6 +308,51 @@ public class TestBasic {
             @Override
             public String getPaymentProviderName() {
                 return "Paypal";
+            }
+
+            @Override
+            public DateTimeZone getTimeZone() {
+                return null;
+            }
+
+            @Override
+            public String getLocale() {
+                return null;
+            }
+
+            @Override
+            public String getAddress1() {
+                return null;
+            }
+
+            @Override
+            public String getAddress2() {
+                return null;
+            }
+
+            @Override
+            public String getCompanyName() {
+                return null;
+            }
+
+            @Override
+            public String getCity() {
+                return null;
+            }
+
+            @Override
+            public String getStateOrProvince() {
+                return null;
+            }
+
+            @Override
+            public String getPostalCode() {
+                return null;
+            }
+
+            @Override
+            public String getCountry() {
+                return null;
             }
         };
         return accountData;

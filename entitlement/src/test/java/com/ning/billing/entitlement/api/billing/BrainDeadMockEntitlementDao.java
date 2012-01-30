@@ -58,20 +58,18 @@ class BrainDeadMockEntitlementDao implements EntitlementDao {
 	}
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
 	public Subscription getBaseSubscription(final UUID bundleId) {
 		throw new UnsupportedOperationException();
-
 	}
 
 	@Override
 	public List<Subscription> getSubscriptions(final UUID bundleId) {
 		throw new UnsupportedOperationException();
-
 	}
 
 	@Override
@@ -102,7 +100,6 @@ class BrainDeadMockEntitlementDao implements EntitlementDao {
 		throw new UnsupportedOperationException();
 	}
 
-
 	@Override
 	public void createSubscription(final SubscriptionData subscription,
 			final List<EntitlementEvent> initialEvents) {
@@ -113,7 +110,6 @@ class BrainDeadMockEntitlementDao implements EntitlementDao {
 	public void cancelSubscription(final UUID subscriptionId,
 			final EntitlementEvent cancelEvent) {
 		throw new UnsupportedOperationException();
-
 	}
 
 	@Override

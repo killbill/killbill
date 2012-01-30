@@ -27,6 +27,10 @@ public abstract class BillingModeBase implements BillingMode {
         if (endDate.isBefore(startDate)) {throw new InvalidDateSequenceException();}
         if (targetDate.isBefore(startDate)) {throw new InvalidDateSequenceException();}
 
+        if (billingPeriod == BillingPeriod.NO_BILLING_PERIOD) {
+            return BigDecimal.ZERO;
+        }
+
         BigDecimal precedingProRation = calculateProRationBeforeFirstBillingPeriod(startDate, billingCycleDay, billingPeriod);
 
         DateTime firstBillCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);

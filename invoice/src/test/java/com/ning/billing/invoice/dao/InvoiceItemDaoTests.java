@@ -21,7 +21,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.glue.InvoiceModuleMock;
+import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import org.apache.commons.io.IOUtils;
@@ -45,7 +45,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         DateTime endDate = new DateTime(2011, 11, 1, 0, 0, 0, 0);
         BigDecimal rate = new BigDecimal("20.00");
 
-        InvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, "test", rate, rate, Currency.USD);
+        InvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, "test", rate, rate, rate, Currency.USD);
         invoiceItemDao.create(item);
 
         InvoiceItem thisItem = invoiceItemDao.getById(item.getId().toString());
@@ -56,8 +56,9 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         assertEquals(thisItem.getStartDate(), item.getStartDate());
         assertEquals(thisItem.getEndDate(), item.getEndDate());
         assertEquals(thisItem.getDescription(), item.getDescription());
-        assertEquals(thisItem.getAmount().compareTo(item.getAmount()), 0);
-        assertEquals(thisItem.getRate().compareTo(item.getRate()), 0);
+        assertEquals(thisItem.getRecurringAmount().compareTo(item.getRecurringAmount()), 0);
+        assertEquals(thisItem.getRecurringRate().compareTo(item.getRecurringRate()), 0);
+        assertEquals(thisItem.getFixedAmount().compareTo(item.getFixedAmount()), 0);
         assertEquals(thisItem.getCurrency(), item.getCurrency());
     }
 
@@ -69,7 +70,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
 
         for (int i = 0; i < 3; i++) {
             UUID invoiceId = UUID.randomUUID();
-            DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate.plusMonths(i), startDate.plusMonths(i + 1), "test", rate, rate, Currency.USD);
+            DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate.plusMonths(i), startDate.plusMonths(i + 1), "test", rate, rate, null, Currency.USD);
             invoiceItemDao.create(item);
         }
 
@@ -86,7 +87,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         for (int i = 0; i < 5; i++) {
             UUID subscriptionId = UUID.randomUUID();
             BigDecimal amount = rate.multiply(new BigDecimal(i + 1));
-            DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", amount, amount, Currency.USD);
+            DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", amount, amount, amount, Currency.USD);
             invoiceItemDao.create(item);
         }
 
@@ -107,7 +108,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         BigDecimal rate = new BigDecimal("20.00");
 
         UUID subscriptionId = UUID.randomUUID();
-        DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", rate, rate, Currency.USD);
+        DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, startDate.plusMonths(1), "test", rate, rate, rate, Currency.USD);
         invoiceItemDao.create(item);
 
         List<InvoiceItem> items = invoiceItemDao.getInvoiceItemsByAccount(accountId.toString());

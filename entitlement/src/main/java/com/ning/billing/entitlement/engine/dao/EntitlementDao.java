@@ -43,7 +43,7 @@ public interface EntitlementDao {
     public Subscription getSubscriptionFromId(UUID subscriptionId);
 
     // Account retrieval
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) throws EntitlementBillingApiException;
+    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId);
 
     // Subscription retrieval
     public Subscription getBaseSubscription(UUID bundleId);

@@ -144,13 +144,13 @@ public class TestBusHandler {
         log.debug("notifyIfStackEmpty EXIT");
     }
 
-    private void assertEqualsNicely(NextEvent expected) {
+    private void assertEqualsNicely(NextEvent received) {
 
         boolean foundIt = false;
         Iterator<NextEvent> it = nextExpectedEvent.iterator();
         while (it.hasNext()) {
             NextEvent ev = it.next();
-            if (ev == expected) {
+            if (ev == received) {
                 it.remove();
                 foundIt = true;
                 break;
@@ -158,7 +158,7 @@ public class TestBusHandler {
         }
         if (!foundIt) {
             Joiner joiner = Joiner.on(" ");
-            System.err.println("Expected event " + expected + " got " + joiner.join(nextExpectedEvent));
+            System.err.println("Received event " + received + "; expected " + joiner.join(nextExpectedEvent));
             System.exit(1);
         }
     }

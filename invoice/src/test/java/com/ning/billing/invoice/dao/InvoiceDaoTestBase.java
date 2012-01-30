@@ -16,42 +16,63 @@
 
 package com.ning.billing.invoice.dao;
 
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
 import java.io.IOException;
+
+import com.ning.billing.invoice.tests.InvoicingTestBase;
 import org.apache.commons.io.IOUtils;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.invoice.glue.InvoiceModuleMock;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.BusService;
+import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
+import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.bus.DefaultBusService;
 
-import static org.testng.Assert.fail;
-
-public abstract class InvoiceDaoTestBase {
+public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected InvoiceDao invoiceDao;
     protected InvoiceItemSqlDao invoiceItemDao;
+    protected InvoicePaymentSqlDao invoicePaymentDao;
+    protected InvoiceModuleWithEmbeddedDb module;
 
-    @BeforeClass()
+    @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
-            InvoiceModuleMock module = new InvoiceModuleMock();
-            final String ddl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-            module.createDb(ddl);
+            module = new InvoiceModuleWithEmbeddedDb();
+            final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+            final String entitlementDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+
+            module.startDb();
+            module.initDb(invoiceDdl);
+            module.initDb(entitlementDdl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
             invoiceDao = injector.getInstance(InvoiceDao.class);
             invoiceDao.test();
 
-            invoiceItemDao = module.getInvoiceItemDao();
+            invoiceItemDao = module.getInvoiceItemSqlDao();
+
+            invoicePaymentDao = module.getInvoicePaymentSqlDao();
 
             BusService busService = injector.getInstance(BusService.class);
-            ((DefaultEventBusService) busService).startBus();
+            ((DefaultBusService) busService).startBus();
+
+            assertTrue(true);
         }
         catch (Throwable t) {
             fail(t.toString());
         }
+    }
+
+    @AfterClass(alwaysRun = true)
+    protected void tearDown() {
+        module.stopDb();
+        assertTrue(true);
     }
 }

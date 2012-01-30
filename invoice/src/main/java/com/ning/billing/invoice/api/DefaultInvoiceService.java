@@ -21,7 +21,7 @@ import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.util.eventbus.Bus;
+import com.ning.billing.util.bus.Bus;
 
 public class DefaultInvoiceService implements InvoiceService {
 

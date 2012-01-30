@@ -47,11 +47,11 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.util.eventbus.Bus;
-import com.ning.billing.util.tag.DefaultTag;
-import com.ning.billing.util.tag.DefaultTagDescription;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.tag.DescriptiveTag;
+import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.dao.TagDescriptionDao;
+import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -74,8 +74,8 @@ public class TestAnalyticsService
 {
     private static final String KEY = "12345";
     private static final String ACCOUNT_KEY = "pierre-12345";
-    private static final DefaultTagDescription TAG_ONE = new DefaultTagDescription("batch20", "something", false, false, "pierre", new DateTime(DateTimeZone.UTC));
-    private static final DefaultTagDescription TAG_TWO = new DefaultTagDescription("awesome", "something", false, false, "pierre", new DateTime(DateTimeZone.UTC));
+    private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something", "pierre", new DateTime(DateTimeZone.UTC));
+    private static final DefaultTagDefinition TAG_TWO = new DefaultTagDefinition("awesome", "something", "pierre", new DateTime(DateTimeZone.UTC));
 
     @Inject
     private AccountUserApi accountApi;
@@ -84,7 +84,7 @@ public class TestAnalyticsService
     private EntitlementUserApi entitlementApi;
 
     @Inject
-    private TagDescriptionDao tagDao;
+    private TagDefinitionSqlDao tagDao;
 
     @Inject
     private AnalyticsService service;
@@ -118,8 +118,8 @@ public class TestAnalyticsService
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
         try {
             List<Tag> tags = new ArrayList<Tag>();
-            tags.add(new DefaultTag(TAG_ONE, "pierre", new DateTime(DateTimeZone.UTC)));
-            tags.add(new DefaultTag(TAG_TWO, "pierre", new DateTime(DateTimeZone.UTC)));
+            tags.add(new DescriptiveTag(TAG_ONE, "pierre", new DateTime(DateTimeZone.UTC)));
+            tags.add(new DescriptiveTag(TAG_TWO, "pierre", new DateTime(DateTimeZone.UTC)));
 
             final Account storedAccount = accountApi.createAccount(account, null, tags);
 

@@ -34,9 +34,11 @@ public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
 
     String getDescription();
 
-    BigDecimal getAmount();
+    BigDecimal getRecurringAmount();
 
-    BigDecimal getRate();
+    BigDecimal getRecurringRate();
+
+    BigDecimal getFixedAmount();
 
     Currency getCurrency();
 

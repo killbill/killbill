@@ -21,15 +21,9 @@ import org.joda.time.DateTime;
 import com.ning.billing.util.entity.Entity;
 
 public interface Tag extends Entity {
-    UUID getTagDescriptionId();
-
-    String getName();
-
-    boolean getProcessPayment();
-
-    boolean getGenerateInvoice();
+    String getTagDefinitionName();
 
     String getAddedBy();
 
-    DateTime getDateAdded();
+    DateTime getAddedDate();
 }
