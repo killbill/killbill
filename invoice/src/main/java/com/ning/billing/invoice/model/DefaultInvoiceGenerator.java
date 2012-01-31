@@ -150,8 +150,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
             BillingMode billingMode = getBillingMode(event.getBillingMode());
             DateTime billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
-
-            addInvoiceItem(invoiceId, items, event, billThroughDate, recurringAmount, recurringRate, fixedPrice, targetCurrency);
+            if (!billThroughDate.isAfter(targetDate.plusMonths(event.getBillingPeriod().getNumberOfMonths()))) {
+                addInvoiceItem(invoiceId, items, event, billThroughDate, recurringAmount, recurringRate, fixedPrice, targetCurrency);
+            }
     	} catch (CatalogApiException e) {
             log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s", 
                     invoiceId.toString(), 

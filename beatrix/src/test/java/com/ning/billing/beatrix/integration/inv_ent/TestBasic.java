@@ -231,6 +231,7 @@ public class TestBasic {
         newProductName = "Pistol";
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
         log.info("testSimple has passed third busHandler checkpoint (no events)");
+
         //
         // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
         //

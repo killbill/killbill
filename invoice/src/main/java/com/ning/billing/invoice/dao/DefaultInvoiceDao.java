@@ -34,8 +34,12 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.util.bus.Bus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DefaultInvoiceDao implements InvoiceDao {
+    private final static Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
+
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
@@ -248,6 +252,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private void setChargedThroughDates(final InvoiceSqlDao dao, final Collection<InvoiceItem> invoiceItems) {
         for (InvoiceItem invoiceItem : invoiceItems) {
             if (invoiceItem.getEndDate() != null) {
+                log.info("Setting CTD for invoice item {} to {}", invoiceItem.getId().toString(), invoiceItem.getEndDate().toString());
                 entitlementBillingApi.setChargedThroughDateFromTransaction(dao, invoiceItem.getSubscriptionId(), invoiceItem.getEndDate());
             }
         }
