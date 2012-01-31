@@ -488,7 +488,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BillingEvent event4 = new DefaultBillingEvent(subscription, new DateTime("2012-03-01T00:02:04.000Z"),
                                                       pistol, pistolMonthlyEvergreen,
                                                       null, pistolEvergreenPrice, BillingPeriod.MONTHLY, billCycleDay,
-                                                      BillingModeType.IN_ADVANCE, "Test Event 3");
+                                                      BillingModeType.IN_ADVANCE, "Test Event 4");
         events.add(event4);
 
         InvoiceItemList items = new InvoiceItemList();

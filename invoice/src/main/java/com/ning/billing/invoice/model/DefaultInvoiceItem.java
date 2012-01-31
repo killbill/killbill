@@ -18,6 +18,7 @@ package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
 import org.joda.time.DateTime;
 
 import javax.annotation.Nullable;
@@ -248,9 +249,28 @@ public class DefaultInvoiceItem implements InvoiceItem {
         sb.append("subscriptionId = ").append(subscriptionId.toString()).append(", ");
         sb.append("startDate = ").append(startDate.toString()).append(", ");
         sb.append("endDate = ").append(startDate.toString()).append(", ");
-        sb.append("recurringAmount = ") .append(recurringAmount.toString()).append(", ");
-        sb.append("recurringRate = ").append(recurringRate.toString()).append(", ");
-        sb.append("fixedAmount = ").append(fixedAmount.toString());
+        sb.append("recurringAmount = ");
+        if (recurringAmount == null) {
+            sb.append("null");
+        } else {
+            sb.append(recurringAmount.toString());
+        }
+        sb.append(", ");
+
+        sb.append("recurringRate = ");
+        if (recurringRate == null) {
+            sb.append("null");
+        } else {
+            sb.append(recurringRate.toString());
+        }
+        sb.append(", ");
+
+        sb.append("fixedAmount = ");
+        if (fixedAmount == null) {
+            sb.append("null");
+        } else {
+            sb.append(fixedAmount.toString());
+        }
 
         sb.append("}");
         return sb.toString();
