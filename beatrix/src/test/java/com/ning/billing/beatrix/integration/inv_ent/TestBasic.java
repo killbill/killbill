@@ -161,6 +161,7 @@ public class TestBasic {
         });
     }
 
+
     private DateTime checkAndGetCTD(UUID subscriptionId) {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscriptionId);
         DateTime ctd = subscription.getChargedThroughDate();
@@ -170,9 +171,9 @@ public class TestBasic {
     }
 
     @Test(groups = "fast", enabled = true)
-    public void testSimple() throws Exception {
+    public void testBasePlanComplete() throws Exception {
         long DELAY = 5000;
-
+        
         Account account = accountUserApi.createAccount(getAccountData(), null, null);
         assertNotNull(account);
 
@@ -217,6 +218,13 @@ public class TestBasic {
         DateTime ctd = checkAndGetCTD(subscription.getId());
 
         //
+        // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
+        //
+        busHandler.pushExpectedEvent(NextEvent.PHASE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+
+        //
         // CHANGE PLAN EOT AND EXPECT NOTHING
         //
         newTerm = BillingPeriod.MONTHLY;
@@ -229,7 +237,7 @@ public class TestBasic {
         //
         busHandler.pushExpectedEvent(NextEvent.CHANGE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        clock.setDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
+        clock.addDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
         //clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed fourth busHandler checkpoint.");
@@ -251,12 +259,19 @@ public class TestBasic {
         //
         subscription.cancel(clock.getUTCNow(), false);
 
-        // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL, NextEvent.INVOICE
+        // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         busHandler.pushExpectedEvent(NextEvent.CANCEL);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
         Interval it = new Interval(lastCtd, clock.getUTCNow());
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(busHandler.isCompleted(DELAY));
+
+        //
+        // CHECK AGAIN THERE IS NO MORE INVOICES GENERATED
+        //
+        busHandler.reset();
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
+        assertTrue(busHandler.isCompleted(DELAY));
+        lastCtd = checkAndGetCTD(subscription.getId());
     }
 
 

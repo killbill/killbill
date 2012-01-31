@@ -109,6 +109,7 @@ public class TestBusHandler {
 
     public void reset() {
         nextExpectedEvent.clear();
+        completed = true;
     }
 
     public void pushExpectedEvent(NextEvent next) {

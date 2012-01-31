@@ -85,34 +85,31 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
 
         log.debug(String.format("NotificationQueue %s getEventsReady START effectiveNow =  %s",  getFullQName(), now));
 
-        List<Notification> result = dao.inTransaction(new Transaction<List<Notification>, NotificationSqlDao>() {
-
+        List<Notification> input = dao.inTransaction(new Transaction<List<Notification>, NotificationSqlDao>() {
             @Override
             public List<Notification> inTransaction(NotificationSqlDao transactionalDao,
                     TransactionStatus status) throws Exception {
-
-                List<Notification> claimedNotifications = new ArrayList<Notification>();
-                List<Notification> input = transactionalDao.getReadyNotifications(now, config.getDaoMaxReadyEvents(), getFullQName());
-                for (Notification cur : input) {
-                    final boolean claimed = (transactionalDao.claimNotification(hostname, nextAvailable, cur.getId().toString(), now) == 1);
-                    if (claimed) {
-                        claimedNotifications.add(cur);
-                        transactionalDao.insertClaimedHistory(seqId, hostname, now, cur.getId().toString());
-                    }
-                }
-                return claimedNotifications;
+                return transactionalDao.getReadyNotifications(now, config.getDaoMaxReadyEvents(), getFullQName());
             }
         });
 
-        for (Notification cur : result) {
-            log.debug(String.format("NotificationQueue %sclaimed events %s",
+        List<Notification> claimedNotifications = new ArrayList<Notification>();
+        for (Notification cur : input) {
+            final boolean claimed = (dao.claimNotification(hostname, nextAvailable, cur.getId().toString(), now) == 1);
+            if (claimed) {
+                claimedNotifications.add(cur);
+                dao.insertClaimedHistory(seqId, hostname, now, cur.getId().toString());
+            }
+        }
+
+        for (Notification cur : claimedNotifications) {
+            log.debug(String.format("NotificationQueue %s claimed events %s",
                     getFullQName(), cur.getId()));
             if (cur.getOwner() != null && !cur.getOwner().equals(hostname)) {
                 log.warn(String.format("NotificationQueue %s stealing notification %s from %s",
                         getFullQName(), cur, cur.getOwner()));
             }
         }
-        return result;
+        return claimedNotifications;
     }
-    
 }
