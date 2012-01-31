@@ -66,7 +66,7 @@ import com.ning.billing.util.bus.BusService;
 public class TestBasic {
 
     private static final Logger log = LoggerFactory.getLogger(TestBasic.class);
-    private static long AT_LEAST_ONE_MONTH_MS = (31 * 24 * 3600 * 1000);
+    private static long AT_LEAST_ONE_MONTH_MS =  31L * 24L * 3600L * 1000L;
 
     @Inject IDBI dbi;
 
@@ -172,7 +172,7 @@ public class TestBasic {
     @Test(groups = "fast", enabled = true)
     public void testBasePlanComplete() throws Exception {
         long DELAY = 5000;
-        
+
         Account account = accountUserApi.createAccount(getAccountData(), null, null);
         assertNotNull(account);
 
