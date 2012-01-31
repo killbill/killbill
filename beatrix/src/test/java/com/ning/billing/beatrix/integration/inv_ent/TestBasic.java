@@ -88,7 +88,6 @@ public class TestBasic {
     @Inject
     private AccountService accountService;
 
-
     private EntitlementUserApi entitlementUserApi;
 
     private InvoiceUserApi invoiceUserApi;
