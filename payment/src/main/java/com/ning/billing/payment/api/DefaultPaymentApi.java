@@ -68,9 +68,6 @@ public class DefaultPaymentApi implements PaymentApi {
             if (account != null) {
                 return getPaymentProviderPlugin(account);
             }
-            else {
-                throw new IllegalArgumentException("Did not find account with accountKey " + accountKey);
-            }
         }
 
         return pluginRegistry.getPlugin(paymentProviderName);
@@ -105,21 +102,21 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, String> addPaypalPaymentMethod(@Nullable String accountKey, PaypalPaymentMethodInfo paypalPaymentMethod) {
+    public Either<PaymentError, String> addPaymentMethod(@Nullable String accountKey, PaymentMethodInfo paymentMethod) {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        return plugin.addPaypalPaymentMethod(accountKey, paypalPaymentMethod);
+        return plugin.addPaymentMethod(accountKey, paymentMethod);
     }
 
     @Override
     public Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId) {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        return plugin.deletePaypalPaymentMethod(accountKey, paymentMethodId);
+        return plugin.deletePaymentMethod(accountKey, paymentMethodId);
     }
 
     @Override
     public Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo) {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        return plugin.updatePaypalPaymentMethod(accountKey, paymentMethodInfo);
+        return plugin.updatePaymentMethod(accountKey, paymentMethodInfo);
     }
 
     @Override
@@ -182,9 +179,9 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, PaymentProviderAccount> updatePaymentProviderAccount(Account account) {
+    public Either<PaymentError, Void> updatePaymentProviderAccount(Account account) {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
-        return plugin.updatePaymentProviderAccount(account);
+        return plugin.updatePaymentProviderAccountWithExistingContact(account);
     }
 
     @Override

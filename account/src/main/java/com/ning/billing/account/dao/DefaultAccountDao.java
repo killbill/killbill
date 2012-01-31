@@ -18,10 +18,11 @@ package com.ning.billing.account.dao;
 
 import java.util.List;
 import java.util.UUID;
+
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
-import org.skife.jdbi.v2.exceptions.TransactionFailedException;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
@@ -157,7 +158,7 @@ public class DefaultAccountDao implements AccountDao {
             }
         }
     }
-    
+
     @Override
 	public void deleteByKey(final String externalKey) throws AccountApiException {
     	try {
@@ -204,7 +205,7 @@ public class DefaultAccountDao implements AccountDao {
         }
     }
 
-    private void saveCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao, final boolean isCreation) {
+    private void saveTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao, final boolean isCreation) {
         String accountId = account.getId().toString();
         String objectType = account.getObjectName();
 
@@ -219,7 +220,7 @@ public class DefaultAccountDao implements AccountDao {
         }
     }
 
-    private void saveTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao, final boolean isCreation) {
+    private void saveCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao, final boolean isCreation) {
         String accountId = account.getId().toString();
         String objectType = account.getObjectName();
 
@@ -234,5 +235,5 @@ public class DefaultAccountDao implements AccountDao {
         }
     }
 
-	
+
 }
