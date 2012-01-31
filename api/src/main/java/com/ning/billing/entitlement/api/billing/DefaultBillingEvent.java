@@ -16,6 +16,8 @@
 
 package com.ning.billing.entitlement.api.billing;
 
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Currency;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -129,5 +131,38 @@ public class DefaultBillingEvent implements BillingEvent {
     @Override
     public InternationalPrice getRecurringPrice() {
         return recurringPrice;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("BillingEvent {subscriptionId = ").append(subscription.getId().toString()).append(", ");
+        sb.append("plan = ").append(plan.getName()).append(", ");
+        sb.append("phase = ").append(planPhase.getName()).append(", ");
+        sb.append("effectiveDate = ").append(effectiveDate.toString()).append(", ");
+        sb.append("billCycleDay = ").append(billCycleDay).append(", ");
+        sb.append("recurringPrice(USD) = ");
+
+        try {
+            sb.append(recurringPrice.getPrice(Currency.USD).toString());
+        } catch (Exception e) {
+            sb.append("null");
+        }
+
+        sb.append(", ");
+        sb.append("fixedPrice(USD) = ");
+
+        try {
+            sb.append(fixedPrice.getPrice(Currency.USD).toString());
+        } catch (Exception e) {
+            sb.append("null");
+        }
+
+        sb.append(", ");
+
+        sb.append("billingPeriod = ").append(billingPeriod.toString());
+        sb.append("}");
+
+        return sb.toString();
     }
 }

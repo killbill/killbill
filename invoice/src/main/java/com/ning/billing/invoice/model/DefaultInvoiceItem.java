@@ -239,4 +239,20 @@ public class DefaultInvoiceItem implements InvoiceItem {
         if ((value1 == null) ^ (value2 == null)) {return false;}
         return (value1.add(value2).compareTo(BigDecimal.ZERO) == 0);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
+        sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
+        sb.append("subscriptionId = ").append(subscriptionId.toString()).append(", ");
+        sb.append("startDate = ").append(startDate.toString()).append(", ");
+        sb.append("endDate = ").append(startDate.toString()).append(", ");
+        sb.append("recurringAmount = ") .append(recurringAmount.toString()).append(", ");
+        sb.append("recurringRate = ").append(recurringRate.toString()).append(", ");
+        sb.append("fixedAmount = ").append(fixedAmount.toString());
+
+        sb.append("}");
+        return sb.toString();
+    }
 }

@@ -36,18 +36,18 @@ import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 
 public class DefaultAccountDao implements AccountDao {
-    private final AccountSqlDao accountDao;
+    private final AccountSqlDao accountSqlDao;
     private final Bus eventBus;
 
     @Inject
     public DefaultAccountDao(IDBI dbi, Bus eventBus) {
         this.eventBus = eventBus;
-        this.accountDao = dbi.onDemand(AccountSqlDao.class);
+        this.accountSqlDao = dbi.onDemand(AccountSqlDao.class);
     }
 
     @Override
     public Account getAccountByKey(final String key) {
-        return accountDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
+        return accountSqlDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
             @Override
             public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
                 Account account = accountSqlDao.getAccountByKey(key);
@@ -65,35 +65,30 @@ public class DefaultAccountDao implements AccountDao {
         if (externalKey == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_CANNOT_MAP_NULL_KEY, "");
         }
-        return accountDao.getIdFromKey(externalKey);
+        return accountSqlDao.getIdFromKey(externalKey);
     }
 
     @Override
     public Account getById(final String id) {
-        return accountDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
-            @Override
-            public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
-                Account account = accountSqlDao.getById(id);
-                if (account != null) {
-                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
-                    setTagsFromWithinTransaction(account, accountSqlDao);
-                }
-                return account;
-            }
-        });
+        Account account = accountSqlDao.getById(id);
+        if (account != null) {
+            setCustomFieldsFromWithinTransaction(account, accountSqlDao);
+            setTagsFromWithinTransaction(account, accountSqlDao);
+        }
+        return account;
     }
 
 
     @Override
     public List<Account> get() {
-        return accountDao.get();
+        return accountSqlDao.get();
     }
 
     @Override
     public void create(final Account account) throws AccountApiException {
         final String key = account.getExternalKey();
         try {
-            accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
                     Account currentAccount = accountSqlDao.getAccountByKey(key);
@@ -122,7 +117,7 @@ public class DefaultAccountDao implements AccountDao {
     @Override
     public void update(final Account account) throws AccountApiException {
         try {
-            accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
                     String accountId = account.getId().toString();
@@ -160,7 +155,7 @@ public class DefaultAccountDao implements AccountDao {
     @Override
 	public void deleteByKey(final String externalKey) throws AccountApiException {
     	try {
-            accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
 
@@ -180,7 +175,7 @@ public class DefaultAccountDao implements AccountDao {
 
     @Override
     public void test() {
-        accountDao.test();
+        accountSqlDao.test();
     }
 
     private void setCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {

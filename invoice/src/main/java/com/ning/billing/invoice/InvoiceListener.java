@@ -50,6 +50,8 @@ public class InvoiceListener {
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
 
+    private final static boolean VERBOSE_OUTPUT = true;
+
     @Inject
     public InvoiceListener(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
                            final EntitlementBillingApi entitlementBillingApi,
@@ -107,7 +109,19 @@ public class InvoiceListener {
         InvoiceItemList invoiceItemList = new InvoiceItemList(items);
         Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoiceItemList, targetDate, targetCurrency);
 
-        if (invoice != null) {
+        if (invoice == null) {
+            log.info("Generated null invoice.");
+            if (VERBOSE_OUTPUT) {
+                for (BillingEvent event : events) {
+                    log.info(event.toString());
+                }
+                for (InvoiceItem item : invoiceItemList) {
+                    log.info(item.toString());
+                }
+            }
+        } else {
+            log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
+
             if (invoice.getNumberOfItems() > 0) {
                 invoiceDao.create(invoice);
             }

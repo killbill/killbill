@@ -44,8 +44,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     public Invoice generateInvoice(final UUID accountId, final BillingEventSet events,
                                    @Nullable final InvoiceItemList existingItems, final DateTime targetDate,
                                    final Currency targetCurrency) {
-        if (events == null) {return null;}
-        if (events.size() == 0) {return null;}
+        if (events == null) {
+            return null;
+        }
+
+        if (events.size() == 0) {
+            return null;
+        }
 
         DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, targetCurrency);
         InvoiceItemList currentItems = generateInvoiceItems(events, invoice.getId(), targetDate, targetCurrency);
@@ -61,7 +66,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     private InvoiceItemList reconcileInvoiceItems(final UUID invoiceId, final InvoiceItemList currentInvoiceItems,
                                                   final InvoiceItemList existingInvoiceItems) {
-        if (existingInvoiceItems == null) {
+        if ((existingInvoiceItems == null) || (existingInvoiceItems.size() == 0)) {
             return currentInvoiceItems;
         }
 

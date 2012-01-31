@@ -161,7 +161,6 @@ public class TestBasic {
         });
     }
 
-
     private DateTime checkAndGetCTD(UUID subscriptionId) {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscriptionId);
         DateTime ctd = subscription.getChargedThroughDate();
@@ -170,8 +169,9 @@ public class TestBasic {
         return ctd;
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testSimple() throws Exception {
+        long DELAY = 5000;
 
         Account account = accountUserApi.createAccount(getAccountData(), null, null);
         assertNotNull(account);
@@ -190,7 +190,7 @@ public class TestBasic {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
         assertNotNull(subscription);
-        assertTrue(busHandler.isCompleted(5000));
+        assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed first busHandler checkpoint.");
 
         //
@@ -208,7 +208,7 @@ public class TestBasic {
         String newPlanSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
         String newProductName = "Assault-Rifle";
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
-        assertTrue(busHandler.isCompleted(5000));
+        assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed second busHandler checkpoint.");
 
         //
@@ -223,7 +223,7 @@ public class TestBasic {
         newPlanSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
         newProductName = "Pistol";
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
-
+        log.info("testSimple has passed third busHandler checkpoint (no events)");
         //
         // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
         //
@@ -231,8 +231,8 @@ public class TestBasic {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         clock.setDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
         //clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
-        assertTrue(busHandler.isCompleted(5000));
-        log.info("testSimple passed third busHandler checkpoint.");
+        assertTrue(busHandler.isCompleted(DELAY));
+        log.info("testSimple passed fourth busHandler checkpoint.");
 
         //
         // MOVE TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE
@@ -242,8 +242,7 @@ public class TestBasic {
         do {
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
-            busHandler.pushExpectedEvent(NextEvent.INVOICE);
-            assertTrue(busHandler.isCompleted(5000));
+            assertTrue(busHandler.isCompleted(DELAY));
             lastCtd = checkAndGetCTD(subscription.getId());
         } while (maxCycles-- > 0);
 
@@ -257,7 +256,7 @@ public class TestBasic {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         Interval it = new Interval(lastCtd, clock.getUTCNow());
         clock.addDeltaFromReality(it.toDurationMillis());
-        assertTrue(busHandler.isCompleted(5000));
+        assertTrue(busHandler.isCompleted(DELAY));
     }
 
 

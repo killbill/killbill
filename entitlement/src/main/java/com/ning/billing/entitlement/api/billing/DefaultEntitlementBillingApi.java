@@ -20,7 +20,14 @@ import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.BillingAlignment;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -33,7 +40,13 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.UUID;
+
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
@@ -60,7 +73,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             subscriptions.addAll(dao.getSubscriptions(bundle.getId()));
         }
 
-        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();        
+        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         for (final Subscription subscription: subscriptions) {
         	for (final SubscriptionTransition transition : subscription.getAllTransitions()) {
         		try {
@@ -89,14 +102,16 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     	PlanPhase phase = transition.getNextPhase();
     	
     	BillingAlignment alignment = catalog.billingAlignment(
-    			new PlanPhaseSpecifier(product.getName(), 
+    			new PlanPhaseSpecifier(product.getName(),
     					product.getCategory(), 
     					phase.getBillingPeriod(), 
     					transition.getNextPriceList(), 
     					phase.getPhaseType()), 
     					transition.getRequestedTransitionTime());
     	int result = 0;
-    	Account account = accountApi.getAccountById(accountId);
+
+        Account account = accountApi.getAccountById(accountId);
+
     	switch (alignment) {
     		case ACCOUNT : 
     			result = account.getBillCycleDay();

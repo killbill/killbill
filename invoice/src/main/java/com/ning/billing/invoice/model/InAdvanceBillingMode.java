@@ -52,9 +52,13 @@ public class InAdvanceBillingMode extends BillingModeBase {
 
         DateTime proposedDate;
         if (billingCycleDay > lastDayOfMonth) {
-            proposedDate = buildDate(date.getYear(), date.getMonthOfYear(), lastDayOfMonth);
+            proposedDate = new DateTime(date.getYear(), date.getMonthOfYear(), lastDayOfMonth,
+                                        date.getHourOfDay(), date.getMinuteOfHour(),
+                                        date.getSecondOfMinute(), date.getMillisOfSecond());
         } else {
-            proposedDate = buildDate(date.getYear(), date.getMonthOfYear(), billingCycleDay);
+            proposedDate = new DateTime(date.getYear(), date.getMonthOfYear(), billingCycleDay,
+                                        date.getHourOfDay(), date.getMinuteOfHour(),
+                                        date.getSecondOfMinute(), date.getMillisOfSecond());
         }
 
         while (proposedDate.isBefore(date)) {
@@ -74,9 +78,13 @@ public class InAdvanceBillingMode extends BillingModeBase {
                 int lastDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
 
                 if (lastDayOfMonth < billingCycleDay) {
-                    proposedDate = buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfMonth);
+                    proposedDate = new DateTime(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfMonth,
+                                                proposedDate.getHourOfDay(), proposedDate.getMinuteOfHour(),
+                                                proposedDate.getSecondOfMinute(), proposedDate.getMillisOfSecond());
                 } else {
-                    proposedDate = buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay);
+                    proposedDate = new DateTime(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay,
+                                                proposedDate.getHourOfDay(), proposedDate.getMinuteOfHour(),
+                                                proposedDate.getSecondOfMinute(), proposedDate.getMillisOfSecond());
                 }
             }
         }
@@ -100,9 +108,13 @@ public class InAdvanceBillingMode extends BillingModeBase {
         if (proposedDate.dayOfMonth().get() < billingCycleDay) {
             int lastDayOfTheMonth = proposedDate.dayOfMonth().getMaximumValue();
             if (lastDayOfTheMonth < billingCycleDay) {
-                return buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfTheMonth);
+                return new DateTime(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfTheMonth,
+                                    proposedDate.getHourOfDay(), proposedDate.getMinuteOfHour(),
+                                    proposedDate.getSecondOfMinute(), proposedDate.getMillisOfSecond());
             } else {
-                return buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay);
+                return new DateTime(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay,
+                                    proposedDate.getHourOfDay(), proposedDate.getMinuteOfHour(),
+                                    proposedDate.getSecondOfMinute(), proposedDate.getMillisOfSecond());
             }
         } else {
             return proposedDate;

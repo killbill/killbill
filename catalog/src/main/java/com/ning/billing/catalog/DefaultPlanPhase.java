@@ -17,7 +17,13 @@
 package com.ning.billing.catalog;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;

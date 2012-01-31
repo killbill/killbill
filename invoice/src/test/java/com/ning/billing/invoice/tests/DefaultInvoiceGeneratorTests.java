@@ -22,6 +22,7 @@ import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -33,6 +34,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.dao.MockSubscription;
 import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
@@ -49,6 +51,8 @@ import java.util.UUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 @Test(groups = {"fast", "invoicing", "invoiceGenerator"})
 public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
@@ -415,6 +419,93 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         testInvoiceGeneration(events, invoiceItems, buildDateTime(2011, 10, 10), 1, expectedAmount);
     }
 
+    @Test
+    public void testZeroDollarEvents() {
+        Plan plan = new MockPlan();
+        PlanPhase planPhase = createMockMonthlyPlanPhase(ZERO);
+        BillingEventSet events = new BillingEventSet();
+        DateTime targetDate = buildDateTime(2011, 1, 1);
+        events.add(createBillingEvent(UUID.randomUUID(), targetDate, plan, planPhase, 1));
+
+        InvoiceGenerator invoiceGenerator = new DefaultInvoiceGenerator();
+        Invoice invoice = invoiceGenerator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
+
+        assertEquals(invoice.getNumberOfItems(), 1);
+    }
+
+    @Test
+    public void testEndDateIsCorrect() {
+        Plan plan = new MockPlan();
+        PlanPhase planPhase = createMockMonthlyPlanPhase(ZERO);
+        BillingEventSet events = new BillingEventSet();
+        DateTime targetDate = new DateTime();
+        events.add(createBillingEvent(UUID.randomUUID(), targetDate, plan, planPhase, targetDate.getDayOfMonth()));
+
+        InvoiceGenerator invoiceGenerator = new DefaultInvoiceGenerator();
+        Invoice invoice = invoiceGenerator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
+        InvoiceItem item = invoice.getInvoiceItems().get(0);
+
+        // end date of the invoice item should be equal to exactly one month later
+        assertEquals(item.getEndDate().compareTo(targetDate.plusMonths(1)), 0);
+    }
+
+    @Test
+    public void testDuplicatesEventBusIssues() {
+        Subscription subscription = new MockSubscription();
+        InternationalPrice zeroPrice = new MockInternationalPrice(new DefaultPrice(ZERO, Currency.USD));
+        int billCycleDay = 1;
+        BillingEventSet events = new BillingEventSet();
+
+        Plan shotgun = new MockPlan();
+        PlanPhase shotgunMonthly = createMockMonthlyPlanPhase(null, ZERO, PhaseType.TRIAL);
+        BillingEvent event1 = new DefaultBillingEvent(subscription, new DateTime("2012-01-31T00:02:04.000Z"),
+                                                      shotgun, shotgunMonthly,
+                                                      zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
+                                                      BillingModeType.IN_ADVANCE, "Test Event 1");
+        events.add(event1);
+
+
+        Plan assaultRifle = new MockPlan();
+        PlanPhase assaultRifleMonthly = createMockMonthlyPlanPhase(null, ZERO, PhaseType.TRIAL);
+        BillingEvent event2 = new DefaultBillingEvent(subscription, new DateTime("2012-01-31T00:02:04.000Z"),
+                                                      assaultRifle, assaultRifleMonthly,
+                                                      zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
+                                                      BillingModeType.IN_ADVANCE, "Test Event 2");
+        events.add(event2);
+
+        Plan pistol = new MockPlan();
+        PlanPhase pistolMonthlyTrial = createMockMonthlyPlanPhase(null, ZERO, PhaseType.TRIAL);
+        BigDecimal pistolMonthlyCost = new BigDecimal("29.95");
+        PlanPhase pistolMonthlyEvergreen = createMockMonthlyPlanPhase(pistolMonthlyCost, null, PhaseType.EVERGREEN);
+        InternationalPrice pistolEvergreenPrice = new MockInternationalPrice(new DefaultPrice(pistolMonthlyCost, Currency.USD));
+        BillingEvent event3 = new DefaultBillingEvent(subscription, new DateTime("2012-01-31T00:02:05.000Z"),
+                                                      pistol, pistolMonthlyTrial,
+                                                      zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
+                                                      BillingModeType.IN_ADVANCE, "Test Event 3");
+        events.add(event3);
+
+
+        BillingEvent event4 = new DefaultBillingEvent(subscription, new DateTime("2012-03-01T00:02:04.000Z"),
+                                                      pistol, pistolMonthlyEvergreen,
+                                                      null, pistolEvergreenPrice, BillingPeriod.MONTHLY, billCycleDay,
+                                                      BillingModeType.IN_ADVANCE, "Test Event 3");
+        events.add(event4);
+
+        InvoiceItemList items = new InvoiceItemList();
+        UUID subscriptionId = UUID.randomUUID();
+        InvoiceItem item1 = new DefaultInvoiceItem(UUID.randomUUID(), subscriptionId, new DateTime("2012-01-30T16:02:04.000-08:00"), new DateTime("2012-01-30T16:02:04.000-08:00"), "1", ZERO, ZERO, ZERO, Currency.USD);
+        InvoiceItem item2 = new DefaultInvoiceItem(UUID.randomUUID(), subscriptionId, new DateTime("2012-02-29T16:02:04.000-08:00"), new DateTime("2012-02-29T16:02:04.000-08:00"), "2", ZERO, new BigDecimal("249.95"), ZERO, Currency.USD);
+        InvoiceItem item3 = new DefaultInvoiceItem(UUID.randomUUID(), subscriptionId, new DateTime("2012-01-30T16:02:04.000-08:00"), new DateTime("2012-01-30T16:02:04.000-08:00"), "3", ZERO, ZERO, ZERO, Currency.USD);
+        items.add(item1);
+        items.add(item2);
+        items.add(item3);
+
+        InvoiceGenerator generator= new DefaultInvoiceGenerator();
+        Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, items, new DateTime(), Currency.USD);
+        assertNotNull(invoice);
+        assertTrue(invoice.getNumberOfItems() > 0);
+    }
+
     private MockPlanPhase createMockMonthlyPlanPhase() {
         return new MockPlanPhase(null, null, BillingPeriod.MONTHLY);
     }
@@ -422,6 +513,13 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate) {
         return new MockPlanPhase(new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD)),
                                  null, BillingPeriod.MONTHLY);
+    }
+
+    private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,
+                                                     final BigDecimal fixedRate, PhaseType phaseType) {
+        return new MockPlanPhase(new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD)),
+                                 new MockInternationalPrice(new DefaultPrice(fixedRate, Currency.USD)),
+                                 BillingPeriod.MONTHLY, phaseType);
     }
 
     private MockPlanPhase createMockMonthlyPlanPhase(final BigDecimal recurringRate, final PhaseType phaseType) {

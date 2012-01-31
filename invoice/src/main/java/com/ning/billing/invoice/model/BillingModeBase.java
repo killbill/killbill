@@ -60,10 +60,6 @@ public abstract class BillingModeBase implements BillingMode {
         return precedingProRation.add(numberOfBillingPeriods);
     }
 
-    DateTime buildDate(final int year, final int month, final int day) {
-        return new DateTime(year, month, day, 0, 0, 0, 0);
-    }
-
     boolean isNotBetween(DateTime targetDate, DateTime startDate, DateTime endDate) {
         return (targetDate.isBefore(startDate) || !targetDate.isBefore(endDate));
     }
