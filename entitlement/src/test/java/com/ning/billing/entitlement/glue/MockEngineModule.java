@@ -23,17 +23,17 @@ import com.ning.billing.util.glue.MockClockModule;
 
 public class MockEngineModule extends EntitlementModule {
 
-    @Override
-    protected void installClock() {
-        install (new MockClockModule());
-    }
-
-    @Override
-    protected void configure() {
-        super.configure();
+    protected void installModulesForTests() {
         install(new EventBusModule());
         install(new CatalogModule());
         install(new AccountModuleWithMocks());
+        install (new MockClockModule());	
+    }
+    
+    @Override
+    protected void configure() {
+        super.configure();
+        installModulesForTests();
     }
 
 }

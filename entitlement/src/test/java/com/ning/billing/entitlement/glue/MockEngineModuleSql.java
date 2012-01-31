@@ -33,11 +33,6 @@ public class MockEngineModuleSql extends MockEngineModule {
         bind(EntitlementDao.class).to(MockEntitlementDaoSql.class).asEagerSingleton();
     }
 
-    @Override
-    protected void installClock() {
-        bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-    }
-
     protected void installDBI() {
         bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
         final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);

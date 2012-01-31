@@ -33,6 +33,7 @@ import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.glue.MockClockModule;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 
@@ -64,7 +65,7 @@ public class TestTagStore {
             module.startDb();
             module.initDb(utilDdl);
 
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
+            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module, new MockClockModule());
             dbi = injector.getInstance(IDBI.class);
 
             tagStoreSqlDao = injector.getInstance(TagStoreSqlDao.class);

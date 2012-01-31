@@ -44,9 +44,4 @@ public class TagStoreModuleMock extends TagStoreModule {
         bind(IDBI.class).toInstance(helper.getDBI());
         super.configure();
     }
-    
-    @Override
-    protected void configureClock() {
-    	install(new MockClockModule());
-    }
 }

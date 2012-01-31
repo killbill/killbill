@@ -28,7 +28,7 @@ public class AccountModuleWithMocks extends AccountModule {
     }
     
     @Override
-    protected void installClock() {
+    protected void installTestModules() {
         install(new MockClockModule());
     }
 }

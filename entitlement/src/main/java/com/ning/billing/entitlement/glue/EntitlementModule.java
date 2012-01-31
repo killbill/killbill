@@ -48,10 +48,6 @@ public class EntitlementModule extends AbstractModule {
         bind(EntitlementConfig.class).toInstance(config);
     }
     
-    protected void installClock() {
-    	install(new ClockModule());
-    }
-
     protected void installApiEventProcessor() {
         bind(EventNotifier.class).to(DefaultApiEventProcessor.class).asEagerSingleton();
     }
@@ -78,6 +74,5 @@ public class EntitlementModule extends AbstractModule {
         installApiEventProcessor();
         installEntitlementDao();
         installEntitlementCore();
-        installClock();
     }
 }
