@@ -83,6 +83,8 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
 
             if (fixedAmountNull && (recurringRateNull || recurringAmountZero)) {
                 iterator.remove();
+            } else if (item.getStartDate().compareTo(item.getEndDate()) == 0) {
+                iterator.remove();
             }
         }
     }

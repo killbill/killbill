@@ -17,6 +17,8 @@
 package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.invoice.api.InvoiceItem;
 import org.joda.time.DateTime;
 
@@ -153,7 +155,8 @@ public class DefaultInvoiceItem implements InvoiceItem {
                 return 1;
             }
 
-            return getStartDate().compareTo(that.getStartDate());
+            int compareStartDates = getStartDate().compareTo(that.getStartDate());
+            return compareStartDates;
         } else {
             return compareSubscriptions;
         }

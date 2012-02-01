@@ -165,7 +165,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             BigDecimal fixedPrice = firstEvent.getFixedPrice() == null ? null : firstEvent.getFixedPrice().getPrice(targetCurrency);
 
             BigDecimal numberOfBillingPeriods;
-            BigDecimal recurringAmount =null;
+            BigDecimal recurringAmount = null;
 
             if (recurringRate != null) {
                 numberOfBillingPeriods = calculateNumberOfBillingPeriods(firstEvent, secondEvent, targetDate);
