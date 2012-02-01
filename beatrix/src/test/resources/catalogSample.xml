@@ -183,6 +183,20 @@ Use Cases to do:
 	</rules>
 
 	<plans>
+		<plan name="pistol-monthly-no-trial">
+			<product>Pistol</product>
+			<finalPhase type="EVERGREEN">
+				<duration>
+					<unit>UNLIMITED</unit>
+				</duration>
+				<billingPeriod>MONTHLY</billingPeriod>
+				<recurringPrice>
+					<price><currency>GBP</currency><value>29.95</value></price>
+					<price><currency>EUR</currency><value>29.95</value></price> 
+					<price><currency>USD</currency><value>29.95</value></price>								
+				</recurringPrice>
+			</finalPhase>
+		</plan>
 		<plan name="pistol-monthly">
 			<product>Pistol</product>
 			<initialPhases>
