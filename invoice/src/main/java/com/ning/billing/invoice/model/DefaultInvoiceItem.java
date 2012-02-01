@@ -18,7 +18,6 @@ package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
 import org.joda.time.DateTime;
 
 import javax.annotation.Nullable;
@@ -29,30 +28,34 @@ public class DefaultInvoiceItem implements InvoiceItem {
     private final UUID id;
     private final UUID invoiceId;
     private final UUID subscriptionId;
+    private final String planName;
+    private final String phaseName;
     private DateTime startDate;
     private DateTime endDate;
-    private final String description;
     private BigDecimal recurringAmount;
     private final BigDecimal recurringRate;
     private BigDecimal fixedAmount;
     private final Currency currency;
 
-    public DefaultInvoiceItem(UUID invoiceId, UUID subscriptionId, DateTime startDate, DateTime endDate,
-                              String description, BigDecimal recurringAmount, BigDecimal recurringRate,
+    public DefaultInvoiceItem(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
+                              DateTime startDate, DateTime endDate,
+                              BigDecimal recurringAmount, BigDecimal recurringRate,
                               BigDecimal fixedAmount, Currency currency) {
-        this(UUID.randomUUID(), invoiceId, subscriptionId, startDate, endDate, description,
+        this(UUID.randomUUID(), invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
              recurringAmount, recurringRate, fixedAmount, currency);
     }
 
-    public DefaultInvoiceItem(UUID id, UUID invoiceId, UUID subscriptionId, DateTime startDate, DateTime endDate,
-                              String description, BigDecimal recurringAmount, BigDecimal recurringRate,
+    public DefaultInvoiceItem(UUID id, UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
+                              DateTime startDate, DateTime endDate,
+                              BigDecimal recurringAmount, BigDecimal recurringRate,
                               BigDecimal fixedAmount, Currency currency) {
         this.id = id;
         this.invoiceId = invoiceId;
         this.subscriptionId = subscriptionId;
+        this.planName = planName;
+        this.phaseName = phaseName;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.description = description;
         this.recurringAmount = recurringAmount;
         this.recurringRate = recurringRate;
         this.fixedAmount = fixedAmount;
@@ -63,9 +66,10 @@ public class DefaultInvoiceItem implements InvoiceItem {
         this.id = UUID.randomUUID();
         this.invoiceId = invoiceId;
         this.subscriptionId = that.getSubscriptionId();
+        this.planName = that.getPlanName();
+        this.phaseName = that.getPhaseName();
         this.startDate = that.getStartDate();
         this.endDate = that.getEndDate();
-        this.description = that.getDescription();
         this.recurringAmount = that.getRecurringAmount();
         this.recurringRate = that.getRecurringRate();
         this.fixedAmount = that.getFixedAmount();
@@ -76,7 +80,7 @@ public class DefaultInvoiceItem implements InvoiceItem {
     public InvoiceItem asCredit(UUID invoiceId) {
         BigDecimal recurringAmountNegated = recurringAmount == null ? null : recurringAmount.negate();
         BigDecimal fixedAmountNegated = fixedAmount == null ? null : fixedAmount.negate();
-        return new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, description,
+        return new DefaultInvoiceItem(invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
                                       recurringAmountNegated, recurringRate, fixedAmountNegated, currency);
     }
 
@@ -96,6 +100,16 @@ public class DefaultInvoiceItem implements InvoiceItem {
     }
 
     @Override
+    public String getPlanName() {
+        return planName;
+    }
+
+    @Override
+    public String getPhaseName() {
+        return phaseName;
+    }
+
+    @Override
     public DateTime getStartDate() {
         return startDate;
     }
@@ -103,11 +117,6 @@ public class DefaultInvoiceItem implements InvoiceItem {
     @Override
     public DateTime getEndDate() {
         return endDate;
-    }
-
-    @Override
-    public String getDescription() {
-        return description;
     }
 
     @Override
@@ -156,18 +165,15 @@ public class DefaultInvoiceItem implements InvoiceItem {
         if (this.startDate.equals(that.getStartDate()) && this.endDate.equals(that.getEndDate())) {
             this.startDate = this.endDate;
                 this.recurringAmount = safeSubtract(this.recurringAmount, that.getRecurringAmount());
-                this.fixedAmount = safeSubtract(this.fixedAmount, that.getFixedAmount());
         } else {
             if (this.startDate.equals(that.getStartDate())) {
                 this.startDate = that.getEndDate();
                 this.recurringAmount = safeSubtract(this.recurringAmount, that.getRecurringAmount());
-                this.fixedAmount = safeSubtract(this.fixedAmount, that.getFixedAmount());
             }
 
             if (this.endDate.equals(that.getEndDate())) {
                 this.endDate = that.getStartDate();
                 this.recurringAmount = safeSubtract(this.recurringAmount, that.getRecurringAmount());
-                this.fixedAmount = safeSubtract(this.fixedAmount, that.getFixedAmount());
             }
         }
     }
@@ -192,13 +198,14 @@ public class DefaultInvoiceItem implements InvoiceItem {
 
     @Override
     public boolean duplicates(InvoiceItem that) {
-        if(!this.getSubscriptionId().equals(that.getSubscriptionId())) {return false;}
-        
-        //if (!compareNullableBigDecimal(this.getRecurringAmount(), that.getRecurringAmount())) {return false;}
-        if (!compareNullableBigDecimal(this.getRecurringRate(), that.getRecurringRate())) {return false;}
-        if (!compareNullableBigDecimal(this.getFixedAmount(), that.getFixedAmount())) {return false;}
+        if (!this.getSubscriptionId().equals(that.getSubscriptionId())) {return false;}
 
-        if(!this.getCurrency().equals(that.getCurrency())) {return false;}
+        if (!this.planName.equals(that.getPlanName())) {return false;}
+        if (!this.phaseName.equals(that.getPhaseName())) {return false;}
+
+        if (!compareNullableBigDecimal(this.getRecurringRate(), that.getRecurringRate())) {return false;}
+
+        if (!this.getCurrency().equals(that.getCurrency())) {return false;}
 
         DateRange thisDateRange = new DateRange(this.getStartDate(), this.getEndDate());
         return thisDateRange.contains(that.getStartDate()) && thisDateRange.contains(that.getEndDate());
@@ -247,6 +254,8 @@ public class DefaultInvoiceItem implements InvoiceItem {
         sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
         sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
         sb.append("subscriptionId = ").append(subscriptionId.toString()).append(", ");
+        sb.append("planName = ").append(planName).append(", ");
+        sb.append("phaseName = ").append(phaseName).append(", ");
         sb.append("startDate = ").append(startDate.toString()).append(", ");
         sb.append("endDate = ").append(startDate.toString()).append(", ");
         sb.append("recurringAmount = ");

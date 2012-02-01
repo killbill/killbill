@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
@@ -111,19 +112,35 @@ public class InvoiceListener {
 
         if (invoice == null) {
             log.info("Generated null invoice.");
-            if (VERBOSE_OUTPUT) {
-                for (BillingEvent event : events) {
-                    log.info(event.toString());
-                }
-                for (InvoiceItem item : invoiceItemList) {
-                    log.info(item.toString());
-                }
-            }
+            outputDebugData(events, invoiceItemList);
         } else {
             log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
 
+            if (VERBOSE_OUTPUT) {
+                log.info("New items");
+                for (InvoiceItem item : invoice.getInvoiceItems()) {
+                    log.info(item.toString());
+                }
+            }
+
+            outputDebugData(events, invoiceItemList);
+
             if (invoice.getNumberOfItems() > 0) {
                 invoiceDao.create(invoice);
+            }
+        }
+    }
+
+    private void outputDebugData(Collection<BillingEvent> events, Collection<InvoiceItem> invoiceItemList) {
+        if (VERBOSE_OUTPUT) {
+            log.info("Events");
+            for (BillingEvent event : events) {
+                log.info(event.toString());
+            }
+
+            log.info("Existing items");
+            for (InvoiceItem item : invoiceItemList) {
+                log.info(item.toString());
             }
         }
     }
