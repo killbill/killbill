@@ -17,12 +17,15 @@
 package com.ning.billing.entitlement.api.billing;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.DefaultPrice;
@@ -39,18 +42,86 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 
 public class TestDefaultBillingEvent {
+	public static final UUID ID_ZERO = new UUID(0L,0L);
+	public static final UUID ID_ONE = new UUID(0L,1L);
+	public static final UUID ID_TWO = new UUID(0L,2L);
 
 	@Test(groups={"fast"})
-	public void testEventOrdering() {
-		Subscription subscription = new BrainDeadSubscription();
-		;
-		BillingEvent event1 = createEvent(subscription, new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+	public void testEventOrderingSubscription() {
+	
+		BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+		BillingEvent event1 = createEvent(subscription(ID_ONE), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+		BillingEvent event2 = createEvent(subscription(ID_TWO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
 		
 		SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
-		
+		set.add(event2);
 		set.add(event1);
+		set.add(event0);
 		
+		Iterator<BillingEvent> it = set.iterator();
+		
+		Assert.assertEquals(event0, it.next());
+		Assert.assertEquals(event1, it.next());
+		Assert.assertEquals(event2, it.next());
 	}
+	
+	@Test(groups={"fast"})
+	public void testEventOrderingDate() {
+	
+		BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+		BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-02-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+		BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-03-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+		
+		SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
+		set.add(event2);
+		set.add(event1);
+		set.add(event0);
+		
+		Iterator<BillingEvent> it = set.iterator();
+		
+		Assert.assertEquals(event0, it.next());
+		Assert.assertEquals(event1, it.next());
+		Assert.assertEquals(event2, it.next());
+	}
+	
+	@Test(groups={"fast"})
+	public void testEventOrderingType() {
+	
+		BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+		BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CHANGE);
+		BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CANCEL);
+		
+		SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
+		set.add(event2);
+		set.add(event1);
+		set.add(event0);
+		
+		Iterator<BillingEvent> it = set.iterator();
+		
+		Assert.assertEquals(event0, it.next());
+		Assert.assertEquals(event1, it.next());
+		Assert.assertEquals(event2, it.next());
+	}
+	
+	@Test(groups={"fast"})
+	public void testEventOrderingMix() {
+	
+		BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+		BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-02T00:02:04.000Z"), SubscriptionTransitionType.CHANGE);
+		BillingEvent event2 = createEvent(subscription(ID_ONE), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CANCEL);
+		
+		SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
+		set.add(event2);
+		set.add(event1);
+		set.add(event0);
+		
+		Iterator<BillingEvent> it = set.iterator();
+		
+		Assert.assertEquals(event0, it.next());
+		Assert.assertEquals(event1, it.next());
+		Assert.assertEquals(event2, it.next());
+	}
+
 	
 	private BillingEvent createEvent(Subscription sub, DateTime effectiveDate, SubscriptionTransitionType type) {
 		InternationalPrice zeroPrice = new MockInternationalPrice(new DefaultPrice(BigDecimal.ZERO, Currency.USD));
@@ -70,6 +141,14 @@ public class TestDefaultBillingEvent {
 		return new MockPlanPhase(new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD)),
 				new MockInternationalPrice(new DefaultPrice(fixedRate, Currency.USD)),
 				BillingPeriod.MONTHLY, phaseType);
+	}
+	
+	private Subscription subscription(final UUID id) {
+		return new BrainDeadSubscription() {
+			public UUID getId() {
+				return id;
+			}
+		};
 	}
 
 }
