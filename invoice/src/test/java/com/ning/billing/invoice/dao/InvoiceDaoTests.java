@@ -27,6 +27,7 @@ import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -487,7 +488,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime effectiveDate1 = new DateTime(2011, 2, 1, 0, 0, 0, 0);
         BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan1, phase1, null,
                                                       recurringPrice, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
-                                                      "testEvent1");
+                                                      "testEvent1", SubscriptionTransitionType.CREATE);
 
         BillingEventSet events = new BillingEventSet();
         events.add(event1);
@@ -505,7 +506,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime effectiveDate2 = new DateTime(2011, 2, 15, 0, 0, 0, 0);
         BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan2, phase2, null,
                                                       recurringPrice2, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
-                                                      "testEvent2");
+                                                      "testEvent2", SubscriptionTransitionType.CREATE);
         events.add(event2);
 
         // second invoice should be for one half (14/28 days) the difference between the rate plans
@@ -536,7 +537,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         BillingEvent event = new DefaultBillingEvent(subscription, effectiveDate, plan, phase, null,
                                                      recurringPrice, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
-                                                     "testEvent");
+                                                     "testEvent", SubscriptionTransitionType.CREATE);
         BillingEventSet events = new BillingEventSet();
         events.add(event);
 

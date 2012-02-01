@@ -32,6 +32,7 @@ import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.dao.MockSubscription;
@@ -459,7 +460,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BillingEvent event1 = new DefaultBillingEvent(subscription, new DateTime("2012-01-31T00:02:04.000Z"),
                                                       shotgun, shotgunMonthly,
                                                       zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-                                                      BillingModeType.IN_ADVANCE, "Test Event 1");
+                                                      BillingModeType.IN_ADVANCE, "Test Event 1", SubscriptionTransitionType.CREATE);
         events.add(event1);
 
 
@@ -468,7 +469,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BillingEvent event2 = new DefaultBillingEvent(subscription, new DateTime("2012-01-31T00:02:04.000Z"),
                                                       assaultRifle, assaultRifleMonthly,
                                                       zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-                                                      BillingModeType.IN_ADVANCE, "Test Event 2");
+                                                      BillingModeType.IN_ADVANCE, "Test Event 2", SubscriptionTransitionType.CREATE);
         events.add(event2);
 
         Plan pistol = new MockPlan();
@@ -479,14 +480,14 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BillingEvent event3 = new DefaultBillingEvent(subscription, new DateTime("2012-01-31T00:02:05.000Z"),
                                                       pistol, pistolMonthlyTrial,
                                                       zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-                                                      BillingModeType.IN_ADVANCE, "Test Event 3");
+                                                      BillingModeType.IN_ADVANCE, "Test Event 3", SubscriptionTransitionType.CREATE);
         events.add(event3);
 
 
         BillingEvent event4 = new DefaultBillingEvent(subscription, new DateTime("2012-03-01T00:02:04.000Z"),
                                                       pistol, pistolMonthlyEvergreen,
                                                       null, pistolEvergreenPrice, BillingPeriod.MONTHLY, billCycleDay,
-                                                      BillingModeType.IN_ADVANCE, "Test Event 4");
+                                                      BillingModeType.IN_ADVANCE, "Test Event 4",SubscriptionTransitionType.CREATE);
         events.add(event4);
 
         InvoiceItemList items = new InvoiceItemList();
@@ -571,7 +572,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         return new DefaultBillingEvent(sub, startDate, plan, planPhase,
                                        planPhase.getFixedPrice(),
                                        planPhase.getRecurringPrice(), planPhase.getBillingPeriod(),
-                                       billCycleDay, BillingModeType.IN_ADVANCE,"Test");
+                                       billCycleDay, BillingModeType.IN_ADVANCE,"Test", SubscriptionTransitionType.CREATE);
     }
 
     private void testInvoiceGeneration(final BillingEventSet events, final InvoiceItemList existingInvoiceItems,
