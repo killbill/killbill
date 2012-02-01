@@ -68,14 +68,14 @@ public abstract class TestPaymentApi {
         final UUID subscriptionId = UUID.randomUUID();
 
         invoice.addInvoiceItem(new DefaultInvoiceItem(invoice.getId(),
-                                           subscriptionId,
-                                           now,
-                                           now.plusMonths(1),
-                                           "Test",
-                                           amount,
-                                           new BigDecimal("1.0"),
-                                           null,
-                                           Currency.USD));
+                                                       subscriptionId,
+                                                       "test plan", "test phase",
+                                                       now,
+                                                       now.plusMonths(1),
+                                                       amount,
+                                                       new BigDecimal("1.0"),
+                                                       null,
+                                                       Currency.USD));
 
         List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()));
 

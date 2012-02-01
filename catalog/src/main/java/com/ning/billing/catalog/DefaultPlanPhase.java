@@ -171,7 +171,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 		return this;
 	}
 
-	protected DefaultPlanPhase setReccuringPrice(DefaultInternationalPrice price) {
+	protected DefaultPlanPhase setRecurringPrice(DefaultInternationalPrice price) {
 		this.recurringPrice = price;
 		return this;
 	}

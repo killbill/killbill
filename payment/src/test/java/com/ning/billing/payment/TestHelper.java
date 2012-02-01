@@ -68,9 +68,10 @@ public class TestHelper {
         for (InvoiceItem item : items) {
             invoice.addInvoiceItem(new DefaultInvoiceItem(invoice.getId(),
                                                item.getSubscriptionId(),
+                                               item.getPlanName(),
+                                               item.getPhaseName(),
                                                item.getStartDate(),
                                                item.getEndDate(),
-                                               item.getDescription(),
                                                item.getRecurringAmount(),
                                                item.getRecurringRate(),
                                                item.getFixedAmount(),
@@ -84,7 +85,7 @@ public class TestHelper {
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final UUID subscriptionId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal("10.00");
-        final InvoiceItem item = new DefaultInvoiceItem(null, subscriptionId, now, now.plusMonths(1), "Test", amount, new BigDecimal("1.0"), null, Currency.USD);
+        final InvoiceItem item = new DefaultInvoiceItem(null, subscriptionId, "test plan", "test phase", now, now.plusMonths(1), amount, new BigDecimal("1.0"), null, Currency.USD);
 
         return createTestInvoice(account, now, Currency.USD, item);
     }

@@ -4,9 +4,10 @@ invoiceItemFields(prefix) ::= <<
   <prefix>id,
   <prefix>invoice_id,
   <prefix>subscription_id,
+  <prefix>plan_name,
+  <prefix>phase_name,
   <prefix>start_date,
   <prefix>end_date,
-  <prefix>description,
   <prefix>recurring_amount,
   <prefix>recurring_rate,
   <prefix>fixed_amount,
@@ -40,14 +41,14 @@ getInvoiceItemsBySubscription() ::= <<
 
 create() ::= <<
   INSERT INTO invoice_items(<invoiceItemFields()>)
-  VALUES(:id, :invoiceId, :subscriptionId, :startDate, :endDate, :description,
+  VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
          :recurringAmount, :recurringRate, :fixedAmount, :currency);
 >>
 
 update() ::= <<
   UPDATE invoice_items
-  SET invoice_id = :invoiceId, subscription_id = :subscriptionId, start_date = :startDate, end_date = :endDate,
-      description = :description, recurring_amount = :recurringAmount, recurring_rate = :recurringRate,
+  SET invoice_id = :invoiceId, subscription_id = :subscriptionId, plan_name = :planName, phase_name = :phaseName,
+      start_date = :startDate, end_date = :endDate, recurring_amount = :recurringAmount, recurring_rate = :recurringRate,
       fixed_amount = :fixedAmount, currency = :currency
   WHERE id = :id;
 >>
