@@ -76,13 +76,26 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         Iterator<InvoiceItem> iterator = this.iterator();
         while (iterator.hasNext()) {
             InvoiceItem item = iterator.next();
-            Boolean hasZeroRecurringAmount = item.getRecurringAmount() == null || (item.getRecurringAmount().compareTo(BigDecimal.ZERO) == 0);
-            Boolean hasRecurringRate = item.getRecurringRate() == null || (item.getRecurringRate().compareTo(BigDecimal.ZERO) != 0);
-            Boolean hasZeroFixedAmount = item.getFixedAmount() == null || (item.getFixedAmount().compareTo(BigDecimal.ZERO) == 0);
 
-            if (hasZeroRecurringAmount && hasRecurringRate & hasZeroFixedAmount) {
+            boolean fixedAmountNull = (item.getFixedAmount() == null);
+            boolean recurringRateNull = (item.getRecurringRate() == null);
+            boolean recurringAmountZero = (item.getRecurringRate() !=null) && (item.getRecurringAmount().compareTo(BigDecimal.ZERO) == 0);
+
+            if (fixedAmountNull && (recurringRateNull || recurringAmountZero)) {
+                iterator.remove();
+            } else if (item.getStartDate().compareTo(item.getEndDate()) == 0) {
                 iterator.remove();
             }
         }
+    }
+
+    public boolean hasInvoiceItemForPhase(final String phaseName) {
+        for (final InvoiceItem item : this) {
+            if (item.getPhaseName().equals(phaseName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

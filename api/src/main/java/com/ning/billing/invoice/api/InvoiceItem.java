@@ -28,11 +28,13 @@ public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
 
     UUID getSubscriptionId();
 
+    String getPlanName();
+
+    String getPhaseName();
+
     DateTime getStartDate();
 
     DateTime getEndDate();
-
-    String getDescription();
 
     BigDecimal getRecurringAmount();
 

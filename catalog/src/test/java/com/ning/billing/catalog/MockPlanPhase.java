@@ -18,6 +18,7 @@ package com.ning.billing.catalog;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -33,7 +34,7 @@ public class MockPlanPhase extends DefaultPlanPhase {
 		setBillingPeriod(billingPeriod);
 		setPhaseType(type);
 		setDuration(duration);
-		setReccuringPrice(recurringPrice);
+		setRecurringPrice(recurringPrice);
 		setFixedPrice(fixedPrice);
 	}
     
@@ -59,7 +60,7 @@ public class MockPlanPhase extends DefaultPlanPhase {
 		setBillingPeriod(billingPeriod);
 		setPhaseType(phaseType);
 		setDuration(new DefaultDuration().setNumber(-1).setUnit(TimeUnit.UNLIMITED));
-		setReccuringPrice(recurringPrice);
+		setRecurringPrice(recurringPrice);
 		setFixedPrice(fixedPrice);
 		setPlan(new MockPlan(this));
 	}
@@ -68,10 +69,17 @@ public class MockPlanPhase extends DefaultPlanPhase {
 		setBillingPeriod(BillingPeriod.MONTHLY);
 		setPhaseType(PhaseType.EVERGREEN);
 		setDuration(new DefaultDuration().setNumber(-1).setUnit(TimeUnit.UNLIMITED));
-		setReccuringPrice(new MockInternationalPrice());
+		setRecurringPrice(new MockInternationalPrice());
 		setFixedPrice(null);
 		setPlan(mockPlan);
 	}
 
-	
+    public MockPlanPhase(Plan plan, PhaseType phaseType) {
+		setBillingPeriod(BillingPeriod.MONTHLY);
+		setPhaseType(phaseType);
+		setDuration(new DefaultDuration().setNumber(-1).setUnit(TimeUnit.UNLIMITED));
+		setRecurringPrice(new MockInternationalPrice());
+		setFixedPrice(null);
+		setPlan(plan);
+	}
 }

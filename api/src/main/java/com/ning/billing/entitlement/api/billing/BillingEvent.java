@@ -23,6 +23,7 @@ import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
@@ -88,4 +89,9 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      * @return the recurring price for the phase
      */
     public InternationalPrice getRecurringPrice();
+
+	/**
+	 * @return the transition type of the underlying subscription event that triggered this
+	 */
+	public SubscriptionTransitionType getTransitionType();
 }

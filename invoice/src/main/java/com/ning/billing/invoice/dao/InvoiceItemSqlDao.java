@@ -79,9 +79,10 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("subscriptionId", item.getSubscriptionId().toString());
+                        q.bind("planName", item.getPlanName());
+                        q.bind("phaseName", item.getPhaseName());
                         q.bind("startDate", item.getStartDate().toDate());
                         q.bind("endDate", item.getEndDate() == null ? null : item.getEndDate().toDate());
-                        q.bind("description", item.getDescription());
                         q.bind("recurringAmount", item.getRecurringAmount() == null ? BigDecimal.ZERO : item.getRecurringAmount());
                         q.bind("recurringRate", item.getRecurringRate() == null ? BigDecimal.ZERO : item.getRecurringRate());
                         q.bind("fixedAmount", item.getFixedAmount() == null ? BigDecimal.ZERO : item.getFixedAmount());
@@ -98,16 +99,17 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             UUID id = UUID.fromString(result.getString("id"));
             UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
             UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
+            String planName = result.getString("plan_name");
+            String phaseName = result.getString("phase_name");
             DateTime startDate = new DateTime(result.getTimestamp("start_date"));
             DateTime endDate = new DateTime(result.getTimestamp("end_date"));
-            String description = result.getString("description");
             BigDecimal recurringAmount = result.getBigDecimal("recurring_amount");
             BigDecimal recurringRate = result.getBigDecimal("recurring_rate");
             BigDecimal fixedAmount = result.getBigDecimal("fixed_amount");
             Currency currency = Currency.valueOf(result.getString("currency"));
 
-            return new DefaultInvoiceItem(id, invoiceId, subscriptionId, startDate, endDate,
-                                          description, recurringAmount, recurringRate, fixedAmount, currency);
+            return new DefaultInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
+                                          recurringAmount, recurringRate, fixedAmount, currency);
         }
     }
 }
