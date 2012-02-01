@@ -506,7 +506,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     }
 
     @Test
-    private void testImmediateChange() {
+    public void testImmediateChange() {
         UUID accountId = UUID.randomUUID();
         Subscription subscription = new MockSubscription();
         Plan plan1 = new MockPlan("plan 1");
@@ -519,7 +519,8 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BillingEvent event1 = new DefaultBillingEvent(subscription, new DateTime("2012-01-31T00:02:04.000Z"),
                                                       plan1, phase1,
                                                       zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, 1,
-                                                      BillingModeType.IN_ADVANCE, "Test Event 1");
+                                                      BillingModeType.IN_ADVANCE, "Test Event 1",
+                                                      SubscriptionTransitionType.CREATE);
         events.add(event1);
 
         Invoice invoice1 = generator.generateInvoice(accountId, events, null, new DateTime("2012-01-31T00:02:04.000Z"), Currency.USD);
@@ -529,7 +530,8 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BillingEvent event2 = new DefaultBillingEvent(subscription, new DateTime("2012-01-31T00:02:04.000Z"),
                                                       plan2, phase2,
                                                       zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, 1,
-                                                      BillingModeType.IN_ADVANCE, "Test Event 2");
+                                                      BillingModeType.IN_ADVANCE, "Test Event 2",
+                                                      SubscriptionTransitionType.CHANGE);
         events.add(event2);
         InvoiceItemList items = new InvoiceItemList(invoice1.getInvoiceItems());
         Invoice invoice2 = generator.generateInvoice(accountId, events, items, new DateTime("2012-01-31T00:02:04.000Z"), Currency.USD);
@@ -549,7 +551,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     }
 
     private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,
-                                                     final BigDecimal fixedRate, PhaseType phaseType) {
+                                                     @Nullable final BigDecimal fixedRate, PhaseType phaseType) {
         return new MockPlanPhase(new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD)),
                                  new MockInternationalPrice(new DefaultPrice(fixedRate, Currency.USD)),
                                  BillingPeriod.MONTHLY, phaseType);

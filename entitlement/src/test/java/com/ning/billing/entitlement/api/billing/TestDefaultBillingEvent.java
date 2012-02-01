@@ -43,7 +43,7 @@ public class TestDefaultBillingEvent {
 	@Test(groups={"fast"})
 	public void testEventOrdering() {
 		Subscription subscription = new BrainDeadSubscription();
-		;
+
 		BillingEvent event1 = createEvent(subscription, new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
 		
 		SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();

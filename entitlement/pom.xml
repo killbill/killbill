@@ -48,6 +48,11 @@
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-catalog</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-catalog</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
