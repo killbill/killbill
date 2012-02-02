@@ -46,7 +46,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     @Override
     public Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice) {
         PaymentInfo payment = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
-                                             .setAmount(invoice.getAmountOutstanding())
+                                             .setAmount(invoice.getBalance())
                                              .setStatus("Processed")
                                              .setBankIdentificationNumber("1234")
                                              .setCreatedDate(new DateTime())

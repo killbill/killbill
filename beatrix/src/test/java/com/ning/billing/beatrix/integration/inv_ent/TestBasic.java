@@ -169,7 +169,7 @@ public class TestBasic {
         return ctd;
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
     }
