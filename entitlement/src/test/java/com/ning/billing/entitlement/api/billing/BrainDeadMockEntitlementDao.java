@@ -99,18 +99,6 @@ class BrainDeadMockEntitlementDao implements EntitlementDao {
 	}
 
 	@Override
-	public List<EntitlementEvent> getEventsReady(UUID ownerId,
-			int sequenceId) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void clearEventsReady(UUID ownerId,
-			Collection<EntitlementEvent> cleared) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public void createSubscription(SubscriptionData subscription,
 			List<EntitlementEvent> initialEvents) {
 		throw new UnsupportedOperationException();
@@ -142,6 +130,11 @@ class BrainDeadMockEntitlementDao implements EntitlementDao {
 
 	@Override
 	public void undoMigration(UUID accountId) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public EntitlementEvent getEventById(UUID eventId) {
 		throw new UnsupportedOperationException();
 	}
 	
