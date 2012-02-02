@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.glue;
 
+import com.ning.billing.util.glue.GlobalLockerModule;
 import org.skife.config.ConfigurationObjectFactory;
 import com.google.inject.AbstractModule;
 import com.ning.billing.config.InvoiceConfig;
@@ -60,6 +61,7 @@ public class InvoiceModule extends AbstractModule {
     }
 
     protected void installInvoiceListener() {
+        install(new GlobalLockerModule());
         bind(InvoiceListener.class).asEagerSingleton();
     }
 

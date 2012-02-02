@@ -241,6 +241,11 @@ public abstract class TestApiBase {
             public int getNumber() {
                 return days;
             }
+
+            @Override
+            public DateTime addToDateTime(DateTime dateTime) {
+                return null;
+            }
         };
         return result;
     }
@@ -254,6 +259,11 @@ public abstract class TestApiBase {
             @Override
             public int getNumber() {
                 return months;
+            }
+
+            @Override
+            public DateTime addToDateTime(DateTime dateTime) {
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
         };
         return result;
@@ -269,6 +279,11 @@ public abstract class TestApiBase {
             @Override
             public int getNumber() {
                 return years;
+            }
+
+            @Override
+            public DateTime addToDateTime(DateTime dateTime) {
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
         };
         return result;

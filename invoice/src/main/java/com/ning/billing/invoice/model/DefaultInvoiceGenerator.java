@@ -21,6 +21,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.joda.time.Duration;
+import org.joda.time.Period;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,9 +146,11 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     		BigDecimal numberOfBillingPeriods;
             BigDecimal recurringAmount = null;
-            DateTime billThroughDate = null;
+            DateTime billThroughDate;
 
-            if (recurringRate != null) {
+            if (recurringRate == null) {
+                billThroughDate = event.getPlanPhase().getDuration().addToDateTime(event.getEffectiveDate());
+            } else {
                 numberOfBillingPeriods = calculateNumberOfBillingPeriods(event, targetDate);
                 recurringAmount = numberOfBillingPeriods.multiply(recurringRate);
                 BillingMode billingMode = getBillingMode(event.getBillingMode());
@@ -181,8 +186,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
             }
 
-            BigDecimal effectiveFixedPrice = items.hasInvoiceItemForPhase(firstEvent.getPlanPhase().getName()) ? null : fixedPrice;
-            addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, recurringAmount, recurringRate, effectiveFixedPrice, targetCurrency);
+            if (Days.daysBetween(firstEvent.getEffectiveDate(), billThroughDate).getDays() > 0) {
+                BigDecimal effectiveFixedPrice = items.hasInvoiceItemForPhase(firstEvent.getPlanPhase().getName()) ? null : fixedPrice;
+                addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, recurringAmount, recurringRate, effectiveFixedPrice, targetCurrency);
+            }
     	} catch (CatalogApiException e) {
     		log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s",
                     invoiceId.toString(),

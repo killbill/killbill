@@ -14,15 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.api;
+package com.ning.billing.util.glue;
 
-import org.joda.time.DateTime;
+import com.google.inject.AbstractModule;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 
-public interface Duration {
-
-	public abstract TimeUnit getUnit();
-
-	public abstract int getNumber();
-
-    public DateTime addToDateTime(DateTime dateTime);
+public class GlobalLockerModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
+    }
 }

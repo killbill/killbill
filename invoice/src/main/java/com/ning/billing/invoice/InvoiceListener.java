@@ -23,6 +23,9 @@ import java.util.UUID;
 
 import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.notification.NextBillingDateEvent;
+import com.ning.billing.util.globallocker.GlobalLock;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.sun.istack.internal.FinalArrayList;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,17 +53,19 @@ public class InvoiceListener {
     private final EntitlementBillingApi entitlementBillingApi;
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
+    private final GlobalLocker globalLocker;
 
     private final static boolean VERBOSE_OUTPUT = false;
 
     @Inject
     public InvoiceListener(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
                            final EntitlementBillingApi entitlementBillingApi,
-                           final InvoiceDao invoiceDao) {
+                           final InvoiceDao invoiceDao, final GlobalLocker globalLocker) {
         this.generator = generator;
         this.entitlementBillingApi = entitlementBillingApi;
         this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
+        this.globalLocker = globalLocker;
     }
 
     @Subscribe
@@ -94,40 +99,50 @@ public class InvoiceListener {
             return;
         }
 
-        Account account = accountUserApi.getAccountById(accountId);
-        if (account == null) {
-            log.error("Failed handling entitlement change.",
-                      new InvoiceApiException(ErrorCode.INVOICE_ACCOUNT_ID_INVALID, accountId.toString()));
-            return;
-        }
+        GlobalLock lock = globalLocker.lockWithNumberOfTries("invoiceProcessor:" + accountId.toString(), 1);
 
-        SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccount(accountId);
-        BillingEventSet billingEvents = new BillingEventSet(events);
-
-        Currency targetCurrency = account.getCurrency();
-
-        List<InvoiceItem> items = invoiceDao.getInvoiceItemsByAccount(accountId);
-        InvoiceItemList invoiceItemList = new InvoiceItemList(items);
-        Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoiceItemList, targetDate, targetCurrency);
-
-        if (invoice == null) {
-            log.info("Generated null invoice.");
-            outputDebugData(events, invoiceItemList);
+        if (lock == null) {
+            log.warn("Conflicting lock detected from InvoiceListener on account "  + accountId.toString());
         } else {
-            log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
+            log.info("Locked " + accountId.toString());
 
-            if (VERBOSE_OUTPUT) {
-                log.info("New items");
-                for (InvoiceItem item : invoice.getInvoiceItems()) {
-                    log.info(item.toString());
+            Account account = accountUserApi.getAccountById(accountId);
+            if (account == null) {
+                log.error("Failed handling entitlement change.",
+                          new InvoiceApiException(ErrorCode.INVOICE_ACCOUNT_ID_INVALID, accountId.toString()));
+                return;
+            }
+
+            SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccount(accountId);
+            BillingEventSet billingEvents = new BillingEventSet(events);
+
+            Currency targetCurrency = account.getCurrency();
+
+            List<InvoiceItem> items = invoiceDao.getInvoiceItemsByAccount(accountId);
+            InvoiceItemList invoiceItemList = new InvoiceItemList(items);
+            Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoiceItemList, targetDate, targetCurrency);
+
+            if (invoice == null) {
+                log.info("Generated null invoice.");
+                outputDebugData(events, invoiceItemList);
+            } else {
+                log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
+
+                if (VERBOSE_OUTPUT) {
+                    log.info("New items");
+                    for (InvoiceItem item : invoice.getInvoiceItems()) {
+                        log.info(item.toString());
+                    }
+                }
+
+                outputDebugData(events, invoiceItemList);
+
+                if (invoice.getNumberOfItems() > 0) {
+                    invoiceDao.create(invoice);
                 }
             }
 
-            outputDebugData(events, invoiceItemList);
-
-            if (invoice.getNumberOfItems() > 0) {
-                invoiceDao.create(invoice);
-            }
+            lock.release();
         }
     }
 

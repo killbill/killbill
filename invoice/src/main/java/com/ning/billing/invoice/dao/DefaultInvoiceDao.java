@@ -243,7 +243,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
         for (final InvoiceItem item : invoiceItems) {
-            if (item.getEndDate() != null) {
+            if (item.getRecurringRate() != null) {
                 notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
             }
         }

@@ -14,15 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.api;
+package com.ning.billing.util.globallocker;
 
-import org.joda.time.DateTime;
-
-public interface Duration {
-
-	public abstract TimeUnit getUnit();
-
-	public abstract int getNumber();
-
-    public DateTime addToDateTime(DateTime dateTime);
+public interface GlobalLocker {
+    GlobalLock lockWithNumberOfTries(String lockName, int i);
 }

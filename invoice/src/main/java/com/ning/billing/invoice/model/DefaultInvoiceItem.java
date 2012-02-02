@@ -241,7 +241,8 @@ public class DefaultInvoiceItem implements InvoiceItem {
         if(!this.getStartDate().equals(that.getStartDate())) {return false;}
 
         if (!safeCheckForZeroSum(this.getRecurringAmount(), that.getRecurringAmount())) {return false;}
-        if(!this.getRecurringRate().equals(that.getRecurringRate())) {return false;}
+
+        if (!safeCheckForEquality(this.getRecurringRate(), that.getRecurringRate())) {return false;}
 
         if (!safeCheckForZeroSum(this.getFixedAmount(), that.getFixedAmount())) {return false;}
         if(!this.getCurrency().equals(that.getCurrency())) {return false;}
@@ -253,6 +254,12 @@ public class DefaultInvoiceItem implements InvoiceItem {
         if ((value1 == null) && (value2 == null)) {return true;}
         if ((value1 == null) ^ (value2 == null)) {return false;}
         return (value1.add(value2).compareTo(BigDecimal.ZERO) == 0);
+    }
+
+    private boolean safeCheckForEquality(final BigDecimal value1, final BigDecimal value2) {
+        if ((value1 == null) && (value2 == null)) {return true;}
+        if ((value1 == null) ^ (value2 == null)) {return false;}
+        return (value1.compareTo(value2) == 0);
     }
 
     @Override

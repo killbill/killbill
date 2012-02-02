@@ -160,11 +160,11 @@ public class TestBasic {
         });
     }
 
-
     private DateTime checkAndGetCTD(UUID subscriptionId) {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscriptionId);
         DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
+        log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
         assertTrue(clock.getUTCNow().isBefore(ctd));
         return ctd;
     }
@@ -174,7 +174,7 @@ public class TestBasic {
         testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
     }
@@ -185,7 +185,7 @@ public class TestBasic {
     }
 
     private void testBasePlanComplete(int billingDay) throws Exception {
-        long DELAY = 5000;
+        long DELAY = 5000 * 10;
 
         Account account = accountUserApi.createAccount(getAccountData(), null, null);
         assertNotNull(account);
@@ -224,8 +224,6 @@ public class TestBasic {
         String newPlanSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
         String newProductName = "Assault-Rifle";
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
-
-        Thread.sleep(600000);
 
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed second busHandler checkpoint.");
