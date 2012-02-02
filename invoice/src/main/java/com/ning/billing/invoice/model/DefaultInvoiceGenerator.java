@@ -139,18 +139,17 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     		BigDecimal numberOfBillingPeriods;
             BigDecimal recurringAmount = null;
+            DateTime billThroughDate = null;
 
             if (recurringRate != null) {
                 numberOfBillingPeriods = calculateNumberOfBillingPeriods(event, targetDate);
                 recurringAmount = numberOfBillingPeriods.multiply(recurringRate);
+                BillingMode billingMode = getBillingMode(event.getBillingMode());
+                billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
             }
 
-            BillingMode billingMode = getBillingMode(event.getBillingMode());
-            DateTime billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
-            if ((event.getBillingPeriod() == BillingPeriod.NO_BILLING_PERIOD) || (!billThroughDate.isAfter(targetDate.plusMonths(event.getBillingPeriod().getNumberOfMonths())))) {
-                BigDecimal effectiveFixedPrice = items.hasInvoiceItemForPhase(event.getPlanPhase().getName()) ? null : fixedPrice;
-                addInvoiceItem(invoiceId, items, event, billThroughDate, recurringAmount, recurringRate, effectiveFixedPrice, targetCurrency);
-            }
+            BigDecimal effectiveFixedPrice = items.hasInvoiceItemForPhase(event.getPlanPhase().getName()) ? null : fixedPrice;
+            addInvoiceItem(invoiceId, items, event, billThroughDate, recurringAmount, recurringRate, effectiveFixedPrice, targetCurrency);
     	} catch (CatalogApiException e) {
             log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s", 
                     invoiceId.toString(), 
@@ -166,14 +165,14 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
             BigDecimal numberOfBillingPeriods;
             BigDecimal recurringAmount = null;
+            DateTime billThroughDate = null;
 
             if (recurringRate != null) {
                 numberOfBillingPeriods = calculateNumberOfBillingPeriods(firstEvent, secondEvent, targetDate);
                 recurringAmount = numberOfBillingPeriods.multiply(recurringRate);
+                BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
+                billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
             }
-
-            BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
-            DateTime billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
 
             BigDecimal effectiveFixedPrice = items.hasInvoiceItemForPhase(firstEvent.getPlanPhase().getName()) ? null : fixedPrice;
             addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, recurringAmount, recurringRate, effectiveFixedPrice, targetCurrency);

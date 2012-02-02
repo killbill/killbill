@@ -51,7 +51,7 @@ public class InvoiceListener {
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
 
-    private final static boolean VERBOSE_OUTPUT = true;
+    private final static boolean VERBOSE_OUTPUT = false;
 
     @Inject
     public InvoiceListener(final InvoiceGenerator generator, final AccountUserApi accountUserApi,

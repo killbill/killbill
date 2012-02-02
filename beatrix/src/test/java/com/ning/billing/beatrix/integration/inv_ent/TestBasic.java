@@ -169,26 +169,11 @@ public class TestBasic {
         return ctd;
     }
 
-
     @Test(groups = "fast", enabled = true)
-    public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
-    }
-
-    @Test(groups = "fast", enabled = true)
-    public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
-    }
-
-    @Test(groups = "fast", enabled = true)
-    public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().plusDays(1).getDayOfMonth());
-    }
-
-    private void testBasePlanComplete(int billingDay) throws Exception {
+    public void testBasePlanComplete() throws Exception {
         long DELAY = 5000;
 
-        Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
+        Account account = accountUserApi.createAccount(getAccountData(), null, null);
         assertNotNull(account);
 
         SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever");
@@ -252,8 +237,8 @@ public class TestBasic {
         //
         busHandler.pushExpectedEvent(NextEvent.CHANGE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-
         clock.addDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
+        //clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed fourth busHandler checkpoint.");
 
@@ -290,7 +275,7 @@ public class TestBasic {
     }
 
 
-    protected AccountData getAccountData(final int billCycleDay) {
+    protected AccountData getAccountData() {
         AccountData accountData = new AccountData() {
             @Override
             public String getName() {
@@ -314,7 +299,7 @@ public class TestBasic {
             }
             @Override
             public int getBillCycleDay() {
-                return billCycleDay;
+                return 1;
             }
             @Override
             public Currency getCurrency() {

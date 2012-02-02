@@ -33,7 +33,11 @@ public class DateRange {
      * @return whether the DateRange contains (inclusively) the DateTime in question
      */
     public boolean contains(DateTime date) {
-        return (!date.isBefore(startDate)) && (!date.isAfter(endDate));
+        if (endDate == null) {
+            return date.compareTo(startDate) == 0;
+        }
+
+        return !date.isBefore(startDate) && !date.isAfter(endDate);
     }
 
     public boolean overlaps(DateRange range) {

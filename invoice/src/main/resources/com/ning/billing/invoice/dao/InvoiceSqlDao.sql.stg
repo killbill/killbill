@@ -42,8 +42,8 @@ getInvoicesForPayment() ::= <<
   LEFT JOIN invoice_payment_summary ips ON ips.invoice_id = i.id
   LEFT JOIN invoice_item_summary iis ON iis.invoice_id = i.id
   WHERE ((ips.last_payment_date IS NULL) OR (DATEDIFF(:targetDate, ips.last_payment_date) >= :numberOfDays))
-        AND ((ips.total_paid IS NULL) OR (iis.total_amount >= ips.total_paid))
-        AND ((iis.total_amount IS NOT NULL) AND (iis.total_amount > 0))
+        AND ((ips.total_paid IS NULL) OR (iis.amount_invoiced >= ips.total_paid))
+        AND ((iis.amount_invoiced IS NOT NULL) AND (iis.amount_invoiced > 0))
   GROUP BY <invoiceFields("i.")>;
 >>
 
@@ -54,7 +54,8 @@ getById() ::= <<
 >>
 
 getAccountBalance() ::= <<
-  SELECT SUM(iis.total_amount) AS amount_invoiced, SUM(ips.total_paid) AS amount_paid
+  SELECT SUM(iis.amount_invoiced) AS amount_invoiced,
+         SUM(ips.total_paid) AS amount_paid
   FROM invoices i
   LEFT JOIN invoice_payment_summary ips ON i.id = ips.invoice_id
   LEFT JOIN invoice_item_summary iis ON i.id = iis.invoice_id
@@ -87,7 +88,7 @@ getUnpaidInvoicesByAccountId() ::= <<
   LEFT JOIN invoice_item_summary iis ON i.id = iis.invoice_id
   WHERE i.account_id = :accountId AND NOT (i.target_date > :upToDate)
   GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
-  HAVING (SUM(iis.total_amount) > SUM(ips.total_paid)) OR (SUM(ips.total_paid) IS NULL)
+  HAVING (SUM(iis.amount_invoiced) > SUM(ips.total_paid)) OR (SUM(ips.total_paid) IS NULL)
   ORDER BY i.target_date ASC;
 >>
 

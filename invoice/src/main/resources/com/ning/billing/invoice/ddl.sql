@@ -7,9 +7,9 @@ CREATE TABLE invoice_items (
   phase_name varchar(50) NOT NULL,
   start_date datetime NOT NULL,
   end_date datetime NULL,
-  recurring_amount numeric(10,4) NOT NULL,
-  recurring_rate numeric(10,4) NOT NULL,
-  fixed_amount numeric(10,4) NOT NULL,
+  recurring_amount numeric(10,4) NULL,
+  recurring_rate numeric(10,4) NULL,
+  fixed_amount numeric(10,4) NULL,
   currency char(3) NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
@@ -41,12 +41,16 @@ CREATE UNIQUE INDEX invoice_payments_unique ON invoice_payments(invoice_id, paym
 
 DROP VIEW IF EXISTS invoice_payment_summary;
 CREATE VIEW invoice_payment_summary AS
-SELECT invoice_id, SUM(amount) AS total_paid, MAX(payment_attempt_date) AS last_payment_date
+SELECT invoice_id,
+       CASE WHEN SUM(amount) IS NULL THEN 0 ELSE SUM(amount) END AS total_paid,
+       MAX(payment_attempt_date) AS last_payment_date
 FROM invoice_payments
 GROUP BY invoice_id;
 
 DROP VIEW IF EXISTS invoice_item_summary;
 CREATE VIEW invoice_item_summary AS
-select invoice_id, sum(recurring_amount) + SUM(fixed_amount) AS total_amount
-from invoice_items
-group by invoice_id;
+SELECT invoice_id,
+       CASE WHEN SUM(recurring_amount) IS NULL THEN 0 ELSE SUM(recurring_amount) END
+       + CASE WHEN SUM(fixed_amount) IS NULL THEN 0 ELSE SUM(fixed_amount) END AS amount_invoiced
+FROM invoice_items
+GROUP BY invoice_id;
