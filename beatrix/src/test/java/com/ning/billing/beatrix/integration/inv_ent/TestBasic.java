@@ -170,7 +170,21 @@ public class TestBasic {
     }
 
     @Test(groups = "fast", enabled = true)
-    public void testBasePlanComplete() throws Exception {
+    public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
+        testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
+    }
+
+    @Test(groups = "fast", enabled = false)
+    public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
+        testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
+    }
+
+    @Test(groups = "fast", enabled = false)
+    public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
+        testBasePlanComplete(clock.getUTCNow().plusDays(1).getDayOfMonth());
+    }
+
+    private void testBasePlanComplete(int billingDay) throws Exception {
         long DELAY = 5000;
 
         Account account = accountUserApi.createAccount(getAccountData(), null, null);
@@ -190,6 +204,8 @@ public class TestBasic {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
         assertNotNull(subscription);
+
+
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed first busHandler checkpoint.");
 
@@ -208,6 +224,9 @@ public class TestBasic {
         String newPlanSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
         String newProductName = "Assault-Rifle";
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
+
+        Thread.sleep(600000);
+
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed second busHandler checkpoint.");
 

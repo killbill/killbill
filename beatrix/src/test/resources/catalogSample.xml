@@ -231,7 +231,11 @@ Use Cases to do:
 						<number>30</number>
 					</duration>
 					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-					<fixedPrice></fixedPrice>
+					<fixedPrice>
+                                          <price><currency>GBP</currency><value>29.95</value></price>
+                                          <price><currency>EUR</currency><value>29.95</value></price>
+                                          <price><currency>USD</currency><value>1.95</value></price>
+                                        </fixedPrice>
 				    <!-- no price implies $0 -->
 				</phase>
 			</initialPhases>
@@ -258,6 +262,9 @@ Use Cases to do:
 					</duration>
 					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice>
+                                          <price><currency>GBP</currency><value>29.95</value></price>
+                                          <price><currency>EUR</currency><value>29.95</value></price>
+                                          <price><currency>USD</currency><value>2.95</value></price>
 					</fixedPrice>
 				</phase>
 			</initialPhases>
