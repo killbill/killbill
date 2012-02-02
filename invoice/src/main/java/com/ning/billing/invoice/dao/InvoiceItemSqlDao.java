@@ -82,7 +82,7 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                         q.bind("planName", item.getPlanName());
                         q.bind("phaseName", item.getPhaseName());
                         q.bind("startDate", item.getStartDate().toDate());
-                        q.bind("endDate", item.getEndDate() == null ? null : item.getEndDate().toDate());
+                        q.bind("endDate", item.getEndDate().toDate());
                         q.bind("recurringAmount", item.getRecurringAmount());
                         q.bind("recurringRate", item.getRecurringRate());
                         q.bind("fixedAmount", item.getFixedAmount());

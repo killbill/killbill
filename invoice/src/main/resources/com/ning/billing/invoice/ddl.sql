@@ -6,7 +6,7 @@ CREATE TABLE invoice_items (
   plan_name varchar(50) NOT NULL,
   phase_name varchar(50) NOT NULL,
   start_date datetime NOT NULL,
-  end_date datetime NULL,
+  end_date datetime NOT NULL,
   recurring_amount numeric(10,4) NULL,
   recurring_rate numeric(10,4) NULL,
   fixed_amount numeric(10,4) NULL,

@@ -165,15 +165,6 @@ public class DefaultInvoiceItem implements InvoiceItem {
     // TODO: deal with error cases
     @Override
     public void subtract(InvoiceItem that) {
-        if (this.endDate == null) {
-            // this is a fixed price item; set the fixed amount to null
-            if (this.fixedAmount.compareTo(that.getFixedAmount()) == 0) {
-                this.fixedAmount = null;
-            }
-
-            return;
-        }
-
         if (this.startDate.equals(that.getStartDate()) && this.endDate.equals(that.getEndDate())) {
             this.startDate = this.endDate;
                 this.recurringAmount = safeSubtract(this.recurringAmount, that.getRecurringAmount());

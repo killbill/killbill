@@ -134,6 +134,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private void processEvent(final UUID invoiceId, final BillingEvent event, final InvoiceItemList items,
                               final DateTime targetDate, final Currency targetCurrency) {
     	try {
+            if (event.getEffectiveDate().compareTo(targetDate) > 0) {
+                return;
+            }
+
             BigDecimal recurringRate = event.getRecurringPrice() == null ? null : event.getRecurringPrice().getPrice(targetCurrency);
             BigDecimal fixedPrice = event.getFixedPrice() == null ? null : event.getFixedPrice().getPrice(targetCurrency);
 
@@ -165,9 +169,12 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
             BigDecimal numberOfBillingPeriods;
             BigDecimal recurringAmount = null;
-            DateTime billThroughDate = null;
+            DateTime billThroughDate;
 
-            if (recurringRate != null) {
+            if (recurringRate == null) {
+                // since it's fixed price only, the following event dictates the end date, regardless of when it takes place
+                billThroughDate = secondEvent.getEffectiveDate();
+            } else {
                 numberOfBillingPeriods = calculateNumberOfBillingPeriods(firstEvent, secondEvent, targetDate);
                 recurringAmount = numberOfBillingPeriods.multiply(recurringRate);
                 BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
@@ -187,7 +194,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                 final DateTime billThroughDate, final BigDecimal amount, final BigDecimal rate,
                                 final BigDecimal fixedAmount, final Currency currency) {
         DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, event.getSubscription().getId(),
-                                  event.getPlan().getName(), event.getPlanPhase().getName(),  event.getEffectiveDate(),
+                                  event.getPlan().getName(), event.getPlanPhase().getName(), event.getEffectiveDate(),
                                   billThroughDate, amount, rate, fixedAmount, currency);
         items.add(item);
     }
