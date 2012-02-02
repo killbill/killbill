@@ -16,24 +16,27 @@
 
 package com.ning.billing.invoice.dao;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
-import org.joda.time.Days;
+import org.joda.time.DateTimeZone;
 import org.testng.annotations.Test;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
+import com.ning.billing.payment.api.InvoicePayment;
 import com.ning.billing.util.clock.DefaultClock;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 @Test(groups = {"invoicing", "invoicing-invoiceDao"})
 public class InvoiceDaoTests extends InvoiceDaoTestBase {
@@ -78,8 +81,9 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         assertEquals(savedInvoice.getItems().size(), 1);
 
         BigDecimal paymentAmount = new BigDecimal("11.00");
-        String paymentId = UUID.randomUUID().toString();
-        invoiceDao.notifySuccessfulPayment(invoiceId.toString(), paymentAmount, Currency.USD.toString(), paymentId, new DefaultClock().getUTCNow().plusDays(12).toDate());
+        UUID paymentAttemptId = UUID.randomUUID();
+
+        invoiceDao.notifyOfPaymentAttempt(new InvoicePayment(invoiceId, paymentAmount, Currency.USD, paymentAttemptId, new DateTime(DateTimeZone.UTC).plusDays(12)));
 
         Invoice retrievedInvoice = invoiceDao.getById(invoiceId.toString());
         assertNotNull(retrievedInvoice);
@@ -101,12 +105,13 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
         Invoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
 
-        String paymentId = UUID.randomUUID().toString();
+        UUID paymentAttemptId = UUID.randomUUID();
         DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
         BigDecimal paymentAmount = new BigDecimal("14.0");
 
         invoiceDao.create(invoice);
-        invoiceDao.notifySuccessfulPayment(invoice.getId().toString(), paymentAmount, Currency.USD.toString(), paymentId, paymentAttemptDate.toDate());
+
+        invoiceDao.notifyOfPaymentAttempt(new InvoicePayment(invoice.getId(), paymentAmount, Currency.USD, paymentAttemptId, paymentAttemptDate));
 
         invoice = invoiceDao.getById(invoice.getId().toString());
         assertEquals(invoice.getAmountPaid().compareTo(paymentAmount), 0);
@@ -122,7 +127,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
 
         invoiceDao.create(invoice);
-        invoiceDao.notifyFailedPayment(invoice.getId().toString(), UUID.randomUUID().toString(), paymentAttemptDate.toDate());
+        invoiceDao.notifyOfPaymentAttempt(new InvoicePayment(invoice.getId(), UUID.randomUUID(), paymentAttemptDate));
 
         invoice = invoiceDao.getById(invoice.getId().toString());
         assertTrue(invoice.getLastPaymentAttempt().equals(paymentAttemptDate));
@@ -132,11 +137,11 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     public void testGetInvoicesForPaymentWithNoResults() {
         DateTime notionalDate = new DateTime();
         DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
-        
+
         // determine the number of existing invoices available for payment (to avoid side effects from other tests)
         List<UUID> invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
         int existingInvoiceCount = invoices.size();
-        
+
         UUID accountId = UUID.randomUUID();
         Invoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
 
@@ -174,7 +179,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         // attempt a payment; ensure that the number of invoices for payment has decreased by 1
         // (no retries for NUMBER_OF_DAYS_BETWEEN_RETRIES days)
-        invoiceDao.notifyFailedPayment(invoice.getId().toString(), UUID.randomUUID().toString(), notionalDate.toDate());
+        invoiceDao.notifyOfPaymentAttempt(new InvoicePayment(invoice.getId(), UUID.randomUUID(), notionalDate));
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
         count = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate).size();
         assertEquals(invoices.size(), count);
@@ -187,7 +192,8 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         assertEquals(invoices.size(), count);
 
         // post successful partial payment; ensure that number of invoices for payment has decreased by 1
-        invoiceDao.notifySuccessfulPayment(invoiceId.toString(), new BigDecimal("22.0000"), Currency.USD.toString(), UUID.randomUUID().toString(), notionalDate.toDate());
+        invoiceDao.notifyOfPaymentAttempt(new InvoicePayment(invoice.getId(), new BigDecimal("22.0000"), Currency.USD, UUID.randomUUID(), notionalDate));
+
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
         count = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate).size();
         assertEquals(invoices.size(), count);
@@ -204,7 +210,8 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         assertEquals(invoices.size(), count);
 
         // post completed payment; ensure that the number of invoices for payment has decreased by 1
-        invoiceDao.notifySuccessfulPayment(invoiceId.toString(), new BigDecimal("5.0000"), Currency.USD.toString(), UUID.randomUUID().toString(), notionalDate.toDate());
+        invoiceDao.notifyOfPaymentAttempt(new InvoicePayment(invoice.getId(), new BigDecimal("5.0000"), Currency.USD, UUID.randomUUID(), notionalDate));
+
         invoices = invoiceDao.getInvoicesForPayment(notionalDate.toDate(), NUMBER_OF_DAY_BETWEEN_RETRIES);
         count = getInvoicesDueForPaymentAttempt(invoiceDao.get(), notionalDate).size();
         assertEquals(invoices.size(), count);
@@ -299,4 +306,73 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         assertEquals(items4.size(), 1);
     }
     
+    @Test
+    public void testAccountBalance() {
+        UUID accountId = UUID.randomUUID();
+        DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
+        Invoice invoice1 = new DefaultInvoice(accountId, targetDate1, Currency.USD);
+        invoiceDao.create(invoice1);
+
+        DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
+        DateTime endDate = startDate.plusMonths(1);
+
+        BigDecimal rate1 = new BigDecimal("17.0");
+        BigDecimal rate2 = new BigDecimal("42.0");
+
+        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        invoiceItemDao.create(item1);
+
+        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        invoiceItemDao.create(item2);
+
+        BigDecimal payment1 = new BigDecimal("48.0");
+        
+        // TODO - reenable when DefaultInvoicePayement is visible in this branch
+        //InvoicePayment payment = new DefaultInvoicePayment(invoice1.getId(), new DateTime(), payment1, Currency.USD);
+        //invoicePaymentDao.create(payment);
+        //
+        //BigDecimal balance = invoiceDao.getAccountBalance(accountId);
+        //assertEquals(balance.compareTo(rate1.add(rate2).subtract(payment1)), 0);
+
+    }
+    
+    @Test
+    public void testAccountBalanceWithNoPayments() {
+        UUID accountId = UUID.randomUUID();
+        DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
+        Invoice invoice1 = new DefaultInvoice(accountId, targetDate1, Currency.USD);
+        invoiceDao.create(invoice1);
+
+        DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
+        DateTime endDate = startDate.plusMonths(1);
+
+        BigDecimal rate1 = new BigDecimal("17.0");
+        BigDecimal rate2 = new BigDecimal("42.0");
+
+        DefaultInvoiceItem item1 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test A", rate1, rate1, Currency.USD);
+        invoiceItemDao.create(item1);
+
+        DefaultInvoiceItem item2 = new DefaultInvoiceItem(invoice1.getId(), UUID.randomUUID(), startDate, endDate, "test B", rate2, rate2, Currency.USD);
+        invoiceItemDao.create(item2);
+
+        BigDecimal balance = invoiceDao.getAccountBalance(accountId);
+        assertEquals(balance.compareTo(rate1.add(rate2)), 0);
+    }
+
+
+    @Test
+    public void testAccountBalanceWithNoInvoiceItems() {
+        UUID accountId = UUID.randomUUID();
+        DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
+        Invoice invoice1 = new DefaultInvoice(accountId, targetDate1, Currency.USD);
+        invoiceDao.create(invoice1);
+
+        // TODO - reenable when DefaultInvoicePayement is visible in this branch
+        //BigDecimal payment1 = new BigDecimal("48.0");
+        //InvoicePayment payment = new DefaultInvoicePayment(invoice1.getId(), new DateTime(), payment1, Currency.USD);
+        //invoicePaymentDao.create(payment);
+        //
+        //BigDecimal balance = invoiceDao.getAccountBalance(accountId);
+        //assertEquals(balance.compareTo(BigDecimal.ZERO.subtract(payment1)), 0);
+    }
 }

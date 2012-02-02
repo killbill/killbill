@@ -64,6 +64,11 @@ public interface Subscription {
     public String getCurrentPriceList();
 
     public PlanPhase getCurrentPhase();
+    
+    public DateTime getChargedThroughDate();
+
+    public DateTime getPaidThroughDate();
+
 
     public List<SubscriptionTransition> getActiveTransitions();
 

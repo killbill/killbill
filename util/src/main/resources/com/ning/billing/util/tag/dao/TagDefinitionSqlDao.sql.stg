@@ -1,0 +1,49 @@
+group TagDefinitionDao;
+
+get() ::= <<
+  SELECT id, name, created_by, creation_date, description
+  FROM tag_definitions;
+>>
+
+create() ::= <<
+  INSERT INTO tag_definitions(id, name, created_by, creation_date, description)
+  VALUES(:id, :name, :createdBy, :creationDate, :description);
+>>
+
+update() ::= <<
+  UPDATE tag_definitions
+  SET name = :name, created_by = :createdBy, creation_date = :creationDate,
+      description = :description)
+  WHERE id = :id;
+>>
+
+load() ::= <<
+  SELECT id, name, created_by, creation_date, description
+  FROM tag_definitions
+  WHERE id = :id;
+>>
+
+deleteAllTagsForDefinition() ::= <<
+  DELETE FROM tags
+  WHERE tag_definition_name = :name;
+>>
+
+deleteTagDefinition() ::= <<
+  DELETE FROM tag_definitions
+  WHERE name = :name;
+>>
+
+tagDefinitionUsageCount() ::= <<
+  SELECT COUNT(id)
+  FROM tags
+  WHERE tag_definition_name = :name
+>>
+
+getByName() ::= <<
+  SELECT id, name, created_by, creation_date, description
+  FROM tag_definitions
+  WHERE name = :name;
+>>
+;
+
+

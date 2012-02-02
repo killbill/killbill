@@ -80,9 +80,9 @@ public class MemoryEventBus implements EventBus {
     }
 
     @Override
-    public void register(Object handlerInstnace) throws EventBusException {
+    public void register(Object handlerInstance) throws EventBusException {
         checkInitialized("register");
-        delegate.register(handlerInstnace);
+        delegate.register(handlerInstance);
     }
 
     @Override
@@ -111,7 +111,6 @@ public class MemoryEventBus implements EventBus {
         }
     }
 
-
     private void checkInitialized(String operation) throws EventBusException {
         if (!isInitialized.get()) {
             throw new EventBusException(String.format("Attempting operation %s on an non initialized eventbus",
@@ -124,7 +123,7 @@ public class MemoryEventBus implements EventBus {
             log.info("MemoryEventBus stopping...");
             delegate.completeDispatch();
             delegate.stop();
-            log.info("MemoryEventBus stoped...");
+            log.info("MemoryEventBus stopped...");
         }
     }
 }

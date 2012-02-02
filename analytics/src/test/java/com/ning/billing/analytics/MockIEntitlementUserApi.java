@@ -115,4 +115,9 @@ public class MockIEntitlementUserApi implements EntitlementUserApi
     public SubscriptionBundle getBundleForKey(String bundleKey) {
         throw new UnsupportedOperationException();
     }
+
+	@Override
+	public DateTime getNextBillingDate(UUID account) {
+		throw new UnsupportedOperationException();
+	}
 }

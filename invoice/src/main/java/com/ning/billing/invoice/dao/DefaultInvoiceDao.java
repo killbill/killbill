@@ -16,24 +16,24 @@
 
 package com.ning.billing.invoice.dao;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
-import com.google.inject.Inject;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
-import com.ning.billing.util.eventbus.EventBus;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import com.google.inject.Inject;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
+import com.ning.billing.payment.api.InvoicePayment;
+import com.ning.billing.util.eventbus.EventBus;
 
 public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceDao;
@@ -138,17 +138,28 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifySuccessfulPayment(String invoiceId, BigDecimal paymentAmount, String currency, String paymentId, Date paymentDate) {
-        invoiceDao.notifySuccessfulPayment(invoiceId, paymentAmount, currency, paymentId, paymentDate);
-    }
-
-    @Override
-    public void notifyFailedPayment(String invoiceId, String paymentId, Date paymentAttemptDate) {
-        invoiceDao.notifyFailedPayment(invoiceId, paymentId, paymentAttemptDate);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
+        invoiceDao.notifyOfPaymentAttempt(invoicePayment);
     }
 
     @Override
     public void test() {
         invoiceDao.test();
     }
+
+    @Override
+    public String getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
+        return invoiceDao.getInvoiceIdByPaymentAttemptId(paymentAttemptId.toString());
+    }
+
+    @Override
+    public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
+        return invoiceDao.getInvoicePayment(paymentAttemptId);
+    }
+
+	@Override
+	public BigDecimal getAccountBalance(UUID accountId) {
+		return invoiceDao.getAccountBalance(accountId.toString());
+	}
+
 }

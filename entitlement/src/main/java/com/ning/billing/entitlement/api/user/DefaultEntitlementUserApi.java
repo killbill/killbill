@@ -148,4 +148,21 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             throw new EntitlementUserApiException(e);
         }
     }
+
+	@Override
+	public DateTime getNextBillingDate(UUID accountId) {
+		List<SubscriptionBundle> bundles = getBundlesForAccount(accountId);
+		DateTime result = null;
+		for(SubscriptionBundle bundle : bundles) {
+			List<Subscription> subscriptions = getSubscriptionsForBundle(bundle.getId());
+			for(Subscription subscription : subscriptions) {
+				DateTime chargedThruDate = subscription.getChargedThroughDate();
+				if(result == null || 
+						(chargedThruDate != null && chargedThruDate.isBefore(result))) {
+					result = subscription.getChargedThroughDate();
+				}
+			}
+		}
+		return result;
+	}
 }

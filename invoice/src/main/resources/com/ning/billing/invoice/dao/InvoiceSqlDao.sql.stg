@@ -2,7 +2,7 @@ group InvoiceDao;
 
 get() ::= <<
   SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+         SUM(ip.amount) AS amount_paid, MAX(ip.payment_attempt_date) AS last_payment_attempt
   FROM invoices i
   LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
   LEFT JOIN invoice_items ii ON ii.invoice_id = i.id
@@ -12,7 +12,7 @@ get() ::= <<
 
 getInvoicesByAccount() ::= <<
   SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+         SUM(ip.amount) AS amount_paid, MAX(ip.payment_attempt_date) AS last_payment_attempt
   FROM invoices i
   LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
   LEFT JOIN invoice_items ii ON ii.invoice_id = i.id
@@ -23,7 +23,7 @@ getInvoicesByAccount() ::= <<
 
 getInvoicesBySubscription() ::= <<
   SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+         SUM(ip.amount) AS amount_paid, MAX(ip.payment_attempt_date) AS last_payment_attempt
   FROM invoices i
   LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
   LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
@@ -44,7 +44,7 @@ getInvoicesForPayment() ::= <<
 
 getById() ::= <<
   SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_date) AS last_payment_attempt
+         SUM(ip.amount) AS amount_paid, MAX(ip.payment_attempt_date) AS last_payment_attempt
   FROM invoices i
   LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
   LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
@@ -57,20 +57,37 @@ create() ::= <<
   VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency);
 >>
 
+getInvoiceIdByPaymentAttemptId() ::= <<
+  SELECT i.id
+    FROM invoices i, invoice_payments ip
+   WHERE ip.invoice_id = i.id
+     AND ip.payment_attempt_id = :paymentAttemptId
+>>
+
 update() ::= <<
   UPDATE invoices
   SET account_id = :accountId, invoice_date = :invoiceDate, target_date = :targetDate, currency = :currency
   WHERE id = :id;
 >>
 
-notifySuccessfulPayment() ::= <<
-  INSERT INTO invoice_payments(invoice_id, payment_id, payment_date, amount, currency)
-  VALUES(:invoiceId, :paymentId, :paymentDate, :amount, :currency);
+notifyOfPaymentAttempt() ::= <<
+  INSERT INTO invoice_payments(invoice_id, payment_attempt_id, payment_attempt_date, amount, currency, created_date, updated_date)
+  VALUES(:invoice_id, :payment_attempt_id, :payment_attempt_date, :amount, :currency, NOW(), NOW());
 >>
 
-notifyFailedPayment() ::= <<
-  INSERT INTO invoice_payments(invoice_id, payment_id, payment_date)
-  VALUES(:invoiceId, :paymentId, :paymentAttemptDate);
+getInvoicePayment() ::= <<
+    SELECT invoice_id, payment_attempt_id, payment_attempt_date, amount, currency, created_date, updated_date
+      FROM invoice_payments
+     WHERE payment_id = :payment_id
+>>
+
+getAccountBalance() ::= <<
+  SELECT SUM(iis.total_amount) AS amount_invoiced, SUM(ips.total_paid) AS amount_paid
+  FROM invoices i
+  LEFT JOIN invoice_payment_summary ips ON i.id = ips.invoice_id
+  LEFT JOIN invoice_item_summary iis ON i.id = iis.invoice_id
+  WHERE i.account_id = :accountId
+  GROUP BY i.account_id;
 >>
 
 test() ::= <<

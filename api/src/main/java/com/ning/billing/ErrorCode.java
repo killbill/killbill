@@ -102,9 +102,24 @@ public enum ErrorCode {
     *
     */
     ACCOUNT_ALREADY_EXISTS(3000, "Account already exists for key %s"),
-    ACCOUNT_INVALID_NAME(3001, "An invalid name was specified when creating or updating an account.")
+    ACCOUNT_INVALID_NAME(3001, "An invalid name was specified when creating or updating an account."),
+    ACCOUNT_DOES_NOT_EXIST_FOR_ID(3002, "Account does not exist for id %s"),
+    ACCOUNT_DOES_NOT_EXIST_FOR_KEY(3003, "Account does not exist for key %s"),
+    ACCOUNT_CANNOT_MAP_NULL_KEY(3004, "An attempt was made to get the id for a <null> external key."),
+    ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY(3005, "External keys cannot be updated. Original key remains: %s"),
+
+   /*
+    *
+    * Range 3900: Tag definitions
+    *
+    */
+    TAG_DEFINITION_CONFLICTS_WITH_CONTROL_TAG(3900, "The tag definition name conflicts with a reserved name (name %s)"),
+    TAG_DEFINITION_ALREADY_EXISTS(3901, "The tag definition name already exists (name: %s)"),
+    TAG_DEFINITION_DOES_NOT_EXIST(3902, "The tag definition name does not exist (name: %s)"),
+    TAG_DEFINITION_IN_USE(3903, "The tag definition name is currently in use (name: %s)")
 
     ;
+
     private int code;
     private String format;
 

@@ -16,20 +16,21 @@
 
 package com.ning.billing.util.entity;
 
+import java.util.List;
+
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-import java.util.List;
+import com.ning.billing.account.api.AccountApiException;
 
 public interface EntityDao<T extends Entity> {
     @SqlUpdate
-    public void create(@BindBean T entity);
+    public void create(@BindBean final T entity) throws AccountApiException;
 
     @SqlUpdate
-    public void update(@BindBean T entity);
+    public void update(@BindBean final T entity) throws AccountApiException;
 
     @SqlQuery
     public T getById(@Bind("id") final String id);
@@ -39,4 +40,7 @@ public interface EntityDao<T extends Entity> {
 
     @SqlUpdate
     public void test();
+
+    @SqlUpdate
+    public void deleteByKey(String key) throws AccountApiException;
 }

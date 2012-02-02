@@ -21,7 +21,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.glue.InvoiceModuleMock;
+import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import org.apache.commons.io.IOUtils;
