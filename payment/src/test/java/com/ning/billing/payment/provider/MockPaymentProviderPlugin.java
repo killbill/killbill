@@ -75,10 +75,9 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     @Override
     public Either<PaymentError, String> createPaymentProviderAccount(Account account) {
         if (account != null) {
-            String id = String.valueOf(RandomStringUtils.random(10));
+            String id = String.valueOf(RandomStringUtils.randomAlphanumeric(10));
             accounts.put(account.getExternalKey(),
-                         new PaymentProviderAccount.Builder().setAccountNumber(String.valueOf(RandomStringUtils.random(10)))
-                                                             .setDefaultPaymentMethod(String.valueOf(RandomStringUtils.random(10)))
+                         new PaymentProviderAccount.Builder().setAccountKey(account.getExternalKey())
                                                              .setId(id)
                                                              .build());
 
@@ -102,27 +101,73 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     @Override
     public Either<PaymentError, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
         if (paymentMethod != null) {
-            String paymentMethodId = RandomStringUtils.random(10);
-            PaymentMethodInfo realPaymentMethod = null;
+            PaymentProviderAccount account = accounts.get(accountKey);
 
-            if (paymentMethod instanceof PaypalPaymentMethodInfo) {
-                PaypalPaymentMethodInfo paypalPaymentMethod = (PaypalPaymentMethodInfo)paymentMethod;
-                realPaymentMethod = new PaypalPaymentMethodInfo.Builder(paypalPaymentMethod).setId(paymentMethodId).build();
+            if (account != null && account.getId() != null) {
+                String existingDefaultMethod = account.getDefaultPaymentMethodId();
+
+                String paymentMethodId = RandomStringUtils.randomAlphanumeric(10);
+                boolean shouldBeDefault = Boolean.TRUE.equals(paymentMethod.getDefaultMethod()) || existingDefaultMethod == null;
+                PaymentMethodInfo realPaymentMethod = null;
+
+                if (paymentMethod instanceof PaypalPaymentMethodInfo) {
+                    PaypalPaymentMethodInfo paypalPaymentMethod = (PaypalPaymentMethodInfo)paymentMethod;
+
+                    realPaymentMethod = new PaypalPaymentMethodInfo.Builder(paypalPaymentMethod)
+                                                                   .setId(paymentMethodId)
+                                                                   .setAccountId(accountKey)
+                                                                   .setDefaultMethod(shouldBeDefault)
+                                                                   .setBaid(paypalPaymentMethod.getBaid())
+                                                                   .setEmail(paypalPaymentMethod.getEmail())
+                                                                   .build();
+                }
+                else if (paymentMethod instanceof CreditCardPaymentMethodInfo) {
+                    CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethod;
+                    realPaymentMethod = new CreditCardPaymentMethodInfo.Builder(ccPaymentMethod).setId(paymentMethodId).build();
+                }
+                if (realPaymentMethod == null) {
+                    return Either.left(new PaymentError("unsupported", "Payment method " + paymentMethod.getType() + " not supported by the plugin"));
+                }
+                else {
+                    if (shouldBeDefault) {
+                        setDefaultPaymentMethodOnAccount(account, paymentMethodId);
+                    }
+                    paymentMethods.put(paymentMethodId, realPaymentMethod);
+                    return Either.right(paymentMethodId);
+                }
             }
-            else if (paymentMethod instanceof CreditCardPaymentMethodInfo) {
-                CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethod;
-                realPaymentMethod = new CreditCardPaymentMethodInfo.Builder(ccPaymentMethod).setId(paymentMethodId).build();
-            }
-            if (realPaymentMethod == null) {
-                return Either.left(new PaymentError("unsupported", "Payment method " + paymentMethod.getType() + " not supported by the plugin"));
-            }
-            else {
-                paymentMethods.put(paymentMethodId, paymentMethod);
-                return Either.right(paymentMethodId);
-            }
+                else {
+                    return Either.left(new PaymentError("noaccount", "Could not retrieve account for accountKey " + accountKey));
+                }
         }
         else {
             return Either.left(new PaymentError("unknown", "Could not create add payment method " + paymentMethod + " for " + accountKey));
+        }
+    }
+
+    public void setDefaultPaymentMethodOnAccount(PaymentProviderAccount account, String paymentMethodId) {
+        if (paymentMethodId != null && account != null) {
+            accounts.put(account.getAccountKey(),
+                new PaymentProviderAccount.Builder()
+                                          .copyFrom(account)
+                                          .setDefaultPaymentMethod(paymentMethodId)
+                                          .build());
+            List<PaymentMethodInfo> paymentMethodsToUpdate = new ArrayList<PaymentMethodInfo>();
+            for (PaymentMethodInfo paymentMethod : paymentMethods.values()) {
+                if (account.getAccountKey().equals(paymentMethod.getAccountId()) && !paymentMethodId.equals(paymentMethod.getId())) {
+                    if (paymentMethod instanceof PaypalPaymentMethodInfo) {
+                        PaypalPaymentMethodInfo paypalPaymentMethod = (PaypalPaymentMethodInfo)paymentMethod;
+                        paymentMethodsToUpdate.add(new PaypalPaymentMethodInfo.Builder(paypalPaymentMethod).setDefaultMethod(false).build());
+                    }
+                    else if (paymentMethod instanceof CreditCardPaymentMethodInfo) {
+                        CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethod;
+                        paymentMethodsToUpdate.add(new CreditCardPaymentMethodInfo.Builder(ccPaymentMethod).setDefaultMethod(false).build());
+                    }
+                }
+            }
+            for (PaymentMethodInfo paymentMethod : paymentMethodsToUpdate) {
+                paymentMethods.put(paymentMethod.getId(), paymentMethod);
+            }
         }
     }
 
@@ -154,17 +199,23 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId) {
-        if (paymentMethods.remove(paymentMethodId) == null) {
-            return Either.left(new PaymentError("unknown", "Did not get any result back"));
+        PaymentMethodInfo paymentMethodInfo = paymentMethods.get(paymentMethodId);
+        if (paymentMethodInfo != null) {
+            if (Boolean.FALSE.equals(paymentMethodInfo.getDefaultMethod()) || paymentMethodInfo.getDefaultMethod() == null) {
+                if (paymentMethods.remove(paymentMethodId) == null) {
+                    return Either.left(new PaymentError("unknown", "Did not get any result back"));
+                }
+            }
+            else {
+                return Either.left(new PaymentError("error", "Cannot delete default payment method"));
+            }
         }
-        else {
-            return Either.right(null);
-        }
+        return Either.right(null);
     }
 
     @Override
     public Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
-        if (paymentMethodId != null) {
+        if (paymentMethodId == null) {
             return Either.left(new PaymentError("unknown", "Could not retrieve payment method for paymentMethodId " + paymentMethodId));
         }
 
@@ -172,12 +223,12 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(final String accountId) {
+    public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(final String accountKey) {
 
         Collection<PaymentMethodInfo> filteredPaymentMethods = Collections2.filter(paymentMethods.values(), new Predicate<PaymentMethodInfo>() {
             @Override
             public boolean apply(PaymentMethodInfo input) {
-                return accountId.equals(input.getAccountId());
+                return accountKey.equals(input.getAccountId());
             }
         });
         List<PaymentMethodInfo> result = new ArrayList<PaymentMethodInfo>(filteredPaymentMethods);
@@ -190,7 +241,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, Void> updatePaymentProviderAccountWithExistingContact(Account account) {
+    public Either<PaymentError, Void> updatePaymentProviderAccountExistingContact(Account account) {
         // nothing to do here
         return Either.right(null);
     }

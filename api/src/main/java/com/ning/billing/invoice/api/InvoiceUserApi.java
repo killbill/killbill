@@ -33,11 +33,6 @@ public interface InvoiceUserApi {
 
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
 
-//    public void paymentAttemptFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate);
-//
-//    public void paymentAttemptSuccessful(UUID invoiceId, BigDecimal amount, Currency currency,
-//                                         UUID paymentId, DateTime paymentDate);
-    
     public BigDecimal getAccountBalance(UUID accountId);
 
 }

@@ -20,18 +20,18 @@ import com.google.common.base.Objects;
 
 public class PaymentProviderAccount {
     private final String id;
-    private final String accountNumber;
+    private final String accountKey;
     private final String accountName;
     private final String phoneNumber;
     private final String defaultPaymentMethodId;
 
     public PaymentProviderAccount(String id,
-                                  String accountNumber,
+                                  String accountKey,
                                   String accountName,
                                   String phoneNumber,
                                   String defaultPaymentMethodId) {
         this.id = id;
-        this.accountNumber = accountNumber;
+        this.accountKey = accountKey;
         this.accountName = accountName;
         this.phoneNumber = phoneNumber;
         this.defaultPaymentMethodId = defaultPaymentMethodId;
@@ -41,8 +41,8 @@ public class PaymentProviderAccount {
         return id;
     }
 
-    public String getAccountNumber() {
-        return accountNumber;
+    public String getAccountKey() {
+        return accountKey;
     }
 
     public String getAccountName() {
@@ -59,18 +59,27 @@ public class PaymentProviderAccount {
 
     public static class Builder {
         private String id;
-        private String accountNumber;
+        private String accountKey;
         private String accountName;
         private String phoneNumber;
         private String defaultPaymentMethodId;
+
+        public Builder copyFrom(PaymentProviderAccount src) {
+            this.id = src.getId();
+            this.accountKey = src.getAccountKey();
+            this.accountName = src.getAccountName();
+            this.phoneNumber = src.getPhoneNumber();
+            this.defaultPaymentMethodId = src.getDefaultPaymentMethodId();
+            return this;
+        }
 
         public Builder setId(String id) {
             this.id = id;
             return this;
         }
 
-        public Builder setAccountNumber(String accountNumber) {
-            this.accountNumber = accountNumber;
+        public Builder setAccountKey(String accountKey) {
+            this.accountKey = accountKey;
             return this;
         }
 
@@ -90,7 +99,7 @@ public class PaymentProviderAccount {
         }
 
         public PaymentProviderAccount build() {
-            return new PaymentProviderAccount(id, accountNumber, accountName, phoneNumber, defaultPaymentMethodId);
+            return new PaymentProviderAccount(id, accountKey, accountName, phoneNumber, defaultPaymentMethodId);
         }
 
     }
@@ -98,7 +107,7 @@ public class PaymentProviderAccount {
     @Override
     public int hashCode() {
         return Objects.hashCode(id,
-                                accountNumber,
+                                accountKey,
                                 accountName,
                                 phoneNumber,
                                 defaultPaymentMethodId);
@@ -113,12 +122,18 @@ public class PaymentProviderAccount {
             }
             else {
                 return Objects.equal(id, other.id) &&
-                       Objects.equal(accountNumber, other.accountNumber) &&
+                       Objects.equal(accountKey, other.accountKey) &&
+                       Objects.equal(accountName, other.accountName) &&
                        Objects.equal(phoneNumber, other.phoneNumber) &&
                        Objects.equal(defaultPaymentMethodId, other.defaultPaymentMethodId);
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "PaymentProviderAccount [id=" + id + ", accountKey=" + accountKey + ", accountName=" + accountName + ", phoneNumber=" + phoneNumber + ", defaultPaymentMethodId=" + defaultPaymentMethodId + "]";
     }
 
 }
