@@ -20,6 +20,8 @@ import com.google.common.base.Strings;
 
 
 public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
+    public static final String TYPE = "PayPal";
+
     public static final class Builder extends BuilderBase<PaypalPaymentMethodInfo, Builder> {
         private String baid;
         private String email;
@@ -55,7 +57,7 @@ public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
                                    Boolean defaultMethod,
                                    String baid,
                                    String email) {
-        super(id, accountId, defaultMethod, "PayPal");
+        super(id, accountId, defaultMethod, TYPE);
 
         if (Strings.isNullOrEmpty(accountId) || Strings.isNullOrEmpty(baid) || Strings.isNullOrEmpty(email)) {
             throw new IllegalArgumentException("accountId, baid and email should be present");
