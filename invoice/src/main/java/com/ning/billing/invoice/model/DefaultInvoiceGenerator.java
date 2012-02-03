@@ -75,6 +75,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             currentItems.add(new DefaultInvoiceItem(item, invoiceId));
         }
 
+        // STEPH why clone? Why cast?
         InvoiceItemList existingItems = (InvoiceItemList) existingInvoiceItems.clone();
 
         Collections.sort(currentItems);
@@ -86,6 +87,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             // see if there are any existing items that are covered by the current item
             while (it.hasNext()) {
                 InvoiceItem existingItem = it.next();
+                // STEPH this is more like 'contained' that 'duplicates'
                 if (currentItem.duplicates(existingItem)) {
                     currentItem.subtract(existingItem);
                     it.remove();
@@ -98,6 +100,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         // add existing items that aren't covered by current items as credit items
         for (final InvoiceItem existingItem : existingItems) {
+            // STEPH do we really want to credit if that has not been paid yet?
             currentItems.add(existingItem.asCredit(existingItem.getInvoiceId()));
         }
 
@@ -119,7 +122,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             BillingEvent thisEvent = events.get(i);
             BillingEvent nextEvent = events.get(i + 1);
 
-            if (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) {
+
+            if (thisEvent.getSubscription().getId().equals(nextEvent.getSubscription().getId())) {
                 processEvents(invoiceId, thisEvent, nextEvent, items, targetDate, targetCurrency);
             } else {
                 processEvent(invoiceId, thisEvent, items, targetDate, targetCurrency);
@@ -137,6 +141,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private void processEvent(final UUID invoiceId, final BillingEvent event, final InvoiceItemList items,
                               final DateTime targetDate, final Currency targetCurrency) {
     	try {
+    	    // STEPH should not that check apply to next method as well?
             if (event.getEffectiveDate().compareTo(targetDate) > 0) {
                 return;
             }
@@ -158,10 +163,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             }
 
             BigDecimal effectiveFixedPrice = items.hasInvoiceItemForPhase(event.getPlanPhase().getName()) ? null : fixedPrice;
+
+            // STEPH don't we also need to check for if (Days.daysBetween(firstEvent.getEffectiveDate(), billThroughDate).getDays() > 0)
             addInvoiceItem(invoiceId, items, event, billThroughDate, recurringAmount, recurringRate, effectiveFixedPrice, targetCurrency);
     	} catch (CatalogApiException e) {
-            log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s", 
-                    invoiceId.toString(), 
+    	    // STEPH same remark for catalog exception.
+            log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s",
+                    invoiceId.toString(),
                     ISODateTimeFormat.basicDateTime().print(event.getEffectiveDate())), e);
         }
     }
@@ -191,6 +199,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, recurringAmount, recurringRate, effectiveFixedPrice, targetCurrency);
             }
     	} catch (CatalogApiException e) {
+
+    	    // STEPH That needs to be thrown so we stop that invoice generation
     		log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s",
                     invoiceId.toString(),
                     ISODateTimeFormat.basicDateTime().print(firstEvent.getEffectiveDate())), e);

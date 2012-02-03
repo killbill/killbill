@@ -136,6 +136,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+
+                // STEPH this seems useless
                 Invoice currentInvoice = invoiceDao.getById(invoice.getId().toString());
 
                 if (currentInvoice == null) {
@@ -148,6 +150,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     notifyOfFutureBillingEvents(invoiceSqlDao, invoiceItems);
                     setChargedThroughDates(invoiceSqlDao, invoiceItems);
 
+
+                    // STEPH Why do we need that? Are the payments not always null at this point?
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
                     InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
                     invoicePaymentSqlDao.create(invoicePayments);
@@ -188,7 +192,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     public BigDecimal getAccountBalance(final UUID accountId) {
         return invoiceSqlDao.getAccountBalance(accountId.toString());
     }
-    
+
     @Override
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
         invoicePaymentSqlDao.notifyOfPaymentAttempt(invoicePayment);
@@ -211,6 +215,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public boolean lockAccount(final UUID accountId) {
+        /*
         try {
             invoiceSqlDao.lockAccount(accountId.toString());
             return true;
@@ -218,16 +223,21 @@ public class DefaultInvoiceDao implements InvoiceDao {
             log.error("Ouch! I broke", e);
             return false;
         }
+        */
+        return true;
     }
 
     @Override
     public boolean releaseAccount(final UUID accountId) {
+        /*
         try {
             invoiceSqlDao.releaseAccount(accountId.toString());
             return true;
         } catch (Exception e) {
             return false;
         }
+        */
+        return true;
     }
 
     @Override
@@ -264,19 +274,19 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
         for (final InvoiceItem item : invoiceItems) {
-            if (item.getRecurringRate() != null) {
-                if (item.getRecurringAmount().compareTo(BigDecimal.ZERO) > 0) {
-                    notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
-                }
+            if ((item.getEndDate() != null) &&
+                    (item.getRecurringAmount() == null || item.getRecurringAmount().compareTo(BigDecimal.ZERO) >= 0)) {
+                notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
             }
         }
     }
 
     private void setChargedThroughDates(final InvoiceSqlDao dao, final Collection<InvoiceItem> invoiceItems) {
-        for (InvoiceItem invoiceItem : invoiceItems) {
-            if (invoiceItem.getEndDate() != null) {
-                log.info("Setting CTD for invoice item {} to {}", invoiceItem.getId().toString(), invoiceItem.getEndDate().toString());
-                entitlementBillingApi.setChargedThroughDateFromTransaction(dao, invoiceItem.getSubscriptionId(), invoiceItem.getEndDate());
+        for (InvoiceItem item : invoiceItems) {
+            if ((item.getEndDate() != null) &&
+                    (item.getRecurringAmount() == null || item.getRecurringAmount().compareTo(BigDecimal.ZERO) >= 0)) {
+                log.info("Setting CTD for invoice item {} to {}", item.getId().toString(), item.getEndDate().toString());
+                entitlementBillingApi.setChargedThroughDateFromTransaction(dao, item.getSubscriptionId(), item.getEndDate());
             }
         }
     }
