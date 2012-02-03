@@ -63,20 +63,31 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     protected void doProcessEvents(int sequenceId) {
 
         List<Notification> processedNotifications = new ArrayList<Notification>();
+        List<Notification> oldNotifications = new ArrayList<Notification>();
+
+        List<Notification> readyNotifications = new ArrayList<Notification>();
         synchronized(notifications) {
             Iterator<Notification> it = notifications.iterator();
             while (it.hasNext()) {
                 Notification cur = it.next();
                 if (cur.isAvailableForProcessing(clock.getUTCNow())) {
-                    handler.handleReadyNotification(cur.getNotificationKey());
-                    DefaultNotification processedNotification = new DefaultNotification(cur.getId(), hostname, clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
-                    it.remove();
-                    processedNotifications.add(processedNotification);
+                    readyNotifications.add(cur);
                 }
+            }
+            for (Notification cur : readyNotifications) {
+                handler.handleReadyNotification(cur.getNotificationKey());
+                DefaultNotification processedNotification = new DefaultNotification(cur.getId(), hostname, clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
+                oldNotifications.add(cur);
+                processedNotifications.add(processedNotification);
+
+            }
+            if (oldNotifications.size() > 0) {
+                notifications.removeAll(oldNotifications);
             }
             if (processedNotifications.size() > 0) {
                 notifications.addAll(processedNotifications);
             }
         }
+
     }
 }

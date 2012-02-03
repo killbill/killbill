@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -35,7 +36,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
 
     protected final NotificationSqlDao dao;
 
-    public DefaultNotificationQueue(final DBI dbi, final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
+    public DefaultNotificationQueue(final IDBI dbi, final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
         super(clock, svcName, queueName, handler, config);
         this.dao = dbi.onDemand(NotificationSqlDao.class);
     }
