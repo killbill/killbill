@@ -21,6 +21,8 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.UUID;
 
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
@@ -174,7 +176,7 @@ public class TestBasic {
         testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
     }
@@ -289,6 +291,43 @@ public class TestBasic {
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
         assertTrue(busHandler.isCompleted(DELAY));
         lastCtd = checkAndGetCTD(subscription.getId());
+    }
+
+    @Test(enabled=false)
+    public void testHappyPath() throws AccountApiException, EntitlementUserApiException {
+        long DELAY = 5000 * 10;
+
+        Account account = accountUserApi.createAccount(getAccountData(), null, null);
+        assertNotNull(account);
+
+        SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever");
+
+        String productName = "Shotgun";
+        BillingPeriod term = BillingPeriod.MONTHLY;
+        String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        busHandler.pushExpectedEvent(NextEvent.CREATE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
+                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
+        assertNotNull(subscription);
+
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        busHandler.pushExpectedEvent(NextEvent.CHANGE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        BillingPeriod newTerm = BillingPeriod.MONTHLY;
+        String newPlanSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+        String newProductName = "Assault-Rifle";
+        subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
+
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        busHandler.pushExpectedEvent(NextEvent.PHASE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+        assertTrue(busHandler.isCompleted(DELAY));
+
     }
 
 

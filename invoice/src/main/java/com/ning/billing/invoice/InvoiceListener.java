@@ -53,19 +53,17 @@ public class InvoiceListener {
     private final EntitlementBillingApi entitlementBillingApi;
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
-    private final GlobalLocker globalLocker;
 
     private final static boolean VERBOSE_OUTPUT = false;
 
     @Inject
     public InvoiceListener(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
                            final EntitlementBillingApi entitlementBillingApi,
-                           final InvoiceDao invoiceDao, final GlobalLocker globalLocker) {
+                           final InvoiceDao invoiceDao) {
         this.generator = generator;
         this.entitlementBillingApi = entitlementBillingApi;
         this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
-        this.globalLocker = globalLocker;
     }
 
     @Subscribe
@@ -99,9 +97,7 @@ public class InvoiceListener {
             return;
         }
 
-        GlobalLock lock = globalLocker.lockWithNumberOfTries("invoiceProcessor:" + accountId.toString(), 1);
-
-        if (lock == null) {
+        if (!invoiceDao.lockAccount(accountId)) {
             log.warn("Conflicting lock detected from InvoiceListener on account "  + accountId.toString());
         } else {
             log.info("Locked " + accountId.toString());
@@ -142,7 +138,7 @@ public class InvoiceListener {
                 }
             }
 
-            lock.release();
+            invoiceDao.releaseAccount(accountId);
         }
     }
 

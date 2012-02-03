@@ -205,7 +205,7 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
-					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+					<billingPeriod>MONTHLY</billingPeriod>
 					<fixedPrice> <!-- empty price implies $0 -->
 					</fixedPrice>
 				</phase>
@@ -231,11 +231,11 @@ Use Cases to do:
 						<number>30</number>
 					</duration>
 					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-					<fixedPrice>
-                                          <price><currency>GBP</currency><value>29.95</value></price>
-                                          <price><currency>EUR</currency><value>29.95</value></price>
-                                          <price><currency>USD</currency><value>1.95</value></price>
-                                        </fixedPrice>
+					<recurringPrice>
+                        <price><currency>GBP</currency><value>29.95</value></price>
+                        <price><currency>EUR</currency><value>29.95</value></price>
+                        <price><currency>USD</currency><value>1.95</value></price>
+                    </recurringPrice>
 				    <!-- no price implies $0 -->
 				</phase>
 			</initialPhases>
@@ -260,12 +260,12 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
-					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-					<fixedPrice>
-                                          <price><currency>GBP</currency><value>29.95</value></price>
-                                          <price><currency>EUR</currency><value>29.95</value></price>
-                                          <price><currency>USD</currency><value>2.95</value></price>
-					</fixedPrice>
+					<billingPeriod>MONTHLY</billingPeriod>
+					<recurringPrice>
+                        <price><currency>GBP</currency><value>29.95</value></price>
+                        <price><currency>EUR</currency><value>29.95</value></price>
+                        <price><currency>USD</currency><value>2.95</value></price>
+					</recurringPrice>
 				</phase>
 			</initialPhases>
 			<finalPhase type="EVERGREEN">

@@ -53,5 +53,9 @@ public interface InvoiceDao {
 
     List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate);
 
+    boolean lockAccount(final UUID accountId);
+
+    boolean releaseAccount(final UUID accountId);
+
     void test();
 }

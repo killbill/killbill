@@ -86,6 +86,12 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     @SqlQuery
     List<Invoice> getUnpaidInvoicesByAccountId(@Bind("accountId") final String accountId,
                                                @Bind("upToDate") final Date upToDate);
+
+    @SqlUpdate
+    void lockAccount(@Bind("accountId") final String accountId);
+
+    @SqlUpdate
+    void releaseAccount(@Bind("accountId") final String accountId);
     
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)

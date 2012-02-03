@@ -208,7 +208,28 @@ public class DefaultInvoiceDao implements InvoiceDao {
             }
         });
     }
-    
+
+    @Override
+    public boolean lockAccount(final UUID accountId) {
+        try {
+            invoiceSqlDao.lockAccount(accountId.toString());
+            return true;
+        } catch (Exception e) {
+            log.error("Ouch! I broke", e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean releaseAccount(final UUID accountId) {
+        try {
+            invoiceSqlDao.releaseAccount(accountId.toString());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     @Override
     public UUID getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
         return invoiceSqlDao.getInvoiceIdByPaymentAttemptId(paymentAttemptId.toString());
@@ -244,7 +265,9 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
         for (final InvoiceItem item : invoiceItems) {
             if (item.getRecurringRate() != null) {
-                notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
+                if (item.getRecurringAmount().compareTo(BigDecimal.ZERO) > 0) {
+                    notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
+                }
             }
         }
     }

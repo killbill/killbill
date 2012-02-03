@@ -15,6 +15,12 @@ CREATE TABLE invoice_items (
 ) ENGINE=innodb;
 CREATE INDEX invoice_items_subscription_id ON invoice_items(subscription_id ASC);
 
+DROP TABLE IF EXISTS invoice_locking;
+CREATE TABLE invoice_locking (
+  account_id char(36) NOT NULL,
+  PRIMARY KEY(account_id)
+) ENGINE = innodb;
+
 DROP TABLE IF EXISTS invoices;
 CREATE TABLE invoices (
   id char(36) NOT NULL,
