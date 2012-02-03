@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.globallocker;
+package com.ning.billing.util.globalLocker;
 
 import com.google.inject.Inject;
 import org.skife.jdbi.v2.Handle;

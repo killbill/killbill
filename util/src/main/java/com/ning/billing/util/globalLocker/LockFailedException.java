@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.globallocker;
+package com.ning.billing.util.globalLocker;
 
 public class LockFailedException extends RuntimeException
 {

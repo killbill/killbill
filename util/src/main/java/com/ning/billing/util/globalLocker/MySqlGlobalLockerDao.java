@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.globallocker;
+package com.ning.billing.util.globalLocker;
 
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;

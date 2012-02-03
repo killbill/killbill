@@ -21,14 +21,10 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import com.ning.billing.invoice.model.BillingEventSet;
-import com.ning.billing.invoice.notification.NextBillingDateEvent;
-import com.ning.billing.util.globallocker.GlobalLock;
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.sun.istack.internal.FinalArrayList;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
@@ -42,9 +38,10 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceItemList;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.invoice.notification.NextBillingDateEvent;
 
 public class InvoiceListener {
     private final static Logger log = LoggerFactory.getLogger(InvoiceListener.class);
