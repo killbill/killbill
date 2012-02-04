@@ -214,6 +214,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                   event.getPlan().getName(), event.getPlanPhase().getName(), event.getEffectiveDate(),
                                   billThroughDate, amount, rate, fixedAmount, currency);
         items.add(item);
+        System.out.println(item);
     }
 
     private BigDecimal calculateNumberOfBillingPeriods(final BillingEvent event, final DateTime targetDate){

@@ -121,6 +121,9 @@ public class TestBusHandler {
 
     public boolean isCompleted(long timeout) {
         synchronized (this) {
+            if (completed) {
+                return completed;
+            }
             try {
                 wait(timeout);
             } catch (Exception ignore) {

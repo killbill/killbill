@@ -36,7 +36,7 @@ public class DefaultInvoiceItem implements InvoiceItem {
     private DateTime endDate;
     private BigDecimal recurringAmount;
     private final BigDecimal recurringRate;
-    private BigDecimal fixedAmount;
+    private final BigDecimal fixedAmount;
     private final Currency currency;
 
     public DefaultInvoiceItem(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
@@ -223,7 +223,7 @@ public class DefaultInvoiceItem implements InvoiceItem {
         if ((value1 != null) && (value2 == null)) {return false;}
 
         if ((value1 != null) && (value2 != null)) {
-            if (!value1.equals(value2)) {return false;}
+            if (value1.compareTo(value2) != 0) {return false;}
         }
 
         return true;
@@ -271,7 +271,11 @@ public class DefaultInvoiceItem implements InvoiceItem {
         sb.append("planName = ").append(planName).append(", ");
         sb.append("phaseName = ").append(phaseName).append(", ");
         sb.append("startDate = ").append(startDate.toString()).append(", ");
-        sb.append("endDate = ").append(startDate.toString()).append(", ");
+        if (endDate != null) {
+            sb.append("endDate = ").append(endDate.toString()).append(", ");
+        } else {
+            sb.append("endDate = null");
+        }
         sb.append("recurringAmount = ");
         if (recurringAmount == null) {
             sb.append("null");
