@@ -136,12 +136,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 			errors.add(new ValidationError(String.format("Phase %s of plan %s has a recurring price but no billing period", type.toString(), plan.getName()),
 					catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
 		}
-		
-		if(billingPeriod == BillingPeriod.NO_BILLING_PERIOD && recurringPrice != null) {
-			errors.add(new ValidationError(String.format("Phase %s of plan %s has a recurring price but no billing period", type.toString(), plan.getName()),
-					catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
-		}
-
+	
 		//Validation: if there is a recurring price there must be a billing period
 		if((recurringPrice != null) && (billingPeriod == null || billingPeriod == BillingPeriod.NO_BILLING_PERIOD)) {
 			errors.add(new ValidationError(String.format("Phase %s of plan %s has a recurring price but no billing period", type.toString(), plan.getName()),

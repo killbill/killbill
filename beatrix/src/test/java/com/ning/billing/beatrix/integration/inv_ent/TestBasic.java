@@ -176,7 +176,7 @@ public class TestBasic {
         testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
     }
