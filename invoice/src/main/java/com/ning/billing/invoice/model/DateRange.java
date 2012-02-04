@@ -34,7 +34,7 @@ public class DateRange {
      */
     public boolean contains(DateTime date) {
         if (endDate == null) {
-            return date.compareTo(startDate) == 0;
+            return date.compareTo(startDate) >= 0;
         }
 
         return !date.isBefore(startDate) && !date.isAfter(endDate);

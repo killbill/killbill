@@ -187,7 +187,7 @@ public class TestBasic {
     }
 
     private void testBasePlanComplete(int billingDay) throws Exception {
-        long DELAY = 5000 * 10;
+        long DELAY = 5000;
 
         Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
         assertNotNull(account);
@@ -240,8 +240,6 @@ public class TestBasic {
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
-
-        Thread.sleep(600000);
         assertTrue(busHandler.isCompleted(DELAY));
 
         //
@@ -250,6 +248,7 @@ public class TestBasic {
         newTerm = BillingPeriod.MONTHLY;
         newPlanSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
         newProductName = "Pistol";
+        subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscription.getId());
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
         log.info("testSimple has passed third busHandler checkpoint (no events)");
 
@@ -258,8 +257,8 @@ public class TestBasic {
         //
         busHandler.pushExpectedEvent(NextEvent.CHANGE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        clock.addDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
-        //clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
+        //clock.addDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed fourth busHandler checkpoint.");
 
@@ -269,8 +268,8 @@ public class TestBasic {
         int maxCycles = 3;
         DateTime lastCtd = null;
         do {
-            clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
+            clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
             assertTrue(busHandler.isCompleted(DELAY));
             lastCtd = checkAndGetCTD(subscription.getId());
         } while (maxCycles-- > 0);
@@ -278,11 +277,12 @@ public class TestBasic {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
+        subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscription.getId());
         subscription.cancel(clock.getUTCNow(), false);
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         busHandler.pushExpectedEvent(NextEvent.CANCEL);
-        Interval it = new Interval(lastCtd, clock.getUTCNow());
+        Interval it = new Interval(clock.getUTCNow(), lastCtd);
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(busHandler.isCompleted(DELAY));
 
@@ -292,7 +292,13 @@ public class TestBasic {
         busHandler.reset();
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
         assertTrue(busHandler.isCompleted(DELAY));
-        lastCtd = checkAndGetCTD(subscription.getId());
+
+
+        subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscription.getId());
+        lastCtd = subscription.getChargedThroughDate();
+        assertNotNull(lastCtd);
+        log.info("Checking CTD: " + lastCtd.toString() + "; clock is " + clock.getUTCNow().toString());
+        assertTrue(lastCtd.isBefore(clock.getUTCNow()));
     }
 
     @Test(enabled=false)

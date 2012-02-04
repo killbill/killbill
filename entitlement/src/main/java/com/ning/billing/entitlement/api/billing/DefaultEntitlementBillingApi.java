@@ -32,6 +32,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
@@ -50,7 +51,7 @@ import java.util.UUID;
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
-	
+
     private final EntitlementDao dao;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
@@ -66,7 +67,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     @Override
     public SortedSet<BillingEvent> getBillingEventsForAccount(
             final UUID accountId) {
-        
+
         List<SubscriptionBundle> bundles = dao.getSubscriptionBundleForAccount(accountId);
         List<Subscription> subscriptions = new ArrayList<Subscription>();
         for (final SubscriptionBundle bundle: bundles) {
@@ -80,7 +81,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
                     BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBCD(transition, accountId));
         			result.add(event);
         		} catch (CatalogApiException e) {
-        			log.error("Failing to identify catalog components while creating BillingEvent from transition: " + 
+        			log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
         					transition.getId().toString(), e);
                 } catch (Exception e) {
                     log.warn("Failed while getting BillingEvent", e);
@@ -97,26 +98,28 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
     private int calculateBCD(final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException {
     	Catalog catalog = catalogService.getFullCatalog();
-    	Plan plan = transition.getNextPlan();
+    	Plan plan =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+    	        transition.getNextPlan() : transition.getPreviousPlan();
     	Product product = plan.getProduct();
-    	PlanPhase phase = transition.getNextPhase();
-    	
+    	PlanPhase phase = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+    	        transition.getNextPhase() : transition.getPreviousPhase();
+
     	BillingAlignment alignment = catalog.billingAlignment(
     			new PlanPhaseSpecifier(product.getName(),
-    					product.getCategory(), 
-    					phase.getBillingPeriod(), 
-    					transition.getNextPriceList(), 
-    					phase.getPhaseType()), 
+    					product.getCategory(),
+    					phase.getBillingPeriod(),
+    					transition.getNextPriceList(),
+    					phase.getPhaseType()),
     					transition.getRequestedTransitionTime());
     	int result = 0;
 
         Account account = accountApi.getAccountById(accountId);
 
     	switch (alignment) {
-    		case ACCOUNT : 
+    		case ACCOUNT :
     			result = account.getBillCycleDay();
     		break;
-    		case BUNDLE : 
+    		case BUNDLE :
     			SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(transition.getBundleId());
     			//TODO result = bundle.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
     			result = bundle.getStartDate().getDayOfMonth();
@@ -131,9 +134,9 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     		throw new CatalogApiException(ErrorCode.CAT_INVALID_BILLING_ALIGNMENT, alignment.toString());
     	}
     	return result;
-    		
+
     }
-    
+
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
         SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionId);

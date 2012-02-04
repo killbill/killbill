@@ -31,7 +31,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition.Subscription
 
 public class DefaultBillingEvent implements BillingEvent {
 	Logger log = LoggerFactory.getLogger(DefaultBillingEvent.class);
-	
+
     final private int billCycleDay;
     final private Subscription subscription;
     final private DateTime effectiveDate;
@@ -48,15 +48,18 @@ public class DefaultBillingEvent implements BillingEvent {
         this.billCycleDay = billCycleDay;
         this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();
-        planPhase = transition.getNextPhase();
-        plan = transition.getNextPlan();
-        fixedPrice = (transition.getNextPhase() == null) ? null : 
+        planPhase = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+                transition.getNextPhase() : transition.getPreviousPhase();
+        plan = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+                transition.getNextPlan() : transition.getPreviousPlan();
+        fixedPrice = (transition.getNextPhase() == null) ? null :
         		transition.getNextPhase().getFixedPrice();
         recurringPrice = (transition.getNextPhase() == null) ? null :
         	transition.getNextPhase().getRecurringPrice();
         description = transition.getTransitionType().toString();
-        billingModeType=BillingModeType.IN_ADVANCE;
-        billingPeriod = transition.getNextPhase().getBillingPeriod();
+        billingModeType = BillingModeType.IN_ADVANCE;
+        billingPeriod =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+                transition.getNextPhase().getBillingPeriod() : transition.getPreviousPhase().getBillingPeriod();
         type = transition.getTransitionType();
     }
 
@@ -90,7 +93,7 @@ public class DefaultBillingEvent implements BillingEvent {
     				 return hashCode() - e1.hashCode();
     			 }
     		 }
-    	 }	
+    	 }
     }
 
     @Override
