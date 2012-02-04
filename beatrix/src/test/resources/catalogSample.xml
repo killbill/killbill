@@ -202,8 +202,8 @@ Use Cases to do:
 			<initialPhases>
 				<phase type="TRIAL">
 					<duration>
-						<unit>DAYS</unit>
-						<number>30</number>
+						<unit>MONTHS</unit>
+						<number>1</number>
 					</duration>
 					<billingPeriod>MONTHLY</billingPeriod>
 					<fixedPrice> <!-- empty price implies $0 -->
@@ -227,10 +227,10 @@ Use Cases to do:
 			<initialPhases>
 				<phase type="TRIAL">
 					<duration>
-						<unit>DAYS</unit>
-						<number>30</number>
+						<unit>MONTHS</unit>
+						<number>1</number>
 					</duration>
-					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+					<billingPeriod>MONTHLY</billingPeriod>
 					<recurringPrice>
                         <price><currency>GBP</currency><value>29.95</value></price>
                         <price><currency>EUR</currency><value>29.95</value></price>
@@ -257,8 +257,8 @@ Use Cases to do:
 			<initialPhases>
 				<phase type="TRIAL">
 					<duration>
-						<unit>DAYS</unit>
-						<number>30</number>
+						<unit>MONTHS</unit>
+						<number>1</number>
 					</duration>
 					<billingPeriod>MONTHLY</billingPeriod>
 					<recurringPrice>

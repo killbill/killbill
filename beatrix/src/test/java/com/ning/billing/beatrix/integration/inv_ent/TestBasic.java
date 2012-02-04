@@ -176,7 +176,7 @@ public class TestBasic {
         testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
     }
@@ -189,7 +189,7 @@ public class TestBasic {
     private void testBasePlanComplete(int billingDay) throws Exception {
         long DELAY = 5000 * 10;
 
-        Account account = accountUserApi.createAccount(getAccountData(), null, null);
+        Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
         assertNotNull(account);
 
         SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever");
@@ -206,7 +206,6 @@ public class TestBasic {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
         assertNotNull(subscription);
-
 
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed first busHandler checkpoint.");
@@ -241,6 +240,9 @@ public class TestBasic {
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+
+        Thread.sleep(600000);
+        assertTrue(busHandler.isCompleted(DELAY));
 
         //
         // CHANGE PLAN EOT AND EXPECT NOTHING
@@ -297,7 +299,7 @@ public class TestBasic {
     public void testHappyPath() throws AccountApiException, EntitlementUserApiException {
         long DELAY = 5000 * 10;
 
-        Account account = accountUserApi.createAccount(getAccountData(), null, null);
+        Account account = accountUserApi.createAccount(getAccountData(3), null, null);
         assertNotNull(account);
 
         SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever");
@@ -331,7 +333,7 @@ public class TestBasic {
     }
 
 
-    protected AccountData getAccountData() {
+    protected AccountData getAccountData(final int billingDay) {
         AccountData accountData = new AccountData() {
             @Override
             public String getName() {
@@ -355,7 +357,7 @@ public class TestBasic {
             }
             @Override
             public int getBillCycleDay() {
-                return 1;
+                return billingDay;
             }
             @Override
             public Currency getCurrency() {

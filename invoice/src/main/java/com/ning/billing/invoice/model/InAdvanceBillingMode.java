@@ -20,6 +20,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.Months;
+import org.joda.time.MutableDateTime;
 
 import java.math.BigDecimal;
 
@@ -50,24 +51,23 @@ public class InAdvanceBillingMode extends BillingModeBase {
     protected DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDay) {
         int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
 
-        DateTime proposedDate;
+
+        MutableDateTime tmp = date.toMutableDateTime();
         if (billingCycleDay > lastDayOfMonth) {
-            proposedDate = new DateTime(date.getYear(), date.getMonthOfYear(), lastDayOfMonth,
-                                        date.getHourOfDay(), date.getMinuteOfHour(),
-                                        date.getSecondOfMinute(), date.getMillisOfSecond());
+            tmp.setDayOfMonth(lastDayOfMonth);
         } else {
-            proposedDate = new DateTime(date.getYear(), date.getMonthOfYear(), billingCycleDay,
-                                        date.getHourOfDay(), date.getMinuteOfHour(),
-                                        date.getSecondOfMinute(), date.getMillisOfSecond());
+            tmp.setDayOfMonth(billingCycleDay);
         }
+        DateTime proposedDate = tmp.toDateTime();
 
         while (proposedDate.isBefore(date)) {
+            // STEPH could be an annual ?
             proposedDate = proposedDate.plusMonths(1);
         }
-
         return proposedDate;
     }
 
+    @Override
     protected DateTime calculateBillingCycleDateAfter(final DateTime date, final DateTime billingCycleDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
         DateTime proposedDate = billingCycleDate;
 

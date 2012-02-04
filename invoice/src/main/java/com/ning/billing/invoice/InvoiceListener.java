@@ -42,6 +42,7 @@ import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceItemList;
 import com.ning.billing.invoice.notification.NextBillingDateEvent;
+import com.ning.billing.util.clock.Clock;
 
 public class InvoiceListener {
     private final static Logger log = LoggerFactory.getLogger(InvoiceListener.class);
@@ -50,17 +51,20 @@ public class InvoiceListener {
     private final EntitlementBillingApi entitlementBillingApi;
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
+    private final Clock clock;
 
     private final static boolean VERBOSE_OUTPUT = false;
 
     @Inject
     public InvoiceListener(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
                            final EntitlementBillingApi entitlementBillingApi,
-                           final InvoiceDao invoiceDao) {
+                           final InvoiceDao invoiceDao,
+                           final Clock clock) {
         this.generator = generator;
         this.entitlementBillingApi = entitlementBillingApi;
         this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
+        this.clock = clock;
     }
 
     @Subscribe
@@ -70,7 +74,8 @@ public class InvoiceListener {
 
     @Subscribe
     public void handleNextBillingDateEvent(final NextBillingDateEvent event) {
-        processSubscription(event.getSubscriptionId(), new DateTime());
+        // STEPH should we use the date of the event instead?
+        processSubscription(event.getSubscriptionId(), clock.getUTCNow());
     }
 
     private void processSubscription(final SubscriptionTransition transition) {
