@@ -46,10 +46,11 @@ public class TestHelper {
     }
 
     public Account createTestAccount() throws AccountApiException {
-        final String name = "First" + RandomStringUtils.random(5) + " " + "Last" + RandomStringUtils.random(5);
+        final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
+        final String externalKey = RandomStringUtils.randomAlphanumeric(10);
         final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
                                                                      .firstNameLength(name.length())
-                                                                     .externalKey("12345")
+                                                                     .externalKey(externalKey)
                                                                      .phone("123-456-7890")
                                                                      .email("user@example.com")
                                                                      .currency(Currency.USD)

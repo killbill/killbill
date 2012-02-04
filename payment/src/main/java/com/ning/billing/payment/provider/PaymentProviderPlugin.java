@@ -40,7 +40,7 @@ public interface PaymentProviderPlugin {
     Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo);
     Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId);
 
-    Either<PaymentError, Void> updatePaymentProviderAccountWithExistingContact(Account account);
+    Either<PaymentError, Void> updatePaymentProviderAccountExistingContact(Account account);
     Either<PaymentError, Void> updatePaymentProviderAccountWithNewContact(Account account);
 
 }

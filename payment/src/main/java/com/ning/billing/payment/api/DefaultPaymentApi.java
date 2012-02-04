@@ -179,9 +179,9 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, Void> updatePaymentProviderAccount(Account account) {
+    public Either<PaymentError, Void> updatePaymentProviderAccountContact(Account account) {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
-        return plugin.updatePaymentProviderAccountWithExistingContact(account);
+        return plugin.updatePaymentProviderAccountExistingContact(account);
     }
 
     @Override
