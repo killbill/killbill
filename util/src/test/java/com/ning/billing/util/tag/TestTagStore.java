@@ -33,7 +33,7 @@ import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.glue.MockClockModule;
+import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 

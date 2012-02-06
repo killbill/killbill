@@ -21,7 +21,6 @@ import java.io.IOException;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.glue.MockClockModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
 public class TagStoreModuleMock extends TagStoreModule {

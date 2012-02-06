@@ -14,11 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.util.glue;
+package com.ning.billing.util.clock;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 
 
 public class MockClockModule extends AbstractModule {
