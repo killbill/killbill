@@ -31,16 +31,26 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
-import com.ning.billing.entitlement.events.EventLifecycle.EventLifecycleState;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.notificationq.NotificationKey;
+import com.ning.billing.util.notificationq.NotificationLifecycle;
+import com.ning.billing.util.notificationq.NotificationQueue;
+import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlementDao {
 
@@ -52,15 +62,15 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     private final Clock clock;
     private final EntitlementConfig config;
     private final SubscriptionFactory factory;
-
-
+    private final NotificationQueueService notificationQueueService;
 
     @Inject
-    public MockEntitlementDaoMemory(Clock clock, EntitlementConfig config, SubscriptionFactory factory) {
+    public MockEntitlementDaoMemory(Clock clock, EntitlementConfig config, SubscriptionFactory factory, NotificationQueueService notificationQueueService) {
         super();
         this.clock = clock;
         this.config = config;
         this.factory = factory;
+        this.notificationQueueService = notificationQueueService;
         this.bundles = new ArrayList<SubscriptionBundle>();
         this.subscriptions = new ArrayList<Subscription>();
         this.events = new TreeSet<EntitlementEvent>();
@@ -138,6 +148,14 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
         synchronized(events) {
             events.addAll(initalEvents);
+            for (final EntitlementEvent cur : initalEvents) {
+                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new NotificationKey() {
+                    @Override
+                    public String toString() {
+                        return cur.getId().toString();
+                    }
+                });
+            }
         }
         Subscription updatedSubscription = buildSubscription(subscription);
         subscriptions.add(updatedSubscription);
@@ -174,7 +192,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             List<EntitlementEvent> results = new LinkedList<EntitlementEvent>();
             for (EntitlementEvent cur : events) {
                 if (cur.isActive() &&
-                        cur.getProcessingState() == EventLifecycleState.AVAILABLE &&
+                        cur.getEffectiveDate().isAfter(clock.getUTCNow()) &&
                             cur.getSubscriptionId().equals(subscriptionId)) {
                     results.add(cur);
                 }
@@ -202,39 +220,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
 
-    @Override
-    public List<EntitlementEvent> getEventsReady(UUID ownerId, int sequenceId) {
-        synchronized(events) {
-            List<EntitlementEvent> readyList = new LinkedList<EntitlementEvent>();
-            for (EntitlementEvent cur : events) {
-                if (cur.isAvailableForProcessing(clock.getUTCNow())) {
-
-                    if (cur.getOwner() != null) {
-                        log.warn(String.format("EventProcessor %s stealing event %s from %s", ownerId, cur, cur.getOwner()));
-                    }
-                    cur.setOwner(ownerId);
-                    cur.setNextAvailableDate(clock.getUTCNow().plus(config.getDaoClaimTimeMs()));
-                    cur.setProcessingState(EventLifecycleState.IN_PROCESSING);
-                    readyList.add(cur);
-                }
-            }
-            Collections.sort(readyList);
-            return readyList;
-        }
-    }
-
-    @Override
-    public void clearEventsReady(UUID ownerId, Collection<EntitlementEvent> cleared) {
-        synchronized(events) {
-            for (EntitlementEvent cur : cleared) {
-                if (cur.getOwner().equals(ownerId)) {
-                    cur.setProcessingState(EventLifecycleState.PROCESSED);
-                } else {
-                    log.warn(String.format("EventProcessor %s trying to clear event %s that it does not own", ownerId, cur));
-                }
-            }
-        }
-    }
 
     private Subscription buildSubscription(SubscriptionData in) {
         return factory.createSubscription(new SubscriptionBuilder(in), getEventsForSubscription(in.getId()));
@@ -272,12 +257,26 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             cancelNextChangeEvent(subscriptionId);
             cancelNextPhaseEvent(subscriptionId);
             events.addAll(changeEvents);
+            for (final EntitlementEvent cur : changeEvents) {
+                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new NotificationKey() {
+                    @Override
+                    public String toString() {
+                        return cur.getId().toString();
+                    }
+                });
+            }
         }
     }
 
-    private void insertEvent(EntitlementEvent event) {
+    private void insertEvent(final EntitlementEvent event) {
         synchronized(events) {
             events.add(event);
+            recordFutureNotificationFromTransaction(null, event.getEffectiveDate(), new NotificationKey() {
+                @Override
+                public String toString() {
+                    return event.getId().toString();
+                }
+            });
         }
     }
 
@@ -298,10 +297,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
                     continue;
                 }
                 if (cur.getType() == EventType.PHASE &&
-                        cur.getProcessingState() == EventLifecycleState.AVAILABLE) {
+                        cur.getEffectiveDate().isAfter(clock.getUTCNow())) {
                     cur.deactivate();
                     break;
                 }
+
             }
         }
     }
@@ -319,7 +319,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
                 }
                 if (cur.getType() == EventType.API_USER &&
                         ApiEventType.CHANGE == ((ApiEvent) cur).getEventType() &&
-                        cur.getProcessingState() == EventLifecycleState.AVAILABLE) {
+                        cur.getEffectiveDate().isAfter(clock.getUTCNow())) {
                     cur.deactivate();
                     break;
                 }
@@ -364,8 +364,15 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
                 SubscriptionBundleData bundleData = curBundle.getData();
                 for (SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
                     SubscriptionData subData = curSubscription.getData();
-                    for (EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
+                    for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
                         events.add(curEvent);
+                        recordFutureNotificationFromTransaction(null, curEvent.getEffectiveDate(), new NotificationKey() {
+                            @Override
+                            public String toString() {
+                                return curEvent.getId().toString();
+                            }
+                        });
+
                     }
                     subscriptions.add(subData);
                 }
@@ -392,5 +399,27 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             }
         }
 
+    }
+
+    @Override
+    public EntitlementEvent getEventById(UUID eventId) {
+        synchronized(events) {
+            for (EntitlementEvent cur : events) {
+                if (cur.getId().equals(eventId)) {
+                    return cur;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime effectiveDate, final NotificationKey notificationKey) {
+        try {
+            NotificationQueue subscritionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
+                Engine.NOTIFICATION_QUEUE_NAME);
+            subscritionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
+        } catch (NoSuchNotificationQueue e) {
+            throw new RuntimeException(e);
+        }
     }
 }

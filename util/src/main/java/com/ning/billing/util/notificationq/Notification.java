@@ -14,16 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.engine.core;
+package com.ning.billing.util.notificationq;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 
-public interface EventNotifier {
 
-    public void processAllReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly);
+public interface Notification extends NotificationLifecycle {
 
-    public void startNotifications(EventListener listener);
+    public UUID getId();
 
-    public void stopNotifications();
+    public String getNotificationKey();
+
+    public DateTime getEffectiveDate();
 }

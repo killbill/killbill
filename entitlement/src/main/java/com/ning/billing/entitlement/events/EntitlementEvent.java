@@ -21,7 +21,7 @@ import org.joda.time.DateTime;
 import java.util.UUID;
 
 
-public interface EntitlementEvent extends EventLifecycle, Comparable<EntitlementEvent> {
+public interface EntitlementEvent extends Comparable<EntitlementEvent> {
 
     public enum EventType {
         API_USER,
@@ -31,6 +31,16 @@ public interface EntitlementEvent extends EventLifecycle, Comparable<Entitlement
     public EventType getType();
 
     public UUID getId();
+
+    public long getActiveVersion();
+
+    public void setActiveVersion(long activeVersion);
+
+    public boolean isActive();
+
+    public void deactivate();
+
+    public void reactivate();
 
     public DateTime getProcessedDate();
 

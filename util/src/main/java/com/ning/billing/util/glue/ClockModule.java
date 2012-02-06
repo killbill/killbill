@@ -26,5 +26,4 @@ public class ClockModule extends AbstractModule {
 	protected void configure() {
 		bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
 	}
-
 }

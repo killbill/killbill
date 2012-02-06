@@ -25,7 +25,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -33,6 +35,7 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
@@ -58,10 +61,9 @@ public abstract class TestPaymentApi {
         eventBus.stop();
     }
 
-//    @Test(groups = "fast")
     @Test
     public void testCreatePayment() throws AccountApiException {
-        final DateTime now = new DateTime();
+        final DateTime now = new DateTime(DateTimeZone.UTC);
         final Account account = testHelper.createTestAccount();
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
         final BigDecimal amount = new BigDecimal("10.00");
@@ -84,6 +86,113 @@ public abstract class TestPaymentApi {
         PaymentInfo paymentInfo = results.get(0).getRight();
 
         assertNotNull(paymentInfo.getPaymentId());
-        assertEquals(paymentInfo.getAmount().doubleValue(), amount.doubleValue());
+        assertTrue(paymentInfo.getAmount().compareTo(amount) == 0);
+        assertNotNull(paymentInfo.getPaymentNumber());
+
+        PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
+        assertNotNull(paymentAttempt);
+        assertNotNull(paymentAttempt.getPaymentAttemptId());
+        assertEquals(paymentAttempt.getInvoiceId(), invoice.getId());
+        assertTrue(paymentAttempt.getAmount().compareTo(amount) == 0);
+        assertEquals(paymentAttempt.getCurrency(), Currency.USD);
+        assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getPaymentId());
+        assertEquals(paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0), now.withMillisOfSecond(0));
+
+    }
+
+    private PaymentProviderAccount setupAccountWithPaymentMethod() throws AccountApiException {
+        final Account account = testHelper.createTestAccount();
+        paymentApi.createPaymentProviderAccount(account);
+
+        String accountKey = account.getExternalKey();
+
+        PaypalPaymentMethodInfo paymentMethod = new PaypalPaymentMethodInfo.Builder()
+                                                                           .setBaid("12345")
+                                                                           .setEmail(account.getEmail())
+                                                                           .setDefaultMethod(true)
+                                                                           .build();
+        Either<PaymentError, String> paymentMethodIdOrError = paymentApi.addPaymentMethod(accountKey, paymentMethod);
+
+        assertTrue(paymentMethodIdOrError.isRight());
+        assertNotNull(paymentMethodIdOrError.getRight());
+
+        Either<PaymentError, PaymentMethodInfo> paymentMethodInfoOrError = paymentApi.getPaymentMethod(accountKey, paymentMethodIdOrError.getRight());
+
+        assertTrue(paymentMethodInfoOrError.isRight());
+        assertNotNull(paymentMethodInfoOrError.getRight());
+
+        Either<PaymentError, PaymentProviderAccount> accountOrError = paymentApi.getPaymentProviderAccount(accountKey);
+
+        assertTrue(accountOrError.isRight());
+
+        return accountOrError.getRight();
+    }
+
+    @Test
+    public void testCreatePaymentMethod() throws AccountApiException {
+        PaymentProviderAccount account = setupAccountWithPaymentMethod();
+        assertNotNull(account);
+    }
+
+    @Test
+    public void testUpdatePaymentProviderAccountContact() throws AccountApiException {
+        final Account account = testHelper.createTestAccount();
+        paymentApi.createPaymentProviderAccount(account);
+
+        String newName = "Tester " + RandomStringUtils.randomAlphanumeric(10);
+        String newNumber = "888-888-" + RandomStringUtils.randomNumeric(4);
+
+        final Account accountToUpdate = new AccountBuilder(account.getId())
+                                                                  .name(newName)
+                                                                  .firstNameLength(newName.length())
+                                                                  .externalKey(account.getExternalKey())
+                                                                  .phone(newNumber)
+                                                                  .email(account.getEmail())
+                                                                  .currency(account.getCurrency())
+                                                                  .billingCycleDay(account.getBillCycleDay())
+                                                                  .build();
+
+        Either<PaymentError, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(accountToUpdate);
+        assertTrue(voidOrError.isRight());
+    }
+
+    @Test
+    public void testCannotDeleteDefaultPaymentMethod() throws AccountApiException {
+        PaymentProviderAccount account = setupAccountWithPaymentMethod();
+
+        Either<PaymentError, Void> errorOrVoid = paymentApi.deletePaymentMethod(account.getAccountKey(), account.getDefaultPaymentMethodId());
+
+        assertTrue(errorOrVoid.isLeft());
+    }
+
+    @Test
+    public void testDeleteNonDefaultPaymentMethod() throws AccountApiException {
+        final Account account = testHelper.createTestAccount();
+        paymentApi.createPaymentProviderAccount(account);
+
+        String accountKey = account.getExternalKey();
+
+        PaypalPaymentMethodInfo paymentMethod1 = new PaypalPaymentMethodInfo.Builder().setDefaultMethod(false).setBaid("12345").setEmail(account.getEmail()).build();
+        Either<PaymentError, String> paymentMethodIdOrError1 = paymentApi.addPaymentMethod(accountKey, paymentMethod1);
+
+        assertTrue(paymentMethodIdOrError1.isRight());
+        assertNotNull(paymentMethodIdOrError1.getRight());
+
+        PaypalPaymentMethodInfo paymentMethod2 = new PaypalPaymentMethodInfo.Builder().setDefaultMethod(true).setBaid("12345").setEmail(account.getEmail()).build();
+
+        Either<PaymentError, String> paymentMethodIdOrError2 = paymentApi.addPaymentMethod(accountKey, paymentMethod2);
+
+        assertTrue(paymentMethodIdOrError2.isRight());
+        assertNotNull(paymentMethodIdOrError2.getRight());
+
+        Either<PaymentError, List<PaymentMethodInfo>> paymentMethodsOrError = paymentApi.getPaymentMethods(accountKey);
+
+        assertTrue(paymentMethodsOrError.isRight());
+
+        Either<PaymentError, Void> errorOrVoid1 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError1.getRight());
+        Either<PaymentError, Void> errorOrVoid2 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError2.getRight());
+
+        assertTrue(errorOrVoid1.isRight());
+        assertTrue(errorOrVoid2.isLeft());
     }
 }

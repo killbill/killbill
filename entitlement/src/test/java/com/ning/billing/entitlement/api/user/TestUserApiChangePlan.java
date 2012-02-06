@@ -198,6 +198,15 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.addDeltaFromReality(currentPhase.getDuration());
             DateTime futureNow = clock.getUTCNow();
+
+            /*
+            try {
+                Thread.sleep(1000 * 3000);
+            } catch (Exception e) {
+
+            }
+            */
+
             assertTrue(futureNow.isAfter(nextExpectedPhaseChange));
             assertTrue(testListener.isCompleted(3000));
 

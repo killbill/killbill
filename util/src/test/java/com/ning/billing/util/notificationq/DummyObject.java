@@ -14,8 +14,25 @@
  * under the License.
  */
 
-package com.ning.billing.util.notification;
+package com.ning.billing.util.notificationq;
 
-public interface INotification {
+import java.util.UUID;
 
+public class DummyObject {
+    private final String value;
+    private final UUID key;
+
+    public DummyObject(String value, UUID key) {
+        super();
+        this.value = value;
+        this.key = key;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public UUID getKey() {
+        return key;
+    }
 }

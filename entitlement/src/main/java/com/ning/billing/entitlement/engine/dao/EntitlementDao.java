@@ -54,13 +54,11 @@ public interface EntitlementDao {
     // Event apis
     public void createNextPhaseEvent(UUID subscriptionId, EntitlementEvent nextPhase);
 
+    public EntitlementEvent getEventById(UUID eventId);
+
     public List<EntitlementEvent> getEventsForSubscription(UUID subscriptionId);
 
     public List<EntitlementEvent> getPendingEventsForSubscription(UUID subscriptionId);
-
-    public List<EntitlementEvent> getEventsReady(UUID ownerId, int sequenceId);
-
-    public void clearEventsReady(UUID ownerId, Collection<EntitlementEvent> cleared);
 
     // Subscription creation, cancellation, changePlan apis
     public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents);

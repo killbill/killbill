@@ -30,12 +30,8 @@ public abstract class EventBase implements EntitlementEvent {
     private final DateTime effectiveDate;
     private final DateTime processedDate;
 
-    // Lifecyle of the event
     private long activeVersion;
     private boolean isActive;
-    private UUID processingOwner;
-    private DateTime nextAvailableProcessingTime;
-    private EventLifecycleState processingState;
 
     public EventBase(EventBaseBuilder<?> builder) {
         this.uuid = builder.getUuid();
@@ -46,31 +42,17 @@ public abstract class EventBase implements EntitlementEvent {
 
         this.activeVersion = builder.getActiveVersion();
         this.isActive = builder.isActive();
-        this.processingOwner = builder.getProcessingOwner();
-        this.nextAvailableProcessingTime = builder.getNextAvailableProcessingTime();
-        this.processingState = builder.getProcessingState();
     }
 
     public EventBase(UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive) {
-        this(subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive, null, null, EventLifecycleState.AVAILABLE);
-    }
-
-    private EventBase(UUID subscriptionId, DateTime requestedDate,
-            DateTime effectiveDate, DateTime processedDate,
-            long activeVersion, boolean isActive,
-            UUID processingOwner, DateTime nextAvailableProcessingTime,
-            EventLifecycleState processingState) {
-        this(UUID.randomUUID(), subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive,
-                processingOwner, nextAvailableProcessingTime, processingState);
+        this(UUID.randomUUID(), subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive);
     }
 
     public EventBase(UUID id, UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,
-            long activeVersion, boolean isActive,
-            UUID processingOwner, DateTime nextAvailableProcessingTime,
-            EventLifecycleState processingState) {
+            long activeVersion, boolean isActive) {
         this.uuid = id;
         this.subscriptionId = subscriptionId;
         this.requestedDate = requestedDate;
@@ -79,10 +61,6 @@ public abstract class EventBase implements EntitlementEvent {
 
         this.activeVersion = activeVersion;
         this.isActive = isActive;
-        this.processingOwner = processingOwner;
-        this.nextAvailableProcessingTime = nextAvailableProcessingTime;
-        this.processingState = processingState;
-
     }
 
 
@@ -138,64 +116,9 @@ public abstract class EventBase implements EntitlementEvent {
     }
 
 
-    @Override
-    public UUID getOwner() {
-        return processingOwner;
-    }
-
-    @Override
-    public void setOwner(UUID owner) {
-        this.processingOwner = owner;
-    }
-
-    @Override
-    public DateTime getNextAvailableDate() {
-        return nextAvailableProcessingTime;
-    }
-
-    @Override
-    public void setNextAvailableDate(DateTime dateTime) {
-        this.nextAvailableProcessingTime = dateTime;
-    }
-
-
-    @Override
-    public EventLifecycleState getProcessingState() {
-        return processingState;
-    }
-
-    @Override
-    public void setProcessingState(EventLifecycleState processingState) {
-        this.processingState = processingState;
-    }
-
-    @Override
-    public boolean isAvailableForProcessing(DateTime now) {
-
-        // Event got deactivated, will never be processed
-        if (!isActive) {
-            return false;
-        }
-
-        switch(processingState) {
-        case AVAILABLE:
-            break;
-        case IN_PROCESSING:
-            // Somebody already got the event, not available yet
-            if (nextAvailableProcessingTime.isAfter(now)) {
-                return false;
-            }
-            break;
-        case PROCESSED:
-            return false;
-        default:
-            throw new EntitlementError(String.format("Unkwnon IEvent processing state %s", processingState));
-        }
-        return effectiveDate.isBefore(now);
-    }
 
     //
-    // Really used for unit tesrs only as the sql implementation relies on date first and then event insertion
+    // Really used for unit tests only as the sql implementation relies on date first and then event insertion
     //
     // Order first by:
     // - effectiveDate, followed by processedDate, requestedDate

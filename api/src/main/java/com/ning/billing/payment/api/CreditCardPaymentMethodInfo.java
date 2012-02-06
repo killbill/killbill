@@ -23,6 +23,12 @@ public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
         private String cardType;
         private String expirationDate;
         private String maskNumber;
+        private String cardAddress1;
+        private String cardAddress2;
+        private String cardCity;
+        private String cardState;
+        private String cardPostalCode;
+        private String cardCountry;
 
         public Builder() {
             super(Builder.class);
@@ -30,6 +36,16 @@ public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
 
         public Builder(CreditCardPaymentMethodInfo src) {
             super(Builder.class, src);
+            this.cardHolderName = src.cardHolderName;
+            this.cardType = src.cardType;
+            this.expirationDate = src.expirationDate;
+            this.cardAddress1 = src.cardAddress1;
+            this.cardAddress2 = src.cardAddress2;
+            this.cardCity = src.cardCity;
+            this.cardState = src.cardState;
+            this.cardPostalCode = src.cardPostalCode;
+            this.cardCountry = src.cardCountry;
+            this.maskNumber = src.maskNumber;
         }
 
         public Builder setCardHolderName(String cardHolderName) {
@@ -47,13 +63,55 @@ public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
             return this;
         }
 
+        public Builder setCardAddress1(String creditCardAddress1) {
+            this.cardAddress1 = creditCardAddress1;
+            return this;
+        }
+
+        public Builder setCardAddress2(String creditCardAddress2) {
+            this.cardAddress2 = creditCardAddress2;
+            return this;
+        }
+
+        public Builder setCardCity(String creditCardCity) {
+            this.cardCity = creditCardCity;
+            return this;
+        }
+
+        public Builder setCardState(String creditCardState) {
+            this.cardState = creditCardState;
+            return this;
+        }
+
+        public Builder setCardPostalCode(String creditCardPostalCode) {
+            this.cardPostalCode = creditCardPostalCode;
+            return this;
+        }
+
+        public Builder setCardCountry(String creditCardCountry) {
+            this.cardCountry = creditCardCountry;
+            return this;
+        }
+
         public Builder setMaskNumber(String maskNumber) {
             this.maskNumber = maskNumber;
             return this;
         }
 
         public CreditCardPaymentMethodInfo build() {
-            return new CreditCardPaymentMethodInfo(id, accountId, defaultMethod, cardHolderName, cardType, expirationDate, maskNumber);
+            return new CreditCardPaymentMethodInfo(id,
+                                                   accountId,
+                                                   defaultMethod,
+                                                   cardHolderName,
+                                                   cardType,
+                                                   expirationDate,
+                                                   maskNumber,
+                                                   cardAddress1,
+                                                   cardAddress2,
+                                                   cardCity,
+                                                   cardState,
+                                                   cardPostalCode,
+                                                   cardCountry);
         }
     }
 
@@ -61,6 +119,12 @@ public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
     private final String cardType;
     private final String expirationDate;
     private final String maskNumber;
+    private final String cardAddress1;
+    private final String cardAddress2;
+    private final String cardCity;
+    private final String cardState;
+    private final String cardPostalCode;
+    private final String cardCountry;
 
     public CreditCardPaymentMethodInfo(String id,
                                    String accountId,
@@ -68,12 +132,25 @@ public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
                                    String cardHolderName,
                                    String cardType,
                                    String expirationDate,
-                                   String maskNumber) {
+                                   String maskNumber,
+                                   String cardAddress1,
+                                   String cardAddress2,
+                                   String cardCity,
+                                   String cardState,
+                                   String cardPostalCode,
+                                   String cardCountry) {
+
       super(id, accountId, defaultMethod, "CreditCard");
       this.cardHolderName = cardHolderName;
       this.cardType = cardType;
       this.expirationDate = expirationDate;
       this.maskNumber = maskNumber;
+      this.cardAddress1 = cardAddress1;
+      this.cardAddress2 = cardAddress2;
+      this.cardCity = cardCity;
+      this.cardState = cardState;
+      this.cardPostalCode = cardPostalCode;
+      this.cardCountry = cardCountry;
     }
 
     public String getCardHolderName() {
@@ -82,6 +159,30 @@ public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
 
     public String getCardType() {
       return cardType;
+    }
+
+    public String getCardAddress1() {
+        return cardAddress1;
+    }
+
+    public String getCardAddress2() {
+        return cardAddress2;
+    }
+
+    public String getCardCity() {
+        return cardCity;
+    }
+
+    public String getCardState() {
+        return cardState;
+    }
+
+    public String getCardPostalCode() {
+        return cardPostalCode;
+    }
+
+    public String getCardCountry() {
+        return cardCountry;
     }
 
     public String getExpirationDate() {

@@ -18,7 +18,11 @@ package com.ning.billing.entitlement.api.test;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.EntitlementConfig;
-import com.ning.billing.entitlement.engine.core.EventNotifier;
+import com.ning.billing.entitlement.engine.core.Engine;
+import com.ning.billing.util.notificationq.NotificationQueue;
+import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,20 +32,32 @@ public class DefaultEntitlementTestApi implements EntitlementTestApi {
 
     private final static Logger log = LoggerFactory.getLogger(DefaultEntitlementTestApi.class);
 
-    private final EventNotifier apiEventProcessor;
     private final EntitlementConfig config;
+    private final NotificationQueueService notificationQueueService;
 
     @Inject
-    public DefaultEntitlementTestApi(EventNotifier apiEventProcessor, EntitlementConfig config) {
-        this.apiEventProcessor = apiEventProcessor;
+    public DefaultEntitlementTestApi(NotificationQueueService notificationQueueService, EntitlementConfig config) {
         this.config = config;
+        this.notificationQueueService = notificationQueueService;
     }
 
     @Override
     public void doProcessReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly) {
         if (config.isEventProcessingOff()) {
             log.warn("Running event processing loop");
-            apiEventProcessor.processAllReadyEvents(subscriptionsIds, recursive, oneEventOnly);
+            NotificationQueue queue = getNotificationQueue();
+            queue.processReadyNotification();
+
+        }
+    }
+
+    private NotificationQueue getNotificationQueue() {
+        try {
+            NotificationQueue subscritionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
+                    Engine.NOTIFICATION_QUEUE_NAME);
+            return subscritionEventQueue;
+        } catch (NoSuchNotificationQueue e) {
+            throw new RuntimeException(e);
         }
     }
 }

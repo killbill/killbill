@@ -25,21 +25,22 @@ import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
-import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
 
 public interface PaymentProviderPlugin {
     Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice);
     Either<PaymentError, String> createPaymentProviderAccount(Account account);
-    Either<PaymentError, String> addPaypalPaymentMethod(String accountId, PaypalPaymentMethodInfo paypalPaymentMethod);
-    Either<PaymentError, PaymentProviderAccount> updatePaymentProviderAccount(Account account);
 
     Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId);
-    Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId);
     Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
-    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountKey);
-
     Either<PaymentError, Void> updatePaymentGateway(String accountKey);
-    Either<PaymentError, Void> deletePaypalPaymentMethod(String accountKey, String paymentMethodId);
-    Either<PaymentError, PaymentMethodInfo> updatePaypalPaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo);
+
+    Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId);
+    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountKey);
+    Either<PaymentError, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod);
+    Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo);
+    Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId);
+
+    Either<PaymentError, Void> updatePaymentProviderAccountExistingContact(Account account);
+    Either<PaymentError, Void> updatePaymentProviderAccountWithNewContact(Account account);
 
 }
