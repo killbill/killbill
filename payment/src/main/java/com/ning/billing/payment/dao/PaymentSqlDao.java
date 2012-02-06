@@ -57,7 +57,13 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
 
     @SqlUpdate
     void updatePaymentAttemptWithPaymentId(@Bind("payment_attempt_id") String paymentAttemptId,
-                                           @Bind("payment_id") String payment_id);
+                                           @Bind("payment_id") String paymentId);
+
+    @SqlUpdate
+    void updatePaymentInfo(@Bind("payment_method") String paymentMethod,
+                           @Bind("payment_id") String paymentId,
+                           @Bind("card_type") String cardType,
+                           @Bind("card_country") String cardCountry);
 
     @SqlUpdate
     void insertPaymentInfo(@Bind(binder = PaymentInfoBinder.class) PaymentInfo paymentInfo);
@@ -73,7 +79,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             stmt.bind("payment_attempt_id", paymentAttempt.getPaymentAttemptId().toString());
             stmt.bind("invoice_id", paymentAttempt.getInvoiceId().toString());
             stmt.bind("account_id", paymentAttempt.getAccountId().toString());
-            stmt.bind("amount", paymentAttempt.getAmount()); //TODO: suppport partial payments
+            stmt.bind("amount", paymentAttempt.getAmount());
             stmt.bind("currency", paymentAttempt.getCurrency().toString());
             stmt.bind("invoice_dt", getDate(paymentAttempt.getInvoiceDate()));
             stmt.bind("payment_attempt_dt", getDate(paymentAttempt.getPaymentAttemptDate()));
@@ -124,6 +130,10 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             stmt.bind("status", paymentInfo.getStatus());
             stmt.bind("payment_type", paymentInfo.getType());
             stmt.bind("reference_id", paymentInfo.getReferenceId());
+            stmt.bind("payment_method_id", paymentInfo.getPaymentMethodId());
+            stmt.bind("payment_method", paymentInfo.getPaymentMethodType());
+            stmt.bind("card_type", paymentInfo.getCardType());
+            stmt.bind("card_country", paymentInfo.getCardCountry());
             stmt.bind("effective_dt", getDate(paymentInfo.getEffectiveDate()));
             stmt.bind("created_dt", getDate(paymentInfo.getCreatedDate()));
             stmt.bind("updated_dt", getDate(paymentInfo.getUpdatedDate()));
@@ -148,6 +158,10 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             String status = rs.getString("status");
             String type = rs.getString("payment_type");
             String referenceId = rs.getString("reference_id");
+            String paymentMethodId = rs.getString("payment_method_id");
+            String paymentMethod = rs.getString("payment_method");
+            String cardType = rs.getString("card_type");
+            String cardCountry = rs.getString("card_country");
             DateTime effectiveDate = getDate(rs, "effective_dt");
             DateTime createdDate = getDate(rs, "created_dt");
             DateTime updatedDate = getDate(rs, "updated_dt");
@@ -160,6 +174,10 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
                                    status,
                                    type,
                                    referenceId,
+                                   paymentMethodId,
+                                   paymentMethod,
+                                   cardType,
+                                   cardCountry,
                                    effectiveDate,
                                    createdDate,
                                    updatedDate);

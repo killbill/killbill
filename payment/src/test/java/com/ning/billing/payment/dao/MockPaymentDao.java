@@ -70,4 +70,10 @@ public class MockPaymentDao implements PaymentDao {
         return null;
     }
 
+    @Override
+    public void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry) {
+        // TODO Auto-generated method stub
+
+    }
+
 }

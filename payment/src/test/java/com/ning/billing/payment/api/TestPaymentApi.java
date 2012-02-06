@@ -17,6 +17,7 @@
 package com.ning.billing.payment.api;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -88,6 +89,7 @@ public abstract class TestPaymentApi {
         assertNotNull(paymentInfo.getPaymentId());
         assertTrue(paymentInfo.getAmount().compareTo(amount) == 0);
         assertNotNull(paymentInfo.getPaymentNumber());
+        assertFalse(paymentInfo.getStatus().equals("Error"));
 
         PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
         assertNotNull(paymentAttempt);
@@ -96,7 +98,7 @@ public abstract class TestPaymentApi {
         assertTrue(paymentAttempt.getAmount().compareTo(amount) == 0);
         assertEquals(paymentAttempt.getCurrency(), Currency.USD);
         assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getPaymentId());
-        assertEquals(paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0), now.withMillisOfSecond(0));
+        assertEquals(paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0), now.withMillisOfSecond(0).withSecondOfMinute(0));
 
     }
 

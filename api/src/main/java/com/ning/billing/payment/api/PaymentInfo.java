@@ -34,23 +34,13 @@ public class PaymentInfo implements EventBusNotification {
     private final String status;
     private final String type;
     private final String referenceId;
+    private final String paymentMethodId;
+    private final String paymentMethod;
+    private final String creditCardType;
+    private final String creditCardCountry;
     private final DateTime effectiveDate;
     private final DateTime createdDate;
     private final DateTime updatedDate;
-
-    public PaymentInfo(PaymentInfo src) {
-        this.paymentId = src.paymentId;
-        this.amount = src.amount;
-        this.refundAmount = src.refundAmount;
-        this.paymentNumber = src.paymentNumber;
-        this.bankIdentificationNumber = src.bankIdentificationNumber;
-        this.status = src.status;
-        this.type = src.type;
-        this.referenceId = src.referenceId;
-        this.effectiveDate = src.effectiveDate;
-        this.createdDate = src.createdDate;
-        this.updatedDate = src.updatedDate;
-    }
 
     @JsonCreator
     public PaymentInfo(@JsonProperty("paymentId") String paymentId,
@@ -61,6 +51,10 @@ public class PaymentInfo implements EventBusNotification {
                        @JsonProperty("status") String status,
                        @JsonProperty("type") String type,
                        @JsonProperty("referenceId") String referenceId,
+                       @JsonProperty("paymentMethodId") String paymentMethodId,
+                       @JsonProperty("paymentMethod") String paymentMethod,
+                       @JsonProperty("creditCardType") String creditCardType,
+                       @JsonProperty("creditCardCountry") String creditCardCountry,
                        @JsonProperty("effectiveDate") DateTime effectiveDate,
                        @JsonProperty("createdDate") DateTime createdDate,
                        @JsonProperty("updatedDate") DateTime updatedDate) {
@@ -70,11 +64,33 @@ public class PaymentInfo implements EventBusNotification {
         this.bankIdentificationNumber = bankIdentificationNumber;
         this.effectiveDate = effectiveDate;
         this.paymentNumber = paymentNumber;
-        this.referenceId = referenceId;
         this.status = status;
         this.type = type;
+        this.referenceId = referenceId;
+        this.paymentMethodId = paymentMethodId;
+        this.paymentMethod = paymentMethod;
+        this.creditCardType = creditCardType;
+        this.creditCardCountry = creditCardCountry;
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
+    }
+
+    public PaymentInfo(PaymentInfo src) {
+        this.paymentId = src.paymentId;
+        this.amount = src.amount;
+        this.refundAmount = src.refundAmount;
+        this.paymentNumber = src.paymentNumber;
+        this.bankIdentificationNumber = src.bankIdentificationNumber;
+        this.status = src.status;
+        this.type = src.type;
+        this.referenceId = src.referenceId;
+        this.paymentMethodId = src.paymentMethodId;
+        this.paymentMethod = src.paymentMethod;
+        this.creditCardType = src.creditCardType;
+        this.creditCardCountry = src.creditCardCountry;
+        this.effectiveDate = src.effectiveDate;
+        this.createdDate = src.createdDate;
+        this.updatedDate = src.updatedDate;
     }
 
     public Builder cloner() {
@@ -109,6 +125,22 @@ public class PaymentInfo implements EventBusNotification {
         return referenceId;
     }
 
+    public String getPaymentMethodType() {
+        return paymentMethod;
+    }
+
+    public String getCardType() {
+        return creditCardType;
+    }
+
+    public String getPaymentMethodId() {
+        return paymentMethodId;
+    }
+
+    public String getCardCountry() {
+        return creditCardCountry;
+    }
+
     public BigDecimal getRefundAmount() {
         return refundAmount;
     }
@@ -134,6 +166,10 @@ public class PaymentInfo implements EventBusNotification {
         private String type;
         private String status;
         private String referenceId;
+        private String paymentMethodId;
+        private String paymentMethod;
+        private String creditCardType;
+        private String creditCardCountry;
         private DateTime effectiveDate;
         private DateTime createdDate;
         private DateTime updatedDate;
@@ -151,6 +187,10 @@ public class PaymentInfo implements EventBusNotification {
             this.status = src.status;
             this.effectiveDate = src.effectiveDate;
             this.referenceId = src.referenceId;
+            this.paymentMethodId = src.paymentMethodId;
+            this.paymentMethod = src.paymentMethod;
+            this.creditCardType = src.creditCardType;
+            this.creditCardCountry = src.creditCardCountry;
             this.createdDate = src.createdDate;
             this.updatedDate = src.updatedDate;
         }
@@ -205,6 +245,26 @@ public class PaymentInfo implements EventBusNotification {
             return this;
         }
 
+        public Builder setPaymentMethodId(String paymentMethodId) {
+            this.paymentMethodId = paymentMethodId;
+            return this;
+        }
+
+        public Builder setPaymentMethodType(String paymentMethodType) {
+            this.paymentMethod = paymentMethodType;
+            return this;
+        }
+
+        public Builder setCreditCardType(String creditCardType) {
+            this.creditCardType = creditCardType;
+            return this;
+        }
+
+        public Builder setCreditCardCountry(String creditCardCountry) {
+            this.creditCardCountry = creditCardCountry;
+            return this;
+        }
+
         public Builder setUpdatedDate(DateTime updatedDate) {
             this.updatedDate = updatedDate;
             return this;
@@ -216,9 +276,13 @@ public class PaymentInfo implements EventBusNotification {
                                    refundAmount,
                                    bankIdentificationNumber,
                                    paymentNumber,
-                                   type,
                                    status,
+                                   type,
                                    referenceId,
+                                   paymentMethodId,
+                                   paymentMethod,
+                                   creditCardType,
+                                   creditCardCountry,
                                    effectiveDate,
                                    createdDate,
                                    updatedDate);
@@ -227,16 +291,20 @@ public class PaymentInfo implements EventBusNotification {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(amount,
-                                bankIdentificationNumber,
-                                createdDate,
-                                effectiveDate,
-                                paymentId,
-                                paymentNumber,
-                                referenceId,
+        return Objects.hashCode(paymentId,
+                                amount,
                                 refundAmount,
+                                bankIdentificationNumber,
+                                paymentNumber,
                                 status,
                                 type,
+                                referenceId,
+                                paymentMethodId,
+                                paymentMethod,
+                                creditCardType,
+                                creditCardCountry,
+                                effectiveDate,
+                                createdDate,
                                 updatedDate);
     }
 
@@ -250,14 +318,18 @@ public class PaymentInfo implements EventBusNotification {
             else {
                 return Objects.equal(amount, other.amount) &&
                        Objects.equal(bankIdentificationNumber, other.bankIdentificationNumber) &&
-                       Objects.equal(createdDate, other.createdDate) &&
-                       Objects.equal(effectiveDate, other.effectiveDate) &&
                        Objects.equal(paymentId, other.paymentId) &&
                        Objects.equal(paymentNumber, other.paymentNumber) &&
                        Objects.equal(referenceId, other.referenceId) &&
                        Objects.equal(refundAmount, other.refundAmount) &&
                        Objects.equal(status, other.status) &&
                        Objects.equal(type, other.type) &&
+                       Objects.equal(paymentMethodId, other.paymentMethodId) &&
+                       Objects.equal(paymentMethod, other.paymentMethod) &&
+                       Objects.equal(creditCardType, other.creditCardType) &&
+                       Objects.equal(creditCardCountry, other.creditCardCountry) &&
+                       Objects.equal(effectiveDate, other.effectiveDate) &&
+                       Objects.equal(createdDate, other.createdDate) &&
                        Objects.equal(updatedDate, other.updatedDate);
             }
         }
@@ -266,6 +338,7 @@ public class PaymentInfo implements EventBusNotification {
 
     @Override
     public String toString() {
-        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
+        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethodType=" + paymentMethod + ", creditCardType=" + creditCardType + ", creditCardCountry=" + creditCardCountry + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
     }
+
 }
