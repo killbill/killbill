@@ -62,10 +62,10 @@ public abstract class TestPaymentApi {
         eventBus.stop();
     }
 
-    @Test
-    public void testCreatePayment() throws AccountApiException {
+    @Test(enabled=true)
+    public void testCreateCreditCardPayment() throws AccountApiException {
         final DateTime now = new DateTime(DateTimeZone.UTC);
-        final Account account = testHelper.createTestAccount();
+        final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();
@@ -103,7 +103,7 @@ public abstract class TestPaymentApi {
     }
 
     private PaymentProviderAccount setupAccountWithPaymentMethod() throws AccountApiException {
-        final Account account = testHelper.createTestAccount();
+        final Account account = testHelper.createTestPayPalAccount();
         paymentApi.createPaymentProviderAccount(account);
 
         String accountKey = account.getExternalKey();
@@ -130,15 +130,15 @@ public abstract class TestPaymentApi {
         return accountOrError.getRight();
     }
 
-    @Test
+    @Test(enabled=true)
     public void testCreatePaymentMethod() throws AccountApiException {
         PaymentProviderAccount account = setupAccountWithPaymentMethod();
         assertNotNull(account);
     }
 
-    @Test
+    @Test(enabled=true)
     public void testUpdatePaymentProviderAccountContact() throws AccountApiException {
-        final Account account = testHelper.createTestAccount();
+        final Account account = testHelper.createTestPayPalAccount();
         paymentApi.createPaymentProviderAccount(account);
 
         String newName = "Tester " + RandomStringUtils.randomAlphanumeric(10);
@@ -158,7 +158,7 @@ public abstract class TestPaymentApi {
         assertTrue(voidOrError.isRight());
     }
 
-    @Test
+    @Test(enabled=true)
     public void testCannotDeleteDefaultPaymentMethod() throws AccountApiException {
         PaymentProviderAccount account = setupAccountWithPaymentMethod();
 
@@ -167,9 +167,9 @@ public abstract class TestPaymentApi {
         assertTrue(errorOrVoid.isLeft());
     }
 
-    @Test
+    @Test(enabled=true)
     public void testDeleteNonDefaultPaymentMethod() throws AccountApiException {
-        final Account account = testHelper.createTestAccount();
+        final Account account = testHelper.createTestPayPalAccount();
         paymentApi.createPaymentProviderAccount(account);
 
         String accountKey = account.getExternalKey();

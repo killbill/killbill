@@ -45,14 +45,30 @@ public class TestHelper {
         this.invoiceDao = invoiceDao;
     }
 
-    public Account createTestAccount() throws AccountApiException {
+    // These helper methods can be overridden in a plugin implementation
+    public Account createTestCreditCardAccount() throws AccountApiException {
         final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
         final String externalKey = RandomStringUtils.randomAlphanumeric(10);
         final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
                                                                      .firstNameLength(name.length())
                                                                      .externalKey(externalKey)
                                                                      .phone("123-456-7890")
-                                                                     .email("user@example.com")
+                                                                     .email("ccuser@example.com")
+                                                                     .currency(Currency.USD)
+                                                                     .billingCycleDay(1)
+                                                                     .build();
+        accountDao.create(account);
+        return account;
+    }
+
+    public Account createTestPayPalAccount() throws AccountApiException {
+        final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
+        final String externalKey = RandomStringUtils.randomAlphanumeric(10);
+        final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
+                                                                     .firstNameLength(name.length())
+                                                                     .externalKey(externalKey)
+                                                                     .phone("123-456-7890")
+                                                                     .email("ppuser@example.com")
                                                                      .currency(Currency.USD)
                                                                      .billingCycleDay(1)
                                                                      .build();

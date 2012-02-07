@@ -120,7 +120,7 @@ public class TestPaymentInvoiceIntegration {
 
     @Test
     public void testInvoiceIntegration() throws Exception {
-        final Account account = testHelper.createTestAccount();
+        final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {

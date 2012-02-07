@@ -59,9 +59,9 @@ public class PaymentAttempt {
             return paymentAttemptDate;
     }
 
-    @Override
-    public String toString() {
-        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", accountId=" + accountId + ", invoiceId=" + invoiceId + ", paymentAttemptAmount=" + paymentAttemptAmount + "]";
-    }
+        @Override
+        public String toString() {
+            return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", accountId=" + accountId + ", invoiceId=" + invoiceId + ", paymentAttemptAmount=" + paymentAttemptAmount + ", paymentAttemptDate=" + paymentAttemptDate + "]";
+        }
 
 }
