@@ -35,6 +35,8 @@ public class PaymentAttempt {
     private final String paymentId;
     private final DateTime invoiceDate;
     private final DateTime paymentAttemptDate;
+    private final Integer retryCount;
+    private final DateTime nextRetryDate;
     private final DateTime createdDate;
     private final DateTime updatedDate;
 
@@ -46,6 +48,8 @@ public class PaymentAttempt {
                           DateTime invoiceDate,
                           DateTime paymentAttemptDate,
                           String paymentId,
+                          Integer retryCount,
+                          DateTime nextRetryDate,
                           DateTime createdDate,
                           DateTime updatedDate) {
         this.paymentAttemptId = paymentAttemptId;
@@ -56,6 +60,8 @@ public class PaymentAttempt {
         this.invoiceDate = invoiceDate;
         this.paymentAttemptDate = paymentAttemptDate == null ? new DateTime(DateTimeZone.UTC) : paymentAttemptDate;
         this.paymentId = paymentId;
+        this.retryCount = retryCount;
+        this.nextRetryDate = nextRetryDate;
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
     }
@@ -67,20 +73,33 @@ public class PaymentAttempt {
                           Currency currency,
                           DateTime invoiceDate,
                           DateTime paymentAttemptDate,
-                          String paymentId) {
-        this(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, paymentId, new DateTime(DateTimeZone.UTC), new DateTime(DateTimeZone.UTC));
+                          String paymentId,
+                          Integer retryCount,
+                          DateTime nextRetryDate) {
+        this(paymentAttemptId,
+             invoiceId,
+             accountId,
+             amount,
+             currency,
+             invoiceDate,
+             paymentAttemptDate,
+             paymentId,
+             retryCount,
+             nextRetryDate,
+             new DateTime(DateTimeZone.UTC),
+             new DateTime(DateTimeZone.UTC));
     }
 
     public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, BigDecimal amount, Currency currency, DateTime invoiceDate, DateTime paymentAttemptDate) {
-        this(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, null);
+        this(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, null, null, null);
     }
 
     public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, DateTime invoiceDate, DateTime paymentAttemptDate) {
-        this(paymentAttemptId, invoiceId, accountId, null, null, invoiceDate, paymentAttemptDate, null);
+        this(paymentAttemptId, invoiceId, accountId, null, null, invoiceDate, paymentAttemptDate, null, null, null);
     }
 
     public PaymentAttempt(UUID paymentAttemptId, Invoice invoice) {
-        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getAmountOutstanding(), invoice.getCurrency(), invoice.getInvoiceDate(), null);
+        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getAmountOutstanding(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null, null);
     }
 
     public DateTime getInvoiceDate() {
@@ -123,9 +142,17 @@ public class PaymentAttempt {
         return currency;
     }
 
+    public Integer getRetryCount() {
+        return retryCount;
+    }
+
+    public DateTime getNextRetryDate() {
+        return nextRetryDate;
+    }
+
     @Override
     public String toString() {
-        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", invoiceId=" + invoiceId + ", amount=" + amount + ", currency=" + currency + ", paymentId=" + paymentId + ", paymentAttemptDate=" + paymentAttemptDate + "]";
+        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", invoiceId=" + invoiceId + ", accountId=" + accountId + ", amount=" + amount + ", currency=" + currency + ", paymentId=" + paymentId + ", invoiceDate=" + invoiceDate + ", paymentAttemptDate=" + paymentAttemptDate + ", retryCount=" + retryCount + ", nextRetryDate=" + nextRetryDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
     }
 
     public Builder cloner() {
@@ -141,6 +168,8 @@ public class PaymentAttempt {
         private DateTime invoiceDate;
         private DateTime paymentAttemptDate;
         private String paymentId;
+        private Integer retryCount;
+        private DateTime nextRetryDate;
         private DateTime createdDate;
         private DateTime updatedDate;
 
@@ -156,6 +185,8 @@ public class PaymentAttempt {
             this.invoiceDate = src.invoiceDate;
             this.paymentAttemptDate = src.paymentAttemptDate;
             this.paymentId = src.paymentId;
+            this.retryCount = src.retryCount;
+            this.nextRetryDate = src.nextRetryDate;
             this.createdDate = src.createdDate;
             this.updatedDate = src.updatedDate;
         }
@@ -210,6 +241,16 @@ public class PaymentAttempt {
             return this;
         }
 
+        public Builder setRetryCount(Integer retryCount) {
+            this.retryCount = retryCount;
+            return this;
+        }
+
+        public Builder setNextRetryDate(DateTime nextRetryDate) {
+            this.nextRetryDate = nextRetryDate;
+            return this;
+        }
+
         public PaymentAttempt build() {
             return new PaymentAttempt(paymentAttemptId,
                                       invoiceId,
@@ -219,6 +260,8 @@ public class PaymentAttempt {
                                       invoiceDate,
                                       paymentAttemptDate,
                                       paymentId,
+                                      retryCount,
+                                      nextRetryDate,
                                       createdDate,
                                       updatedDate);
         }
@@ -233,7 +276,11 @@ public class PaymentAttempt {
                                 currency,
                                 invoiceDate,
                                 paymentAttemptDate,
-                                paymentId);
+                                paymentId,
+                                retryCount,
+                                nextRetryDate,
+                                createdDate,
+                                updatedDate);
     }
 
     @Override
@@ -251,6 +298,8 @@ public class PaymentAttempt {
                        Objects.equal(currency, other.currency) &&
                        Objects.equal(invoiceDate, other.invoiceDate) &&
                        Objects.equal(paymentAttemptDate, other.paymentAttemptDate) &&
+                       Objects.equal(retryCount, other.retryCount) &&
+                       Objects.equal(nextRetryDate, other.nextRetryDate) &&
                        Objects.equal(paymentId, other.paymentId);
             }
         }

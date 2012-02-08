@@ -27,9 +27,9 @@ public class MockEngineModule extends EntitlementModule {
         install(new EventBusModule());
         install(new CatalogModule());
         install(new AccountModuleWithMocks());
-        install (new MockClockModule());	
+        install(new MockClockModule());
     }
-    
+
     @Override
     protected void configure() {
         super.configure();

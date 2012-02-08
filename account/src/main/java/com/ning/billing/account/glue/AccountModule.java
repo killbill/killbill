@@ -45,7 +45,7 @@ public class AccountModule extends AbstractModule {
     private void installAccountService() {
         bind(AccountService.class).to(DefaultAccountService.class).asEagerSingleton();
     }
-    
+
     protected void installTestModules() {
         install(new ClockModule());
     }
@@ -57,6 +57,6 @@ public class AccountModule extends AbstractModule {
         installAccountDao();
         installAccountService();
         installAccountUserApi();
-        installTestModules() ;
+        installTestModules();
     }
 }

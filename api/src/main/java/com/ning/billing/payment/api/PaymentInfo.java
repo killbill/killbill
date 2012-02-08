@@ -121,6 +121,18 @@ public class PaymentInfo implements EventBusNotification {
         return paymentNumber;
     }
 
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public String getCreditCardType() {
+        return creditCardType;
+    }
+
+    public String getCreditCardCountry() {
+        return creditCardCountry;
+    }
+
     public String getReferenceId() {
         return referenceId;
     }
@@ -170,6 +182,8 @@ public class PaymentInfo implements EventBusNotification {
         private String paymentMethod;
         private String creditCardType;
         private String creditCardCountry;
+        private Integer retryCount;
+        private DateTime nextRetryDate;
         private DateTime effectiveDate;
         private DateTime createdDate;
         private DateTime updatedDate;
@@ -338,7 +352,7 @@ public class PaymentInfo implements EventBusNotification {
 
     @Override
     public String toString() {
-        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethodType=" + paymentMethod + ", creditCardType=" + creditCardType + ", creditCardCountry=" + creditCardCountry + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
+        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethod=" + paymentMethod + ", creditCardType=" + creditCardType + ", creditCardCountry=" + creditCardCountry + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
     }
 
 }

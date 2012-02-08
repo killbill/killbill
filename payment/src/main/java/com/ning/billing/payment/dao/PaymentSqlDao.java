@@ -84,6 +84,8 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             stmt.bind("invoice_dt", getDate(paymentAttempt.getInvoiceDate()));
             stmt.bind("payment_attempt_dt", getDate(paymentAttempt.getPaymentAttemptDate()));
             stmt.bind("payment_id", paymentAttempt.getPaymentId());
+            stmt.bind("retry_count", paymentAttempt.getRetryCount());
+            stmt.bind("next_retry_date", getDate(paymentAttempt.getNextRetryDate()));
             stmt.bind("created_dt", getDate(paymentAttempt.getCreatedDate()));
             stmt.bind("updated_dt", getDate(paymentAttempt.getUpdatedDate()));
         }
@@ -107,10 +109,23 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             DateTime invoiceDate = getDate(rs, "invoice_dt");
             DateTime paymentAttemptDate = getDate(rs, "payment_attempt_dt");
             String paymentId = rs.getString("payment_id");
+            Integer retryCount = rs.getInt("retry_count");
+            DateTime nextRetryDate = getDate(rs, "next_retry_dt");
             DateTime createdDate = getDate(rs, "created_dt");
             DateTime updatedDate = getDate(rs, "updated_dt");
 
-            return new PaymentAttempt(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, paymentId, createdDate, updatedDate);
+            return new PaymentAttempt(paymentAttemptId,
+                                      invoiceId,
+                                      accountId,
+                                      amount,
+                                      currency,
+                                      invoiceDate,
+                                      paymentAttemptDate,
+                                      paymentId,
+                                      retryCount,
+                                      nextRetryDate,
+                                      createdDate,
+                                      updatedDate);
         }
     }
 
