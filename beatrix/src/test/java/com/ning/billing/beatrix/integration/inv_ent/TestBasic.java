@@ -163,6 +163,7 @@ public class TestBasic {
     }
 
     private DateTime checkAndGetCTD(UUID subscriptionId) {
+
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscriptionId);
         DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
@@ -176,7 +177,7 @@ public class TestBasic {
         testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
     }
@@ -206,13 +207,13 @@ public class TestBasic {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
         assertNotNull(subscription);
-
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed first busHandler checkpoint.");
 
         //
         // VERIFY CTD HAS BEEN SET
         //
+
         checkAndGetCTD(subscription.getId());
 
         //
@@ -240,6 +241,7 @@ public class TestBasic {
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+
         assertTrue(busHandler.isCompleted(DELAY));
 
         //

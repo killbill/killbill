@@ -55,7 +55,7 @@ public class DBIProvider implements Provider<IDBI>
         dbConfig.setMaxConnectionsPerPartition(config.getMaxActive());
         dbConfig.setConnectionTimeout(config.getConnectionTimeout().getPeriod(), config.getConnectionTimeout().getUnit());
         dbConfig.setPartitionCount(1);
-        dbConfig.setDefaultTransactionIsolation("READ_COMMITTED");
+        dbConfig.setDefaultTransactionIsolation("REPEATABLE_READ");
         dbConfig.setDisableJMX(false);
 
         final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);

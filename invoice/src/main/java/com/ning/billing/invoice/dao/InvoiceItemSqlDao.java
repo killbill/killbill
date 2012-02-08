@@ -65,16 +65,18 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
     @SqlUpdate
     void update(@InvoiceItemBinder final InvoiceItem invoiceItem);
 
-    @SqlBatch
-    void create(@InvoiceItemBinder final List<InvoiceItem> items);
+    @SqlBatch(transactional=false)
+    void batchCreateFromTransaction(@InvoiceItemBinder final List<InvoiceItem> items);
 
     @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
     public @interface InvoiceItemBinder {
         public static class InvoiceItemBinderFactory implements BinderFactory {
+            @Override
             public Binder build(Annotation annotation) {
                 return new Binder<InvoiceItemBinder, InvoiceItem>() {
+                    @Override
                     public void bind(SQLStatement q, InvoiceItemBinder bind, InvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());

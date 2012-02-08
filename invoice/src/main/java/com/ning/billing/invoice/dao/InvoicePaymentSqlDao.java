@@ -52,8 +52,8 @@ public interface InvoicePaymentSqlDao {
     @SqlUpdate
     public void create(@InvoicePaymentBinder  InvoicePayment invoicePayment);
 
-    @SqlBatch
-    void create(@InvoicePaymentBinder List<InvoicePayment> items);
+    @SqlBatch(transactional=false)
+    void batchCreateFromTransaction(@InvoicePaymentBinder List<InvoicePayment> items);
 
     @SqlUpdate
     public void update(@InvoicePaymentBinder  InvoicePayment invoicePayment);
@@ -85,7 +85,7 @@ public interface InvoicePaymentSqlDao {
             final DateTime updatedDate = getDate(result, "updated_date");
 
             return new InvoicePayment() {
-                private  DateTime now = new DateTime();
+                private final  DateTime now = new DateTime();
 
                 @Override
                 public UUID getPaymentAttemptId() {
@@ -124,8 +124,10 @@ public interface InvoicePaymentSqlDao {
     @Target({ElementType.PARAMETER})
     public @interface InvoicePaymentBinder {
         public static class InvoicePaymentBinderFactory implements BinderFactory {
+            @Override
             public Binder build(Annotation annotation) {
                 return new Binder<InvoicePaymentBinder, InvoicePayment>() {
+                    @Override
                     public void bind(SQLStatement q, InvoicePaymentBinder bind, InvoicePayment payment) {
                         q.bind("invoiceId", payment.getInvoiceId().toString());
                         q.bind("paymentAttemptId", payment.getPaymentAttemptId().toString());

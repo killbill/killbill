@@ -145,7 +145,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                     List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
                     InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
-                    invoiceItemDao.create(invoiceItems);
+                    invoiceItemDao.batchCreateFromTransaction(invoiceItems);
 
                     notifyOfFutureBillingEvents(invoiceSqlDao, invoiceItems);
                     setChargedThroughDates(invoiceSqlDao, invoiceItems);
@@ -154,7 +154,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     // STEPH Why do we need that? Are the payments not always null at this point?
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
                     InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
-                    invoicePaymentSqlDao.create(invoicePayments);
+                    invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments);
 
                     InvoiceCreationNotification event;
                     event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),

@@ -55,7 +55,7 @@ public class TestBusHandler {
 
     @Subscribe
     public void handleEntitlementEvents(SubscriptionTransition event) {
-        log.info(String.format("Got subscription event %s", event.toString()));
+        log.info(String.format("TestBusHandler Got subscription event %s", event.toString()));
         switch (event.getTransitionType()) {
         case MIGRATE_ENTITLEMENT:
             assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
@@ -101,7 +101,7 @@ public class TestBusHandler {
 
     @Subscribe
     public void handleInvoiceEvents(InvoiceCreationNotification event) {
-        log.info(String.format("Got Invoice event %s", event.toString()));
+        log.info(String.format("TestBusHandler Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
 
@@ -130,13 +130,14 @@ public class TestBusHandler {
             }
         }
         if (!completed) {
-            log.debug("TestBusHandler did not complete in " + timeout + " ms");
+            Joiner joiner = Joiner.on(" ");
+            log.error("TestBusHandler did not complete in " + timeout + " ms, remaining events are " + joiner.join(nextExpectedEvent));
         }
         return completed;
     }
 
     private void notifyIfStackEmpty() {
-        log.debug("notifyIfStackEmpty ENTER");
+        log.debug("TestBusHandler notifyIfStackEmpty ENTER");
         synchronized (this) {
             if (nextExpectedEvent.isEmpty()) {
                 log.debug("notifyIfStackEmpty EMPTY");
@@ -144,7 +145,7 @@ public class TestBusHandler {
                 notify();
             }
         }
-        log.debug("notifyIfStackEmpty EXIT");
+        log.debug("TestBusHandler notifyIfStackEmpty EXIT");
     }
 
     private void assertEqualsNicely(NextEvent received) {
@@ -161,7 +162,7 @@ public class TestBusHandler {
         }
         if (!foundIt) {
             Joiner joiner = Joiner.on(" ");
-            System.err.println("Received event " + received + "; expected " + joiner.join(nextExpectedEvent));
+            log.error("TestBusHandler Received event " + received + "; expected " + joiner.join(nextExpectedEvent));
             // System.exit(1);
         }
     }
