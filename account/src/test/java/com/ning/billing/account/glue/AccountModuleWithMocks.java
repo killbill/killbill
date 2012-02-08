@@ -26,7 +26,7 @@ public class AccountModuleWithMocks extends AccountModule {
         bind(MockAccountDao.class).asEagerSingleton();
         bind(AccountDao.class).to(MockAccountDao.class);
     }
-    
+
     @Override
     protected void installTestModules() {
         install(new MockClockModule());
