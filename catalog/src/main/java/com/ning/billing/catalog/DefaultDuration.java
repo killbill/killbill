@@ -20,6 +20,7 @@ import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
+import org.joda.time.DateTime;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -49,7 +50,25 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
         return number;
     }
 
-	@Override
+    @Override
+    public DateTime addToDateTime(DateTime dateTime) {
+        if (number < 0) {return null;}
+
+        switch (unit) {
+            case DAYS:
+                return dateTime.plusDays(number);
+            case MONTHS:
+                return dateTime.plusMonths(number);
+            case YEARS:
+                return dateTime.plusYears(number);
+            case UNLIMITED:
+                return dateTime.plusYears(100);
+        }
+
+        return null;
+    }
+
+    @Override
 	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
 		//TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
 		return errors;

@@ -20,46 +20,60 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoicePayment;
 import org.joda.time.DateTime;
-
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.payment.api.InvoicePayment;
 
 public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final InvoiceDao dao;
 
     @Inject
-    public DefaultInvoiceUserApi(InvoiceDao dao) {
+    public DefaultInvoiceUserApi(final InvoiceDao dao) {
         this.dao = dao;
     }
 
     @Override
-    public List<UUID> getInvoicesForPayment(DateTime targetDate, int numberOfDays) {
-        return dao.getInvoicesForPayment(targetDate.toDate(), numberOfDays);
+    public List<UUID> getInvoicesForPayment(final DateTime targetDate, final int numberOfDays) {
+        return dao.getInvoicesForPayment(targetDate, numberOfDays);
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(UUID accountId) {
-        return dao.getInvoicesByAccount(accountId.toString());
+    public List<Invoice> getInvoicesByAccount(final UUID accountId) {
+        return dao.getInvoicesByAccount(accountId);
     }
 
     @Override
-    public Invoice getInvoice(UUID invoiceId) {
-        return dao.getById(invoiceId.toString());
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final DateTime fromDate) {
+        return dao.getInvoicesByAccount(accountId, fromDate);
     }
 
     @Override
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
         dao.notifyOfPaymentAttempt(invoicePayment);
     }
-
-	@Override
+    
+    @Override
 	public BigDecimal getAccountBalance(UUID accountId) {
 		BigDecimal result = dao.getAccountBalance(accountId);
 		return result == null ? BigDecimal.ZERO : result;
 	}
 
+    @Override
+    public List<InvoiceItem> getInvoiceItemsByAccount(final UUID accountId) {
+        return dao.getInvoiceItemsByAccount(accountId);
+    }
+
+    @Override
+    public Invoice getInvoice(final UUID invoiceId) {
+        return dao.getById(invoiceId);
+    }
+
+    @Override
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
+        return dao.getUnpaidInvoicesByAccountId(accountId, upToDate);
+    }
 }

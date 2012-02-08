@@ -25,13 +25,14 @@ import com.ning.jdbi.metrics.MetricsTimingCollector;
 import com.ning.jdbi.metrics.SqlJdbiGroupStrategy;
 import com.yammer.metrics.core.MetricsRegistry;
 import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TimingCollector;
 import org.skife.jdbi.v2.logging.Log4JLog;
 import org.skife.jdbi.v2.tweak.SQLLog;
 
 import java.util.concurrent.TimeUnit;
 
-public class DBIProvider implements Provider<DBI>
+public class DBIProvider implements Provider<IDBI>
 {
     private final MetricsRegistry metricsRegistry;
     private final DbiConfig config;
@@ -44,7 +45,7 @@ public class DBIProvider implements Provider<DBI>
     }
 
     @Override
-    public DBI get()
+    public IDBI get()
     {
         final BoneCPConfig dbConfig = new BoneCPConfig();
         dbConfig.setJdbcUrl(config.getJdbcUrl());
@@ -54,7 +55,7 @@ public class DBIProvider implements Provider<DBI>
         dbConfig.setMaxConnectionsPerPartition(config.getMaxActive());
         dbConfig.setConnectionTimeout(config.getConnectionTimeout().getPeriod(), config.getConnectionTimeout().getUnit());
         dbConfig.setPartitionCount(1);
-        dbConfig.setDefaultTransactionIsolation("READ_COMMITTED");
+        dbConfig.setDefaultTransactionIsolation("REPEATABLE_READ");
         dbConfig.setDisableJMX(false);
 
         final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);

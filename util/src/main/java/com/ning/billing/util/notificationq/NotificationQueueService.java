@@ -16,33 +16,22 @@
 
 package com.ning.billing.util.notificationq;
 
-import java.util.NoSuchElementException;
-
 
 public interface NotificationQueueService {
 
     public interface NotificationQueueHandler {
         /**
-         * Called when the Notification thread has been started
-         */
-        public void completedQueueStart();
-
-        /**
          * Called for each notification ready
          *
-         * @param key the notification key associated to that notification entry
+         * @param notificationKey the notification key associated to that notification entry
          */
         public void handleReadyNotification(String notificationKey);
-        /**
-         * Called right before the Notification thread is about to exit
-         */
-        public void completedQueueStop();
-    }
+     }
 
-    public static final class NotficationQueueAlreadyExists extends Exception {
+    public static final class NotificationQueueAlreadyExists extends Exception {
         private static final long serialVersionUID = 1541281L;
 
-        public NotficationQueueAlreadyExists(String msg) {
+        public NotificationQueueAlreadyExists(String msg) {
             super(msg);
         }
     }
@@ -65,11 +54,11 @@ public interface NotificationQueueService {
      *
      * @return a new NotificationQueue
      *
-     * @throws NotficationQueueAlreadyExists is the queue associated with that service and name already exits
+     * @throws com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists is the queue associated with that service and name already exits
      *
      */
     NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config)
-        throws NotficationQueueAlreadyExists;
+        throws NotificationQueueAlreadyExists;
 
     /**
      * Retrieves an already created NotificationQueue by service and name if it exists

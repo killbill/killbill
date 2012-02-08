@@ -23,6 +23,8 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +136,7 @@ public class DefaultPaymentApi implements PaymentApi {
         for (String invoiceId : invoiceIds) {
             Invoice invoice = invoicePaymentApi.getInvoice(UUID.fromString(invoiceId));
 
-            if (invoice.getAmountOutstanding().compareTo(BigDecimal.ZERO) == 0 ) {
+            if (invoice.getBalance().compareTo(BigDecimal.ZERO) == 0 ) {
             // TODO: send a notification that invoice was ignored?
                 log.info("Received invoice for payment with outstanding amount of 0 {} ", invoice);
             }
@@ -174,12 +176,12 @@ public class DefaultPaymentApi implements PaymentApi {
                     }
                 }
 
-                invoicePaymentApi.notifyOfPaymentAttempt(new InvoicePayment(invoice.getId(),
-                                                                     paymentInfo == null ? null : paymentInfo.getAmount(),
-//                                                                   paymentInfo.getRefundAmount(), TODO
-                                                                     paymentInfo == null ? null : invoice.getCurrency(),
-                                                                     paymentAttempt.getPaymentAttemptId(),
-                                                                     paymentAttempt.getPaymentAttemptDate()));
+                invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getPaymentAttemptId(),
+                                                                                   invoice.getId(),
+                                                                                   paymentAttempt.getPaymentAttemptDate(),
+                                                                                   paymentInfo == null ? null : paymentInfo.getAmount(),
+//                                                                                 paymentInfo.getRefundAmount(), TODO
+                                                                                   paymentInfo == null ? null : invoice.getCurrency()));
 
             }
         }

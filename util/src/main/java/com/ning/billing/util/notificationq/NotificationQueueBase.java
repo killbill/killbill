@@ -17,33 +17,27 @@
 package com.ning.billing.util.notificationq;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
-import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
 
 public abstract class NotificationQueueBase implements NotificationQueue {
 
     protected final static Logger log = LoggerFactory.getLogger(NotificationQueueBase.class);
+
+    private static final long MAX_NOTIFICATION_THREAD_WAIT_MS = 10000; // 10 secs
+    private static final long NOTIFICATION_THREAD_WAIT_INCREMENT_MS = 1000; // 1 sec
+    private static final long NANO_TO_MS = (1000 * 1000);
 
     protected static final String NOTIFICATION_THREAD_PREFIX = "Notification-";
     protected final long STOP_WAIT_TIMEOUT_MS = 60000;
@@ -63,7 +57,10 @@ public abstract class NotificationQueueBase implements NotificationQueue {
 
     // Use this object's monitor for synchronization (no need for volatile)
     protected boolean isProcessingEvents;
-
+    
+    private boolean startedComplete = false;
+    private boolean stoppedComplete = false;
+    
     // Package visibility on purpose
     NotificationQueueBase(final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
         this.clock = clock;
@@ -92,14 +89,14 @@ public abstract class NotificationQueueBase implements NotificationQueue {
 
     @Override
     public void processReadyNotification() {
-        // STEPH to be implemented
+        doProcessEvents(sequenceId.incrementAndGet());
     }
 
 
     @Override
     public void stopQueue() {
         if (config.isNotificationProcessingOff()) {
-            handler.completedQueueStop();
+            completedQueueStop();
             return;
         }
 
@@ -113,7 +110,7 @@ public abstract class NotificationQueueBase implements NotificationQueue {
                 log.warn("NotificationQueue got interrupted exception when stopping notifications", e);
             }
         }
-
+        waitForNotificationStopCompletion();
     }
 
     @Override
@@ -125,7 +122,7 @@ public abstract class NotificationQueueBase implements NotificationQueue {
 
         if (config.isNotificationProcessingOff()) {
             log.warn(String.format("KILLBILL NOTIFICATION PROCESSING FOR SVC %s IS OFF !!!", getFullQName()));
-            handler.completedQueueStart();
+            completedQueueStart();
             return;
         }
         final NotificationQueueBase notificationQueue = this;
@@ -139,7 +136,7 @@ public abstract class NotificationQueueBase implements NotificationQueue {
                         Thread.currentThread().getId()));
 
                 // Thread is now started, notify the listener
-                handler.completedQueueStart();
+                completedQueueStart();
 
                 try {
                     while (true) {
@@ -171,7 +168,7 @@ public abstract class NotificationQueueBase implements NotificationQueue {
                     // Just to make it really obvious in the log
                     e.printStackTrace();
                 } finally {
-                    handler.completedQueueStop();
+                    completedQueueStop();
                     log.info(String.format("NotificationQueue thread  %s  [%d] exited...",
                             Thread.currentThread().getName(),
                             Thread.currentThread().getId()));
@@ -182,8 +179,59 @@ public abstract class NotificationQueueBase implements NotificationQueue {
                 Thread.sleep(config.getNotificationSleepTimeMs());
             }
         });
+        waitForNotificationStartCompletion();
+    }
+    
+    private void completedQueueStop() {
+    	synchronized (this) {
+    		stoppedComplete = true;
+            this.notifyAll();
+        }
+    }
+    
+    private void completedQueueStart() {
+        synchronized (this) {
+        	startedComplete = true;
+            this.notifyAll();
+        }
     }
 
+    private void waitForNotificationStartCompletion() {
+        waitForNotificationEventCompletion(true);
+    }
+
+    private void waitForNotificationStopCompletion() {
+        waitForNotificationEventCompletion(false);
+    }
+
+    private void waitForNotificationEventCompletion(boolean startEvent) {
+
+        long ini = System.nanoTime();
+        synchronized(this) {
+            do {
+                if ((startEvent ? startedComplete : stoppedComplete)) {
+                    break;
+                }
+                try {
+                    this.wait(NOTIFICATION_THREAD_WAIT_INCREMENT_MS);
+                } catch (InterruptedException e ) {
+                    Thread.currentThread().interrupt();
+                    throw new NotificationError(e);
+                }
+            } while (!(startEvent ? startedComplete : stoppedComplete) &&
+                    (System.nanoTime() - ini) / NANO_TO_MS < MAX_NOTIFICATION_THREAD_WAIT_MS);
+
+            if (!(startEvent ? startedComplete : stoppedComplete)) {
+                log.error("Could not {} notification thread in {} msec !!!",
+                        (startEvent ? "start" : "stop"),
+                        MAX_NOTIFICATION_THREAD_WAIT_MS);
+                throw new NotificationError("Failed to start service!!");
+            }
+            log.info("Notification thread has been {} in {} ms",
+                    (startEvent ? "started" : "stopped"),
+                    (System.nanoTime() - ini) / NANO_TO_MS);
+        }
+    }
 
     protected String getFullQName() {
         return svcName + ":" +  queueName;

@@ -24,9 +24,9 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Objects;
-import com.ning.billing.util.eventbus.EventBusNotification;
+import com.ning.billing.util.bus.BusEvent;
 
-public class PaymentInfo implements EventBusNotification {
+public class PaymentInfo implements BusEvent {
     private final String paymentId;
     private final BigDecimal amount;
     private final BigDecimal refundAmount;

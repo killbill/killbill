@@ -16,7 +16,11 @@
 
 package com.ning.billing.beatrix.lifecycle;
 
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
@@ -34,7 +38,7 @@ public class TestLifecycle {
     private Service1 s1;
     private Service2 s2;
 
-    private Lifecycle lifecycle;
+    private DefaultLifecycle lifecycle;
 
     public static class ServiceBase {
 
@@ -122,7 +126,7 @@ public class TestLifecycle {
         final Injector g = Guice.createInjector(Stage.DEVELOPMENT, new TestLifecycleModule());
         s1 = g.getInstance(Service1.class);
         s2 = g.getInstance(Service2.class);
-        lifecycle = g.getInstance(Lifecycle.class);
+        lifecycle = g.getInstance(DefaultLifecycle.class);
     }
 
     @Test(enabled=true, groups={"fast"})
@@ -148,7 +152,7 @@ public class TestLifecycle {
         Assert.assertEquals(s1.getCount() + s2.getCount(), 1);
     }
 
-    public static class LifecycleNoWarn extends Lifecycle {
+    public static class LifecycleNoWarn extends DefaultLifecycle {
 
         @Inject
         public LifecycleNoWarn(Injector injector) {
@@ -163,7 +167,7 @@ public class TestLifecycle {
 
         @Override
         protected void configure() {
-            bind(Lifecycle.class).to(LifecycleNoWarn.class).asEagerSingleton();
+            bind(DefaultLifecycle.class).to(LifecycleNoWarn.class).asEagerSingleton();
             bind(Service1.class).asEagerSingleton();
             bind(Service2.class).asEagerSingleton();
         }

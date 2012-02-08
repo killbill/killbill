@@ -20,6 +20,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.Months;
+import org.joda.time.MutableDateTime;
 
 import java.math.BigDecimal;
 
@@ -50,20 +51,23 @@ public class InAdvanceBillingMode extends BillingModeBase {
     protected DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDay) {
         int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
 
-        DateTime proposedDate;
+
+        MutableDateTime tmp = date.toMutableDateTime();
         if (billingCycleDay > lastDayOfMonth) {
-            proposedDate = buildDate(date.getYear(), date.getMonthOfYear(), lastDayOfMonth);
+            tmp.setDayOfMonth(lastDayOfMonth);
         } else {
-            proposedDate = buildDate(date.getYear(), date.getMonthOfYear(), billingCycleDay);
+            tmp.setDayOfMonth(billingCycleDay);
         }
+        DateTime proposedDate = tmp.toDateTime();
 
         while (proposedDate.isBefore(date)) {
+            // STEPH could be an annual ?
             proposedDate = proposedDate.plusMonths(1);
         }
-
         return proposedDate;
     }
 
+    @Override
     protected DateTime calculateBillingCycleDateAfter(final DateTime date, final DateTime billingCycleDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
         DateTime proposedDate = billingCycleDate;
 
@@ -74,9 +78,13 @@ public class InAdvanceBillingMode extends BillingModeBase {
                 int lastDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
 
                 if (lastDayOfMonth < billingCycleDay) {
-                    proposedDate = buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfMonth);
+                    proposedDate = new DateTime(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfMonth,
+                                                proposedDate.getHourOfDay(), proposedDate.getMinuteOfHour(),
+                                                proposedDate.getSecondOfMinute(), proposedDate.getMillisOfSecond());
                 } else {
-                    proposedDate = buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay);
+                    proposedDate = new DateTime(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay,
+                                                proposedDate.getHourOfDay(), proposedDate.getMinuteOfHour(),
+                                                proposedDate.getSecondOfMinute(), proposedDate.getMillisOfSecond());
                 }
             }
         }
@@ -100,9 +108,13 @@ public class InAdvanceBillingMode extends BillingModeBase {
         if (proposedDate.dayOfMonth().get() < billingCycleDay) {
             int lastDayOfTheMonth = proposedDate.dayOfMonth().getMaximumValue();
             if (lastDayOfTheMonth < billingCycleDay) {
-                return buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfTheMonth);
+                return new DateTime(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfTheMonth,
+                                    proposedDate.getHourOfDay(), proposedDate.getMinuteOfHour(),
+                                    proposedDate.getSecondOfMinute(), proposedDate.getMillisOfSecond());
             } else {
-                return buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay);
+                return new DateTime(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay,
+                                    proposedDate.getHourOfDay(), proposedDate.getMinuteOfHour(),
+                                    proposedDate.getSecondOfMinute(), proposedDate.getMillisOfSecond());
             }
         } else {
             return proposedDate;
@@ -114,7 +126,12 @@ public class InAdvanceBillingMode extends BillingModeBase {
         DateTime nextBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
         DateTime previousBillingCycleDate = nextBillingCycleDate.plusMonths(-billingPeriod.getNumberOfMonths());
 
-        BigDecimal daysInPeriod = new BigDecimal(Days.daysBetween(previousBillingCycleDate, nextBillingCycleDate).getDays());
+        int daysBetween = Days.daysBetween(previousBillingCycleDate, nextBillingCycleDate).getDays();
+        if (daysBetween == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal daysInPeriod = new BigDecimal(daysBetween);
         BigDecimal days = new BigDecimal(Days.daysBetween(startDate, nextBillingCycleDate).getDays());
 
         return days.divide(daysInPeriod, NUMBER_OF_DECIMALS, ROUNDING_METHOD);

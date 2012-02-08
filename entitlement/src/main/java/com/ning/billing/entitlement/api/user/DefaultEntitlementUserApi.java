@@ -89,7 +89,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate) throws EntitlementUserApiException {
-
         try {
             String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             DateTime now = clock.getUTCNow();
@@ -101,7 +100,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             DateTime effectiveDate = requestedDate;
 
             Plan plan = catalogService.getFullCatalog().findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);
-
 
             PlanPhase phase = (plan.getInitialPhases() != null) ? plan.getInitialPhases()[0] : plan.getFinalPhase();
             if (phase == null) {

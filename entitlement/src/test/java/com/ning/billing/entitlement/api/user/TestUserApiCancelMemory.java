@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api.user;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 import org.testng.annotations.Test;
 
@@ -38,7 +39,7 @@ public class TestUserApiCancelMemory extends TestUserApiCancel {
 
     @Override
     @Test(enabled=true, groups={"fast"})
-    public void testCancelSubscriptionEOTWithChargeThroughDate() {
+    public void testCancelSubscriptionEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testCancelSubscriptionEOTWithChargeThroughDate();
     }
 
@@ -50,7 +51,7 @@ public class TestUserApiCancelMemory extends TestUserApiCancel {
 
     @Override
     @Test(enabled=true, groups={"fast"})
-    public void testUncancel() {
+    public void testUncancel() throws EntitlementBillingApiException {
         super.testUncancel();
     }
 }

@@ -16,7 +16,12 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -94,7 +99,7 @@ public class TestBusinessSubscription
         Assert.assertEquals(subscription, subscription);
         Assert.assertTrue(subscription.equals(subscription));
 
-        final Subscription otherIsubscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
-        Assert.assertTrue(!subscription.equals(new BusinessSubscription(otherIsubscription, USD)));
+        final Subscription otherSubscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
+        Assert.assertTrue(!subscription.equals(new BusinessSubscription(otherSubscription, USD)));
     }
 }

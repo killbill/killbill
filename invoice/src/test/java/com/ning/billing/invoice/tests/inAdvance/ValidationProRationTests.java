@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 
 import static org.testng.Assert.assertEquals;
 
-@Test(groups = {"invoicing", "proRation"})
+@Test(groups = {"fast", "invoicing", "proRation"})
 public class ValidationProRationTests extends ProRationTestBase {
     protected BillingPeriod getBillingPeriod() {
         return BillingPeriod.MONTHLY;

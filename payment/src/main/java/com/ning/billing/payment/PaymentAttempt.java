@@ -41,7 +41,7 @@ public class PaymentAttempt {
         this.paymentAttemptId = paymentAttemptId;
         this.accountId = invoice.getAccountId();
         this.invoiceId = invoice.getId();
-        this.paymentAttemptAmount = invoice.getAmountOutstanding();
+        this.paymentAttemptAmount = invoice.getBalance();
         this.paymentAttemptDate = new DateTime(DateTimeZone.UTC);
         this.retryCount = retryCount;
         this.nextRetryDate = nextRetryDate;

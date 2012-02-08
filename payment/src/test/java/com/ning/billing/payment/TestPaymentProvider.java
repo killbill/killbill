@@ -37,13 +37,13 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 @Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
 public class TestPaymentProvider {
     @Inject
-    private EventBus eventBus;
+    private Bus eventBus;
     @Inject
     private RequestProcessor invoiceProcessor;
     @Inject
@@ -58,6 +58,8 @@ public class TestPaymentProvider {
         eventBus.start();
         eventBus.register(invoiceProcessor);
         eventBus.register(paymentInfoReceiver);
+
+        assertTrue(true);
     }
 
     @AfterMethod(alwaysRun = true)
@@ -65,6 +67,8 @@ public class TestPaymentProvider {
         eventBus.unregister(invoiceProcessor);
         eventBus.unregister(paymentInfoReceiver);
         eventBus.stop();
+
+        assertTrue(true);
     }
 
     @Test

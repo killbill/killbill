@@ -33,15 +33,15 @@ import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 public class RequestProcessor {
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
     private final AccountUserApi accountUserApi;
     private final PaymentApi paymentApi;
     private final PaymentProviderPluginRegistry pluginRegistry;
-    private final EventBus eventBus;
+    private final Bus eventBus;
 
     private static final Logger log = LoggerFactory.getLogger(RequestProcessor.class);
 
@@ -49,7 +49,7 @@ public class RequestProcessor {
     public RequestProcessor(AccountUserApi accountUserApi,
                             PaymentApi paymentApi,
                             PaymentProviderPluginRegistry pluginRegistry,
-                            EventBus eventBus) {
+                            Bus eventBus) {
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
         this.pluginRegistry = pluginRegistry;

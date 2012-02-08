@@ -80,16 +80,18 @@ public class TestHelper {
                                      DateTime targetDate,
                                      Currency currency,
                                      InvoiceItem... items) {
-        Invoice invoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), new DateTime(), targetDate, currency, null, new BigDecimal("0"));
+        Invoice invoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), new DateTime(), targetDate, currency);
 
         for (InvoiceItem item : items) {
-            invoice.add(new DefaultInvoiceItem(invoice.getId(),
+            invoice.addInvoiceItem(new DefaultInvoiceItem(invoice.getId(),
                                                item.getSubscriptionId(),
+                                               item.getPlanName(),
+                                               item.getPhaseName(),
                                                item.getStartDate(),
                                                item.getEndDate(),
-                                               item.getDescription(),
-                                               item.getAmount(),
-                                               item.getRate(),
+                                               item.getRecurringAmount(),
+                                               item.getRecurringRate(),
+                                               item.getFixedAmount(),
                                                item.getCurrency()));
         }
         invoiceDao.create(invoice);
@@ -100,7 +102,7 @@ public class TestHelper {
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final UUID subscriptionId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal("10.00");
-        final InvoiceItem item = new DefaultInvoiceItem(null, subscriptionId, now, now.plusMonths(1), "Test", amount, new BigDecimal("1.0"), Currency.USD);
+        final InvoiceItem item = new DefaultInvoiceItem(null, subscriptionId, "test plan", "test phase", now, now.plusMonths(1), amount, new BigDecimal("1.0"), null, Currency.USD);
 
         return createTestInvoice(account, now, Currency.USD, item);
     }

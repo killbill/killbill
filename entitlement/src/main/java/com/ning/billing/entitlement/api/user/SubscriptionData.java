@@ -30,7 +30,12 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
 public class SubscriptionData implements Subscription {
 
@@ -99,29 +104,29 @@ public class SubscriptionData implements Subscription {
 
     @Override
     public SubscriptionState getState() {
-        return (transitions == null) ? null : getLatestTranstion().getNextState();
+        return (getLatestTransition() == null) ? null : getLatestTransition().getNextState();
     }
 
     @Override
     public PlanPhase getCurrentPhase() {
-        return (transitions == null) ? null : getLatestTranstion().getNextPhase();
+        return (getLatestTransition() == null) ? null : getLatestTransition().getNextPhase();
     }
 
 
     @Override
     public Plan getCurrentPlan() {
-        return (transitions == null) ? null : getLatestTranstion().getNextPlan();
+        return (getLatestTransition() == null) ? null : getLatestTransition().getNextPlan();
     }
 
     @Override
     public String getCurrentPriceList() {
-        return (transitions == null) ? null : getLatestTranstion().getNextPriceList();
+        return (getLatestTransition() == null) ? null : getLatestTransition().getNextPriceList();
     }
 
 
     @Override
     public DateTime getEndDate() {
-        SubscriptionTransition latestTransition = getLatestTranstion();
+        SubscriptionTransition latestTransition = getLatestTransition();
         if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
             return latestTransition.getEffectiveTransitionTime();
         }
@@ -195,7 +200,7 @@ public class SubscriptionData implements Subscription {
         return null;
     }
 
-    public SubscriptionTransition getLatestTranstion() {
+    public SubscriptionTransition getLatestTransition() {
 
         if (transitions == null) {
             return null;

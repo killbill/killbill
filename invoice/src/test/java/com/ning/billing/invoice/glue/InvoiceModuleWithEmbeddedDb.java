@@ -16,19 +16,33 @@
 
 package com.ning.billing.invoice.glue;
 
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
-import com.ning.billing.util.glue.EventBusModule;
-import org.skife.jdbi.v2.IDBI;
-
 import java.io.IOException;
+
+import com.ning.billing.invoice.api.test.InvoiceTestApi;
+import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
+import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
+import com.ning.billing.util.glue.GlobalLockerModule;
+import org.skife.jdbi.v2.IDBI;
+import com.ning.billing.account.glue.AccountModule;
+import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.entitlement.glue.EntitlementModule;
+import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.notificationq.MockNotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService;
 
 public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private IDBI dbi;
 
-    public void createDb(String ddl) throws IOException {
+    public void startDb() throws IOException {
         helper.startMysql();
+    }
+
+    public void initDb(final String ddl) throws IOException {
         helper.initDb(ddl);
     }
 
@@ -36,15 +50,33 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         helper.stopMysql();
     }
 
-    public InvoiceItemSqlDao getInvoiceItemDao() {
+    public InvoiceItemSqlDao getInvoiceItemSqlDao() {
         return dbi.onDemand(InvoiceItemSqlDao.class);
+    }
+
+    public InvoicePaymentSqlDao getInvoicePaymentSqlDao() {
+        return dbi.onDemand(InvoicePaymentSqlDao.class);
+    }
+
+    private void installNotificationQueue() {
+        bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
     }
 
     @Override
     public void configure() {
         dbi = helper.getDBI();
         bind(IDBI.class).toInstance(dbi);
+
+        bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
+        installNotificationQueue();
+        install(new AccountModule());
+        install(new CatalogModule());
+        install(new EntitlementModule());
+
         super.configure();
-        install(new EventBusModule());
+
+        bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
+
+        install(new BusModule());
     }
 }

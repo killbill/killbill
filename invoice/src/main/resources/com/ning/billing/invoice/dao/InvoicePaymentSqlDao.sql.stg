@@ -1,0 +1,61 @@
+group InvoicePayment;
+
+invoicePaymentFields(prefix) ::= <<
+  <prefix>invoice_id,
+  <prefix>payment_attempt_id,
+  <prefix>payment_attempt_date,
+  <prefix>amount,
+  <prefix>currency,
+  <prefix>created_date,
+  <prefix>updated_date
+>>
+
+create() ::= <<
+  INSERT INTO invoice_payments(<invoicePaymentFields()>)
+  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, :createdDate, :updatedDate);
+>>
+
+batchCreateFromTransaction() ::= <<
+  INSERT INTO invoice_payments(<invoicePaymentFields()>)
+  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, :createdDate, :updatedDate);
+>>
+
+
+update() ::= <<
+  UPDATE invoice_payments
+  SET payment_date = :paymentAttemptDate, amount = :amount, currency = :currency, created_date = :createdDate, updated_date = :updatedDate
+  WHERE invoice_id = :invoiceId, payment_attempt_id = :paymentAttemptId;
+>>
+
+getByPaymentAttemptId() ::= <<
+  SELECT <invoicePaymentFields()>
+  FROM invoice_payments
+  WHERE payment_id = :paymentAttemptId;
+>>
+
+get() ::= <<
+  SELECT <invoicePaymentFields()>
+  FROM invoice_payments;
+>>
+
+getPaymentsForInvoice() ::= <<
+  SELECT <invoicePaymentFields()>
+  FROM invoice_payments
+  WHERE invoice_id = :invoiceId;
+>>
+
+notifyOfPaymentAttempt() ::= <<
+  INSERT INTO invoice_payments(<invoicePaymentFields()>)
+  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, NOW(), NOW());
+>>
+
+getInvoicePayment() ::= <<
+    SELECT <invoicePaymentFields()>
+    FROM invoice_payments
+    WHERE payment_id = :payment_id;
+>>
+
+test() ::= <<
+  SELECT 1 FROM invoice_payments;
+>>
+;

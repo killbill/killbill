@@ -16,18 +16,17 @@
 
 package com.ning.billing.invoice.model;
 
-
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.Iterator;
 import java.util.UUID;
-
 import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.joda.time.Duration;
+import org.joda.time.Period;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
@@ -36,61 +35,82 @@ import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 
+import javax.annotation.Nullable;
+
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
-    private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceGenerator.class); 
+    private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceGenerator.class);
+
     @Override
-    public Invoice generateInvoice(final UUID accountId, final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
-        if (events == null) {return new DefaultInvoice(accountId, targetDate, targetCurrency);}
-        if (events.size() == 0) {return new DefaultInvoice(accountId, targetDate, targetCurrency);}
+    public Invoice generateInvoice(final UUID accountId, final BillingEventSet events,
+                                   @Nullable final InvoiceItemList existingItems, final DateTime targetDate,
+                                   final Currency targetCurrency) {
+        if (events == null) {
+            return null;
+        }
+
+        if (events.size() == 0) {
+            return null;
+        }
 
         DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, targetCurrency);
         InvoiceItemList currentItems = generateInvoiceItems(events, invoice.getId(), targetDate, targetCurrency);
         InvoiceItemList itemsToPost = reconcileInvoiceItems(invoice.getId(), currentItems, existingItems);
-        invoice.add(itemsToPost);
 
-        return invoice;
+        if (itemsToPost.size() == 0) {
+            return null;
+        } else {
+            invoice.addInvoiceItems(itemsToPost);
+            return invoice;
+        }
     }
 
-    private InvoiceItemList reconcileInvoiceItems(final UUID invoiceId, final InvoiceItemList currentInvoiceItems, final InvoiceItemList existingInvoiceItems) {
+    private InvoiceItemList reconcileInvoiceItems(final UUID invoiceId, final InvoiceItemList currentInvoiceItems,
+                                                  final InvoiceItemList existingInvoiceItems) {
+        if ((existingInvoiceItems == null) || (existingInvoiceItems.size() == 0)) {
+            return currentInvoiceItems;
+        }
+
         InvoiceItemList currentItems = new InvoiceItemList();
-        for (InvoiceItem item : currentInvoiceItems) {
+        for (final InvoiceItem item : currentInvoiceItems) {
             currentItems.add(new DefaultInvoiceItem(item, invoiceId));
         }
 
+        // STEPH why clone? Why cast?
         InvoiceItemList existingItems = (InvoiceItemList) existingInvoiceItems.clone();
 
         Collections.sort(currentItems);
         Collections.sort(existingItems);
 
-        List<InvoiceItem> existingItemsToRemove = new ArrayList<InvoiceItem>();
+        for (final InvoiceItem currentItem : currentItems) {
+            Iterator<InvoiceItem> it = existingItems.iterator();
 
-        for (InvoiceItem currentItem : currentItems) {
             // see if there are any existing items that are covered by the current item
-            for (InvoiceItem existingItem : existingItems) {
+            while (it.hasNext()) {
+                InvoiceItem existingItem = it.next();
+                // STEPH this is more like 'contained' that 'duplicates'
                 if (currentItem.duplicates(existingItem)) {
                     currentItem.subtract(existingItem);
-                    existingItemsToRemove.add(existingItem);
+                    it.remove();
                 }
             }
         }
 
-        existingItems.removeAll(existingItemsToRemove);
-
         // remove cancelling pairs of invoice items
         existingItems.removeCancellingPairs();
 
-        // remove zero-dollar invoice items
-        currentItems.removeZeroDollarItems();
-
         // add existing items that aren't covered by current items as credit items
-        for (InvoiceItem existingItem : existingItems) {
-            currentItems.add(existingItem.asCredit(invoiceId));
+        for (final InvoiceItem existingItem : existingItems) {
+            // STEPH do we really want to credit if that has not been paid yet?
+            currentItems.add(existingItem.asCredit(existingItem.getInvoiceId()));
         }
+
+        currentItems.cleanupDuplicatedItems();
 
         return currentItems;
     }
 
-    private InvoiceItemList generateInvoiceItems(BillingEventSet events, UUID invoiceId, DateTime targetDate, Currency targetCurrency) {
+    private InvoiceItemList generateInvoiceItems(final BillingEventSet events, final UUID invoiceId,
+                                                 final DateTime targetDate, final Currency targetCurrency) {
         InvoiceItemList items = new InvoiceItemList();
 
         // sort events; this relies on the sort order being by subscription id then start date
@@ -102,7 +122,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             BillingEvent thisEvent = events.get(i);
             BillingEvent nextEvent = events.get(i + 1);
 
-            if (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) {
+
+            if (thisEvent.getSubscription().getId().equals(nextEvent.getSubscription().getId())) {
                 processEvents(invoiceId, thisEvent, nextEvent, items, targetDate, targetCurrency);
             } else {
                 processEvent(invoiceId, thisEvent, items, targetDate, targetCurrency);
@@ -117,62 +138,101 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return items;
     }
 
-    private void processEvent(UUID invoiceId, BillingEvent event, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
+    private void processEvent(final UUID invoiceId, final BillingEvent event, final InvoiceItemList items,
+                              final DateTime targetDate, final Currency targetCurrency) {
     	try {
-    		//TODO: Jeff getPrice() -> getRecurringPrice()
-    		BigDecimal rate = event.getRecurringPrice(targetCurrency);
-    		BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(event, targetDate, rate);
-    		BillingMode billingMode = getBillingMode(event.getBillingMode());
-    		DateTime billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
+    	    // STEPH should not that check apply to next method as well?
+            if (event.getEffectiveDate().compareTo(targetDate) > 0) {
+                return;
+            }
 
-    		addInvoiceItem(invoiceId, items, event, billThroughDate, invoiceItemAmount, rate, targetCurrency);
+            BigDecimal recurringRate = event.getRecurringPrice() == null ? null : event.getRecurringPrice().getPrice(targetCurrency);
+            BigDecimal fixedPrice = event.getFixedPrice() == null ? null : event.getFixedPrice().getPrice(targetCurrency);
+
+    		BigDecimal numberOfBillingPeriods;
+            BigDecimal recurringAmount = null;
+            DateTime billThroughDate;
+
+            if (recurringRate == null) {
+                billThroughDate = event.getPlanPhase().getDuration().addToDateTime(event.getEffectiveDate());
+            } else {
+                numberOfBillingPeriods = calculateNumberOfBillingPeriods(event, targetDate);
+                recurringAmount = numberOfBillingPeriods.multiply(recurringRate);
+                BillingMode billingMode = getBillingMode(event.getBillingMode());
+                billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
+            }
+
+            BigDecimal effectiveFixedPrice = items.hasInvoiceItemForPhase(event.getPlanPhase().getName()) ? null : fixedPrice;
+
+            // STEPH don't we also need to check for if (Days.daysBetween(firstEvent.getEffectiveDate(), billThroughDate).getDays() > 0)
+            addInvoiceItem(invoiceId, items, event, billThroughDate, recurringAmount, recurringRate, effectiveFixedPrice, targetCurrency);
     	} catch (CatalogApiException e) {
-            log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s", 
-                    invoiceId.toString(), 
+    	    // STEPH same remark for catalog exception.
+            log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s",
+                    invoiceId.toString(),
                     ISODateTimeFormat.basicDateTime().print(event.getEffectiveDate())), e);
         }
     }
 
-    private void processEvents(UUID invoiceId, BillingEvent firstEvent, BillingEvent secondEvent, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
-    	//TODO: Jeff getPrice() -> getRecurringPrice()
+    private void processEvents(final UUID invoiceId, final BillingEvent firstEvent, final BillingEvent secondEvent,
+                               final InvoiceItemList items, final DateTime targetDate, final Currency targetCurrency) {
     	try {
-    		BigDecimal rate = firstEvent.getRecurringPrice(targetCurrency);
-    		BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
-    		BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
-    		DateTime billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
+            BigDecimal recurringRate = firstEvent.getRecurringPrice() == null ? null : firstEvent.getRecurringPrice().getPrice(targetCurrency);
+            BigDecimal fixedPrice = firstEvent.getFixedPrice() == null ? null : firstEvent.getFixedPrice().getPrice(targetCurrency);
 
-    		addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
+            BigDecimal numberOfBillingPeriods;
+            BigDecimal recurringAmount = null;
+            DateTime billThroughDate;
+
+            if (recurringRate == null) {
+                // since it's fixed price only, the following event dictates the end date, regardless of when it takes place
+                billThroughDate = secondEvent.getEffectiveDate();
+            } else {
+                numberOfBillingPeriods = calculateNumberOfBillingPeriods(firstEvent, secondEvent, targetDate);
+                recurringAmount = numberOfBillingPeriods.multiply(recurringRate);
+                BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
+                billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
+            }
+
+            if (Days.daysBetween(firstEvent.getEffectiveDate(), billThroughDate).getDays() > 0) {
+                BigDecimal effectiveFixedPrice = items.hasInvoiceItemForPhase(firstEvent.getPlanPhase().getName()) ? null : fixedPrice;
+                addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, recurringAmount, recurringRate, effectiveFixedPrice, targetCurrency);
+            }
     	} catch (CatalogApiException e) {
-    		log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s", 
-                    invoiceId.toString(), 
+
+    	    // STEPH That needs to be thrown so we stop that invoice generation
+    		log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s",
+                    invoiceId.toString(),
                     ISODateTimeFormat.basicDateTime().print(firstEvent.getEffectiveDate())), e);
         }
     }
 
-    private void addInvoiceItem(UUID invoiceId, List<InvoiceItem> items, BillingEvent event, DateTime billThroughDate, BigDecimal amount, BigDecimal rate, Currency currency) {
-        if (!(amount.compareTo(BigDecimal.ZERO) == 0)) {
-            DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, event.getSubscription().getId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
-            items.add(item);
-        }
+    private void addInvoiceItem(final UUID invoiceId, final InvoiceItemList items, final BillingEvent event,
+                                final DateTime billThroughDate, final BigDecimal amount, final BigDecimal rate,
+                                final BigDecimal fixedAmount, final Currency currency) {
+        DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, event.getSubscription().getId(),
+                                  event.getPlan().getName(), event.getPlanPhase().getName(), event.getEffectiveDate(),
+                                  billThroughDate, amount, rate, fixedAmount, currency);
+        items.add(item);
+        System.out.println(item);
     }
 
-    private BigDecimal calculateInvoiceItemAmount(BillingEvent event, DateTime targetDate, BigDecimal rate){
+    private BigDecimal calculateNumberOfBillingPeriods(final BillingEvent event, final DateTime targetDate){
         BillingMode billingMode = getBillingMode(event.getBillingMode());
         DateTime startDate = event.getEffectiveDate();
         int billingCycleDay = event.getBillCycleDay();
         BillingPeriod billingPeriod = event.getBillingPeriod();
 
         try {
-            BigDecimal numberOfBillingCycles;
-            numberOfBillingCycles = billingMode.calculateNumberOfBillingCycles(startDate, targetDate, billingCycleDay, billingPeriod);
-            return numberOfBillingCycles.multiply(rate);
+            return billingMode.calculateNumberOfBillingCycles(startDate, targetDate, billingCycleDay, billingPeriod);
         } catch (InvalidDateSequenceException e) {
             // TODO: Jeff -- log issue
             return BigDecimal.ZERO;
         }
     }
 
-    private BigDecimal calculateInvoiceItemAmount(BillingEvent firstEvent, BillingEvent secondEvent, DateTime targetDate, BigDecimal rate) {
+    private BigDecimal calculateNumberOfBillingPeriods(final BillingEvent firstEvent, final BillingEvent secondEvent,
+                                                  final DateTime targetDate) {
         BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
         DateTime startDate = firstEvent.getEffectiveDate();
         int billingCycleDay = firstEvent.getBillCycleDay();
@@ -181,16 +241,14 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         DateTime endDate = secondEvent.getEffectiveDate();
 
         try {
-            BigDecimal numberOfBillingCycles;
-            numberOfBillingCycles = billingMode.calculateNumberOfBillingCycles(startDate, endDate, targetDate, billingCycleDay, billingPeriod);
-            return numberOfBillingCycles.multiply(rate);
+            return billingMode.calculateNumberOfBillingCycles(startDate, endDate, targetDate, billingCycleDay, billingPeriod);
         } catch (InvalidDateSequenceException e) {
             // TODO: Jeff -- log issue
             return BigDecimal.ZERO;
         }
     }
 
-    private BillingMode getBillingMode(BillingModeType billingModeType) {
+    private BillingMode getBillingMode(final BillingModeType billingModeType) {
         switch (billingModeType) {
             case IN_ADVANCE:
                 return new InAdvanceBillingMode();

@@ -10,6 +10,7 @@ CREATE TABLE custom_fields (
 CREATE INDEX custom_fields_object_id_object_type ON custom_fields(object_id, object_type);
 CREATE UNIQUE INDEX custom_fields_unique ON custom_fields(object_id, object_type, field_name);
 
+DROP TABLE IF EXISTS tag_descriptions;
 DROP TABLE IF EXISTS tag_definitions;
 CREATE TABLE tag_definitions (
   id char(36) NOT NULL,
@@ -41,14 +42,14 @@ CREATE TABLE notifications (
     created_dt datetime NOT NULL,
 	notification_key varchar(256) NOT NULL,
     effective_dt datetime NOT NULL,
-    processing_owner char(36) DEFAULT NULL,
+    queue_name char(64) NOT NULL,
+    processing_owner char(50) DEFAULT NULL,
     processing_available_dt datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
     PRIMARY KEY(id)
 ) ENGINE=innodb;
-CREATE INDEX  `idx_comp_where` ON notifications (`effective_dt`,`processing_state`,`processing_owner`,`processing_available_dt`);
-CREATE INDEX  `idx_update` ON notifications (`notification_id`,`processing_state`,`processing_owner`,`processing_available_dt`);
-CREATE INDEX  `idx_update1` ON notifications (`notification_id`,`processing_owner`);
+CREATE INDEX  `idx_comp_where` ON notifications (`effective_dt`, `queue_name`, `processing_state`,`processing_owner`,`processing_available_dt`);
+CREATE INDEX  `idx_update` ON notifications (`processing_state`,`processing_owner`,`processing_available_dt`);
 CREATE INDEX  `idx_get_ready` ON notifications (`effective_dt`,`created_dt`,`id`);
 
 DROP TABLE IF EXISTS claimed_notifications;

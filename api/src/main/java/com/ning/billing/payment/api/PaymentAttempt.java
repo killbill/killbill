@@ -99,7 +99,7 @@ public class PaymentAttempt {
     }
 
     public PaymentAttempt(UUID paymentAttemptId, Invoice invoice) {
-        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getAmountOutstanding(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null, null);
+        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null, null);
     }
 
     public DateTime getInvoiceDate() {

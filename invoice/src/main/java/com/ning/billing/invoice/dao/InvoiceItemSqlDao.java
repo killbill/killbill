@@ -19,17 +19,26 @@ package com.ning.billing.invoice.dao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
-import com.ning.billing.util.entity.EntityCollectionDao;
 import com.ning.billing.util.entity.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.sqlobject.*;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -56,25 +65,29 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
     @SqlUpdate
     void update(@InvoiceItemBinder final InvoiceItem invoiceItem);
 
-    @SqlBatch
-    void create(@InvoiceItemBinder final List<InvoiceItem> items);
+    @SqlBatch(transactional=false)
+    void batchCreateFromTransaction(@InvoiceItemBinder final List<InvoiceItem> items);
 
     @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
     public @interface InvoiceItemBinder {
         public static class InvoiceItemBinderFactory implements BinderFactory {
+            @Override
             public Binder build(Annotation annotation) {
                 return new Binder<InvoiceItemBinder, InvoiceItem>() {
+                    @Override
                     public void bind(SQLStatement q, InvoiceItemBinder bind, InvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("subscriptionId", item.getSubscriptionId().toString());
+                        q.bind("planName", item.getPlanName());
+                        q.bind("phaseName", item.getPhaseName());
                         q.bind("startDate", item.getStartDate().toDate());
                         q.bind("endDate", item.getEndDate().toDate());
-                        q.bind("description", item.getDescription());
-                        q.bind("amount", item.getAmount());
-                        q.bind("rate", item.getRate());
+                        q.bind("recurringAmount", item.getRecurringAmount());
+                        q.bind("recurringRate", item.getRecurringRate());
+                        q.bind("fixedAmount", item.getFixedAmount());
                         q.bind("currency", item.getCurrency().toString());
                     }
                 };
@@ -88,14 +101,17 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             UUID id = UUID.fromString(result.getString("id"));
             UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
             UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
+            String planName = result.getString("plan_name");
+            String phaseName = result.getString("phase_name");
             DateTime startDate = new DateTime(result.getTimestamp("start_date"));
             DateTime endDate = new DateTime(result.getTimestamp("end_date"));
-            String description = result.getString("description");
-            BigDecimal amount = result.getBigDecimal("amount");
-            BigDecimal rate = result.getBigDecimal("rate");
+            BigDecimal recurringAmount = result.getBigDecimal("recurring_amount");
+            BigDecimal recurringRate = result.getBigDecimal("recurring_rate");
+            BigDecimal fixedAmount = result.getBigDecimal("fixed_amount");
             Currency currency = Currency.valueOf(result.getString("currency"));
 
-            return new DefaultInvoiceItem(id, invoiceId, subscriptionId, startDate, endDate, description, amount, rate , currency);
+            return new DefaultInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
+                                          recurringAmount, recurringRate, fixedAmount, currency);
         }
     }
 }
