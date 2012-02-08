@@ -62,8 +62,8 @@ public class PaymentAttempt {
         this.paymentId = paymentId;
         this.retryCount = retryCount;
         this.nextRetryDate = nextRetryDate;
-        this.createdDate = createdDate;
-        this.updatedDate = updatedDate;
+        this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
+        this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
     }
 
     public PaymentAttempt(UUID paymentAttemptId,
@@ -86,8 +86,8 @@ public class PaymentAttempt {
              paymentId,
              retryCount,
              nextRetryDate,
-             new DateTime(DateTimeZone.UTC),
-             new DateTime(DateTimeZone.UTC));
+             null,
+             null);
     }
 
     public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, BigDecimal amount, Currency currency, DateTime invoiceDate, DateTime paymentAttemptDate) {

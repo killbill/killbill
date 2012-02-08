@@ -85,7 +85,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             stmt.bind("payment_attempt_dt", getDate(paymentAttempt.getPaymentAttemptDate()));
             stmt.bind("payment_id", paymentAttempt.getPaymentId());
             stmt.bind("retry_count", paymentAttempt.getRetryCount());
-            stmt.bind("next_retry_date", getDate(paymentAttempt.getNextRetryDate()));
+            stmt.bind("next_retry_dt", getDate(paymentAttempt.getNextRetryDate()));
             stmt.bind("created_dt", getDate(paymentAttempt.getCreatedDate()));
             stmt.bind("updated_dt", getDate(paymentAttempt.getUpdatedDate()));
         }

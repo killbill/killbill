@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Objects;
 import com.ning.billing.util.eventbus.EventBusNotification;
@@ -62,7 +63,6 @@ public class PaymentInfo implements EventBusNotification {
         this.amount = amount;
         this.refundAmount = refundAmount;
         this.bankIdentificationNumber = bankIdentificationNumber;
-        this.effectiveDate = effectiveDate;
         this.paymentNumber = paymentNumber;
         this.status = status;
         this.type = type;
@@ -71,26 +71,27 @@ public class PaymentInfo implements EventBusNotification {
         this.paymentMethod = paymentMethod;
         this.creditCardType = creditCardType;
         this.creditCardCountry = creditCardCountry;
-        this.createdDate = createdDate;
-        this.updatedDate = updatedDate;
+        this.effectiveDate = effectiveDate;
+        this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
+        this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
     }
 
     public PaymentInfo(PaymentInfo src) {
-        this.paymentId = src.paymentId;
-        this.amount = src.amount;
-        this.refundAmount = src.refundAmount;
-        this.paymentNumber = src.paymentNumber;
-        this.bankIdentificationNumber = src.bankIdentificationNumber;
-        this.status = src.status;
-        this.type = src.type;
-        this.referenceId = src.referenceId;
-        this.paymentMethodId = src.paymentMethodId;
-        this.paymentMethod = src.paymentMethod;
-        this.creditCardType = src.creditCardType;
-        this.creditCardCountry = src.creditCardCountry;
-        this.effectiveDate = src.effectiveDate;
-        this.createdDate = src.createdDate;
-        this.updatedDate = src.updatedDate;
+        this(src.paymentId,
+             src.amount,
+             src.refundAmount,
+             src.bankIdentificationNumber,
+             src.paymentNumber,
+             src.status,
+             src.type,
+             src.referenceId,
+             src.paymentMethodId,
+             src.paymentMethod,
+             src.creditCardType,
+             src.creditCardCountry,
+             src.effectiveDate,
+             src.createdDate,
+             src.updatedDate);
     }
 
     public Builder cloner() {
@@ -182,8 +183,6 @@ public class PaymentInfo implements EventBusNotification {
         private String paymentMethod;
         private String creditCardType;
         private String creditCardCountry;
-        private Integer retryCount;
-        private DateTime nextRetryDate;
         private DateTime effectiveDate;
         private DateTime createdDate;
         private DateTime updatedDate;
