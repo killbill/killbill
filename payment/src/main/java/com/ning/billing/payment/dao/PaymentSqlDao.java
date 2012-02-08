@@ -146,7 +146,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             stmt.bind("payment_type", paymentInfo.getType());
             stmt.bind("reference_id", paymentInfo.getReferenceId());
             stmt.bind("payment_method_id", paymentInfo.getPaymentMethodId());
-            stmt.bind("payment_method", paymentInfo.getPaymentMethodType());
+            stmt.bind("payment_method", paymentInfo.getPaymentMethod());
             stmt.bind("card_type", paymentInfo.getCardType());
             stmt.bind("card_country", paymentInfo.getCardCountry());
             stmt.bind("effective_dt", getDate(paymentInfo.getEffectiveDate()));
