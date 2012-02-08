@@ -28,7 +28,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -56,7 +55,7 @@ import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.glue.ClockModule;
 
 public class TestDefaultEntitlementBillingApi {
 	private static final UUID zeroId = new UUID(0L,0L);
@@ -76,11 +75,7 @@ public class TestDefaultEntitlementBillingApi {
 	@BeforeClass(groups={"setup"})
 	public void setup() throws ServiceException {
 		TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new CatalogModule(), new AbstractModule() {
-			protected void configure() {
-				 bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
-			}  	
-        });
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new CatalogModule(), new ClockModule());
 
         
         catalogService = g.getInstance(CatalogService.class);

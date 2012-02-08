@@ -14,16 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.engine.core;
+package com.ning.billing.util.clock;
 
-import java.util.UUID;
+import com.google.inject.AbstractModule;
 
 
-public interface EventNotifier {
+public class MockClockModule extends AbstractModule {
 
-    public void processAllReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly);
+	@Override
+	protected void configure() {
+		bind(Clock.class).to(ClockMock.class).asEagerSingleton();
+	}
 
-    public void startNotifications(EventListener listener);
-
-    public void stopNotifications();
 }
