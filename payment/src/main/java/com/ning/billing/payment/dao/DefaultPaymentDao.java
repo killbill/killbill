@@ -66,4 +66,16 @@ public class DefaultPaymentDao implements PaymentDao {
         sqlDao.updatePaymentInfo(type, paymentId, cardType, cardCountry);
     }
 
+    @Override
+    public PaymentAttempt getPaymentAttemptById(UUID paymentAttemptId) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void updatePaymentAttempt(PaymentAttempt updatedPaymentAttempt) {
+        // TODO Auto-generated method stub
+
+    }
+
 }

@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,12 +35,14 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.payment.setup.PaymentConfig;
 
 public class DefaultPaymentApi implements PaymentApi {
     private final PaymentProviderPluginRegistry pluginRegistry;
     private final AccountUserApi accountUserApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final PaymentDao paymentDao;
+    private final PaymentConfig config;
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentApi.class);
 
@@ -47,11 +50,13 @@ public class DefaultPaymentApi implements PaymentApi {
     public DefaultPaymentApi(PaymentProviderPluginRegistry pluginRegistry,
                              AccountUserApi accountUserApi,
                              InvoicePaymentApi invoicePaymentApi,
-                             PaymentDao paymentDao) {
+                             PaymentDao paymentDao,
+                             PaymentConfig config) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.paymentDao = paymentDao;
+        this.config = config;
     }
 
     @Override
@@ -125,6 +130,42 @@ public class DefaultPaymentApi implements PaymentApi {
         return createPayment(account, invoiceIds);
     }
 
+    private void addRetry(UUID paymentAttemptId, String error) {
+//        PaymentAttempt paymentAttempt = paymentDao.getPaymentAttemptById(paymentAttemptId);
+//        final List<String> retryDays = config.getPaymentRetryDays();
+//
+//        int retryCount = 0;
+//
+//        if (paymentAttempt != null && paymentAttempt.getRetryCount() != null) {
+//            retryCount = paymentAttempt.getRetryCount();
+//        }
+//
+//        if (retryCount < retryDays.size()) {
+//            int retryInDays = 0;
+//            DateTime nextRetryDate = new DateTime(DateTimeZone.UTC);
+//
+//            try {
+//                retryInDays = Integer.valueOf(retryDays.get(retryCount));
+//                nextRetryDate = nextRetryDate.plusDays(retryInDays);
+//            }
+//            catch (NumberFormatException ex) {
+//                log.error("Could not get retry day for retry count {}", retryCount);
+//            }
+//
+//            PaymentAttemptRetry updatedPaymentAttemptRetry = paymentAttempt.cloner().setRetryCount(retryCount + 1)
+//                                                                                    .setNextRetryDate(nextRetryDate)
+//                                                                                    .build();
+//
+//            paymentDao.updatePaymentAttempt(updatedPaymentAttemptRetry);
+//        }
+//        else if (retryCount == retryDays.size()) {
+//            log.info("Last payment retry failed for {} ", paymentAttempt);
+//        }
+//        else {
+//            log.error("Cannot update payment retry information because retry count is invalid {} ", retryCount);
+//        }
+    }
+
     @Override
     public List<Either<PaymentError, PaymentInfo>> createPayment(Account account, List<String> invoiceIds) {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
@@ -148,6 +189,13 @@ public class DefaultPaymentApi implements PaymentApi {
                 processedPaymentsOrErrors.add(paymentOrError);
 
                 PaymentInfo paymentInfo = null;
+
+                if (paymentOrError.isLeft()) {
+                    String error = StringUtils.substring(paymentOrError.getLeft().getMessage() + paymentOrError.getLeft().getType(), 0, 100);
+                    log.info("Could not process a payment for " + paymentAttempt + " error was " + error);
+
+                    addRetry(paymentAttempt.getPaymentAttemptId(), error);
+                }
 
                 if (paymentOrError.isRight()) {
                     paymentInfo = paymentOrError.getRight();
