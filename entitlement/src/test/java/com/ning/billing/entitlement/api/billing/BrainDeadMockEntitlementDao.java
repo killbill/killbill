@@ -134,6 +134,7 @@ class BrainDeadMockEntitlementDao implements EntitlementDao {
         throw new UnsupportedOperationException();
 	}
 
+
     @Override
     public EntitlementEvent getEventById(final UUID eventId) {
         throw new UnsupportedOperationException();

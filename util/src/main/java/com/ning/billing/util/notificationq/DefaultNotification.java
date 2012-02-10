@@ -22,7 +22,8 @@ import org.joda.time.DateTime;
 
 public class DefaultNotification implements Notification {
 
-    private final UUID id;
+    private final long id;
+    private final UUID uuid;
     private final String owner;
     private final String queueName;
     private final DateTime nextAvailableDate;
@@ -31,11 +32,12 @@ public class DefaultNotification implements Notification {
     private final DateTime effectiveDate;
 
 
-    public DefaultNotification(UUID id, String owner, String queueName, DateTime nextAvailableDate,
+    public DefaultNotification(long id, UUID uuid, String owner, String queueName, DateTime nextAvailableDate,
             NotificationLifecycleState lifecycleState,
             String notificationKey, DateTime effectiveDate) {
         super();
         this.id = id;
+        this.uuid = uuid;
         this.owner = owner;
         this.queueName = queueName;
         this.nextAvailableDate = nextAvailableDate;
@@ -44,13 +46,17 @@ public class DefaultNotification implements Notification {
         this.effectiveDate = effectiveDate;
     }
 
-    public DefaultNotification(String queueName, String notificationKey, DateTime effectiveDate) {
-        this(UUID.randomUUID(), null, queueName, null, NotificationLifecycleState.AVAILABLE, notificationKey, effectiveDate);
+    @Override
+    public long getId() {
+        return id;
     }
 
+    public DefaultNotification(String queueName, String notificationKey, DateTime effectiveDate) {
+        this(-1L, UUID.randomUUID(), null, queueName, null, NotificationLifecycleState.AVAILABLE, notificationKey, effectiveDate);
+    }
     @Override
-    public UUID getId() {
-        return id;
+    public UUID getUUID() {
+        return uuid;
     }
 
     @Override
@@ -101,4 +107,5 @@ public class DefaultNotification implements Notification {
 	public String getQueueName() {
 		return queueName;
 	}
+
 }

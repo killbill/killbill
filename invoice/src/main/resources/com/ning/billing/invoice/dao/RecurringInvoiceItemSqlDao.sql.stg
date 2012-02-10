@@ -45,6 +45,12 @@ create() ::= <<
          :amount, :rate, :currency, :reversedItemId);
 >>
 
+batchCreateFromTransaction() ::= <<
+  INSERT INTO recurring_invoice_items(<fields()>)
+  VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
+         :amount, :rate, :currency, :reversedItemId);
+>>
+
 update() ::= <<
   UPDATE recurring_invoice_items
   SET invoice_id = :invoiceId, subscription_id = :subscriptionId, plan_name = :planName, phase_name = :phaseName,

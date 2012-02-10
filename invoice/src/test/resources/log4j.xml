@@ -25,11 +25,7 @@
     </appender>
 
 
-    <logger name="com.ning.billing.entitlement">
-        <level value="info"/>
-    </logger>
-
-    <logger name="com.ning.billing.util.notificationq">
+    <logger name="com.ning.billing.invoice">
         <level value="info"/>
     </logger>
 

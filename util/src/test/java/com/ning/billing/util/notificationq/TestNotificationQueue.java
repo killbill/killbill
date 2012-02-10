@@ -48,6 +48,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
@@ -57,8 +59,8 @@ import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 @Guice(modules = TestNotificationQueue.TestNotificationQueueModule.class)
 public class TestNotificationQueue {
 	Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
-	@Inject
-	private IDBI dbi;
+    @Inject
+    private IDBI dbi;
 
 	@Inject
 	MysqlTestingHelper helper;
@@ -67,7 +69,7 @@ public class TestNotificationQueue {
 	private Clock clock;
 
 	private DummySqlTest dao;
-	
+
 	private int eventsReceived;
 
 	// private NotificationQueue queue;
@@ -107,7 +109,7 @@ public class TestNotificationQueue {
 	/**
 	 * Test that we can post a notification in the future from a transaction and get the notification
 	 * callback with the correct key when the time is ready
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	@Test(groups={"fast"}, enabled = true)
 	public void testSimpleNotification() throws Exception {
@@ -254,20 +256,20 @@ public class TestNotificationQueue {
 		assertEquals(success, true);
 
 	}
-	
+
 	/**
 	 * Test that we can post a notification in the future from a transaction and get the notification
 	 * callback with the correct key when the time is ready
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	@Test(groups={"fast"}, enabled = true)
 	public void testMultipleHandlerNotification() throws Exception {
 
 		final Map<String, Boolean> expectedNotificationsFred = new TreeMap<String, Boolean>();
 		final Map<String, Boolean> expectedNotificationsBarney = new TreeMap<String, Boolean>();
-		
-		NotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock);
-		
+
+		NotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi,  clock);
+
 		NotificationConfig config=new NotificationConfig() {
             @Override
             public boolean isNotificationProcessingOff() {
@@ -286,8 +288,8 @@ public class TestNotificationQueue {
                 return 60000;
             }
 		};
-		
-		
+
+
 		final NotificationQueue queueFred = notificationQueueService.createNotificationQueue("UtilTest", "Fred", new NotificationQueueHandler() {
                 @Override
                 public void handleReadyNotification(String notificationKey) {
@@ -297,7 +299,7 @@ public class TestNotificationQueue {
                 }
             },
             config);
-		
+
 		final NotificationQueue queueBarney = notificationQueueService.createNotificationQueue("UtilTest", "Barney", new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(String notificationKey) {
@@ -310,8 +312,8 @@ public class TestNotificationQueue {
 
 		queueFred.startQueue();
 //		We don't start Barney so it can never pick up notifications
-		
-		
+
+
 		final UUID key = UUID.randomUUID();
 		final DummyObject obj = new DummyObject("foo", key);
 		final DateTime now = new DateTime();
@@ -323,7 +325,7 @@ public class TestNotificationQueue {
 			}
 		};
 
-		
+
 		final NotificationKey notificationKeyBarney = new NotificationKey() {
 			@Override
 			public String toString() {
@@ -372,7 +374,7 @@ public class TestNotificationQueue {
 
 		Assert.assertTrue(expectedNotificationsFred.get(notificationKeyFred.toString()));
 		Assert.assertFalse(expectedNotificationsFred.get(notificationKeyBarney.toString()));
-		  
+
 	}
 
 	NotificationConfig getNotificationConfig(final boolean off,
@@ -408,6 +410,8 @@ public class TestNotificationQueue {
 			bind(MysqlTestingHelper.class).toInstance(helper);
 			IDBI dbi = helper.getDBI();
 			bind(IDBI.class).toInstance(dbi);
+			IDBI otherDbi = helper.getDBI();
+			bind(IDBI.class).annotatedWith(Names.named("global-lock")).toInstance(otherDbi);
 			/*
             bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);

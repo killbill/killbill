@@ -14,16 +14,22 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.engine.core;
+package com.ning.billing.util.globalLocker;
 
-import java.util.UUID;
+public class MockGlobalLocker implements GlobalLocker {
 
+    @Override
+    public GlobalLock lockWithNumberOfTries(LockerService service,
+            String lockKey, int retry) {
+        return new GlobalLock() {
+            @Override
+            public void release() {
+            }
+        };
+    }
 
-public interface EventNotifier {
-
-    public void processAllReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly);
-
-    public void startNotifications(EventListener listener);
-
-    public void stopNotifications();
+    @Override
+    public Boolean isFree(LockerService service, String lockKey) {
+        return Boolean.TRUE;
+    }
 }

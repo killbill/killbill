@@ -45,6 +45,7 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
 
@@ -67,6 +68,7 @@ public class MockModule extends AbstractModule {
         install(new CatalogModule());
         install(new EntitlementModule());
         install(new InvoiceModule());
+        install(new GlobalLockerModule());
     }
 
 

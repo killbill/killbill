@@ -89,18 +89,18 @@ public class DefaultAccountDao implements AccountDao {
     public void create(final Account account) throws AccountApiException {
         final String key = account.getExternalKey();
         try {
+
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
-                    Account currentAccount = accountSqlDao.getAccountByKey(key);
+                public Void inTransaction(final AccountSqlDao transactionalDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
+                    Account currentAccount = transactionalDao.getAccountByKey(key);
                     if (currentAccount != null) {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
                     }
-                    accountSqlDao.create(account);
+                    transactionalDao.create(account);
 
-                    saveTagsFromWithinTransaction(account, accountSqlDao, true);
-                    saveCustomFieldsFromWithinTransaction(account, accountSqlDao, true);
-
+                    saveTagsFromWithinTransaction(account, transactionalDao, true);
+                    saveCustomFieldsFromWithinTransaction(account, transactionalDao, true);
                     AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
                     eventBus.post(creationEvent);
                     return null;
@@ -210,7 +210,7 @@ public class DefaultAccountDao implements AccountDao {
 
         List<Tag> tagList = account.getTagList();
         if (tagList != null) {
-            tagStoreDao.save(accountId, objectType, tagList);
+            tagStoreDao.batchSaveFromTransaction(accountId, objectType, tagList);
         }
     }
 
@@ -225,7 +225,7 @@ public class DefaultAccountDao implements AccountDao {
 
         List<CustomField> fieldList = account.getFieldList();
         if (fieldList != null) {
-            fieldStoreDao.save(accountId, objectType, fieldList);
+            fieldStoreDao.batchSaveFromTransaction(accountId, objectType, fieldList);
         }
     }
 

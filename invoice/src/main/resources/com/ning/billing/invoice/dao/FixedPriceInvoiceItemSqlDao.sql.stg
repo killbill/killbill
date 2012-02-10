@@ -42,6 +42,12 @@ create() ::= <<
          :date, :amount, :currency);
 >>
 
+batchCreateFromTransaction() ::= <<
+  INSERT INTO fixed_invoice_items(<fields()>)
+  VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName,
+         :date, :amount, :currency);
+>>
+
 update() ::= <<
   UPDATE fixed_invoice_items
   SET invoice_id = :invoiceId, subscription_id = :subscriptionId, plan_name = :planName, phase_name = :phaseName,

@@ -18,20 +18,17 @@ package com.ning.billing.entitlement.glue;
 
 import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.BusModule;
 
 public class MockEngineModule extends EntitlementModule {
 
-
     @Override
     protected void configure() {
         super.configure();
-        bind(Clock.class).to(ClockMock.class).asEagerSingleton();
         install(new BusModule());
         install(new CatalogModule());
         install(new AccountModuleWithMocks());
+        install(new MockClockModule());
     }
-
 }

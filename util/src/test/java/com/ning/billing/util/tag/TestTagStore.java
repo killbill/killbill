@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -33,6 +35,7 @@ import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 
@@ -52,7 +55,7 @@ public class TestTagStore {
     private TagStoreModuleMock module;
     private TagStoreSqlDao tagStoreSqlDao;
     private TagDefinitionDao tagDefinitionDao;
-    private Logger log = LoggerFactory.getLogger(TestTagStore.class);
+    private final Logger log = LoggerFactory.getLogger(TestTagStore.class);
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
@@ -64,7 +67,7 @@ public class TestTagStore {
             module.startDb();
             module.initDb(utilDdl);
 
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
+            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module, new MockClockModule());
             dbi = injector.getInstance(IDBI.class);
 
             tagStoreSqlDao = injector.getInstance(TagStoreSqlDao.class);
@@ -86,6 +89,17 @@ public class TestTagStore {
         module.stopDb();
     }
 
+    private void saveTags(final TagStoreSqlDao dao, final String objectType, final String accountId, final List<Tag> tagList)  {
+        dao.inTransaction(new Transaction<Void, TagStoreSqlDao>() {
+            @Override
+            public Void inTransaction(TagStoreSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+                dao.batchSaveFromTransaction(accountId.toString(), objectType, tagList);
+                return null;
+            }
+        });
+    }
+
     @Test
     public void testTagCreationAndRetrieval() {
         UUID accountId = UUID.randomUUID();
@@ -95,7 +109,7 @@ public class TestTagStore {
         tagStore.add(tag);
 
         TagStoreSqlDao dao = dbi.onDemand(TagStoreSqlDao.class);
-        dao.save(accountId.toString(), ACCOUNT_TYPE, tagStore.getEntityList());
+        saveTags(dao, ACCOUNT_TYPE, accountId.toString(), tagStore.getEntityList());
 
         List<Tag> savedTags = dao.load(accountId.toString(), ACCOUNT_TYPE);
         assertEquals(savedTags.size(), 1);
@@ -107,6 +121,7 @@ public class TestTagStore {
         assertEquals(savedTag.getId(), tag.getId());
     }
 
+
     @Test
     public void testControlTagCreation() {
         UUID accountId = UUID.randomUUID();
@@ -117,7 +132,7 @@ public class TestTagStore {
         assertEquals(tagStore.generateInvoice(), false);
 
         List<Tag> tagList = tagStore.getEntityList();
-        tagStoreSqlDao.save(accountId.toString(), ACCOUNT_TYPE, tagList);
+        saveTags(tagStoreSqlDao, ACCOUNT_TYPE, accountId.toString(), tagList);
 
         tagStore.clear();
         assertEquals(tagStore.getEntityList().size(), 0);
@@ -147,7 +162,7 @@ public class TestTagStore {
         assertEquals(tagStore.generateInvoice(), true);
 
         List<Tag> tagList = tagStore.getEntityList();
-        tagStoreSqlDao.save(accountId.toString(), ACCOUNT_TYPE, tagList);
+        saveTags(tagStoreSqlDao, ACCOUNT_TYPE, accountId.toString(), tagList);
 
         tagStore.clear();
         assertEquals(tagStore.getEntityList().size(), 0);
@@ -181,7 +196,7 @@ public class TestTagStore {
         assertEquals(tagStore.generateInvoice(), false);
 
         List<Tag> tagList = tagStore.getEntityList();
-        tagStoreSqlDao.save(accountId.toString(), ACCOUNT_TYPE, tagList);
+        saveTags(tagStoreSqlDao, ACCOUNT_TYPE, accountId.toString(), tagList);
 
         tagStore.clear();
         assertEquals(tagStore.getEntityList().size(), 0);
@@ -244,7 +259,8 @@ public class TestTagStore {
         Tag tag = new DescriptiveTag(tagDefinition, "test", clock.getUTCNow());
         tagStore.add(tag);
 
-        tagStoreSqlDao.save(objectId.toString(), objectType, tagStore.getEntityList());
+        saveTags(tagStoreSqlDao, objectType, objectId.toString(), tagStore.getEntityList());
+
         List<Tag> tags = tagStoreSqlDao.load(objectId.toString(), objectType);
         assertEquals(tags.size(), 1);
 
@@ -269,7 +285,8 @@ public class TestTagStore {
         Tag tag = new DescriptiveTag(tagDefinition, "test", clock.getUTCNow());
         tagStore.add(tag);
 
-        tagStoreSqlDao.save(objectId.toString(), objectType, tagStore.getEntityList());
+        saveTags(tagStoreSqlDao, objectType, objectId.toString(), tagStore.getEntityList());
+
         List<Tag> tags = tagStoreSqlDao.load(objectId.toString(), objectType);
         assertEquals(tags.size(), 1);
 

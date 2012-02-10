@@ -36,6 +36,16 @@ public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
 
         public Builder(CreditCardPaymentMethodInfo src) {
             super(Builder.class, src);
+            this.cardHolderName = src.cardHolderName;
+            this.cardType = src.cardType;
+            this.expirationDate = src.expirationDate;
+            this.cardAddress1 = src.cardAddress1;
+            this.cardAddress2 = src.cardAddress2;
+            this.cardCity = src.cardCity;
+            this.cardState = src.cardState;
+            this.cardPostalCode = src.cardPostalCode;
+            this.cardCountry = src.cardCountry;
+            this.maskNumber = src.maskNumber;
         }
 
         public Builder setCardHolderName(String cardHolderName) {

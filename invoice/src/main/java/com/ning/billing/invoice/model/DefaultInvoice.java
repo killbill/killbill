@@ -73,6 +73,17 @@ public class DefaultInvoice implements Invoice {
     }
 
     @Override
+    public List<InvoiceItem> getInvoiceItems(Class clazz) {
+        List<InvoiceItem> results = new ArrayList<InvoiceItem>();
+        for (InvoiceItem item : invoiceItems) {
+            if (item.getClass() == clazz) {
+                results.add(item);
+            }
+        }
+        return results;
+    }
+
+    @Override
     public int getNumberOfItems() {
         return invoiceItems.size();
     }

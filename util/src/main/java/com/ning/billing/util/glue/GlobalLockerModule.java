@@ -17,8 +17,8 @@
 package com.ning.billing.util.glue;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.util.globalLocker.GlobalLocker;
-import com.ning.billing.util.globalLocker.MySqlGlobalLocker;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 
 public class GlobalLockerModule extends AbstractModule {
     @Override

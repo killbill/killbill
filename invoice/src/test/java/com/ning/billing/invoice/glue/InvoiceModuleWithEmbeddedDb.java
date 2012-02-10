@@ -22,6 +22,7 @@ import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
+import com.ning.billing.util.glue.GlobalLockerModule;
 import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -71,6 +72,7 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         install(new AccountModule());
         install(new CatalogModule());
         install(new EntitlementModule());
+        install(new GlobalLockerModule());
 
         super.configure();
 

@@ -54,12 +54,27 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 	private final DateTime createdDate;
 	private final DateTime updatedDate;
 
-	public DefaultAccount(final AccountData data) {
-		this(UUID.randomUUID(), data, null, null);
+	/**
+	 * This call is used to create a new account
+	 * @param data
+	 * @param createdDate
+	 */
+	public DefaultAccount(final AccountData data, DateTime createdDate) {
+		this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
+				data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
+				data.getTimeZone(), data.getLocale(),
+				data.getAddress1(), data.getAddress2(), data.getCompanyName(),
+				data.getCity(), data.getStateOrProvince(), data.getCountry(),
+				data.getPostalCode(), data.getPhone(), createdDate, createdDate);
 	}
 
-	public DefaultAccount(final UUID id, final AccountData data, DateTime createdDate, DateTime updatedDate) {
-		this(id, data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
+	/**
+	 * This call is used to migrate an account
+	 * @param data
+	 * @param createdDate
+	 */
+	public DefaultAccount(final AccountData data, DateTime createdDate,  DateTime updatedDate) {
+		this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
 				data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
 				data.getTimeZone(), data.getLocale(),
 				data.getAddress1(), data.getAddress2(), data.getCompanyName(),
@@ -67,6 +82,45 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 				data.getPostalCode(), data.getPhone(), createdDate, updatedDate);
 	}
 
+	
+	/**
+	 * This call is used to update an existing account
+	 *  
+	 * @param id
+	 * @param data
+	 */
+	public DefaultAccount(final UUID id, final AccountData data) {
+		this(id, data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
+				data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
+				data.getTimeZone(), data.getLocale(),
+				data.getAddress1(), data.getAddress2(), data.getCompanyName(),
+				data.getCity(), data.getStateOrProvince(), data.getCountry(),
+				data.getPostalCode(), data.getPhone(), null, null);
+	}
+
+	/**
+	 * This call is used for testing 
+	 * @param id
+	 * @param externalKey
+	 * @param email
+	 * @param name
+	 * @param firstNameLength
+	 * @param currency
+	 * @param billCycleDay
+	 * @param paymentProviderName
+	 * @param timeZone
+	 * @param locale
+	 * @param address1
+	 * @param address2
+	 * @param companyName
+	 * @param city
+	 * @param stateOrProvince
+	 * @param country
+	 * @param postalCode
+	 * @param phone
+	 * @param createdDate
+	 * @param updatedDate
+	 */
 	public DefaultAccount(final UUID id, final String externalKey, final String email, final String name, final int firstNameLength,
 			final Currency currency, final int billCycleDay, final String paymentProviderName,
 			final DateTimeZone timeZone, final String locale,
@@ -92,8 +146,8 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 		this.postalCode = postalCode;
 		this.country = country;
 		this.phone = phone;
-		this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
-		this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
+		this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate; // This is a fallback, we are only expecting these to be set to null 
+		this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate; // in the case that the account is being updated. In which case the values are ignored anyway
 		this.tags = new DefaultTagStore(id, getObjectName());
 	}
 

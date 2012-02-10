@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Objects;
 import com.ning.billing.util.bus.BusEvent;
@@ -34,23 +35,13 @@ public class PaymentInfo implements BusEvent {
     private final String status;
     private final String type;
     private final String referenceId;
+    private final String paymentMethodId;
+    private final String paymentMethod;
+    private final String cardType;
+    private final String cardCoutry;
     private final DateTime effectiveDate;
     private final DateTime createdDate;
     private final DateTime updatedDate;
-
-    public PaymentInfo(PaymentInfo src) {
-        this.paymentId = src.paymentId;
-        this.amount = src.amount;
-        this.refundAmount = src.refundAmount;
-        this.paymentNumber = src.paymentNumber;
-        this.bankIdentificationNumber = src.bankIdentificationNumber;
-        this.status = src.status;
-        this.type = src.type;
-        this.referenceId = src.referenceId;
-        this.effectiveDate = src.effectiveDate;
-        this.createdDate = src.createdDate;
-        this.updatedDate = src.updatedDate;
-    }
 
     @JsonCreator
     public PaymentInfo(@JsonProperty("paymentId") String paymentId,
@@ -61,6 +52,10 @@ public class PaymentInfo implements BusEvent {
                        @JsonProperty("status") String status,
                        @JsonProperty("type") String type,
                        @JsonProperty("referenceId") String referenceId,
+                       @JsonProperty("paymentMethodId") String paymentMethodId,
+                       @JsonProperty("paymentMethod") String paymentMethod,
+                       @JsonProperty("cardType") String cardType,
+                       @JsonProperty("cardCountry") String cardCountry,
                        @JsonProperty("effectiveDate") DateTime effectiveDate,
                        @JsonProperty("createdDate") DateTime createdDate,
                        @JsonProperty("updatedDate") DateTime updatedDate) {
@@ -68,13 +63,35 @@ public class PaymentInfo implements BusEvent {
         this.amount = amount;
         this.refundAmount = refundAmount;
         this.bankIdentificationNumber = bankIdentificationNumber;
-        this.effectiveDate = effectiveDate;
         this.paymentNumber = paymentNumber;
-        this.referenceId = referenceId;
         this.status = status;
         this.type = type;
-        this.createdDate = createdDate;
-        this.updatedDate = updatedDate;
+        this.referenceId = referenceId;
+        this.paymentMethodId = paymentMethodId;
+        this.paymentMethod = paymentMethod;
+        this.cardType = cardType;
+        this.cardCoutry = cardCountry;
+        this.effectiveDate = effectiveDate;
+        this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
+        this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
+    }
+
+    public PaymentInfo(PaymentInfo src) {
+        this(src.paymentId,
+             src.amount,
+             src.refundAmount,
+             src.bankIdentificationNumber,
+             src.paymentNumber,
+             src.status,
+             src.type,
+             src.referenceId,
+             src.paymentMethodId,
+             src.paymentMethod,
+             src.cardType,
+             src.cardCoutry,
+             src.effectiveDate,
+             src.createdDate,
+             src.updatedDate);
     }
 
     public Builder cloner() {
@@ -105,8 +122,24 @@ public class PaymentInfo implements BusEvent {
         return paymentNumber;
     }
 
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public String getCardType() {
+        return cardType;
+    }
+
+    public String getCardCountry() {
+        return cardCoutry;
+    }
+
     public String getReferenceId() {
         return referenceId;
+    }
+
+    public String getPaymentMethodId() {
+        return paymentMethodId;
     }
 
     public BigDecimal getRefundAmount() {
@@ -134,6 +167,10 @@ public class PaymentInfo implements BusEvent {
         private String type;
         private String status;
         private String referenceId;
+        private String paymentMethodId;
+        private String paymentMethod;
+        private String cardType;
+        private String cardCountry;
         private DateTime effectiveDate;
         private DateTime createdDate;
         private DateTime updatedDate;
@@ -151,6 +188,10 @@ public class PaymentInfo implements BusEvent {
             this.status = src.status;
             this.effectiveDate = src.effectiveDate;
             this.referenceId = src.referenceId;
+            this.paymentMethodId = src.paymentMethodId;
+            this.paymentMethod = src.paymentMethod;
+            this.cardType = src.cardType;
+            this.cardCountry = src.cardCoutry;
             this.createdDate = src.createdDate;
             this.updatedDate = src.updatedDate;
         }
@@ -205,6 +246,26 @@ public class PaymentInfo implements BusEvent {
             return this;
         }
 
+        public Builder setPaymentMethodId(String paymentMethodId) {
+            this.paymentMethodId = paymentMethodId;
+            return this;
+        }
+
+        public Builder setPaymentMethod(String paymentMethod) {
+            this.paymentMethod = paymentMethod;
+            return this;
+        }
+
+        public Builder setCardType(String cardType) {
+            this.cardType = cardType;
+            return this;
+        }
+
+        public Builder setCardCountry(String cardCountry) {
+            this.cardCountry = cardCountry;
+            return this;
+        }
+
         public Builder setUpdatedDate(DateTime updatedDate) {
             this.updatedDate = updatedDate;
             return this;
@@ -216,9 +277,13 @@ public class PaymentInfo implements BusEvent {
                                    refundAmount,
                                    bankIdentificationNumber,
                                    paymentNumber,
-                                   type,
                                    status,
+                                   type,
                                    referenceId,
+                                   paymentMethodId,
+                                   paymentMethod,
+                                   cardType,
+                                   cardCountry,
                                    effectiveDate,
                                    createdDate,
                                    updatedDate);
@@ -227,16 +292,20 @@ public class PaymentInfo implements BusEvent {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(amount,
-                                bankIdentificationNumber,
-                                createdDate,
-                                effectiveDate,
-                                paymentId,
-                                paymentNumber,
-                                referenceId,
+        return Objects.hashCode(paymentId,
+                                amount,
                                 refundAmount,
+                                bankIdentificationNumber,
+                                paymentNumber,
                                 status,
                                 type,
+                                referenceId,
+                                paymentMethodId,
+                                paymentMethod,
+                                cardType,
+                                cardCoutry,
+                                effectiveDate,
+                                createdDate,
                                 updatedDate);
     }
 
@@ -250,14 +319,18 @@ public class PaymentInfo implements BusEvent {
             else {
                 return Objects.equal(amount, other.amount) &&
                        Objects.equal(bankIdentificationNumber, other.bankIdentificationNumber) &&
-                       Objects.equal(createdDate, other.createdDate) &&
-                       Objects.equal(effectiveDate, other.effectiveDate) &&
                        Objects.equal(paymentId, other.paymentId) &&
                        Objects.equal(paymentNumber, other.paymentNumber) &&
                        Objects.equal(referenceId, other.referenceId) &&
                        Objects.equal(refundAmount, other.refundAmount) &&
                        Objects.equal(status, other.status) &&
                        Objects.equal(type, other.type) &&
+                       Objects.equal(paymentMethodId, other.paymentMethodId) &&
+                       Objects.equal(paymentMethod, other.paymentMethod) &&
+                       Objects.equal(cardType, other.cardType) &&
+                       Objects.equal(cardCoutry, other.cardCoutry) &&
+                       Objects.equal(effectiveDate, other.effectiveDate) &&
+                       Objects.equal(createdDate, other.createdDate) &&
                        Objects.equal(updatedDate, other.updatedDate);
             }
         }
@@ -266,6 +339,7 @@ public class PaymentInfo implements BusEvent {
 
     @Override
     public String toString() {
-        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
+        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethod=" + paymentMethod + ", cardType=" + cardType + ", cardCountry=" + cardCoutry + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
     }
+
 }

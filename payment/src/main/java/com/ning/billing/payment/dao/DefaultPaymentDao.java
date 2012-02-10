@@ -61,4 +61,9 @@ public class DefaultPaymentDao implements PaymentDao {
         sqlDao.updatePaymentAttemptWithPaymentId(paymentAttemptId.toString(), paymentId);
     }
 
+    @Override
+    public void updatePaymentInfo(String type, String paymentId, String cardType, String cardCountry) {
+        sqlDao.updatePaymentInfo(type, paymentId, cardType, cardCountry);
+    }
+
 }

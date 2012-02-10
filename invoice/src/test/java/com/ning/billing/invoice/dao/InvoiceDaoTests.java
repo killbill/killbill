@@ -607,4 +607,45 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new DateTime(), Currency.USD);
         assertNull(invoice);
     }
+
+    @Test
+    public void testMixedModeInvoicePersistence() throws InvoiceApiException {
+        DefaultPrice zeroPrice = new DefaultPrice(BigDecimal.ZERO, Currency.USD);
+        MockInternationalPrice fixedPrice = new MockInternationalPrice(zeroPrice);
+        MockPlanPhase phase1 = new MockPlanPhase(null, fixedPrice);
+
+        BigDecimal cheapAmount = new BigDecimal("24.95");
+        DefaultPrice cheapPrice = new DefaultPrice(cheapAmount, Currency.USD);
+        MockInternationalPrice recurringPrice = new MockInternationalPrice(cheapPrice);
+        MockPlanPhase phase2 = new MockPlanPhase(recurringPrice, null);
+
+        MockPlan plan = new MockPlan();
+        Subscription subscription = new MockSubscription();
+        DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
+
+        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan, phase1, fixedPrice,
+                                                     null, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                                                     "testEvent1", SubscriptionTransitionType.CREATE);
+        BillingEventSet events = new BillingEventSet();
+        events.add(event1);
+
+        DateTime effectiveDate2 = effectiveDate1.plusDays(30);
+        BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan, phase2, null,
+                                                     recurringPrice, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                                                     "testEvent2", SubscriptionTransitionType.CHANGE);
+        events.add(event2);
+
+        InvoiceGenerator generator = new DefaultInvoiceGenerator();
+        Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, effectiveDate2, Currency.USD);
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 2);
+        assertEquals(invoice.getTotalAmount().compareTo(cheapAmount), 0);
+
+        invoiceDao.create(invoice);
+        Invoice savedInvoice = invoiceDao.getById(invoice.getId());
+
+        assertNotNull(savedInvoice);
+        assertEquals(savedInvoice.getNumberOfItems(), 2);
+        assertEquals(savedInvoice.getTotalAmount().compareTo(cheapAmount), 0);
+    }
 }

@@ -22,9 +22,10 @@ import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
+
 import com.ning.billing.util.glue.BusModule;
+
+import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
@@ -40,10 +41,9 @@ public class AnalyticsTestModule extends AnalyticsModule
         install(new CatalogModule());
         install(new BusModule());
         install(new EntitlementModule());
+        install(new ClockModule());
         install(new TagStoreModule());
         install(new NotificationQueueModule());
-
-        bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
 
         // Install the Dao layer
         final MysqlTestingHelper helper = new MysqlTestingHelper();

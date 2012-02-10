@@ -63,7 +63,7 @@ public class TestNotifyInvoicePaymentApi {
 
     @Test
     public void testNotifyPaymentSuccess() throws AccountApiException {
-        final Account account = testHelper.createTestAccount();
+        final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
         PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
@@ -81,7 +81,7 @@ public class TestNotifyInvoicePaymentApi {
 
     @Test
     public void testNotifyPaymentFailure() throws AccountApiException {
-        final Account account = testHelper.createTestAccount();
+        final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
         PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);

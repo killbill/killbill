@@ -50,7 +50,10 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
     void update(@FixedPriceInvoiceItemBinder final InvoiceItem invoiceItem);
 
     @SqlBatch
-    void create(@FixedPriceInvoiceItemBinder final List<FixedPriceInvoiceItem> items);
+    void create(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items);
+
+    @SqlBatch(transactional=false)
+    void batchCreateFromTransaction(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items);
 
     @BindingAnnotation(FixedPriceInvoiceItemBinder.FixedPriceInvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
@@ -74,7 +77,7 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
         }
     }
 
-    public static class FixedPriceInvoiceItemMapper implements ResultSetMapper<FixedPriceInvoiceItem> {
+    public static class FixedPriceInvoiceItemMapper implements ResultSetMapper<InvoiceItem> {
         @Override
         public FixedPriceInvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
             UUID id = UUID.fromString(result.getString("id"));

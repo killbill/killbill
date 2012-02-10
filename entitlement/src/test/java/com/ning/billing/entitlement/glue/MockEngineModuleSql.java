@@ -35,7 +35,6 @@ public class MockEngineModuleSql extends MockEngineModule {
         bind(EntitlementDao.class).to(MockEntitlementDaoSql.class).asEagerSingleton();
     }
 
-
     protected void installDBI() {
         bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
         final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);

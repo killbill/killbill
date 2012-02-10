@@ -30,13 +30,21 @@ public class PaymentAttempt {
     private final UUID invoiceId;
     private final BigDecimal paymentAttemptAmount;
     private final DateTime paymentAttemptDate;
+    private final Integer retryCount;
+    private final DateTime nextRetryDate;
 
     public PaymentAttempt(UUID paymentAttemptId, Invoice invoice) {
+        this(paymentAttemptId, invoice, null, null);
+    }
+
+    public PaymentAttempt(UUID paymentAttemptId, Invoice invoice, Integer retryCount, DateTime nextRetryDate) {
         this.paymentAttemptId = paymentAttemptId;
         this.accountId = invoice.getAccountId();
         this.invoiceId = invoice.getId();
         this.paymentAttemptAmount = invoice.getBalance();
         this.paymentAttemptDate = new DateTime(DateTimeZone.UTC);
+        this.retryCount = retryCount;
+        this.nextRetryDate = nextRetryDate;
     }
 
     public UUID getPaymentAttemptId() {
@@ -55,13 +63,21 @@ public class PaymentAttempt {
         return paymentAttemptAmount;
     }
 
-        public DateTime getPaymentAttemptDate() {
-            return paymentAttemptDate;
+    public DateTime getPaymentAttemptDate() {
+        return paymentAttemptDate;
+    }
+
+    public Integer getRetryCount() {
+        return retryCount;
+    }
+
+    public DateTime getNextRetryDate() {
+        return nextRetryDate;
     }
 
     @Override
     public String toString() {
-        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", accountId=" + accountId + ", invoiceId=" + invoiceId + ", paymentAttemptAmount=" + paymentAttemptAmount + "]";
+        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", accountId=" + accountId + ", invoiceId=" + invoiceId + ", paymentAttemptAmount=" + paymentAttemptAmount + ", paymentAttemptDate=" + paymentAttemptDate + ", retryCount=" + retryCount + ", nextRetryDate=" + nextRetryDate + "]";
     }
 
 }

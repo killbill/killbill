@@ -19,16 +19,22 @@ package com.ning.billing.util.globalLocker;
 import com.google.inject.Inject;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MySqlGlobalLocker implements GlobalLocker {
+
+    private final static Logger logger = LoggerFactory.getLogger(MySqlGlobalLocker.class);
+
+    private final static long DEFAULT_TIMEOUT = 3L; // 3 seconds
+
     private final IDBI dbi;
     private long timeout;
 
     @Inject
-    public MySqlGlobalLocker(IDBI dbi)
-    {
+    public MySqlGlobalLocker(IDBI dbi) {
         this.dbi = dbi;
-        this.timeout = 1000L;
+        this.timeout = DEFAULT_TIMEOUT;
     }
 
     public void setTimeout(final long timeout) {
@@ -36,39 +42,65 @@ public class MySqlGlobalLocker implements GlobalLocker {
     }
 
     @Override
-    public GlobalLock lockWithNumberOfTries(final String lockName, final int i)
-    {
-        int tries_left = i;
+    public GlobalLock lockWithNumberOfTries(final LockerService service, final String lockKey, final int retry) {
+
+        final String lockName = getLockName(service, lockKey);
+        int tries_left = retry;
         while (tries_left-- > 0) {
             GlobalLock lock = lock(lockName);
             if (lock != null) {
                 return lock;
             }
         }
+        logger.error(String.format("Failed to acquire lock %s for service %s after %d retry", lockKey, service, retry));
         throw new LockFailedException();
     }
 
-    private GlobalLock lock(final String lockName) throws LockFailedException
-    {
+    private GlobalLock lock(final String lockName) throws LockFailedException {
+
         final Handle h = dbi.open();
         final MySqlGlobalLockerDao dao = h.attach(MySqlGlobalLockerDao.class);
 
         final boolean obtained = dao.lock(lockName, timeout);
         if (obtained) {
             return new GlobalLock() {
-                public void release()
-                {
+                @Override
+                public void release() {
                     try {
                         dao.releaseLock(lockName);
                     }
                     finally {
-                        h.close();
+                        if (h != null) {
+                            h.close();
+                        }
                     }
                 }
             };
-        }
-        else {
+        } else {
             return null;
         }
+    }
+
+    @Override
+    public Boolean isFree(final LockerService service, final String lockKey) {
+
+        final String lockName = getLockName(service, lockKey);
+        final Handle h = dbi.open();
+        try {
+            final MySqlGlobalLockerDao dao = h.attach(MySqlGlobalLockerDao.class);
+            return dao.isFree(lockName);
+        } finally {
+            if (h != null) {
+                h.close();
+            }
+        }
+    }
+
+    private String getLockName(final LockerService service, final String lockKey) {
+        StringBuilder tmp = new StringBuilder()
+            .append(service.toString())
+            .append("-")
+            .append(lockKey);
+        return tmp.toString();
     }
 }

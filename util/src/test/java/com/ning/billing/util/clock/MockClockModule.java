@@ -14,23 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.account.glue;
+package com.ning.billing.util.clock;
 
-import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.MockAccountDao;
-import com.ning.billing.util.clock.MockClockModule;
-
-public class AccountModuleWithMocks extends AccountModule {
-    @Override
-    protected void installAccountDao() {
-        bind(MockAccountDao.class).asEagerSingleton();
-        bind(AccountDao.class).to(MockAccountDao.class);
-    }
+import com.google.inject.AbstractModule;
 
 
-    @Override
-    protected void configure() {
-        super.configure();
-        install(new MockClockModule());
-    }
+public class MockClockModule extends AbstractModule {
+
+	@Override
+	protected void configure() {
+		bind(Clock.class).to(ClockMock.class).asEagerSingleton();
+	}
+
 }

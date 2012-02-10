@@ -17,7 +17,9 @@
 package com.ning.billing.util.tag;
 
 import java.io.IOException;
+
 import org.skife.jdbi.v2.IDBI;
+
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.glue.TagStoreModule;
 

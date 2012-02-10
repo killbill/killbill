@@ -33,6 +33,8 @@ import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
+import com.ning.billing.util.glue.ClockModule;
+
 
 public class InvoiceModule extends AbstractModule {
     protected void installInvoiceDao() {
@@ -45,6 +47,10 @@ public class InvoiceModule extends AbstractModule {
 
     protected void installInvoicePaymentApi() {
         bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
+    }
+
+    protected void installClock() {
+    	install(new ClockModule());
     }
 
     protected void installConfig() {

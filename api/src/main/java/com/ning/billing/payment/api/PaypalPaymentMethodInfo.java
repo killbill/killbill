@@ -32,6 +32,8 @@ public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
 
         public Builder(PaypalPaymentMethodInfo src) {
             super(Builder.class, src);
+            this.baid = src.baid;
+            this.email = src.email;
         }
 
         public Builder setBaid(String baid) {
@@ -59,8 +61,8 @@ public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
                                    String email) {
         super(id, accountId, defaultMethod, TYPE);
 
-        if (Strings.isNullOrEmpty(accountId) || Strings.isNullOrEmpty(baid) || Strings.isNullOrEmpty(email)) {
-            throw new IllegalArgumentException("accountId, baid and email should be present");
+        if (Strings.isNullOrEmpty(baid) || Strings.isNullOrEmpty(email)) {
+            throw new IllegalArgumentException("baid and email should be present");
         }
 
         this.baid = baid;
@@ -74,4 +76,10 @@ public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
     public String getEmail() {
         return email;
     }
+
+    @Override
+    public String toString() {
+        return "PaypalPaymentMethodInfo [baid=" + baid + ", email=" + email + "]";
+    }
+
 }

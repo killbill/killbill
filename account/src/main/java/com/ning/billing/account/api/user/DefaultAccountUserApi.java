@@ -18,26 +18,30 @@ package com.ning.billing.account.api.user;
 
 import java.util.List;
 import java.util.UUID;
+
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
     private final AccountDao dao;
+	private Clock clock;
 
     @Inject
-    public DefaultAccountUserApi(final AccountDao dao) {
+    public DefaultAccountUserApi(final AccountDao dao, final Clock clock) {
         this.dao = dao;
+        this.clock = clock;
     }
 
     @Override
     public Account createAccount(final AccountData data, final List<CustomField> fields, List<Tag> tags) throws AccountApiException {
-        Account account = new DefaultAccount(data);
+        Account account = new DefaultAccount(data, clock.getUTCNow());
         account.addFields(fields);
         account.addTags(tags);
 

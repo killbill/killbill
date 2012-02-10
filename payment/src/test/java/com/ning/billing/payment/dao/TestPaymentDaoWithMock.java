@@ -14,23 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.account.glue;
+package com.ning.billing.payment.dao;
 
-import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.MockAccountDao;
-import com.ning.billing.util.clock.MockClockModule;
+import java.io.IOException;
 
-public class AccountModuleWithMocks extends AccountModule {
-    @Override
-    protected void installAccountDao() {
-        bind(MockAccountDao.class).asEagerSingleton();
-        bind(AccountDao.class).to(MockAccountDao.class);
-    }
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-
-    @Override
-    protected void configure() {
-        super.configure();
-        install(new MockClockModule());
+@Test(groups = { "fast" })
+public class TestPaymentDaoWithMock extends TestPaymentDao {
+    @BeforeMethod(alwaysRun = true)
+    public void setUp() throws IOException {
+        dao = new MockPaymentDao();
     }
 }

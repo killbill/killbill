@@ -27,11 +27,15 @@ import java.sql.SQLException;
 
 @RegisterMapper(MySqlGlobalLockerDao.LockMapper.class)
 public interface MySqlGlobalLockerDao {
+
     @SqlQuery("Select GET_LOCK(:lockName, :timeout);")
     public Boolean lock(@Bind("lockName") final String lockName, @Bind("timeout") final long timeout);
 
     @SqlQuery("Select RELEASE_LOCK(:lockName);")
     public Boolean releaseLock(@Bind("lockName") final String lockName);
+
+    @SqlQuery("Select IS_FREE_LOCK(:lockName);")
+    public Boolean isFree(@Bind("lockName") final String lockName);
 
     class LockMapper implements ResultSetMapper<Boolean> {
          @Override

@@ -73,7 +73,7 @@ public class TestPaymentProvider {
 
     @Test
     public void testSimpleInvoice() throws Exception {
-        final Account account = testHelper.createTestAccount();
+        final Account account = testHelper.createTestCreditCardAccount();
 
         testHelper.createTestInvoice(account);
 

@@ -53,6 +53,7 @@ import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.setup.PaymentTestModuleWithEmbeddedDb;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.clock.MockClockModule;
 
 public class TestPaymentInvoiceIntegration {
     // create payment for received invoice and save it -- positive and negative
@@ -97,6 +98,7 @@ public class TestPaymentInvoiceIntegration {
         Injector injector = Guice.createInjector(new PaymentTestModuleWithEmbeddedDb(),
                                                  new AccountModule(),
                                                  new InvoiceModuleWithMocks(),
+                                                 new MockClockModule(),
                                                  new AbstractModule() {
                                                     @Override
                                                     protected void configure() {
@@ -121,7 +123,7 @@ public class TestPaymentInvoiceIntegration {
 
     @Test
     public void testInvoiceIntegration() throws Exception {
-        final Account account = testHelper.createTestAccount();
+        final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
