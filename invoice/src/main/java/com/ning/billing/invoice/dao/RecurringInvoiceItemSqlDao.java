@@ -18,7 +18,7 @@ package com.ning.billing.invoice.dao;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.DefaultInvoiceItem;
+import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.util.entity.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
@@ -46,8 +46,8 @@ import java.util.List;
 import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(InvoiceItemSqlDao.InvoiceItemMapper.class)
-public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
+@RegisterMapper(RecurringInvoiceItemSqlDao.RecurringInvoiceItemMapper.class)
+public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
     @SqlQuery
     List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
 
@@ -59,23 +59,23 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
 
     @Override
     @SqlUpdate
-    void create(@InvoiceItemBinder final InvoiceItem invoiceItem);
+    void create(@RecurringInvoiceItemBinder final InvoiceItem invoiceItem);
 
     @Override
     @SqlUpdate
-    void update(@InvoiceItemBinder final InvoiceItem invoiceItem);
+    void update(@RecurringInvoiceItemBinder final InvoiceItem invoiceItem);
 
     @SqlBatch
-    void create(@InvoiceItemBinder final List<InvoiceItem> items);
+    void create(@RecurringInvoiceItemBinder final List<InvoiceItem> items);
 
-    @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
+    @BindingAnnotation(RecurringInvoiceItemBinder.InvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
-    public @interface InvoiceItemBinder {
+    public @interface RecurringInvoiceItemBinder {
         public static class InvoiceItemBinderFactory implements BinderFactory {
             public Binder build(Annotation annotation) {
-                return new Binder<InvoiceItemBinder, InvoiceItem>() {
-                    public void bind(SQLStatement q, InvoiceItemBinder bind, InvoiceItem item) {
+                return new Binder<RecurringInvoiceItemBinder, RecurringInvoiceItem>() {
+                    public void bind(SQLStatement q, RecurringInvoiceItemBinder bind, RecurringInvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("subscriptionId", item.getSubscriptionId().toString());
@@ -83,17 +83,17 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                         q.bind("phaseName", item.getPhaseName());
                         q.bind("startDate", item.getStartDate().toDate());
                         q.bind("endDate", item.getEndDate().toDate());
-                        q.bind("recurringAmount", item.getRecurringAmount());
-                        q.bind("recurringRate", item.getRecurringRate());
-                        q.bind("fixedAmount", item.getFixedAmount());
+                        q.bind("amount", item.getAmount());
+                        q.bind("rate", item.getRate());
                         q.bind("currency", item.getCurrency().toString());
+                        q.bind("reversedItemId", (item.getReversedItemId() == null) ? null : item.getReversedItemId().toString());
                     }
                 };
             }
         }
     }
 
-    public static class InvoiceItemMapper implements ResultSetMapper<InvoiceItem> {
+    public static class RecurringInvoiceItemMapper implements ResultSetMapper<InvoiceItem> {
         @Override
         public InvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
             UUID id = UUID.fromString(result.getString("id"));
@@ -103,13 +103,14 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             String phaseName = result.getString("phase_name");
             DateTime startDate = new DateTime(result.getTimestamp("start_date"));
             DateTime endDate = new DateTime(result.getTimestamp("end_date"));
-            BigDecimal recurringAmount = result.getBigDecimal("recurring_amount");
-            BigDecimal recurringRate = result.getBigDecimal("recurring_rate");
-            BigDecimal fixedAmount = result.getBigDecimal("fixed_amount");
+            BigDecimal amount = result.getBigDecimal("amount");
+            BigDecimal rate = result.getBigDecimal("rate");
             Currency currency = Currency.valueOf(result.getString("currency"));
+            String reversedItemString = result.getString("reversed_item_id");
+            UUID reversedItemId = (reversedItemString == null) ? null : UUID.fromString(reversedItemString);
 
-            return new DefaultInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
-                                          recurringAmount, recurringRate, fixedAmount, currency);
+            return new RecurringInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
+                                           amount, rate, currency, reversedItemId);
         }
     }
 }

@@ -128,7 +128,8 @@ public enum ErrorCode {
     */
     INVOICE_ACCOUNT_ID_INVALID(4001, "No account could be retrieved for id %s"),
     INVOICE_INVALID_TRANSITION(4002, "Transition did not contain a subscription id."),
-    INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID(4003, "No account id was retrieved for subscription id %s")  
+    INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID(4003, "No account id was retrieved for subscription id %s"),
+    INVOICE_INVALID_DATE_SEQUENCE(4004, "Date sequence was invalid. Start Date: %s; End Date: %s; Target Date: %s")
     ;
 
     private int code;

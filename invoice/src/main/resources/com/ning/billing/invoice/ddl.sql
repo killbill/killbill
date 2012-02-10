@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS invoice_items;
-CREATE TABLE invoice_items (
+DROP TABLE IF EXISTS recurring_invoice_items;
+CREATE TABLE recurring_invoice_items (
   id char(36) NOT NULL,
   invoice_id char(36) NOT NULL,
   subscription_id char(36) NOT NULL,
@@ -7,13 +8,29 @@ CREATE TABLE invoice_items (
   phase_name varchar(50) NOT NULL,
   start_date datetime NOT NULL,
   end_date datetime NOT NULL,
-  recurring_amount numeric(10,4) NULL,
-  recurring_rate numeric(10,4) NULL,
-  fixed_amount numeric(10,4) NULL,
+  amount numeric(10,4) NULL,
+  rate numeric(10,4) NULL,
+  currency char(3) NOT NULL,
+  reversed_item_id char(36),
+  PRIMARY KEY(id)
+) ENGINE=innodb;
+CREATE INDEX recurring_invoice_items_subscription_id ON recurring_invoice_items(subscription_id ASC);
+CREATE INDEX recurring_invoice_items_invoice_id ON recurring_invoice_items(invoice_id ASC);
+
+DROP TABLE IF EXISTS fixed_invoice_items;
+CREATE TABLE fixed_invoice_items (
+  id char(36) NOT NULL,
+  invoice_id char(36) NOT NULL,
+  subscription_id char(36) NOT NULL,
+  plan_name varchar(50) NOT NULL,
+  phase_name varchar(50) NOT NULL,
+  date datetime NOT NULL,
+  amount numeric(10,4) NULL,
   currency char(3) NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
-CREATE INDEX invoice_items_subscription_id ON invoice_items(subscription_id ASC);
+CREATE INDEX fixed_invoice_items_subscription_id ON fixed_invoice_items(subscription_id ASC);
+CREATE INDEX fixed_invoice_items_invoice_id ON fixed_invoice_items(invoice_id ASC);
 
 DROP TABLE IF EXISTS invoice_locking;
 CREATE TABLE invoice_locking (
@@ -56,7 +73,6 @@ GROUP BY invoice_id;
 DROP VIEW IF EXISTS invoice_item_summary;
 CREATE VIEW invoice_item_summary AS
 SELECT invoice_id,
-       CASE WHEN SUM(recurring_amount) IS NULL THEN 0 ELSE SUM(recurring_amount) END
-       + CASE WHEN SUM(fixed_amount) IS NULL THEN 0 ELSE SUM(fixed_amount) END AS amount_invoiced
-FROM invoice_items
+       CASE WHEN SUM(amount) IS NULL THEN 0 ELSE SUM(amount) END AS amount_invoiced
+FROM recurring_invoice_items
 GROUP BY invoice_id;

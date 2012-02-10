@@ -69,16 +69,24 @@ public class InvoiceListener {
 
     @Subscribe
     public void handleSubscriptionTransition(final SubscriptionTransition transition) {
-        processSubscription(transition);
+        try {
+            processSubscription(transition);
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Subscribe
     public void handleNextBillingDateEvent(final NextBillingDateEvent event) {
         // STEPH should we use the date of the event instead?
-        processSubscription(event.getSubscriptionId(), clock.getUTCNow());
+        try {
+            processSubscription(event.getSubscriptionId(), clock.getUTCNow());
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
     }
 
-    private void processSubscription(final SubscriptionTransition transition) {
+    private void processSubscription(final SubscriptionTransition transition) throws InvoiceApiException {
         UUID subscriptionId = transition.getSubscriptionId();
         DateTime targetDate = transition.getEffectiveTransitionTime();
         log.info("Got subscription transition from InvoiceListener. id: " + subscriptionId.toString() + "; targetDate: " + targetDate.toString());
@@ -86,7 +94,7 @@ public class InvoiceListener {
         processSubscription(subscriptionId, targetDate);
     }
 
-    private void processSubscription(final UUID subscriptionId, final DateTime targetDate) {
+    private void processSubscription(final UUID subscriptionId, final DateTime targetDate) throws InvoiceApiException {
         if (subscriptionId == null) {
             log.error("Failed handling entitlement change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
             return;

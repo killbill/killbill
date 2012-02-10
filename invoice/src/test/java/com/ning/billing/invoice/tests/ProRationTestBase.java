@@ -19,23 +19,25 @@ package com.ning.billing.invoice.tests;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.invoice.model.BillingMode;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
+import com.ning.billing.invoice.model.RecurringInvoiceItemData;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-public abstract class ProRationTestBase extends InvoicingTestBase{
+public abstract class ProRationTestBase extends InvoicingTestBase {
     protected abstract BillingMode getBillingMode();
     protected abstract BillingPeriod getBillingPeriod();
 
     protected void testCalculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay, BigDecimal expectedValue) throws InvalidDateSequenceException {
         try {
             BigDecimal numberOfBillingCycles;
-            numberOfBillingCycles = getBillingMode().calculateNumberOfBillingCycles(startDate, targetDate, billingCycleDay, getBillingPeriod());
+            numberOfBillingCycles = calculateNumberOfBillingCycles(startDate, targetDate, billingCycleDay);
 
-            assertEquals(numberOfBillingCycles, expectedValue);
+            assertEquals(numberOfBillingCycles.compareTo(expectedValue), 0, "Actual: " + numberOfBillingCycles.toString() + "; expected: " + expectedValue.toString());
         } catch (InvalidDateSequenceException idse) {
             throw idse;
         } catch (Exception e) {
@@ -46,13 +48,35 @@ public abstract class ProRationTestBase extends InvoicingTestBase{
     protected void testCalculateNumberOfBillingCycles(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BigDecimal expectedValue) throws InvalidDateSequenceException {
         try {
             BigDecimal numberOfBillingCycles;
-            numberOfBillingCycles = getBillingMode().calculateNumberOfBillingCycles(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod());
+            numberOfBillingCycles = calculateNumberOfBillingCycles(startDate, endDate, targetDate, billingCycleDay);
 
-            assertEquals(numberOfBillingCycles, expectedValue);
+            assertEquals(numberOfBillingCycles.compareTo(expectedValue), 0);
         } catch (InvalidDateSequenceException idse) {
             throw idse;
         } catch (Exception e) {
             fail("Unexpected exception: " + e.getMessage());
         }
+    }
+
+    protected BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay) throws InvalidDateSequenceException {
+        List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod());
+
+        BigDecimal numberOfBillingCycles = ZERO;
+        for (RecurringInvoiceItemData item : items) {
+            numberOfBillingCycles = numberOfBillingCycles.add(item.getNumberOfCycles());
+        }
+
+        return numberOfBillingCycles;
+    }
+
+    protected BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay) throws InvalidDateSequenceException {
+        List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, targetDate, billingCycleDay, getBillingPeriod());
+
+        BigDecimal numberOfBillingCycles = ZERO;
+        for (RecurringInvoiceItemData item : items) {
+            numberOfBillingCycles = numberOfBillingCycles.add(item.getNumberOfCycles());
+        }
+
+        return numberOfBillingCycles;
     }
 }

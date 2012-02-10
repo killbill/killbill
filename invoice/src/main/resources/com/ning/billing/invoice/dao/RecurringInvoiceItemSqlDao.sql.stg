@@ -1,0 +1,60 @@
+group RecurringInvoiceItemSqlDao;
+
+fields(prefix) ::= <<
+  <prefix>id,
+  <prefix>invoice_id,
+  <prefix>subscription_id,
+  <prefix>plan_name,
+  <prefix>phase_name,
+  <prefix>start_date,
+  <prefix>end_date,
+  <prefix>amount,
+  <prefix>rate,
+  <prefix>currency,
+  <prefix>reversed_item_id
+>>
+
+getById() ::= <<
+  SELECT <fields()>
+  FROM recurring_invoice_items
+  WHERE id = :id;
+>>
+
+getInvoiceItemsByInvoice() ::= <<
+  SELECT <fields()>
+  FROM recurring_invoice_items
+  WHERE invoice_id = :invoiceId;
+>>
+
+getInvoiceItemsByAccount() ::= <<
+  SELECT <fields("rii.")>
+  FROM recurring_invoice_items rii
+  INNER JOIN invoices i ON i.id = rii.invoice_id
+  WHERE i.account_id = :accountId;
+>>
+
+getInvoiceItemsBySubscription() ::= <<
+  SELECT <fields()>
+  FROM recurring_invoice_items
+  WHERE subscription_id = :subscriptionId;
+>>
+
+create() ::= <<
+  INSERT INTO recurring_invoice_items(<fields()>)
+  VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
+         :amount, :rate, :currency, :reversedItemId);
+>>
+
+update() ::= <<
+  UPDATE recurring_invoice_items
+  SET invoice_id = :invoiceId, subscription_id = :subscriptionId, plan_name = :planName, phase_name = :phaseName,
+      start_date = :startDate, end_date = :endDate, amount = :amount, rate = :rate, currency = :currency,
+      reversed_item_id = :reversedItemId
+  WHERE id = :id;
+>>
+
+test() ::= <<
+  SELECT 1
+  FROM recurring_invoice_items;
+>>
+;

@@ -19,14 +19,17 @@ package com.ning.billing.invoice.model;
 import com.ning.billing.catalog.api.BillingPeriod;
 import org.joda.time.DateTime;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 public interface BillingMode {
-    BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
+    List<RecurringInvoiceItemData> calculateInvoiceItemData(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
+    List<RecurringInvoiceItemData> calculateInvoiceItemData(DateTime startDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
 
-    BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
-
-    DateTime calculateEffectiveEndDate(DateTime startDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod);
-
-    DateTime calculateEffectiveEndDate(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod);
+//    BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
+//
+//    BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
+//
+//    DateTime calculateEffectiveEndDate(DateTime startDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod);
+//
+//    DateTime calculateEffectiveEndDate(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod);
 }

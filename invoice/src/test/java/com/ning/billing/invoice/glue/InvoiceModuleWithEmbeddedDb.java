@@ -21,13 +21,12 @@ import java.io.IOException;
 import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
-import com.ning.billing.util.glue.GlobalLockerModule;
+import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
 import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
-import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.glue.BusModule;
@@ -50,8 +49,8 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         helper.stopMysql();
     }
 
-    public InvoiceItemSqlDao getInvoiceItemSqlDao() {
-        return dbi.onDemand(InvoiceItemSqlDao.class);
+    public RecurringInvoiceItemSqlDao getInvoiceItemSqlDao() {
+        return dbi.onDemand(RecurringInvoiceItemSqlDao.class);
     }
 
     public InvoicePaymentSqlDao getInvoicePaymentSqlDao() {

@@ -33,7 +33,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.invoice.model.DefaultInvoiceItem;
+import com.ning.billing.invoice.model.RecurringInvoiceItem;
 
 public class TestHelper {
     protected final AccountDao accountDao;
@@ -66,16 +66,18 @@ public class TestHelper {
         Invoice invoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), new DateTime(), targetDate, currency);
 
         for (InvoiceItem item : items) {
-            invoice.addInvoiceItem(new DefaultInvoiceItem(invoice.getId(),
-                                               item.getSubscriptionId(),
-                                               item.getPlanName(),
-                                               item.getPhaseName(),
-                                               item.getStartDate(),
-                                               item.getEndDate(),
-                                               item.getRecurringAmount(),
-                                               item.getRecurringRate(),
-                                               item.getFixedAmount(),
-                                               item.getCurrency()));
+            if (item instanceof RecurringInvoiceItem) {
+                RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
+                invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+                                                               recurringInvoiceItem.getSubscriptionId(),
+                                                               recurringInvoiceItem.getPlanName(),
+                                                               recurringInvoiceItem.getPhaseName(),
+                                                               recurringInvoiceItem.getStartDate(),
+                                                               recurringInvoiceItem.getEndDate(),
+                                                               recurringInvoiceItem.getAmount(),
+                                                               recurringInvoiceItem.getRate(),
+                                                               recurringInvoiceItem.getCurrency()));
+            }
         }
         invoiceDao.create(invoice);
         return invoice;
@@ -85,7 +87,7 @@ public class TestHelper {
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final UUID subscriptionId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal("10.00");
-        final InvoiceItem item = new DefaultInvoiceItem(null, subscriptionId, "test plan", "test phase", now, now.plusMonths(1), amount, new BigDecimal("1.0"), null, Currency.USD);
+        final InvoiceItem item = new RecurringInvoiceItem(null, subscriptionId, "test plan", "test phase", now, now.plusMonths(1), amount, new BigDecimal("1.0"), Currency.USD);
 
         return createTestInvoice(account, now, Currency.USD, item);
     }

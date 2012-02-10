@@ -1,0 +1,56 @@
+group FixedPriceInvoiceItemSqlDao;
+
+fields(prefix) ::= <<
+  <prefix>id,
+  <prefix>invoice_id,
+  <prefix>subscription_id,
+  <prefix>plan_name,
+  <prefix>phase_name,
+  <prefix>date,
+  <prefix>amount,
+  <prefix>currency
+>>
+
+getById() ::= <<
+  SELECT <fields()>
+  FROM fixed_invoice_items
+  WHERE id = :id;
+>>
+
+getInvoiceItemsByInvoice() ::= <<
+  SELECT <fields()>
+  FROM fixed_invoice_items
+  WHERE invoice_id = :invoiceId;
+>>
+
+getInvoiceItemsByAccount() ::= <<
+  SELECT <fields("rii.")>
+  FROM fixed_invoice_items rii
+  INNER JOIN invoices i ON i.id = rii.invoice_id
+  WHERE i.account_id = :accountId;
+>>
+
+getInvoiceItemsBySubscription() ::= <<
+  SELECT <fields()>
+  FROM fixed_invoice_items
+  WHERE subscription_id = :subscriptionId;
+>>
+
+create() ::= <<
+  INSERT INTO fixed_invoice_items(<fields()>)
+  VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName,
+         :date, :amount, :currency);
+>>
+
+update() ::= <<
+  UPDATE fixed_invoice_items
+  SET invoice_id = :invoiceId, subscription_id = :subscriptionId, plan_name = :planName, phase_name = :phaseName,
+      date = :date, amount = :amount, currency = :currency
+  WHERE id = :id;
+>>
+
+test() ::= <<
+  SELECT 1
+  FROM fixed_invoice_items;
+>>
+;

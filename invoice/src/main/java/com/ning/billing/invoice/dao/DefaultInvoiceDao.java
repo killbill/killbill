@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -41,7 +42,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final static Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
 
     private final InvoiceSqlDao invoiceSqlDao;
-    private final InvoiceItemSqlDao invoiceItemSqlDao;
+    private final RecurringInvoiceItemSqlDao recurringInvoiceItemSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final NextBillingDateNotifier notifier;
     private final EntitlementBillingApi entitlementBillingApi;
@@ -52,7 +53,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus,
                              final NextBillingDateNotifier notifier, final EntitlementBillingApi entitlementBillingApi) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
-        this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
+        this.recurringInvoiceItemSqlDao = dbi.onDemand(RecurringInvoiceItemSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.eventBus = eventBus;
         this.notifier = notifier;
@@ -91,7 +92,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public List<InvoiceItem> getInvoiceItemsByAccount(final UUID accountId) {
-        return invoiceItemSqlDao.getInvoiceItemsByAccount(accountId.toString());
+        return recurringInvoiceItemSqlDao.getInvoiceItemsByAccount(accountId.toString());
     }
 
     @Override
@@ -117,8 +118,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
                  Invoice invoice = invoiceDao.getById(invoiceId.toString());
 
                  if (invoice != null) {
-                     InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
-                     List<InvoiceItem> invoiceItems = invoiceItemDao.getInvoiceItemsByInvoice(invoiceId.toString());
+                     RecurringInvoiceItemSqlDao recurringInvoiceItemDao = invoiceDao.become(RecurringInvoiceItemSqlDao.class);
+                     List<InvoiceItem> invoiceItems = recurringInvoiceItemDao.getInvoiceItemsByInvoice(invoiceId.toString());
                      invoice.addInvoiceItems(invoiceItems);
 
                      InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
@@ -144,8 +145,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     invoiceDao.create(invoice);
 
                     List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
-                    InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
-                    invoiceItemDao.create(invoiceItems);
+                    RecurringInvoiceItemSqlDao recurringInvoiceItemDao = invoiceDao.become(RecurringInvoiceItemSqlDao.class);
+                    recurringInvoiceItemDao.create(invoiceItems);
 
                     notifyOfFutureBillingEvents(invoiceSqlDao, invoiceItems);
                     setChargedThroughDates(invoiceSqlDao, invoiceItems);
@@ -256,9 +257,9 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     private void getInvoiceItemsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao) {
-        InvoiceItemSqlDao invoiceItemDao = invoiceDao.become(InvoiceItemSqlDao.class);
+        RecurringInvoiceItemSqlDao recurringInvoiceItemDao = invoiceDao.become(RecurringInvoiceItemSqlDao.class);
         for (final Invoice invoice : invoices) {
-            List<InvoiceItem> invoiceItems = invoiceItemDao.getInvoiceItemsByInvoice(invoice.getId().toString());
+            List<InvoiceItem> invoiceItems = recurringInvoiceItemDao.getInvoiceItemsByInvoice(invoice.getId().toString());
             invoice.addInvoiceItems(invoiceItems);
         }
     }
@@ -274,20 +275,30 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
         for (final InvoiceItem item : invoiceItems) {
-            if ((item.getEndDate() != null) &&
-                    (item.getRecurringAmount() == null || item.getRecurringAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), item.getEndDate());
+            if (item instanceof RecurringInvoiceItem) {
+                RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
+                if ((recurringInvoiceItem.getEndDate() != null) &&
+                        (recurringInvoiceItem.getAmount() == null ||
+                                recurringInvoiceItem.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
+                notifier.insertNextBillingNotification(dao, item.getSubscriptionId(), recurringInvoiceItem.getEndDate());
             }
+            }
+
         }
     }
 
     private void setChargedThroughDates(final InvoiceSqlDao dao, final Collection<InvoiceItem> invoiceItems) {
         for (InvoiceItem item : invoiceItems) {
-            if ((item.getEndDate() != null) &&
-                    (item.getRecurringAmount() == null || item.getRecurringAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                log.info("Setting CTD for invoice item {} to {}", item.getId().toString(), item.getEndDate().toString());
-                entitlementBillingApi.setChargedThroughDateFromTransaction(dao, item.getSubscriptionId(), item.getEndDate());
+            if (item instanceof RecurringInvoiceItem) {
+                RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
+                if ((recurringInvoiceItem.getEndDate() != null) &&
+                        (recurringInvoiceItem.getAmount() == null ||
+                                recurringInvoiceItem.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
+                    log.info("Setting CTD for invoice item {} to {}", recurringInvoiceItem.getId().toString(), recurringInvoiceItem.getEndDate().toString());
+                    entitlementBillingApi.setChargedThroughDateFromTransaction(dao, recurringInvoiceItem.getSubscriptionId(), recurringInvoiceItem.getEndDate());
+                }
             }
+
         }
     }
 }

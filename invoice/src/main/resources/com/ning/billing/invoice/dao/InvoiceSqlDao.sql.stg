@@ -31,8 +31,8 @@ getInvoicesByAccountAfterDate() ::= <<
 getInvoicesBySubscription() ::= <<
   SELECT <invoiceFields("i.")>
   FROM invoices i
-  LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
-  WHERE ii.subscription_id = :subscriptionId
+  LEFT JOIN recurring_invoice_items rii ON i.id = rii.invoice_id
+  WHERE rii.subscription_id = :subscriptionId
   GROUP BY <invoiceFields("i.")>;
 >>
 
