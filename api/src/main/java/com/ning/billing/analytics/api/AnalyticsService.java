@@ -18,5 +18,5 @@ package com.ning.billing.analytics.api;
 
 import com.ning.billing.lifecycle.KillbillService;
 
-public interface IAnalyticsService extends KillbillService {
+public interface AnalyticsService extends KillbillService {
 }
