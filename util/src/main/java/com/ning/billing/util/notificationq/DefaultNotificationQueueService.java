@@ -18,6 +18,7 @@ package com.ning.billing.util.notificationq;
 
 import org.skife.jdbi.v2.IDBI;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultNotificationQueueService extends NotificationQueueServiceBase {

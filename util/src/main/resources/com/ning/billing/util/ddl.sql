@@ -48,9 +48,8 @@ CREATE TABLE notifications (
     processing_state varchar(14) DEFAULT 'AVAILABLE',
     PRIMARY KEY(id)
 ) ENGINE=innodb;
-CREATE INDEX  `idx_comp_where` ON notifications (`effective_dt`,`processing_state`,`processing_owner`,`processing_available_dt`);
-CREATE INDEX  `idx_update` ON notifications (`notification_id`,`processing_state`,`processing_owner`,`processing_available_dt`);
-CREATE INDEX  `idx_update1` ON notifications (`notification_id`,`processing_owner`);
+CREATE INDEX  `idx_comp_where` ON notifications (`effective_dt`, `queue_name`, `processing_state`,`processing_owner`,`processing_available_dt`);
+CREATE INDEX  `idx_update` ON notifications (`processing_state`,`processing_owner`,`processing_available_dt`);
 CREATE INDEX  `idx_get_ready` ON notifications (`effective_dt`,`created_dt`,`id`);
 
 DROP TABLE IF EXISTS claimed_notifications;

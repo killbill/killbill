@@ -26,8 +26,9 @@ import java.util.List;
  * @param <T>
  */
 public interface EntityCollectionDao<T extends Entity> {
-    @SqlBatch
-    public void save(@Bind("objectId") final String objectId,
+
+    @SqlBatch(transactional=false)
+    public void batchSaveFromTransaction(@Bind("objectId") final String objectId,
                      @Bind("objectType") final String objectType,
                      @BindBean final List<T> entities);
 

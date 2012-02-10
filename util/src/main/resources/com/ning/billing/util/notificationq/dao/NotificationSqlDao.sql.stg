@@ -2,8 +2,9 @@ group NotificationSqlDao;
 
 getReadyNotifications(now, max) ::= <<
     select
-      notification_id
-    , notification_key
+      id
+      ,  notification_id
+      , notification_key
       , created_dt
       , effective_dt
       , queue_name
@@ -19,33 +20,31 @@ getReadyNotifications(now, max) ::= <<
     order by
       effective_dt asc
       , created_dt asc
-      , id asc
+      , id
     limit :max
     ;
 >>
 
 
-claimNotification(owner, next_available, notification_id, now) ::= <<
+claimNotification(owner, next_available, id, now) ::= <<
     update notifications
     set
       processing_owner = :owner
       , processing_available_dt = :next_available
       , processing_state = 'IN_PROCESSING'
     where
-      notification_id = :notification_id
+      id = :id
       and processing_state != 'PROCESSED'
       and (processing_owner IS NULL OR processing_available_dt \<= :now)
     ;
 >>
 
-clearNotification(notification_id, owner) ::= <<
+clearNotification(id, owner) ::= <<
     update notifications
     set
-      processing_owner = NULL
-      , processing_state = 'PROCESSED'
+      processing_state = 'PROCESSED'
     where
-      notification_id = :notification_id
-      and processing_owner = :owner
+      id = :id
     ;
 >>
 
