@@ -546,9 +546,58 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         InvoiceGenerator generator = new DefaultInvoiceGenerator();
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
 
-        // expect one pro-ration it and one full-period item
+        // expect one pro-ration item and one full-period item
         assertEquals(invoice.getNumberOfItems(), 2);
         assertEquals(invoice.getTotalAmount().compareTo(ZERO), 0);
+    }
+
+    @Test
+    public void testInvoiceForFreeTrialWithRecurringDiscount() throws InvoiceApiException {
+        DefaultPrice zeroPrice = new DefaultPrice(BigDecimal.ZERO, Currency.USD);
+        MockInternationalPrice fixedPrice = new MockInternationalPrice(zeroPrice);
+        MockPlanPhase phase1 = new MockPlanPhase(null, fixedPrice);
+
+        BigDecimal cheapAmount = new BigDecimal("24.95");
+        DefaultPrice cheapPrice = new DefaultPrice(cheapAmount, Currency.USD);
+        MockInternationalPrice recurringPrice = new MockInternationalPrice(cheapPrice);
+        MockPlanPhase phase2 = new MockPlanPhase(recurringPrice, null);
+
+        MockPlan plan = new MockPlan();
+        Subscription subscription = new MockSubscription();
+        DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
+
+        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan, phase1, fixedPrice,
+                                                     null, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                                                     "testEvent1", SubscriptionTransitionType.CREATE);
+        BillingEventSet events = new BillingEventSet();
+        events.add(event1);
+
+        InvoiceGenerator generator = new DefaultInvoiceGenerator();
+        Invoice invoice1 = generator.generateInvoice(UUID.randomUUID(), events, null, effectiveDate1, Currency.USD);
+        assertNotNull(invoice1);
+        assertEquals(invoice1.getNumberOfItems(), 1);
+        assertEquals(invoice1.getTotalAmount().compareTo(ZERO), 0);
+
+        List<InvoiceItem> existingItems = invoice1.getInvoiceItems();
+
+        DateTime effectiveDate2 = effectiveDate1.plusDays(30);
+        BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan, phase2, null,
+                                                     recurringPrice, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                                                     "testEvent2", SubscriptionTransitionType.CHANGE);
+        events.add(event2);
+
+        Invoice invoice2 = generator.generateInvoice(UUID.randomUUID(), events, existingItems, effectiveDate2, Currency.USD);
+        assertNotNull(invoice2);
+        assertEquals(invoice2.getNumberOfItems(), 1);
+        assertEquals(invoice2.getTotalAmount().compareTo(cheapAmount), 0);
+
+        existingItems.addAll(invoice2.getInvoiceItems());
+
+        DateTime effectiveDate3 = effectiveDate2.plusMonths(1);
+        Invoice invoice3 = generator.generateInvoice(UUID.randomUUID(), events, existingItems, effectiveDate3, Currency.USD);
+        assertNotNull(invoice3);
+        assertEquals(invoice3.getNumberOfItems(), 1);
+        assertEquals(invoice3.getTotalAmount().compareTo(cheapAmount), 0);
     }
 
     @Test
