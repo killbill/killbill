@@ -25,6 +25,8 @@ public interface AccountUserApi {
 
     public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException;
 
+    public Account migrateAccount(MigrationAccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException;
+
     /***
      *
      * Note: does not update the external key
