@@ -22,6 +22,7 @@ import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -34,6 +35,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBui
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.dao.MockSubscription;
 import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
@@ -46,11 +48,13 @@ import org.testng.annotations.Test;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 @Test(groups = {"fast", "invoicing", "invoiceGenerator"})
 public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
@@ -486,6 +490,77 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(item.getDate().compareTo(changeDate), 0);
    }
 
+    @Test
+    public void testMixedModeLifeCycle() throws InvoiceApiException {
+        // create a subscription with a fixed price and recurring price
+        Plan plan1 = new MockPlan();
+        BigDecimal monthlyRate = FIVE;
+        BigDecimal fixedCost = TEN;
+        PlanPhase phase1 = createMockMonthlyPlanPhase(monthlyRate, fixedCost, PhaseType.TRIAL);
+
+        BillingEventSet events = new BillingEventSet();
+        UUID subscriptionId = UUID.randomUUID();
+        UUID accountId = UUID.randomUUID();
+
+        DateTime startDate = new DateTime(2011, 1, 1, 3, 40, 27, 0);
+        BillingEvent event1 = createBillingEvent(subscriptionId, startDate, plan1, phase1, 1);
+        events.add(event1);
+
+        // ensure both components are invoiced
+        Invoice invoice1 = generator.generateInvoice(accountId, events, null, startDate, Currency.USD);
+        assertNotNull(invoice1);
+        assertEquals(invoice1.getNumberOfItems(), 2);
+        assertEquals(invoice1.getTotalAmount(), FIFTEEN);
+
+        List<InvoiceItem> existingItems = invoice1.getInvoiceItems();
+
+        // move forward in time one billing period
+        DateTime currentDate = startDate.plusMonths(1);
+
+        // ensure that only the recurring price is invoiced
+        Invoice invoice2 = generator.generateInvoice(accountId, events, existingItems, currentDate, Currency.USD);
+        assertNotNull(invoice2);
+        assertEquals(invoice2.getNumberOfItems(), 1);
+        assertEquals(invoice2.getTotalAmount(), FIVE);
+    }
+
+    @Test
+    public void testFixedModePlanChange() throws InvoiceApiException {
+        // create a subscription with a fixed price and recurring price
+        Plan plan1 = new MockPlan();
+        BigDecimal fixedCost1 = TEN;
+        BigDecimal fixedCost2 = TWENTY;
+        PlanPhase phase1 = createMockMonthlyPlanPhase(null, fixedCost1, PhaseType.TRIAL);
+        PlanPhase phase2 = createMockMonthlyPlanPhase(null, fixedCost2, PhaseType.EVERGREEN);
+
+        BillingEventSet events = new BillingEventSet();
+        UUID subscriptionId = UUID.randomUUID();
+        UUID accountId = UUID.randomUUID();
+
+        DateTime startDate = new DateTime(2011, 1, 1, 3, 40, 27, 0);
+        BillingEvent event1 = createBillingEvent(subscriptionId, startDate, plan1, phase1, 1);
+        events.add(event1);
+
+        // ensure that a single invoice item is generated for the fixed cost
+        Invoice invoice1 = generator.generateInvoice(accountId, events, null, startDate, Currency.USD);
+        assertNotNull(invoice1);
+        assertEquals(invoice1.getNumberOfItems(), 1);
+        assertEquals(invoice1.getTotalAmount(), fixedCost1);
+
+        List<InvoiceItem> existingItems = invoice1.getInvoiceItems();
+
+        // move forward in time one billing period
+        DateTime phaseChangeDate = startDate.plusMonths(1);
+        BillingEvent event2 = createBillingEvent(subscriptionId, phaseChangeDate, plan1, phase2, 1);
+        events.add(event2);
+
+        // ensure that a single invoice item is generated for the fixed cost
+        Invoice invoice2 = generator.generateInvoice(accountId, events, existingItems, phaseChangeDate, Currency.USD);
+        assertNotNull(invoice2);
+        assertEquals(invoice2.getNumberOfItems(), 1);
+        assertEquals(invoice2.getTotalAmount(), fixedCost2);
+    }
+
     private MockPlanPhase createMockMonthlyPlanPhase() {
         return new MockPlanPhase(null, null, BillingPeriod.MONTHLY);
     }
@@ -498,6 +573,14 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     private MockPlanPhase createMockMonthlyPlanPhase(final BigDecimal recurringRate, final PhaseType phaseType) {
         return new MockPlanPhase(new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD)),
                                  null, BillingPeriod.MONTHLY, phaseType);
+    }
+
+    private MockPlanPhase createMockMonthlyPlanPhase(final BigDecimal recurringRate, final BigDecimal fixedCost,
+                                                     final PhaseType phaseType) {
+        MockInternationalPrice recurringPrice = (recurringRate == null) ? null : new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD));
+        MockInternationalPrice fixedPrice = (fixedCost == null) ? null : new MockInternationalPrice(new DefaultPrice(fixedCost, Currency.USD));
+
+        return new MockPlanPhase(recurringPrice, fixedPrice, BillingPeriod.MONTHLY, phaseType);
     }
 
     private MockPlanPhase createMockAnnualPlanPhase(final BigDecimal recurringRate, final PhaseType phaseType) {
