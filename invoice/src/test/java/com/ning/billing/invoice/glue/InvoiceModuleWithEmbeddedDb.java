@@ -72,6 +72,7 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         install(new AccountModule());
         install(new CatalogModule());
         install(new EntitlementModule());
+        install(new GlobalLockerModule());
 
         super.configure();
 

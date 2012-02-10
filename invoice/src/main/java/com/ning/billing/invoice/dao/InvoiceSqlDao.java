@@ -78,7 +78,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     @RegisterMapper(UuidMapper.class)
     List<UUID> getInvoicesForPayment(@Bind("targetDate") final Date targetDate,
                                     @Bind("numberOfDays") final int numberOfDays);
-    
+
     @SqlQuery
     @RegisterMapper(BalanceMapper.class)
     BigDecimal getAccountBalance(@Bind("accountId") final String accountId);
@@ -86,13 +86,6 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     @SqlQuery
     List<Invoice> getUnpaidInvoicesByAccountId(@Bind("accountId") final String accountId,
                                                @Bind("upToDate") final Date upToDate);
-
-    @SqlUpdate
-    void lockAccount(@Bind("accountId") final String accountId);
-
-    @SqlUpdate
-    void releaseAccount(@Bind("accountId") final String accountId);
-    
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
@@ -130,7 +123,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             return new DefaultInvoice(id, accountId, invoiceDate, targetDate, currency);
         }
     }
-      
+
     public static class BalanceMapper implements ResultSetMapper<BigDecimal> {
         @Override
         public BigDecimal map(final int index, final ResultSet result, final StatementContext context) throws SQLException {

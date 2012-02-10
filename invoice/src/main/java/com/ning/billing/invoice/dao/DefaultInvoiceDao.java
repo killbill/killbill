@@ -214,33 +214,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public boolean lockAccount(final UUID accountId) {
-        /*
-        try {
-            invoiceSqlDao.lockAccount(accountId.toString());
-            return true;
-        } catch (Exception e) {
-            log.error("Ouch! I broke", e);
-            return false;
-        }
-        */
-        return true;
-    }
-
-    @Override
-    public boolean releaseAccount(final UUID accountId) {
-        /*
-        try {
-            invoiceSqlDao.releaseAccount(accountId.toString());
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-        */
-        return true;
-    }
-
-    @Override
     public UUID getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
         return invoiceSqlDao.getInvoiceIdByPaymentAttemptId(paymentAttemptId.toString());
     }

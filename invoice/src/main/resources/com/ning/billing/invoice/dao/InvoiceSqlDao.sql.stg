@@ -92,14 +92,6 @@ getUnpaidInvoicesByAccountId() ::= <<
   ORDER BY i.target_date ASC;
 >>
 
-lockAccount() ::= <<
-  INSERT INTO invoice_locking(account_id) VALUES (:accountId);
->>
-
-releaseAccount() ::= <<
-  DELETE FROM invoice_locking
-  WHERE account_id = :accountId;
->>
 
 test() ::= <<
   SELECT 1

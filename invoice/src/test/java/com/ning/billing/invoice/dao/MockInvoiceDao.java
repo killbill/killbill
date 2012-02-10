@@ -215,14 +215,4 @@ public class MockInvoiceDao implements InvoiceDao {
 
         return unpaidInvoices;
     }
-
-    @Override
-    public boolean lockAccount(UUID accountId) {
-        return true;
-    }
-
-    @Override
-    public boolean releaseAccount(UUID accountId) {
-        return true;
-    }
 }

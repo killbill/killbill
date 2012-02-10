@@ -16,25 +16,20 @@
 
 package com.ning.billing.util.globalLocker;
 
-public interface GlobalLocker {
+public class MockGlobalLocker implements GlobalLocker {
 
-    GlobalLock lockWithNumberOfTries(final LockerService service, final String lockKey, final int retry);
-    Boolean isFree(final LockerService service, final String lockKey);
+    @Override
+    public GlobalLock lockWithNumberOfTries(LockerService service,
+            String lockKey, int retry) {
+        return new GlobalLock() {
+            @Override
+            public void release() {
+            }
+        };
+    }
 
-    public enum LockerService {
-
-        // Only service needing global lock
-        INVOICE("invoice");
-
-        private final String svcName;
-
-        LockerService(String svcName) {
-            this.svcName = svcName;
-        }
-
-        @Override
-        public String toString() {
-            return svcName;
-        }
+    @Override
+    public Boolean isFree(LockerService service, String lockKey) {
+        return Boolean.TRUE;
     }
 }
