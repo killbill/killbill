@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.beatrix.integration.inv_ent;
+package com.ning.billing.beatrix.integration;
 
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -23,6 +23,9 @@ import java.util.UUID;
 
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
@@ -47,7 +50,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.beatrix.integration.inv_ent.TestBusHandler.NextEvent;
+import com.ning.billing.beatrix.integration.TestBusHandler.NextEvent;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
@@ -157,6 +160,10 @@ public class TestBasic {
                 h.execute("truncate table invoice_items");
                 h.execute("truncate table tag_definitions");
                 h.execute("truncate table tags");
+                h.execute("truncate table custom_fields");
+                h.execute("truncate table invoice_payments");
+                h.execute("truncate table payment_attempts");
+                h.execute("truncate table payments");
                 return null;
             }
         });
@@ -183,8 +190,31 @@ public class TestBasic {
     }
 
     @Test(groups = "fast", enabled = false)
+    public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
+        testBasePlanComplete(clock.getUTCNow().plusDays(30).getDayOfMonth());
+    }
+
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
         testBasePlanComplete(clock.getUTCNow().plusDays(1).getDayOfMonth());
+    }
+
+
+    private void waitForDebug() throws Exception {
+        Thread.sleep(600000);
+    }
+
+
+    @Test(groups = "stress", enabled = false)
+    public void stressTest() throws Exception {
+        final int maxIterations = 3;
+        int curIteration = maxIterations;
+        for (curIteration = 0; curIteration < maxIterations; curIteration++) {
+            log.info("################################  ITERATION " + curIteration + "  #########################");
+            setupTest();
+            Thread.sleep(1000);
+            testBasePlanCompleteWithBillingDayPresent();
+        }
     }
 
     private void testBasePlanComplete(int billingDay) throws Exception {
@@ -240,7 +270,10 @@ public class TestBasic {
         //
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+
+        //waitForDebug();
 
         assertTrue(busHandler.isCompleted(DELAY));
 
@@ -259,6 +292,7 @@ public class TestBasic {
         //
         busHandler.pushExpectedEvent(NextEvent.CHANGE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         //clock.addDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
         assertTrue(busHandler.isCompleted(DELAY));
@@ -271,6 +305,7 @@ public class TestBasic {
         DateTime lastCtd = null;
         do {
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
+            busHandler.pushExpectedEvent(NextEvent.PAYMENT);
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
             assertTrue(busHandler.isCompleted(DELAY));
             lastCtd = checkAndGetCTD(subscription.getId());
@@ -342,6 +377,8 @@ public class TestBasic {
 
 
     protected AccountData getAccountData(final int billingDay) {
+
+        final String someRandomKey = RandomStringUtils.randomAlphanumeric(10);
         AccountData accountData = new AccountData() {
             @Override
             public String getName() {
@@ -353,7 +390,7 @@ public class TestBasic {
             }
             @Override
             public String getEmail() {
-                return "accountName@yahoo.com";
+                return  someRandomKey + "@laposte.fr";
             }
             @Override
             public String getPhone() {
@@ -361,7 +398,7 @@ public class TestBasic {
             }
             @Override
             public String getExternalKey() {
-                return "k123456";
+                return someRandomKey;
             }
             @Override
             public int getBillCycleDay() {
@@ -373,7 +410,7 @@ public class TestBasic {
             }
             @Override
             public String getPaymentProviderName() {
-                return "Paypal";
+                return MockModule.PLUGIN_NAME;
             }
 
             @Override
