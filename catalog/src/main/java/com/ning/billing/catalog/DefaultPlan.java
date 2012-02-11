@@ -29,9 +29,12 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
@@ -227,6 +230,18 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 	public DefaultPlan setPlansAllowedInBundle(Integer plansAllowedInBundle) {
 		this.plansAllowedInBundle = plansAllowedInBundle;
 		return this;
+	}
+	@Override
+	public DateTime dateOfFirstRecurringNonZeroCharge(DateTime subscriptionStartDate) {
+		DateTime result = subscriptionStartDate.toDateTime();
+		for (PlanPhase phase : getAllPhases()) {
+			if(phase.getRecurringPrice() == null || phase.getRecurringPrice().isZero()) {
+				result = phase.getDuration().addToDateTime(result);
+			} else {
+				break;
+			}
+		}
+		return result;
 	}
 	
 	
