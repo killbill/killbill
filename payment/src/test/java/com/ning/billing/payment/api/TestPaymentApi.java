@@ -22,6 +22,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -67,7 +68,7 @@ public abstract class TestPaymentApi {
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
-        final BigDecimal amount = new BigDecimal("10.00");
+        final BigDecimal amount = new BigDecimal("10.0011");
         final UUID subscriptionId = UUID.randomUUID();
 
         invoice.addInvoiceItem(new DefaultInvoiceItem(invoice.getId(),
@@ -88,7 +89,7 @@ public abstract class TestPaymentApi {
         PaymentInfo paymentInfo = results.get(0).getRight();
 
         assertNotNull(paymentInfo.getPaymentId());
-        assertTrue(paymentInfo.getAmount().compareTo(amount) == 0);
+        assertTrue(paymentInfo.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
         assertNotNull(paymentInfo.getPaymentNumber());
         assertFalse(paymentInfo.getStatus().equals("Error"));
 
