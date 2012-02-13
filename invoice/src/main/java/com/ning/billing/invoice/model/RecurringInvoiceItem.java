@@ -114,15 +114,15 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
 
         RecurringInvoiceItem that = (RecurringInvoiceItem) o;
 
-        if (!amount.equals(that.amount)) return false;
+        if (amount.compareTo(that.amount) != 0) return false;
         if (currency != that.currency) return false;
-        if (!endDate.equals(that.endDate)) return false;
+        if (startDate.compareTo(that.startDate) != 0) return false;
+        if (endDate.compareTo(that.endDate) != 0) return false;
         if (!phaseName.equals(that.phaseName)) return false;
         if (!planName.equals(that.planName)) return false;
-        if (!rate.equals(that.rate)) return false;
+        if (rate.compareTo(that.rate) != 0) return false;
         if (reversedItemId != null ? !reversedItemId.equals(that.reversedItemId) : that.reversedItemId != null)
             return false;
-        if (!startDate.equals(that.startDate)) return false;
         if (!subscriptionId.equals(that.subscriptionId)) return false;
 
         return true;
