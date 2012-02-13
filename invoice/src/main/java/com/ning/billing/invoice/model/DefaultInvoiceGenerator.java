@@ -92,10 +92,18 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         while (proposedItemIterator.hasNext()) {
             InvoiceItem proposedItem = proposedItemIterator.next();
 
-            if (existingInvoiceItems.contains(proposedItem)) {
-                existingInvoiceItems.remove(proposedItem);
-                proposedItemIterator.remove();
+            Iterator<InvoiceItem> existingItemIterator = existingInvoiceItems.iterator();
+            while (existingItemIterator.hasNext()) {
+                InvoiceItem existingItem = existingItemIterator.next();
+                if (existingItem.equals(proposedItem)) {
+                    existingItemIterator.remove();
+                    proposedItemIterator.remove();
+                }
             }
+//            if (existingInvoiceItems.contains(proposedItem)) {
+//                existingInvoiceItems.remove(proposedItem);
+//                proposedItemIterator.remove();
+//            }
         }
     }
 

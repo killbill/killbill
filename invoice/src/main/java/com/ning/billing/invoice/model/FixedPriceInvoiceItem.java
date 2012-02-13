@@ -107,10 +107,10 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
 
         FixedPriceInvoiceItem that = (FixedPriceInvoiceItem) o;
 
-        if (amount != null ? !amount.equals(that.amount) : that.amount != null) return false;
+        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) return false;
         if (currency != that.currency) return false;
-        if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) return false;
-        if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) return false;
+        if (startDate != null ? startDate.compareTo(that.startDate) != 0 : that.startDate != null) return false;
+        if (endDate != null ? endDate.compareTo(that.endDate) != 0 : that.endDate != null) return false;
         if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) return false;
         if (planName != null ? !planName.equals(that.planName) : that.planName != null) return false;
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null)
