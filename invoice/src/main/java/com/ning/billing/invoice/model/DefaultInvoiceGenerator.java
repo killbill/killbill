@@ -150,35 +150,37 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
             BillingMode billingMode = instantiateBillingMode(thisEvent.getBillingMode());
             DateTime startDate = thisEvent.getEffectiveDate();
-            DateTime endDate = (nextEvent == null) ? null : nextEvent.getEffectiveDate();
-            int billCycleDay = thisEvent.getBillCycleDay();
+            if (!startDate.isAfter(targetDate)) {
+                DateTime endDate = (nextEvent == null) ? null : nextEvent.getEffectiveDate();
+                int billCycleDay = thisEvent.getBillCycleDay();
 
-            List<RecurringInvoiceItemData> itemData;
-            try {
-                itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, billCycleDay, billingPeriod);
-            } catch (InvalidDateSequenceException e) {
-                throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
-            }
+                List<RecurringInvoiceItemData> itemData;
+                try {
+                    itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, billCycleDay, billingPeriod);
+                } catch (InvalidDateSequenceException e) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
+                }
 
-            for (RecurringInvoiceItemData itemDatum : itemData) {
-                InternationalPrice price = thisEvent.getRecurringPrice();
-                if (price != null) {
-                    BigDecimal rate;
+                for (RecurringInvoiceItemData itemDatum : itemData) {
+                    InternationalPrice price = thisEvent.getRecurringPrice();
+                    if (price != null) {
+                        BigDecimal rate;
 
-                    try {
-                        rate = thisEvent.getRecurringPrice().getPrice(currency);
-                    } catch (CatalogApiException e) {
-                        throw new InvoiceApiException(e, ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency.toString());
+                        try {
+                            rate = thisEvent.getRecurringPrice().getPrice(currency);
+                        } catch (CatalogApiException e) {
+                            throw new InvoiceApiException(e, ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency.toString());
+                        }
+
+                        BigDecimal amount = itemDatum.getNumberOfCycles().multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
+
+                        RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
+                                                                                      thisEvent.getPlan().getName(),
+                                                                                      thisEvent.getPlanPhase().getName(),
+                                                                                      itemDatum.getStartDate(), itemDatum.getEndDate(),
+                                                                                      amount, rate, currency);
+                        items.add(recurringItem);
                     }
-
-                    BigDecimal amount = itemDatum.getNumberOfCycles().multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
-
-                    RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
-                                                                                  thisEvent.getPlan().getName(),
-                                                                                  thisEvent.getPlanPhase().getName(),
-                                                                                  itemDatum.getStartDate(), itemDatum.getEndDate(),
-                                                                                  amount, rate, currency);
-                    items.add(recurringItem);
                 }
             }
         }

@@ -185,12 +185,12 @@ public class TestBasic {
         testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
         testBasePlanComplete(clock.getUTCNow().plusDays(30).getDayOfMonth());
     }
@@ -200,10 +200,10 @@ public class TestBasic {
         testBasePlanComplete(clock.getUTCNow().plusDays(1).getDayOfMonth());
     }
 
-
-    private void waitForDebug() throws Exception {
-        Thread.sleep(600000);
-    }
+//
+//    private void waitForDebug() throws Exception {
+//        Thread.sleep(600000);
+//    }
 
 
     @Test(groups = "stress", enabled = false)
@@ -240,7 +240,7 @@ public class TestBasic {
         assertNotNull(subscription);
 
 
-        waitForDebug();
+        //waitForDebug();
 
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed first busHandler checkpoint.");
