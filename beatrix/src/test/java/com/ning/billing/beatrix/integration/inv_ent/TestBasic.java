@@ -154,7 +154,8 @@ public class TestBasic {
                 h.execute("truncate table notifications");
                 h.execute("truncate table claimed_notifications");
                 h.execute("truncate table invoices");
-                h.execute("truncate table invoice_items");
+                h.execute("truncate table fixed_invoice_items");
+                h.execute("truncate table recurring_invoice_items");
                 h.execute("truncate table tag_definitions");
                 h.execute("truncate table tags");
                 return null;

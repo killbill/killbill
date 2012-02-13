@@ -23,17 +23,8 @@ import org.joda.time.DateTime;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public class RecurringInvoiceItem implements InvoiceItem {
-    private final UUID id;
-    private final UUID invoiceId;
-    private final UUID subscriptionId;
-    private final String planName;
-    private final String phaseName;
-    private DateTime startDate;
-    private DateTime endDate;
-    private BigDecimal amount;
+public class RecurringInvoiceItem extends InvoiceItemBase {
     private final BigDecimal rate;
-    private final Currency currency;
     private final UUID reversedItemId;
 
     public RecurringInvoiceItem(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
@@ -56,16 +47,9 @@ public class RecurringInvoiceItem implements InvoiceItem {
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
                                 Currency currency) {
-        this.id = id;
-        this.invoiceId = invoiceId;
-        this.subscriptionId = subscriptionId;
-        this.planName = planName;
-        this.phaseName = phaseName;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.amount = amount;
+        super(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
+
         this.rate = rate;
-        this.currency = currency;
         this.reversedItemId = null;
     }
 
@@ -73,16 +57,9 @@ public class RecurringInvoiceItem implements InvoiceItem {
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
                                 Currency currency, UUID reversedItemId) {
-        this.id = id;
-        this.invoiceId = invoiceId;
-        this.subscriptionId = subscriptionId;
-        this.planName = planName;
-        this.phaseName = phaseName;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.amount = amount;
+        super(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
+
         this.rate = rate;
-        this.currency = currency;
         this.reversedItemId = reversedItemId;
     }
 
@@ -94,46 +71,8 @@ public class RecurringInvoiceItem implements InvoiceItem {
     }
 
     @Override
-    public UUID getId() {
-        return id;
-    }
-
-    @Override
-    public UUID getInvoiceId() {
-        return invoiceId;
-    }
-
-    @Override
-    public UUID getSubscriptionId() {
-        return subscriptionId;
-    }
-
-    @Override
-    public String getPlanName() {
-        return planName;
-    }
-
-    @Override
-    public String getPhaseName() {
-        return phaseName;
-    }
-
-    @Override
     public String getDescription() {
         return String.format("%s from %s to %s", phaseName, startDate.toString(), endDate.toString());
-    }
-
-    public DateTime getStartDate() {
-        return startDate;
-    }
-
-    public DateTime getEndDate() {
-        return endDate;
-    }
-
-    @Override
-    public BigDecimal getAmount() {
-        return amount;
     }
 
     public UUID getReversedItemId() {
@@ -146,11 +85,6 @@ public class RecurringInvoiceItem implements InvoiceItem {
 
     public BigDecimal getRate() {
         return rate;
-    }
-
-    @Override
-    public Currency getCurrency() {
-        return currency;
     }
 
     @Override
@@ -212,34 +146,43 @@ public class RecurringInvoiceItem implements InvoiceItem {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
-        sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
-        sb.append("subscriptionId = ").append(subscriptionId.toString()).append(", ");
-        sb.append("planName = ").append(planName).append(", ");
-        sb.append("phaseName = ").append(phaseName).append(", ");
-        sb.append("startDate = ").append(startDate.toString()).append(", ");
-        if (endDate != null) {
-            sb.append("endDate = ").append(endDate.toString()).append(", ");
-        } else {
-            sb.append("endDate = null");
-        }
-        sb.append("recurringAmount = ");
-        if (amount == null) {
-            sb.append("null");
-        } else {
-            sb.append(amount.toString());
-        }
-        sb.append(", ");
 
-        sb.append("recurringRate = ");
-        if (rate == null) {
-            sb.append("null");
-        } else {
-            sb.append(rate.toString());
-        }
-        sb.append(", ");
+        sb.append(phaseName).append(", ");
+        sb.append(startDate.toString()).append(", ");
+        sb.append(endDate.toString()).append(", ");
+        sb.append(amount.toString()).append(", ");
 
-        sb.append("}");
         return sb.toString();
+
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
+//        sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
+//        sb.append("subscriptionId = ").append(subscriptionId.toString()).append(", ");
+//        sb.append("planName = ").append(planName).append(", ");
+//        sb.append("phaseName = ").append(phaseName).append(", ");
+//        sb.append("startDate = ").append(startDate.toString()).append(", ");
+//        if (endDate != null) {
+//            sb.append("endDate = ").append(endDate.toString()).append(", ");
+//        } else {
+//            sb.append("endDate = null");
+//        }
+//        sb.append("recurringAmount = ");
+//        if (amount == null) {
+//            sb.append("null");
+//        } else {
+//            sb.append(amount.toString());
+//        }
+//        sb.append(", ");
+//
+//        sb.append("recurringRate = ");
+//        if (rate == null) {
+//            sb.append("null");
+//        } else {
+//            sb.append(rate.toString());
+//        }
+//        sb.append(", ");
+//
+//        sb.append("}");
+//        return sb.toString();
     }
 }

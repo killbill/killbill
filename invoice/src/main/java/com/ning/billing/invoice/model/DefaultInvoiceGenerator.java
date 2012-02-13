@@ -18,7 +18,6 @@ package com.ning.billing.invoice.model;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +26,7 @@ import java.util.UUID;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -35,7 +35,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import org.joda.time.MutableDateTime;
 
 import javax.annotation.Nullable;
 
@@ -54,7 +53,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         Collections.sort(events);
 
-        List<InvoiceItem> existingItems = null;
+        List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         if (items != null) {
             existingItems = new ArrayList<InvoiceItem>(items);
             Collections.sort(existingItems);
@@ -205,10 +204,12 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
             if (thisEvent.getFixedPrice() != null) {
                 try {
+                    Duration duration = thisEvent.getPlanPhase().getDuration();
+                    DateTime endDate = duration.addToDateTime(thisEvent.getEffectiveDate());
                     BigDecimal fixedPrice = thisEvent.getFixedPrice().getPrice(currency);
                     fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
                                                                       thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
-                                                                      thisEvent.getEffectiveDate(), fixedPrice, currency);
+                                                                      thisEvent.getEffectiveDate(), endDate, fixedPrice, currency);
                 } catch (CatalogApiException e) {
                     throw new InvoiceApiException(e, ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency.toString());
                 }
@@ -218,33 +219,33 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-    // assumption: startDate is in the user's time zone
-    private DateTime calculateSegmentEndDate(final DateTime startDate, final DateTime nextEndDate,
-                                             final int billCycleDay, final BillingPeriod billingPeriod) {
-        int dayOfMonth = startDate.getDayOfMonth();
-        int maxDayOfMonth = startDate.dayOfMonth().getMaximumValue();
-
-        DateTime nextBillingDate;
-
-        // if the start date is not on the bill cycle day, move it to the nearest following date that works
-        if ((billCycleDay > maxDayOfMonth) || (dayOfMonth == billCycleDay)) {
-            nextBillingDate = startDate.plusMonths(billingPeriod.getNumberOfMonths());
-        } else {
-            MutableDateTime proposedDate = startDate.toMutableDateTime();
-
-            if (dayOfMonth < billCycleDay) {
-                // move the end date forward to the bill cycle date (same month)
-                int effectiveBillCycleDay = (billCycleDay > maxDayOfMonth) ? maxDayOfMonth : billCycleDay;
-                nextBillingDate = proposedDate.dayOfMonth().set(effectiveBillCycleDay).toDateTime();
-            } else {
-                // go to the next month
-                proposedDate = proposedDate.monthOfYear().add(1);
-                maxDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
-                int effectiveBillCycleDay = (billCycleDay > maxDayOfMonth) ? maxDayOfMonth : billCycleDay;
-                nextBillingDate = proposedDate.dayOfMonth().set(effectiveBillCycleDay).toDateTime();
-            }
-        }
-
-        return nextBillingDate.isAfter(nextEndDate) ? nextEndDate : nextBillingDate;
-    }
+//    // assumption: startDate is in the user's time zone
+//    private DateTime calculateSegmentEndDate(final DateTime startDate, final DateTime nextEndDate,
+//                                             final int billCycleDay, final BillingPeriod billingPeriod) {
+//        int dayOfMonth = startDate.getDayOfMonth();
+//        int maxDayOfMonth = startDate.dayOfMonth().getMaximumValue();
+//
+//        DateTime nextBillingDate;
+//
+//        // if the start date is not on the bill cycle day, move it to the nearest following date that works
+//        if ((billCycleDay > maxDayOfMonth) || (dayOfMonth == billCycleDay)) {
+//            nextBillingDate = startDate.plusMonths(billingPeriod.getNumberOfMonths());
+//        } else {
+//            MutableDateTime proposedDate = startDate.toMutableDateTime();
+//
+//            if (dayOfMonth < billCycleDay) {
+//                // move the end date forward to the bill cycle date (same month)
+//                int effectiveBillCycleDay = (billCycleDay > maxDayOfMonth) ? maxDayOfMonth : billCycleDay;
+//                nextBillingDate = proposedDate.dayOfMonth().set(effectiveBillCycleDay).toDateTime();
+//            } else {
+//                // go to the next month
+//                proposedDate = proposedDate.monthOfYear().add(1);
+//                maxDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
+//                int effectiveBillCycleDay = (billCycleDay > maxDayOfMonth) ? maxDayOfMonth : billCycleDay;
+//                nextBillingDate = proposedDate.dayOfMonth().set(effectiveBillCycleDay).toDateTime();
+//            }
+//        }
+//
+//        return nextBillingDate.isAfter(nextEndDate) ? nextEndDate : nextBillingDate;
+//    }
 }

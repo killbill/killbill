@@ -68,7 +68,8 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                         q.bind("subscriptionId", item.getSubscriptionId().toString());
                         q.bind("planName", item.getPlanName());
                         q.bind("phaseName", item.getPhaseName());
-                        q.bind("date", item.getDate().toDate());
+                        q.bind("startDate", item.getStartDate().toDate());
+                        q.bind("endDate", item.getEndDate().toDate());
                         q.bind("amount", item.getAmount());
                         q.bind("currency", item.getCurrency().toString());
                     }
@@ -85,12 +86,13 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
             String planName = result.getString("plan_name");
             String phaseName = result.getString("phase_name");
-            DateTime date = new DateTime(result.getTimestamp("date"));
+            DateTime startDate = new DateTime(result.getTimestamp("start_date"));
+            DateTime endDate = new DateTime(result.getTimestamp("end_date"));
             BigDecimal amount = result.getBigDecimal("amount");
             Currency currency = Currency.valueOf(result.getString("currency"));
 
-            return new FixedPriceInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName, date,
-                                            amount, currency);
+            return new FixedPriceInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName,
+                                            startDate, endDate, amount, currency);
         }
     }
 }

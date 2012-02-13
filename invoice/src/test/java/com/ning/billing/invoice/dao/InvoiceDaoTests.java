@@ -648,4 +648,80 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         assertEquals(savedInvoice.getNumberOfItems(), 2);
         assertEquals(savedInvoice.getTotalAmount().compareTo(cheapAmount), 0);
     }
+
+//    @Test
+//    public void testCancellationWithMultipleBillingPeriodsFollowing() throws InvoiceApiException {
+//        UUID accountId = UUID.randomUUID();
+//
+//        BigDecimal fixedValue = FIVE;
+//        DefaultPrice fixedAmount = new DefaultPrice(fixedValue, Currency.USD);
+//        MockInternationalPrice fixedPrice = new MockInternationalPrice(fixedAmount);
+//        MockPlanPhase plan1phase1 = new MockPlanPhase(null, fixedPrice);
+//
+//        BigDecimal trialValue = new BigDecimal("9.95");
+//        DefaultPrice trialAmount = new DefaultPrice(trialValue, Currency.USD);
+//        MockInternationalPrice trialPrice = new MockInternationalPrice(trialAmount);
+//        MockPlanPhase plan2phase1 = new MockPlanPhase(trialPrice, null);
+//
+//        BigDecimal discountValue = new BigDecimal("24.95");
+//        DefaultPrice discountAmount = new DefaultPrice(discountValue, Currency.USD);
+//        MockInternationalPrice discountPrice = new MockInternationalPrice(discountAmount);
+//        MockPlanPhase plan2phase2 = new MockPlanPhase(discountPrice, null);
+//
+//        MockPlan plan1 = new MockPlan();
+//        MockPlan plan2 = new MockPlan();
+//        Subscription subscription = new MockSubscription();
+//        DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
+//
+//        BillingEvent creationEvent = new DefaultBillingEvent(subscription, effectiveDate1, plan1, plan1phase1, fixedPrice,
+//                                                     null, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+//                                                     "trial", SubscriptionTransitionType.CREATE);
+//        BillingEventSet events = new BillingEventSet();
+//        events.add(creationEvent);
+//
+//        InvoiceGenerator generator = new DefaultInvoiceGenerator();
+//        InvoiceItemList existingItems;
+//
+//        existingItems = new InvoiceItemList(invoiceDao.getInvoiceItemsByAccount(accountId));
+//        Invoice invoice1 = generator.generateInvoice(accountId, events, existingItems, effectiveDate1, Currency.USD);
+//
+//        assertNotNull(invoice1);
+//        assertEquals(invoice1.getNumberOfItems(), 1);
+//        assertEquals(invoice1.getTotalAmount().compareTo(fixedValue), 0);
+//        invoiceDao.create(invoice1);
+//
+//        DateTime effectiveDate2 = effectiveDate1.plusSeconds(1);
+//        BillingEvent changeEvent = new DefaultBillingEvent(subscription, effectiveDate2, plan2, plan2phase1, null,
+//                                                     trialPrice, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+//                                                     "discount", SubscriptionTransitionType.CHANGE);
+//        events.add(changeEvent);
+//
+//        existingItems = new InvoiceItemList(invoiceDao.getInvoiceItemsByAccount(accountId));
+//        Invoice invoice2 = generator.generateInvoice(accountId, events, existingItems, effectiveDate2, Currency.USD);
+//        assertNotNull(invoice2);
+//        assertEquals(invoice2.getNumberOfItems(), 2);
+//        assertEquals(invoice2.getTotalAmount().compareTo(trialValue), 0);
+//        invoiceDao.create(invoice2);
+//
+//        DateTime effectiveDate3 = effectiveDate2.plusMonths(1);
+//        BillingEvent phaseEvent = new DefaultBillingEvent(subscription, effectiveDate3, plan2, plan2phase2, null,
+//                                                     discountPrice, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+//                                                     "discount", SubscriptionTransitionType.PHASE);
+//        events.add(phaseEvent);
+//
+//        existingItems = new InvoiceItemList(invoiceDao.getInvoiceItemsByAccount(accountId));
+//        Invoice invoice3 = generator.generateInvoice(accountId, events, existingItems, effectiveDate3, Currency.USD);
+//        assertNotNull(invoice3);
+//        assertEquals(invoice3.getNumberOfItems(), 1);
+//        assertEquals(invoice3.getTotalAmount().compareTo(discountValue), 0);
+//        invoiceDao.create(invoice3);
+//
+//        DateTime effectiveDate4 = effectiveDate3.plusMonths(1);
+//        existingItems = new InvoiceItemList(invoiceDao.getInvoiceItemsByAccount(accountId));
+//        Invoice invoice4 = generator.generateInvoice(accountId, events, existingItems, effectiveDate4, Currency.USD);
+//        assertNotNull(invoice4);
+//        assertEquals(invoice4.getNumberOfItems(), 1);
+//        assertEquals(invoice4.getTotalAmount().compareTo(discountValue), 0);
+//        invoiceDao.create(invoice4);
+//    }
 }

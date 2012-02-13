@@ -24,7 +24,8 @@ CREATE TABLE fixed_invoice_items (
   subscription_id char(36) NOT NULL,
   plan_name varchar(50) NOT NULL,
   phase_name varchar(50) NOT NULL,
-  date datetime NOT NULL,
+  start_date datetime NOT NULL,
+  end_date datetime NOT NULL,
   amount numeric(10,4) NULL,
   currency char(3) NOT NULL,
   PRIMARY KEY(id)

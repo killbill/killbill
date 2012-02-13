@@ -22,7 +22,6 @@ import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -54,7 +53,6 @@ import java.util.UUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.fail;
 
 @Test(groups = {"fast", "invoicing", "invoiceGenerator"})
 public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
@@ -487,7 +485,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
         FixedPriceInvoiceItem item = (FixedPriceInvoiceItem) invoice2.getInvoiceItems().get(0);
-        assertEquals(item.getDate().compareTo(changeDate), 0);
+        assertEquals(item.getStartDate().compareTo(changeDate), 0);
    }
 
     @Test
@@ -575,7 +573,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
                                  null, BillingPeriod.MONTHLY, phaseType);
     }
 
-    private MockPlanPhase createMockMonthlyPlanPhase(final BigDecimal recurringRate, final BigDecimal fixedCost,
+    private MockPlanPhase createMockMonthlyPlanPhase(@Nullable BigDecimal recurringRate, final BigDecimal fixedCost,
                                                      final PhaseType phaseType) {
         MockInternationalPrice recurringPrice = (recurringRate == null) ? null : new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD));
         MockInternationalPrice fixedPrice = (fixedCost == null) ? null : new MockInternationalPrice(new DefaultPrice(fixedCost, Currency.USD));

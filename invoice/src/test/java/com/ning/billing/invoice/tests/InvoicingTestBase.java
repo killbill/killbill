@@ -17,7 +17,6 @@
 package com.ning.billing.invoice.tests;
 
 
-import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import org.joda.time.DateTime;
 

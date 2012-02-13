@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.globalLocker;
+package com.ning.billing.util.globallocker;
 
 public class MockGlobalLocker implements GlobalLocker {
 

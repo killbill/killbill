@@ -80,9 +80,12 @@ public class InAdvanceBillingMode implements BillingMode {
     public List<RecurringInvoiceItemData> calculateInvoiceItemData(final DateTime startDate,
                                                                    final DateTime targetDate, final int billingCycleDay,
                                                                    final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
-        if (targetDate.isBefore(startDate)) {throw new InvalidDateSequenceException();}
-
         List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
+
+        if (targetDate.isBefore(startDate)) {
+            // since the target date is before the start date of the event, this should result in no items being generated
+            throw new InvalidDateSequenceException();
+        }
 
         // beginning from the start date, find the first billing date
         DateTime firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
