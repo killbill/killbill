@@ -25,7 +25,6 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
@@ -185,7 +184,7 @@ public class TestBasic {
         testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
     }
@@ -197,13 +196,13 @@ public class TestBasic {
 
     @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().plusDays(1).getDayOfMonth());
+        testBasePlanComplete(clock.getUTCNow().plusDays(2).getDayOfMonth());
     }
 
-//
-//    private void waitForDebug() throws Exception {
-//        Thread.sleep(600000);
-//    }
+
+    private void waitForDebug() throws Exception {
+        Thread.sleep(600000);
+    }
 
 
     @Test(groups = "stress", enabled = false)
@@ -278,8 +277,6 @@ public class TestBasic {
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
 
-        //waitForDebug();
-
         assertTrue(busHandler.isCompleted(DELAY));
 
         //
@@ -300,6 +297,9 @@ public class TestBasic {
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         //clock.addDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
+
+        //waitForDebug();
+
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed fourth busHandler checkpoint.");
 
