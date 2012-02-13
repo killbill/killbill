@@ -21,6 +21,7 @@ import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
 
+
 public class InvoiceModuleWithMocks extends InvoiceModule {
     @Override
     protected void installInvoiceDao() {

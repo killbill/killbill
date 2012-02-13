@@ -32,6 +32,10 @@ import org.testng.annotations.Test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.globallocker.GlobalLock;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.LockFailedException;
+import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
 
 @Guice(modules=TestMysqlGlobalLocker.TestMysqlGlobalLockerModule.class)

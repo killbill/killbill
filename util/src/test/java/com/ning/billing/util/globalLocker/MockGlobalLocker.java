@@ -16,6 +16,9 @@
 
 package com.ning.billing.util.globallocker;
 
+import com.ning.billing.util.globallocker.GlobalLock;
+import com.ning.billing.util.globallocker.GlobalLocker;
+
 public class MockGlobalLocker implements GlobalLocker {
 
     @Override

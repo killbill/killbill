@@ -190,7 +190,7 @@ public class TestBasic {
         testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
         testBasePlanComplete(clock.getUTCNow().plusDays(30).getDayOfMonth());
     }
@@ -238,6 +238,10 @@ public class TestBasic {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
         assertNotNull(subscription);
+
+
+        waitForDebug();
+
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed first busHandler checkpoint.");
 
