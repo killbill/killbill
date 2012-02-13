@@ -23,6 +23,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 
@@ -62,6 +63,13 @@ public class BrainDeadAccountUserApi implements AccountUserApi {
 
 	@Override
 	public void deleteAccountByKey(String externalKey)
+			throws AccountApiException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Account migrateAccount(MigrationAccountData data,
+			List<CustomField> fields, List<Tag> tags)
 			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}

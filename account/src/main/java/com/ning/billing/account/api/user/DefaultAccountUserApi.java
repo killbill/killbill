@@ -24,6 +24,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
@@ -77,5 +78,18 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 	@Override
 	public void deleteAccountByKey(String externalKey) throws AccountApiException {
 		dao.deleteByKey(externalKey);
+	}
+
+	@Override
+	public Account migrateAccount(MigrationAccountData data,
+			List<CustomField> fields, List<Tag> tags)
+			throws AccountApiException {
+		
+		Account account = new DefaultAccount(data);
+        account.addFields(fields);
+        account.addTags(tags);
+
+        dao.create(account);
+        return account;
 	}
 }

@@ -20,9 +20,11 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
@@ -76,6 +78,13 @@ public class MockIAccountUserApi implements AccountUserApi
 
 	@Override
 	public void deleteAccountByKey(String externalKey) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Account migrateAccount(MigrationAccountData data,
+			List<CustomField> fields, List<Tag> tags)
+			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}
 }
