@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
@@ -72,6 +73,16 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 
     @Override
     public void updateAccount(final Account account) throws AccountApiException {
+        dao.update(account);
+    }
+
+    @Override
+    public void updateAccount(final String externalKey, final AccountData accountData) throws AccountApiException {
+    	UUID accountId = getIdFromKey(externalKey);
+    	if(accountId == null) {
+    		throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
+    	}
+    	Account account = new DefaultAccount(accountId, accountData);
         dao.update(account);
     }
 

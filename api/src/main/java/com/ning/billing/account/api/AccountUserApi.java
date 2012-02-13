@@ -34,6 +34,8 @@ public interface AccountUserApi {
      */
     public void updateAccount(Account account) throws AccountApiException;
 
+    public void updateAccount(String key, AccountData accountData) throws AccountApiException;
+
     public Account getAccountByKey(String key);
 
     public Account getAccountById(UUID accountId);

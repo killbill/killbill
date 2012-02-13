@@ -87,4 +87,10 @@ public class MockIAccountUserApi implements AccountUserApi
 			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void updateAccount(String key, AccountData accountData)
+			throws AccountApiException {
+		throw new UnsupportedOperationException();
+	}
 }

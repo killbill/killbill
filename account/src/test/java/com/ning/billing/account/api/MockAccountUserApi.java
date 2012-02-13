@@ -126,4 +126,10 @@ public class MockAccountUserApi implements AccountUserApi {
         accounts.add(result);
         return result;
 	}
+
+	@Override
+	public void updateAccount(String key, AccountData accountData)
+			throws AccountApiException {
+		throw new UnsupportedOperationException();
+	}
 }

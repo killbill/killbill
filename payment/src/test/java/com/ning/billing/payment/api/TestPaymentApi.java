@@ -154,7 +154,7 @@ public abstract class TestPaymentApi {
                                                                   .billingCycleDay(account.getBillCycleDay())
                                                                   .build();
 
-        Either<PaymentError, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(accountToUpdate);
+        Either<PaymentError, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(accountToUpdate.getExternalKey());
         assertTrue(voidOrError.isRight());
     }
 
