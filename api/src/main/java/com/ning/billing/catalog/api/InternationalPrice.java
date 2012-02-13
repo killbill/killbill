@@ -25,4 +25,6 @@ public interface InternationalPrice {
 
 	public abstract BigDecimal getPrice(Currency currency) throws CatalogApiException;
 
+	public abstract boolean isZero();
+
 }

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.beatrix.integration.inv_ent;
+package com.ning.billing.beatrix.integration;
 
 import java.util.Iterator;
 import java.util.List;
@@ -22,11 +22,14 @@ import java.util.Stack;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.payment.api.PaymentError;
+import com.ning.billing.payment.api.PaymentInfo;
 
 public class TestBusHandler {
 
@@ -50,7 +53,8 @@ public class TestBusHandler {
         PAUSE,
         RESUME,
         PHASE,
-        INVOICE
+        INVOICE,
+        PAYMENT
     }
 
     @Subscribe
@@ -105,6 +109,19 @@ public class TestBusHandler {
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
 
+    }
+
+    @Subscribe
+    public void handlePaymentEvents(PaymentInfo event) {
+        log.info(String.format("TestBusHandler Got PaymentInfo event %s", event.toString()));
+        assertEqualsNicely(NextEvent.PAYMENT);
+        notifyIfStackEmpty();
+    }
+
+    @Subscribe
+    public void handlePaymentErrorEvents(PaymentError event) {
+        log.info(String.format("TestBusHandler Got PaymentError event %s", event.toString()));
+        Assert.fail("Unexpected payment failure");
     }
 
     public void reset() {
@@ -163,7 +180,7 @@ public class TestBusHandler {
         if (!foundIt) {
             Joiner joiner = Joiner.on(" ");
             log.error("TestBusHandler Received event " + received + "; expected " + joiner.join(nextExpectedEvent));
-            // System.exit(1);
+            Assert.fail();
         }
     }
 }
