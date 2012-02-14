@@ -36,6 +36,7 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
@@ -66,9 +67,19 @@ public class MockModule extends AbstractModule {
         bind(Clock.class).to(ClockMock.class).asEagerSingleton();
         bind(ClockMock.class).asEagerSingleton();
         bind(Lifecycle.class).to(SubsetDefaultLifecycle.class).asEagerSingleton();
-        bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-        final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-        bind(DbiConfig.class).toInstance(config);
+
+
+        final MysqlTestingHelper helper = new MysqlTestingHelper();
+        bind(MysqlTestingHelper.class).toInstance(helper);
+        if (helper.isUsingLocalInstance()) {
+            bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
+            final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
+            bind(DbiConfig.class).toInstance(config);
+        } else {
+            final IDBI dbi = helper.getDBI();
+            bind(IDBI.class).toInstance(dbi);
+        }
+
         install(new GlobalLockerModule());
         install(new BusModule());
         install(new NotificationQueueModule());
