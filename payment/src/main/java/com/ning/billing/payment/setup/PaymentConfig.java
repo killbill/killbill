@@ -17,10 +17,29 @@
 package com.ning.billing.payment.setup;
 
 import org.skife.config.Config;
+import org.skife.config.Default;
 import org.skife.config.DefaultNull;
 
-public interface PaymentConfig {
+import com.ning.billing.util.notificationq.NotificationConfig;
+
+public interface PaymentConfig extends NotificationConfig {
     @Config("killbill.payment.provider.default")
     @DefaultNull
     public String getDefaultPaymentProvider();
+
+    @Config("killbill.payment.dao.claim.time")
+    @Default("60000")
+    public long getDaoClaimTimeMs();
+
+    @Config("killbill.payment.dao.ready.max")
+    @Default("10")
+    public int getDaoMaxReadyEvents();
+
+    @Config("killbill.payment.engine.notifications.sleep")
+    @Default("500")
+    public long getNotificationSleepTimeMs();
+
+    @Config("killbill.payment.engine.events.off")
+    @Default("false")
+    public boolean isNotificationProcessingOff();
 }

@@ -18,7 +18,6 @@ package com.ning.billing.payment;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -90,23 +89,5 @@ public class TestPaymentProvider {
         assertFalse(paymentInfoReceiver.getProcessedPayments().isEmpty());
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
 
-        final PaymentInfo paymentInfo = paymentInfoReceiver.getProcessedPayments().get(0);
-        final PaymentInfoRequest paymentInfoRequest = new PaymentInfoRequest(account.getId(), paymentInfo.getPaymentId());
-
-        paymentInfoReceiver.clear();
-        eventBus.post(paymentInfoRequest);
-        await().atMost(5, MINUTES).until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                List<PaymentInfo> processedPayments = paymentInfoReceiver.getProcessedPayments();
-                List<PaymentError> errors = paymentInfoReceiver.getErrors();
-
-                return processedPayments.size() == 1 || errors.size() == 1;
-            }
-        });
-
-        assertFalse(paymentInfoReceiver.getProcessedPayments().isEmpty());
-        assertTrue(paymentInfoReceiver.getErrors().isEmpty());
-        assertEquals(paymentInfoReceiver.getProcessedPayments().get(0), paymentInfo);
     }
 }
