@@ -20,6 +20,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 
@@ -44,8 +45,8 @@ public class DefaultInvoice implements Invoice {
     private final DateTime targetDate;
     private final Currency currency;
 
-    public DefaultInvoice(UUID accountId, DateTime targetDate, Currency currency) {
-        this(UUID.randomUUID(), accountId, new DefaultClock().getUTCNow(), targetDate, currency);
+    public DefaultInvoice(UUID accountId, DateTime targetDate, Currency currency, Clock clock) {
+        this(UUID.randomUUID(), accountId, clock.getUTCNow(), targetDate, currency);
     }
 
     public DefaultInvoice(UUID invoiceId, UUID accountId, DateTime invoiceDate, DateTime targetDate,

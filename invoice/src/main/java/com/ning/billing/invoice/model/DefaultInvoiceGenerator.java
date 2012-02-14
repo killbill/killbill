@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -35,6 +36,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.clock.Clock;
 
 import javax.annotation.Nullable;
 
@@ -42,6 +44,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     //private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceGenerator.class);
+
+    private final Clock clock;
+
+    @Inject
+    public DefaultInvoiceGenerator(Clock clock) {
+        this.clock = clock;
+    }
 
     @Override
     public Invoice generateInvoice(final UUID accountId, final BillingEventSet events,
@@ -59,7 +68,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             Collections.sort(existingItems);
         }
 
-        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, targetCurrency);
+        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, targetCurrency, clock);
         UUID invoiceId = invoice.getId();
         List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, events, targetDate, targetCurrency);
 

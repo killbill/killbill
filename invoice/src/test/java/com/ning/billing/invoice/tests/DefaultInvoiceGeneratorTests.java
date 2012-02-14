@@ -39,9 +39,12 @@ import com.ning.billing.invoice.dao.MockSubscription;
 import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceItemList;
+import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
+
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
@@ -56,7 +59,9 @@ import static org.testng.Assert.assertNull;
 
 @Test(groups = {"fast", "invoicing", "invoiceGenerator"})
 public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
-    private final InvoiceGenerator generator = new DefaultInvoiceGenerator();
+
+
+    private final InvoiceGenerator generator = new DefaultInvoiceGenerator(new DefaultClock());
 
     @Test
     public void testWithNullEventSetAndNullInvoiceSet() throws InvoiceApiException {
@@ -87,12 +92,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Plan plan = new MockPlan();
         BigDecimal rate1 = TEN;
         PlanPhase phase = createMockMonthlyPlanPhase(rate1);
-        
+
         BillingEvent event = createBillingEvent(sub.getId(), startDate, plan, phase, 1);
         events.add(event);
 
         InvoiceItemList existingInvoiceItems = new InvoiceItemList();
-        
+
         DateTime targetDate = buildDateTime(2011, 10, 3);
         UUID accountId = UUID.randomUUID();
         Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, targetDate, Currency.USD);
@@ -117,8 +122,8 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         events.add(event);
 
         InvoiceItemList existingInvoiceItems = new InvoiceItemList();
-        
-        DateTime targetDate = buildDateTime(2011, 10, 3);        
+
+        DateTime targetDate = buildDateTime(2011, 10, 3);
         UUID accountId = UUID.randomUUID();
         Invoice invoice = generator.generateInvoice(accountId, events, existingInvoiceItems, targetDate, Currency.USD);
 
@@ -142,7 +147,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Plan plan2 = new MockPlan();
         BigDecimal rate2 = TEN;
         PlanPhase phase2 = createMockMonthlyPlanPhase(rate2);
-        
+
         Subscription sub = new SubscriptionData(new SubscriptionBuilder().setId(UUID.randomUUID()));
 
         BillingEvent event1 = createBillingEvent(sub.getId(), buildDateTime(2011, 9, 1), plan1, phase1, 1);
@@ -241,7 +246,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Plan plan1 = new MockPlan();
         BigDecimal rate = FIVE;
         PlanPhase phase1 = createMockMonthlyPlanPhase(rate);
-        
+
         BillingEvent event1 = createBillingEvent(sub.getId(), startDate, plan1, phase1, 1);
         events.add(event1);
 
@@ -426,8 +431,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         DateTime targetDate = buildDateTime(2011, 1, 1);
         events.add(createBillingEvent(UUID.randomUUID(), targetDate, plan, planPhase, 1));
 
-        InvoiceGenerator invoiceGenerator = new DefaultInvoiceGenerator();
-        Invoice invoice = invoiceGenerator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
+        Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
 
         assertEquals(invoice.getNumberOfItems(), 1);
     }
@@ -440,8 +444,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         DateTime targetDate = new DateTime();
         events.add(createBillingEvent(UUID.randomUUID(), targetDate, plan, planPhase, targetDate.getDayOfMonth()));
 
-        InvoiceGenerator invoiceGenerator = new DefaultInvoiceGenerator();
-        Invoice invoice = invoiceGenerator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
+        Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
         RecurringInvoiceItem item = (RecurringInvoiceItem) invoice.getInvoiceItems().get(0);
 
         // end date of the invoice item should be equal to exactly one month later
@@ -610,4 +613,4 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     }
 
     // TODO: Jeff C -- how do we ensure that an annual add-on is properly aligned *at the end* with the base plan?
-}                      
+}

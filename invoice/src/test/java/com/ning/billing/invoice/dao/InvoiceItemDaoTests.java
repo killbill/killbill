@@ -20,6 +20,9 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
+
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
@@ -32,6 +35,9 @@ import static org.testng.Assert.assertNotNull;
 
 
 public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
+
+    private final Clock clock = new DefaultClock();
+
     @Test
     public void testInvoiceItemCreation() {
         UUID invoiceId = UUID.randomUUID();
@@ -92,7 +98,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
     public void testGetInvoiceItemsByAccountId() {
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 5, 23, 0, 0, 0, 0);
-        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD);
+        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD, clock);
 
         invoiceDao.create(invoice);
 
