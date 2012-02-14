@@ -35,6 +35,7 @@ import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InvalidConfigException;
@@ -53,14 +54,14 @@ public class TestVersionedCatalog {
 		vc = loader.load(Resources.getResource("versionedCatalog").toString());
 	}
 
-	@Test(enabled=true)
+	@Test(groups={"fast"},enabled=true)
 	public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException, CatalogApiException {
 		vc.add(new StandaloneCatalog(new Date()));
-		assertEquals(5, vc.size());
+		assertEquals(4, vc.size());
 	}
 	
 		
-	@Test(enabled=true)
+	@Test(groups={"fast"},enabled=true)
 	public void testFindPlanWithDates() throws Exception {
 		DateTime dt0= new DateTime("2010-01-01T00:00:00+00:00");
 		DateTime dt1 = new DateTime("2011-01-01T00:01:00+00:00");
@@ -97,6 +98,18 @@ public class TestVersionedCatalog {
 		Assert.assertEquals(exSubPlan214.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("2.0"));
 		Assert.assertEquals(exSubPlan3.getAllPhases()[1].getRecurringPrice().getPrice(Currency.USD), new BigDecimal("2.0"));
 
-		
+	}
+	
+	@Test(groups={"fast"},enabled=true)
+	public void testErrorOnDateTooEarly() {
+		DateTime dt0= new DateTime("1977-01-01T00:00:00+00:00");
+		try {
+			vc.findPlan("foo", dt0);
+			Assert.fail("Date is too early an exception should have been thrown");
+		} catch (CatalogApiException e) {
+			e.printStackTrace();
+			Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE.getCode());
+
+		}
 	}
 }
