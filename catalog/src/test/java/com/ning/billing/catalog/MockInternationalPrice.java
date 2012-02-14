@@ -19,17 +19,16 @@ package com.ning.billing.catalog;
 import com.ning.billing.catalog.api.Currency;
 
 import java.math.BigDecimal;
-import java.util.Date;
 
 public class MockInternationalPrice extends DefaultInternationalPrice {
-	
-	MockInternationalPrice() {
+
+	public MockInternationalPrice() {
 		setPrices(new DefaultPrice[] {
-			new DefaultPrice().setCurrency(Currency.USD).setValue(new BigDecimal(1))	
+			new DefaultPrice().setCurrency(Currency.USD).setValue(new BigDecimal(1))
 		});
 	}
-	
-	MockInternationalPrice(DefaultPrice... price) {
+
+	public MockInternationalPrice(DefaultPrice... price) {
 		setPrices(price);
 	}
 

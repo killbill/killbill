@@ -16,17 +16,14 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import java.math.BigDecimal;
-
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
@@ -93,19 +90,8 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      */
     public InternationalPrice getRecurringPrice();
 
-    /**
-     * Syntactic sugar to wrap currency access call
-     * 
-     * @param currency
-     * @return price value
-     */
-    public BigDecimal getRecurringPrice(Currency currency) throws CatalogApiException ;
-
-    /**
-     * Syntactic sugar to wrap currency access call
-     * 
-     * @param currency
-     * @return price value
-     */
-    public BigDecimal getFixedPrice(Currency currency) throws CatalogApiException ;
+	/**
+	 * @return the transition type of the underlying subscription event that triggered this
+	 */
+	public SubscriptionTransitionType getTransitionType();
 }

@@ -25,7 +25,6 @@ import com.ning.billing.account.api.DefaultAccountService;
 import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.DefaultAccountDao;
-import com.ning.billing.util.glue.ClockModule;
 
 public class AccountModule extends AbstractModule {
 
@@ -46,17 +45,11 @@ public class AccountModule extends AbstractModule {
         bind(AccountService.class).to(DefaultAccountService.class).asEagerSingleton();
     }
 
-    protected void installTestModules() {
-        install(new ClockModule());
-    }
-
-
     @Override
     protected void configure() {
         installConfig();
         installAccountDao();
         installAccountService();
         installAccountUserApi();
-        installTestModules();
     }
 }

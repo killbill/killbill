@@ -27,8 +27,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.eventbus.Subscribe;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.MemoryEventBus;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.InMemoryBus;
 
 @Test
 public class TestSyncWaitOnEventBus {
@@ -70,11 +70,11 @@ public class TestSyncWaitOnEventBus {
         }
     }
 
-    private EventBus eventBus;
+    private Bus eventBus;
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
-        eventBus = new MemoryEventBus();
+        eventBus = new InMemoryBus();
         eventBus.start();
         eventBus.register(new Object() {
             @Subscribe

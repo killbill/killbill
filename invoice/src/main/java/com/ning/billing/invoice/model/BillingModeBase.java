@@ -27,6 +27,10 @@ public abstract class BillingModeBase implements BillingMode {
         if (endDate.isBefore(startDate)) {throw new InvalidDateSequenceException();}
         if (targetDate.isBefore(startDate)) {throw new InvalidDateSequenceException();}
 
+        if (billingPeriod == BillingPeriod.NO_BILLING_PERIOD) {
+            return BigDecimal.ZERO;
+        }
+
         BigDecimal precedingProRation = calculateProRationBeforeFirstBillingPeriod(startDate, billingCycleDay, billingPeriod);
 
         DateTime firstBillCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
@@ -54,10 +58,6 @@ public abstract class BillingModeBase implements BillingMode {
         BigDecimal numberOfBillingPeriods = calculateNumberOfWholeBillingPeriods(firstBillCycleDate, endBillCycleDate, billingPeriod);
 
         return precedingProRation.add(numberOfBillingPeriods);
-    }
-
-    DateTime buildDate(final int year, final int month, final int day) {
-        return new DateTime(year, month, day, 0, 0, 0, 0);
     }
 
     boolean isNotBetween(DateTime targetDate, DateTime startDate, DateTime endDate) {

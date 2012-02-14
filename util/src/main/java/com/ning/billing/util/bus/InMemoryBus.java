@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.eventbus;
+package com.ning.billing.util.bus;
 
 import com.google.common.eventbus.AsyncEventBus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -26,16 +26,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MemoryEventBus implements EventBus {
+public class InMemoryBus implements Bus {
 
     // STEPH config ?
     private final static int MAX_EVENT_THREADS = 1;
 
-    private final static String EVENT_BUS_IDENTIFIER = "eventbus-service";
-    private final static String EVENT_BUS_GROUP_NAME = "eventbus-grp";
-    private final static String EVENT_BUS_TH_NAME = "eventbus-th";
+    private final static String EVENT_BUS_IDENTIFIER = "bus-service";
+    private final static String EVENT_BUS_GROUP_NAME = "bus-grp";
+    private final static String EVENT_BUS_TH_NAME = "bus-th";
 
-    private static final Logger log = LoggerFactory.getLogger(MemoryEventBus.class);
+    private static final Logger log = LoggerFactory.getLogger(InMemoryBus.class);
 
     private final EventBusDelegate delegate;
     private final AtomicBoolean isInitialized;
@@ -65,7 +65,7 @@ public class MemoryEventBus implements EventBus {
         }
     }
 
-    public MemoryEventBus() {
+    public InMemoryBus() {
 
         final ThreadGroup group = new ThreadGroup(EVENT_BUS_GROUP_NAME);
         Executor executor = Executors.newFixedThreadPool(MAX_EVENT_THREADS, new ThreadFactory() {
@@ -92,13 +92,13 @@ public class MemoryEventBus implements EventBus {
     }
 
     @Override
-    public void post(EventBusNotification event) throws EventBusException {
+    public void post(BusEvent event) throws EventBusException {
         checkInitialized("post");
         delegate.post(event);
     }
 
     @Override
-    public void postFromTransaction(EventBusNotification event, Transmogrifier dao) throws EventBusException {
+    public void postFromTransaction(BusEvent event, Transmogrifier dao) throws EventBusException {
         checkInitialized("postFromTransaction");
         delegate.post(event);
     }
@@ -106,24 +106,24 @@ public class MemoryEventBus implements EventBus {
     @Override
     public void start() {
         if (isInitialized.compareAndSet(false, true)) {
-            log.info("MemoryEventBus started...");
+            log.info("InMemoryBus started...");
 
         }
     }
 
     private void checkInitialized(String operation) throws EventBusException {
         if (!isInitialized.get()) {
-            throw new EventBusException(String.format("Attempting operation %s on an non initialized eventbus",
+            throw new EventBusException(String.format("Attempting operation %s on an non initialized bus",
                     operation));
         }
     }
     @Override
     public void stop() {
         if (isInitialized.compareAndSet(true, false)) {
-            log.info("MemoryEventBus stopping...");
+            log.info("InMemoryBus stopping...");
             delegate.completeDispatch();
             delegate.stop();
-            log.info("MemoryEventBus stopped...");
+            log.info("InMemoryBus stopped...");
         }
     }
 }

@@ -24,7 +24,7 @@ import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
 
-@Test(groups = {"invoicing", "proRation"})
+@Test(groups = {"fast", "invoicing", "proRation"})
 public class DoubleProRationTests extends ProRationInAdvanceTestBase {
     @Override
     protected BillingPeriod getBillingPeriod() {

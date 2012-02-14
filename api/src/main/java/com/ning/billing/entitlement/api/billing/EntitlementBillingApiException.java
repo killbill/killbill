@@ -16,25 +16,21 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-public class EntitlementBillingApiException extends Exception {
+import com.ning.billing.BillingExceptionBase;
+import com.ning.billing.ErrorCode;
 
+public class EntitlementBillingApiException extends BillingExceptionBase {
     private static final long serialVersionUID = 127392038L;
 
-    public EntitlementBillingApiException() {
-        super();
+    public EntitlementBillingApiException(Throwable cause, int code, final String msg) {
+        super(cause, code, msg);
     }
 
-    public EntitlementBillingApiException(String msg, Throwable arg1) {
-        super(msg, arg1);
+    public EntitlementBillingApiException(Throwable cause, ErrorCode code, final Object... args) {
+        super(cause, code, args);
     }
 
-    public EntitlementBillingApiException(String msg) {
-        super(msg);
+    public EntitlementBillingApiException(ErrorCode code, final Object... args) {
+        super(code, args);
     }
-
-    public EntitlementBillingApiException(Throwable msg) {
-        super(msg);
-    }
-
-
 }

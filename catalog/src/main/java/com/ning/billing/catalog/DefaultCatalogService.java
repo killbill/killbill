@@ -28,6 +28,7 @@ import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
 public class DefaultCatalogService implements KillbillService, Provider<Catalog>, CatalogService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DefaultCatalogService.class);
 
     private static final String CATALOG_SERVICE_NAME = "catalog-service";
 
@@ -54,7 +55,7 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
             	System.out.println("Really really::" + config.getCatalogURI());
             	String url = config.getCatalogURI();
             	catalog = loader.load(url);
-            	
+
                 //catalog = XMLLoader.getObjectFromProperty(config.getCatalogURI(), Catalog.class);
                 isInitialized = true;
             } catch (Exception e) {

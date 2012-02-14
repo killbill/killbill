@@ -16,23 +16,27 @@
 
 package com.ning.billing.invoice.api;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
-
 import org.joda.time.DateTime;
 
-import com.ning.billing.payment.api.InvoicePayment;
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 public interface InvoiceUserApi {
     public List<UUID> getInvoicesForPayment(DateTime targetDate, int numberOfDays);
 
     public List<Invoice> getInvoicesByAccount(UUID accountId);
 
+    public List<Invoice> getInvoicesByAccount(UUID accountId, DateTime fromDate);
+
+    public BigDecimal getAccountBalance(UUID accountId);
+
+    public List<InvoiceItem> getInvoiceItemsByAccount(UUID accountId);
+
     public Invoice getInvoice(UUID invoiceId);
 
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
 
-    public BigDecimal getAccountBalance(UUID accountId);
-
+    public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate);
 }

@@ -42,18 +42,17 @@ public interface NotificationQueue {
    public void processReadyNotification();
 
    /**
-    * Stops the queue.
+    * Stops the queue. Blocks until queue is completely stopped.
     *
     * @see NotificationQueueHandler.completedQueueStop to be notified when the notification thread exited
     */
    public void stopQueue();
 
    /**
-    * Starts the queue.
+    * Starts the queue. Blocks until queue has completely started.
     *
     * @see NotificationQueueHandler.completedQueueStart to be notified when the notification thread started
     */
    public void startQueue();
-
 
 }

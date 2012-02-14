@@ -23,9 +23,15 @@ import org.joda.time.DateTime;
 
 public interface Notification extends NotificationLifecycle {
 
-    public UUID getId();
+    public long getId();
+
+    public UUID getUUID();
 
     public String getNotificationKey();
 
     public DateTime getEffectiveDate();
+
+    public String getQueueName();
+
+
 }

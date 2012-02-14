@@ -16,36 +16,42 @@
 
 package com.ning.billing.invoice.dao;
 
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment;
+import org.joda.time.DateTime;
+
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.payment.api.InvoicePayment;
 
 public interface InvoiceDao {
     void create(Invoice invoice);
 
-    Invoice getById(final String id);
+    Invoice getById(final UUID id);
 
     List<Invoice> get();
 
-    List<Invoice> getInvoicesByAccount(final String accountId);
+    List<Invoice> getInvoicesByAccount(final UUID accountId);
 
-    List<Invoice> getInvoicesBySubscription(final String subscriptionId);
+    List<Invoice> getInvoicesByAccount(final UUID accountId, final DateTime fromDate);
 
-    List<UUID> getInvoicesForPayment(final Date targetDate,
+    List<InvoiceItem> getInvoiceItemsByAccount(final UUID accountId);
+
+    List<Invoice> getInvoicesBySubscription(final UUID subscriptionId);
+
+    List<UUID> getInvoicesForPayment(final DateTime targetDate,
                                      final int numberOfDays);
 
-    String getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId);
+    UUID getInvoiceIdByPaymentAttemptId(final UUID paymentAttemptId);
+
+    InvoicePayment getInvoicePayment(final UUID paymentAttemptId);
+
+    void notifyOfPaymentAttempt(final InvoicePayment invoicePayment);
+
+    BigDecimal getAccountBalance(final UUID accountId);
+
+    List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate);
 
     void test();
-
-    InvoicePayment getInvoicePayment(UUID paymentAttemptId);
-
-    void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
-
-    BigDecimal getAccountBalance(UUID accountId);
-
 }

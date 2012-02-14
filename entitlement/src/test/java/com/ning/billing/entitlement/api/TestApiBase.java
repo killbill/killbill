@@ -67,8 +67,8 @@ import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.EventBusService;
+import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.bus.BusService;
 
 
 public abstract class TestApiBase {
@@ -87,7 +87,7 @@ public abstract class TestApiBase {
     protected EntitlementConfig config;
     protected EntitlementDao dao;
     protected ClockMock clock;
-    protected EventBusService busService;
+    protected BusService busService;
 
     protected AccountData accountData;
     protected Catalog catalog;
@@ -109,8 +109,8 @@ public abstract class TestApiBase {
     @AfterClass(groups={"setup"})
     public void tearDown() {
         try {
-            busService.getEventBus().register(testListener);
-            ((DefaultEventBusService) busService).stopBus();
+            busService.getBus().register(testListener);
+            ((DefaultBusService) busService).stopBus();
         } catch (Exception e) {
             log.warn("Failed to tearDown test properly ", e);
         }
@@ -125,14 +125,13 @@ public abstract class TestApiBase {
 
         entitlementService = g.getInstance(EntitlementService.class);
         catalogService = g.getInstance(CatalogService.class);
-        busService = g.getInstance(EventBusService.class);
+        busService = g.getInstance(BusService.class);
         config = g.getInstance(EntitlementConfig.class);
         dao = g.getInstance(EntitlementDao.class);
         clock = (ClockMock) g.getInstance(Clock.class);
         try {
-
             ((DefaultCatalogService) catalogService).loadCatalog();
-            ((DefaultEventBusService) busService).startBus();
+            ((DefaultBusService) busService).startBus();
             ((Engine) entitlementService).initialize();
             init();
         } catch (EntitlementUserApiException e) {
@@ -152,7 +151,7 @@ public abstract class TestApiBase {
         assertNotNull(catalog);
 
 
-        testListener = new ApiTestListener(busService.getEventBus());
+        testListener = new ApiTestListener(busService.getBus());
         entitlementApi = entitlementService.getUserApi();
         billingApi = entitlementService.getBillingApi();
         migrationApi = entitlementService.getMigrationApi();
@@ -170,7 +169,7 @@ public abstract class TestApiBase {
         clock.resetDeltaFromReality();
         ((MockEntitlementDao) dao).reset();
         try {
-            busService.getEventBus().register(testListener);
+            busService.getBus().register(testListener);
             UUID accountId = UUID.randomUUID();
             bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle");
         } catch (Exception e) {
@@ -242,6 +241,11 @@ public abstract class TestApiBase {
             public int getNumber() {
                 return days;
             }
+
+            @Override
+            public DateTime addToDateTime(DateTime dateTime) {
+                return null;
+            }
         };
         return result;
     }
@@ -255,6 +259,11 @@ public abstract class TestApiBase {
             @Override
             public int getNumber() {
                 return months;
+            }
+
+            @Override
+            public DateTime addToDateTime(DateTime dateTime) {
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
         };
         return result;
@@ -270,6 +279,11 @@ public abstract class TestApiBase {
             @Override
             public int getNumber() {
                 return years;
+            }
+
+            @Override
+            public DateTime addToDateTime(DateTime dateTime) {
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
         };
         return result;

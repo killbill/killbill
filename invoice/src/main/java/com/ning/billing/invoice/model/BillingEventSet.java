@@ -19,8 +19,18 @@ package com.ning.billing.invoice.model;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class BillingEventSet extends ArrayList<BillingEvent> {
+    public BillingEventSet() {
+        super();
+    }
+
+    public BillingEventSet(Collection<BillingEvent> events) {
+        super();
+        addAll(events);
+    }
+
     public BillingEvent getLast() {
         if (this.size() == 0) {return null;}
 

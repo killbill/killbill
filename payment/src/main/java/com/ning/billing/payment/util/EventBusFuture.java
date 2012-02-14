@@ -20,11 +20,11 @@ import javax.annotation.Nullable;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AbstractFuture;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 public class EventBusFuture<T, V extends EventBusResponse<T>> extends AbstractFuture<V> {
-    public static <V, W extends EventBusRequest<V>, X extends EventBusResponse<V>> EventBusFuture<V, X> post(final EventBus eventBus, final W event) throws EventBusException {
+    public static <V, W extends EventBusRequest<V>, X extends EventBusResponse<V>> EventBusFuture<V, X> post(final Bus eventBus, final W event) throws EventBusException {
         final EventBusFuture<V, X> responseFuture = new EventBusFuture<V, X>(eventBus, event.getId());
 
         eventBus.register(responseFuture);
@@ -32,10 +32,10 @@ public class EventBusFuture<T, V extends EventBusResponse<T>> extends AbstractFu
         return responseFuture;
     }
 
-    private final EventBus eventBus;
+    private final Bus eventBus;
     private final T requestId;
 
-    private EventBusFuture(EventBus eventBus, T requestId) {
+    private EventBusFuture(Bus eventBus, T requestId) {
         this.eventBus = eventBus;
         this.requestId = requestId;
     }

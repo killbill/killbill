@@ -14,32 +14,22 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.util.globalLocker;
 
-import java.util.UUID;
+public class MockGlobalLocker implements GlobalLocker {
 
-import com.ning.billing.util.eventbus.EventBusNotification;
-
-public class PaymentInfoRequest implements EventBusNotification {
-    private final UUID accountId;
-    private final String paymentId;
-
-    public PaymentInfoRequest(UUID accountId, String paymentId) {
-        this.accountId = accountId;
-        this.paymentId = paymentId;
-    }
-
-    public UUID getAccountId() {
-        return accountId;
-    }
-
-    public String getPaymentId() {
-        return paymentId;
+    @Override
+    public GlobalLock lockWithNumberOfTries(LockerService service,
+            String lockKey, int retry) {
+        return new GlobalLock() {
+            @Override
+            public void release() {
+            }
+        };
     }
 
     @Override
-    public String toString() {
-        return "PaymentInfoRequest [accountId=" + accountId + ", paymentId=" + paymentId + "]";
+    public Boolean isFree(LockerService service, String lockKey) {
+        return Boolean.TRUE;
     }
-
 }

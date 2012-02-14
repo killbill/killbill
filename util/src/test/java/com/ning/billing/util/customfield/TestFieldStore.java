@@ -20,21 +20,15 @@ import java.io.IOException;
 import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.customfield.DefaultFieldStore;
-import com.ning.billing.util.customfield.FieldStore;
 import com.ning.billing.util.customfield.dao.FieldStoreDao;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.EventBusService;
-import com.ning.billing.util.glue.EventBusModule;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
@@ -70,32 +64,48 @@ public class TestFieldStore {
 
     @Test
     public void testFieldStore() {
-        UUID id = UUID.randomUUID();
-        String objectType = "Test widget";
+        final UUID id = UUID.randomUUID();
+        final String objectType = "Test widget";
 
-        FieldStore fieldStore = new DefaultFieldStore(id, objectType);
+        final FieldStore fieldStore1 = new DefaultFieldStore(id, objectType);
 
         String fieldName = "TestField1";
         String fieldValue = "Kitty Hawk";
-        fieldStore.setValue(fieldName, fieldValue);
+        fieldStore1.setValue(fieldName, fieldValue);
 
         FieldStoreDao fieldStoreDao = dbi.onDemand(FieldStoreDao.class);
-        fieldStoreDao.save(id.toString(), objectType, fieldStore.getEntityList());
+        fieldStoreDao.inTransaction(new Transaction<Void, FieldStoreDao>() {
+            @Override
+            public Void inTransaction(FieldStoreDao transactional,
+                    TransactionStatus status) throws Exception {
+                transactional.batchSaveFromTransaction(id.toString(), objectType, fieldStore1.getEntityList());
+                return null;
+            }
+        });
 
-        fieldStore = DefaultFieldStore.create(id, objectType);
-        fieldStore.add(fieldStoreDao.load(id.toString(), objectType));
 
-        assertEquals(fieldStore.getValue(fieldName), fieldValue);
+        final FieldStore fieldStore2 = DefaultFieldStore.create(id, objectType);
+        fieldStore2.add(fieldStoreDao.load(id.toString(), objectType));
+
+        assertEquals(fieldStore2.getValue(fieldName), fieldValue);
 
         fieldValue = "Cape Canaveral";
-        fieldStore.setValue(fieldName, fieldValue);
-        assertEquals(fieldStore.getValue(fieldName), fieldValue);
-        fieldStoreDao.save(id.toString(), objectType, fieldStore.getEntityList());
+        fieldStore2.setValue(fieldName, fieldValue);
+        assertEquals(fieldStore2.getValue(fieldName), fieldValue);
+        fieldStoreDao.inTransaction(new Transaction<Void, FieldStoreDao>() {
+            @Override
+            public Void inTransaction(FieldStoreDao transactional,
+                    TransactionStatus status) throws Exception {
+                transactional.batchSaveFromTransaction(id.toString(), objectType, fieldStore2.getEntityList());
+                return null;
+            }
+        });
 
-        fieldStore = DefaultFieldStore.create(id, objectType);
-        assertEquals(fieldStore.getValue(fieldName), null);
-        fieldStore.add(fieldStoreDao.load(id.toString(), objectType));
 
-        assertEquals(fieldStore.getValue(fieldName), fieldValue);
+        final FieldStore fieldStore3 = DefaultFieldStore.create(id, objectType);
+        assertEquals(fieldStore3.getValue(fieldName), null);
+        fieldStore3.add(fieldStoreDao.load(id.toString(), objectType));
+
+        assertEquals(fieldStore3.getValue(fieldName), fieldValue);
     }
 }

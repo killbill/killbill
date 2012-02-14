@@ -22,7 +22,6 @@ import java.util.UUID;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
-
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
@@ -33,23 +32,23 @@ import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.FieldStoreDao;
-import com.ning.billing.util.eventbus.EventBus;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 
 public class DefaultAccountDao implements AccountDao {
-    private final AccountSqlDao accountDao;
-    private final EventBus eventBus;
+    private final AccountSqlDao accountSqlDao;
+    private final Bus eventBus;
 
     @Inject
-    public DefaultAccountDao(final IDBI dbi, final EventBus eventBus) {
+    public DefaultAccountDao(IDBI dbi, Bus eventBus) {
         this.eventBus = eventBus;
-        this.accountDao = dbi.onDemand(AccountSqlDao.class);
+        this.accountSqlDao = dbi.onDemand(AccountSqlDao.class);
     }
 
     @Override
     public Account getAccountByKey(final String key) {
-        return accountDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
+        return accountSqlDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
             @Override
             public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
                 Account account = accountSqlDao.getAccountByKey(key);
@@ -67,46 +66,41 @@ public class DefaultAccountDao implements AccountDao {
         if (externalKey == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_CANNOT_MAP_NULL_KEY, "");
         }
-        return accountDao.getIdFromKey(externalKey);
+        return accountSqlDao.getIdFromKey(externalKey);
     }
 
     @Override
     public Account getById(final String id) {
-        return accountDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
-            @Override
-            public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
-                Account account = accountSqlDao.getById(id);
-                if (account != null) {
-                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
-                    setTagsFromWithinTransaction(account, accountSqlDao);
-                }
-                return account;
-            }
-        });
+        Account account = accountSqlDao.getById(id);
+        if (account != null) {
+            setCustomFieldsFromWithinTransaction(account, accountSqlDao);
+            setTagsFromWithinTransaction(account, accountSqlDao);
+        }
+        return account;
     }
 
 
     @Override
     public List<Account> get() {
-        return accountDao.get();
+        return accountSqlDao.get();
     }
 
     @Override
     public void create(final Account account) throws AccountApiException {
         final String key = account.getExternalKey();
         try {
-            accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+
+            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, EventBus.EventBusException {
-                    Account currentAccount = accountSqlDao.getAccountByKey(key);
+                public Void inTransaction(final AccountSqlDao transactionalDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
+                    Account currentAccount = transactionalDao.getAccountByKey(key);
                     if (currentAccount != null) {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
                     }
-                    accountSqlDao.create(account);
+                    transactionalDao.create(account);
 
-                    saveTagsFromWithinTransaction(account, accountSqlDao, true);
-                    saveCustomFieldsFromWithinTransaction(account, accountSqlDao, true);
-
+                    saveTagsFromWithinTransaction(account, transactionalDao, true);
+                    saveCustomFieldsFromWithinTransaction(account, transactionalDao, true);
                     AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
                     eventBus.post(creationEvent);
                     return null;
@@ -124,9 +118,9 @@ public class DefaultAccountDao implements AccountDao {
     @Override
     public void update(final Account account) throws AccountApiException {
         try {
-            accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, EventBus.EventBusException {
+                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
                     String accountId = account.getId().toString();
                     Account currentAccount = accountSqlDao.getById(accountId);
                     if (currentAccount == null) {
@@ -162,9 +156,9 @@ public class DefaultAccountDao implements AccountDao {
     @Override
 	public void deleteByKey(final String externalKey) throws AccountApiException {
     	try {
-            accountDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, EventBus.EventBusException {
+                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
 
                     accountSqlDao.deleteByKey(externalKey);
 
@@ -182,7 +176,7 @@ public class DefaultAccountDao implements AccountDao {
 
     @Override
     public void test() {
-        accountDao.test();
+        accountSqlDao.test();
     }
 
     private void setCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
@@ -216,7 +210,7 @@ public class DefaultAccountDao implements AccountDao {
 
         List<Tag> tagList = account.getTagList();
         if (tagList != null) {
-            tagStoreDao.save(accountId, objectType, tagList);
+            tagStoreDao.batchSaveFromTransaction(accountId, objectType, tagList);
         }
     }
 
@@ -231,7 +225,7 @@ public class DefaultAccountDao implements AccountDao {
 
         List<CustomField> fieldList = account.getFieldList();
         if (fieldList != null) {
-            fieldStoreDao.save(accountId, objectType, fieldList);
+            fieldStoreDao.batchSaveFromTransaction(accountId, objectType, fieldList);
         }
     }
 

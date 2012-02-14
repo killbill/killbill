@@ -31,17 +31,15 @@ import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
-import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 public class RequestProcessor {
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
     private final AccountUserApi accountUserApi;
     private final PaymentApi paymentApi;
-    private final PaymentProviderPluginRegistry pluginRegistry;
-    private final EventBus eventBus;
+    private final Bus eventBus;
 
     private static final Logger log = LoggerFactory.getLogger(RequestProcessor.class);
 
@@ -49,10 +47,9 @@ public class RequestProcessor {
     public RequestProcessor(AccountUserApi accountUserApi,
                             PaymentApi paymentApi,
                             PaymentProviderPluginRegistry pluginRegistry,
-                            EventBus eventBus) {
+                            Bus eventBus) {
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
-        this.pluginRegistry = pluginRegistry;
         this.eventBus = eventBus;
     }
 
@@ -79,22 +76,6 @@ public class RequestProcessor {
         }
         catch (EventBusException ex) {
             throw new RuntimeException(ex);
-        }
-    }
-
-    @Subscribe
-    public void receivePaymentInfoRequest(PaymentInfoRequest paymentInfoRequest) throws EventBusException {
-        final Account account = accountUserApi.getAccountById(paymentInfoRequest.getAccountId());
-        if (account == null) {
-            log.info("could not process payment info request: could not find a valid account for event {}", paymentInfoRequest);
-        }
-        else {
-            final String paymentProviderName = account.getFieldValue(PAYMENT_PROVIDER_KEY);
-            final PaymentProviderPlugin plugin = pluginRegistry.getPlugin(paymentProviderName);
-
-            Either<PaymentError, PaymentInfo> result = plugin.getPaymentInfo(paymentInfoRequest.getPaymentId());
-
-            eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
         }
     }
 }

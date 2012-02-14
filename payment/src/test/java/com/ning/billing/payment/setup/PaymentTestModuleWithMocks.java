@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.setup;
 
+import com.ning.billing.util.bus.InMemoryBus;
 import org.apache.commons.collections.MapUtils;
 
 import com.google.common.collect.ImmutableMap;
@@ -23,11 +24,11 @@ import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
+
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.MemoryEventBus;
+import com.ning.billing.util.bus.Bus;
 
 public class PaymentTestModuleWithMocks extends PaymentModule {
     public PaymentTestModuleWithMocks() {
@@ -47,7 +48,7 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
     @Override
     protected void configure() {
         super.configure();
-        bind(EventBus.class).to(MemoryEventBus.class).asEagerSingleton();
+        bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
         bind(MockAccountDao.class).asEagerSingleton();
         bind(AccountDao.class).to(MockAccountDao.class);
         bind(MockInvoiceDao.class).asEagerSingleton();

@@ -21,9 +21,14 @@ import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.catalog.api.*;
-import com.ning.billing.catalog.rules.TestCase.CaseResult;
 
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.ProductCategory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -39,10 +44,10 @@ public class TestCaseChange {
 		private Result result;
 
 		public CaseChangeResult(DefaultProduct from, DefaultProduct to, 
-				ProductCategory fromProductCategory, ProductCategory toProductCategory, 
-				BillingPeriod fromBP, BillingPeriod toBP, 
+				ProductCategory fromProductCategory, ProductCategory toProductCategory,
+				BillingPeriod fromBP, BillingPeriod toBP,
 				DefaultPriceList fromPriceList, DefaultPriceList toPriceList,
-				PhaseType fromType, 
+				PhaseType fromType,
 				Result result) {
 			setFromProduct(from);
 			setToProduct(to);
@@ -63,7 +68,7 @@ public class TestCaseChange {
 		}
 	}
 	@Test(enabled=true)
-	public void testBasic() throws CatalogApiException{
+	public void testBasic() throws CatalogApiException {
 		MockCatalog cat = new MockCatalog();
 
 		DefaultProduct product1 = cat.getCurrentProducts()[0];
@@ -1043,8 +1048,8 @@ public class TestCaseChange {
 				String fromPriceListName, String toPriceListName,
 				PhaseType phaseType, StandaloneCatalog cat){
 	        try{
-	        	cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory, fromBp, fromPriceListName, phaseType), 
-						new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName),cat);	
+	        	cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory, fromBp, fromPriceListName, phaseType),
+						new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName),cat);
 	        	Assert.fail("Expecting an exception");
 	        } catch (CatalogApiException e) {
 	        	Assert.assertEquals(e.getCode(), ErrorCode.CAT_PRICE_LIST_NOT_FOUND.getCode());

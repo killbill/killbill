@@ -1,34 +1,39 @@
 group InvoiceDao;
 
+invoiceFields(prefix) ::= <<
+    <prefix>id,
+    <prefix>account_id,
+    <prefix>invoice_date,
+    <prefix>target_date,
+    <prefix>currency
+>>
+
 get() ::= <<
-  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_attempt_date) AS last_payment_attempt
-  FROM invoices i
-  LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
-  LEFT JOIN invoice_items ii ON ii.invoice_id = i.id
-  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
-  ORDER BY i.invoice_date ASC;
+  SELECT <invoiceFields()>
+  FROM invoices
+  ORDER BY target_date ASC;
 >>
 
 getInvoicesByAccount() ::= <<
-  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_attempt_date) AS last_payment_attempt
-  FROM invoices i
-  LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
-  LEFT JOIN invoice_items ii ON ii.invoice_id = i.id
-  WHERE i.account_id = :accountId
-  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
-  ORDER BY i.invoice_date ASC;
+  SELECT <invoiceFields()>
+  FROM invoices
+  WHERE account_id = :accountId
+  ORDER BY target_date ASC;
+>>
+
+getInvoicesByAccountAfterDate() ::= <<
+  SELECT <invoiceFields()>
+  FROM invoices
+  WHERE account_id = :accountId AND target_date >= :fromDate
+  ORDER BY target_date ASC;
 >>
 
 getInvoicesBySubscription() ::= <<
-  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_attempt_date) AS last_payment_attempt
+  SELECT <invoiceFields("i.")>
   FROM invoices i
   LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
-  LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
   WHERE ii.subscription_id = :subscriptionId
-  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency;
+  GROUP BY <invoiceFields("i.")>;
 >>
 
 getInvoicesForPayment() ::= <<
@@ -37,23 +42,29 @@ getInvoicesForPayment() ::= <<
   LEFT JOIN invoice_payment_summary ips ON ips.invoice_id = i.id
   LEFT JOIN invoice_item_summary iis ON iis.invoice_id = i.id
   WHERE ((ips.last_payment_date IS NULL) OR (DATEDIFF(:targetDate, ips.last_payment_date) >= :numberOfDays))
-        AND ((ips.total_paid IS NULL) OR (iis.total_amount >= ips.total_paid))
-        AND ((iis.total_amount IS NOT NULL) AND (iis.total_amount > 0))
-  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency;
+        AND ((ips.total_paid IS NULL) OR (iis.amount_invoiced >= ips.total_paid))
+        AND ((iis.amount_invoiced IS NOT NULL) AND (iis.amount_invoiced > 0))
+  GROUP BY <invoiceFields("i.")>;
 >>
 
 getById() ::= <<
-  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency, SUM(ii.amount) AS amount,
-         SUM(ip.amount) AS amount_paid, MAX(ip.payment_attempt_date) AS last_payment_attempt
+  SELECT <invoiceFields()>
+  FROM invoices
+  WHERE id = :id;
+>>
+
+getAccountBalance() ::= <<
+  SELECT SUM(iis.amount_invoiced) AS amount_invoiced,
+         SUM(ips.total_paid) AS amount_paid
   FROM invoices i
-  LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
-  LEFT JOIN invoice_payments ip ON ip.invoice_id = i.id
-  WHERE i.id = :id
-  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency;
+  LEFT JOIN invoice_payment_summary ips ON i.id = ips.invoice_id
+  LEFT JOIN invoice_item_summary iis ON i.id = iis.invoice_id
+  WHERE i.account_id = :accountId
+  GROUP BY i.account_id;
 >>
 
 create() ::= <<
-  INSERT INTO invoices(id, account_id, invoice_date, target_date, currency)
+  INSERT INTO invoices(<invoiceFields()>)
   VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency);
 >>
 
@@ -70,25 +81,17 @@ update() ::= <<
   WHERE id = :id;
 >>
 
-notifyOfPaymentAttempt() ::= <<
-  INSERT INTO invoice_payments(invoice_id, payment_attempt_id, payment_attempt_date, amount, currency, created_date, updated_date)
-  VALUES(:invoice_id, :payment_attempt_id, :payment_attempt_date, :amount, :currency, NOW(), NOW());
->>
-
-getInvoicePayment() ::= <<
-    SELECT invoice_id, payment_attempt_id, payment_attempt_date, amount, currency, created_date, updated_date
-      FROM invoice_payments
-     WHERE payment_id = :payment_id
->>
-
-getAccountBalance() ::= <<
-  SELECT SUM(iis.total_amount) AS amount_invoiced, SUM(ips.total_paid) AS amount_paid
+getUnpaidInvoicesByAccountId() ::= <<
+  SELECT i.id, i.account_id, i.invoice_date, i.target_date, i.currency
   FROM invoices i
   LEFT JOIN invoice_payment_summary ips ON i.id = ips.invoice_id
   LEFT JOIN invoice_item_summary iis ON i.id = iis.invoice_id
-  WHERE i.account_id = :accountId
-  GROUP BY i.account_id;
+  WHERE i.account_id = :accountId AND NOT (i.target_date > :upToDate)
+  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
+  HAVING (SUM(iis.amount_invoiced) > SUM(ips.total_paid)) OR (SUM(ips.total_paid) IS NULL)
+  ORDER BY i.target_date ASC;
 >>
+
 
 test() ::= <<
   SELECT 1

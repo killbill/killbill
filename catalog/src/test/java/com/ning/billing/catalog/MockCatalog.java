@@ -19,7 +19,11 @@ package com.ning.billing.catalog;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.rules.*;
+import com.ning.billing.catalog.rules.CaseCancelPolicy;
+import com.ning.billing.catalog.rules.CaseChangePlanAlignment;
+import com.ning.billing.catalog.rules.CaseChangePlanPolicy;
+import com.ning.billing.catalog.rules.CaseCreateAlignment;
+import com.ning.billing.catalog.rules.PlanRules;
 
 import java.util.Date;
 
@@ -60,7 +64,7 @@ public class MockCatalog extends StandaloneCatalog {
 		DefaultProduct[] products = getCurrentProducts();
 		DefaultPlan[] plans = new DefaultPlan[products.length];
 		for(int i = 0; i < products.length; i++) {
-			DefaultPlanPhase phase = new DefaultPlanPhase().setPhaseType(PhaseType.EVERGREEN).setBillingPeriod(BillingPeriod.MONTHLY).setReccuringPrice(new DefaultInternationalPrice());
+			DefaultPlanPhase phase = new DefaultPlanPhase().setPhaseType(PhaseType.EVERGREEN).setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice());
 			plans[i] = new MockPlan().setName(products[i].getName().toLowerCase() + "-plan").setProduct(products[i]).setFinalPhase(phase);
 		}
 		setPlans(plans);

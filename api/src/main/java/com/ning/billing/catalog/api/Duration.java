@@ -16,10 +16,13 @@
 
 package com.ning.billing.catalog.api;
 
+import org.joda.time.DateTime;
+
 public interface Duration {
 
 	public abstract TimeUnit getUnit();
 
 	public abstract int getNumber();
 
+    public DateTime addToDateTime(DateTime dateTime);
 }

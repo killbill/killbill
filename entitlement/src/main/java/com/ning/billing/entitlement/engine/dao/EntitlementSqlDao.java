@@ -21,9 +21,18 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
@@ -44,14 +53,7 @@ import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import sun.jkernel.Bundle;
 
 
 public class EntitlementSqlDao implements EntitlementDao {
@@ -66,7 +68,8 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final NotificationQueueService notificationQueueService;
 
     @Inject
-    public EntitlementSqlDao(DBI dbi, Clock clock, SubscriptionFactory factory, NotificationQueueService notificationQueueService) {
+    public EntitlementSqlDao(final IDBI dbi, final Clock clock, final SubscriptionFactory factory,
+                             final NotificationQueueService notificationQueueService) {
         this.clock = clock;
         this.factory = factory;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
@@ -76,18 +79,18 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey) {
+    public SubscriptionBundle getSubscriptionBundleFromKey(final String bundleKey) {
         return bundlesDao.getBundleFromKey(bundleKey);
     }
 
     @Override
     public List<SubscriptionBundle> getSubscriptionBundleForAccount(
-            UUID accountId) {
+            final UUID accountId) {
         return bundlesDao.getBundleFromAccount(accountId.toString());
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
+    public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
         return bundlesDao.getBundleFromId(bundleId.toString());
     }
 
@@ -103,8 +106,31 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public Subscription getSubscriptionFromId(UUID subscriptionId) {
+    public Subscription getSubscriptionFromId(final UUID subscriptionId) {
         return buildSubscription(subscriptionsDao.getSubscriptionFromId(subscriptionId.toString()));
+    }
+
+    @Override
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
+        Subscription subscription = subscriptionsDao.getSubscriptionFromId(subscriptionId.toString());
+        if (subscription == null) {
+            log.error(String.format(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getFormat(), subscriptionId.toString()));
+            return null;
+        }
+
+        UUID bundleId = subscription.getBundleId();
+        if (bundleId == null) {
+            log.error(String.format(ErrorCode.ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION.getFormat(), subscriptionId.toString()));
+            return null;
+        }
+
+        SubscriptionBundle bundle = bundlesDao.getBundleFromId(bundleId.toString());
+        if (bundle == null) {
+            log.error(String.format(ErrorCode.ENT_GET_INVALID_BUNDLE_ID.getFormat(), bundleId.toString()));
+            return null;
+        }
+
+        return bundle.getAccountId();
     }
 
     @Override
@@ -194,9 +220,9 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                 dao.insertSubscription(subscription);
                 // STEPH batch as well
-                EventSqlDao eventsDaoFromSameTranscation = dao.become(EventSqlDao.class);
+                EventSqlDao eventsDaoFromSameTransaction = dao.become(EventSqlDao.class);
                 for (final EntitlementEvent cur : initialEvents) {
-                    eventsDaoFromSameTranscation.insertEvent(cur);
+                    eventsDaoFromSameTransaction.insertEvent(cur);
                     recordFutureNotificationFromTransaction(dao,
                             cur.getEffectiveDate(),
                             new NotificationKey() {
@@ -417,9 +443,9 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     private void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime effectiveDate, final NotificationKey notificationKey) {
         try {
-            NotificationQueue subscritionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
+            NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
                 Engine.NOTIFICATION_QUEUE_NAME);
-            subscritionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
+            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         }

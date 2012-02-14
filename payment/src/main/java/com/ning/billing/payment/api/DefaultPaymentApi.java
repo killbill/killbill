@@ -32,6 +32,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
@@ -175,7 +176,7 @@ public class DefaultPaymentApi implements PaymentApi {
         for (String invoiceId : invoiceIds) {
             Invoice invoice = invoicePaymentApi.getInvoice(UUID.fromString(invoiceId));
 
-            if (invoice.getAmountOutstanding().compareTo(BigDecimal.ZERO) == 0 ) {
+            if (invoice.getBalance().compareTo(BigDecimal.ZERO) == 0 ) {
             // TODO: send a notification that invoice was ignored?
                 log.info("Received invoice for payment with outstanding amount of 0 {} ", invoice);
             }
@@ -222,12 +223,12 @@ public class DefaultPaymentApi implements PaymentApi {
                     }
                 }
 
-                invoicePaymentApi.notifyOfPaymentAttempt(new InvoicePayment(invoice.getId(),
-                                                                     paymentInfo == null ? null : paymentInfo.getAmount(),
-//                                                                   paymentInfo.getRefundAmount(), TODO
-                                                                     paymentInfo == null ? null : invoice.getCurrency(),
-                                                                     paymentAttempt.getPaymentAttemptId(),
-                                                                     paymentAttempt.getPaymentAttemptDate()));
+                invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getPaymentAttemptId(),
+                                                                                   invoice.getId(),
+                                                                                   paymentAttempt.getPaymentAttemptDate(),
+                                                                                   paymentInfo == null ? null : paymentInfo.getAmount(),
+//                                                                                 paymentInfo.getRefundAmount(), TODO
+                                                                                   paymentInfo == null ? null : invoice.getCurrency()));
 
             }
         }
@@ -256,6 +257,16 @@ public class DefaultPaymentApi implements PaymentApi {
     public List<Either<PaymentError, PaymentInfo>> createRefund(Account account, List<String> invoiceIds) {
         //TODO
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<PaymentInfo> getPaymentInfo(List<String> invoiceIds) {
+        return paymentDao.getPaymentInfo(invoiceIds);
+    }
+
+    @Override
+    public PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId) {
+        return paymentDao.getPaymentAttemptForInvoiceId(invoiceId);
     }
 
 }

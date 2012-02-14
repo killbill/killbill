@@ -18,11 +18,34 @@ package com.ning.billing.invoice.glue;
 
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
+import com.ning.billing.util.globalLocker.GlobalLocker;
+import com.ning.billing.util.globalLocker.MockGlobalLocker;
 
 public class InvoiceModuleWithMocks extends InvoiceModule {
     @Override
     protected void installInvoiceDao() {
         bind(MockInvoiceDao.class).asEagerSingleton();
         bind(InvoiceDao.class).to(MockInvoiceDao.class);
+        bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
+    }
+
+    @Override
+    protected void installGlobalLocker() {
+        bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
+    }
+
+    @Override
+    protected void installInvoiceListener() {
+
+    }
+
+    @Override
+    protected void installNotifier() {
+
+    }
+
+    @Override
+    protected void installInvoiceService() {
+
     }
 }

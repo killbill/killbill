@@ -14,20 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.util.eventbus;
+package com.ning.billing.util.bus;
 
 import com.google.inject.Inject;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
-public class DefaultEventBusService implements EventBusService {
+public class DefaultBusService implements BusService {
 
-    private final static String EVENT_BUS_SERVICE = "eventbus-service";
+    private final static String EVENT_BUS_SERVICE = "bus-service";
 
-    private final EventBus eventBus;
+    private final Bus eventBus;
 
     @Inject
-    public DefaultEventBusService(EventBus eventBus) {
+    public DefaultBusService(Bus eventBus) {
         this.eventBus = eventBus;
     }
 
@@ -47,7 +47,7 @@ public class DefaultEventBusService implements EventBusService {
     }
 
     @Override
-    public EventBus getEventBus() {
+    public Bus getBus() {
         return eventBus;
     }
 

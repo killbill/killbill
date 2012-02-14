@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
 
-@Test(groups = {"invoicing", "proRation"})
+@Test(groups = {"fast", "invoicing", "proRation"})
 public class GenericProRationTests extends GenericProRationTestBase {
     @Override
     protected BillingPeriod getBillingPeriod() {

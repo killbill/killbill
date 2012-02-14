@@ -16,12 +16,12 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.util.eventbus.EventBusNotification;
+import com.ning.billing.util.bus.BusEvent;
 
 import java.util.List;
 import java.util.UUID;
 
-public interface AccountChangeNotification extends EventBusNotification {
+public interface AccountChangeNotification extends BusEvent {
     public UUID getAccountId();
 
     public List<ChangedField> getChangedFields();

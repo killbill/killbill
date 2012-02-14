@@ -26,28 +26,25 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
 
-public class TestPaymentDaoWithEmbeddedDb
-{
-    @Test(enabled = true, groups = { "slow", "database" })
-    public class TestPaymentDaoWithEmbeddedDB extends TestPaymentDao {
-        private final MysqlTestingHelper helper = new MysqlTestingHelper();
+@Test(enabled = true, groups = { "slow", "database" })
+public class TestPaymentDaoWithEmbeddedDb extends TestPaymentDao {
+    private final MysqlTestingHelper helper = new MysqlTestingHelper();
 
-        @BeforeClass(alwaysRun = true)
-        public void startMysql() throws IOException {
-            final String paymentddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
+    @BeforeClass(alwaysRun = true)
+    public void startMysql() throws IOException {
+        final String paymentddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
 
-            helper.startMysql();
-            helper.initDb(paymentddl);
-        }
+        helper.startMysql();
+        helper.initDb(paymentddl);
+    }
 
-        @AfterClass(alwaysRun = true)
-        public void stopMysql() {
-            helper.stopMysql();
-        }
+    @AfterClass(alwaysRun = true)
+    public void stopMysql() {
+        helper.stopMysql();
+    }
 
-        @BeforeMethod(alwaysRun = true)
-        public void setUp() throws IOException {
-            dao = new DefaultPaymentDao(helper.getDBI());
-        }
+    @BeforeMethod(alwaysRun = true)
+    public void setUp() throws IOException {
+        paymentDao = new DefaultPaymentDao(helper.getDBI());
     }
 }

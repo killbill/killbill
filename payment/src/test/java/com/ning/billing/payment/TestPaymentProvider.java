@@ -18,7 +18,6 @@ package com.ning.billing.payment;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -37,13 +36,13 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 @Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
 public class TestPaymentProvider {
     @Inject
-    private EventBus eventBus;
+    private Bus eventBus;
     @Inject
     private RequestProcessor invoiceProcessor;
     @Inject
@@ -58,6 +57,8 @@ public class TestPaymentProvider {
         eventBus.start();
         eventBus.register(invoiceProcessor);
         eventBus.register(paymentInfoReceiver);
+
+        assertTrue(true);
     }
 
     @AfterMethod(alwaysRun = true)
@@ -65,6 +66,8 @@ public class TestPaymentProvider {
         eventBus.unregister(invoiceProcessor);
         eventBus.unregister(paymentInfoReceiver);
         eventBus.stop();
+
+        assertTrue(true);
     }
 
     @Test
@@ -86,23 +89,5 @@ public class TestPaymentProvider {
         assertFalse(paymentInfoReceiver.getProcessedPayments().isEmpty());
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
 
-        final PaymentInfo paymentInfo = paymentInfoReceiver.getProcessedPayments().get(0);
-        final PaymentInfoRequest paymentInfoRequest = new PaymentInfoRequest(account.getId(), paymentInfo.getPaymentId());
-
-        paymentInfoReceiver.clear();
-        eventBus.post(paymentInfoRequest);
-        await().atMost(5, MINUTES).until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                List<PaymentInfo> processedPayments = paymentInfoReceiver.getProcessedPayments();
-                List<PaymentError> errors = paymentInfoReceiver.getErrors();
-
-                return processedPayments.size() == 1 || errors.size() == 1;
-            }
-        });
-
-        assertFalse(paymentInfoReceiver.getProcessedPayments().isEmpty());
-        assertTrue(paymentInfoReceiver.getErrors().isEmpty());
-        assertEquals(paymentInfoReceiver.getProcessedPayments().get(0), paymentInfo);
     }
 }

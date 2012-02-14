@@ -29,6 +29,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.TestApiBase;
 
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
@@ -64,7 +65,7 @@ public class TestUserApiDemos extends TestApiBase {
      *  8. Cancel EOT
      */
     @Test(enabled=true, groups="demos")
-    public void testDemo1() {
+    public void testDemo1() throws EntitlementBillingApiException {
 
         try {
             System.out.println("DEMO 1 START");
@@ -189,7 +190,7 @@ public class TestUserApiDemos extends TestApiBase {
     }
 
     @Test(enabled= true, groups={"stress"})
-    public void stressTest() {
+    public void stressTest() throws EntitlementBillingApiException {
         for (int i = 0; i < 100; i++) {
             cleanupTest();
             setupTest();

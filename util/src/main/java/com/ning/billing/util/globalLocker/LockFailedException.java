@@ -14,20 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.util.glue;
+package com.ning.billing.util.globalLocker;
 
-import com.google.inject.AbstractModule;
-import com.ning.billing.util.eventbus.DefaultEventBusService;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBusService;
-import com.ning.billing.util.eventbus.MemoryEventBus;
-
-public class EventBusModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(EventBusService.class).to(DefaultEventBusService.class);
-        bind(EventBus.class).to(MemoryEventBus.class).asEagerSingleton();
-    }
-
+public class LockFailedException extends RuntimeException
+{
 }

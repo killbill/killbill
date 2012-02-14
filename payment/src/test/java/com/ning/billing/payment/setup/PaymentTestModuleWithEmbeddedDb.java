@@ -16,12 +16,12 @@
 
 package com.ning.billing.payment.setup;
 
+import com.ning.billing.util.bus.Bus;
 import org.apache.commons.collections.MapUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.MemoryEventBus;
+import com.ning.billing.util.bus.InMemoryBus;
 
 public class PaymentTestModuleWithEmbeddedDb extends PaymentModule {
     public PaymentTestModuleWithEmbeddedDb() {
@@ -36,6 +36,6 @@ public class PaymentTestModuleWithEmbeddedDb extends PaymentModule {
     @Override
     protected void configure() {
         super.configure();
-        bind(EventBus.class).to(MemoryEventBus.class).asEagerSingleton();
+        bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
     }
 }

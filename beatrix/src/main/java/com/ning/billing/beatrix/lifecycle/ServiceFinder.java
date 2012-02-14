@@ -16,7 +16,6 @@
 
 package com.ning.billing.beatrix.lifecycle;
 
-
 import com.ning.billing.lifecycle.KillbillService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +24,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.jar.JarFile;
 
 public class ServiceFinder {
@@ -81,8 +86,6 @@ public class ServiceFinder {
 	    }
 
 	    for (int h = 0; h < classPaths.length; h++) {
-
-
 	        Enumeration<?> files = null;
 	        JarFile module = null;
 	        File classPath = new File( (URL.class).isInstance(classPaths[h]) ?
@@ -93,7 +96,7 @@ public class ServiceFinder {
 
 	            List<String> dirListing = new ArrayList<String>();
 	            recursivelyListDir(dirListing, classPath, new StringBuffer() );
-	            files = Collections.enumeration( dirListing );
+	            files = Collections.enumeration(dirListing);
 	        } else if (classPath.getName().endsWith(".jar")) {
 
 	            log.debug("JAR : " + classPath);

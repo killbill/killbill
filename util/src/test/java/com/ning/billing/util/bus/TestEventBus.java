@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.eventbus;
+package com.ning.billing.util.bus;
 
 import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;
@@ -28,12 +28,12 @@ public class TestEventBus {
 
     private static final Logger log = LoggerFactory.getLogger(TestEventBus.class);
 
-    private EventBus eventBus;
+    private Bus eventBus;
 
 
     @BeforeClass
     public void setup() {
-        eventBus = new MemoryEventBus();
+        eventBus = new InMemoryBus();
         eventBus.start();
     }
 
@@ -42,7 +42,7 @@ public class TestEventBus {
         eventBus.stop();
     }
 
-    public static final class MyEvent implements EventBusNotification {
+    public static final class MyEvent implements BusEvent {
         String name;
         Long value;
 
@@ -52,7 +52,7 @@ public class TestEventBus {
         }
     }
 
-    public static final class MyOtherEvent implements EventBusNotification {
+    public static final class MyOtherEvent implements BusEvent {
         String name;
         Long value;
 

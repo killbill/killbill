@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.eventbus;
+package com.ning.billing.util.bus;
 
 import com.google.common.eventbus.Subscribe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -22,7 +22,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 /**
  *
- * EventBus API based on the guava EventBus API
+ * Bus API based on the guava EventBus API
  *
  * The API also provides an API to send events from within a transaction
  * with the guarantee that the event will be delivered if and only if
@@ -30,7 +30,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
  * DB, this API is behaves the same as the regular post() call.
  *
  */
-public interface EventBus {
+public interface Bus {
 
 
     public class EventBusException extends Exception {
@@ -89,7 +89,7 @@ public interface EventBus {
      *
      *  @throws EventBusException if bus not been started yet
      */
-    public void post(EventBusNotification event) throws EventBusException;
+    public void post(BusEvent event) throws EventBusException;
 
     /**
      *
@@ -102,7 +102,7 @@ public interface EventBus {
      *
      *  @throws EventBusException if bus not been started yet
      */
-    public void postFromTransaction(EventBusNotification event, Transmogrifier dao) throws EventBusException;
+    public void postFromTransaction(BusEvent event, Transmogrifier dao) throws EventBusException;
 
 
 }

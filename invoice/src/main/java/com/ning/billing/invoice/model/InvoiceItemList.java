@@ -16,36 +16,40 @@
 
 package com.ning.billing.invoice.model;
 
-import com.ning.billing.invoice.api.InvoiceItem;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import com.ning.billing.invoice.api.InvoiceItem;
 
 public class InvoiceItemList extends ArrayList<InvoiceItem> {
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
+    private static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMethod();
 
-    public BigDecimal getTotalAmount() {
-        // TODO: Jeff -- naive implementation, assumes all invoice items share the same currency
-        BigDecimal total = new BigDecimal("0");
-
-        for (InvoiceItem item : this) {
-            total = total.add(item.getAmount());
-        }
-
-        return total.setScale(NUMBER_OF_DECIMALS);
+    public InvoiceItemList() {
+        super();
     }
 
-    public void removeZeroDollarItems() {
-        List<InvoiceItem> itemsToRemove = new ArrayList<InvoiceItem>();
+    public InvoiceItemList(final List<InvoiceItem> invoiceItems) {
+        super();
+        this.addAll(invoiceItems);
+    }
 
-        for (InvoiceItem item : this) {
-            if (item.getAmount().compareTo(BigDecimal.ZERO) == 0) {
-                itemsToRemove.add(item);
+    public BigDecimal getTotalAmount() {
+        // naive implementation, assumes all invoice items share the same currency
+        BigDecimal total = BigDecimal.ZERO.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        for (final InvoiceItem item : this) {
+            if (item.getRecurringAmount() != null) {
+                total = total.add(item.getRecurringAmount());
+            }
+
+            if (item.getFixedAmount() != null) {
+                total = total.add(item.getFixedAmount());
             }
         }
 
-        this.removeAll(itemsToRemove);
+        return total.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 
     public void removeCancellingPairs() {
@@ -63,5 +67,37 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         }
 
         this.removeAll(itemsToRemove);
+    }
+
+   /*
+    * removes items from the list that have a recurring amount of zero, but a recurring rate that is not zero
+    */
+    public void cleanupDuplicatedItems() {
+        Iterator<InvoiceItem> iterator = this.iterator();
+        while (iterator.hasNext()) {
+            InvoiceItem item = iterator.next();
+
+            boolean fixedAmountNull = (item.getFixedAmount() == null);
+            boolean recurringRateNull = (item.getRecurringRate() == null);
+            boolean recurringAmountZero = (item.getRecurringRate() !=null) && (item.getRecurringAmount().compareTo(BigDecimal.ZERO) == 0);
+
+            if (fixedAmountNull && (recurringRateNull || recurringAmountZero)) {
+                iterator.remove();
+            } else if (item.getEndDate() != null && item.getStartDate().compareTo(item.getEndDate()) == 0) {
+                iterator.remove();
+            } else if (item.getFixedAmount() == null && item.getRecurringAmount() == null) {
+                iterator.remove();
+            }
+        }
+    }
+
+    public boolean hasInvoiceItemForPhase(final String phaseName) {
+        for (final InvoiceItem item : this) {
+            if (item.getPhaseName().equals(phaseName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

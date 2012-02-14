@@ -16,11 +16,10 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -32,110 +31,112 @@ class BrainDeadMockEntitlementDao implements EntitlementDao {
 
 	@Override
 	public List<SubscriptionBundle> getSubscriptionBundleForAccount(
-			UUID accountId) {
+			final UUID accountId) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey) {
+	public SubscriptionBundle getSubscriptionBundleFromKey(final String bundleKey) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
+	public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public SubscriptionBundle createSubscriptionBundle(
-			SubscriptionBundleData bundle) {
+			final SubscriptionBundleData bundle) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Subscription getSubscriptionFromId(UUID subscriptionId) {
+	public Subscription getSubscriptionFromId(final UUID subscriptionId) {
 		throw new UnsupportedOperationException();
 
 	}
 
-	@Override
-	public Subscription getBaseSubscription(UUID bundleId) {
-		throw new UnsupportedOperationException();
+    @Override
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
+        throw new UnsupportedOperationException();
+    }
 
-	}
-
-	@Override
-	public List<Subscription> getSubscriptions(UUID bundleId) {
-		throw new UnsupportedOperationException();
-
-	}
-
-	@Override
-	public List<Subscription> getSubscriptionsForKey(String bundleKey) {
+    @Override
+	public Subscription getBaseSubscription(final UUID bundleId) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void updateSubscription(SubscriptionData subscription) {
+	public List<Subscription> getSubscriptions(final UUID bundleId) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void createNextPhaseEvent(UUID subscriptionId,
-			EntitlementEvent nextPhase) {
+	public List<Subscription> getSubscriptionsForKey(final String bundleKey) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void updateSubscription(final SubscriptionData subscription) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void createNextPhaseEvent(final UUID subscriptionId,
+			final EntitlementEvent nextPhase) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<EntitlementEvent> getEventsForSubscription(
-			UUID subscriptionId) {
+			final UUID subscriptionId) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<EntitlementEvent> getPendingEventsForSubscription(
-			UUID subscriptionId) {
+			final UUID subscriptionId) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void createSubscription(SubscriptionData subscription,
-			List<EntitlementEvent> initialEvents) {
+	public void createSubscription(final SubscriptionData subscription,
+			final List<EntitlementEvent> initialEvents) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void cancelSubscription(UUID subscriptionId,
-			EntitlementEvent cancelEvent) {
-		throw new UnsupportedOperationException();
-
-	}
-
-	@Override
-	public void uncancelSubscription(UUID subscriptionId,
-			List<EntitlementEvent> uncancelEvents) {
+	public void cancelSubscription(final UUID subscriptionId,
+			final EntitlementEvent cancelEvent) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void changePlan(UUID subscriptionId,
-			List<EntitlementEvent> changeEvents) {
+	public void uncancelSubscription(final UUID subscriptionId,
+			final List<EntitlementEvent> uncancelEvents) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void migrate(UUID acountId, AccountMigrationData data) {
+	public void changePlan(final UUID subscriptionId,
+			final List<EntitlementEvent> changeEvents) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void undoMigration(UUID accountId) {
+	public void migrate(final UUID acountId, final AccountMigrationData data) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public EntitlementEvent getEventById(UUID eventId) {
-		throw new UnsupportedOperationException();
+	public void undoMigration(final UUID accountId) {
+        throw new UnsupportedOperationException();
 	}
-	
+
+
+    @Override
+    public EntitlementEvent getEventById(final UUID eventId) {
+        throw new UnsupportedOperationException();
+    }
 }

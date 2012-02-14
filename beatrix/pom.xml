@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.3-SNAPSHOT</version>
+        <version>0.1.5-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-beatrix</artifactId>
@@ -28,7 +28,11 @@
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-entitlement</artifactId>
         </dependency>
-       <dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-invoice</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-catalog</artifactId>
         </dependency>
@@ -76,6 +80,12 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-util</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -21,15 +21,20 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
-import javax.xml.bind.annotation.*;
-
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
 import java.net.URI;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implements Product {
 	private static final DefaultProduct[] EMPTY_PRODUCT_LIST = new DefaultProduct[0];
 	
-	@XmlAttribute (required=true)
+	@XmlAttribute(required=true)
 	@XmlID
     private String name;
 
@@ -42,7 +47,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 	@XmlElementWrapper(name="included", required=false)
 	@XmlIDREF @XmlElement(name="addonProduct", required=true)
     private DefaultProduct[] included = EMPTY_PRODUCT_LIST;
-	
+
 	@XmlElementWrapper(name="available", required=false)
 	@XmlIDREF @XmlElement(name="addonProduct", required=true)
     private DefaultProduct[] available = EMPTY_PRODUCT_LIST;

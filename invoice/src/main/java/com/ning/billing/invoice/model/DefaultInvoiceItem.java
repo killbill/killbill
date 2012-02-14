@@ -17,9 +17,12 @@
 package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.invoice.api.InvoiceItem;
 import org.joda.time.DateTime;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -27,26 +30,37 @@ public class DefaultInvoiceItem implements InvoiceItem {
     private final UUID id;
     private final UUID invoiceId;
     private final UUID subscriptionId;
+    private final String planName;
+    private final String phaseName;
     private DateTime startDate;
     private DateTime endDate;
-    private final String description;
-    private BigDecimal amount;
-    private final BigDecimal rate;
+    private BigDecimal recurringAmount;
+    private final BigDecimal recurringRate;
+    private final BigDecimal fixedAmount;
     private final Currency currency;
 
-    public DefaultInvoiceItem(UUID invoiceId, UUID subscriptionId, DateTime startDate, DateTime endDate, String description, BigDecimal amount, BigDecimal rate, Currency currency) {
-        this(UUID.randomUUID(), invoiceId, subscriptionId, startDate, endDate, description, amount, rate, currency);
+    public DefaultInvoiceItem(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
+                              DateTime startDate, DateTime endDate,
+                              BigDecimal recurringAmount, BigDecimal recurringRate,
+                              BigDecimal fixedAmount, Currency currency) {
+        this(UUID.randomUUID(), invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
+             recurringAmount, recurringRate, fixedAmount, currency);
     }
 
-    public DefaultInvoiceItem(UUID id, UUID invoiceId, UUID subscriptionId, DateTime startDate, DateTime endDate, String description, BigDecimal amount, BigDecimal rate, Currency currency) {
+    public DefaultInvoiceItem(UUID id, UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
+                              DateTime startDate, DateTime endDate,
+                              BigDecimal recurringAmount, BigDecimal recurringRate,
+                              BigDecimal fixedAmount, Currency currency) {
         this.id = id;
         this.invoiceId = invoiceId;
         this.subscriptionId = subscriptionId;
+        this.planName = planName;
+        this.phaseName = phaseName;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.description = description;
-        this.amount = amount;
-        this.rate = rate;
+        this.recurringAmount = recurringAmount;
+        this.recurringRate = recurringRate;
+        this.fixedAmount = fixedAmount;
         this.currency = currency;
     }
 
@@ -54,17 +68,22 @@ public class DefaultInvoiceItem implements InvoiceItem {
         this.id = UUID.randomUUID();
         this.invoiceId = invoiceId;
         this.subscriptionId = that.getSubscriptionId();
+        this.planName = that.getPlanName();
+        this.phaseName = that.getPhaseName();
         this.startDate = that.getStartDate();
         this.endDate = that.getEndDate();
-        this.description = that.getDescription();
-        this.amount = that.getAmount();
-        this.rate = that.getRate();
+        this.recurringAmount = that.getRecurringAmount();
+        this.recurringRate = that.getRecurringRate();
+        this.fixedAmount = that.getFixedAmount();
         this.currency = that.getCurrency();
     }
 
     @Override
     public InvoiceItem asCredit(UUID invoiceId) {
-        return new DefaultInvoiceItem(invoiceId, subscriptionId, startDate, endDate, description, amount.negate(), rate, currency);
+        BigDecimal recurringAmountNegated = recurringAmount == null ? null : recurringAmount.negate();
+        BigDecimal fixedAmountNegated = fixedAmount == null ? null : fixedAmount.negate();
+        return new DefaultInvoiceItem(invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
+                                      recurringAmountNegated, recurringRate, fixedAmountNegated, currency);
     }
 
     @Override
@@ -83,6 +102,16 @@ public class DefaultInvoiceItem implements InvoiceItem {
     }
 
     @Override
+    public String getPlanName() {
+        return planName;
+    }
+
+    @Override
+    public String getPhaseName() {
+        return phaseName;
+    }
+
+    @Override
     public DateTime getStartDate() {
         return startDate;
     }
@@ -93,18 +122,18 @@ public class DefaultInvoiceItem implements InvoiceItem {
     }
 
     @Override
-    public String getDescription() {
-        return description;
+    public BigDecimal getRecurringAmount() {
+        return recurringAmount;
     }
 
     @Override
-    public BigDecimal getAmount() {
-        return amount;
+    public BigDecimal getRecurringRate() {
+        return recurringRate;
     }
 
     @Override
-    public BigDecimal getRate() {
-        return rate;
+    public BigDecimal getFixedAmount() {
+        return fixedAmount;
     }
 
     @Override
@@ -113,11 +142,21 @@ public class DefaultInvoiceItem implements InvoiceItem {
     }
 
     @Override
-    public int compareTo(InvoiceItem invoiceItem) {
-        int compareSubscriptions = getSubscriptionId().compareTo(invoiceItem.getSubscriptionId());
+    public int compareTo(InvoiceItem that) {
+        int compareSubscriptions = getSubscriptionId().compareTo(that.getSubscriptionId());
 
         if (compareSubscriptions == 0) {
-            return getStartDate().compareTo(invoiceItem.getStartDate());
+            // move null end dates to the end of the set
+            if ((this.endDate != null) && (that.getEndDate() == null)) {
+                return -1;
+            }
+
+            if ((this.endDate == null) && (that.getEndDate() != null)) {
+                return 1;
+            }
+
+            int compareStartDates = getStartDate().compareTo(that.getStartDate());
+            return compareStartDates;
         } else {
             return compareSubscriptions;
         }
@@ -128,44 +167,139 @@ public class DefaultInvoiceItem implements InvoiceItem {
     public void subtract(InvoiceItem that) {
         if (this.startDate.equals(that.getStartDate()) && this.endDate.equals(that.getEndDate())) {
             this.startDate = this.endDate;
-            this.amount = this.amount.subtract(that.getAmount());
+                this.recurringAmount = safeSubtract(this.recurringAmount, that.getRecurringAmount());
         } else {
             if (this.startDate.equals(that.getStartDate())) {
                 this.startDate = that.getEndDate();
-                this.amount = this.amount.subtract(that.getAmount());
+                this.recurringAmount = safeSubtract(this.recurringAmount, that.getRecurringAmount());
             }
 
             if (this.endDate.equals(that.getEndDate())) {
                 this.endDate = that.getStartDate();
-                this.amount = this.amount.subtract(that.getAmount());
+                this.recurringAmount = safeSubtract(this.recurringAmount, that.getRecurringAmount());
             }
         }
     }
 
+    private BigDecimal safeSubtract(BigDecimal minuend, BigDecimal subtrahend) {
+        // minuend - subtrahend == difference
+        if (minuend == null) {
+            if (subtrahend == null) {
+                return BigDecimal.ZERO;
+            } else {
+                return subtrahend.negate();
+            }
+        } else {
+            if (subtrahend == null) {
+                return minuend;
+            } else {
+                return minuend.subtract(subtrahend);
+            }
+        }
+
+    }
+
     @Override
     public boolean duplicates(InvoiceItem that) {
-        if(!this.getSubscriptionId().equals(that.getSubscriptionId())) {return false;}
-        if(!this.getRate().equals(that.getRate())) {return false;}
-        if(!this.getCurrency().equals(that.getCurrency())) {return false;}
+        if (!this.getSubscriptionId().equals(that.getSubscriptionId())) {return false;}
+
+        if (!this.planName.equals(that.getPlanName())) {return false;}
+        if (!this.phaseName.equals(that.getPhaseName())) {return false;}
+
+        if (!compareNullableBigDecimal(this.getRecurringRate(), that.getRecurringRate())) {return false;}
+
+        if (!this.getCurrency().equals(that.getCurrency())) {return false;}
+
+        if ((this.endDate == null) && (that.getEndDate() == null) && (this.startDate.compareTo(that.getStartDate()) == 0)) {
+            return true;
+        }
 
         DateRange thisDateRange = new DateRange(this.getStartDate(), this.getEndDate());
-        return thisDateRange.contains(that.getStartDate()) && thisDateRange.contains(that.getEndDate());
+        return thisDateRange.contains(that.getStartDate()) && (that.getEndDate() == null || thisDateRange.contains(that.getEndDate()));
+    }
+
+    private boolean compareNullableBigDecimal(@Nullable BigDecimal value1, @Nullable BigDecimal value2) {
+        if ((value1 == null) && (value2 != null)) {return false;}
+        if ((value1 != null) && (value2 == null)) {return false;}
+
+        if ((value1 != null) && (value2 != null)) {
+            if (value1.compareTo(value2) != 0) {return false;}
+        }
+
+        return true;
     }
 
     /**
      * indicates whether the supplied item is a cancelling item for this item
-     * @param that
-     * @return
+     * @param that  the InvoiceItem to be examined
+     * @return true if the two invoice items cancel each other out (same subscription, same date range, sum of amounts = 0)
      */
     @Override
     public boolean cancels(InvoiceItem that) {
         if(!this.getSubscriptionId().equals(that.getSubscriptionId())) {return false;}
         if(!this.getEndDate().equals(that.getEndDate())) {return false;}
         if(!this.getStartDate().equals(that.getStartDate())) {return false;}
-        if(!this.getAmount().equals(that.getAmount().negate())) {return false;}
-        if(!this.getRate().equals(that.getRate())) {return false;}
+
+        if (!safeCheckForZeroSum(this.getRecurringAmount(), that.getRecurringAmount())) {return false;}
+
+        if (!safeCheckForEquality(this.getRecurringRate(), that.getRecurringRate())) {return false;}
+
+        if (!safeCheckForZeroSum(this.getFixedAmount(), that.getFixedAmount())) {return false;}
         if(!this.getCurrency().equals(that.getCurrency())) {return false;}
 
         return true;
+    }
+
+    private boolean safeCheckForZeroSum(final BigDecimal value1, final BigDecimal value2) {
+        if ((value1 == null) && (value2 == null)) {return true;}
+        if ((value1 == null) ^ (value2 == null)) {return false;}
+        return (value1.add(value2).compareTo(BigDecimal.ZERO) == 0);
+    }
+
+    private boolean safeCheckForEquality(final BigDecimal value1, final BigDecimal value2) {
+        if ((value1 == null) && (value2 == null)) {return true;}
+        if ((value1 == null) ^ (value2 == null)) {return false;}
+        return (value1.compareTo(value2) == 0);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
+        sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
+        sb.append("subscriptionId = ").append(subscriptionId.toString()).append(", ");
+        sb.append("planName = ").append(planName).append(", ");
+        sb.append("phaseName = ").append(phaseName).append(", ");
+        sb.append("startDate = ").append(startDate.toString()).append(", ");
+        if (endDate != null) {
+            sb.append("endDate = ").append(endDate.toString()).append(", ");
+        } else {
+            sb.append("endDate = null");
+        }
+        sb.append("recurringAmount = ");
+        if (recurringAmount == null) {
+            sb.append("null");
+        } else {
+            sb.append(recurringAmount.toString());
+        }
+        sb.append(", ");
+
+        sb.append("recurringRate = ");
+        if (recurringRate == null) {
+            sb.append("null");
+        } else {
+            sb.append(recurringRate.toString());
+        }
+        sb.append(", ");
+
+        sb.append("fixedAmount = ");
+        if (fixedAmount == null) {
+            sb.append("null");
+        } else {
+            sb.append(fixedAmount.toString());
+        }
+
+        sb.append("}");
+        return sb.toString();
     }
 }

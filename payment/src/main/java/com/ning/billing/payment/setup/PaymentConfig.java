@@ -23,7 +23,9 @@ import org.skife.config.Default;
 import org.skife.config.DefaultNull;
 import org.skife.config.TimeSpan;
 
-public interface PaymentConfig {
+import com.ning.billing.util.notificationq.NotificationConfig;
+
+public interface PaymentConfig extends NotificationConfig {
     @Config("killbill.payment.provider.default")
     @DefaultNull
     public String getDefaultPaymentProvider();
@@ -32,14 +34,20 @@ public interface PaymentConfig {
     @DefaultNull
     public List<String> getPaymentRetryDays();
 
-    @Config("killbill.payment.retry.pause")
-    // payment retry job is off by default
-    @DefaultNull
-    TimeSpan getPaymentRetrySchedulePause();
+    @Config("killbill.payment.dao.claim.time")
+    @Default("60000")
+    public long getDaoClaimTimeMs();
 
-    @Config("killbill.payment.retry.claim.timeout")
-    // if payment retry job is on, then retry abandoned payment attempts after some period of time
-    @Default("1h")
-    TimeSpan getPaymentRetryClaimTimeout();
+    @Config("killbill.payment.dao.ready.max")
+    @Default("10")
+    public int getDaoMaxReadyEvents();
+
+    @Config("killbill.payment.engine.notifications.sleep")
+    @Default("500")
+    public long getNotificationSleepTimeMs();
+
+    @Config("killbill.payment.engine.events.off")
+    @Default("false")
+    public boolean isNotificationProcessingOff();
 
 }

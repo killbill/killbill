@@ -20,6 +20,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoicePayment;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -32,16 +33,15 @@ import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
-import com.ning.billing.payment.api.InvoicePayment;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 @Test
 @Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
 public class TestNotifyInvoicePaymentApi {
     @Inject
-    private EventBus eventBus;
+    private Bus eventBus;
     @Inject
     private RequestProcessor invoiceProcessor;
     @Inject
@@ -69,7 +69,7 @@ public class TestNotifyInvoicePaymentApi {
         PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
 
         invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
-                                     invoice.getAmountOutstanding(),
+                                     invoice.getBalance(),
                                      invoice.getCurrency(),
                                      paymentAttempt.getPaymentAttemptId(),
                                      paymentAttempt.getPaymentAttemptDate());

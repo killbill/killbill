@@ -19,12 +19,14 @@ package com.ning.billing.entitlement.api.test;
 import com.google.inject.Inject;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.engine.core.Engine;
+import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import java.util.UUID;
 
@@ -43,11 +45,13 @@ public class DefaultEntitlementTestApi implements EntitlementTestApi {
 
     @Override
     public void doProcessReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly) {
+        if (recursive || oneEventOnly) {
+            throw new EntitlementError("Not implemented");
+        }
         if (config.isEventProcessingOff()) {
             log.warn("Running event processing loop");
             NotificationQueue queue = getNotificationQueue();
             queue.processReadyNotification();
-
         }
     }
 

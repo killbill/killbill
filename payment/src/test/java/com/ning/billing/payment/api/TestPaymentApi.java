@@ -41,12 +41,12 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.model.DefaultInvoiceItem;
 import com.ning.billing.payment.TestHelper;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 
 public abstract class TestPaymentApi {
     @Inject
-    private EventBus eventBus;
+    private Bus eventBus;
     @Inject
     protected PaymentApi paymentApi;
     @Inject
@@ -70,14 +70,15 @@ public abstract class TestPaymentApi {
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();
 
-        invoice.add(new DefaultInvoiceItem(invoice.getId(),
-                                           subscriptionId,
-                                           now,
-                                           now.plusMonths(1),
-                                           "Test",
-                                           amount,
-                                           new BigDecimal("1.0"),
-                                           Currency.USD));
+        invoice.addInvoiceItem(new DefaultInvoiceItem(invoice.getId(),
+                                                       subscriptionId,
+                                                       "test plan", "test phase",
+                                                       now,
+                                                       now.plusMonths(1),
+                                                       amount,
+                                                       new BigDecimal("1.0"),
+                                                       null,
+                                                       Currency.USD));
 
         List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()));
 
@@ -99,6 +100,16 @@ public abstract class TestPaymentApi {
         assertEquals(paymentAttempt.getCurrency(), Currency.USD);
         assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getPaymentId());
         assertEquals(paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0), now.withMillisOfSecond(0).withSecondOfMinute(0));
+
+        List<PaymentInfo> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        assertNotNull(paymentInfos);
+        assertTrue(paymentInfos.size() > 0);
+
+        PaymentInfo paymentInfoFromGet = paymentInfos.get(0);
+        assertEquals(paymentInfo, paymentInfoFromGet);
+
+        PaymentAttempt paymentAttemptFromGet = paymentApi.getPaymentAttemptForInvoiceId(invoice.getId().toString());
+        assertEquals(paymentAttempt, paymentAttemptFromGet);
 
     }
 

@@ -18,150 +18,133 @@ package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.bus.Bus;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
-import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.payment.api.InvoicePayment;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBus.EventBusException;
 
 public class MockInvoiceDao implements InvoiceDao {
-    private final EventBus eventBus;
+    private final Bus eventBus;
     private final Object monitor = new Object();
-    private final Map<String, Invoice> invoices = new LinkedHashMap<String, Invoice>();
-    private final Map<UUID, InvoicePayment> invoicePayments = new LinkedHashMap<UUID, InvoicePayment>();
+    private final Map<UUID, Invoice> invoices = new LinkedHashMap<UUID, Invoice>();
 
     @Inject
-    public MockInvoiceDao(EventBus eventBus) {
+    public MockInvoiceDao(Bus eventBus) {
         this.eventBus = eventBus;
     }
 
     @Override
     public void create(Invoice invoice) {
         synchronized (monitor) {
-            invoices.put(invoice.getId().toString(), invoice);
+            invoices.put(invoice.getId(), invoice);
         }
         try {
             eventBus.post(new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
-                                                                 invoice.getAmountOutstanding(), invoice.getCurrency(),
+                                                                 invoice.getBalance(), invoice.getCurrency(),
                                                                  invoice.getInvoiceDate()));
         }
-        catch (EventBusException ex) {
+        catch (Bus.EventBusException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    private Invoice munge(Invoice invoice) {
-        if (invoice == null) {
-            return null;
-        }
-
-        DateTime lastPaymentDate = null;
-        BigDecimal amountPaid = new BigDecimal("0");
-
-        for (InvoicePayment invoicePayment : invoicePayments.values()) {
-            if (invoicePayment.getInvoiceId().equals(invoice.getId().toString())) {
-                if (lastPaymentDate == null || lastPaymentDate.isBefore(invoicePayment.getPaymentAttemptDate())) {
-                    lastPaymentDate = invoicePayment.getPaymentAttemptDate();
-                }
-                if (invoicePayment.getAmount() != null) {
-                    amountPaid.add(invoicePayment.getAmount());
-                }
-            }
-        }
-        return new DefaultInvoice(invoice.getId(),
-                                  invoice.getAccountId(),
-                                  invoice.getInvoiceDate(),
-                                  invoice.getTargetDate(),
-                                  invoice.getCurrency(),
-                                  lastPaymentDate,
-                                  amountPaid,
-                                  invoice.getItems());
-    }
-
-    private List<Invoice> munge(Collection<Invoice> invoices) {
-        List<Invoice> result = new ArrayList<Invoice>();
-        for (Invoice invoice : invoices) {
-            result.add(munge(invoice));
-        }
-        return result;
-    }
-
     @Override
-    public Invoice getById(String id) {
+    public Invoice getById(UUID id) {
         synchronized (monitor) {
-            return munge(invoices.get(id));
+            return invoices.get(id);
         }
     }
 
     @Override
     public List<Invoice> get() {
         synchronized (monitor) {
-            return munge(invoices.values());
+            return new ArrayList<Invoice>(invoices.values());
         }
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(String accountId) {
+    public List<Invoice> getInvoicesByAccount(UUID accountId) {
         List<Invoice> result = new ArrayList<Invoice>();
 
         synchronized (monitor) {
             for (Invoice invoice : invoices.values()) {
-                if (accountId.equals(invoice.getAccountId().toString())) {
+                if (accountId.equals(invoice.getAccountId())) {
                     result.add(invoice);
                 }
             }
         }
-        return munge(result);
+        return result;
     }
 
     @Override
-    public List<Invoice> getInvoicesBySubscription(String subscriptionId) {
+    public List<Invoice> getInvoicesByAccount(UUID accountId, DateTime fromDate) {
+        List<Invoice> invoicesForAccount = new ArrayList<Invoice>();
+
+        synchronized (monitor) {
+            for (Invoice invoice : get()) {
+                if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate)) {
+                    invoicesForAccount.add(invoice);
+                }
+            }
+        }
+
+        return invoicesForAccount;
+    }
+
+    @Override
+    public List<InvoiceItem> getInvoiceItemsByAccount(UUID accountId) {
+        List<InvoiceItem> invoiceItemsForAccount = new ArrayList<InvoiceItem>();
+
+        synchronized (monitor) {
+            for (Invoice invoice : get()) {
+                if (accountId.equals(invoice.getAccountId())) {
+                    invoiceItemsForAccount.addAll(invoice.getInvoiceItems());
+                }
+            }
+        }
+
+        return invoiceItemsForAccount;
+    }
+
+    @Override
+    public List<Invoice> getInvoicesBySubscription(UUID subscriptionId) {
         List<Invoice> result = new ArrayList<Invoice>();
 
         synchronized (monitor) {
             for (Invoice invoice : invoices.values()) {
-                for (InvoiceItem item : invoice.getItems()) {
-                    if (subscriptionId.equals(item.getSubscriptionId().toString())) {
+                for (InvoiceItem item : invoice.getInvoiceItems()) {
+                    if (subscriptionId.equals(item.getSubscriptionId())) {
                         result.add(invoice);
                         break;
                     }
                 }
             }
         }
-        return munge(result);
+        return result;
     }
 
     @Override
-    public List<UUID> getInvoicesForPayment(Date targetDate, int numberOfDays) {
-        Set<UUID> result = new LinkedHashSet<UUID>();
+    public List<UUID> getInvoicesForPayment(DateTime targetDate, int numberOfDays) {
+        List<UUID> result = new ArrayList<UUID>();
 
         synchronized (monitor) {
-            for (InvoicePayment invoicePayment : invoicePayments.values()) {
-                Invoice invoice = invoices.get(invoicePayment.getInvoiceId());
-                if ((invoice != null) &&
-                    (((invoicePayment.getPaymentAttemptDate() == null) || !invoicePayment.getPaymentAttemptDate().plusDays(numberOfDays).isAfter(targetDate.getTime())) &&
-                    (invoice.getTotalAmount() != null) && invoice.getTotalAmount().doubleValue() >= 0) &&
-                    ((invoicePayment.getAmount() == null) || invoicePayment.getAmount().doubleValue() >= invoice.getTotalAmount().doubleValue())) {
-                        result.add(invoice.getId());
+            for (Invoice invoice : invoices.values()) {
+                if (invoice.isDueForPayment(targetDate, numberOfDays)) {
+                    result.add(invoice.getId());
                 }
             }
         }
 
-        return new ArrayList<UUID>(result);
+        return result;
     }
 
     @Override
@@ -169,11 +152,13 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public String getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
+    public UUID getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
         synchronized(monitor) {
-            for (InvoicePayment invoicePayment : invoicePayments.values()) {
-                if (paymentAttemptId.toString().equals(invoicePayment.getPaymentAttemptId())) {
-                    return invoicePayment.getInvoiceId().toString();
+            for (Invoice invoice : invoices.values()) {
+                for (InvoicePayment payment : invoice.getPayments()) {
+                    if (paymentAttemptId.equals(payment.getPaymentAttemptId())) {
+                        return invoice.getId();
+                    }
                 }
             }
         }
@@ -183,24 +168,51 @@ public class MockInvoiceDao implements InvoiceDao {
     @Override
     public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
         synchronized(monitor) {
-            return invoicePayments.get(paymentAttemptId);
+            for (Invoice invoice : invoices.values()) {
+                for (InvoicePayment payment : invoice.getPayments()) {
+                    if (paymentAttemptId.equals(payment.getPaymentAttemptId())) {
+                        return payment;
+                    }
+                }
+            }
         }
+
+        return null;
     }
 
     @Override
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
-      synchronized (monitor) {
-          invoicePayments.put(invoicePayment.getPaymentAttemptId(), invoicePayment);
-      }
+        synchronized (monitor) {
+            Invoice invoice = invoices.get(invoicePayment.getInvoiceId());
+            if (invoice != null) {
+                invoice.addPayment(invoicePayment);
+            }
+        }
     }
 
-	@Override
-	public BigDecimal getAccountBalance(UUID accountId) {
-		List<Invoice> invoices = getInvoicesByAccount(accountId.toString());
-		BigDecimal result = BigDecimal.ZERO;
-		for(Invoice invoice : invoices) {
-			result = result.add(invoice.getAmountOutstanding());
-		}
-		return result;
-	}
+    @Override
+    public BigDecimal getAccountBalance(UUID accountId) {
+        BigDecimal balance = BigDecimal.ZERO;
+
+        for (Invoice invoice : get()) {
+            if (accountId.equals(invoice.getAccountId())) {
+                balance = balance.add(invoice.getBalance());
+            }
+        }
+
+        return balance;
+    }
+
+    @Override
+    public List<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate) {
+        List<Invoice> unpaidInvoices = new ArrayList<Invoice>();
+
+        for (Invoice invoice : get()) {
+            if (accountId.equals(invoice.getAccountId()) && (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0)) {
+                unpaidInvoices.add(invoice);
+            }
+        }
+
+        return unpaidInvoices;
+    }
 }
