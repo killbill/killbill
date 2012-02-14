@@ -17,25 +17,30 @@
 
 package com.ning.billing.invoice.api.invoice;
 
-import com.google.inject.Inject;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.model.DefaultInvoicePayment;
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
+import com.google.inject.Inject;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.InvoiceListener;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
+
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     private final InvoiceDao dao;
+	private final InvoiceListener listener;
 
     @Inject
-    public DefaultInvoicePaymentApi(final InvoiceDao dao) {
+    public DefaultInvoicePaymentApi(final InvoiceDao dao, final InvoiceListener listener) {
         this.dao = dao;
+        this.listener = listener;
     }
 
     @Override
@@ -79,5 +84,10 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate) {
         InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
         dao.notifyOfPaymentAttempt(invoicePayment);
+    }
+    
+    @Override 
+    public void triggerInvoiceGeneration(UUID accountId, DateTime targetDate) throws InvoiceApiException {
+    	listener.processAccount(accountId, targetDate);
     }
 }

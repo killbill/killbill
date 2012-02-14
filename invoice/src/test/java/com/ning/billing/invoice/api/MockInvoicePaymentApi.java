@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.naming.OperationNotSupportedException;
+
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import org.joda.time.DateTime;
 
@@ -99,4 +101,11 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
         InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
         notifyOfPaymentAttempt(invoicePayment);
     }
+
+	@Override
+	public void triggerInvoiceGeneration(UUID accountId, DateTime targetDate)
+			throws InvoiceApiException {
+		throw new UnsupportedOperationException();	
+		
+	}
 }

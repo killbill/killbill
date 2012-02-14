@@ -117,21 +117,25 @@ public class InvoiceListener {
             return;
         }
 
-        GlobalLock lock = null;
-        try {
-            lock = locker.lockWithNumberOfTries(LockerService.INVOICE, accountId.toString(), NB_LOCK_TRY);
+        processAccount(accountId, targetDate);
+    }
+    
+    public void processAccount(final UUID accountId, final DateTime targetDate) throws InvoiceApiException {
+    	  GlobalLock lock = null;
+          try {
+              lock = locker.lockWithNumberOfTries(LockerService.INVOICE, accountId.toString(), NB_LOCK_TRY);
 
-            processAccountWithLock(accountId, targetDate);
+              processAccountWithLock(accountId, targetDate);
 
-        } catch (LockFailedException e) {
-            // Not good!
-            log.error(String.format("Failed to process invoice for account %s, subscription %s, targetDate %s",
-                    accountId.toString(), subscriptionId.toString(), targetDate), e);
-        } finally {
-            if (lock != null) {
-                lock.release();
-            }
-        }
+          } catch (LockFailedException e) {
+              // Not good!
+              log.error(String.format("Failed to process invoice for account %s, targetDate %s",
+                      accountId.toString(), targetDate), e);
+          } finally {
+              if (lock != null) {
+                  lock.release();
+              }
+          }
     }
 
     private void processAccountWithLock(final UUID accountId, final DateTime targetDate) throws InvoiceApiException {
