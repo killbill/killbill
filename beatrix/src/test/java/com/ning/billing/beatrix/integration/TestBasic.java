@@ -185,17 +185,17 @@ public class TestBasic {
         testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
         testBasePlanComplete(clock.getUTCNow().plusDays(30).getDayOfMonth());
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
         testBasePlanComplete(clock.getUTCNow().plusDays(1).getDayOfMonth());
     }
