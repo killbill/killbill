@@ -38,8 +38,9 @@ public interface NotificationQueue {
     * This is only valid when the queue has been configured with isNotificationProcessingOff is true
     * In which case, it will callback users for all the ready notifications.
     *
+    * @return true if we processed some active notifications
     */
-   public void processReadyNotification();
+   public boolean processReadyNotification();
 
    /**
     * Stops the queue. Blocks until queue is completely stopped.
