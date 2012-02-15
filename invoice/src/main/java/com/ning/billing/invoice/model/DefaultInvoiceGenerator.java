@@ -109,10 +109,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     proposedItemIterator.remove();
                 }
             }
-//            if (existingInvoiceItems.contains(proposedItem)) {
-//                existingInvoiceItems.remove(proposedItem);
-//                proposedItemIterator.remove();
-//            }
         }
     }
 
