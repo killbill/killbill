@@ -31,8 +31,8 @@ public interface PaymentConfig extends NotificationConfig {
     public String getDefaultPaymentProvider();
 
     @Config("killbill.payment.retry.days")
-    @DefaultNull
-    public List<String> getPaymentRetryDays();
+    @Default("8,8,8")
+    public List<Integer> getPaymentRetryDays();
 
     @Config("killbill.payment.dao.claim.time")
     @Default("60000")
@@ -47,7 +47,8 @@ public interface PaymentConfig extends NotificationConfig {
     public long getNotificationSleepTimeMs();
 
     @Config("killbill.payment.engine.events.off")
-    @Default("false")
+    // turn off payment retries by default
+    @Default("true")
     public boolean isNotificationProcessingOff();
 
 }

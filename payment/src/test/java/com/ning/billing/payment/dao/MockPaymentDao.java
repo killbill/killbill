@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.joda.time.DateTime;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.ning.billing.invoice.api.Invoice;
@@ -82,8 +84,11 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry) {
-        // TODO Auto-generated method stub
-
+        PaymentInfo existingPayment = payments.get(paymentId);
+        if (existingPayment != null) {
+            PaymentInfo payment = existingPayment.cloner().setPaymentMethod(paymentMethodType).setCardType(cardType).setCardCountry(cardCountry).build();
+            payments.put(paymentId, payment);
+        }
     }
 
     @Override
@@ -112,6 +117,20 @@ public class MockPaymentDao implements PaymentDao {
             }
         }
         return paymentAttempts;
+    }
+
+    @Override
+    public void updatePaymentAttemptWithRetryInfo(UUID paymentAttemptId, int retryCount, DateTime nextRetryDate) {
+        PaymentAttempt existingAttempt = paymentAttempts.get(paymentAttemptId);
+        if (existingAttempt != null) {
+            PaymentAttempt attempt = existingAttempt.cloner().setPaymentAttemptId(paymentAttemptId).setRetryCount(retryCount).setNextRetryDate(nextRetryDate).build();
+            paymentAttempts.put(paymentAttemptId, attempt);
+        }
+    }
+
+    @Override
+    public PaymentAttempt getPaymentAttemptById(UUID paymentAttemptId) {
+        return paymentAttempts.get(paymentAttemptId);
     }
 
 }

@@ -20,7 +20,6 @@ import static org.testng.Assert.assertNotNull;
 
 import java.util.UUID;
 
-import com.ning.billing.invoice.api.InvoicePayment;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -31,8 +30,10 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
+import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;

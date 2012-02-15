@@ -208,4 +208,5 @@ public abstract class TestPaymentApi {
         assertTrue(errorOrVoid1.isRight());
         assertTrue(errorOrVoid2.isLeft());
     }
+
 }

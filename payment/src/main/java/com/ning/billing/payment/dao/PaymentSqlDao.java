@@ -55,6 +55,10 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
 
     @SqlQuery
     @Mapper(PaymentAttemptMapper.class)
+    PaymentAttempt getPaymentAttemptById(@Bind("payment_attempt_id") String paymentAttemptId);
+
+    @SqlQuery
+    @Mapper(PaymentAttemptMapper.class)
     PaymentAttempt getPaymentAttemptForInvoiceId(@Bind("invoice_id") String invoiceId);
 
     @SqlQuery
@@ -64,6 +68,11 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
     @SqlUpdate
     void updatePaymentAttemptWithPaymentId(@Bind("payment_attempt_id") String paymentAttemptId,
                                            @Bind("payment_id") String paymentId);
+
+    @SqlUpdate
+    void updatePaymentAttemptWithRetryInfo(@Bind("payment_attempt_id") String paymentAttemptId,
+                                           @Bind("retry_count") int retryCount,
+                                           @Bind("next_retry_dt") DateTime nextRetryDate);
 
     @SqlUpdate
     void updatePaymentInfo(@Bind("payment_method") String paymentMethod,
