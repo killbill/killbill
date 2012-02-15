@@ -25,13 +25,13 @@ public interface StaticCatalog {
     //
     public abstract String getCatalogName();
     
-    public abstract Date getEffectiveDate();
+    public abstract Date getEffectiveDate() throws CatalogApiException;
 
-    public abstract Currency[] getCurrentSupportedCurrencies();
+    public abstract Currency[] getCurrentSupportedCurrencies() throws CatalogApiException;
 
-	public abstract Product[] getCurrentProducts();
+	public abstract Product[] getCurrentProducts() throws CatalogApiException;
 	
-	public abstract Plan[] getCurrentPlans();
+	public abstract Plan[] getCurrentPlans() throws CatalogApiException;
 	
 	//
 	// Find a plan
