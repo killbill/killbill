@@ -40,6 +40,4 @@ public interface InvoicePaymentApi {
 
     public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate);
 
-	void triggerInvoiceGeneration(UUID accountId, DateTime targetDate) throws InvoiceApiException;
-
 }

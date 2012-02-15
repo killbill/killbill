@@ -86,7 +86,6 @@ public class InvoiceListener {
         }
     }
 
-    @Subscribe
     public void handleNextBillingDateEvent(final NextBillingDateEvent event) {
         // STEPH should we use the date of the event instead?
         try {

@@ -20,20 +20,24 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.InvoicePayment;
 import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 
 public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final InvoiceDao dao;
+	private final InvoiceListener listener;
 
     @Inject
-    public DefaultInvoiceUserApi(final InvoiceDao dao) {
+    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceListener listener) {
         this.dao = dao;
+        this.listener = listener;
     }
 
     @Override
@@ -75,5 +79,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
         return dao.getUnpaidInvoicesByAccountId(accountId, upToDate);
+    }
+    
+
+    @Override 
+    public void triggerInvoiceGeneration(UUID accountId, DateTime targetDate) throws InvoiceApiException {
+    	listener.processAccount(accountId, targetDate);
     }
 }

@@ -25,9 +25,7 @@ import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -35,13 +33,11 @@ import com.ning.billing.invoice.model.DefaultInvoicePayment;
 
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     private final InvoiceDao dao;
-	private final InvoiceListener listener;
 
     @Inject
-    public DefaultInvoicePaymentApi(final InvoiceDao dao, final InvoiceListener listener) {
+    public DefaultInvoicePaymentApi(final InvoiceDao dao) {
         this.dao = dao;
-        this.listener = listener;
-    }
+     }
 
     @Override
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
@@ -86,8 +82,4 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         dao.notifyOfPaymentAttempt(invoicePayment);
     }
     
-    @Override 
-    public void triggerInvoiceGeneration(UUID accountId, DateTime targetDate) throws InvoiceApiException {
-    	listener.processAccount(accountId, targetDate);
-    }
 }
