@@ -258,7 +258,7 @@ public class TestBasic {
         testBasePlanComplete(startDate, 2, false);
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 3, true);
