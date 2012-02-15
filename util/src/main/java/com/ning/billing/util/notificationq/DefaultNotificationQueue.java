@@ -53,7 +53,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
             nbProcessedEvents.incrementAndGet();
             logDebug("handling notification %s, key = %s for time %s",
                     cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate());
-            handler.handleReadyNotification(cur.getNotificationKey());
+            handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
             clearNotification(cur);
             logDebug("done handling notification %s, key = %s for time %s",
                     cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate());
