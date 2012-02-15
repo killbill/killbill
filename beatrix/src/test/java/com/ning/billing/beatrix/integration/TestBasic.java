@@ -217,8 +217,8 @@ public class TestBasic {
         Iterator<InvoiceItem> invoiceItemIterator = invoiceItems.iterator();
         while (invoiceItemIterator.hasNext()) {
             InvoiceItem item = invoiceItemIterator.next();
-            if (item.getStartDate().compareTo(removeMillis(startDate)) == 0) {
-                if (item.getEndDate().compareTo(removeMillis(endDate)) == 0) {
+            if (item.getStartDate().compareTo(startDate) == 0) {
+                if (item.getEndDate().compareTo(endDate) == 0) {
                     if (item.getAmount().compareTo(amount) == 0) {
                         wasFound = true;
                         break;
@@ -233,11 +233,7 @@ public class TestBasic {
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
         assertTrue(clock.getUTCNow().isBefore(ctd));
-        assertTrue(ctd.compareTo(removeMillis(chargeThroughDate)) == 0);
-    }
-
-    private DateTime removeMillis(DateTime input) {
-        return input.toMutableDateTime().millisOfSecond().set(0).toDateTime();
+        assertTrue(ctd.compareTo(chargeThroughDate) == 0);
     }
 
     @Test(groups = "fast", enabled = false)
@@ -291,7 +287,7 @@ public class TestBasic {
 
     private void testBasePlanComplete(DateTime initialCreationDate, int billingDay,
                                       boolean proRationExpected) throws Exception {
-        long DELAY = 5000 * 10;
+        long DELAY = 5000;
 
         Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
         UUID accountId = account.getId();
@@ -343,7 +339,7 @@ public class TestBasic {
         // VERIFY AGAIN CTD HAS BEEN SET
         //
         startDate = subscription.getCurrentPhaseStart();
-        endDate = startDate.plusMonths(1);
+        endDate = startDate.plusDays(30);
         price = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
         verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
 
@@ -362,6 +358,16 @@ public class TestBasic {
         clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
 
         assertTrue(busHandler.isCompleted(DELAY));
+
+        startDate = subscription.getCurrentPhaseStart();
+        int numberOfDaysToProRate = billingDay - startDate.dayOfMonth().get();
+        DateTime firstEndDate = startDate.plusDays(numberOfDaysToProRate);
+        DateTime secondEndDate = firstEndDate.plusMonths(1);
+
+        BigDecimal rate = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
+        price = rate.multiply(new BigDecimal(numberOfDaysToProRate).setScale(4)).setScale(4).divide(new BigDecimal("29.0000"), 6);
+        verifyTestResult(accountId, subscription.getId(), startDate, firstEndDate, price, secondEndDate);
+        verifyTestResult(accountId, subscription.getId(), firstEndDate, secondEndDate, rate, secondEndDate);
 
         //
         // CHANGE PLAN EOT AND EXPECT NOTHING
@@ -387,17 +393,23 @@ public class TestBasic {
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed fourth busHandler checkpoint.");
 
+        startDate = secondEndDate;
+        endDate = secondEndDate.plusMonths(1);
+        price = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
+
         //
         // MOVE TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE
         //
         int maxCycles = 3;
-        startDate = endDate;
-        endDate = startDate.plusMonths(1);
         do {
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
             busHandler.pushExpectedEvent(NextEvent.PAYMENT);
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
             assertTrue(busHandler.isCompleted(DELAY));
+
+            startDate = endDate;
+            endDate = startDate.plusMonths(1);
             verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
         } while (maxCycles-- > 0);
 

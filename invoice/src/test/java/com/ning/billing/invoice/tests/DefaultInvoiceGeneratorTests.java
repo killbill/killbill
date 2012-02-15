@@ -131,8 +131,8 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice.getNumberOfItems(), 2);
 
         BigDecimal expectedNumberOfBillingCycles;
-        expectedNumberOfBillingCycles = ONE.add(FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
-        BigDecimal expectedAmount = expectedNumberOfBillingCycles.multiply(rate).setScale(NUMBER_OF_DECIMALS);
+        expectedNumberOfBillingCycles = ONE.add(FOURTEEN.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        BigDecimal expectedAmount = expectedNumberOfBillingCycles.multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         assertEquals(invoice.getTotalAmount(), expectedAmount);
     }
 
@@ -373,7 +373,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         // on 6/21/2011, create add-on (subscription 5)
         events.add(createBillingEvent(subscriptionId5, plan5StartDate, plan5, plan5Phase1, 10));
-        expectedAmount = TWENTY.multiply(NINETEEN.divide(THIRTY, NUMBER_OF_DECIMALS, ROUNDING_METHOD)).setScale(NUMBER_OF_DECIMALS);
+        expectedAmount = TWENTY.multiply(NINETEEN).divide(THIRTY, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testInvoiceGeneration(events, invoiceItems, plan5StartDate, 1, expectedAmount);
 
         // on 7/7/2011, invoice subscription 4 (plan 1)
