@@ -76,7 +76,7 @@ public interface NotificationQueueService {
     /**
      *
      * @param services
-     * @return
+     * @return whether or not things were ready in the queue
      */
-    public void triggerManualQueueProcessing(final String [] services);
+    public boolean triggerManualQueueProcessing(final String [] services, final Boolean keepRunning);
 }
