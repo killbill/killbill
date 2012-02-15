@@ -33,7 +33,7 @@ public interface InvoiceConfig {
     @Default("500")
     public long getNotificationSleepTimeMs();
 
-    @Config("killbill.invoice.engine.events.off")
+    @Config("killbill.notifications.off")
     @Default("false")
     public boolean isEventProcessingOff();
 }

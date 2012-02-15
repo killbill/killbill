@@ -36,5 +36,4 @@ public class DefaultNotificationQueueService extends NotificationQueueServiceBas
             NotificationConfig config) {
         return new DefaultNotificationQueue(dbi, clock, svcName, queueName, handler, config);
     }
-
 }
