@@ -179,7 +179,7 @@ public class TestBasic {
             public Void inTransaction(Handle h, TransactionStatus status)
                     throws Exception {
                 h.execute("truncate table accounts");
-                h.execute("truncate table events");
+                h.execute("truncate table entitlement_events");
                 h.execute("truncate table subscriptions");
                 h.execute("truncate table bundles");
                 h.execute("truncate table notifications");
