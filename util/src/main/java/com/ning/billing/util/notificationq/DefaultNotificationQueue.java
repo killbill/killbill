@@ -38,13 +38,13 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     }
 
     @Override
-    protected void doProcessEvents(final int sequenceId) {
+    protected boolean doProcessEvents(final int sequenceId) {
 
         logDebug("ENTER doProcessEvents");
         List<Notification> notifications = getReadyNotifications(sequenceId);
         if (notifications.size() == 0) {
             logDebug("EXIT doProcessEvents");
-            return;
+            return false;
         }
 
         logDebug("START processing %d events at time %s", notifications.size(), clock.getUTCNow().toDate());
@@ -58,6 +58,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
             logDebug("done handling notification %s, key = %s for time %s",
                     cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate());
         }
+        return true;
     }
 
     @Override

@@ -15,14 +15,14 @@ getEventById(event_id) ::= <<
       , plist_name
       , current_version
       , is_active  
-  from events
+  from entitlement_events
   where
       event_id = :event_id
   ;
 >>
 
 insertEvent() ::= <<
-    insert into events (
+    insert into entitlement_events (
       event_id
       , event_type
       , user_type
@@ -54,14 +54,14 @@ insertEvent() ::= <<
 >>
 
 removeEvents(subscription_id) ::= <<
-    delete from events
+    delete from entitlement_events
       where
     subscription_id = :subscription_id
     ;
 >>
 
 unactiveEvent(event_id, now) ::= <<
-    update events
+    update entitlement_events
     set
       is_active = 0
       , updated_dt = :now
@@ -71,7 +71,7 @@ unactiveEvent(event_id, now) ::= <<
 >>
 
 reactiveEvent(event_id, now) ::= <<
-    update events
+    update entitlement_events
     set
       is_active = 1
       , updated_dt = :now
@@ -95,7 +95,7 @@ getFutureActiveEventForSubscription(subscription_id, now) ::= <<
       , plist_name
       , current_version
       , is_active
-    from events
+    from entitlement_events
     where
       subscription_id = :subscription_id
       and is_active = 1
@@ -123,7 +123,7 @@ getEventsForSubscription(subscription_id) ::= <<
       , plist_name
       , current_version
       , is_active
-    from events
+    from entitlement_events
     where
       subscription_id = :subscription_id
     order by
