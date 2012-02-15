@@ -87,7 +87,7 @@ public class TestAnalyticsService
     private TagDefinitionSqlDao tagDao;
 
     @Inject
-    private AnalyticsService service;
+    private DefaultAnalyticsService service;
 
     @Inject
     private Bus bus;

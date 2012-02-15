@@ -24,11 +24,11 @@ public interface Catalog {
     //
     public abstract String getCatalogName();
 
-    public abstract Currency[] getSupportedCurrencies(DateTime requestedDate);
+    public abstract Currency[] getSupportedCurrencies(DateTime requestedDate) throws CatalogApiException;
 
-	public abstract Product[] getProducts(DateTime requestedDate);
+	public abstract Product[] getProducts(DateTime requestedDate) throws CatalogApiException;
 	
-	public abstract Plan[] getPlans(DateTime requestedDate);
+	public abstract Plan[] getPlans(DateTime requestedDate) throws CatalogApiException;
 
 	
 	//

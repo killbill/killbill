@@ -64,11 +64,7 @@ public class RequestProcessor {
             }
             else {
                 List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()));
-
-                if (results.isEmpty()) {
-                    eventBus.post(new PaymentError("unknown", "No payment processed"));
-                }
-                else {
+                if (!results.isEmpty()) {
                     Either<PaymentError, PaymentInfo> result = results.get(0);
                     eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
                 }

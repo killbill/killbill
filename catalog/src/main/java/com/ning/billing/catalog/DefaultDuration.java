@@ -52,7 +52,7 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
 
     @Override
     public DateTime addToDateTime(DateTime dateTime) {
-        if (number < 0) {return null;}
+        if (number == null) {return dateTime;}
 
         switch (unit) {
             case DAYS:
@@ -63,9 +63,9 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
                 return dateTime.plusYears(number);
             case UNLIMITED:
                 return dateTime.plusYears(100);
+            default:
+                return dateTime;
         }
-
-        return null;
     }
 
     @Override

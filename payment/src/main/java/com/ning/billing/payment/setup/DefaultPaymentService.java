@@ -23,20 +23,24 @@ import com.google.inject.Inject;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.payment.RequestProcessor;
+import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.util.bus.Bus;
 
-public class PaymentService implements KillbillService {
-    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+public class DefaultPaymentService implements PaymentService {
+    private static final Logger log = LoggerFactory.getLogger(DefaultPaymentService.class);
 
     private static final String SERVICE_NAME = "payment-service";
 
     private final RequestProcessor requestProcessor;
     private final Bus eventBus;
+    private final PaymentApi api;
 
     @Inject
-    public PaymentService(final RequestProcessor requestProcessor, final Bus eventBus) {
+    public DefaultPaymentService(final RequestProcessor requestProcessor, final PaymentApi api, final Bus eventBus) {
         this.requestProcessor = requestProcessor;
         this.eventBus = eventBus;
+        this.api = api;
     }
 
     @Override
@@ -52,6 +56,11 @@ public class PaymentService implements KillbillService {
         catch (Bus.EventBusException e) {
             log.error("Unable to register with the EventBus!", e);
         }
+    }
+
+    @Override
+    public PaymentApi getPaymentApi() {
+        return api;
     }
 
 }

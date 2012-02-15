@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import com.ning.billing.util.bus.BusEvent;
 
-public class NextBillingDateEvent implements BusEvent{
+public class NextBillingDateEvent implements BusEvent {
 	private final UUID subscriptionId;
 
 	public NextBillingDateEvent(UUID subscriptionId) {

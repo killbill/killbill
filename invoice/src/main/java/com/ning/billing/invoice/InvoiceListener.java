@@ -43,10 +43,10 @@ import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceItemList;
 import com.ning.billing.invoice.notification.NextBillingDateEvent;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.globalLocker.GlobalLock;
-import com.ning.billing.util.globalLocker.GlobalLocker;
-import com.ning.billing.util.globalLocker.GlobalLocker.LockerService;
-import com.ning.billing.util.globalLocker.LockFailedException;
+import com.ning.billing.util.globallocker.GlobalLock;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
+import com.ning.billing.util.globallocker.LockFailedException;
 
 public class InvoiceListener {
 
@@ -59,7 +59,7 @@ public class InvoiceListener {
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
     private final Clock clock;
-    private final  GlobalLocker locker;
+    private final GlobalLocker locker;
 
     private final static boolean VERBOSE_OUTPUT = false;
 
@@ -79,16 +79,24 @@ public class InvoiceListener {
 
     @Subscribe
     public void handleSubscriptionTransition(final SubscriptionTransition transition) {
-        processSubscription(transition);
+        try {
+            processSubscription(transition);
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Subscribe
     public void handleNextBillingDateEvent(final NextBillingDateEvent event) {
         // STEPH should we use the date of the event instead?
-        processSubscription(event.getSubscriptionId(), clock.getUTCNow());
+        try {
+            processSubscription(event.getSubscriptionId(), clock.getUTCNow());
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
     }
 
-    private void processSubscription(final SubscriptionTransition transition) {
+    private void processSubscription(final SubscriptionTransition transition) throws InvoiceApiException {
         UUID subscriptionId = transition.getSubscriptionId();
         DateTime targetDate = transition.getEffectiveTransitionTime();
         log.info("Got subscription transition from InvoiceListener. id: " + subscriptionId.toString() + "; targetDate: " + targetDate.toString());
@@ -96,8 +104,7 @@ public class InvoiceListener {
         processSubscription(subscriptionId, targetDate);
     }
 
-    private void processSubscription(final UUID subscriptionId, final DateTime targetDate) {
-
+    private void processSubscription(final UUID subscriptionId, final DateTime targetDate) throws InvoiceApiException {
         if (subscriptionId == null) {
             log.error("Failed handling entitlement change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
             return;
@@ -127,7 +134,7 @@ public class InvoiceListener {
         }
     }
 
-    private void processAccountWithLock(final UUID accountId, final DateTime targetDate) {
+    private void processAccountWithLock(final UUID accountId, final DateTime targetDate) throws InvoiceApiException {
 
         Account account = accountUserApi.getAccountById(accountId);
         if (account == null) {

@@ -121,9 +121,8 @@ public class TestVersionedCatalogLoader {
 	@Test(enabled=true)
 	public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
 		VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog").toString());
-		assertEquals(4, c.size());
+		assertEquals(3, c.size());
 		Iterator<StandaloneCatalog> it = c.iterator();
-		it.next(); //discard the baseline
 		DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
 		assertEquals(dt.toDate(),it.next().getEffectiveDate());
 		dt = new DateTime("2011-02-02T00:00:00+00:00");

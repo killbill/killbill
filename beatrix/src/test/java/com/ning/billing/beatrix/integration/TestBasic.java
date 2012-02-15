@@ -14,15 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.beatrix.integration.inv_ent;
+package com.ning.billing.beatrix.integration;
 
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
@@ -47,7 +52,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.beatrix.integration.inv_ent.TestBusHandler.NextEvent;
+import com.ning.billing.beatrix.integration.TestBusHandler.NextEvent;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
@@ -90,6 +95,9 @@ public class TestBasic {
     @Inject
     private AccountService accountService;
 
+    @Inject
+    private MysqlTestingHelper helper;
+
     private EntitlementUserApi entitlementUserApi;
 
     private InvoiceUserApi invoiceUserApi;
@@ -100,8 +108,29 @@ public class TestBasic {
 
 
 
+    private void setupMySQL() throws IOException
+    {
+
+
+        final String accountDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+        final String entitlementDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+        final String invoiceDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+        final String paymentDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
+        final String utilDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+
+        helper.startMysql();
+
+        helper.initDb(accountDdl);
+        helper.initDb(entitlementDdl);
+        helper.initDb(invoiceDdl);
+        helper.initDb(paymentDdl);
+        helper.initDb(utilDdl);
+    }
+
     @BeforeSuite(alwaysRun = true)
     public void setup() throws Exception{
+
+        setupMySQL();
 
         /**
          * Initialize lifecyle for subset of services
@@ -110,6 +139,8 @@ public class TestBasic {
         lifecycle.fireStartupSequencePriorEventRegistration();
         busService.getBus().register(busHandler);
         lifecycle.fireStartupSequencePostEventRegistration();
+
+
 
         /**
          * Retrieve APIs
@@ -154,9 +185,14 @@ public class TestBasic {
                 h.execute("truncate table notifications");
                 h.execute("truncate table claimed_notifications");
                 h.execute("truncate table invoices");
-                h.execute("truncate table invoice_items");
+                h.execute("truncate table fixed_invoice_items");
+                h.execute("truncate table recurring_invoice_items");
                 h.execute("truncate table tag_definitions");
                 h.execute("truncate table tags");
+                h.execute("truncate table custom_fields");
+                h.execute("truncate table invoice_payments");
+                h.execute("truncate table payment_attempts");
+                h.execute("truncate table payments");
                 return null;
             }
         });
@@ -172,22 +208,54 @@ public class TestBasic {
         return ctd;
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth());
+        testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth(), false);
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().getDayOfMonth());
+        testBasePlanComplete(clock.getUTCNow().getDayOfMonth(), false);
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "slow", enabled = true)
+    public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
+        testBasePlanComplete(clock.getUTCNow().plusDays(30).getDayOfMonth(), false);
+    }
+
+    @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().plusDays(1).getDayOfMonth());
+        testBasePlanComplete(clock.getUTCNow().plusDays(2).getDayOfMonth(), true);
     }
 
-    private void testBasePlanComplete(int billingDay) throws Exception {
+
+    private void waitForDebug() throws Exception {
+        Thread.sleep(600000);
+    }
+
+
+    @Test(groups = "stress", enabled = true)
+    public void stressTest() throws Exception {
+        final int maxIterations = 7;
+        int curIteration = maxIterations;
+        for (curIteration = 0; curIteration < maxIterations; curIteration++) {
+            log.info("################################  ITERATION " + curIteration + "  #########################");
+            Thread.sleep(1000);
+            setupTest();
+            testBasePlanCompleteWithBillingDayPresent();
+            Thread.sleep(1000);
+            setupTest();
+            testBasePlanCompleteWithBillingDayInPast();
+            Thread.sleep(1000);
+            setupTest();
+            testBasePlanCompleteWithBillingDayAlignedWithTrial();
+            Thread.sleep(1000);
+            setupTest();
+            testBasePlanCompleteWithBillingDayInFuture();
+        }
+    }
+
+    private void testBasePlanComplete(int billingDay, boolean prorationExpected) throws Exception {
         long DELAY = 5000;
 
         Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
@@ -207,6 +275,10 @@ public class TestBasic {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
         assertNotNull(subscription);
+
+
+        //waitForDebug();
+
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed first busHandler checkpoint.");
 
@@ -240,6 +312,13 @@ public class TestBasic {
         //
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+
+        if (prorationExpected) {
+            busHandler.pushExpectedEvent(NextEvent.INVOICE);
+            busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        }
+
         clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
 
         assertTrue(busHandler.isCompleted(DELAY));
@@ -259,8 +338,12 @@ public class TestBasic {
         //
         busHandler.pushExpectedEvent(NextEvent.CHANGE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         //clock.addDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
+
+        //waitForDebug();
+
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed fourth busHandler checkpoint.");
 
@@ -271,6 +354,7 @@ public class TestBasic {
         DateTime lastCtd = null;
         do {
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
+            busHandler.pushExpectedEvent(NextEvent.PAYMENT);
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
             assertTrue(busHandler.isCompleted(DELAY));
             lastCtd = checkAndGetCTD(subscription.getId());
@@ -301,6 +385,10 @@ public class TestBasic {
         assertNotNull(lastCtd);
         log.info("Checking CTD: " + lastCtd.toString() + "; clock is " + clock.getUTCNow().toString());
         assertTrue(lastCtd.isBefore(clock.getUTCNow()));
+
+        // The invoice system is still working to verify there is nothing to do
+        Thread.sleep(3000);
+        log.info("TEST PASSED !");
     }
 
     @Test(enabled=false)
@@ -342,6 +430,8 @@ public class TestBasic {
 
 
     protected AccountData getAccountData(final int billingDay) {
+
+        final String someRandomKey = RandomStringUtils.randomAlphanumeric(10);
         AccountData accountData = new AccountData() {
             @Override
             public String getName() {
@@ -353,7 +443,7 @@ public class TestBasic {
             }
             @Override
             public String getEmail() {
-                return "accountName@yahoo.com";
+                return  someRandomKey + "@laposte.fr";
             }
             @Override
             public String getPhone() {
@@ -361,7 +451,7 @@ public class TestBasic {
             }
             @Override
             public String getExternalKey() {
-                return "k123456";
+                return someRandomKey;
             }
             @Override
             public int getBillCycleDay() {
@@ -373,7 +463,7 @@ public class TestBasic {
             }
             @Override
             public String getPaymentProviderName() {
-                return "Paypal";
+                return MockModule.PLUGIN_NAME;
             }
 
             @Override

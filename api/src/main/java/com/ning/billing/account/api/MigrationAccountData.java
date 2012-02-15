@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.test;
+package com.ning.billing.account.api;
 
-import java.util.UUID;
+import org.joda.time.DateTime;
 
+public interface MigrationAccountData extends AccountData {
 
-public interface EntitlementTestApi {
-
-    public void doProcessReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly);
-
+	public DateTime getCreatedDate();
+	
+	public DateTime getUpdatedDate();
 }

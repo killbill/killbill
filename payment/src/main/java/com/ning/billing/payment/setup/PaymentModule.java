@@ -25,6 +25,7 @@ import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.dao.DefaultPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
@@ -60,7 +61,7 @@ public class PaymentModule extends AbstractModule {
         bind(PaymentProviderPluginRegistry.class).asEagerSingleton();
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(RequestProcessor.class).asEagerSingleton();
-        bind(PaymentService.class).asEagerSingleton();
+        bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();
         installPaymentProviderPlugins(paymentConfig);
         installPaymentDao();
     }

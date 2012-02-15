@@ -18,7 +18,7 @@ package com.ning.billing.invoice.dao;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.DefaultInvoiceItem;
+import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.util.entity.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
@@ -46,8 +46,8 @@ import java.util.List;
 import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(InvoiceItemSqlDao.InvoiceItemMapper.class)
-public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
+@RegisterMapper(FixedPriceInvoiceItemSqlDao.FixedPriceInvoiceItemMapper.class)
+public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
     @SqlQuery
     List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
 
@@ -59,25 +59,26 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
 
     @Override
     @SqlUpdate
-    void create(@InvoiceItemBinder final InvoiceItem invoiceItem);
+    void create(@FixedPriceInvoiceItemBinder final InvoiceItem invoiceItem);
 
     @Override
     @SqlUpdate
-    void update(@InvoiceItemBinder final InvoiceItem invoiceItem);
+    void update(@FixedPriceInvoiceItemBinder final InvoiceItem invoiceItem);
+
+    @SqlBatch
+    void create(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items);
 
     @SqlBatch(transactional=false)
-    void batchCreateFromTransaction(@InvoiceItemBinder final List<InvoiceItem> items);
+    void batchCreateFromTransaction(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items);
 
-    @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
+    @BindingAnnotation(FixedPriceInvoiceItemBinder.FixedPriceInvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
-    public @interface InvoiceItemBinder {
-        public static class InvoiceItemBinderFactory implements BinderFactory {
-            @Override
+    public @interface FixedPriceInvoiceItemBinder {
+        public static class FixedPriceInvoiceItemBinderFactory implements BinderFactory {
             public Binder build(Annotation annotation) {
-                return new Binder<InvoiceItemBinder, InvoiceItem>() {
-                    @Override
-                    public void bind(SQLStatement q, InvoiceItemBinder bind, InvoiceItem item) {
+                return new Binder<FixedPriceInvoiceItemBinder, FixedPriceInvoiceItem>() {
+                    public void bind(SQLStatement q, FixedPriceInvoiceItemBinder bind, FixedPriceInvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("subscriptionId", item.getSubscriptionId().toString());
@@ -85,9 +86,7 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                         q.bind("phaseName", item.getPhaseName());
                         q.bind("startDate", item.getStartDate().toDate());
                         q.bind("endDate", item.getEndDate().toDate());
-                        q.bind("recurringAmount", item.getRecurringAmount());
-                        q.bind("recurringRate", item.getRecurringRate());
-                        q.bind("fixedAmount", item.getFixedAmount());
+                        q.bind("amount", item.getAmount());
                         q.bind("currency", item.getCurrency().toString());
                     }
                 };
@@ -95,9 +94,9 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
         }
     }
 
-    public static class InvoiceItemMapper implements ResultSetMapper<InvoiceItem> {
+    public static class FixedPriceInvoiceItemMapper implements ResultSetMapper<InvoiceItem> {
         @Override
-        public InvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
+        public FixedPriceInvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
             UUID id = UUID.fromString(result.getString("id"));
             UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
             UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
@@ -105,13 +104,11 @@ public interface InvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             String phaseName = result.getString("phase_name");
             DateTime startDate = new DateTime(result.getTimestamp("start_date"));
             DateTime endDate = new DateTime(result.getTimestamp("end_date"));
-            BigDecimal recurringAmount = result.getBigDecimal("recurring_amount");
-            BigDecimal recurringRate = result.getBigDecimal("recurring_rate");
-            BigDecimal fixedAmount = result.getBigDecimal("fixed_amount");
+            BigDecimal amount = result.getBigDecimal("amount");
             Currency currency = Currency.valueOf(result.getString("currency"));
 
-            return new DefaultInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
-                                          recurringAmount, recurringRate, fixedAmount, currency);
+            return new FixedPriceInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName,
+                                            startDate, endDate, amount, currency);
         }
     }
 }

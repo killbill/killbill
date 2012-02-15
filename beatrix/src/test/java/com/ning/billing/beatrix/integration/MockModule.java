@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.beatrix.integration.inv_ent;
+package com.ning.billing.beatrix.integration;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -36,11 +36,16 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.lifecycle.KillbillService;
+import com.ning.billing.payment.api.PaymentService;
+import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
+import com.ning.billing.payment.setup.PaymentConfig;
+import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.bus.BusService;
@@ -51,6 +56,9 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 
 public class MockModule extends AbstractModule {
 
+
+    public static final String PLUGIN_NAME = "yoyo";
+
     @Override
     protected void configure() {
 
@@ -59,18 +67,35 @@ public class MockModule extends AbstractModule {
         bind(Clock.class).to(ClockMock.class).asEagerSingleton();
         bind(ClockMock.class).asEagerSingleton();
         bind(Lifecycle.class).to(SubsetDefaultLifecycle.class).asEagerSingleton();
-        bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-        final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-        bind(DbiConfig.class).toInstance(config);
+
+
+        final MysqlTestingHelper helper = new MysqlTestingHelper();
+        bind(MysqlTestingHelper.class).toInstance(helper);
+        if (helper.isUsingLocalInstance()) {
+            bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
+            final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
+            bind(DbiConfig.class).toInstance(config);
+        } else {
+            final IDBI dbi = helper.getDBI();
+            bind(IDBI.class).toInstance(dbi);
+        }
+
+        install(new GlobalLockerModule());
         install(new BusModule());
         install(new NotificationQueueModule());
         install(new AccountModule());
         install(new CatalogModule());
         install(new EntitlementModule());
         install(new InvoiceModule());
-        install(new GlobalLockerModule());
+        install(new PaymentMockModule());
     }
 
+    private static final class PaymentMockModule extends PaymentModule {
+        @Override
+        protected void installPaymentProviderPlugins(PaymentConfig config) {
+            install(new MockPaymentProviderPluginModule(PLUGIN_NAME));
+        }
+    }
 
     private static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestBasic.class.getResource(resource);
@@ -84,7 +109,6 @@ public class MockModule extends AbstractModule {
 
     private final static class SubsetDefaultLifecycle extends DefaultLifecycle {
 
-
         @Inject
         public SubsetDefaultLifecycle(Injector injector) {
             super(injector);
@@ -97,6 +121,7 @@ public class MockModule extends AbstractModule {
                             .add(injector.getInstance(CatalogService.class))
                             .add(injector.getInstance(EntitlementService.class))
                             .add(injector.getInstance(InvoiceService.class))
+                            .add(injector.getInstance(PaymentService.class))
                             .build();
             return services;
         }

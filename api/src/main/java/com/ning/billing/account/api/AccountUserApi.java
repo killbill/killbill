@@ -25,12 +25,16 @@ public interface AccountUserApi {
 
     public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException;
 
+    public Account migrateAccount(MigrationAccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException;
+
     /***
      *
      * Note: does not update the external key
      * @param account
      */
     public void updateAccount(Account account) throws AccountApiException;
+
+    public void updateAccount(String key, AccountData accountData) throws AccountApiException;
 
     public Account getAccountByKey(String key);
 

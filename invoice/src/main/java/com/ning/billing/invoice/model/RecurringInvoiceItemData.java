@@ -14,33 +14,32 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.invoice.model;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.entity.Entity;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
-public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
-    UUID getInvoiceId();
+public class RecurringInvoiceItemData {
+    private final DateTime startDate;
+    private final DateTime endDate;
+    private final BigDecimal numberOfCycles;
 
-    UUID getSubscriptionId();
+    public RecurringInvoiceItemData(DateTime startDate, DateTime endDate, BigDecimal numberOfCycles) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.numberOfCycles = numberOfCycles;
+    }
 
-    String getPlanName();
+    public DateTime getStartDate() {
+        return startDate;
+    }
 
-    String getPhaseName();
+    public DateTime getEndDate() {
+        return endDate;
+    }
 
-    String getDescription();
-
-    DateTime getStartDate();
-
-    DateTime getEndDate();
-
-    BigDecimal getAmount();
-
-    Currency getCurrency();
-
-    InvoiceItem asCredit();
+    public BigDecimal getNumberOfCycles() {
+        return numberOfCycles;
+    }
 }
