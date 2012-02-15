@@ -104,29 +104,29 @@ public class SubscriptionData implements Subscription {
 
     @Override
     public SubscriptionState getState() {
-        return (getLatestTransition() == null) ? null : getLatestTransition().getNextState();
+        return (getPreviousTransition() == null) ? null : getPreviousTransition().getNextState();
     }
 
     @Override
     public PlanPhase getCurrentPhase() {
-        return (getLatestTransition() == null) ? null : getLatestTransition().getNextPhase();
+        return (getPreviousTransition() == null) ? null : getPreviousTransition().getNextPhase();
     }
 
 
     @Override
     public Plan getCurrentPlan() {
-        return (getLatestTransition() == null) ? null : getLatestTransition().getNextPlan();
+        return (getPreviousTransition() == null) ? null : getPreviousTransition().getNextPlan();
     }
 
     @Override
     public String getCurrentPriceList() {
-        return (getLatestTransition() == null) ? null : getLatestTransition().getNextPriceList();
+        return (getPreviousTransition() == null) ? null : getPreviousTransition().getNextPriceList();
     }
 
 
     @Override
     public DateTime getEndDate() {
-        SubscriptionTransition latestTransition = getLatestTransition();
+        SubscriptionTransition latestTransition = getPreviousTransition();
         if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
             return latestTransition.getEffectiveTransitionTime();
         }
@@ -188,6 +188,7 @@ public class SubscriptionData implements Subscription {
         return result;
     }
 
+    @Override
     public SubscriptionTransition getPendingTransition() {
         if (transitions == null) {
             return null;
@@ -200,7 +201,7 @@ public class SubscriptionData implements Subscription {
         return null;
     }
 
-    public SubscriptionTransition getLatestTransition() {
+    public SubscriptionTransition getPreviousTransition() {
 
         if (transitions == null) {
             return null;
@@ -240,10 +241,12 @@ public class SubscriptionData implements Subscription {
         return bundleStartDate;
     }
 
+    @Override
     public DateTime getChargedThroughDate() {
         return chargedThroughDate;
     }
 
+    @Override
     public DateTime getPaidThroughDate() {
         return paidThroughDate;
     }
@@ -354,7 +357,7 @@ public class SubscriptionData implements Subscription {
         transitions = new LinkedList<SubscriptionTransitionData>();
         Plan previousPlan = null;
         PlanPhase previousPhase = null;
-        
+
         for (final EntitlementEvent cur : events) {
 
             if (!cur.isActive() || cur.getActiveVersion() < activeVersion) {

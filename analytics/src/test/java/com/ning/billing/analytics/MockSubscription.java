@@ -133,7 +133,8 @@ public class MockSubscription implements Subscription
     public List<SubscriptionTransition> getAllTransitions() {
         throw new UnsupportedOperationException();
      }
-    
+
+    @Override
     public SubscriptionTransition getPendingTransition() {
         throw new UnsupportedOperationException();
     }
@@ -147,4 +148,9 @@ public class MockSubscription implements Subscription
 	public DateTime getPaidThroughDate() {
 		throw new UnsupportedOperationException();
 	}
+
+    @Override
+    public SubscriptionTransition getPreviousTransition() {
+        return null;
+    }
 }
