@@ -16,22 +16,11 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.ErrorCode;
+import org.joda.time.DateTime;
 
-public class AccountApiException extends BillingExceptionBase {
-	private static final long serialVersionUID = 1L;
+public interface MigrationAccountData extends AccountData {
 
-	public AccountApiException(Throwable cause, int code, final String msg) {
-        super(cause, code, msg);
-    }
-
-    public AccountApiException(Throwable cause, ErrorCode code, final Object... args) {
-        super(cause, code, args);
-    }
-
-    public AccountApiException(ErrorCode code, final Object... args) {
-        super(code, args);
-    }
-
+	public DateTime getCreatedDate();
+	
+	public DateTime getUpdatedDate();
 }

@@ -20,6 +20,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -27,11 +28,12 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.util.clock.MockClockModule;
-import com.sun.org.apache.bcel.internal.generic.NEW;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -101,6 +103,9 @@ public class TestBasic {
     @Inject
     private AccountService accountService;
 
+    @Inject
+    private MysqlTestingHelper helper;
+
     private EntitlementUserApi entitlementUserApi;
 
     private InvoiceUserApi invoiceUserApi;
@@ -111,8 +116,29 @@ public class TestBasic {
 
 
 
+    private void setupMySQL() throws IOException
+    {
+
+
+        final String accountDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+        final String entitlementDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+        final String invoiceDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+        final String paymentDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
+        final String utilDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+
+        helper.startMysql();
+
+        helper.initDb(accountDdl);
+        helper.initDb(entitlementDdl);
+        helper.initDb(invoiceDdl);
+        helper.initDb(paymentDdl);
+        helper.initDb(utilDdl);
+    }
+
     @BeforeSuite(alwaysRun = true)
     public void setup() throws Exception{
+
+        setupMySQL();
 
         /**
          * Initialize lifecyle for subset of services
@@ -121,6 +147,8 @@ public class TestBasic {
         lifecycle.fireStartupSequencePriorEventRegistration();
         busService.getBus().register(busHandler);
         lifecycle.fireStartupSequencePostEventRegistration();
+
+
 
         /**
          * Retrieve APIs
@@ -178,66 +206,62 @@ public class TestBasic {
         });
     }
 
-    private void verifyTestResult(UUID accountId, UUID subscriptionId, InvoiceTestResult expectedResult) {
+    private void verifyTestResult(UUID accountId, UUID subscriptionId,
+                                  DateTime startDate, DateTime endDate,
+                                  BigDecimal amount, DateTime chargeThroughDate) {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscriptionId);
 
         List<InvoiceItem> invoiceItems = invoiceUserApi.getInvoiceItemsByAccount(accountId);
+        boolean wasFound = false;
+
         Iterator<InvoiceItem> invoiceItemIterator = invoiceItems.iterator();
         while (invoiceItemIterator.hasNext()) {
             InvoiceItem item = invoiceItemIterator.next();
-
-            for (InvoiceItemData data : expectedResult.getItems()) {
-                if (item.getStartDate().compareTo(data.getStartDate()) == 0) {
-                    if (item.getEndDate().compareTo(data.getEndDate()) == 0) {
-                        if (item.getAmount().compareTo(data.getAmount()) == 0) {
-                            invoiceItemIterator.remove();
-                        }
+            if (item.getStartDate().compareTo(removeMillis(startDate)) == 0) {
+                if (item.getEndDate().compareTo(removeMillis(endDate)) == 0) {
+                    if (item.getAmount().compareTo(amount) == 0) {
+                        wasFound = true;
+                        break;
                     }
                 }
             }
         }
 
-        assertEquals(invoiceItems.size(), 0);
+        assertTrue(wasFound);
 
         DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
         assertTrue(clock.getUTCNow().isBefore(ctd));
-        assertTrue(ctd.compareTo(expectedResult.getChargeThroughDate()) == 0);
+        assertTrue(ctd.compareTo(removeMillis(chargeThroughDate)) == 0);
+    }
+
+    private DateTime removeMillis(DateTime input) {
+        return input.toMutableDateTime().millisOfSecond().set(0).toDateTime();
     }
 
     @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
-        List<InvoiceTestResult> expectedTestResults = new ArrayList<InvoiceTestResult>();
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
-        testBasePlanComplete(startDate, 31, expectedTestResults);
+        testBasePlanComplete(startDate, 31, false);
     }
 
     @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
-        List<InvoiceTestResult> expectedTestResults = new ArrayList<InvoiceTestResult>();
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
-        testBasePlanComplete(startDate, 1, expectedTestResults);
+        testBasePlanComplete(startDate, 1, false);
     }
 
     @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
-        List<InvoiceTestResult> expectedTestResults = new ArrayList<InvoiceTestResult>();
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
-        testBasePlanComplete(startDate, 2, expectedTestResults);
+        testBasePlanComplete(startDate, 2, false);
     }
 
     @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
-        List<InvoiceTestResult> expectedTestResults = new ArrayList<InvoiceTestResult>();
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
-
-        DateTime firstCTD = new DateTime(2012, 3, 2, 0, 3, 42, 0);
-        List<InvoiceItemData> firstItemList = new ArrayList<InvoiceItemData>();
-        firstItemList.add(new InvoiceItemData(BigDecimal.ZERO, startDate,firstCTD));
-        expectedTestResults.add(new InvoiceTestResult(firstCTD, firstItemList));
-
-        testBasePlanComplete(startDate, 3, expectedTestResults);
+        testBasePlanComplete(startDate, 3, true);
     }
 
     private void waitForDebug() throws Exception {
@@ -246,18 +270,28 @@ public class TestBasic {
 
     @Test(groups = "stress", enabled = false)
     public void stressTest() throws Exception {
-        final int maxIterations = 3;
+        final int maxIterations = 7;
         int curIteration = maxIterations;
         for (curIteration = 0; curIteration < maxIterations; curIteration++) {
             log.info("################################  ITERATION " + curIteration + "  #########################");
-            setupTest();
             Thread.sleep(1000);
+            setupTest();
             testBasePlanCompleteWithBillingDayPresent();
+            Thread.sleep(1000);
+            setupTest();
+            testBasePlanCompleteWithBillingDayInPast();
+            Thread.sleep(1000);
+            setupTest();
+            testBasePlanCompleteWithBillingDayAlignedWithTrial();
+            Thread.sleep(1000);
+            setupTest();
+            testBasePlanCompleteWithBillingDayInFuture();
         }
     }
 
-    private void testBasePlanComplete(DateTime initialCreationDate, int billingDay, List<InvoiceTestResult> expectedResults) throws Exception {
-        long DELAY = 5000;
+    private void testBasePlanComplete(DateTime initialCreationDate, int billingDay,
+                                      boolean proRationExpected) throws Exception {
+        long DELAY = 5000 * 10;
 
         Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
         UUID accountId = account.getId();
@@ -270,8 +304,6 @@ public class TestBasic {
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;
         String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
-
-        Iterator<InvoiceTestResult> testItemIterator = expectedResults.iterator();
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
@@ -288,8 +320,10 @@ public class TestBasic {
         //
         // VERIFY CTD HAS BEEN SET
         //
-
-        verifyTestResult(accountId, subscription.getId(), testItemIterator.next());
+        DateTime startDate = subscription.getCurrentPhaseStart();
+        DateTime endDate = startDate.plusDays(30);
+        BigDecimal price = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
 
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
@@ -308,7 +342,10 @@ public class TestBasic {
         //
         // VERIFY AGAIN CTD HAS BEEN SET
         //
-        verifyTestResult(accountId, subscription.getId(), testItemIterator.next());
+        startDate = subscription.getCurrentPhaseStart();
+        endDate = startDate.plusMonths(1);
+        price = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
 
         //
         // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
@@ -316,6 +353,12 @@ public class TestBasic {
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+
+        if (proRationExpected) {
+            busHandler.pushExpectedEvent(NextEvent.INVOICE);
+            busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        }
+
         clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
 
         assertTrue(busHandler.isCompleted(DELAY));
@@ -348,12 +391,14 @@ public class TestBasic {
         // MOVE TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE
         //
         int maxCycles = 3;
+        startDate = endDate;
+        endDate = startDate.plusMonths(1);
         do {
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
             busHandler.pushExpectedEvent(NextEvent.PAYMENT);
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
             assertTrue(busHandler.isCompleted(DELAY));
-            verifyTestResult(accountId, subscription.getId(), testItemIterator.next());
+            verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
         } while (maxCycles-- > 0);
 
         //
@@ -362,25 +407,28 @@ public class TestBasic {
         subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscription.getId());
         subscription.cancel(clock.getUTCNow(), false);
 
-//        // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
-//        busHandler.pushExpectedEvent(NextEvent.CANCEL);
-//        Interval it = new Interval(clock.getUTCNow(), lastCtd);
-//        clock.addDeltaFromReality(it.toDurationMillis());
-//        assertTrue(busHandler.isCompleted(DELAY));
-//
-//        //
-//        // CHECK AGAIN THERE IS NO MORE INVOICES GENERATED
-//        //
-//        busHandler.reset();
-//        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
-//        assertTrue(busHandler.isCompleted(DELAY));
-//
-//
-//        subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscription.getId());
-//        lastCtd = subscription.getChargedThroughDate();
-//        assertNotNull(lastCtd);
-//        log.info("Checking CTD: " + lastCtd.toString() + "; clock is " + clock.getUTCNow().toString());
-//        assertTrue(lastCtd.isBefore(clock.getUTCNow()));
+        // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
+        busHandler.pushExpectedEvent(NextEvent.CANCEL);
+        Interval it = new Interval(clock.getUTCNow(), endDate);
+        clock.addDeltaFromReality(it.toDurationMillis());
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        //
+        // CHECK AGAIN THERE IS NO MORE INVOICES GENERATED
+        //
+        busHandler.reset();
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscription.getId());
+        DateTime lastCtd = subscription.getChargedThroughDate();
+        assertNotNull(lastCtd);
+        log.info("Checking CTD: " + lastCtd.toString() + "; clock is " + clock.getUTCNow().toString());
+        assertTrue(lastCtd.isBefore(clock.getUTCNow()));
+
+        // The invoice system is still working to verify there is nothing to do
+        Thread.sleep(DELAY);
+        log.info("TEST PASSED !");
     }
 
     @Test(enabled=false)
@@ -503,47 +551,5 @@ public class TestBasic {
             }
         };
         return accountData;
-    }
-
-    private class InvoiceTestResult {
-        private final DateTime chargeThroughDate;
-        private final List<InvoiceItemData> items;
-
-        private InvoiceTestResult(DateTime chargeThroughDate, List<InvoiceItemData> items) {
-            this.chargeThroughDate = chargeThroughDate;
-            this.items = items;
-        }
-
-        public DateTime getChargeThroughDate() {
-            return chargeThroughDate;
-        }
-
-        public List<InvoiceItemData> getItems() {
-            return items;
-        }
-    }
-
-    private class InvoiceItemData {
-        private final BigDecimal amount;
-        private final DateTime startDate;
-        private final DateTime endDate;
-
-        private InvoiceItemData(BigDecimal amount, DateTime startDate, DateTime endDate) {
-            this.amount = amount;
-            this.startDate = startDate;
-            this.endDate = endDate;
-        }
-
-        public BigDecimal getAmount() {
-            return amount;
-        }
-
-        public DateTime getStartDate() {
-            return startDate;
-        }
-
-        public DateTime getEndDate() {
-            return endDate;
-        }
     }
 }
