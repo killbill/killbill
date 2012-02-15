@@ -59,7 +59,7 @@ public interface NotificationQueueService {
      * @throws com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists is the queue associated with that service and name already exits
      *
      */
-    NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config)
+    public NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config)
         throws NotificationQueueAlreadyExists;
 
     /**
@@ -71,7 +71,14 @@ public interface NotificationQueueService {
      *
      * @throws NoSuchNotificationQueue if queue does not exist
      */
-    NotificationQueue getNotificationQueue(final String svcName, final String queueName)
+    public NotificationQueue getNotificationQueue(final String svcName, final String queueName)
         throws NoSuchNotificationQueue;
 
+
+    /**
+     *
+     * @param services
+     * @return whether or not things were ready in the queue
+     */
+    public boolean triggerManualQueueProcessing(final String [] services, final Boolean keepRunning);
 }

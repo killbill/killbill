@@ -141,4 +141,9 @@ public class BrainDeadSubscription implements Subscription {
 		
 	}
 
+	@Override
+	public SubscriptionTransition getPreviousTransition() {
+		throw new UnsupportedOperationException();
+	}
+
 }

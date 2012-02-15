@@ -16,20 +16,28 @@
 
 package com.ning.billing.beatrix.integration;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 import org.joda.time.Interval;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -179,7 +187,7 @@ public class TestBasic {
             public Void inTransaction(Handle h, TransactionStatus status)
                     throws Exception {
                 h.execute("truncate table accounts");
-                h.execute("truncate table events");
+                h.execute("truncate table entitlement_events");
                 h.execute("truncate table subscriptions");
                 h.execute("truncate table bundles");
                 h.execute("truncate table notifications");
@@ -198,43 +206,69 @@ public class TestBasic {
         });
     }
 
-    private DateTime checkAndGetCTD(UUID subscriptionId) {
-
+    private void verifyTestResult(UUID accountId, UUID subscriptionId,
+                                  DateTime startDate, DateTime endDate,
+                                  BigDecimal amount, DateTime chargeThroughDate) {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscriptionId);
+
+        List<InvoiceItem> invoiceItems = invoiceUserApi.getInvoiceItemsByAccount(accountId);
+        boolean wasFound = false;
+
+        Iterator<InvoiceItem> invoiceItemIterator = invoiceItems.iterator();
+        while (invoiceItemIterator.hasNext()) {
+            InvoiceItem item = invoiceItemIterator.next();
+            if (item.getStartDate().compareTo(removeMillis(startDate)) == 0) {
+                if (item.getEndDate().compareTo(removeMillis(endDate)) == 0) {
+                    if (item.getAmount().compareTo(amount) == 0) {
+                        wasFound = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        assertTrue(wasFound);
+
         DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
         assertTrue(clock.getUTCNow().isBefore(ctd));
-        return ctd;
+        assertTrue(ctd.compareTo(removeMillis(chargeThroughDate)) == 0);
     }
 
-    @Test(groups = "slow", enabled = true)
+    private DateTime removeMillis(DateTime input) {
+        return input.toMutableDateTime().millisOfSecond().set(0).toDateTime();
+    }
+
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().minusDays(1).getDayOfMonth(), false);
+        DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        testBasePlanComplete(startDate, 31, false);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().getDayOfMonth(), false);
+        DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        testBasePlanComplete(startDate, 1, false);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().plusDays(30).getDayOfMonth(), false);
+        DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        testBasePlanComplete(startDate, 2, false);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
-        testBasePlanComplete(clock.getUTCNow().plusDays(2).getDayOfMonth(), true);
+        DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        testBasePlanComplete(startDate, 3, true);
     }
-
 
     private void waitForDebug() throws Exception {
         Thread.sleep(600000);
     }
 
-
-    @Test(groups = "stress", enabled = true)
+    @Test(groups = "stress", enabled = false)
     public void stressTest() throws Exception {
         final int maxIterations = 7;
         int curIteration = maxIterations;
@@ -255,12 +289,16 @@ public class TestBasic {
         }
     }
 
-    private void testBasePlanComplete(int billingDay, boolean prorationExpected) throws Exception {
-        long DELAY = 5000;
+    private void testBasePlanComplete(DateTime initialCreationDate, int billingDay,
+                                      boolean proRationExpected) throws Exception {
+        long DELAY = 5000 * 10;
 
         Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
+        UUID accountId = account.getId();
         assertNotNull(account);
 
+        // set clock to the initial start date
+        clock.setDeltaFromReality(initialCreationDate.getMillis() - DateTime.now().getMillis());
         SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever");
 
         String productName = "Shotgun";
@@ -276,17 +314,16 @@ public class TestBasic {
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
         assertNotNull(subscription);
 
-
-        //waitForDebug();
-
         assertTrue(busHandler.isCompleted(DELAY));
         log.info("testSimple passed first busHandler checkpoint.");
 
         //
         // VERIFY CTD HAS BEEN SET
         //
-
-        checkAndGetCTD(subscription.getId());
+        DateTime startDate = subscription.getCurrentPhaseStart();
+        DateTime endDate = startDate.plusDays(30);
+        BigDecimal price = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
 
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
@@ -305,7 +342,10 @@ public class TestBasic {
         //
         // VERIFY AGAIN CTD HAS BEEN SET
         //
-        DateTime ctd = checkAndGetCTD(subscription.getId());
+        startDate = subscription.getCurrentPhaseStart();
+        endDate = startDate.plusMonths(1);
+        price = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
 
         //
         // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
@@ -314,7 +354,7 @@ public class TestBasic {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
 
-        if (prorationExpected) {
+        if (proRationExpected) {
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
             busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         }
@@ -351,13 +391,14 @@ public class TestBasic {
         // MOVE TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE
         //
         int maxCycles = 3;
-        DateTime lastCtd = null;
+        startDate = endDate;
+        endDate = startDate.plusMonths(1);
         do {
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
             busHandler.pushExpectedEvent(NextEvent.PAYMENT);
             clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
             assertTrue(busHandler.isCompleted(DELAY));
-            lastCtd = checkAndGetCTD(subscription.getId());
+            verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
         } while (maxCycles-- > 0);
 
         //
@@ -368,7 +409,7 @@ public class TestBasic {
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         busHandler.pushExpectedEvent(NextEvent.CANCEL);
-        Interval it = new Interval(clock.getUTCNow(), lastCtd);
+        Interval it = new Interval(clock.getUTCNow(), endDate);
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(busHandler.isCompleted(DELAY));
 
@@ -379,15 +420,14 @@ public class TestBasic {
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
         assertTrue(busHandler.isCompleted(DELAY));
 
-
         subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscription.getId());
-        lastCtd = subscription.getChargedThroughDate();
+        DateTime lastCtd = subscription.getChargedThroughDate();
         assertNotNull(lastCtd);
         log.info("Checking CTD: " + lastCtd.toString() + "; clock is " + clock.getUTCNow().toString());
         assertTrue(lastCtd.isBefore(clock.getUTCNow()));
 
         // The invoice system is still working to verify there is nothing to do
-        Thread.sleep(3000);
+        Thread.sleep(DELAY);
         log.info("TEST PASSED !");
     }
 
@@ -427,7 +467,6 @@ public class TestBasic {
         assertTrue(busHandler.isCompleted(DELAY));
 
     }
-
 
     protected AccountData getAccountData(final int billingDay) {
 

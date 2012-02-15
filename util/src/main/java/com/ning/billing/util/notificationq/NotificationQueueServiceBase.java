@@ -16,12 +16,16 @@
 
 package com.ning.billing.util.notificationq;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.ning.billing.util.clock.Clock;
 
@@ -78,6 +82,49 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         return result;
     }
 
+
+    //
+    // Test ONLY
+    //
+    @Override
+    public boolean triggerManualQueueProcessing(final String [] services, final Boolean keepRunning) {
+
+        boolean result = false;
+
+        List<NotificationQueue> manualQueues = null;
+        if (services == null) {
+            manualQueues = new ArrayList<NotificationQueue>(queues.values());
+        } else {
+            Joiner join = Joiner.on(",");
+            join.join(services);
+
+            log.info("Trigger manual processing for services {} ", join.toString());
+            manualQueues = new LinkedList<NotificationQueue>();
+            synchronized (queues) {
+                for (String svc : services) {
+                    addQueuesForService(manualQueues, svc);
+                }
+            }
+        }
+        for (NotificationQueue cur : manualQueues) {
+            boolean processedNotifications = true;
+            do {
+                processedNotifications = cur.processReadyNotification();
+                if (result == false) {
+                    result = processedNotifications;
+                }
+            } while(keepRunning && processedNotifications);
+        }
+        return result;
+    }
+
+    private final void addQueuesForService(final List<NotificationQueue> result, final String svcName) {
+        for (String cur : queues.keySet()) {
+            if (cur.startsWith(svcName)) {
+                result.add(queues.get(cur));
+            }
+        }
+    }
 
     protected abstract NotificationQueue createNotificationQueueInternal(String svcName,
             String queueName, NotificationQueueHandler handler,

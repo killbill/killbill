@@ -29,7 +29,4 @@ public interface NextBillingDateNotifier {
 
     public void stop();
 
-	public void insertNextBillingNotification(Transmogrifier transactionalDao,
-			UUID subscriptionId, DateTime futureNotificationTime);
-
 }

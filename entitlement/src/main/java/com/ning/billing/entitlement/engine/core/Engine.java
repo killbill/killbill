@@ -31,8 +31,6 @@ import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.test.DefaultEntitlementTestApi;
-import com.ning.billing.entitlement.api.test.EntitlementTestApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -65,7 +63,6 @@ public class Engine implements EventListener, EntitlementService {
     private final PlanAligner planAligner;
     private final EntitlementUserApi userApi;
     private final EntitlementBillingApi billingApi;
-    private final EntitlementTestApi testApi;
     private final EntitlementMigrationApi migrationApi;
     private final Bus eventBus;
     private final EntitlementConfig config;
@@ -76,7 +73,7 @@ public class Engine implements EventListener, EntitlementService {
     @Inject
     public Engine(Clock clock, EntitlementDao dao, PlanAligner planAligner,
             EntitlementConfig config, DefaultEntitlementUserApi userApi,
-            DefaultEntitlementBillingApi billingApi, DefaultEntitlementTestApi testApi,
+            DefaultEntitlementBillingApi billingApi,
             DefaultEntitlementMigrationApi migrationApi, Bus eventBus,
             NotificationQueueService notificationQueueService) {
         super();
@@ -84,7 +81,6 @@ public class Engine implements EventListener, EntitlementService {
         this.dao = dao;
         this.planAligner = planAligner;
         this.userApi = userApi;
-        this.testApi = testApi;
         this.billingApi = billingApi;
         this.migrationApi = migrationApi;
         this.config = config;
@@ -159,11 +155,6 @@ public class Engine implements EventListener, EntitlementService {
         return billingApi;
     }
 
-
-    @Override
-    public EntitlementTestApi getTestApi() {
-        return testApi;
-    }
 
     @Override
     public EntitlementMigrationApi getMigrationApi() {

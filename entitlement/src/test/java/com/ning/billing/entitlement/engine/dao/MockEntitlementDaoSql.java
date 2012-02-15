@@ -58,7 +58,7 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
 
     public static interface ResetSqlDao extends Transactional<ResetSqlDao>, CloseMe {
 
-        @SqlUpdate("truncate table events")
+        @SqlUpdate("truncate table entitlement_events")
         public void resetEvents();
 
         @SqlUpdate("truncate table subscriptions")

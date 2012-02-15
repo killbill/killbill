@@ -33,7 +33,7 @@ public interface EntitlementConfig {
     @Default("500")
     public long getNotificationSleepTimeMs();
 
-    @Config("killbill.entitlement.engine.events.off")
+    @Config("killbill.notifications.off")
     @Default("false")
     public boolean isEventProcessingOff();
 }

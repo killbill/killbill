@@ -59,7 +59,9 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    protected void doProcessEvents(int sequenceId) {
+    protected boolean doProcessEvents(int sequenceId) {
+
+        boolean result = false;
 
         List<Notification> processedNotifications = new ArrayList<Notification>();
         List<Notification> oldNotifications = new ArrayList<Notification>();
@@ -73,6 +75,8 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
                     readyNotifications.add(cur);
                 }
             }
+
+            result = readyNotifications.size() > 0;
             for (Notification cur : readyNotifications) {
                 handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
                 DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getUUID(), hostname, "MockQueue", clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
@@ -87,6 +91,6 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
                 notifications.addAll(processedNotifications);
             }
         }
-
+        return result;
     }
 }

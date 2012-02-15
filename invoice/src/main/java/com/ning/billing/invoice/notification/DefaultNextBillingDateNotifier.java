@@ -41,7 +41,7 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
 
     private final static Logger log = LoggerFactory.getLogger(DefaultNextBillingDateNotifier.class);
 
-    private static final String NEXT_BILLING_DATE_NOTIFIER_QUEUE = "next-billing-date-queue";
+    public static final String NEXT_BILLING_DATE_NOTIFIER_QUEUE = "next-billing-date-queue";
 
     private final NotificationQueueService notificationQueueService;
 	private final InvoiceConfig config;
@@ -51,8 +51,8 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
 	private InvoiceListener listener;
 
     @Inject
-	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService, Bus eventBus,
-                                          InvoiceConfig config, EntitlementDao entitlementDao, InvoiceListener listener){
+	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService, 
+			InvoiceConfig config, EntitlementDao entitlementDao, InvoiceListener listener){
 		this.notificationQueueService = notificationQueueService;
 		this.config = config;
         this.entitlementDao = entitlementDao;
@@ -121,19 +121,5 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
         listener.handleNextBillingDateEvent(subscriptionId, eventDateTime);
     }
 
-    @Override
-    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime futureNotificationTime) {
-    	if (nextBillingQueue != null) {
-            log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
-
-            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
-                @Override
-                public String toString() {
-                    return subscriptionId.toString();
-                }
-    	    });
-        } else {
-            log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).");
-        }
-    }
+ 
 }
