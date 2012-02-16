@@ -66,24 +66,16 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 
 	public VersionedCatalog(Clock clock) {
 		this.clock = clock;
-		StandaloneCatalog baseline = new StandaloneCatalog(new Date(0)); // init with an empty catalog may need to 
-													 // populate some empty pieces here to make validation work
-		try {
-			add(baseline);
-		} catch (CatalogApiException e) {
-			// This should never happen
-			log.error("This error should never happpen", e);
-		} 
 	}
 
 	//
 	// Private methods
 	//
-	private StandaloneCatalog versionForDate(DateTime date) {
+	private StandaloneCatalog versionForDate(DateTime date) throws CatalogApiException {
 		return versions.get(indexOfVersionForDate(date.toDate()));
 	}
 
-	private List<StandaloneCatalog> versionsBeforeDate(Date date) {
+	private List<StandaloneCatalog> versionsBeforeDate(Date date) throws CatalogApiException {
 		List<StandaloneCatalog> result = new ArrayList<StandaloneCatalog>();
 		int index = indexOfVersionForDate(date);
 		for(int i = 0; i <= index; i++) {
@@ -92,14 +84,14 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 		return result;
 	}
 
-	private int indexOfVersionForDate(Date date) {
-		for(int i = 1; i < versions.size(); i++) {
+	private int indexOfVersionForDate(Date date) throws CatalogApiException {
+		for(int i = versions.size() - 1; i >= 0; i--) {
 			StandaloneCatalog c = versions.get(i);
-			if(c.getEffectiveDate().getTime() > date.getTime()) {
-				return i - 1;
+			if(c.getEffectiveDate().getTime() < date.getTime()) {
+				return i;
 			}
 		}
-		return versions.size() - 1;
+		throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, date.toString());
 	}
 	
 	private class PlanRequestWrapper {
@@ -205,17 +197,17 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 	}
 
 	@Override
-	public DefaultProduct[] getProducts(DateTime requestedDate) {
+	public DefaultProduct[] getProducts(DateTime requestedDate) throws CatalogApiException {
 		return versionForDate(requestedDate).getCurrentProducts();
 	}
 
 	@Override
-	public Currency[] getSupportedCurrencies(DateTime requestedDate) {
+	public Currency[] getSupportedCurrencies(DateTime requestedDate) throws CatalogApiException {
 		return versionForDate(requestedDate).getCurrentSupportedCurrencies();
 	}
 
 	@Override
-	public DefaultPlan[] getPlans(DateTime requestedDate) {
+	public DefaultPlan[] getPlans(DateTime requestedDate) throws CatalogApiException {
 		return versionForDate(requestedDate).getCurrentPlans();
 	}
 
@@ -350,22 +342,22 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 	// Static catalog API
 	//
 	@Override
-	public Date getEffectiveDate() {
+	public Date getEffectiveDate() throws CatalogApiException {
 		return versionForDate(clock.getUTCNow()).getEffectiveDate();
 	}
 
 	@Override
-	public Currency[] getCurrentSupportedCurrencies() {
+	public Currency[] getCurrentSupportedCurrencies() throws CatalogApiException {
 		return versionForDate(clock.getUTCNow()).getCurrentSupportedCurrencies();
 	}
 
 	@Override
-	public Product[] getCurrentProducts() {
+	public Product[] getCurrentProducts() throws CatalogApiException {
 		return versionForDate(clock.getUTCNow()).getCurrentProducts() ;
 	}
 
 	@Override
-	public Plan[] getCurrentPlans() {
+	public Plan[] getCurrentPlans() throws CatalogApiException {
 		return versionForDate(clock.getUTCNow()).getCurrentPlans();
 	}
 
