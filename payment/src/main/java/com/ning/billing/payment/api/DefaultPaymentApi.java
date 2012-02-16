@@ -178,9 +178,9 @@ public class DefaultPaymentApi implements PaymentApi {
                 invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getPaymentAttemptId(),
                                                                                    invoice.getId(),
                                                                                    paymentAttempt.getPaymentAttemptDate(),
-                                                                                   paymentInfo == null ? null : paymentInfo.getAmount(),
+                                                                                   paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
 //                                                                                 paymentInfo.getRefundAmount(), TODO
-                                                                                   paymentInfo == null ? null : invoice.getCurrency()));
+                                                                                   paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency()));
 
             }
         }

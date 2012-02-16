@@ -53,7 +53,7 @@ public class RetryService implements KillbillService {
     public void initialize() throws NotificationQueueAlreadyExists {
         retryQueue = notificationQueueService.createNotificationQueue(SERVICE_NAME, QUEUE_NAME, new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(String notificationKey) {
+            public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
                 retry(notificationKey);
             }
         },

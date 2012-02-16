@@ -16,6 +16,9 @@
 
 package com.ning.billing.payment.api;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import com.google.common.base.Strings;
 
 
@@ -54,11 +57,12 @@ public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
     private final String baid;
     private final String email;
 
-    public PaypalPaymentMethodInfo(String id,
-                                   String accountId,
-                                   Boolean defaultMethod,
-                                   String baid,
-                                   String email) {
+    @JsonCreator
+    public PaypalPaymentMethodInfo(@JsonProperty("id") String id,
+                                   @JsonProperty("accountId") String accountId,
+                                   @JsonProperty("defaultMethod") Boolean defaultMethod,
+                                   @JsonProperty("baid") String baid,
+                                   @JsonProperty("email") String email) {
         super(id, accountId, defaultMethod, TYPE);
 
         if (Strings.isNullOrEmpty(baid) || Strings.isNullOrEmpty(email)) {
