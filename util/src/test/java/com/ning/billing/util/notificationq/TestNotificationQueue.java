@@ -48,7 +48,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.clock.Clock;
@@ -119,7 +118,7 @@ public class TestNotificationQueue {
 		final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "foo",
 				new NotificationQueueHandler() {
 			@Override
-			public void handleReadyNotification(String notificationKey) {
+			public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
 				synchronized (expectedNotifications) {
 	            	log.info("Handler received key: " + notificationKey);
 
@@ -182,7 +181,7 @@ public class TestNotificationQueue {
 		final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
 				new NotificationQueueHandler() {
 			@Override
-			public void handleReadyNotification(String notificationKey) {
+			public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
 				synchronized (expectedNotifications) {
 					expectedNotifications.put(notificationKey, Boolean.TRUE);
 					expectedNotifications.notify();
@@ -292,7 +291,7 @@ public class TestNotificationQueue {
 
 		final NotificationQueue queueFred = notificationQueueService.createNotificationQueue("UtilTest", "Fred", new NotificationQueueHandler() {
                 @Override
-                public void handleReadyNotification(String notificationKey) {
+                public void handleReadyNotification(String notificationKey, DateTime eventDateTime)  {
                 	log.info("Fred received key: " + notificationKey);
                 	expectedNotificationsFred.put(notificationKey, Boolean.TRUE);
                 	eventsReceived++;
@@ -302,7 +301,7 @@ public class TestNotificationQueue {
 
 		final NotificationQueue queueBarney = notificationQueueService.createNotificationQueue("UtilTest", "Barney", new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(String notificationKey) {
+            public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
              	log.info("Barney received key: " + notificationKey);
             	expectedNotificationsBarney.put(notificationKey, Boolean.TRUE);
             	eventsReceived++;

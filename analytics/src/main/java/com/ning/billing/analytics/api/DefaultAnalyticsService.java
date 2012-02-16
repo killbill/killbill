@@ -23,9 +23,9 @@ import com.ning.billing.util.bus.Bus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AnalyticsService implements IAnalyticsService
+public class DefaultAnalyticsService implements AnalyticsService
 {
-    private static final Logger log = LoggerFactory.getLogger(AnalyticsService.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultAnalyticsService.class);
 
     private static final String ANALYTICS_SERVICE = "analytics-service";
 
@@ -33,7 +33,7 @@ public class AnalyticsService implements IAnalyticsService
     private final Bus eventBus;
 
     @Inject
-    public AnalyticsService(final AnalyticsListener listener, final Bus eventBus)
+    public DefaultAnalyticsService(final AnalyticsListener listener, final Bus eventBus)
     {
         this.listener = listener;
         this.eventBus = eventBus;

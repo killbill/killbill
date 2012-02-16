@@ -28,9 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class InMemoryBus implements Bus {
 
-    // STEPH config ?
-    private final static int MAX_EVENT_THREADS = 1;
-
     private final static String EVENT_BUS_IDENTIFIER = "bus-service";
     private final static String EVENT_BUS_GROUP_NAME = "bus-grp";
     private final static String EVENT_BUS_TH_NAME = "bus-th";
@@ -68,7 +65,7 @@ public class InMemoryBus implements Bus {
     public InMemoryBus() {
 
         final ThreadGroup group = new ThreadGroup(EVENT_BUS_GROUP_NAME);
-        Executor executor = Executors.newFixedThreadPool(MAX_EVENT_THREADS, new ThreadFactory() {
+        Executor executor = Executors.newCachedThreadPool(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
                 return new Thread(group, r, EVENT_BUS_TH_NAME);

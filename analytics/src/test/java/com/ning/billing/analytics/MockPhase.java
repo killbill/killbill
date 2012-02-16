@@ -59,6 +59,11 @@ public class MockPhase implements PlanPhase
                 return BigDecimal.valueOf(price);
             }
 
+			@Override
+			public boolean isZero() {
+				return price == 0.0;
+			}
+
          };
     }
 
@@ -78,7 +83,11 @@ public class MockPhase implements PlanPhase
             {
                 return BigDecimal.valueOf(price);
             }
-
+            
+        	@Override
+			public boolean isZero() {
+				return price == 0.0;
+			}
         };
     }
 

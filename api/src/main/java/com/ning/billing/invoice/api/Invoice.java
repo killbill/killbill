@@ -31,6 +31,8 @@ public interface Invoice extends Entity {
 
     List<InvoiceItem> getInvoiceItems();
 
+    List<InvoiceItem> getInvoiceItems(Class clazz);
+
     int getNumberOfItems();
 
     boolean addPayment(InvoicePayment payment);

@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.api;
+package com.ning.billing.util.globallocker;
 
-import com.ning.billing.lifecycle.KillbillService;
-
-public interface IAnalyticsService extends KillbillService {
+public class LockFailedException extends RuntimeException
+{
 }

@@ -24,7 +24,7 @@ import java.math.BigDecimal;
 
 public abstract class InvoicingTestBase {
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
-    protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMethod();
+    protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
 
     protected static final BigDecimal ZERO = new BigDecimal("0.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal ONE_HALF = new BigDecimal("0.5").setScale(NUMBER_OF_DECIMALS);

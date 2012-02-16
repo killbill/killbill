@@ -18,8 +18,9 @@ package com.ning.billing.invoice.glue;
 
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
-import com.ning.billing.util.globalLocker.GlobalLocker;
-import com.ning.billing.util.globalLocker.MockGlobalLocker;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.MockGlobalLocker;
+
 
 public class InvoiceModuleWithMocks extends InvoiceModule {
     @Override

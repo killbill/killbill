@@ -57,10 +57,10 @@ public abstract class NotificationQueueBase implements NotificationQueue {
 
     // Use this object's monitor for synchronization (no need for volatile)
     protected boolean isProcessingEvents;
-    
+
     private boolean startedComplete = false;
     private boolean stoppedComplete = false;
-    
+
     // Package visibility on purpose
     NotificationQueueBase(final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
         this.clock = clock;
@@ -88,8 +88,8 @@ public abstract class NotificationQueueBase implements NotificationQueue {
 
 
     @Override
-    public void processReadyNotification() {
-        doProcessEvents(sequenceId.incrementAndGet());
+    public int processReadyNotification() {
+        return doProcessEvents(sequenceId.incrementAndGet());
     }
 
 
@@ -181,14 +181,14 @@ public abstract class NotificationQueueBase implements NotificationQueue {
         });
         waitForNotificationStartCompletion();
     }
-    
+
     private void completedQueueStop() {
     	synchronized (this) {
     		stoppedComplete = true;
             this.notifyAll();
         }
     }
-    
+
     private void completedQueueStart() {
         synchronized (this) {
         	startedComplete = true;
@@ -233,9 +233,10 @@ public abstract class NotificationQueueBase implements NotificationQueue {
         }
     }
 
-    protected String getFullQName() {
+    @Override
+    public String getFullQName() {
         return svcName + ":" +  queueName;
     }
 
-    protected abstract void doProcessEvents(int sequenceId);
+    protected abstract int doProcessEvents(int sequenceId);
 }

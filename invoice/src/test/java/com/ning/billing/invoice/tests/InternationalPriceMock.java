@@ -43,4 +43,9 @@ public class InternationalPriceMock implements InternationalPrice {
         return rate;
     }
 
+	@Override
+	public boolean isZero() {
+		return rate.compareTo(BigDecimal.ZERO) == 0;
+	}
+
 }

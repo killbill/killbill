@@ -20,14 +20,12 @@ import java.util.List;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
-import org.skife.config.DefaultNull;
-import org.skife.config.TimeSpan;
 
 import com.ning.billing.util.notificationq.NotificationConfig;
 
 public interface PaymentConfig extends NotificationConfig {
     @Config("killbill.payment.provider.default")
-    @DefaultNull
+    @Default("noop")
     public String getDefaultPaymentProvider();
 
     @Config("killbill.payment.retry.days")

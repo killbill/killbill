@@ -117,4 +117,19 @@ public class MockAccountUserApi implements AccountUserApi {
         }	
 		
 	}
+
+	@Override
+	public Account migrateAccount(MigrationAccountData data,
+			List<CustomField> fields, List<Tag> tags)
+			throws AccountApiException {
+		Account result = new DefaultAccount(data, data.getCreatedDate(), data.getUpdatedDate());
+        accounts.add(result);
+        return result;
+	}
+
+	@Override
+	public void updateAccount(String key, AccountData accountData)
+			throws AccountApiException {
+		throw new UnsupportedOperationException();
+	}
 }

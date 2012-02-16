@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.globalLocker;
+package com.ning.billing.util.globallocker;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -32,7 +32,11 @@ import org.testng.annotations.Test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.globalLocker.GlobalLocker.LockerService;
+import com.ning.billing.util.globallocker.GlobalLock;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.LockFailedException;
+import com.ning.billing.util.globallocker.MySqlGlobalLocker;
+import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
 
 @Guice(modules=TestMysqlGlobalLocker.TestMysqlGlobalLockerModule.class)
 public class TestMysqlGlobalLocker {
@@ -60,7 +64,7 @@ public class TestMysqlGlobalLocker {
 
         final String lockName = UUID.randomUUID().toString();
 
-        GlobalLocker locker = new  MySqlGlobalLocker(dbi);
+        GlobalLocker locker = new MySqlGlobalLocker(dbi);
         GlobalLock lock = locker.lockWithNumberOfTries(LockerService.INVOICE, lockName, 3);
 
         dbi.inTransaction(new TransactionCallback<Void>() {

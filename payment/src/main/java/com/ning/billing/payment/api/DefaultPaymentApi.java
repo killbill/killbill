@@ -208,7 +208,6 @@ public class DefaultPaymentApi implements PaymentApi {
                 }
             }
 
-
             if (paymentInfo.getPaymentId() != null) {
                 paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), paymentInfo.getPaymentId());
             }
@@ -217,9 +216,9 @@ public class DefaultPaymentApi implements PaymentApi {
         invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getPaymentAttemptId(),
                                                                            invoice.getId(),
                                                                            paymentAttempt.getPaymentAttemptDate(),
-                                                                           paymentInfo == null ? null : paymentInfo.getAmount(),
-//                                                                                 paymentInfo.getRefundAmount(), TODO
-                                                                           paymentInfo == null ? null : invoice.getCurrency()));
+                                                                           paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
+//                                                                         paymentInfo.getRefundAmount(), TODO
+                                                                           paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency()));
 
         return paymentOrError;
     }
@@ -262,7 +261,8 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, Void> updatePaymentProviderAccountContact(Account account) {
+    public Either<PaymentError, Void> updatePaymentProviderAccountContact(String externalKey) {
+    	Account account = accountUserApi.getAccountByKey(externalKey);
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
         return plugin.updatePaymentProviderAccountExistingContact(account);
     }

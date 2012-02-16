@@ -18,12 +18,15 @@ package com.ning.billing.analytics;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 
 import java.util.Date;
 import java.util.Iterator;
+
+import org.joda.time.DateTime;
 
 public class MockPlan implements Plan
 {
@@ -97,5 +100,11 @@ public class MockPlan implements Plan
 	@Override
 	public boolean isRetired() {
 		return false;
+	}
+
+	@Override
+	public DateTime dateOfFirstRecurringNonZeroCharge(
+			DateTime subscriptionStartDate) {
+		 throw new UnsupportedOperationException();
 	}
 }

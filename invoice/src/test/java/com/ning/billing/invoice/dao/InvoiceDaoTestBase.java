@@ -35,7 +35,7 @@ import com.ning.billing.util.bus.DefaultBusService;
 
 public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected InvoiceDao invoiceDao;
-    protected InvoiceItemSqlDao invoiceItemDao;
+    protected RecurringInvoiceItemSqlDao recurringInvoiceItemDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
     protected InvoiceModuleWithEmbeddedDb module;
 
@@ -56,7 +56,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
             invoiceDao = injector.getInstance(InvoiceDao.class);
             invoiceDao.test();
 
-            invoiceItemDao = module.getInvoiceItemSqlDao();
+            recurringInvoiceItemDao = module.getInvoiceItemSqlDao();
 
             invoicePaymentDao = module.getInvoicePaymentSqlDao();
 
