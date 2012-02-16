@@ -16,13 +16,11 @@
 
 package com.ning.billing.beatrix.integration;
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -31,13 +29,11 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
-import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.Days;
 import org.joda.time.Interval;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -79,6 +75,13 @@ import com.ning.billing.util.bus.BusService;
 
 @Guice(modules = {MockModule.class})
 public class TestBasic {
+    private static final int NUMBER_OF_DECIMALS = 4;
+    private static final int ROUNDING_METHOD = BigDecimal.ROUND_HALF_EVEN;
+
+    private static final BigDecimal ONE = new BigDecimal("1.0000").setScale(NUMBER_OF_DECIMALS);
+    private static final BigDecimal TWENTY_NINE = new BigDecimal("29.0000").setScale(NUMBER_OF_DECIMALS);
+    private static final BigDecimal THIRTY = new BigDecimal("30.0000").setScale(NUMBER_OF_DECIMALS);
+    private static final BigDecimal THIRTY_ONE = new BigDecimal("31.0000").setScale(NUMBER_OF_DECIMALS);
 
     private static final Logger log = LoggerFactory.getLogger(TestBasic.class);
     private static long AT_LEAST_ONE_MONTH_MS =  31L * 24L * 3600L * 1000L;
@@ -113,8 +116,6 @@ public class TestBasic {
     private AccountUserApi accountUserApi;
 
     private TestBusHandler busHandler;
-
-
 
     private void setupMySQL() throws IOException
     {
@@ -236,25 +237,25 @@ public class TestBasic {
         assertTrue(ctd.compareTo(chargeThroughDate) == 0);
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 31, false);
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 1, false);
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 2, false);
     }
 
-    @Test(groups = "fast", enabled = false)
+    @Test(groups = "fast", enabled = true)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 3, true);
@@ -264,11 +265,10 @@ public class TestBasic {
         Thread.sleep(600000);
     }
 
-    @Test(groups = "stress", enabled = false)
+    @Test(groups = "stress", enabled = true)
     public void stressTest() throws Exception {
         final int maxIterations = 7;
-        int curIteration = maxIterations;
-        for (curIteration = 0; curIteration < maxIterations; curIteration++) {
+        for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
             log.info("################################  ITERATION " + curIteration + "  #########################");
             Thread.sleep(1000);
             setupTest();
@@ -287,8 +287,9 @@ public class TestBasic {
 
     private void testBasePlanComplete(DateTime initialCreationDate, int billingDay,
                                       boolean proRationExpected) throws Exception {
-        long DELAY = 5000;
+        long DELAY = 2000;
 
+        log.info("Beginning test with BCD of " + billingDay);
         Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
         UUID accountId = account.getId();
         assertNotNull(account);
@@ -311,15 +312,14 @@ public class TestBasic {
         assertNotNull(subscription);
 
         assertTrue(busHandler.isCompleted(DELAY));
-        log.info("testSimple passed first busHandler checkpoint.");
 
         //
         // VERIFY CTD HAS BEEN SET
         //
         DateTime startDate = subscription.getCurrentPhaseStart();
         DateTime endDate = startDate.plusDays(30);
-        BigDecimal price = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
-        verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
+        BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate);
 
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
@@ -333,15 +333,13 @@ public class TestBasic {
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
 
         assertTrue(busHandler.isCompleted(DELAY));
-        log.info("testSimple passed second busHandler checkpoint.");
 
         //
         // VERIFY AGAIN CTD HAS BEEN SET
         //
         startDate = subscription.getCurrentPhaseStart();
         endDate = startDate.plusDays(30);
-        price = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
-        verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate);
 
         //
         // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
@@ -360,14 +358,40 @@ public class TestBasic {
         assertTrue(busHandler.isCompleted(DELAY));
 
         startDate = subscription.getCurrentPhaseStart();
-        int numberOfDaysToProRate = billingDay - startDate.dayOfMonth().get();
-        DateTime firstEndDate = startDate.plusDays(numberOfDaysToProRate);
-        DateTime secondEndDate = firstEndDate.plusMonths(1);
+        rate = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
+        BigDecimal price;
+        DateTime chargeThroughDate;
 
-        BigDecimal rate = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
-        price = rate.multiply(new BigDecimal(numberOfDaysToProRate).setScale(4)).setScale(4).divide(new BigDecimal("29.0000"), 6);
-        verifyTestResult(accountId, subscription.getId(), startDate, firstEndDate, price, secondEndDate);
-        verifyTestResult(accountId, subscription.getId(), firstEndDate, secondEndDate, rate, secondEndDate);
+        switch (billingDay) {
+            case 1:
+                // this will result in a 30-day pro-ration
+                price = THIRTY.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+                chargeThroughDate = startDate.plusMonths(1).toMutableDateTime().dayOfMonth().set(billingDay).toDateTime();
+                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate);
+                break;
+            case 2:
+                // this will result in one full-period invoice item
+                chargeThroughDate = startDate.plusMonths(1);
+                price = rate;
+                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate);
+                break;
+            case 3:
+                // this will result in a 1-day leading pro-ration and a full-period invoice item
+                DateTime firstEndDate = startDate.plusDays(1);
+                chargeThroughDate = firstEndDate.plusMonths(1);
+                price = ONE.divide(TWENTY_NINE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+                verifyTestResult(accountId, subscription.getId(), startDate, firstEndDate, price, chargeThroughDate);
+                verifyTestResult(accountId, subscription.getId(), firstEndDate, chargeThroughDate, rate, chargeThroughDate);
+                break;
+            case 31:
+                // this will result in a 29-day pro-ration
+                chargeThroughDate = startDate.toMutableDateTime().dayOfMonth().set(31).toDateTime();
+                price = TWENTY_NINE.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate);
+                break;
+            default:
+                throw new UnsupportedOperationException();
+        }
 
         //
         // CHANGE PLAN EOT AND EXPECT NOTHING
@@ -377,7 +401,6 @@ public class TestBasic {
         newProductName = "Pistol";
         subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscription.getId());
         subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow());
-        log.info("testSimple has passed third busHandler checkpoint (no events)");
 
         //
         // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
@@ -391,10 +414,9 @@ public class TestBasic {
         //waitForDebug();
 
         assertTrue(busHandler.isCompleted(DELAY));
-        log.info("testSimple passed fourth busHandler checkpoint.");
 
-        startDate = secondEndDate;
-        endDate = secondEndDate.plusMonths(1);
+        startDate = chargeThroughDate;
+        endDate = chargeThroughDate.plusMonths(1);
         price = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
         verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
 
@@ -410,6 +432,13 @@ public class TestBasic {
 
             startDate = endDate;
             endDate = startDate.plusMonths(1);
+            if (endDate.dayOfMonth().get() != billingDay) {
+                // adjust for end of month issues
+                int maximumDay = endDate.dayOfMonth().getMaximumValue();
+                int newDay = (maximumDay < billingDay) ? maximumDay : billingDay;
+                endDate = endDate.toMutableDateTime().dayOfMonth().set(newDay).toDateTime();
+            }
+
             verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
         } while (maxCycles-- > 0);
 
