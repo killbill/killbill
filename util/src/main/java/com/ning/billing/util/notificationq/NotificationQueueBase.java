@@ -88,7 +88,7 @@ public abstract class NotificationQueueBase implements NotificationQueue {
 
 
     @Override
-    public boolean processReadyNotification() {
+    public int processReadyNotification() {
         return doProcessEvents(sequenceId.incrementAndGet());
     }
 
@@ -233,9 +233,10 @@ public abstract class NotificationQueueBase implements NotificationQueue {
         }
     }
 
-    protected String getFullQName() {
+    @Override
+    public String getFullQName() {
         return svcName + ":" +  queueName;
     }
 
-    protected abstract boolean doProcessEvents(int sequenceId);
+    protected abstract int doProcessEvents(int sequenceId);
 }

@@ -43,6 +43,7 @@ import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
+import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
@@ -60,19 +61,19 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     private final Bus eventBus;
 
-	private NotificationQueueService notificationQueueService;
+	private NextBillingDatePoster nextBillingDatePoster;
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus,
                              final EntitlementBillingApi entitlementBillingApi,
-                             NotificationQueueService notificationQueueService) {
+                             NextBillingDatePoster nextBillingDatePoster) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.recurringInvoiceItemSqlDao = dbi.onDemand(RecurringInvoiceItemSqlDao.class);
         this.fixedPriceInvoiceItemSqlDao = dbi.onDemand(FixedPriceInvoiceItemSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.eventBus = eventBus;
         this.entitlementBillingApi = entitlementBillingApi;
-        this.notificationQueueService = notificationQueueService;
+        this.nextBillingDatePoster = nextBillingDatePoster;
     }
 
     @Override
@@ -282,30 +283,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 if ((recurringInvoiceItem.getEndDate() != null) &&
                         (recurringInvoiceItem.getAmount() == null ||
                                 recurringInvoiceItem.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                insertNextBillingNotification(dao, item.getSubscriptionId(), recurringInvoiceItem.getEndDate());
+                	nextBillingDatePoster.insertNextBillingNotification(dao, item.getSubscriptionId(), recurringInvoiceItem.getEndDate());
                 }
             }
         }
     }
     
-    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime futureNotificationTime) {
-    	NotificationQueue nextBillingQueue;
-		try {
-			nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
-					DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
-			 log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
-
-	            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
-	                @Override
-	                public String toString() {
-	                    return subscriptionId.toString();
-	                }
-	    	    });
-		} catch (NoSuchNotificationQueue e) {
-			log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
-		}
-    }
-
     private void setChargedThroughDates(final InvoiceSqlDao dao, final Collection<InvoiceItem> fixedPriceItems,
                                         final Collection<InvoiceItem> recurringItems) {
         Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
