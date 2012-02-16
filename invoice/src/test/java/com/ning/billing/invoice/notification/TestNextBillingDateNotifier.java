@@ -74,6 +74,7 @@ public class TestNextBillingDateNotifier {
 	private Bus eventBus;
 	private MysqlTestingHelper helper;
 	private InvoiceListenerMock listener = new InvoiceListenerMock();
+	private NotificationQueueService notificationQueueService;
 
 	private static final class InvoiceListenerMock extends InvoiceListener {
 		int eventCount = 0;
@@ -251,7 +252,8 @@ public class TestNextBillingDateNotifier {
         dao = dbi.onDemand(DummySqlTest.class);
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);
-        notifier = new DefaultNextBillingDateNotifier(g.getInstance(NotificationQueueService.class),g.getInstance(InvoiceConfig.class), new MockEntitlementDao(), listener);
+        notificationQueueService = g.getInstance(NotificationQueueService.class);
+        notifier = new DefaultNextBillingDateNotifier(notificationQueueService,g.getInstance(InvoiceConfig.class), new MockEntitlementDao(), listener);
         startMysql();
 	}
 
@@ -266,22 +268,24 @@ public class TestNextBillingDateNotifier {
 	}
 
 
-	@Test(enabled=false, groups="slow")
+	@Test(enabled=true, groups="slow")
 	public void test() throws Exception {
 		final UUID subscriptionId = new UUID(0L,1L);
 		final DateTime now = new DateTime();
 		final DateTime readyTime = now.plusMillis(2000);
+		final NextBillingDatePoster poster = new DefaultNextBillingDatePoster(notificationQueueService); 
 
 		eventBus.start();
 		notifier.initialize();
 		notifier.start();
+		
 
 		dao.inTransaction(new Transaction<Void, DummySqlTest>() {
 			@Override
 			public Void inTransaction(DummySqlTest transactional,
 					TransactionStatus status) throws Exception {
-				//DefaultInvoiceDao insertDao = new DefaultInvoiceDao();
-				((DefaultInvoiceDao)dao).insertNextBillingNotification(transactional, subscriptionId, readyTime);
+
+				poster.insertNextBillingNotification(transactional, subscriptionId, readyTime);
 				return null;
 			}
 		});
