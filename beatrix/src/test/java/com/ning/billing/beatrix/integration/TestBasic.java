@@ -16,6 +16,7 @@
 
 package com.ning.billing.beatrix.integration;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -209,15 +210,16 @@ public class TestBasic {
 
     private void verifyTestResult(UUID accountId, UUID subscriptionId,
                                   DateTime startDate, DateTime endDate,
-                                  BigDecimal amount, DateTime chargeThroughDate) {
+                                  BigDecimal amount, DateTime chargeThroughDate,
+                                  int totalInvoiceItemCount) {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscriptionId);
 
         List<InvoiceItem> invoiceItems = invoiceUserApi.getInvoiceItemsByAccount(accountId);
+        assertEquals(invoiceItems.size(), totalInvoiceItemCount);
+
         boolean wasFound = false;
 
-        Iterator<InvoiceItem> invoiceItemIterator = invoiceItems.iterator();
-        while (invoiceItemIterator.hasNext()) {
-            InvoiceItem item = invoiceItemIterator.next();
+        for (InvoiceItem item : invoiceItems) {
             if (item.getStartDate().compareTo(startDate) == 0) {
                 if (item.getEndDate().compareTo(endDate) == 0) {
                     if (item.getAmount().compareTo(amount) == 0) {
@@ -319,7 +321,8 @@ public class TestBasic {
         DateTime startDate = subscription.getCurrentPhaseStart();
         DateTime endDate = startDate.plusDays(30);
         BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
-        verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate);
+        int invoiceItemCount = 1;
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate, invoiceItemCount);
 
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
@@ -339,7 +342,8 @@ public class TestBasic {
         //
         startDate = subscription.getCurrentPhaseStart();
         endDate = startDate.plusDays(30);
-        verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate);
+        invoiceItemCount = 2;
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate, invoiceItemCount);
 
         //
         // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
@@ -367,27 +371,31 @@ public class TestBasic {
                 // this will result in a 30-day pro-ration
                 price = THIRTY.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
                 chargeThroughDate = startDate.plusMonths(1).toMutableDateTime().dayOfMonth().set(billingDay).toDateTime();
-                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate);
+                invoiceItemCount += 1;
+                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate, invoiceItemCount);
                 break;
             case 2:
                 // this will result in one full-period invoice item
-                chargeThroughDate = startDate.plusMonths(1);
                 price = rate;
-                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate);
+                chargeThroughDate = startDate.plusMonths(1);
+                invoiceItemCount += 1;
+                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate, invoiceItemCount);
                 break;
             case 3:
                 // this will result in a 1-day leading pro-ration and a full-period invoice item
+                price = ONE.divide(TWENTY_NINE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
                 DateTime firstEndDate = startDate.plusDays(1);
                 chargeThroughDate = firstEndDate.plusMonths(1);
-                price = ONE.divide(TWENTY_NINE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-                verifyTestResult(accountId, subscription.getId(), startDate, firstEndDate, price, chargeThroughDate);
-                verifyTestResult(accountId, subscription.getId(), firstEndDate, chargeThroughDate, rate, chargeThroughDate);
+                invoiceItemCount += 2;
+                verifyTestResult(accountId, subscription.getId(), startDate, firstEndDate, price, chargeThroughDate, invoiceItemCount);
+                verifyTestResult(accountId, subscription.getId(), firstEndDate, chargeThroughDate, rate, chargeThroughDate, invoiceItemCount);
                 break;
             case 31:
                 // this will result in a 29-day pro-ration
                 chargeThroughDate = startDate.toMutableDateTime().dayOfMonth().set(31).toDateTime();
                 price = TWENTY_NINE.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate);
+                invoiceItemCount += 1;
+                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate, invoiceItemCount);
                 break;
             default:
                 throw new UnsupportedOperationException();
@@ -418,7 +426,8 @@ public class TestBasic {
         startDate = chargeThroughDate;
         endDate = chargeThroughDate.plusMonths(1);
         price = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
-        verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
+        invoiceItemCount += 1;
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate, invoiceItemCount);
 
         //
         // MOVE TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE
@@ -439,7 +448,8 @@ public class TestBasic {
                 endDate = endDate.toMutableDateTime().dayOfMonth().set(newDay).toDateTime();
             }
 
-            verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate);
+            invoiceItemCount += 1;
+            verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate, invoiceItemCount);
         } while (maxCycles-- > 0);
 
         //
