@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.notificationq;
 
+import org.joda.time.DateTime;
+
 
 public interface NotificationQueueService {
 
@@ -25,7 +27,7 @@ public interface NotificationQueueService {
          *
          * @param notificationKey the notification key associated to that notification entry
          */
-        public void handleReadyNotification(String notificationKey);
+        public void handleReadyNotification(String notificationKey, DateTime eventDateTime);
      }
 
     public static final class NotificationQueueAlreadyExists extends Exception {
@@ -76,7 +78,7 @@ public interface NotificationQueueService {
     /**
      *
      * @param services
-     * @return whether or not things were ready in the queue
+     * @return the number of processed notifications
      */
-    public boolean triggerManualQueueProcessing(final String [] services, final Boolean keepRunning);
+    public int triggerManualQueueProcessing(final String [] services, final Boolean keepRunning);
 }

@@ -16,8 +16,8 @@
 
 package com.ning.billing.invoice.glue;
 
-import com.ning.billing.util.glue.GlobalLockerModule;
 import org.skife.config.ConfigurationObjectFactory;
+
 import com.google.inject.AbstractModule;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.invoice.InvoiceListener;
@@ -32,8 +32,11 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
+import com.ning.billing.invoice.notification.DefaultNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
+import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.glue.ClockModule;
+import com.ning.billing.util.glue.GlobalLockerModule;
 
 
 public class InvoiceModule extends AbstractModule {
@@ -64,6 +67,7 @@ public class InvoiceModule extends AbstractModule {
 
     protected void installNotifier() {
         bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
+        bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
     }
 
     protected void installInvoiceListener() {
