@@ -16,11 +16,12 @@
 
 package com.ning.billing.payment.provider;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
@@ -34,14 +35,12 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice) {
-        PaymentInfo payment = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
+        PaymentInfo payment = new PaymentInfo.Builder()
+                                             .setPaymentId(UUID.randomUUID().toString())
                                              .setAmount(invoice.getBalance())
                                              .setStatus("Processed")
-                                             .setBankIdentificationNumber("1234")
-                                             .setCreatedDate(new DateTime())
-                                             .setEffectiveDate(new DateTime())
-                                             .setPaymentNumber("12345")
-                                             .setReferenceId("12345")
+                                             .setCreatedDate(new DateTime(DateTimeZone.UTC))
+                                             .setEffectiveDate(new DateTime(DateTimeZone.UTC))
                                              .setType("Electronic")
                                              .build();
         return Either.right(payment);
@@ -49,26 +48,26 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId) {
-        return Either.right(new PaymentInfo.Builder().setPaymentId(paymentId).build());
+        return Either.right(null);
     }
 
     @Override
     public Either<PaymentError, String> createPaymentProviderAccount(Account account) {
-            return Either.right(RandomStringUtils.randomAlphanumeric(10));
+        return Either.left(new PaymentError("unsupported", "Account creation not supported in this plugin"));
     }
 
     @Override
     public Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
-        return Either.right(new PaymentProviderAccount.Builder().setAccountKey(accountKey).build());
+        return Either.right(null);
     }
 
     @Override
     public Either<PaymentError, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
-        return Either.right(RandomStringUtils.randomAlphanumeric(10));
+        return Either.right(null);
     }
 
     public void setDefaultPaymentMethodOnAccount(PaymentProviderAccount account, String paymentMethodId) {
-
+        // NO-OP
     }
 
     @Override
@@ -83,12 +82,12 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
-        return Either.right(new PaymentMethodInfo.Builder().setId(paymentMethodId).build());
+        return Either.right(null);
     }
 
     @Override
     public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(final String accountKey) {
-        return Either.right(null);
+        return Either.right(Arrays.<PaymentMethodInfo>asList());
     }
 
     @Override
