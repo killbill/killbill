@@ -18,17 +18,12 @@ package com.ning.billing.invoice.notification;
 
 import java.util.UUID;
 
-import com.ning.billing.util.bus.BusEvent;
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-public class NextBillingDateEvent implements BusEvent {
-	private final UUID subscriptionId;
+public interface NextBillingDatePoster {
 
-	public NextBillingDateEvent(UUID subscriptionId) {
-		super();
-		this.subscriptionId = subscriptionId;
-	}
+	void insertNextBillingNotification(Transmogrifier transactionalDao,
+			UUID subscriptionId, DateTime futureNotificationTime);
 
-	public UUID getSubscriptionId() {
-		return subscriptionId;
-	}
 }

@@ -101,7 +101,7 @@ public class Engine implements EventListener, EntitlementService {
                     NOTIFICATION_QUEUE_NAME,
                     new NotificationQueueHandler() {
                 @Override
-                public void handleReadyNotification(String notificationKey) {
+                public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
                     EntitlementEvent event = dao.getEventById(UUID.fromString(notificationKey));
                     if (event == null) {
                         log.warn("Failed to extract event for notification key {}", notificationKey);

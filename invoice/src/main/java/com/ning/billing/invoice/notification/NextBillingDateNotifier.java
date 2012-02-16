@@ -16,10 +16,6 @@
 
 package com.ning.billing.invoice.notification;
 
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 public interface NextBillingDateNotifier {
 
@@ -28,8 +24,5 @@ public interface NextBillingDateNotifier {
     public void start();
 
     public void stop();
-
-	public void insertNextBillingNotification(Transmogrifier transactionalDao,
-			UUID subscriptionId, DateTime futureNotificationTime);
 
 }

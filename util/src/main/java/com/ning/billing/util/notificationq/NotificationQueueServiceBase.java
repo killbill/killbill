@@ -83,8 +83,13 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
     }
 
 
+    //
+    // Test ONLY
+    //
     @Override
-    public void triggerManualQueueProcessing(final String [] services) {
+    public int triggerManualQueueProcessing(final String [] services, final Boolean keepRunning) {
+
+        int result = 0;
 
         List<NotificationQueue> manualQueues = null;
         if (services == null) {
@@ -102,8 +107,14 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
             }
         }
         for (NotificationQueue cur : manualQueues) {
-            cur.processReadyNotification();
+            int processedNotifications = 0;
+            do {
+                processedNotifications = cur.processReadyNotification();
+                log.info("Got {} results from queue {}", processedNotifications, cur.getFullQName());
+                result += processedNotifications;
+            } while(keepRunning && processedNotifications > 0);
         }
+        return result;
     }
 
     private final void addQueuesForService(final List<NotificationQueue> result, final String svcName) {
