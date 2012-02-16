@@ -100,6 +100,16 @@ public abstract class TestPaymentApi {
         assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getPaymentId());
         assertEquals(paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0), now.withMillisOfSecond(0).withSecondOfMinute(0));
 
+        List<PaymentInfo> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        assertNotNull(paymentInfos);
+        assertTrue(paymentInfos.size() > 0);
+
+        PaymentInfo paymentInfoFromGet = paymentInfos.get(0);
+        assertEquals(paymentInfo, paymentInfoFromGet);
+
+        PaymentAttempt paymentAttemptFromGet = paymentApi.getPaymentAttemptForInvoiceId(invoice.getId().toString());
+        assertEquals(paymentAttempt, paymentAttemptFromGet);
+
     }
 
     private PaymentProviderAccount setupAccountWithPaymentMethod() throws AccountApiException {

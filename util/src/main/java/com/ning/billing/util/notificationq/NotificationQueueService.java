@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.notificationq;
 
+import org.joda.time.DateTime;
+
 
 public interface NotificationQueueService {
 
@@ -25,7 +27,7 @@ public interface NotificationQueueService {
          *
          * @param notificationKey the notification key associated to that notification entry
          */
-        public void handleReadyNotification(String notificationKey);
+        public void handleReadyNotification(String notificationKey, DateTime eventDateTime);
      }
 
     public static final class NotificationQueueAlreadyExists extends Exception {
@@ -57,7 +59,7 @@ public interface NotificationQueueService {
      * @throws com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists is the queue associated with that service and name already exits
      *
      */
-    NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config)
+    public NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config)
         throws NotificationQueueAlreadyExists;
 
     /**
@@ -69,7 +71,14 @@ public interface NotificationQueueService {
      *
      * @throws NoSuchNotificationQueue if queue does not exist
      */
-    NotificationQueue getNotificationQueue(final String svcName, final String queueName)
+    public NotificationQueue getNotificationQueue(final String svcName, final String queueName)
         throws NoSuchNotificationQueue;
 
+
+    /**
+     *
+     * @param services
+     * @return the number of processed notifications
+     */
+    public int triggerManualQueueProcessing(final String [] services, final Boolean keepRunning);
 }

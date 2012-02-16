@@ -18,8 +18,6 @@ package com.ning.billing.invoice.notification;
 
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
@@ -27,9 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.notificationq.NotificationConfig;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
@@ -41,22 +41,22 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
 
     private final static Logger log = LoggerFactory.getLogger(DefaultNextBillingDateNotifier.class);
 
-    private static final String NEXT_BILLING_DATE_NOTIFIER_QUEUE = "next-billing-date-queue";
+    public static final String NEXT_BILLING_DATE_NOTIFIER_QUEUE = "next-billing-date-queue";
 
-    private final Bus eventBus;
     private final NotificationQueueService notificationQueueService;
 	private final InvoiceConfig config;
     private final EntitlementDao entitlementDao;
 
     private NotificationQueue nextBillingQueue;
+	private InvoiceListener listener;
 
     @Inject
-	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService, Bus eventBus,
-                                          InvoiceConfig config, EntitlementDao entitlementDao){
+	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService, 
+			InvoiceConfig config, EntitlementDao entitlementDao, InvoiceListener listener){
 		this.notificationQueueService = notificationQueueService;
 		this.config = config;
-		this.eventBus = eventBus;
         this.entitlementDao = entitlementDao;
+        this.listener = listener; 
 	}
 
     @Override
@@ -66,15 +66,14 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
             		NEXT_BILLING_DATE_NOTIFIER_QUEUE,
                     new NotificationQueueHandler() {
                 @Override
-                public void handleReadyNotification(String notificationKey) {
-                	UUID subscriptionId;
+                public void handleReadyNotification(String notificationKey, DateTime eventDate) {
                 	try {
                  		UUID key = UUID.fromString(notificationKey);
                         Subscription subscription = entitlementDao.getSubscriptionFromId(key);
                         if (subscription == null) {
                             log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")" );
                         } else {
-                            processEvent(key);
+                            processEvent(key , eventDate);
                         }
                 	} catch (IllegalArgumentException e) {
                 		log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
@@ -118,27 +117,9 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
         }
     }
 
-    private void processEvent(UUID subscriptionId) {
-        try {
-            eventBus.post(new NextBillingDateEvent(subscriptionId));
-        } catch (EventBusException e) {
-            log.error("Failed to post entitlement event " + subscriptionId, e);
-        }
+    private void processEvent(UUID subscriptionId, DateTime eventDateTime) {
+        listener.handleNextBillingDateEvent(subscriptionId, eventDateTime);
     }
 
-    @Override
-    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime futureNotificationTime) {
-    	if (nextBillingQueue != null) {
-            log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
-
-            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
-                @Override
-                public String toString() {
-                    return subscriptionId.toString();
-                }
-    	    });
-        } else {
-            log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).");
-        }
-    }
+ 
 }

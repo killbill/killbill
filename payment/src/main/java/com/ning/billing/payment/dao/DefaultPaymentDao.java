@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.dao;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.IDBI;
@@ -44,6 +45,12 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
+    public PaymentAttempt createPaymentAttempt(PaymentAttempt paymentAttempt) {
+        sqlDao.insertPaymentAttempt(paymentAttempt);
+        return paymentAttempt;
+    }
+
+    @Override
     public PaymentAttempt createPaymentAttempt(Invoice invoice) {
         final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
 
@@ -64,6 +71,16 @@ public class DefaultPaymentDao implements PaymentDao {
     @Override
     public void updatePaymentInfo(String type, String paymentId, String cardType, String cardCountry) {
         sqlDao.updatePaymentInfo(type, paymentId, cardType, cardCountry);
+    }
+
+    @Override
+    public List<PaymentInfo> getPaymentInfo(List<String> invoiceIds) {
+        return sqlDao.getPaymentInfos(invoiceIds);
+    }
+
+    @Override
+    public List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<String> invoiceIds) {
+        return sqlDao.getPaymentAttemptsForInvoiceIds(invoiceIds);
     }
 
 }

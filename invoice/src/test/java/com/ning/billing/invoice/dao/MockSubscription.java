@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class MockSubscription implements Subscription {
-    private UUID subscriptionId = UUID.randomUUID();
+    private final UUID subscriptionId = UUID.randomUUID();
 
     @Override
     public void cancel(DateTime requestedDate, boolean eot) throws EntitlementUserApiException {
@@ -118,5 +118,10 @@ public class MockSubscription implements Subscription {
     @Override
     public SubscriptionTransition getPendingTransition() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public SubscriptionTransition getPreviousTransition() {
+        return null;
     }
 }

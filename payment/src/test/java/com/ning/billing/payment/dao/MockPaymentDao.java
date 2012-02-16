@@ -16,10 +16,14 @@
 
 package com.ning.billing.payment.dao;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
@@ -46,6 +50,12 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
+    public PaymentAttempt createPaymentAttempt(PaymentAttempt paymentAttempt) {
+        paymentAttempts.put(paymentAttempt.getPaymentAttemptId(), paymentAttempt);
+        return paymentAttempt;
+    }
+
+    @Override
     public void savePaymentInfo(PaymentInfo paymentInfo) {
         payments.put(paymentInfo.getPaymentId(), paymentInfo);
     }
@@ -63,7 +73,7 @@ public class MockPaymentDao implements PaymentDao {
     @Override
     public PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId) {
         for (PaymentAttempt paymentAttempt : paymentAttempts.values()) {
-            if (invoiceId.equals(paymentAttempt.getInvoiceId())) {
+            if (invoiceId.equals(paymentAttempt.getInvoiceId().toString())) {
                 return paymentAttempt;
             }
         }
@@ -74,6 +84,34 @@ public class MockPaymentDao implements PaymentDao {
     public void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry) {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public List<PaymentInfo> getPaymentInfo(List<String> invoiceIds) {
+        List<PaymentAttempt> attempts = getPaymentAttemptsForInvoiceIds(invoiceIds);
+        List<PaymentInfo> paymentsToReturn = new ArrayList<PaymentInfo>(invoiceIds.size());
+
+        for (final PaymentAttempt attempt : attempts) {
+            paymentsToReturn.addAll(Collections2.filter(payments.values(), new Predicate<PaymentInfo>() {
+                @Override
+                public boolean apply(PaymentInfo input) {
+                    return input.getPaymentId().equals(attempt.getPaymentId());
+                }
+            }));
+        }
+        return paymentsToReturn;
+    }
+
+    @Override
+    public List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<String> invoiceIds) {
+        List<PaymentAttempt> paymentAttempts = new ArrayList<PaymentAttempt>(invoiceIds.size());
+        for (String invoiceId : invoiceIds) {
+            PaymentAttempt attempt = getPaymentAttemptForInvoiceId(invoiceId);
+            if (attempt != null) {
+                paymentAttempts.add(attempt);
+            }
+        }
+        return paymentAttempts;
     }
 
 }

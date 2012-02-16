@@ -25,6 +25,6 @@ import org.testng.annotations.Test;
 public class TestPaymentDaoWithMock extends TestPaymentDao {
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws IOException {
-        dao = new MockPaymentDao();
+        paymentDao = new MockPaymentDao();
     }
 }

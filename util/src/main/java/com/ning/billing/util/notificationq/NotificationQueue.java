@@ -38,8 +38,9 @@ public interface NotificationQueue {
     * This is only valid when the queue has been configured with isNotificationProcessingOff is true
     * In which case, it will callback users for all the ready notifications.
     *
+    * @return the number of entries we processed
     */
-   public void processReadyNotification();
+   public int processReadyNotification();
 
    /**
     * Stops the queue. Blocks until queue is completely stopped.
@@ -54,5 +55,11 @@ public interface NotificationQueue {
     * @see NotificationQueueHandler.completedQueueStart to be notified when the notification thread started
     */
    public void startQueue();
+
+   /**
+    *
+    * @return the name of that queue
+    */
+   public String getFullQName();
 
 }

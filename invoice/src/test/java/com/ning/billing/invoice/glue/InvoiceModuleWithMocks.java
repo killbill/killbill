@@ -31,6 +31,11 @@ public class InvoiceModuleWithMocks extends InvoiceModule {
     }
 
     @Override
+    protected void installGlobalLocker() {
+        bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
+    }
+
+    @Override
     protected void installInvoiceListener() {
 
     }

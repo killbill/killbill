@@ -14,13 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.test;
+package com.ning.billing.invoice.notification;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-public interface EntitlementTestApi {
+public interface NextBillingDatePoster {
 
-    public void doProcessReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly);
+	void insertNextBillingNotification(Transmogrifier transactionalDao,
+			UUID subscriptionId, DateTime futureNotificationTime);
 
 }

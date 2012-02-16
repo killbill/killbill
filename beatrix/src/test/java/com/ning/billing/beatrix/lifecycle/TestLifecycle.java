@@ -121,7 +121,7 @@ public class TestLifecycle {
 
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun=true)
     public void setup() {
         final Injector g = Guice.createInjector(Stage.DEVELOPMENT, new TestLifecycleModule());
         s1 = g.getInstance(Service1.class);

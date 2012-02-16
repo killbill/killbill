@@ -16,17 +16,15 @@
 
 package com.ning.billing.invoice.notification;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import com.ning.billing.catalog.DefaultCatalogService;
-import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.config.CatalogConfig;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
-import com.ning.billing.util.bus.InMemoryBus;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
@@ -38,24 +36,35 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import com.google.common.eventbus.Subscribe;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.catalog.DefaultCatalogService;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.entitlement.api.migration.AccountMigrationData;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
+import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.invoice.InvoiceListener;
+import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
-
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class TestNextBillingDateNotifier {
     private static Logger log = LoggerFactory.getLogger(TestNextBillingDateNotifier.class);
@@ -64,7 +73,159 @@ public class TestNextBillingDateNotifier {
 	private DummySqlTest dao;
 	private Bus eventBus;
 	private MysqlTestingHelper helper;
+	private InvoiceListenerMock listener = new InvoiceListenerMock();
+	private NotificationQueueService notificationQueueService;
 
+	private static final class InvoiceListenerMock extends InvoiceListener {
+		int eventCount = 0;
+		UUID latestSubscriptionId = null;
+
+		public InvoiceListenerMock() {
+			super(null);
+		}
+		
+
+		@Override
+		public void handleNextBillingDateEvent(UUID subscriptionId,
+				DateTime eventDateTime) {
+			eventCount++;
+			latestSubscriptionId=subscriptionId;
+		}
+		
+		public int getEventCount() {
+			return eventCount;
+		}
+		
+		public UUID getLatestSubscriptionId(){
+			return latestSubscriptionId;
+		}
+		
+	}
+	
+	private class MockEntitlementDao implements EntitlementDao {
+
+		@Override
+		public List<SubscriptionBundle> getSubscriptionBundleForAccount(
+				UUID accountId) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public SubscriptionBundle createSubscriptionBundle(
+				SubscriptionBundleData bundle) {
+			throw new UnsupportedOperationException();
+
+		}
+
+		@Override
+		public Subscription getSubscriptionFromId(UUID subscriptionId) {
+			return new BrainDeadSubscription();
+
+		}
+
+		@Override
+		public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) {
+			throw new UnsupportedOperationException();
+
+		}
+
+		@Override
+		public Subscription getBaseSubscription(UUID bundleId) {
+			throw new UnsupportedOperationException();
+
+		}
+
+		@Override
+		public List<Subscription> getSubscriptions(UUID bundleId) {
+			throw new UnsupportedOperationException();
+
+		}
+
+		@Override
+		public List<Subscription> getSubscriptionsForKey(String bundleKey) {
+			throw new UnsupportedOperationException();
+
+		}
+
+		@Override
+		public void updateSubscription(SubscriptionData subscription) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void createNextPhaseEvent(UUID subscriptionId,
+				EntitlementEvent nextPhase) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public EntitlementEvent getEventById(UUID eventId) {
+			throw new UnsupportedOperationException();
+
+		}
+
+		@Override
+		public List<EntitlementEvent> getEventsForSubscription(
+				UUID subscriptionId) {
+			throw new UnsupportedOperationException();
+
+		}
+
+		@Override
+		public List<EntitlementEvent> getPendingEventsForSubscription(
+				UUID subscriptionId) {
+			throw new UnsupportedOperationException();
+
+		}
+
+		@Override
+		public void createSubscription(SubscriptionData subscription,
+				List<EntitlementEvent> initialEvents) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void cancelSubscription(UUID subscriptionId,
+				EntitlementEvent cancelEvent) {
+			throw new UnsupportedOperationException();
+
+		}
+
+		@Override
+		public void uncancelSubscription(UUID subscriptionId,
+				List<EntitlementEvent> uncancelEvents) {
+			throw new UnsupportedOperationException();
+	
+		}
+
+		@Override
+		public void changePlan(UUID subscriptionId,
+				List<EntitlementEvent> changeEvents) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void migrate(UUID acountId, AccountMigrationData data) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void undoMigration(UUID accountId) {
+			throw new UnsupportedOperationException();
+		}
+		
+	}
+	
 	@BeforeClass(groups={"setup"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
@@ -91,7 +252,8 @@ public class TestNextBillingDateNotifier {
         dao = dbi.onDemand(DummySqlTest.class);
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);
-        notifier = new DefaultNextBillingDateNotifier(g.getInstance(NotificationQueueService.class), eventBus, g.getInstance(InvoiceConfig.class), g.getInstance(EntitlementDao.class));
+        notificationQueueService = g.getInstance(NotificationQueueService.class);
+        notifier = new DefaultNextBillingDateNotifier(notificationQueueService,g.getInstance(InvoiceConfig.class), new MockEntitlementDao(), listener);
         startMysql();
 	}
 
@@ -105,48 +267,30 @@ public class TestNextBillingDateNotifier {
         helper.initDb(entitlementDdl);
 	}
 
-	public static class NextBillingEventListener {
-		private int eventCount=0;
-		private NextBillingDateEvent event;
 
-		public int getEventCount() {
-			return eventCount;
-		}
-
-		@Subscribe
-		public synchronized void processEvent(NextBillingDateEvent event) {
-			eventCount++;
-			this.event = event;
-			//log.debug("Got event {} {}", event.name, event.value);
-		}
-		
-		public NextBillingDateEvent getLatestEvent() {
-			return event;
-		}
-	}
-
-	@Test(enabled=false, groups="slow")
+	@Test(enabled=true, groups="slow")
 	public void test() throws Exception {
-		final UUID subscriptionId = new UUID(0L,1000L);
+		final UUID subscriptionId = new UUID(0L,1L);
 		final DateTime now = new DateTime();
 		final DateTime readyTime = now.plusMillis(2000);
+		final NextBillingDatePoster poster = new DefaultNextBillingDatePoster(notificationQueueService); 
 
-		final NextBillingEventListener listener = new NextBillingEventListener();
 		eventBus.start();
 		notifier.initialize();
 		notifier.start();
+		
 
-        eventBus.register(listener);
 		dao.inTransaction(new Transaction<Void, DummySqlTest>() {
 			@Override
 			public Void inTransaction(DummySqlTest transactional,
 					TransactionStatus status) throws Exception {
 
-				notifier.insertNextBillingNotification(transactional, subscriptionId, readyTime);
+				poster.insertNextBillingNotification(transactional, subscriptionId, readyTime);
 				return null;
 			}
 		});
-
+		
+		
 		// Move time in the future after the notification effectiveDate
 		((ClockMock) clock).setDeltaFromReality(3000);
 
@@ -159,6 +303,6 @@ public class TestNextBillingDateNotifier {
 	        });
 
 		Assert.assertEquals(listener.getEventCount(), 1);
-		Assert.assertEquals(listener.getLatestEvent().getSubscriptionId(), subscriptionId);
+		Assert.assertEquals(listener.getLatestSubscriptionId(), subscriptionId);
 	}
 }

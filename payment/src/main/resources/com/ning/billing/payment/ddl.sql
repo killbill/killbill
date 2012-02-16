@@ -25,7 +25,7 @@ CREATE TABLE payments (
       status varchar(20) COLLATE utf8_bin,
       reference_id varchar(36) COLLATE utf8_bin,
       payment_type varchar(20) COLLATE utf8_bin,
-      payment_method_id varchar(20) COLLATE utf8_bin,
+      payment_method_id varchar(36) COLLATE utf8_bin,
       payment_method varchar(20) COLLATE utf8_bin,
       card_type varchar(20) COLLATE utf8_bin,
       card_country varchar(50) COLLATE utf8_bin,

@@ -23,4 +23,5 @@ public interface PaymentService extends KillbillService {
     String getName();
 
     PaymentApi getPaymentApi();
+
 }
