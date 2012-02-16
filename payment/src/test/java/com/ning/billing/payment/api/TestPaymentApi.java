@@ -40,7 +40,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.model.DefaultInvoiceItem;
+import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -71,14 +71,13 @@ public abstract class TestPaymentApi {
         final BigDecimal amount = new BigDecimal("10.0011");
         final UUID subscriptionId = UUID.randomUUID();
 
-        invoice.addInvoiceItem(new DefaultInvoiceItem(invoice.getId(),
+        invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
                                                        subscriptionId,
                                                        "test plan", "test phase",
                                                        now,
                                                        now.plusMonths(1),
                                                        amount,
                                                        new BigDecimal("1.0"),
-                                                       null,
                                                        Currency.USD));
 
         List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()));
@@ -156,7 +155,7 @@ public abstract class TestPaymentApi {
                                                                   .billingCycleDay(account.getBillCycleDay())
                                                                   .build();
 
-        Either<PaymentError, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(accountToUpdate);
+        Either<PaymentError, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(accountToUpdate.getExternalKey());
         assertTrue(voidOrError.isRight());
     }
 

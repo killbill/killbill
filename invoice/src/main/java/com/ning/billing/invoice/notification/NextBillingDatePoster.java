@@ -14,9 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.util.globalLocker;
+package com.ning.billing.invoice.notification;
 
-public interface GlobalLock
-{
-    public void release();
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+
+public interface NextBillingDatePoster {
+
+	void insertNextBillingNotification(Transmogrifier transactionalDao,
+			UUID subscriptionId, DateTime futureNotificationTime);
+
 }

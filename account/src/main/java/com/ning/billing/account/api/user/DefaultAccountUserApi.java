@@ -20,10 +20,12 @@ import java.util.List;
 import java.util.UUID;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
@@ -74,8 +76,31 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
         dao.update(account);
     }
 
+    @Override
+    public void updateAccount(final String externalKey, final AccountData accountData) throws AccountApiException {
+    	UUID accountId = getIdFromKey(externalKey);
+    	if(accountId == null) {
+    		throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
+    	}
+    	Account account = new DefaultAccount(accountId, accountData);
+        dao.update(account);
+    }
+
 	@Override
 	public void deleteAccountByKey(String externalKey) throws AccountApiException {
 		dao.deleteByKey(externalKey);
+	}
+
+	@Override
+	public Account migrateAccount(MigrationAccountData data,
+			List<CustomField> fields, List<Tag> tags)
+			throws AccountApiException {
+		
+		Account account = new DefaultAccount(data);
+        account.addFields(fields);
+        account.addTags(tags);
+
+        dao.create(account);
+        return account;
 	}
 }

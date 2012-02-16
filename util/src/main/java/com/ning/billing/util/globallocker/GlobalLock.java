@@ -14,22 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.util.globalLocker;
+package com.ning.billing.util.globallocker;
 
-public class MockGlobalLocker implements GlobalLocker {
-
-    @Override
-    public GlobalLock lockWithNumberOfTries(LockerService service,
-            String lockKey, int retry) {
-        return new GlobalLock() {
-            @Override
-            public void release() {
-            }
-        };
-    }
-
-    @Override
-    public Boolean isFree(LockerService service, String lockKey) {
-        return Boolean.TRUE;
-    }
+public interface GlobalLock
+{
+    public void release();
 }

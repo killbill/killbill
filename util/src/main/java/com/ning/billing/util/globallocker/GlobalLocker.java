@@ -14,13 +14,27 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.test;
+package com.ning.billing.util.globallocker;
 
-import java.util.UUID;
+public interface GlobalLocker {
 
+    GlobalLock lockWithNumberOfTries(final LockerService service, final String lockKey, final int retry);
+    Boolean isFree(final LockerService service, final String lockKey);
 
-public interface EntitlementTestApi {
+    public enum LockerService {
 
-    public void doProcessReadyEvents(UUID [] subscriptionsIds, Boolean recursive, Boolean oneEventOnly);
+        // Only service needing global lock
+        INVOICE("invoice");
 
+        private final String svcName;
+
+        LockerService(String svcName) {
+            this.svcName = svcName;
+        }
+
+        @Override
+        public String toString() {
+            return svcName;
+        }
+    }
 }

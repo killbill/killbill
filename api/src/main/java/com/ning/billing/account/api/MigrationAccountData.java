@@ -14,8 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.util.globalLocker;
+package com.ning.billing.account.api;
 
-public class LockFailedException extends RuntimeException
-{
+import org.joda.time.DateTime;
+
+public interface MigrationAccountData extends AccountData {
+
+	public DateTime getCreatedDate();
+	
+	public DateTime getUpdatedDate();
 }

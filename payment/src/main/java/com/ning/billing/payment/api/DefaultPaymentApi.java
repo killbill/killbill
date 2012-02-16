@@ -23,8 +23,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +31,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
@@ -179,9 +178,9 @@ public class DefaultPaymentApi implements PaymentApi {
                 invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getPaymentAttemptId(),
                                                                                    invoice.getId(),
                                                                                    paymentAttempt.getPaymentAttemptDate(),
-                                                                                   paymentInfo == null ? null : paymentInfo.getAmount(),
+                                                                                   paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
 //                                                                                 paymentInfo.getRefundAmount(), TODO
-                                                                                   paymentInfo == null ? null : invoice.getCurrency()));
+                                                                                   paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency()));
 
             }
         }
@@ -196,7 +195,8 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, Void> updatePaymentProviderAccountContact(Account account) {
+    public Either<PaymentError, Void> updatePaymentProviderAccountContact(String externalKey) {
+    	Account account = accountUserApi.getAccountByKey(externalKey);
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
         return plugin.updatePaymentProviderAccountExistingContact(account);
     }

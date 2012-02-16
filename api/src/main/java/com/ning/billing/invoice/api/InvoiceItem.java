@@ -32,25 +32,15 @@ public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
 
     String getPhaseName();
 
+    String getDescription();
+
     DateTime getStartDate();
 
     DateTime getEndDate();
 
-    BigDecimal getRecurringAmount();
-
-    BigDecimal getRecurringRate();
-
-    BigDecimal getFixedAmount();
+    BigDecimal getAmount();
 
     Currency getCurrency();
 
-    InvoiceItem asCredit(UUID invoiceId);
-
-    int compareTo(InvoiceItem invoiceItem);
-
-    void subtract(InvoiceItem that);
-
-    boolean duplicates(InvoiceItem that);
-
-    boolean cancels(InvoiceItem that);
+    InvoiceItem asCredit();
 }

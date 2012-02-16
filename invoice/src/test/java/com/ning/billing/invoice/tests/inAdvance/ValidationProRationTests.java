@@ -39,14 +39,6 @@ public class ValidationProRationTests extends ProRationTestBase {
         return new InAdvanceBillingMode();
     }
 
-    protected BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay) throws InvalidDateSequenceException {
-        return getBillingMode().calculateNumberOfBillingCycles(startDate, targetDate, billingCycleDay, getBillingPeriod());
-    }
-
-    protected BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay) throws InvalidDateSequenceException {
-        return getBillingMode().calculateNumberOfBillingCycles(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod());
-    }
-
     @Test(expectedExceptions = InvalidDateSequenceException.class)
     public void testTargetStartEnd() throws InvalidDateSequenceException {
         DateTime startDate = buildDateTime(2011, 1, 30);

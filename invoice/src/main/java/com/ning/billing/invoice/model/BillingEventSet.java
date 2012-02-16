@@ -31,9 +31,7 @@ public class BillingEventSet extends ArrayList<BillingEvent> {
         addAll(events);
     }
 
-    public BillingEvent getLast() {
-        if (this.size() == 0) {return null;}
-
-        return this.get(this.size() - 1);
+    public boolean isLast(final BillingEvent event) {
+        return (super.indexOf(event) == size() - 1);
     }
 }

@@ -200,16 +200,16 @@ Use Cases to do:
 		<plan name="pistol-monthly">
 			<product>Pistol</product>
 			<initialPhases>
-                                <phase type="TRIAL">
-                                        <duration>
-                                                <unit>DAYS</unit>
-                                                <number>30</number>
-                                        </duration>
-                                        <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                                        <fixedPrice>
-                                        </fixedPrice>
-                                    <!-- no price implies $0 -->
-                                </phase>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice>
+                    </fixedPrice>
+                    <!-- no price implies $0 -->
+                </phase>
 			</initialPhases>
 			<finalPhase type="EVERGREEN">
 				<duration>

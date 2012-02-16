@@ -14,21 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.notification;
+package com.ning.billing.util.globallocker;
 
-import java.util.UUID;
-
-import com.ning.billing.util.bus.BusEvent;
-
-public class NextBillingDateEvent implements BusEvent{
-	private final UUID subscriptionId;
-
-	public NextBillingDateEvent(UUID subscriptionId) {
-		super();
-		this.subscriptionId = subscriptionId;
-	}
-
-	public UUID getSubscriptionId() {
-		return subscriptionId;
-	}
+public class LockFailedException extends RuntimeException
+{
 }

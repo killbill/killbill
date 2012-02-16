@@ -158,8 +158,11 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         } else {
             Date paidThroughDate = (subscription.getPaidThroughDate() == null) ? null : subscription.getPaidThroughDate().toDate();
 
-            subscriptionSqlDao.updateSubscription(subscriptionId.toString(), subscription.getActiveVersion(),
-                                                  ctd.toDate(), paidThroughDate);
+            DateTime chargedThroughDate = subscription.getChargedThroughDate();
+            if (chargedThroughDate == null || chargedThroughDate.isBefore(ctd)) {
+                subscriptionSqlDao.updateSubscription(subscriptionId.toString(), subscription.getActiveVersion(),
+                                                      ctd.toDate(), paidThroughDate);
+            }
         }
     }
 }

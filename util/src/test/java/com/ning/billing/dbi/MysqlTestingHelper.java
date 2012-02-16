@@ -39,6 +39,9 @@ import com.mysql.management.MysqldResourceI;
  */
 public class MysqlTestingHelper
 {
+
+    public static final String USE_LOCAL_DB_PROP = "com.ning.billing.dbi.test.useLocalDb";
+
     private static final Logger log = LoggerFactory.getLogger(MysqlTestingHelper.class);
 
     private static final String DB_NAME = "test_killbill";
@@ -47,24 +50,38 @@ public class MysqlTestingHelper
 
     private File dbDir;
     private MysqldResource mysqldResource;
-    private int port = 0;
+    private int port;
 
     public MysqlTestingHelper()
     {
-        // New socket on any free port
-        final ServerSocket socket;
-        try {
-            socket = new ServerSocket(0);
-            port = socket.getLocalPort();
-            socket.close();
+        if (isUsingLocalInstance()) {
+            port = 3306;
+        } else {
+            // New socket on any free port
+            final ServerSocket socket;
+            try {
+                socket = new ServerSocket(0);
+                port = socket.getLocalPort();
+                socket.close();
+            }
+            catch (IOException e) {
+                Assert.fail();
+            }
         }
-        catch (IOException e) {
-            Assert.fail();
-        }
+    }
+
+
+    public boolean isUsingLocalInstance() {
+        return (System.getProperty(USE_LOCAL_DB_PROP) != null);
     }
 
     public void startMysql() throws IOException
     {
+
+        if (isUsingLocalInstance()) {
+            return;
+        }
+
         dbDir = File.createTempFile("mysql", "");
         dbDir.delete();
         dbDir.mkdir();
@@ -87,6 +104,12 @@ public class MysqlTestingHelper
 
     public void cleanupTable(final String table)
     {
+
+        if (!isUsingLocalInstance() && (mysqldResource == null || !mysqldResource.isRunning())) {
+            log.error("Asked to cleanup table " + table + " but MySQL is not running!");
+            return;
+        }
+
         if (mysqldResource == null || !mysqldResource.isRunning()) {
             log.error("Asked to cleanup table " + table + " but MySQL is not running!");
             return;
@@ -122,6 +145,9 @@ public class MysqlTestingHelper
 
     public void initDb(final String ddl) throws IOException
     {
+        if (isUsingLocalInstance()) {
+            return;
+        }
         final IDBI dbi = getDBI();
         dbi.withHandle(new HandleCallback<Void>()
         {
