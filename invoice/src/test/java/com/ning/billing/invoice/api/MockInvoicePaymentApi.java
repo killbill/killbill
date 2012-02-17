@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
 
 public class MockInvoicePaymentApi implements InvoicePaymentApi
 {
@@ -99,4 +99,5 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
         InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
         notifyOfPaymentAttempt(invoicePayment);
     }
+
 }

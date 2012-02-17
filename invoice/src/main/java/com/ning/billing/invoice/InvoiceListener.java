@@ -29,7 +29,7 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 
 public class InvoiceListener {
     private final static Logger log = LoggerFactory.getLogger(InvoiceListener.class);
-	private InvoiceDispatcher dispatcher;
+	private final InvoiceDispatcher dispatcher;
 
     @Inject
     public InvoiceListener(InvoiceDispatcher dispatcher) {
@@ -52,6 +52,4 @@ public class InvoiceListener {
             log.error(e.getMessage());
         }
     }
-
-
 }
