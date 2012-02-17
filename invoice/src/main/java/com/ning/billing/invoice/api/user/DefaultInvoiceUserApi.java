@@ -32,12 +32,10 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 
 public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final InvoiceDao dao;
-	private final InvoiceListener listener;
 
     @Inject
-    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceListener listener) {
+    public DefaultInvoiceUserApi(final InvoiceDao dao) {
         this.dao = dao;
-        this.listener = listener;
     }
 
     @Override
@@ -59,7 +57,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
         dao.notifyOfPaymentAttempt(invoicePayment);
     }
-    
+
     @Override
 	public BigDecimal getAccountBalance(UUID accountId) {
 		BigDecimal result = dao.getAccountBalance(accountId);
@@ -79,11 +77,5 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
         return dao.getUnpaidInvoicesByAccountId(accountId, upToDate);
-    }
-    
-
-    @Override 
-    public void triggerInvoiceGeneration(UUID accountId, DateTime targetDate) throws InvoiceApiException {
-    	listener.processAccount(accountId, targetDate);
     }
 }
