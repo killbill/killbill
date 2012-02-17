@@ -24,12 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.util.globallocker.GlobalLock;
-import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
-import com.ning.billing.util.globallocker.LockFailedException;
 
 public class InvoiceListener {
     private final static Logger log = LoggerFactory.getLogger(InvoiceListener.class);
@@ -56,71 +52,4 @@ public class InvoiceListener {
             log.error(e.getMessage());
         }
     }
-
-    private void processSubscription(final SubscriptionTransition transition) throws InvoiceApiException {
-        UUID subscriptionId = transition.getSubscriptionId();
-        DateTime targetDate = transition.getEffectiveTransitionTime();
-        log.info("Got subscription transition from InvoiceListener. id: " + subscriptionId.toString() + "; targetDate: " + targetDate.toString());
-        log.info("Transition type: " + transition.getTransitionType().toString());
-        processSubscription(subscriptionId, targetDate);
-    }
-
-    private void processSubscription(final UUID subscriptionId, final DateTime targetDate) throws InvoiceApiException {
-        if (subscriptionId == null) {
-            log.error("Failed handling entitlement change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
-            return;
-        }
-
-        UUID accountId = entitlementBillingApi.getAccountIdFromSubscriptionId(subscriptionId);
-        if (accountId == null) {
-            log.error("Failed handling entitlement change.",
-                    new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
-            return;
-        }
-
-        processAccount(accountId, targetDate);
-    }
-
-    public void processAccount(final UUID accountId, final DateTime targetDate) throws InvoiceApiException {
-    	  GlobalLock lock = null;
-          try {
-              lock = locker.lockWithNumberOfTries(LockerService.INVOICE, accountId.toString(), NB_LOCK_TRY);
-
-              processAccountWithLock(accountId, targetDate);
-
-          } catch (LockFailedException e) {
-              // Not good!
-              log.error(String.format("Failed to process invoice for account %s, targetDate %s",
-                      accountId.toString(), targetDate), e);
-          } finally {
-              if (lock != null) {
-                  lock.release();
-              }
-          }
-    }
-
-    private void processAccountWithLock(final UUID accountId, final DateTime targetDate) throws InvoiceApiException {
-
-        Account account = accountUserApi.getAccountById(accountId);
-        if (account == null) {
-            log.error("Failed handling entitlement change.",
-                    new InvoiceApiException(ErrorCode.INVOICE_ACCOUNT_ID_INVALID, accountId.toString()));
-            return;
-        }
-
-        SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccount(accountId);
-        BillingEventSet billingEvents = new BillingEventSet(events);
-
-        Currency targetCurrency = account.getCurrency();
-
-        List<InvoiceItem> items = invoiceDao.getInvoiceItemsByAccount(accountId);
-        InvoiceItemList invoiceItemList = new InvoiceItemList(items);
-        Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoiceItemList, targetDate, targetCurrency);
-
-        if (invoice == null) {
-            log.info("Generated null invoice.");
-            outputDebugData(events, invoiceItemList);
-        } else {
-            log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
-
 }
