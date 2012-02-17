@@ -16,10 +16,16 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Price;
 
 import java.math.BigDecimal;
-import java.util.Date;
 
 public class MockPhase implements PlanPhase
 {
@@ -53,6 +59,11 @@ public class MockPhase implements PlanPhase
                 return BigDecimal.valueOf(price);
             }
 
+			@Override
+			public boolean isZero() {
+				return price == 0.0;
+			}
+
          };
     }
 
@@ -72,7 +83,11 @@ public class MockPhase implements PlanPhase
             {
                 return BigDecimal.valueOf(price);
             }
-
+            
+        	@Override
+			public boolean isZero() {
+				return price == 0.0;
+			}
         };
     }
 

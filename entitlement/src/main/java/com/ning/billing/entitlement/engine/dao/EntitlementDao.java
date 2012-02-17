@@ -16,7 +16,9 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -40,6 +42,8 @@ public interface EntitlementDao {
 
     public Subscription getSubscriptionFromId(UUID subscriptionId);
 
+    // Account retrieval
+    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId);
 
     // Subscription retrieval
     public Subscription getBaseSubscription(UUID bundleId);

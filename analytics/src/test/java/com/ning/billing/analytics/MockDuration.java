@@ -18,6 +18,8 @@ package com.ning.billing.analytics;
 
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
+import org.apache.commons.lang.NotImplementedException;
+import org.joda.time.DateTime;
 
 public class MockDuration
 {
@@ -35,6 +37,11 @@ public class MockDuration
             public int getNumber()
             {
                 return 1;
+            }
+
+            @Override
+            public DateTime addToDateTime(DateTime dateTime) {
+                throw new NotImplementedException();
             }
         };
     }
@@ -54,6 +61,11 @@ public class MockDuration
             {
                 return 1;
             }
+
+            @Override
+            public DateTime addToDateTime(DateTime dateTime) {
+                throw new NotImplementedException();
+            }
         };
     }
 
@@ -71,6 +83,11 @@ public class MockDuration
             public int getNumber()
             {
                 return 1;
+            }
+
+            @Override
+            public DateTime addToDateTime(DateTime dateTime) {
+                throw new NotImplementedException();
             }
         };
     }

@@ -16,187 +16,251 @@
 
 package com.ning.billing.invoice.model;
 
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.entitlement.api.billing.BillingModeType;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
-import com.ning.billing.entitlement.api.billing.BillingModeType;
-import com.ning.billing.invoice.api.BillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.clock.Clock;
+
+import javax.annotation.Nullable;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
-    private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceGenerator.class); 
-    @Override
-    public Invoice generateInvoice(final UUID accountId, final BillingEventSet events, final InvoiceItemList existingItems, final DateTime targetDate, final Currency targetCurrency) {
-        if (events == null) {return new DefaultInvoice(accountId, targetDate, targetCurrency);}
-        if (events.size() == 0) {return new DefaultInvoice(accountId, targetDate, targetCurrency);}
+    private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
+    private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
+    //private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceGenerator.class);
 
-        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, targetCurrency);
-        InvoiceItemList currentItems = generateInvoiceItems(events, invoice.getId(), targetDate, targetCurrency);
-        InvoiceItemList itemsToPost = reconcileInvoiceItems(invoice.getId(), currentItems, existingItems);
-        invoice.add(itemsToPost);
+    private final Clock clock;
 
-        return invoice;
+    @Inject
+    public DefaultInvoiceGenerator(Clock clock) {
+        this.clock = clock;
     }
 
-    private InvoiceItemList reconcileInvoiceItems(final UUID invoiceId, final InvoiceItemList currentInvoiceItems, final InvoiceItemList existingInvoiceItems) {
-        InvoiceItemList currentItems = new InvoiceItemList();
-        for (InvoiceItem item : currentInvoiceItems) {
-            currentItems.add(new DefaultInvoiceItem(item, invoiceId));
+    @Override
+    public Invoice generateInvoice(final UUID accountId, final BillingEventSet events,
+                                   @Nullable final List<InvoiceItem> items, final DateTime targetDate,
+                                   final Currency targetCurrency) throws InvoiceApiException {
+        if ((events == null) || (events.size() == 0)) {
+            return null;
         }
 
-        InvoiceItemList existingItems = (InvoiceItemList) existingInvoiceItems.clone();
+        Collections.sort(events);
 
-        Collections.sort(currentItems);
-        Collections.sort(existingItems);
+        List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
+        if (items != null) {
+            existingItems = new ArrayList<InvoiceItem>(items);
+            Collections.sort(existingItems);
+        }
 
-        List<InvoiceItem> existingItemsToRemove = new ArrayList<InvoiceItem>();
+        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, targetCurrency, clock);
+        UUID invoiceId = invoice.getId();
+        List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, events, targetDate, targetCurrency);
 
-        for (InvoiceItem currentItem : currentItems) {
-            // see if there are any existing items that are covered by the current item
+        if (existingItems != null) {
+            removeCancellingInvoiceItems(existingItems);
+            removeDuplicatedInvoiceItems(proposedItems, existingItems);
+
             for (InvoiceItem existingItem : existingItems) {
-                if (currentItem.duplicates(existingItem)) {
-                    currentItem.subtract(existingItem);
-                    existingItemsToRemove.add(existingItem);
+                if (existingItem instanceof RecurringInvoiceItem) {
+                    RecurringInvoiceItem recurringItem = (RecurringInvoiceItem) existingItem;
+                    proposedItems.add(recurringItem.asCredit());
                 }
             }
         }
 
-        existingItems.removeAll(existingItemsToRemove);
-
-        // remove cancelling pairs of invoice items
-        existingItems.removeCancellingPairs();
-
-        // remove zero-dollar invoice items
-        currentItems.removeZeroDollarItems();
-
-        // add existing items that aren't covered by current items as credit items
-        for (InvoiceItem existingItem : existingItems) {
-            currentItems.add(existingItem.asCredit(invoiceId));
+        if (proposedItems == null || proposedItems.size()  == 0) {
+            return null;
+        } else {
+            invoice.addInvoiceItems(proposedItems);
+            return invoice;
         }
-
-        return currentItems;
     }
 
-    private InvoiceItemList generateInvoiceItems(BillingEventSet events, UUID invoiceId, DateTime targetDate, Currency targetCurrency) {
-        InvoiceItemList items = new InvoiceItemList();
+   /*
+    * removes all matching items from both submitted collections
+    */
+    private void removeDuplicatedInvoiceItems(final List<InvoiceItem> proposedItems,
+                                              final List<InvoiceItem> existingInvoiceItems) {
+        Iterator<InvoiceItem> proposedItemIterator = proposedItems.iterator();
+        while (proposedItemIterator.hasNext()) {
+            InvoiceItem proposedItem = proposedItemIterator.next();
 
-        // sort events; this relies on the sort order being by subscription id then start date
-        Collections.sort(events);
+            Iterator<InvoiceItem> existingItemIterator = existingInvoiceItems.iterator();
+            while (existingItemIterator.hasNext()) {
+                InvoiceItem existingItem = existingItemIterator.next();
+                if (existingItem.equals(proposedItem)) {
+                    existingItemIterator.remove();
+                    proposedItemIterator.remove();
+                }
+            }
+        }
+    }
 
-        // for each event, process it either as a terminated event (if there's a subsequent event)
-        // ...or as a non-terminated event (if no subsequent event exists)
-        for (int i = 0; i < (events.size() - 1); i++) {
-            BillingEvent thisEvent = events.get(i);
-            BillingEvent nextEvent = events.get(i + 1);
+    private void removeCancellingInvoiceItems(final List<InvoiceItem> items) {
+        List<UUID> itemsToRemove = new ArrayList<UUID>();
 
-            if (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) {
-                processEvents(invoiceId, thisEvent, nextEvent, items, targetDate, targetCurrency);
-            } else {
-                processEvent(invoiceId, thisEvent, items, targetDate, targetCurrency);
+        for (InvoiceItem item1 : items) {
+            if (item1 instanceof RecurringInvoiceItem) {
+                RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item1;
+                if (recurringInvoiceItem.reversesItem()) {
+                    itemsToRemove.add(recurringInvoiceItem.getId());
+                    itemsToRemove.add(recurringInvoiceItem.getReversedItemId());
+                }
             }
         }
 
-        // process the last item in the event set
-        if (events.size() > 0) {
-            processEvent(invoiceId, events.getLast(), items, targetDate, targetCurrency);
+        Iterator<InvoiceItem> iterator = items.iterator();
+        while (iterator.hasNext()) {
+            InvoiceItem item = iterator.next();
+            if (itemsToRemove.contains(item.getId())) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private List<InvoiceItem> generateInvoiceItems(final UUID invoiceId, final BillingEventSet events,
+                                                   final DateTime targetDate, final Currency currency) throws InvoiceApiException {
+        List<InvoiceItem> items = new ArrayList<InvoiceItem>();
+
+        for (int i = 0; i < events.size(); i++) {
+            BillingEvent thisEvent = events.get(i);
+            BillingEvent nextEvent = events.isLast(thisEvent) ? null : events.get(i + 1);
+            if (nextEvent != null) {
+                nextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
+            }
+
+            items.addAll(processEvents(invoiceId, thisEvent, nextEvent, targetDate, currency));
         }
 
         return items;
     }
 
-    private void processEvent(UUID invoiceId, BillingEvent event, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
-    	try {
-    		//TODO: Jeff getPrice() -> getRecurringPrice()
-    		BigDecimal rate = event.getRecurringPrice(targetCurrency);
-    		BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(event, targetDate, rate);
-    		BillingMode billingMode = getBillingMode(event.getBillingMode());
-    		DateTime billThroughDate = billingMode.calculateEffectiveEndDate(event.getEffectiveDate(), targetDate, event.getBillCycleDay(), event.getBillingPeriod());
-
-    		addInvoiceItem(invoiceId, items, event, billThroughDate, invoiceItemAmount, rate, targetCurrency);
-    	} catch (CatalogApiException e) {
-            log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s", 
-                    invoiceId.toString(), 
-                    ISODateTimeFormat.basicDateTime().print(event.getEffectiveDate())), e);
+    private List<InvoiceItem> processEvents(final UUID invoiceId, final BillingEvent thisEvent, final BillingEvent nextEvent,
+                                            final DateTime targetDate, final Currency currency) throws InvoiceApiException {
+        List<InvoiceItem> items = new ArrayList<InvoiceItem>();
+        InvoiceItem fixedPriceInvoiceItem = generateFixedPriceItem(invoiceId, thisEvent, targetDate, currency);
+        if (fixedPriceInvoiceItem != null) {
+            items.add(fixedPriceInvoiceItem);
         }
+
+        BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
+        if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
+            BillingMode billingMode = instantiateBillingMode(thisEvent.getBillingMode());
+            DateTime startDate = thisEvent.getEffectiveDate();
+            if (!startDate.isAfter(targetDate)) {
+                DateTime endDate = (nextEvent == null) ? null : nextEvent.getEffectiveDate();
+                int billCycleDay = thisEvent.getBillCycleDay();
+
+                List<RecurringInvoiceItemData> itemData;
+                try {
+                    itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, billCycleDay, billingPeriod);
+                } catch (InvalidDateSequenceException e) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
+                }
+
+                for (RecurringInvoiceItemData itemDatum : itemData) {
+                    InternationalPrice price = thisEvent.getRecurringPrice();
+                    if (price != null) {
+                        BigDecimal rate;
+
+                        try {
+                            rate = thisEvent.getRecurringPrice().getPrice(currency);
+                        } catch (CatalogApiException e) {
+                            throw new InvoiceApiException(e, ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency.toString());
+                        }
+
+                        BigDecimal amount = itemDatum.getNumberOfCycles().multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
+
+                        RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
+                                                                                      thisEvent.getPlan().getName(),
+                                                                                      thisEvent.getPlanPhase().getName(),
+                                                                                      itemDatum.getStartDate(), itemDatum.getEndDate(),
+                                                                                      amount, rate, currency);
+                        items.add(recurringItem);
+                    }
+                }
+            }
+        }
+
+        return items;
     }
 
-    private void processEvents(UUID invoiceId, BillingEvent firstEvent, BillingEvent secondEvent, List<InvoiceItem> items, DateTime targetDate, Currency targetCurrency) {
-    	//TODO: Jeff getPrice() -> getRecurringPrice()
-    	try {
-    		BigDecimal rate = firstEvent.getRecurringPrice(targetCurrency);
-    		BigDecimal invoiceItemAmount = calculateInvoiceItemAmount(firstEvent, secondEvent, targetDate, rate);
-    		BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
-    		DateTime billThroughDate = billingMode.calculateEffectiveEndDate(firstEvent.getEffectiveDate(), secondEvent.getEffectiveDate(), targetDate, firstEvent.getBillCycleDay(), firstEvent.getBillingPeriod());
-
-    		addInvoiceItem(invoiceId, items, firstEvent, billThroughDate, invoiceItemAmount, rate, targetCurrency);
-    	} catch (CatalogApiException e) {
-    		log.error(String.format("Encountered a catalog error processing invoice %s for billing event on date %s", 
-                    invoiceId.toString(), 
-                    ISODateTimeFormat.basicDateTime().print(firstEvent.getEffectiveDate())), e);
-        }
-    }
-
-    private void addInvoiceItem(UUID invoiceId, List<InvoiceItem> items, BillingEvent event, DateTime billThroughDate, BigDecimal amount, BigDecimal rate, Currency currency) {
-        if (!(amount.compareTo(BigDecimal.ZERO) == 0)) {
-            DefaultInvoiceItem item = new DefaultInvoiceItem(invoiceId, event.getSubscription().getId(), event.getEffectiveDate(), billThroughDate, event.getDescription(), amount, rate, currency);
-            items.add(item);
-        }
-    }
-
-    private BigDecimal calculateInvoiceItemAmount(BillingEvent event, DateTime targetDate, BigDecimal rate){
-        BillingMode billingMode = getBillingMode(event.getBillingMode());
-        DateTime startDate = event.getEffectiveDate();
-        int billingCycleDay = event.getBillCycleDay();
-        BillingPeriod billingPeriod = event.getBillingPeriod();
-
-        try {
-            BigDecimal numberOfBillingCycles;
-            numberOfBillingCycles = billingMode.calculateNumberOfBillingCycles(startDate, targetDate, billingCycleDay, billingPeriod);
-            return numberOfBillingCycles.multiply(rate);
-        } catch (InvalidDateSequenceException e) {
-            // TODO: Jeff -- log issue
-            return BigDecimal.ZERO;
-        }
-    }
-
-    private BigDecimal calculateInvoiceItemAmount(BillingEvent firstEvent, BillingEvent secondEvent, DateTime targetDate, BigDecimal rate) {
-        BillingMode billingMode = getBillingMode(firstEvent.getBillingMode());
-        DateTime startDate = firstEvent.getEffectiveDate();
-        int billingCycleDay = firstEvent.getBillCycleDay();
-        BillingPeriod billingPeriod = firstEvent.getBillingPeriod();
-
-        DateTime endDate = secondEvent.getEffectiveDate();
-
-        try {
-            BigDecimal numberOfBillingCycles;
-            numberOfBillingCycles = billingMode.calculateNumberOfBillingCycles(startDate, endDate, targetDate, billingCycleDay, billingPeriod);
-            return numberOfBillingCycles.multiply(rate);
-        } catch (InvalidDateSequenceException e) {
-            // TODO: Jeff -- log issue
-            return BigDecimal.ZERO;
-        }
-    }
-
-    private BillingMode getBillingMode(BillingModeType billingModeType) {
-        switch (billingModeType) {
+    private BillingMode instantiateBillingMode(BillingModeType billingMode) {
+        switch (billingMode) {
             case IN_ADVANCE:
                 return new InAdvanceBillingMode();
             default:
-                return null;
+                throw new UnsupportedOperationException();
         }
     }
+
+    private InvoiceItem generateFixedPriceItem(final UUID invoiceId, final BillingEvent thisEvent,
+                                               final DateTime targetDate, final Currency currency) throws InvoiceApiException {
+        if (thisEvent.getEffectiveDate().isAfter(targetDate)) {
+            return null;
+        } else {
+            FixedPriceInvoiceItem fixedPriceInvoiceItem = null;
+
+            if (thisEvent.getFixedPrice() != null) {
+                try {
+                    Duration duration = thisEvent.getPlanPhase().getDuration();
+                    DateTime endDate = duration.addToDateTime(thisEvent.getEffectiveDate());
+                    BigDecimal fixedPrice = thisEvent.getFixedPrice().getPrice(currency);
+                    fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
+                                                                      thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
+                                                                      thisEvent.getEffectiveDate(), endDate, fixedPrice, currency);
+                } catch (CatalogApiException e) {
+                    throw new InvoiceApiException(e, ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency.toString());
+                }
+            }
+
+            return fixedPriceInvoiceItem;
+        }
+    }
+
+//    // assumption: startDate is in the user's time zone
+//    private DateTime calculateSegmentEndDate(final DateTime startDate, final DateTime nextEndDate,
+//                                             final int billCycleDay, final BillingPeriod billingPeriod) {
+//        int dayOfMonth = startDate.getDayOfMonth();
+//        int maxDayOfMonth = startDate.dayOfMonth().getMaximumValue();
+//
+//        DateTime nextBillingDate;
+//
+//        // if the start date is not on the bill cycle day, move it to the nearest following date that works
+//        if ((billCycleDay > maxDayOfMonth) || (dayOfMonth == billCycleDay)) {
+//            nextBillingDate = startDate.plusMonths(billingPeriod.getNumberOfMonths());
+//        } else {
+//            MutableDateTime proposedDate = startDate.toMutableDateTime();
+//
+//            if (dayOfMonth < billCycleDay) {
+//                // move the end date forward to the bill cycle date (same month)
+//                int effectiveBillCycleDay = (billCycleDay > maxDayOfMonth) ? maxDayOfMonth : billCycleDay;
+//                nextBillingDate = proposedDate.dayOfMonth().set(effectiveBillCycleDay).toDateTime();
+//            } else {
+//                // go to the next month
+//                proposedDate = proposedDate.monthOfYear().add(1);
+//                maxDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
+//                int effectiveBillCycleDay = (billCycleDay > maxDayOfMonth) ? maxDayOfMonth : billCycleDay;
+//                nextBillingDate = proposedDate.dayOfMonth().set(effectiveBillCycleDay).toDateTime();
+//            }
+//        }
+//
+//        return nextBillingDate.isAfter(nextEndDate) ? nextEndDate : nextBillingDate;
+//    }
 }

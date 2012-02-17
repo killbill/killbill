@@ -16,25 +16,24 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import com.google.inject.Inject;
-import com.ning.billing.config.EntitlementConfig;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.notificationq.NotificationQueueService;
-
-import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
+import com.google.inject.Inject;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.notificationq.NotificationQueueService;
+
 public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEntitlementDao {
 
     private final ResetSqlDao resetDao;
 
     @Inject
-    public MockEntitlementDaoSql(DBI dbi, Clock clock, SubscriptionFactory factory, NotificationQueueService notificationQueueService) {
+    public MockEntitlementDaoSql(IDBI dbi, Clock clock, SubscriptionFactory factory, NotificationQueueService notificationQueueService) {
         super(dbi, clock, factory, notificationQueueService);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
     }
@@ -59,7 +58,7 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
 
     public static interface ResetSqlDao extends Transactional<ResetSqlDao>, CloseMe {
 
-        @SqlUpdate("truncate table events")
+        @SqlUpdate("truncate table entitlement_events")
         public void resetEvents();
 
         @SqlUpdate("truncate table subscriptions")

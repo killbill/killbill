@@ -22,7 +22,7 @@ public class InvoicingConfiguration {
     private final static int roundingMethod = BigDecimal.ROUND_HALF_UP;
     private final static int numberOfDecimals = 4;
 
-    public static int getRoundingMethod() {
+    public static int getRoundingMode() {
         return roundingMethod;
     }
 

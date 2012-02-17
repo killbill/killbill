@@ -19,6 +19,8 @@ package com.ning.billing.catalog.api;
 import java.util.Date;
 import java.util.Iterator;
 
+import org.joda.time.DateTime;
+
 public interface Plan {
 
 	public abstract PlanPhase[] getInitialPhases();
@@ -42,4 +44,7 @@ public interface Plan {
 	public abstract Date getEffectiveDateForExistingSubscriptons();
 
 	public abstract PlanPhase findPhase(String name) throws CatalogApiException;
+
+	public abstract DateTime dateOfFirstRecurringNonZeroCharge(DateTime subscriptionStartDate);
+	
 }

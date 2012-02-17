@@ -17,16 +17,18 @@
 package com.ning.billing.entitlement.engine.core;
 
 
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.CatalogService;
+
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.config.EntitlementConfig;
@@ -37,8 +39,6 @@ import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.test.DefaultEntitlementTestApi;
-import com.ning.billing.entitlement.api.test.EntitlementTestApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -57,22 +57,18 @@ import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.eventbus.EventBus;
-import com.ning.billing.util.eventbus.EventBus.EventBusException;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.notificationq.NotificationConfig;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotficationQueueAlreadyExists;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public class Engine implements EventListener, EntitlementService {
 
     public static final String NOTIFICATION_QUEUE_NAME = "subscription-events";
     public static final String ENTITLEMENT_SERVICE_NAME = "entitlement-service";
-
-    private final long MAX_NOTIFICATION_THREAD_WAIT_MS = 10000; // 10 secs
-    private final long NOTIFICATION_THREAD_WAIT_INCREMENT_MS = 1000; // 1 sec
-    private final long NANO_TO_MS = (1000 * 1000);
 
     private final static Logger log = LoggerFactory.getLogger(Engine.class);
 
@@ -81,29 +77,26 @@ public class Engine implements EventListener, EntitlementService {
     private final PlanAligner planAligner;
     private final EntitlementUserApi userApi;
     private final EntitlementBillingApi billingApi;
-    private final EntitlementTestApi testApi;
     private final EntitlementMigrationApi migrationApi;
     private final AddonUtils addonUtils;
-    private final EventBus eventBus;
+    private final Bus eventBus;
+
     private final EntitlementConfig config;
     private final NotificationQueueService notificationQueueService;
 
-    private boolean startedNotificationThread;
-    private boolean stoppedNotificationThread;
     private NotificationQueue subscritionEventQueue;
 
     @Inject
     public Engine(Clock clock, EntitlementDao dao, PlanAligner planAligner,
             EntitlementConfig config, DefaultEntitlementUserApi userApi,
-            DefaultEntitlementBillingApi billingApi, DefaultEntitlementTestApi testApi,
-            DefaultEntitlementMigrationApi migrationApi, AddonUtils addonUtils, EventBus eventBus,
+            DefaultEntitlementBillingApi billingApi,
+            DefaultEntitlementMigrationApi migrationApi, AddonUtils addonUtils, Bus eventBus,
             NotificationQueueService notificationQueueService) {
         super();
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
         this.userApi = userApi;
-        this.testApi = testApi;
         this.billingApi = billingApi;
         this.migrationApi = migrationApi;
         this.addonUtils = addonUtils;
@@ -121,33 +114,16 @@ public class Engine implements EventListener, EntitlementService {
     public void initialize() {
 
         try {
-            this.stoppedNotificationThread = false;
-            this.startedNotificationThread = false;
             subscritionEventQueue = notificationQueueService.createNotificationQueue(ENTITLEMENT_SERVICE_NAME,
                     NOTIFICATION_QUEUE_NAME,
                     new NotificationQueueHandler() {
                 @Override
-                public void handleReadyNotification(String notificationKey) {
+                public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
                     EntitlementEvent event = dao.getEventById(UUID.fromString(notificationKey));
                     if (event == null) {
                         log.warn("Failed to extract event for notification key {}", notificationKey);
                     } else {
                         processEventReady(event);
-                    }
-                }
-
-                @Override
-                public void completedQueueStop() {
-                    synchronized (this) {
-                        stoppedNotificationThread = true;
-                        this.notifyAll();
-                    }
-                }
-                @Override
-                public void completedQueueStart() {
-                    synchronized (this) {
-                        startedNotificationThread = true;
-                        this.notifyAll();
                     }
                 }
             },
@@ -169,7 +145,7 @@ public class Engine implements EventListener, EntitlementService {
                     return config.getDaoMaxReadyEvents();
                 }
             });
-        } catch (NotficationQueueAlreadyExists e) {
+        } catch (NotificationQueueAlreadyExists e) {
             throw new RuntimeException(e);
         }
     }
@@ -177,16 +153,13 @@ public class Engine implements EventListener, EntitlementService {
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
         subscritionEventQueue.startQueue();
-        waitForNotificationStartCompletion();
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() {
         if (subscritionEventQueue != null) {
             subscritionEventQueue.stopQueue();
-            waitForNotificationStopCompletion();
-        }
-        startedNotificationThread = false;
+         }
     }
 
     @Override
@@ -199,11 +172,6 @@ public class Engine implements EventListener, EntitlementService {
         return billingApi;
     }
 
-
-    @Override
-    public EntitlementTestApi getTestApi() {
-        return testApi;
-    }
 
     @Override
     public EntitlementMigrationApi getMigrationApi() {
@@ -237,42 +205,6 @@ public class Engine implements EventListener, EntitlementService {
         }
     }
 
-    private void waitForNotificationStartCompletion() {
-        waitForNotificationEventCompletion(true);
-    }
-
-    private void waitForNotificationStopCompletion() {
-        waitForNotificationEventCompletion(false);
-    }
-
-    private void waitForNotificationEventCompletion(boolean startEvent) {
-
-        long ini = System.nanoTime();
-        synchronized(this) {
-            do {
-                if ((startEvent ? startedNotificationThread : stoppedNotificationThread)) {
-                    break;
-                }
-                try {
-                    this.wait(NOTIFICATION_THREAD_WAIT_INCREMENT_MS);
-                } catch (InterruptedException e ) {
-                    Thread.currentThread().interrupt();
-                    throw new EntitlementError(e);
-                }
-            } while (!(startEvent ? startedNotificationThread : stoppedNotificationThread) &&
-                    (System.nanoTime() - ini) / NANO_TO_MS < MAX_NOTIFICATION_THREAD_WAIT_MS);
-
-            if (!(startEvent ? startedNotificationThread : stoppedNotificationThread)) {
-                log.error("Could not {} notification thread in {} msec !!!",
-                        (startEvent ? "start" : "stop"),
-                        MAX_NOTIFICATION_THREAD_WAIT_MS);
-                throw new EntitlementError("Failed to start service!!");
-            }
-            log.info("Notification thread has been {} in {} ms",
-                    (startEvent ? "started" : "stopped"),
-                    (System.nanoTime() - ini) / NANO_TO_MS);
-        }
-    }
 
     private void onPhaseEvent(SubscriptionData subscription) {
         try {

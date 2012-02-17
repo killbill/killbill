@@ -42,7 +42,7 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
 
 
 	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IInternationalPrice#getPrices()
+	 * @see com.ning.billing.catalog.InternationalPrice#getPrices()
 	 */
 	@Override
 	public Price[] getPrices() {
@@ -117,6 +117,20 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
 		}
 
 		return zeroPrice;
+	}
+
+	@Override
+	public boolean isZero() {
+		for(DefaultPrice price :prices) {
+			try {
+				if( price.getValue().compareTo(BigDecimal.ZERO) != 0) {
+					return false;
+				}
+			} catch (CurrencyValueNull e) {
+				//Ignore if the currency is null we treat it as 0
+			}
+		}
+		return true;
 	}
 
 }

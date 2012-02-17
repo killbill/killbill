@@ -19,12 +19,12 @@ package com.ning.billing.entitlement.api.user;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
-import com.ning.billing.util.eventbus.EventBusNotification;
+import com.ning.billing.util.bus.BusEvent;
 import org.joda.time.DateTime;
 
 import java.util.UUID;
 
-public interface SubscriptionTransition extends EventBusNotification {
+public interface SubscriptionTransition extends BusEvent {
 
     public enum SubscriptionTransitionType {
         MIGRATE_ENTITLEMENT,

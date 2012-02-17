@@ -1,6 +1,6 @@
-group IFieldStoreDao;
+group FieldStoreDao;
 
-save() ::= <<
+batchSaveFromTransaction() ::= <<
   INSERT INTO custom_fields(id, object_id, object_type, field_name, field_value)
   VALUES (:id, :objectId, :objectType, :fieldName, :fieldValue)
   ON DUPLICATE KEY UPDATE

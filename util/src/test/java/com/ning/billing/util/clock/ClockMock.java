@@ -19,12 +19,16 @@ package com.ning.billing.util.clock;
 import com.ning.billing.catalog.api.Duration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 // STEPH should really be in tests but not accessible from other sub modules
 public class ClockMock extends DefaultClock {
+
+    private static final Logger log = LoggerFactory.getLogger(ClockMock.class);
 
     private enum DeltaType {
         DELTA_NONE,
@@ -34,13 +38,13 @@ public class ClockMock extends DefaultClock {
 
     private long deltaFromRealityMs;
     private List<Duration> deltaFromRealityDuration;
-    private long deltaFromRealitDurationEpsilon;
+    private long deltaFromRealityDurationEpsilon;
     private DeltaType deltaType;
 
     public ClockMock() {
         deltaType = DeltaType.DELTA_NONE;
         deltaFromRealityMs = 0;
-        deltaFromRealitDurationEpsilon = 0;
+        deltaFromRealityDurationEpsilon = 0;
         deltaFromRealityDuration = null;
     }
 
@@ -54,41 +58,53 @@ public class ClockMock extends DefaultClock {
         return getNow(DateTimeZone.UTC);
     }
 
+    private void logClockAdjustment(DateTime prev, DateTime next) {
+        log.info(String.format("            ************      ADJUSTING CLOCK FROM %s to %s     ********************", prev, next));
+    }
+
     public synchronized void setDeltaFromReality(Duration delta, long epsilon) {
+        DateTime prev = getUTCNow();
         deltaType = DeltaType.DELTA_DURATION;
         deltaFromRealityDuration = new ArrayList<Duration>();
         deltaFromRealityDuration.add(delta);
-        deltaFromRealitDurationEpsilon = epsilon;
+        deltaFromRealityDurationEpsilon = epsilon;
         deltaFromRealityMs = 0;
+        logClockAdjustment(prev, getUTCNow());
     }
 
     public synchronized void addDeltaFromReality(Duration delta) {
+        DateTime prev = getUTCNow();
         if (deltaType != DeltaType.DELTA_DURATION) {
             throw new RuntimeException("ClockMock should be set with type DELTA_DURATION");
         }
         deltaFromRealityDuration.add(delta);
+        logClockAdjustment(prev, getUTCNow());
     }
 
     public synchronized void setDeltaFromReality(long delta) {
+        DateTime prev = getUTCNow();
         deltaType = DeltaType.DELTA_ABS;
         deltaFromRealityDuration = null;
-        deltaFromRealitDurationEpsilon = 0;
+        deltaFromRealityDurationEpsilon = 0;
         deltaFromRealityMs = delta;
+        logClockAdjustment(prev, getUTCNow());
     }
 
     public synchronized void addDeltaFromReality(long delta) {
+        DateTime prev = getUTCNow();
         if (deltaType != DeltaType.DELTA_ABS) {
             throw new RuntimeException("ClockMock should be set with type DELTA_ABS");
         }
         deltaFromRealityDuration = null;
-        deltaFromRealitDurationEpsilon = 0;
+        deltaFromRealityDurationEpsilon = 0;
         deltaFromRealityMs += delta;
+        logClockAdjustment(prev, getUTCNow());
     }
 
     public synchronized void resetDeltaFromReality() {
         deltaType = DeltaType.DELTA_NONE;
         deltaFromRealityDuration = null;
-        deltaFromRealitDurationEpsilon = 0;
+        deltaFromRealityDurationEpsilon = 0;
         deltaFromRealityMs = 0;
     }
 
@@ -109,8 +125,6 @@ public class ClockMock extends DefaultClock {
 
         DateTime result = input;
         for (Duration cur : deltaFromRealityDuration) {
-
-            int length = cur.getNumber();
             switch (cur.getUnit()) {
             case DAYS:
                 result = result.plusDays(cur.getNumber());
@@ -126,11 +140,11 @@ public class ClockMock extends DefaultClock {
 
             case UNLIMITED:
             default:
-                throw new RuntimeException("ClockMock is adjusting an unlimtited time period");
+                throw new RuntimeException("ClockMock is adjusting an unlimited time period");
             }
         }
-        if (deltaFromRealitDurationEpsilon != 0) {
-            result = result.plus(deltaFromRealitDurationEpsilon);
+        if (deltaFromRealityDurationEpsilon != 0) {
+            result = result.plus(deltaFromRealityDurationEpsilon);
         }
         return result;
     }

@@ -52,14 +52,16 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     public void recordFutureNotificationFromTransaction(
             Transmogrifier transactionalDao, DateTime futureNotificationTime,
             NotificationKey notificationKey) {
-        Notification notification = new DefaultNotification(notificationKey.toString(), futureNotificationTime);
+        Notification notification = new DefaultNotification("MockQueue", notificationKey.toString(), futureNotificationTime);
         synchronized(notifications) {
             notifications.add(notification);
         }
     }
 
     @Override
-    protected void doProcessEvents(int sequenceId) {
+    protected int doProcessEvents(int sequenceId) {
+
+        int result = 0;
 
         List<Notification> processedNotifications = new ArrayList<Notification>();
         List<Notification> oldNotifications = new ArrayList<Notification>();
@@ -73,9 +75,11 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
                     readyNotifications.add(cur);
                 }
             }
+
+            result = readyNotifications.size();
             for (Notification cur : readyNotifications) {
-                handler.handleReadyNotification(cur.getNotificationKey());
-                DefaultNotification processedNotification = new DefaultNotification(cur.getId(), hostname, clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
+                handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
+                DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getUUID(), hostname, "MockQueue", clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
                 oldNotifications.add(cur);
                 processedNotifications.add(processedNotification);
 
@@ -87,5 +91,6 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
                 notifications.addAll(processedNotifications);
             }
         }
+        return result;
     }
 }

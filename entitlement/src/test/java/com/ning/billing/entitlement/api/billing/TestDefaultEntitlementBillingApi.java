@@ -28,7 +28,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -43,6 +42,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -56,7 +56,9 @@ import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.glue.ClockModule;
+
+import static org.testng.Assert.assertTrue;
 
 public class TestDefaultEntitlementBillingApi {
 	private static final UUID zeroId = new UUID(0L,0L);
@@ -76,11 +78,7 @@ public class TestDefaultEntitlementBillingApi {
 	@BeforeClass(groups={"setup"})
 	public void setup() throws ServiceException {
 		TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new CatalogModule(), new AbstractModule() {
-			protected void configure() {
-				 bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
-			}  	
-        });
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new CatalogModule(), new ClockModule());
 
         
         catalogService = g.getInstance(CatalogService.class);
@@ -89,7 +87,7 @@ public class TestDefaultEntitlementBillingApi {
         ((DefaultCatalogService)catalogService).loadCatalog();
 	}
 	
-	@BeforeMethod
+	@BeforeMethod(alwaysRun=true)
 	public void setupEveryTime() {
 		bundles = new ArrayList<SubscriptionBundle>();
 		final SubscriptionBundle bundle = new SubscriptionBundleData( zeroId,"TestKey", oneId,  new DateTime().minusDays(4));
@@ -97,13 +95,11 @@ public class TestDefaultEntitlementBillingApi {
 		
 		
 		transitions = new ArrayList<SubscriptionTransition>();
-		
-		
 		subscriptions = new ArrayList<Subscription>();
 		
 		SubscriptionBuilder builder = new SubscriptionBuilder();
 		subscriptionStartDate = new DateTime().minusDays(3);
-		builder.setStartDate(subscriptionStartDate);
+		builder.setStartDate(subscriptionStartDate).setId(oneId);
 		subscription = new SubscriptionData(builder) {
 		    public List<SubscriptionTransition> getAllTransitions() {
 		    	return transitions;
@@ -127,33 +123,42 @@ public class TestDefaultEntitlementBillingApi {
 				return subscription;
 
 			}
-			
-			@Override
+
+            @Override
+            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
 			public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
 				return bundle;
 			}
-
-
 		};
 
+        assertTrue(true);
 	}
 	
-	@Test
+    @Test(enabled=true, groups="fast")
 	public void testBillingEventsEmpty() {
 		EntitlementDao dao = new BrainDeadMockEntitlementDao() {
 			public List<SubscriptionBundle> getSubscriptionBundleForAccount(
 					UUID accountId) {
 				return new ArrayList<SubscriptionBundle>();
 			}
-			
-		};
+
+            @Override
+            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
+                throw new UnsupportedOperationException();
+            }
+
+        };
 		AccountUserApi accountApi = new BrainDeadAccountUserApi() ;
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
 	
-	@Test
+    @Test(enabled=true, groups="fast")
 	public void testBillingEventsNoBillingPeriod() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
@@ -178,7 +183,7 @@ public class TestDefaultEntitlementBillingApi {
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
-	@Test
+    @Test(enabled=true, groups="fast")
 	public void testBillingEventsAnual() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
@@ -203,11 +208,11 @@ public class TestDefaultEntitlementBillingApi {
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 	
-	@Test
+    @Test(enabled=true, groups="fast")
 	public void testBillingEventsMonthly() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
-		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-annual", now);
+		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-monthly", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionTransition t = new SubscriptionTransitionData(
@@ -228,11 +233,11 @@ public class TestDefaultEntitlementBillingApi {
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 	
-	@Test
+    @Test(enabled=true, groups="fast")
 	public void testBillingEventsAddOn() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
-		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-annual", now);
+		Plan nextPlan = catalogService.getFullCatalog().findPlan("laser-scope-monthly", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0];
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionTransition t = new SubscriptionTransitionData(

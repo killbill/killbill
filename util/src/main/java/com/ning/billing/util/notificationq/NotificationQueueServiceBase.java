@@ -16,12 +16,16 @@
 
 package com.ning.billing.util.notificationq;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.ning.billing.util.clock.Clock;
 
@@ -43,7 +47,7 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
     @Override
     public NotificationQueue createNotificationQueue(String svcName,
             String queueName, NotificationQueueHandler handler,
-            NotificationConfig config) throws NotficationQueueAlreadyExists {
+            NotificationConfig config) throws NotificationQueueAlreadyExists {
         if (svcName == null || queueName == null || handler == null || config == null) {
             throw new RuntimeException("Need to specify all parameters");
         }
@@ -53,7 +57,7 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         synchronized(queues) {
             result = queues.get(compositeName);
             if (result != null) {
-                throw new NotficationQueueAlreadyExists(String.format("Queue for svc %s and name %s already exist",
+                throw new NotificationQueueAlreadyExists(String.format("Queue for svc %s and name %s already exist",
                         svcName, queueName));
             }
             result = createNotificationQueueInternal(svcName, queueName, handler, config);
@@ -78,6 +82,48 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         return result;
     }
 
+
+    //
+    // Test ONLY
+    //
+    @Override
+    public int triggerManualQueueProcessing(final String [] services, final Boolean keepRunning) {
+
+        int result = 0;
+
+        List<NotificationQueue> manualQueues = null;
+        if (services == null) {
+            manualQueues = new ArrayList<NotificationQueue>(queues.values());
+        } else {
+            Joiner join = Joiner.on(",");
+            join.join(services);
+
+            log.info("Trigger manual processing for services {} ", join.toString());
+            manualQueues = new LinkedList<NotificationQueue>();
+            synchronized (queues) {
+                for (String svc : services) {
+                    addQueuesForService(manualQueues, svc);
+                }
+            }
+        }
+        for (NotificationQueue cur : manualQueues) {
+            int processedNotifications = 0;
+            do {
+                processedNotifications = cur.processReadyNotification();
+                log.info("Got {} results from queue {}", processedNotifications, cur.getFullQName());
+                result += processedNotifications;
+            } while(keepRunning && processedNotifications > 0);
+        }
+        return result;
+    }
+
+    private final void addQueuesForService(final List<NotificationQueue> result, final String svcName) {
+        for (String cur : queues.keySet()) {
+            if (cur.startsWith(svcName)) {
+                result.add(queues.get(cur));
+            }
+        }
+    }
 
     protected abstract NotificationQueue createNotificationQueueInternal(String svcName,
             String queueName, NotificationQueueHandler handler,

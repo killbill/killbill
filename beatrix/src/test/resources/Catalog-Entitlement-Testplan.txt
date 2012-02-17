@@ -1,0 +1,112 @@
+ * Copyright 2010-2011 Ning, Inc.
+ *
+ * Ning licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+
+
+NOTES
+=====
+
+Events: Create, change, cancel, migrate 
+Validate: BillingEvents, SubscriptionTransition 
+Rules: 
+    Cancellation
+        Action Policy: When to cancel (Immediate/End-of-term)
+    Creation
+        Alignment: How to align phases in a bundle
+    Change plan behavior
+        Action Policy: When to change plan (Immediate/End-of-term)
+        Alignment: How to align phases 
+        Pricelist: Which pricelist to pick when moving between plans
+    Billing alignment
+        Subscription BCD, Bundle BCD, Account BCD 
+Phases - timing
+Prices - multi-currency, fixed vs recurring prices
+Pricelists - particularly pricelist change rules
+Catalog changes new subscriptions / existing subscriptions
+Price change
+    
+TESTS
+=====
+
+BASEPLAN TESTS
+    * Create a single phase recurring plan
+        - check for creation event (timing?)
+        - check for no termination event
+        - check pricing (different currencies)
+        - check BDC (subscription, account, timezone)
+    * Create a single phase fixed length plan 
+        - check for creation event (timing - different request dates)
+        - check for termination event (timing - different lengths?)
+        - check price (fixed vs recurring)
+    * Create a two phase event use a fixed price and a recurring price
+        - check for phase change (timing)
+        - check prices change
+    * Create a multi-phase plan 
+        - check for phase events
+        - check price changes
+    * Create multiple base plans in a single bundle - should fail
+    
+    * Change base plan once
+        - check plan change policy (immediate, eot)
+        - check alignments of new plan with old 
+        - check move between pricelists
+        - check that phases progress successfully after change
+        - check obsolete events are removed
+    * Change base plan multiple times
+        - check that alignment occurs correctly 
+        - check phases progress correctly
+        - check obsolete events are removed 
+        
+    * Cancellation of a single phase plan
+        - check creation and timing of termination event
+    * Cancellation of a multi-phase plan
+        - check creation of termination event 
+        - check removal of events beyond termination event
+    * Change a cancelled base plan - should fail
+    
+    * Migration to a single phase plan
+        - check migration event occurs when it should
+    * Migration to a multi-phase plan
+        - check migration event occurs when it should
+        - check migration into different phase
+        - check alignment of phases can be correctly controlled
+    * Migration to a fixed duration plan
+        - check migration event occurs when it should
+        - check termination event occurs when it should
+        
+
+         
+STANDALONE TEST
+    * Create multiple plans in a single bundle
+        - check plans can be created
+        - check cannot add a base plan
+        - check BCD at subscription bundle level
+            
+
+PRICE CHANGE TEST
+    * Price change on a single phase base plan
+        - check new subscriptions get price after effective date
+        - check changed subscriptions get price after effective date
+        - check existing subscriptions ONLY get it after ESED
+        - check that if ESED is missing existing subs are grandfathered for ever
+    * Price change on a multi-phase subscription
+        - check price change applies correctly to correct phases
+    * Multiple price changes
+        - check multiple price changes with overlapping dates
+
+
+ADD-ON TESTS
+    * Add-on creation alignment
+    * Add-on cancel with base plan
+    
+    

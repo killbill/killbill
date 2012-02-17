@@ -17,14 +17,10 @@
 package com.ning.billing.util.notificationq;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.clock.Clock;
@@ -35,49 +31,49 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
 
     protected final NotificationSqlDao dao;
 
-    public DefaultNotificationQueue(final DBI dbi, final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
+    public DefaultNotificationQueue(final IDBI dbi, final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
+
         super(clock, svcName, queueName, handler, config);
         this.dao = dbi.onDemand(NotificationSqlDao.class);
     }
 
     @Override
-    protected void doProcessEvents(int sequenceId) {
+    protected int doProcessEvents(final int sequenceId) {
+
+        logDebug("ENTER doProcessEvents");
         List<Notification> notifications = getReadyNotifications(sequenceId);
-        for (Notification cur : notifications) {
-            nbProcessedEvents.incrementAndGet();
-            handler.handleReadyNotification(cur.getNotificationKey());
+        if (notifications.size() == 0) {
+            logDebug("EXIT doProcessEvents");
+            return 0;
         }
-        // If anything happens before we get to clear those notifications, somebody else will pick them up
-        clearNotifications(notifications);
+
+        logDebug("START processing %d events at time %s", notifications.size(), clock.getUTCNow().toDate());
+
+        int result = 0;
+        for (final Notification cur : notifications) {
+            nbProcessedEvents.incrementAndGet();
+            logDebug("handling notification %s, key = %s for time %s",
+                    cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate());
+            handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
+            result++;
+            clearNotification(cur);
+            logDebug("done handling notification %s, key = %s for time %s",
+                    cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate());
+        }
+        return result;
     }
 
     @Override
     public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
             final DateTime futureNotificationTime, final NotificationKey notificationKey) {
         NotificationSqlDao transactionalNotificationDao =  transactionalDao.become(NotificationSqlDao.class);
-        Notification notification = new DefaultNotification(notificationKey.toString(), futureNotificationTime);
+        Notification notification = new DefaultNotification(getFullQName(), notificationKey.toString(), futureNotificationTime);
         transactionalNotificationDao.insertNotification(notification);
     }
 
 
-    private void clearNotifications(final Collection<Notification> cleared) {
-
-        log.debug(String.format("NotificationQueue %s clearEventsReady START cleared size = %d",
-                getFullQName(),
-                cleared.size()));
-
-        dao.inTransaction(new Transaction<Void, NotificationSqlDao>() {
-
-            @Override
-            public Void inTransaction(NotificationSqlDao transactional,
-                    TransactionStatus status) throws Exception {
-                for (Notification cur : cleared) {
-                    transactional.clearNotification(cur.getId().toString(), hostname);
-                    log.debug(String.format("NotificationQueue %s cleared events %s", getFullQName(), cur.getId()));
-                }
-                return null;
-            }
-        });
+    private void clearNotification(final Notification cleared) {
+        dao.clearNotification(cleared.getId(), hostname);
     }
 
     private List<Notification> getReadyNotifications(final int seqId) {
@@ -85,35 +81,34 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(config.getDaoClaimTimeMs()).toDate();
 
-        log.debug(String.format("NotificationQueue %s getEventsReady START effectiveNow =  %s",  getFullQName(), now));
+        List<Notification> input = dao.getReadyNotifications(now, config.getDaoMaxReadyEvents(), getFullQName());
 
-        List<Notification> result = dao.inTransaction(new Transaction<List<Notification>, NotificationSqlDao>() {
-
-            @Override
-            public List<Notification> inTransaction(NotificationSqlDao transactionalDao,
-                    TransactionStatus status) throws Exception {
-
-                List<Notification> claimedNotifications = new ArrayList<Notification>();
-                List<Notification> input = transactionalDao.getReadyNotifications(now, config.getDaoMaxReadyEvents());
-                for (Notification cur : input) {
-                    final boolean claimed = (transactionalDao.claimNotification(hostname, nextAvailable, cur.getId().toString(), now) == 1);
-                    if (claimed) {
-                        claimedNotifications.add(cur);
-                        transactionalDao.insertClaimedHistory(seqId, hostname, now, cur.getId().toString());
-                    }
-                }
-                return claimedNotifications;
+        List<Notification> claimedNotifications = new ArrayList<Notification>();
+        for (Notification cur : input) {
+            logDebug("about to claim notification %s,  key = %s for time %s",
+                    cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate());
+            final boolean claimed = (dao.claimNotification(hostname, nextAvailable, cur.getId(), now) == 1);
+            logDebug("claimed notification %s, key = %s for time %s result = %s",
+                    cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate(), Boolean.valueOf(claimed));
+            if (claimed) {
+                claimedNotifications.add(cur);
+                dao.insertClaimedHistory(seqId, hostname, now, cur.getUUID().toString());
             }
-        });
+        }
 
-        for (Notification cur : result) {
-            log.debug(String.format("NotificationQueue %sclaimed events %s",
-                    getFullQName(), cur.getId()));
+        for (Notification cur : claimedNotifications) {
             if (cur.getOwner() != null && !cur.getOwner().equals(hostname)) {
                 log.warn(String.format("NotificationQueue %s stealing notification %s from %s",
                         getFullQName(), cur, cur.getOwner()));
             }
         }
-        return result;
+        return claimedNotifications;
+    }
+
+    private void logDebug(String format, Object...args) {
+        if (log.isDebugEnabled()) {
+            String realDebug = String.format(format, args);
+            log.debug(String.format("Thread %d [queue = %s] %s", Thread.currentThread().getId(), getFullQName(), realDebug));
+        }
     }
 }

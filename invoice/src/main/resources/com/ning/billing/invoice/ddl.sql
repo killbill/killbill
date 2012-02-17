@@ -1,18 +1,43 @@
 DROP TABLE IF EXISTS invoice_items;
-CREATE TABLE invoice_items (
+DROP TABLE IF EXISTS recurring_invoice_items;
+CREATE TABLE recurring_invoice_items (
   id char(36) NOT NULL,
   invoice_id char(36) NOT NULL,
   subscription_id char(36) NOT NULL,
+  plan_name varchar(50) NOT NULL,
+  phase_name varchar(50) NOT NULL,
   start_date datetime NOT NULL,
   end_date datetime NOT NULL,
-  description varchar(100) NOT NULL,
-  amount numeric(10,4) NOT NULL,
-  rate numeric(10,4) NOT NULL,
+  amount numeric(10,4) NULL,
+  rate numeric(10,4) NULL,
+  currency char(3) NOT NULL,
+  reversed_item_id char(36),
+  PRIMARY KEY(id)
+) ENGINE=innodb;
+CREATE INDEX recurring_invoice_items_subscription_id ON recurring_invoice_items(subscription_id ASC);
+CREATE INDEX recurring_invoice_items_invoice_id ON recurring_invoice_items(invoice_id ASC);
+
+DROP TABLE IF EXISTS fixed_invoice_items;
+CREATE TABLE fixed_invoice_items (
+  id char(36) NOT NULL,
+  invoice_id char(36) NOT NULL,
+  subscription_id char(36) NOT NULL,
+  plan_name varchar(50) NOT NULL,
+  phase_name varchar(50) NOT NULL,
+  start_date datetime NOT NULL,
+  end_date datetime NOT NULL,
+  amount numeric(10,4) NULL,
   currency char(3) NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
+CREATE INDEX fixed_invoice_items_subscription_id ON fixed_invoice_items(subscription_id ASC);
+CREATE INDEX fixed_invoice_items_invoice_id ON fixed_invoice_items(invoice_id ASC);
 
-CREATE INDEX invoice_items_subscription_id ON invoice_items(subscription_id ASC);
+DROP TABLE IF EXISTS invoice_locking;
+CREATE TABLE invoice_locking (
+  account_id char(36) NOT NULL,
+  PRIMARY KEY(account_id)
+) ENGINE = innodb;
 
 DROP TABLE IF EXISTS invoices;
 CREATE TABLE invoices (
@@ -23,28 +48,32 @@ CREATE TABLE invoices (
   currency char(3) NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
-
 CREATE INDEX invoices_account_id ON invoices(account_id ASC);
 
 DROP TABLE IF EXISTS invoice_payments;
 CREATE TABLE invoice_payments (
   invoice_id char(36) NOT NULL,
-  payment_id char(36) NOT NULL,
-  payment_date datetime NOT NULL,
+  payment_attempt_id char(36) COLLATE utf8_bin NOT NULL,
+  payment_attempt_date datetime,
   amount numeric(10,4),
   currency char(3),
-  PRIMARY KEY(invoice_id, payment_id)
+  created_date datetime NOT NULL,
+  updated_date datetime NOT NULL,
+  PRIMARY KEY(invoice_id, payment_attempt_id)
 ) ENGINE=innodb;
-CREATE UNIQUE INDEX invoice_payments_unique ON invoice_payments(invoice_id, payment_id);
+CREATE UNIQUE INDEX invoice_payments_unique ON invoice_payments(invoice_id, payment_attempt_id);
 
 DROP VIEW IF EXISTS invoice_payment_summary;
 CREATE VIEW invoice_payment_summary AS
-SELECT invoice_id, SUM(amount) AS total_paid, MAX(payment_date) AS last_payment_date
+SELECT invoice_id,
+       CASE WHEN SUM(amount) IS NULL THEN 0 ELSE SUM(amount) END AS total_paid,
+       MAX(payment_attempt_date) AS last_payment_date
 FROM invoice_payments
 GROUP BY invoice_id;
 
 DROP VIEW IF EXISTS invoice_item_summary;
 CREATE VIEW invoice_item_summary AS
-SELECT invoice_id, SUM(amount) AS total_amount
-FROM invoice_items
+SELECT invoice_id,
+       CASE WHEN SUM(amount) IS NULL THEN 0 ELSE SUM(amount) END AS amount_invoiced
+FROM recurring_invoice_items
 GROUP BY invoice_id;

@@ -18,39 +18,37 @@ package com.ning.billing.account.api.user;
 
 import java.util.List;
 import java.util.UUID;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
     private final AccountDao dao;
+	private Clock clock;
 
     @Inject
-    public DefaultAccountUserApi(final AccountDao dao) {
+    public DefaultAccountUserApi(final AccountDao dao, final Clock clock) {
         this.dao = dao;
+        this.clock = clock;
     }
 
     @Override
     public Account createAccount(final AccountData data, final List<CustomField> fields, List<Tag> tags) throws AccountApiException {
-        String key = data.getExternalKey();
-        Account existingAccount = dao.getAccountByKey(key);
+        Account account = new DefaultAccount(data, clock.getUTCNow());
+        account.addFields(fields);
+        account.addTags(tags);
 
-        if (existingAccount == null) {
-            Account account = new DefaultAccount(data);
-            account.addFields(fields);
-            account.addTags(tags);
-
-            dao.create(account);
-            return account;
-        } else {
-            throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
-        }
+        dao.create(account);
+        return account;
     }
 
     @Override
@@ -69,12 +67,40 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
-    public UUID getIdFromKey(final String externalKey) {
+    public UUID getIdFromKey(final String externalKey) throws AccountApiException {
         return dao.getIdFromKey(externalKey);
     }
 
     @Override
-    public void updateAccount(final Account account) {
+    public void updateAccount(final Account account) throws AccountApiException {
         dao.update(account);
     }
+
+    @Override
+    public void updateAccount(final String externalKey, final AccountData accountData) throws AccountApiException {
+    	UUID accountId = getIdFromKey(externalKey);
+    	if(accountId == null) {
+    		throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
+    	}
+    	Account account = new DefaultAccount(accountId, accountData);
+        dao.update(account);
+    }
+
+	@Override
+	public void deleteAccountByKey(String externalKey) throws AccountApiException {
+		dao.deleteByKey(externalKey);
+	}
+
+	@Override
+	public Account migrateAccount(MigrationAccountData data,
+			List<CustomField> fields, List<Tag> tags)
+			throws AccountApiException {
+		
+		Account account = new DefaultAccount(data);
+        account.addFields(fields);
+        account.addTags(tags);
+
+        dao.create(account);
+        return account;
+	}
 }

@@ -23,7 +23,13 @@ import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implements PriceList  {
@@ -36,8 +42,7 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
 	private Boolean retired = false;
 	
 	@XmlElementWrapper(name="plans", required=true)
-	@XmlElement(name="plan", required=true)
-	@XmlIDREF
+	@XmlIDREF @XmlElement(name="plan", required=true)
     private DefaultPlan[] plans;
 	
 	public DefaultPriceList(){}

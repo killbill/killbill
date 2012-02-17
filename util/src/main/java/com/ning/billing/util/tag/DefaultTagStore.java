@@ -17,6 +17,7 @@
 package com.ning.billing.util.tag;
 
 import java.util.UUID;
+import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.util.entity.EntityCollectionBase;
 
 public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagStore {
@@ -26,7 +27,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
 
     @Override
     public String getEntityKey(final Tag entity) {
-        return entity.getName();
+        return entity.getTagDefinitionName();
     }
 
     @Override
@@ -36,10 +37,14 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
      */
     public boolean processPayment() {
         for (Tag tag : entities.values()) {
-            if (!tag.getProcessPayment()) {
-                return false;
+            if (tag instanceof ControlTag) {
+                ControlTag controlTag = (ControlTag) tag;
+                if (controlTag.getControlTagType() == ControlTagType.AUTO_BILLING_OFF) {
+                    return false;
+                }
             }
         }
+
         return true;
     }
 
@@ -50,10 +55,14 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
     @Override
     public boolean generateInvoice() {
         for (Tag tag : entities.values()) {
-            if (!tag.getGenerateInvoice()) {
-                return false;
+            if (tag instanceof ControlTag) {
+                ControlTag controlTag = (ControlTag) tag;
+                if (controlTag.getControlTagType() == ControlTagType.AUTO_INVOICING_OFF) {
+                    return false;
+                }
             }
         }
+
         return true;
     }
 
@@ -65,7 +74,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
     @Override
     public boolean containsTag(final String tagName) {
         for (Tag tag : entities.values()) {
-            if (tag.getName().equals(tagName)) {
+            if (tag.getTagDefinitionName().equals(tagName)) {
                 return true;
             }
         }

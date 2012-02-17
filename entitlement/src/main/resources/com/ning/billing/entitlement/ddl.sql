@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS events;
-CREATE TABLE events (
+DROP TABLE IF EXISTS entitlement_events;
+CREATE TABLE entitlement_events (
     id int(11) unsigned NOT NULL AUTO_INCREMENT,
     event_id char(36) NOT NULL,
     event_type varchar(9) NOT NULL,

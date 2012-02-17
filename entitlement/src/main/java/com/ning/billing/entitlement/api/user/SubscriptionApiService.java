@@ -99,10 +99,7 @@ public class SubscriptionApiService {
 
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
-            // STEPH needs to check if requestedDate is before last 'erasable event'?
-            if (requestedDate != null && requestedDate.isAfter(now)) {
-                throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
-            }
+            validateRequestedDateOnChangeOrCancel(subscription, now, requestedDate);
 
             Plan currentPlan = subscription.getCurrentPlan();
             PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
@@ -159,6 +156,7 @@ public class SubscriptionApiService {
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
     }
 
+
     public void changePlan(SubscriptionData subscription, String productName, BillingPeriod term,
             String priceList, DateTime requestedDate)
         throws EntitlementUserApiException {
@@ -168,10 +166,7 @@ public class SubscriptionApiService {
 
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
-            // STEPH needs to check if requestedDate is before last 'erasable event'?
-            if (requestedDate != null && requestedDate.isAfter(now)) {
-                throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
-            }
+            validateRequestedDateOnChangeOrCancel(subscription, now, requestedDate);
 
             String currentPriceList = subscription.getCurrentPriceList();
 
@@ -206,7 +201,7 @@ public class SubscriptionApiService {
             PriceList newPriceList = planChangeResult.getNewPriceList();
 
             Plan newPlan = catalogService.getFullCatalog().findPlan(productName, term, newPriceList.getName(), requestedDate);
-            DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, now);
+            DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, requestedDate);
 
             TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
 
@@ -234,6 +229,20 @@ public class SubscriptionApiService {
                     subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
+        }
+    }
+
+    private void validateRequestedDateOnChangeOrCancel(SubscriptionData subscription, DateTime now, DateTime requestedDate)
+        throws EntitlementUserApiException {
+
+        if (requestedDate.isAfter(now) ) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_FUTURE_DATE, requestedDate.toString());
+        }
+
+        SubscriptionTransition previousTransition = subscription.getPreviousTransition();
+        if (previousTransition.getEffectiveTransitionTime().isAfter(requestedDate)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE,
+                    requestedDate.toString(), previousTransition.getEffectiveTransitionTime());
         }
     }
 }

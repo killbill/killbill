@@ -21,7 +21,11 @@ import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.ProductCategory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -195,7 +199,7 @@ public class TestCasePhase {
 	}
 	
 	@Test(enabled=true)
-	public void testOrder() throws CatalogApiException{
+	public void testOrder() throws CatalogApiException {
 		MockCatalog cat = new MockCatalog();
 
 		DefaultProduct product = cat.getCurrentProducts()[0];

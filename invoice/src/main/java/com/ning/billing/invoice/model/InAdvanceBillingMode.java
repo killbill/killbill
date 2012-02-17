@@ -20,79 +20,195 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.Months;
+import org.joda.time.MutableDateTime;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
-public class InAdvanceBillingMode extends BillingModeBase {
-    private static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMethod();
+public class InAdvanceBillingMode implements BillingMode {
+    private static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
 
     @Override
-    public DateTime calculateEffectiveEndDate(final DateTime startDate, final DateTime targetDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
-        DateTime firstBillCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
-        return calculateBillingCycleDateAfter(targetDate, firstBillCycleDate, billingCycleDay, billingPeriod);
-    }
-
-    @Override
-    public DateTime calculateEffectiveEndDate(final DateTime startDate, final DateTime endDate, final DateTime targetDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
-        DateTime firstBillCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
-        return calculateEffectiveEndDate(firstBillCycleDate, targetDate, endDate, billingPeriod);
-    }
-
-    @Override
-    protected BigDecimal calculateNumberOfWholeBillingPeriods(final DateTime startDate, final DateTime endDate, final BillingPeriod billingPeriod) {
-        int numberOfMonths = Months.monthsBetween(startDate, endDate).getMonths();
-        BigDecimal numberOfMonthsInPeriod = new BigDecimal(billingPeriod.getNumberOfMonths());
-        return new BigDecimal(numberOfMonths).divide(numberOfMonthsInPeriod, 0, ROUNDING_METHOD);
-    }
-
-    @Override
-    protected DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDay) {
-        int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
-
-        DateTime proposedDate;
-        if (billingCycleDay > lastDayOfMonth) {
-            proposedDate = buildDate(date.getYear(), date.getMonthOfYear(), lastDayOfMonth);
-        } else {
-            proposedDate = buildDate(date.getYear(), date.getMonthOfYear(), billingCycleDay);
+    public List<RecurringInvoiceItemData> calculateInvoiceItemData(final DateTime startDate, final DateTime endDate,
+                                                                   final DateTime targetDate, final int billingCycleDay,
+                                                                   final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
+        if (endDate == null) {
+            return calculateInvoiceItemData(startDate, targetDate, billingCycleDay, billingPeriod);
         }
 
-        while (proposedDate.isBefore(date)) {
-            proposedDate = proposedDate.plusMonths(1);
-        }
+        if (endDate.isBefore(startDate)) {throw new InvalidDateSequenceException();}
+        if (targetDate.isBefore(startDate)) {throw new InvalidDateSequenceException();}
 
-        return proposedDate;
-    }
+        List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
 
-    protected DateTime calculateBillingCycleDateAfter(final DateTime date, final DateTime billingCycleDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
-        DateTime proposedDate = billingCycleDate;
+        // beginning from the start date, find the first billing date
+        DateTime firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
 
-        while (!proposedDate.isAfter(date)) {
-            proposedDate = proposedDate.plusMonths(billingPeriod.getNumberOfMonths());
-
-            if (proposedDate.dayOfMonth().get() != billingCycleDay) {
-                int lastDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
-
-                if (lastDayOfMonth < billingCycleDay) {
-                    proposedDate = buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfMonth);
-                } else {
-                    proposedDate = buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay);
-                }
+        // add pro-ration item if needed
+        if (firstBillingCycleDate.isAfter(startDate)) {
+            BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, firstBillingCycleDate, billingPeriod);
+            if (leadingProRationPeriods != null && leadingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
+                results.add(new RecurringInvoiceItemData(startDate, firstBillingCycleDate, leadingProRationPeriods));
             }
         }
 
-        return proposedDate;
+        // add one item per billing period
+        DateTime effectiveEndDate = calculateEffectiveEndDate(firstBillingCycleDate, targetDate, endDate, billingPeriod);
+        DateTime lastBillingCycleDate = calculateLastBillingCycleDateBefore(effectiveEndDate, firstBillingCycleDate, billingCycleDay, billingPeriod);
+        int numberOfWholeBillingPeriods =  calculateNumberOfWholeBillingPeriods(firstBillingCycleDate, lastBillingCycleDate, billingPeriod);
+        int numberOfMonthsPerBillingPeriod = billingPeriod.getNumberOfMonths();
+
+        for (int i = 0; i < numberOfWholeBillingPeriods; i++) {
+            results.add(new RecurringInvoiceItemData(firstBillingCycleDate.plusMonths(i * numberOfMonthsPerBillingPeriod),
+                                                     firstBillingCycleDate.plusMonths((i + 1) * numberOfMonthsPerBillingPeriod), BigDecimal.ONE));
+        }
+
+        // check to see if a trailing pro-ration amount is needed
+        if (effectiveEndDate.isAfter(lastBillingCycleDate)) {
+            BigDecimal trailingProRationPeriods = calculateProRationAfterLastBillingCycleDate(effectiveEndDate, lastBillingCycleDate, billingPeriod);
+            if (trailingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
+                results.add(new RecurringInvoiceItemData(lastBillingCycleDate, effectiveEndDate, trailingProRationPeriods));
+            }
+        }
+
+        return results;
     }
 
     @Override
-    protected DateTime calculateLastBillingCycleDateBefore(final DateTime date, final DateTime previousBillCycleDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
-        DateTime proposedDate = previousBillCycleDate;
-        proposedDate = proposedDate.plusMonths(billingPeriod.getNumberOfMonths());
+    public List<RecurringInvoiceItemData> calculateInvoiceItemData(final DateTime startDate,
+                                                                   final DateTime targetDate, final int billingCycleDay,
+                                                                   final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
+        List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
 
-        if (!proposedDate.isBefore(date)) {return previousBillCycleDate;}
+        if (targetDate.isBefore(startDate)) {
+            // since the target date is before the start date of the event, this should result in no items being generated
+            throw new InvalidDateSequenceException();
+        }
+
+        // beginning from the start date, find the first billing date
+        DateTime firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
+
+        // add pro-ration item if needed
+        if (firstBillingCycleDate.isAfter(startDate)) {
+            BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, firstBillingCycleDate, billingPeriod);
+            if (leadingProRationPeriods != null && leadingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
+                results.add(new RecurringInvoiceItemData(startDate, firstBillingCycleDate, leadingProRationPeriods));
+            }
+        }
+
+        // add one item per billing period
+        DateTime effectiveEndDate = calculateEffectiveEndDate(firstBillingCycleDate, targetDate, billingPeriod);
+        DateTime lastBillingCycleDate = calculateLastBillingCycleDateBefore(effectiveEndDate, firstBillingCycleDate, billingCycleDay, billingPeriod);
+        int numberOfWholeBillingPeriods =  calculateNumberOfWholeBillingPeriods(firstBillingCycleDate, lastBillingCycleDate, billingPeriod);
+        int numberOfMonthsPerBillingPeriod = billingPeriod.getNumberOfMonths();
+
+        for (int i = 0; i < numberOfWholeBillingPeriods; i++) {
+            results.add(new RecurringInvoiceItemData(firstBillingCycleDate.plusMonths(i * numberOfMonthsPerBillingPeriod),
+                                                     firstBillingCycleDate.plusMonths((i + 1) * numberOfMonthsPerBillingPeriod), BigDecimal.ONE));
+        }
+
+        // check to see if a trailing pro-ration amount is needed
+        if (effectiveEndDate.isAfter(lastBillingCycleDate)) {
+            BigDecimal trailingProRationPeriods = calculateProRationAfterLastBillingCycleDate(effectiveEndDate, lastBillingCycleDate, billingPeriod);
+            if (trailingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
+                results.add(new RecurringInvoiceItemData(lastBillingCycleDate, effectiveEndDate, trailingProRationPeriods));
+            }
+        }
+
+        return results;
+    }
+
+    private DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDay) {
+        int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
+
+        MutableDateTime tmp = date.toMutableDateTime();
+        if (billingCycleDay > lastDayOfMonth) {
+            tmp.setDayOfMonth(lastDayOfMonth);
+        } else {
+            tmp.setDayOfMonth(billingCycleDay);
+        }
+        DateTime proposedDate = tmp.toDateTime();
 
         while (proposedDate.isBefore(date)) {
-            proposedDate = proposedDate.plusMonths(billingPeriod.getNumberOfMonths());
+            // STEPH could be an annual ?
+            proposedDate = proposedDate.plusMonths(1);
+        }
+        return proposedDate;
+    }
+
+    private BigDecimal calculateProRationBeforeFirstBillingPeriod(final DateTime startDate, DateTime nextBillingCycleDate, final BillingPeriod billingPeriod) {
+        DateTime previousBillingCycleDate = nextBillingCycleDate.plusMonths(-billingPeriod.getNumberOfMonths());
+
+        int daysBetween = Days.daysBetween(previousBillingCycleDate, nextBillingCycleDate).getDays();
+        if (daysBetween <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal daysInPeriod = new BigDecimal(daysBetween);
+        BigDecimal days = new BigDecimal(Days.daysBetween(startDate, nextBillingCycleDate).getDays());
+
+        return days.divide(daysInPeriod, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+    }
+
+    private int calculateNumberOfWholeBillingPeriods(final DateTime startDate, final DateTime endDate, final BillingPeriod billingPeriod) {
+        int numberOfMonths = Months.monthsBetween(startDate, endDate).getMonths();
+        int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
+        return numberOfMonths / numberOfMonthsInPeriod;
+    }
+
+    private DateTime calculateEffectiveEndDate(DateTime billCycleDate, DateTime targetDate, DateTime endDate, BillingPeriod billingPeriod) {
+        if (targetDate.isBefore(endDate)) {
+            if (targetDate.isBefore(billCycleDate)) {
+                return billCycleDate;
+            }
+
+            int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
+            int numberOfPeriods = 0;
+            DateTime proposedDate = billCycleDate;
+
+            while (!proposedDate.isAfter(targetDate)) {
+                proposedDate = billCycleDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
+                numberOfPeriods += 1;
+            }
+
+            // the current period includes the target date
+            // check to see whether the end date truncates the period
+            if (endDate.isBefore(proposedDate)) {
+                return endDate;
+            } else {
+                return proposedDate;
+            }
+        } else {
+            return endDate;
+        }
+    }
+
+    private DateTime calculateEffectiveEndDate(DateTime billCycleDate, DateTime targetDate, BillingPeriod billingPeriod) {
+        if (targetDate.isBefore(billCycleDate)) {
+            return billCycleDate;
+        }
+
+        int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
+        int numberOfPeriods = 0;
+        DateTime proposedDate = billCycleDate;
+
+        while (!proposedDate.isAfter(targetDate)) {
+            proposedDate = billCycleDate.plusMonths(numberOfPeriods * numberOfMonthsInPeriod);
+            numberOfPeriods += 1;
+        }
+
+        return proposedDate;
+    }
+
+    private DateTime calculateLastBillingCycleDateBefore(final DateTime date, final DateTime previousBillCycleDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
+        DateTime proposedDate = previousBillCycleDate;
+
+        int numberOfPeriods = 0;
+        while (!proposedDate.isAfter(date)) {
+            proposedDate = previousBillCycleDate.plusMonths(numberOfPeriods * billingPeriod.getNumberOfMonths());
+            numberOfPeriods += 1;
         }
 
         proposedDate = proposedDate.plusMonths(-billingPeriod.getNumberOfMonths());
@@ -100,28 +216,16 @@ public class InAdvanceBillingMode extends BillingModeBase {
         if (proposedDate.dayOfMonth().get() < billingCycleDay) {
             int lastDayOfTheMonth = proposedDate.dayOfMonth().getMaximumValue();
             if (lastDayOfTheMonth < billingCycleDay) {
-                return buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfTheMonth);
+                return new MutableDateTime(proposedDate).dayOfMonth().set(lastDayOfTheMonth).toDateTime();
             } else {
-                return buildDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay);
+                return new MutableDateTime(proposedDate).dayOfMonth().set(billingCycleDay).toDateTime();
             }
         } else {
             return proposedDate;
         }
     }
 
-    @Override
-    protected BigDecimal calculateProRationBeforeFirstBillingPeriod(final DateTime startDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
-        DateTime nextBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
-        DateTime previousBillingCycleDate = nextBillingCycleDate.plusMonths(-billingPeriod.getNumberOfMonths());
-
-        BigDecimal daysInPeriod = new BigDecimal(Days.daysBetween(previousBillingCycleDate, nextBillingCycleDate).getDays());
-        BigDecimal days = new BigDecimal(Days.daysBetween(startDate, nextBillingCycleDate).getDays());
-
-        return days.divide(daysInPeriod, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-    }
-
-    @Override
-    protected BigDecimal calculateProRationAfterLastBillingCycleDate(final DateTime endDate, final DateTime previousBillThroughDate, final BillingPeriod billingPeriod) {
+    private BigDecimal calculateProRationAfterLastBillingCycleDate(final DateTime endDate, final DateTime previousBillThroughDate, final BillingPeriod billingPeriod) {
         // note: assumption is that previousBillThroughDate is correctly aligned with the billing cycle day
         DateTime nextBillThroughDate = previousBillThroughDate.plusMonths(billingPeriod.getNumberOfMonths());
         BigDecimal daysInPeriod = new BigDecimal(Days.daysBetween(previousBillThroughDate, nextBillThroughDate).getDays());
@@ -129,33 +233,5 @@ public class InAdvanceBillingMode extends BillingModeBase {
         BigDecimal days = new BigDecimal(Days.daysBetween(previousBillThroughDate, endDate).getDays());
 
         return days.divide(daysInPeriod, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-    }
-
-    @Override
-    protected DateTime calculateEffectiveEndDate(DateTime billCycleDate, DateTime targetDate, DateTime endDate, BillingPeriod billingPeriod) {
-        if (targetDate.isBefore(endDate)) {
-            if (targetDate.isBefore(billCycleDate)) {
-                return billCycleDate;
-            }
-
-            int numberOfMonthsInPeriod = billingPeriod.getNumberOfMonths();
-            DateTime startOfPeriod = billCycleDate;
-            DateTime startOfNextPeriod = billCycleDate.plusMonths(numberOfMonthsInPeriod);
-
-            while (isNotBetween(targetDate, startOfPeriod, startOfNextPeriod)) {
-                startOfPeriod = startOfNextPeriod;
-                startOfNextPeriod = startOfPeriod.plusMonths(numberOfMonthsInPeriod);
-            }
-
-            // the current period includes the target date
-            // check to see whether the end date truncates the period
-            if (endDate.isBefore(startOfNextPeriod)) {
-                return endDate;
-            } else {
-                return startOfNextPeriod;
-            }
-        } else {
-            return endDate;
-        }
     }
 }

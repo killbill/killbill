@@ -17,13 +17,14 @@
 package com.ning.billing.beatrix.glue;
 
 import com.google.inject.AbstractModule;
+import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 
 public class BeatrixModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(Lifecycle.class).asEagerSingleton();
+        bind(Lifecycle.class).to(DefaultLifecycle.class).asEagerSingleton();
     }
 
 }

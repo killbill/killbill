@@ -16,8 +16,12 @@
 
 package com.ning.billing.dbi;
 
-import com.mysql.management.MysqldResource;
-import com.mysql.management.MysqldResourceI;
+import java.io.File;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
@@ -27,17 +31,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.util.HashMap;
-import java.util.Map;
+import com.mysql.management.MysqldResource;
+import com.mysql.management.MysqldResourceI;
 
 /**
  * Utility class to embed MySQL for testing purposes
  */
 public class MysqlTestingHelper
 {
+
+    public static final String USE_LOCAL_DB_PROP = "com.ning.billing.dbi.test.useLocalDb";
+
     private static final Logger log = LoggerFactory.getLogger(MysqlTestingHelper.class);
 
     private static final String DB_NAME = "test_killbill";
@@ -46,24 +50,38 @@ public class MysqlTestingHelper
 
     private File dbDir;
     private MysqldResource mysqldResource;
-    private int port = 0;
+    private int port;
 
     public MysqlTestingHelper()
     {
-        // New socket on any free port
-        final ServerSocket socket;
-        try {
-            socket = new ServerSocket(0);
-            port = socket.getLocalPort();
-            socket.close();
+        if (isUsingLocalInstance()) {
+            port = 3306;
+        } else {
+            // New socket on any free port
+            final ServerSocket socket;
+            try {
+                socket = new ServerSocket(0);
+                port = socket.getLocalPort();
+                socket.close();
+            }
+            catch (IOException e) {
+                Assert.fail();
+            }
         }
-        catch (IOException e) {
-            Assert.fail();
-        }
+    }
+
+
+    public boolean isUsingLocalInstance() {
+        return (System.getProperty(USE_LOCAL_DB_PROP) != null);
     }
 
     public void startMysql() throws IOException
     {
+
+        if (isUsingLocalInstance()) {
+            return;
+        }
+
         dbDir = File.createTempFile("mysql", "");
         dbDir.delete();
         dbDir.mkdir();
@@ -73,7 +91,7 @@ public class MysqlTestingHelper
         dbOpts.put(MysqldResourceI.PORT, Integer.toString(port));
         dbOpts.put(MysqldResourceI.INITIALIZE_USER, "true");
         dbOpts.put(MysqldResourceI.INITIALIZE_USER_NAME, USERNAME);
-        dbOpts.put(MysqldResourceI.INITIALIZE_PASSWORD, PASSWORD);
+        dbOpts.put("default-time-zone", "+00:00");
 
         mysqldResource.start("test-mysqld-thread", dbOpts);
         if (!mysqldResource.isRunning()) {
@@ -86,6 +104,12 @@ public class MysqlTestingHelper
 
     public void cleanupTable(final String table)
     {
+
+        if (!isUsingLocalInstance() && (mysqldResource == null || !mysqldResource.isRunning())) {
+            log.error("Asked to cleanup table " + table + " but MySQL is not running!");
+            return;
+        }
+
         if (mysqldResource == null || !mysqldResource.isRunning()) {
             log.error("Asked to cleanup table " + table + " but MySQL is not running!");
             return;
@@ -113,7 +137,7 @@ public class MysqlTestingHelper
         }
     }
 
-    public DBI getDBI()
+    public IDBI getDBI()
     {
         final String dbiString = "jdbc:mysql://localhost:" + port + "/" + DB_NAME + "?createDatabaseIfNotExist=true";
         return new DBI(dbiString, USERNAME, PASSWORD);
@@ -121,6 +145,9 @@ public class MysqlTestingHelper
 
     public void initDb(final String ddl) throws IOException
     {
+        if (isUsingLocalInstance()) {
+            return;
+        }
         final IDBI dbi = getDBI();
         dbi.withHandle(new HandleCallback<Void>()
         {

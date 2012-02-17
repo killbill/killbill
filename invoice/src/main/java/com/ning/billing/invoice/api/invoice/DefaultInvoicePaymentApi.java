@@ -1,4 +1,5 @@
 /*
+
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -19,39 +20,66 @@ package com.ning.billing.invoice.api.invoice;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.IDBI;
+
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
 
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     private final InvoiceDao dao;
 
     @Inject
-    public DefaultInvoicePaymentApi(InvoiceDao dao) {
+    public DefaultInvoicePaymentApi(final InvoiceDao dao) {
         this.dao = dao;
+     }
+
+    @Override
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
+        dao.notifyOfPaymentAttempt(invoicePayment);
+    }
+
+//    @Override
+//    public void paymentFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate) {
+//        dao.notifyFailedPayment(invoiceId.toString(), paymentId.toString(), paymentAttemptDate.toDate());
+//    }
+
+    @Override
+    public List<Invoice> getInvoicesByAccount(final UUID accountId) {
+        return dao.getInvoicesByAccount(accountId);
     }
 
     @Override
-    public void paymentSuccessful(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentId, DateTime paymentAttemptDate) {
-        dao.notifySuccessfulPayment(invoiceId.toString(), amount, currency.toString(), paymentId.toString(), paymentAttemptDate.toDate());
+    public Invoice getInvoice(final UUID invoiceId) {
+        return dao.getById(invoiceId);
     }
 
     @Override
-    public void paymentFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate) {
-        dao.notifyFailedPayment(invoiceId.toString(), paymentId.toString(), paymentAttemptDate.toDate());
+    public Invoice getInvoiceForPaymentAttemptId(UUID paymentAttemptId) {
+        UUID invoiceIdStr = dao.getInvoiceIdByPaymentAttemptId(paymentAttemptId);
+        return invoiceIdStr == null ? null : dao.getById(invoiceIdStr);
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(UUID accountId) {
-        return dao.getInvoicesByAccount(accountId.toString());
+    public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
+        return dao.getInvoicePayment(paymentAttemptId);
     }
 
     @Override
-    public Invoice getInvoice(UUID invoiceId) {
-        return dao.getById(invoiceId.toString());
+    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+        InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate, amount, currency, null, null);
+        dao.notifyOfPaymentAttempt(invoicePayment);
     }
+
+    @Override
+    public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+        InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
+        dao.notifyOfPaymentAttempt(invoicePayment);
+    }
+    
 }

@@ -96,7 +96,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate) throws EntitlementUserApiException {
-
         try {
             String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             DateTime now = clock.getUTCNow();
@@ -108,7 +107,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             DateTime effectiveDate = requestedDate;
 
             Plan plan = catalogService.getFullCatalog().findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);
-
 
             PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
@@ -156,6 +154,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         }
     }
 
+
     private void checkAddonCreationRights(SubscriptionData baseSubscription, Plan targetAddOnPlan)
         throws EntitlementUserApiException, CatalogApiException {
 
@@ -173,4 +172,21 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                     targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
         }
     }
+
+	@Override
+	public DateTime getNextBillingDate(UUID accountId) {
+		List<SubscriptionBundle> bundles = getBundlesForAccount(accountId);
+		DateTime result = null;
+		for(SubscriptionBundle bundle : bundles) {
+			List<Subscription> subscriptions = getSubscriptionsForBundle(bundle.getId());
+			for(Subscription subscription : subscriptions) {
+				DateTime chargedThruDate = subscription.getChargedThroughDate();
+				if(result == null ||
+						(chargedThruDate != null && chargedThruDate.isBefore(result))) {
+					result = subscription.getChargedThroughDate();
+				}
+			}
+		}
+		return result;
+	}
 }

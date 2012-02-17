@@ -33,6 +33,7 @@ import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -42,10 +43,11 @@ import com.ning.billing.util.entity.EntityCollectionDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(FieldStoreDao.CustomFieldMapper.class)
-public interface FieldStoreDao extends EntityCollectionDao<CustomField>, Transmogrifier {
+public interface FieldStoreDao extends EntityCollectionDao<CustomField>, Transactional<FieldStoreDao>, Transmogrifier {
+
     @Override
-    @SqlBatch
-    public void save(@Bind("objectId") final String objectId,
+    @SqlBatch(transactional=false)
+    public void batchSaveFromTransaction(@Bind("objectId") final String objectId,
                      @Bind("objectType") final String objectType,
                      @CustomFieldBinder final List<CustomField> entities);
 
@@ -65,8 +67,10 @@ public interface FieldStoreDao extends EntityCollectionDao<CustomField>, Transmo
     @Target({ElementType.PARAMETER})
     public @interface CustomFieldBinder {
         public static class CustomFieldBinderFactory implements BinderFactory {
+            @Override
             public Binder build(Annotation annotation) {
                 return new Binder<CustomFieldBinder, CustomField>() {
+                    @Override
                     public void bind(SQLStatement q, CustomFieldBinder bind, CustomField customField) {
                         q.bind("id", customField.getId().toString());
                         q.bind("fieldName", customField.getName());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+w * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,16 +15,6 @@
  */
 
 package com.ning.billing.entitlement.api.billing;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
@@ -42,18 +32,32 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.UUID;
+
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
-	private Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
-	
+	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
+
     private final EntitlementDao dao;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
 
     @Inject
-    public DefaultEntitlementBillingApi(EntitlementDao dao, AccountUserApi accountApi, CatalogService catalogService) {
+    public DefaultEntitlementBillingApi(final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
         super();
         this.dao = dao;
         this.accountApi = accountApi;
@@ -62,48 +66,60 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
     @Override
     public SortedSet<BillingEvent> getBillingEventsForAccount(
-            UUID accountId) {
-        
+            final UUID accountId) {
+
         List<SubscriptionBundle> bundles = dao.getSubscriptionBundleForAccount(accountId);
         List<Subscription> subscriptions = new ArrayList<Subscription>();
-        for (SubscriptionBundle bundle: bundles) {
+        for (final SubscriptionBundle bundle: bundles) {
             subscriptions.addAll(dao.getSubscriptions(bundle.getId()));
         }
 
-        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();        
-        for (Subscription subscription: subscriptions) {
-        	for (SubscriptionTransition transition : subscription.getAllTransitions()) {
+        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
+        for (final Subscription subscription: subscriptions) {
+        	for (final SubscriptionTransition transition : subscription.getAllTransitions()) {
         		try {
-        			result.add(new DefaultBillingEvent(transition, subscription, calculateBCD(transition, accountId)));
+                    BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBCD(transition, accountId));
+        			result.add(event);
         		} catch (CatalogApiException e) {
-        			log.error("Failing to identify catalog components while creating BillingEvent from transition: " + 
+        			log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
         					transition.getId().toString(), e);
+                } catch (Exception e) {
+                    log.warn("Failed while getting BillingEvent", e);
         		}
         	}
         }
         return result;
     }
-    
-    private int calculateBCD(SubscriptionTransition transition, UUID accountId) throws CatalogApiException {
+
+    @Override
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
+        return dao.getAccountIdFromSubscriptionId(subscriptionId);
+    }
+
+    private int calculateBCD(final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException {
     	Catalog catalog = catalogService.getFullCatalog();
-    	Plan plan = transition.getNextPlan();
+    	Plan plan =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+    	        transition.getNextPlan() : transition.getPreviousPlan();
     	Product product = plan.getProduct();
-    	PlanPhase phase = transition.getNextPhase();
-    	
+    	PlanPhase phase = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+    	        transition.getNextPhase() : transition.getPreviousPhase();
+
     	BillingAlignment alignment = catalog.billingAlignment(
-    			new PlanPhaseSpecifier(product.getName(), 
-    					product.getCategory(), 
-    					phase.getBillingPeriod(), 
-    					transition.getNextPriceList(), 
-    					phase.getPhaseType()), 
+    			new PlanPhaseSpecifier(product.getName(),
+    					product.getCategory(),
+    					phase.getBillingPeriod(),
+    					transition.getNextPriceList(),
+    					phase.getPhaseType()),
     					transition.getRequestedTransitionTime());
     	int result = 0;
-    	Account account = accountApi.getAccountById(accountId);
+
+        Account account = accountApi.getAccountById(accountId);
+
     	switch (alignment) {
-    		case ACCOUNT : 
+    		case ACCOUNT :
     			result = account.getBillCycleDay();
     		break;
-    		case BUNDLE : 
+    		case BUNDLE :
     			SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(transition.getBundleId());
     			//TODO result = bundle.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
     			result = bundle.getStartDate().getDayOfMonth();
@@ -118,20 +134,35 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     		throw new CatalogApiException(ErrorCode.CAT_INVALID_BILLING_ALIGNMENT, alignment.toString());
     	}
     	return result;
-    		
+
     }
-    
 
     @Override
-    public void setChargedThroughDate(UUID subscriptionId, DateTime ctd) {
+    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
         SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionId);
-        if (subscription == null) {
-            new EntitlementBillingApiException(String.format("Unknown subscription %s", subscriptionId));
-        }
 
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
             .setChargedThroughDate(ctd)
             .setPaidThroughDate(subscription.getPaidThroughDate());
+
         dao.updateSubscription(new SubscriptionData(builder));
+    }
+
+    @Override
+    public void setChargedThroughDateFromTransaction(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime ctd) {
+        SubscriptionSqlDao subscriptionSqlDao = transactionalDao.become(SubscriptionSqlDao.class);
+        SubscriptionData subscription = (SubscriptionData) subscriptionSqlDao.getSubscriptionFromId(subscriptionId.toString());
+
+        if (subscription == null) {
+            log.warn("Subscription not found when setting CTD.");
+        } else {
+            Date paidThroughDate = (subscription.getPaidThroughDate() == null) ? null : subscription.getPaidThroughDate().toDate();
+
+            DateTime chargedThroughDate = subscription.getChargedThroughDate();
+            if (chargedThroughDate == null || chargedThroughDate.isBefore(ctd)) {
+                subscriptionSqlDao.updateSubscription(subscriptionId.toString(), subscription.getActiveVersion(),
+                                                      ctd.toDate(), paidThroughDate);
+            }
+        }
     }
 }

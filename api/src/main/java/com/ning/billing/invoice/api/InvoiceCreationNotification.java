@@ -16,17 +16,19 @@
 
 package com.ning.billing.invoice.api;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.eventbus.EventBusNotification;
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public interface InvoiceCreationNotification extends EventBusNotification {
+import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.bus.BusEvent;
+
+public interface InvoiceCreationNotification extends BusEvent {
     public UUID getInvoiceId();
     public UUID getAccountId();
     public BigDecimal getAmountOwed();
     public Currency getCurrency();
     public DateTime getInvoiceCreationDate();
+
 }

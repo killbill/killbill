@@ -16,16 +16,16 @@
 
 package com.ning.billing.analytics.dao;
 
+import org.skife.jdbi.v2.IDBI;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import org.skife.jdbi.v2.DBI;
 
 public class BusinessSubscriptionTransitionDaoProvider implements Provider<BusinessSubscriptionTransitionDao>
 {
-    private final DBI dbi;
+    private final IDBI dbi;
 
     @Inject
-    public BusinessSubscriptionTransitionDaoProvider(final DBI dbi)
+    public BusinessSubscriptionTransitionDaoProvider(final IDBI dbi)
     {
         this.dbi = dbi;
     }

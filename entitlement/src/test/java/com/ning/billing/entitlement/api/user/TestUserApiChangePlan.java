@@ -37,6 +37,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.TestApiBase;
 
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.util.clock.DefaultClock;
@@ -100,12 +101,12 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
     }
 
 
-    protected void testChangePlanBundleAlignEOTWithChargeThroughDate() {
+    protected void testChangePlanBundleAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         testChangePlanBundleAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount", "Pistol", BillingPeriod.ANNUAL, "gunclubDiscount");
     }
 
     private void testChangePlanBundleAlignEOTWithChargeThroughDate(String fromProd, BillingPeriod fromTerm, String fromPlanSet,
-            String toProd, BillingPeriod toTerm, String toPlanSet) {
+            String toProd, BillingPeriod toTerm, String toPlanSet) throws EntitlementBillingApiException {
 
         log.info("Starting testChangeSubscriptionEOTWithChargeThroughDate");
         try {
@@ -216,12 +217,12 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
     }
 
 
-    protected void testChangePlanChangePlanAlignEOTWithChargeThroughDate() {
+    protected void testChangePlanChangePlanAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         tChangePlanChangePlanAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
     }
 
     private void tChangePlanChangePlanAlignEOTWithChargeThroughDate(String fromProd, BillingPeriod fromTerm, String fromPlanSet,
-            String toProd, BillingPeriod toTerm, String toPlanSet) {
+            String toProd, BillingPeriod toTerm, String toPlanSet) throws EntitlementBillingApiException {
 
         log.info("Starting testChangePlanBundleAlignEOTWithChargeThroughDate");
 
@@ -297,7 +298,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-    protected void testMultipleChangeLastIMM() {
+    protected void testMultipleChangeLastIMM() throws EntitlementBillingApiException {
 
         try {
             SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
@@ -344,7 +345,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-    protected void testMultipleChangeLastEOT() {
+    protected void testMultipleChangeLastEOT() throws EntitlementBillingApiException {
 
         try {
 

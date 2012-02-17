@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 
 import static org.testng.Assert.assertEquals;
 
-@Test(groups = {"invoicing", "proRation"})
+@Test(groups = {"fast", "invoicing", "proRation"})
 public class ValidationProRationTests extends ProRationTestBase {
     protected BillingPeriod getBillingPeriod() {
         return BillingPeriod.MONTHLY;
@@ -37,14 +37,6 @@ public class ValidationProRationTests extends ProRationTestBase {
     @Override
     protected BillingMode getBillingMode() {
         return new InAdvanceBillingMode();
-    }
-
-    protected BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay) throws InvalidDateSequenceException {
-        return getBillingMode().calculateNumberOfBillingCycles(startDate, targetDate, billingCycleDay, getBillingPeriod());
-    }
-
-    protected BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay) throws InvalidDateSequenceException {
-        return getBillingMode().calculateNumberOfBillingCycles(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod());
     }
 
     @Test(expectedExceptions = InvalidDateSequenceException.class)
