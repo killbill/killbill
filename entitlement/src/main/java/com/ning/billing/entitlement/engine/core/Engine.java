@@ -125,7 +125,7 @@ public class Engine implements EventListener, EntitlementService {
                 }
                 @Override
                 public long getDaoClaimTimeMs() {
-                    return config.getDaoMaxReadyEvents();
+                    return config.getDaoClaimTimeMs();
                 }
             });
         } catch (NotificationQueueAlreadyExists e) {
