@@ -103,7 +103,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             if (requestedDate != null && requestedDate.isAfter(now)) {
                 throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
             }
-            requestedDate = (requestedDate == null) ? now : requestedDate;
             DateTime effectiveDate = requestedDate;
 
             Plan plan = catalogService.getFullCatalog().findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);

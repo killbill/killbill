@@ -225,7 +225,7 @@ public class TestUserApiAddOn extends TestApiBase {
     }
 
 
-    @Test(enabled=false, groups={"sql"})
+    @Test(enabled=true, groups={"sql"})
     public void testAddonCreateWithBundleAlign() {
         try {
             String aoProduct = "Telescopic-Scope";
@@ -247,16 +247,7 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    /*
-     *
-     * STEPH : Can't make the catalog work as i want so disable test until resolved
-     *             <createAlignmentCase>
-                <product>Laser-Scope</product>
-                <alignment>START_OF_SUBSCRIPTION</alignment>
-            </createAlignmentCase>
-
-     */
-    @Test(enabled=false, groups={"sql"})
+    @Test(enabled=true, groups={"sql"})
     public void testAddonCreateWithSubscriptionAlign() {
 
         try {

@@ -227,9 +227,7 @@ public class PlanAligner  {
                 priceList);
 
         DateTime planStartDate = null;
-
-        PlanAlignmentChange alignment = null;
-        alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier, requestedDate);
+        PlanAlignmentChange alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier, requestedDate);
         switch(alignment) {
         case START_OF_SUBSCRIPTION:
             planStartDate = subscriptionStartDate;

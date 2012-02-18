@@ -163,7 +163,6 @@ public class SubscriptionApiService {
 
         try {
 
-
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
             validateRequestedDateOnChangeOrCancel(subscription, now, requestedDate);
