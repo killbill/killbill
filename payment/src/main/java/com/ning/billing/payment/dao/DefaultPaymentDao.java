@@ -94,4 +94,9 @@ public class DefaultPaymentDao implements PaymentDao {
         return sqlDao.getPaymentAttemptById(paymentAttemptId.toString());
     }
 
+    @Override
+    public PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptIdStr) {
+        return sqlDao.getPaymentInfoForPaymentAttemptId(paymentAttemptIdStr);
+    }
+
 }

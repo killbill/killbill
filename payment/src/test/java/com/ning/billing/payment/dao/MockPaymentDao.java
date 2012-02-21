@@ -133,4 +133,10 @@ public class MockPaymentDao implements PaymentDao {
         return paymentAttempts.get(paymentAttemptId);
     }
 
+    @Override
+    public PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptId) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

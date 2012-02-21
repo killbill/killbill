@@ -83,6 +83,14 @@ updatePaymentInfo() ::= <<
      WHERE payment_id = :payment_id
 >>
 
+updatePaymentAttemptWithRetryInfo() ::= <<
+    UPDATE payment_attempts
+       SET retry_count = :retry_count,
+           next_retry_dt = :next_retry_dt,
+           updated_dt = NOW()
+     WHERE payment_attempt_id = :payment_attempt_id
+>>
+
 getPaymentInfos(invoiceIds) ::= <<
     SELECT <paymentInfoFields("p.")>
       FROM payments p, payment_attempts pa

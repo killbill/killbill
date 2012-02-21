@@ -55,5 +55,6 @@ public interface PaymentApi {
 
     PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId);
 
+    PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptId);
 
 }

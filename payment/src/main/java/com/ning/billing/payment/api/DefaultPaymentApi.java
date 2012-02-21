@@ -288,4 +288,9 @@ public class DefaultPaymentApi implements PaymentApi {
         return paymentDao.getPaymentAttemptForInvoiceId(invoiceId);
     }
 
+    @Override
+    public PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptId) {
+        return paymentDao.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
+    }
+
 }

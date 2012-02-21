@@ -65,6 +65,10 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
     @Mapper(PaymentAttemptMapper.class)
     List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(@BindIn("invoiceIds") List<String> invoiceIds);
 
+    @SqlQuery
+    @Mapper(PaymentInfoMapper.class)
+    PaymentInfo getPaymentInfoForPaymentAttemptId(@Bind("payment_attempt_id") String paymentAttemptId);
+
     @SqlUpdate
     void updatePaymentAttemptWithPaymentId(@Bind("payment_attempt_id") String paymentAttemptId,
                                            @Bind("payment_id") String paymentId);

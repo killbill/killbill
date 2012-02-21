@@ -45,5 +45,6 @@ public interface PaymentDao {
     List<PaymentInfo> getPaymentInfo(List<String> invoiceIds);
 
     PaymentAttempt getPaymentAttemptById(UUID paymentAttemptId);
+    PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptId);
 
 }
