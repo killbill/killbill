@@ -47,37 +47,45 @@ public class BusinessSubscriptionTransitionRecorder
         this.accountApi = accountApi;
     }
 
-    public void subscriptionCreated(final SubscriptionTransition created) throws AccountApiException {
+    public void subscriptionCreated(final SubscriptionTransition created) throws AccountApiException
+    {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan());
         recordTransition(event, created);
     }
 
-    public void subscriptionCancelled(final SubscriptionTransition cancelled) throws AccountApiException {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getNextPlan());
+    public void subscriptionCancelled(final SubscriptionTransition cancelled) throws AccountApiException
+    {
+        // cancelled.getNextPlan() is null here - need to look at the previous one to create the correct event name
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getPreviousPlan());
         recordTransition(event, cancelled);
     }
 
-    public void subscriptionChanged(final SubscriptionTransition changed) throws AccountApiException {
+    public void subscriptionChanged(final SubscriptionTransition changed) throws AccountApiException
+    {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan());
         recordTransition(event, changed);
     }
 
-    public void subscriptionPaused(final SubscriptionTransition paused) throws AccountApiException {
+    public void subscriptionPaused(final SubscriptionTransition paused) throws AccountApiException
+    {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPaused(paused.getNextPlan());
         recordTransition(event, paused);
     }
 
-    public void subscriptionResumed(final SubscriptionTransition resumed) throws AccountApiException {
+    public void subscriptionResumed(final SubscriptionTransition resumed) throws AccountApiException
+    {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionResumed(resumed.getNextPlan());
         recordTransition(event, resumed);
     }
 
-    public void subscriptionPhaseChanged(final SubscriptionTransition phaseChanged) throws AccountApiException {
+    public void subscriptionPhaseChanged(final SubscriptionTransition phaseChanged) throws AccountApiException
+    {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState());
         recordTransition(event, phaseChanged);
     }
 
-    public void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionTransition transition) throws AccountApiException {
+    public void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionTransition transition) throws AccountApiException
+    {
         Currency currency = null;
         String transitionKey = null;
         String accountKey = null;
@@ -113,7 +121,15 @@ public class BusinessSubscriptionTransitionRecorder
         else {
             prevSubscription = new BusinessSubscription(transition.getPreviousPriceList(), transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId());
         }
-        final BusinessSubscription nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId());
+        final BusinessSubscription nextSubscription;
+
+        // next plan is null for CANCEL events
+        if (transition.getNextPlan() == null) {
+            nextSubscription = null;
+        }
+        else {
+            nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId());
+        }
 
         record(transitionKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
     }
