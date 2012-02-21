@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.UUID;
 
 public class BusinessSubscriptionTransitionRecorder
 {
@@ -131,13 +132,14 @@ public class BusinessSubscriptionTransitionRecorder
             nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId());
         }
 
-        record(transitionKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
+        record(transition.getId(), transitionKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
     }
 
     // Public for internal reasons
-    public void record(final String key, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription)
+    public void record(final UUID id, final String key, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription)
     {
         final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
+            id,
             key,
             accountKey,
             requestedDateTime,

@@ -52,6 +52,7 @@ import java.util.UUID;
 
 public class TestAnalyticsDao
 {
+    private static final UUID EVENT_ID = UUID.randomUUID();
     private static final String EVENT_KEY = "12345";
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
 
@@ -84,7 +85,7 @@ public class TestAnalyticsDao
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan);
         final DateTime requestedTimestamp = new DateTime(DateTimeZone.UTC);
 
-        transition = new BusinessSubscriptionTransition(EVENT_KEY, ACCOUNT_KEY, requestedTimestamp, event, prevSubscription, nextSubscription);
+        transition = new BusinessSubscriptionTransition(EVENT_ID, EVENT_KEY, ACCOUNT_KEY, requestedTimestamp, event, prevSubscription, nextSubscription);
 
         final IDBI dbi = helper.getDBI();
         businessSubscriptionTransitionDao = dbi.onDemand(BusinessSubscriptionTransitionDao.class);
@@ -133,6 +134,7 @@ public class TestAnalyticsDao
     public void testTransitionsWithNullPrevSubscription()
     {
         final BusinessSubscriptionTransition transitionWithNullPrev = new BusinessSubscriptionTransition(
+            transition.getId(),
             transition.getKey(),
             transition.getAccountKey(),
             transition.getRequestedTimestamp(),
@@ -151,6 +153,7 @@ public class TestAnalyticsDao
     public void testTransitionsWithNullNextSubscription()
     {
         final BusinessSubscriptionTransition transitionWithNullNext = new BusinessSubscriptionTransition(
+            transition.getId(),
             transition.getKey(),
             transition.getAccountKey(),
             transition.getRequestedTimestamp(),
@@ -170,6 +173,7 @@ public class TestAnalyticsDao
     {
         final BusinessSubscription subscriptionWithNullFields = new BusinessSubscription(null, plan, phase, Currency.USD, null, null, null, null);
         final BusinessSubscriptionTransition transitionWithNullFields = new BusinessSubscriptionTransition(
+            transition.getId(),
             transition.getKey(),
             transition.getAccountKey(),
             transition.getRequestedTimestamp(),
@@ -189,6 +193,7 @@ public class TestAnalyticsDao
     {
         final BusinessSubscription subscriptionWithNullPlanAndPhase = new BusinessSubscription(null, null, null, Currency.USD, null, null, null, null);
         final BusinessSubscriptionTransition transitionWithNullPlanAndPhase = new BusinessSubscriptionTransition(
+            transition.getId(),
             transition.getKey(),
             transition.getAccountKey(),
             transition.getRequestedTimestamp(),
@@ -213,6 +218,7 @@ public class TestAnalyticsDao
     {
         final BusinessSubscription subscriptionWithNullPlan = new BusinessSubscription(null, null, phase, Currency.USD, null, null, null, null);
         final BusinessSubscriptionTransition transitionWithNullPlan = new BusinessSubscriptionTransition(
+            transition.getId(),
             transition.getKey(),
             transition.getAccountKey(),
             transition.getRequestedTimestamp(),
@@ -233,6 +239,7 @@ public class TestAnalyticsDao
     {
         final BusinessSubscription subscriptionWithNullPhase = new BusinessSubscription(null, plan, null, Currency.USD, null, null, null, null);
         final BusinessSubscriptionTransition transitionWithNullPhase = new BusinessSubscriptionTransition(
+            transition.getId(),
             transition.getKey(),
             transition.getAccountKey(),
             transition.getRequestedTimestamp(),
