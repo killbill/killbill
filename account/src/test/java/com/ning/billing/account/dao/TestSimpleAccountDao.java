@@ -125,7 +125,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     @Test
     public void testTags() throws AccountApiException {
         Account account = createTestAccount();
-        TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", "Test System", new DateTime());
+        TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", "Test System");
         TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
         tagDescriptionDao.create(definition);
 

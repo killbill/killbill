@@ -13,7 +13,7 @@ load() ::= <<
            td.id AS tag_definition_id,
            t.tag_definition_name AS tag_definition_name,
            td.description AS tag_description,
-           td.created_by, td.creation_date
+           td.created_by
     FROM tags t
     LEFT JOIN tag_definitions td ON t.tag_definition_name = td.name
     WHERE t.object_id = :objectId AND t.object_type = :objectType;

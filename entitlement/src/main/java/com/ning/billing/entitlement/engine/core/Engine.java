@@ -68,7 +68,7 @@ public class Engine implements EventListener, EntitlementService {
     private final EntitlementConfig config;
     private final NotificationQueueService notificationQueueService;
 
-    private NotificationQueue subscritionEventQueue;
+    private NotificationQueue subscriptionEventQueue;
 
     @Inject
     public Engine(Clock clock, EntitlementDao dao, PlanAligner planAligner,
@@ -97,7 +97,7 @@ public class Engine implements EventListener, EntitlementService {
     public void initialize() {
 
         try {
-            subscritionEventQueue = notificationQueueService.createNotificationQueue(ENTITLEMENT_SERVICE_NAME,
+            subscriptionEventQueue = notificationQueueService.createNotificationQueue(ENTITLEMENT_SERVICE_NAME,
                     NOTIFICATION_QUEUE_NAME,
                     new NotificationQueueHandler() {
                 @Override
@@ -135,13 +135,13 @@ public class Engine implements EventListener, EntitlementService {
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
-        subscritionEventQueue.startQueue();
+        subscriptionEventQueue.startQueue();
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() {
-        if (subscritionEventQueue != null) {
-            subscritionEventQueue.stopQueue();
+        if (subscriptionEventQueue != null) {
+            subscriptionEventQueue.stopQueue();
          }
     }
 

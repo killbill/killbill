@@ -48,8 +48,8 @@ public interface FieldStoreDao extends EntityCollectionDao<CustomField>, Transac
     @Override
     @SqlBatch(transactional=false)
     public void batchSaveFromTransaction(@Bind("objectId") final String objectId,
-                     @Bind("objectType") final String objectType,
-                     @CustomFieldBinder final List<CustomField> entities);
+                                         @Bind("objectType") final String objectType,
+                                         @CustomFieldBinder final List<CustomField> entities);
 
 
     public class CustomFieldMapper implements ResultSetMapper<CustomField> {

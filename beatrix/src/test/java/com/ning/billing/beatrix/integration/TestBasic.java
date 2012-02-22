@@ -22,7 +22,6 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -267,7 +266,7 @@ public class TestBasic {
         Thread.sleep(600000);
     }
 
-    @Test(groups = "stress", enabled = true)
+    @Test(groups = "stress", enabled = false)
     public void stressTest() throws Exception {
         final int maxIterations = 7;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
@@ -289,7 +288,7 @@ public class TestBasic {
 
     private void testBasePlanComplete(DateTime initialCreationDate, int billingDay,
                                       boolean proRationExpected) throws Exception {
-        long DELAY = 2000;
+        long DELAY = 5000;
 
         log.info("Beginning test with BCD of " + billingDay);
         Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
@@ -297,7 +296,7 @@ public class TestBasic {
         assertNotNull(account);
 
         // set clock to the initial start date
-        clock.setDeltaFromReality(initialCreationDate.getMillis() - DateTime.now().getMillis());
+        clock.setDeltaFromReality(initialCreationDate.getMillis() - clock.getUTCNow().getMillis());
         SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever");
 
         String productName = "Shotgun";

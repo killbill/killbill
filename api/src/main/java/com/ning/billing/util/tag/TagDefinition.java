@@ -24,7 +24,5 @@ public interface TagDefinition extends Entity {
 
     String getCreatedBy();
 
-    DateTime getCreationDate();
-
     String getDescription();
 }
