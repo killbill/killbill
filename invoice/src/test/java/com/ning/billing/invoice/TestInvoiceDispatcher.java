@@ -82,7 +82,7 @@ public class TestInvoiceDispatcher {
 
 
     @BeforeSuite(alwaysRun = true)
-    public void setupå() throws IOException
+    public void setup() throws IOException
     {
 
 
