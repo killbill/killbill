@@ -37,7 +37,7 @@ public class TestPlan {
 
 		StandaloneCatalog c = new MockCatalog();
 		c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
-		DefaultPlan p1 =  new MockPlan();
+		DefaultPlan p1 =  MockPlan.createBicycleTrialEvergreen1USD();
 		p1.setEffectiveDateForExistingSubscriptons(new Date((new Date().getTime()) - (1000 * 60 * 60 * 24)));
 		ValidationErrors errors = p1.validate(c, new ValidationErrors());
 		Assert.assertEquals(errors.size(), 1);
@@ -45,79 +45,18 @@ public class TestPlan {
 
 	}
 	
-	private static class MyDuration extends DefaultDuration {
-		final int days;
-		
-		public MyDuration(int days) {
-			this.days = days;
-		}
-		
-		@Override
-		public DateTime addToDateTime(DateTime dateTime) {
-			return dateTime.plusDays(days);
-		}
-	}
-	
-	private static class MyPlanPhase extends MockPlanPhase {
-		Duration duration;
-		boolean recurringPriceIsZero;
-		
-		MyPlanPhase(int duration, boolean recurringPriceIsZero) {
-			this.duration= new MyDuration( duration );
-			this.recurringPriceIsZero = recurringPriceIsZero;
-		}
-		@Override
-		public Duration getDuration(){
-			return duration;
-		}
-		
-		@Override
-		public InternationalPrice getRecurringPrice() {
-			return new MockInternationalPrice() {
-				@Override
-				public boolean isZero() {
-					return recurringPriceIsZero;
-				}
-			};
-		}
-	}
-	
 	@Test(groups={"fast"}, enabled = true)
 	public void testDataCalc() {
-		DefaultPlan p0 =  new MockPlan() {
-			public PlanPhase[] getAllPhases() {
-				return new PlanPhase[]{
-						new MyPlanPhase(10, true),
-						new MyPlanPhase(10, false),
-				};
-			}
-		};
+		DefaultPlan p0 = MockPlan.createBicycleTrialEvergreen1USD();  
+					
+		DefaultPlan p1 =  MockPlan.createBicycleTrialEvergreen1USD(100);
 		
-		DefaultPlan p1 =  new MockPlan() {
-			public PlanPhase[] getAllPhases() {
-				return new PlanPhase[]{
-						new MyPlanPhase(10, true),
-						new MyPlanPhase(10, true),
-						new MyPlanPhase(10, true),
-						new MyPlanPhase(10, true),
-						new MyPlanPhase(10, false),
-						new MyPlanPhase(10, true),
-				};
-			}
-		};
+		DefaultPlan p2 =  MockPlan.createBicycleNoTrialEvergreen1USD(); 
 		
-		DefaultPlan p2 =  new MockPlan() {
-			public PlanPhase[] getAllPhases() {
-				return new PlanPhase[]{
-						new MyPlanPhase(10, false),
-						new MyPlanPhase(10, true),
-				};
-			}
-		};
 		DateTime requestedDate = new DateTime();
-		Assert.assertEquals(p0.dateOfFirstRecurringNonZeroCharge(requestedDate), requestedDate.plusDays(10));
-		Assert.assertEquals(p1.dateOfFirstRecurringNonZeroCharge(requestedDate), requestedDate.plusDays(40));
-		Assert.assertEquals(p2.dateOfFirstRecurringNonZeroCharge(requestedDate), requestedDate.plusDays(0));
+		Assert.assertEquals(p0.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(30)), 0);
+		Assert.assertEquals(p1.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(100)), 0);
+		Assert.assertEquals(p2.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(0)), 0);
 
 	}
 }

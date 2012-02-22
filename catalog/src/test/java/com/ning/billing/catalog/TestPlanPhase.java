@@ -32,17 +32,18 @@ public class TestPlanPhase {
 	public void testValidation() {
 		log.info("Testing Plan Phase Validation");
 		
-		DefaultPlanPhase pp = new MockPlanPhase().setBillCycleDuration(BillingPeriod.MONTHLY).setRecurringPrice(null).setFixedPrice(new DefaultInternationalPrice());
+		DefaultPlanPhase pp = MockPlanPhase.createUSDMonthlyEvergreen(null, "1.00").setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());//new MockPlanPhase().setBillCycleDuration(BillingPeriod.MONTHLY).setRecurringPrice(null).setFixedPrice(new DefaultInternationalPrice());
+		
 		ValidationErrors errors = pp.validate(new MockCatalog(), new ValidationErrors());
 		errors.log(log);
 		Assert.assertEquals(errors.size(), 1);
 
-		pp = new MockPlanPhase().setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD).setRecurringPrice(new MockInternationalPrice());
+		pp = MockPlanPhase.createUSDMonthlyEvergreen("1.00", null).setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD).setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());// new MockPlanPhase().setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD).setRecurringPrice(new MockInternationalPrice());
 		errors = pp.validate(new MockCatalog(), new ValidationErrors());
 		errors.log(log);
 		Assert.assertEquals(errors.size(), 1);
 
-		pp = new MockPlanPhase().setRecurringPrice(null).setFixedPrice(null).setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD);
+		pp = MockPlanPhase.createUSDMonthlyEvergreen(null, null).setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD).setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());//new MockPlanPhase().setRecurringPrice(null).setFixedPrice(null).setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD);
 		errors = pp.validate(new MockCatalog(), new ValidationErrors());
 		errors.log(log);
 		Assert.assertEquals(errors.size(), 1);
@@ -53,11 +54,11 @@ public class TestPlanPhase {
 		String planName = "Foo";
 		String planNameExt = planName + "-";
 		
-		DefaultPlan p = new MockPlan().setName(planName);
-		DefaultPlanPhase ppDiscount = new MockPlanPhase().setPhaseType(PhaseType.DISCOUNT).setPlan(p);
-		DefaultPlanPhase ppTrial = new MockPlanPhase().setPhaseType(PhaseType.TRIAL).setPlan(p);
-		DefaultPlanPhase ppEvergreen = new MockPlanPhase().setPhaseType(PhaseType.EVERGREEN).setPlan(p);
-		DefaultPlanPhase ppFixedterm = new MockPlanPhase().setPhaseType(PhaseType.FIXEDTERM).setPlan(p);
+		DefaultPlan p = MockPlan.createBicycleNoTrialEvergreen1USD().setName(planName);
+		DefaultPlanPhase ppDiscount = MockPlanPhase.create1USDMonthlyEvergreen().setPhaseType(PhaseType.DISCOUNT).setPlan(p);
+		DefaultPlanPhase ppTrial = MockPlanPhase.create30DayTrial().setPhaseType(PhaseType.TRIAL).setPlan(p);
+		DefaultPlanPhase ppEvergreen = MockPlanPhase.create1USDMonthlyEvergreen().setPhaseType(PhaseType.EVERGREEN).setPlan(p);
+		DefaultPlanPhase ppFixedterm = MockPlanPhase.create1USDMonthlyEvergreen().setPhaseType(PhaseType.FIXEDTERM).setPlan(p);
 		
 		String ppnDiscount = DefaultPlanPhase.phaseName(p, ppDiscount);
 		String ppnTrial = DefaultPlanPhase.phaseName(p, ppTrial);

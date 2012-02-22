@@ -39,4 +39,6 @@ public interface InvoiceUserApi {
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
 
     public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate);
+    
+    public Invoice triggerInvoiceGeneration(UUID accountId, DateTime targetDate, boolean dryrun) throws InvoiceApiException;
 }

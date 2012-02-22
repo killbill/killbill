@@ -89,31 +89,35 @@ public class InvoiceDispatcher {
                     new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
             return;
         }
-
-        GlobalLock lock = null;
+        processAccount(accountId, targetDate, false);
+    }
+    
+    public Invoice processAccount(UUID accountId, DateTime targetDate, boolean dryrun) throws InvoiceApiException {
+		GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerService.INVOICE, accountId.toString(), NB_LOCK_TRY);
 
-            processAccountWithLock(accountId, targetDate);
+            return processAccountWithLock(accountId, targetDate, dryrun);
 
         } catch (LockFailedException e) {
             // Not good!
-            log.error(String.format("Failed to process invoice for account %s, subscription %s, targetDate %s",
-                    accountId.toString(), subscriptionId.toString(), targetDate), e);
+            log.error(String.format("Failed to process invoice for account %s, targetDate %s",
+                    accountId.toString(), targetDate), e);
         } finally {
             if (lock != null) {
                 lock.release();
             }
         }
+        return null;
     }
 
-    private void processAccountWithLock(final UUID accountId, final DateTime targetDate) throws InvoiceApiException {
+    private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDate, boolean dryrun) throws InvoiceApiException {
 
         Account account = accountUserApi.getAccountById(accountId);
         if (account == null) {
             log.error("Failed handling entitlement change.",
                     new InvoiceApiException(ErrorCode.INVOICE_ACCOUNT_ID_INVALID, accountId.toString()));
-            return;
+            return null;
         }
 
         SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccount(accountId);
@@ -139,10 +143,12 @@ public class InvoiceDispatcher {
             }
             outputDebugData(events, invoiceItemList);
 
-            if (invoice.getNumberOfItems() > 0) {
+            if (invoice.getNumberOfItems() > 0 && !dryrun) {
                 invoiceDao.create(invoice);
             }
         }
+        
+        return invoice;
     }
 
     private void outputDebugData(Collection<BillingEvent> events, Collection<InvoiceItem> invoiceItemList) {
