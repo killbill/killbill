@@ -30,9 +30,9 @@ public class BrainDeadProxyFactory {
 
 	public static interface ZombieControl {
 		
-		public void addResult(String method, Object result);
+		public ZombieControl addResult(String method, Object result);
 		
-		public void clearResults();
+		public ZombieControl clearResults();
 		
 	}
 
@@ -41,7 +41,7 @@ public class BrainDeadProxyFactory {
 		return (T) Proxy.newProxyInstance(clazz.getClassLoader(),
                 new Class[] { clazz , ZombieControl.class},
                 new InvocationHandler() {
-					private Map results = new HashMap<String,Object>();
+					private Map<String,Object> results = new HashMap<String,Object>();
 			
 					@Override
 					public Object invoke(Object proxy, Method method, Object[] args)
@@ -50,8 +50,10 @@ public class BrainDeadProxyFactory {
 						if(method.getDeclaringClass().equals(ZombieControl.class)) {
 							if(method.getName().equals("addResult")) {
 								results.put((String) args[0], args[1]);
+								return proxy;
 							} else if(method.getName().equals("clearResults")) {
 								results.clear();
+								return proxy;
 							}
 
 						} else {
