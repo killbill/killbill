@@ -48,15 +48,15 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
     private final EntitlementDao entitlementDao;
 
     private NotificationQueue nextBillingQueue;
-	private InvoiceListener listener;
+	private final InvoiceListener listener;
 
     @Inject
-	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService, 
+	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService,
 			InvoiceConfig config, EntitlementDao entitlementDao, InvoiceListener listener){
 		this.notificationQueueService = notificationQueueService;
 		this.config = config;
         this.entitlementDao = entitlementDao;
-        this.listener = listener; 
+        this.listener = listener;
 	}
 
     @Override
@@ -97,7 +97,7 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
                 }
                 @Override
                 public long getDaoClaimTimeMs() {
-                    return config.getDaoMaxReadyEvents();
+                    return config.getDaoClaimTimeMs();
                 }
             });
         } catch (NotificationQueueAlreadyExists e) {
@@ -121,5 +121,5 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
         listener.handleNextBillingDateEvent(subscriptionId, eventDateTime);
     }
 
- 
+
 }

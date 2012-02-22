@@ -1,6 +1,7 @@
 drop table if exists bst;
 create table bst (
-  event_key varchar(50) not null
+  event_id char(36) not null
+, event_key varchar(50) not null
 , account_key varchar(50) not null
 , requested_timestamp bigint not null
 , event varchar(50) not null
@@ -32,6 +33,7 @@ create table bst (
 , next_state varchar(32) default null
 , next_subscription_id varchar(100) default null
 , next_bundle_id varchar(100) default null
+, primary key(event_id)
 ) engine=innodb;
 create index bst_key_index on bst (event_key, requested_timestamp asc);
 
