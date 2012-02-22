@@ -72,6 +72,7 @@ import static org.testng.Assert.fail;
 @Guice(modules = AnalyticsTestModule.class)
 public class TestAnalyticsService
 {
+    private static final UUID ID = UUID.randomUUID();
     private static final String KEY = "12345";
     private static final String ACCOUNT_KEY = "pierre-12345";
     private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something", "pierre", new DateTime(DateTimeZone.UTC));
@@ -165,7 +166,7 @@ public class TestAnalyticsService
         final String priceList = "something";
 
         transition = new SubscriptionTransitionData(
-            UUID.randomUUID(),
+            ID,
             subscriptionId,
             bundle.getId(),
             EntitlementEvent.EventType.API_USER,
@@ -182,6 +183,7 @@ public class TestAnalyticsService
             priceList
         );
         expectedTransition = new BusinessSubscriptionTransition(
+            ID,
             KEY,
             ACCOUNT_KEY,
             requestedTransitionTime,
