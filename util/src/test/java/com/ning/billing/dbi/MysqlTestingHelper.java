@@ -46,7 +46,7 @@ public class MysqlTestingHelper
 
     private static final String DB_NAME = "test_killbill";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "";
+    private static final String PASSWORD = "root";
 
     private File dbDir;
     private MysqldResource mysqldResource;
@@ -77,7 +77,6 @@ public class MysqlTestingHelper
 
     public void startMysql() throws IOException
     {
-
         if (isUsingLocalInstance()) {
             return;
         }
@@ -90,6 +89,7 @@ public class MysqlTestingHelper
         final Map<String, String> dbOpts = new HashMap<String, String>();
         dbOpts.put(MysqldResourceI.PORT, Integer.toString(port));
         dbOpts.put(MysqldResourceI.INITIALIZE_USER, "true");
+        dbOpts.put(MysqldResourceI.INITIALIZE_PASSWORD, PASSWORD);
         dbOpts.put(MysqldResourceI.INITIALIZE_USER_NAME, USERNAME);
         dbOpts.put("default-time-zone", "+00:00");
 

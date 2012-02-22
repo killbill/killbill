@@ -5,10 +5,34 @@ CREATE TABLE custom_fields (
   object_type varchar(30) NOT NULL,
   field_name varchar(30) NOT NULL,
   field_value varchar(255) NOT NULL,
+  created_date datetime NOT NULL,
+  updated_date datetime NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE INDEX custom_fields_object_id_object_type ON custom_fields(object_id, object_type);
 CREATE UNIQUE INDEX custom_fields_unique ON custom_fields(object_id, object_type, field_name);
+
+DROP TABLE IF EXISTS custom_field_history;
+CREATE TABLE custom_field_history (
+  id char(36) NOT NULL,
+  object_id char(36) NOT NULL,
+  object_type varchar(30) NOT NULL,
+  field_name varchar(30) NOT NULL,
+  field_value varchar(255) NOT NULL,
+  change_type char(6) NOT NULL,
+  date datetime NOT NULL
+) ENGINE=innodb;
+CREATE INDEX custom_field_history_object_id_object_type ON custom_fields(object_id, object_type);
+
+CREATE TRIGGER store_custom_field_history_on_insert AFTER INSERT ON custom_fields
+    FOR EACH ROW
+        INSERT INTO custom_field_history (id, object_id, object_type, field_name, field_value, change_type, date)
+        VALUES (NEW.id, NEW.object_id, NEW.object_type, NEW.field_name, NEW.field_value, 'CREATE', NEW.created_date);
+
+CREATE TRIGGER store_custom_field_history_on_update AFTER UPDATE ON custom_fields
+    FOR EACH ROW
+        INSERT INTO custom_field_history (id, object_id, object_type, field_name, field_value, change_type, date)
+        VALUES (NEW.id, NEW.object_id, NEW.object_type, NEW.field_name, NEW.field_value, 'UPDATE', NEW.updated_date);
 
 DROP TABLE IF EXISTS tag_descriptions;
 DROP TABLE IF EXISTS tag_definitions;
@@ -16,8 +40,9 @@ CREATE TABLE tag_definitions (
   id char(36) NOT NULL,
   name varchar(20) NOT NULL,
   created_by varchar(50) NOT NULL,
-  creation_date datetime NOT NULL,
   description varchar(200) NOT NULL,
+  created_date datetime NOT NULL,
+  updated_date datetime NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX tag_definitions_name ON tag_definitions(name);

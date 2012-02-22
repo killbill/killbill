@@ -150,7 +150,7 @@ public class ClockMock extends DefaultClock {
     }
 
     private DateTime adjustFromAbsolute(DateTime input) {
-        return input.plus(deltaFromRealityMs);
+        return truncateMs(input.plus(deltaFromRealityMs));
     }
 
 }

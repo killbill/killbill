@@ -22,7 +22,7 @@ public enum ErrorCode {
      * Range 0 : COMMON EXCEPTIONS
      */
     NOT_IMPLEMENTED(1, "Api not implemented yet"),
-
+    DATA_TRUNCATION(2, "Data truncation error. (%s)"),
     /*
      *
      * Range 1000 : ENTITLEMENTS

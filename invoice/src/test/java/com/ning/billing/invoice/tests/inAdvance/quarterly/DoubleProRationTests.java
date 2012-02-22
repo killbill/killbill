@@ -37,7 +37,8 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime targetDate = buildDateTime(2011, 1, 1);
         DateTime endDate = buildDateTime(2011, 4, 27);
 
-        BigDecimal expectedValue = FOURTEEN.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        BigDecimal expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
@@ -47,7 +48,8 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime targetDate = buildDateTime(2011, 1, 7);
         DateTime endDate = buildDateTime(2011, 4, 27);
 
-        BigDecimal expectedValue = FOURTEEN.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        BigDecimal expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
@@ -57,7 +59,8 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime targetDate = buildDateTime(2011, 1, 15);
         DateTime endDate = buildDateTime(2011, 4, 27);
 
-        BigDecimal expectedValue = ONE.add(FOURTEEN.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        BigDecimal expectedValue = ONE.add(FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
@@ -68,8 +71,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(ONE);
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
@@ -81,9 +85,10 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
@@ -95,9 +100,10 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
@@ -109,9 +115,10 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
@@ -123,9 +130,10 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
@@ -137,8 +145,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime endDate = buildDateTime(2011, 8, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(TWO);
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }

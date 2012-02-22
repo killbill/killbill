@@ -21,7 +21,10 @@ import static org.testng.Assert.fail;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.TransactionCallback;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
@@ -31,6 +34,7 @@ import com.google.inject.Stage;
 import com.ning.billing.account.glue.AccountModuleWithEmbeddedDb;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.BusService;
+import org.testng.annotations.BeforeMethod;
 
 public abstract class AccountDaoTestBase {
     protected AccountModuleWithEmbeddedDb module;
@@ -67,5 +71,30 @@ public abstract class AccountDaoTestBase {
     public void stopMysql()
     {
         module.stopDb();
+    }
+
+    @BeforeMethod(alwaysRun = true)
+    public void cleanupData() {
+        dbi.inTransaction(new TransactionCallback<Void>() {
+            @Override
+            public Void inTransaction(Handle h, TransactionStatus status) throws Exception {
+                h.execute("truncate table accounts");
+                h.execute("truncate table entitlement_events");
+                h.execute("truncate table subscriptions");
+                h.execute("truncate table bundles");
+                h.execute("truncate table notifications");
+                h.execute("truncate table claimed_notifications");
+                h.execute("truncate table invoices");
+                h.execute("truncate table fixed_invoice_items");
+                h.execute("truncate table recurring_invoice_items");
+                h.execute("truncate table tag_definitions");
+                h.execute("truncate table tags");
+                h.execute("truncate table custom_fields");
+                h.execute("truncate table invoice_payments");
+                h.execute("truncate table payment_attempts");
+                h.execute("truncate table payments");
+                return null;
+            }
+        });
     }
 }
