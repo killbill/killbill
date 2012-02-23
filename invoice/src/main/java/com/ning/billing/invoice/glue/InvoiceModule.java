@@ -66,8 +66,11 @@ public class InvoiceModule extends AbstractModule {
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
     }
 
-    protected void installInvoiceListener() {
+    protected void installGlobalLocker() {
         install(new GlobalLockerModule());
+    }
+
+    protected void installInvoiceListener() {
         bind(InvoiceListener.class).asEagerSingleton();
     }
 
@@ -81,5 +84,6 @@ public class InvoiceModule extends AbstractModule {
         installInvoiceDao();
         installInvoiceUserApi();
         installInvoicePaymentApi();
+        installGlobalLocker();
     }
 }
