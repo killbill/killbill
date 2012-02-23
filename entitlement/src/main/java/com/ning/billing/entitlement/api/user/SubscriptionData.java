@@ -201,6 +201,7 @@ public class SubscriptionData implements Subscription {
         return null;
     }
 
+    @Override
     public SubscriptionTransition getPreviousTransition() {
 
         if (transitions == null) {
@@ -306,16 +307,12 @@ public class SubscriptionData implements Subscription {
             throw new EntitlementError(String.format("Unexpected policy type %s", policy.toString()));
         }
 
-        //
-        // If CTD is null or CTD in the past, we default to the start date of the current phase
-        //
-        DateTime effectiveDate = chargedThroughDate;
-        if (chargedThroughDate == null || chargedThroughDate.isBefore(clock.getUTCNow())) {
-            effectiveDate = getCurrentPhaseStart();
+        if (chargedThroughDate == null) {
+            return requestedDate;
+        } else {
+            return chargedThroughDate.isBefore(requestedDate) ? requestedDate : chargedThroughDate;
         }
-        return effectiveDate;
     }
-
 
     public DateTime getCurrentPhaseStart() {
 
