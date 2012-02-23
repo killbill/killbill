@@ -70,8 +70,7 @@ public interface TagDefinitionSqlDao extends EntityDao<TagDefinition> {
             String name = result.getString("name");
             String description = result.getString("description");
             String createdBy = result.getString("created_by");
-            DateTime creationDate = new DateTime(result.getTimestamp("creation_date"));
-            return new DefaultTagDefinition(id, name, description, createdBy, creationDate);
+            return new DefaultTagDefinition(id, name, description, createdBy);
         }
     }
 
@@ -86,7 +85,6 @@ public interface TagDefinitionSqlDao extends EntityDao<TagDefinition> {
                         q.bind("id", tagDefinition.getId().toString());
                         q.bind("name", tagDefinition.getName());
                         q.bind("createdBy", tagDefinition.getCreatedBy());
-                        q.bind("creationDate", tagDefinition.getCreationDate().toDate());
                         q.bind("description", tagDefinition.getDescription());
                     }
                 };

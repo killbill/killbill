@@ -66,7 +66,7 @@ public abstract class ProRationTestBase extends InvoicingTestBase {
             numberOfBillingCycles = numberOfBillingCycles.add(item.getNumberOfCycles());
         }
 
-        return numberOfBillingCycles;
+        return numberOfBillingCycles.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay) throws InvalidDateSequenceException {
@@ -77,6 +77,6 @@ public abstract class ProRationTestBase extends InvoicingTestBase {
             numberOfBillingCycles = numberOfBillingCycles.add(item.getNumberOfCycles());
         }
 
-        return numberOfBillingCycles;
+        return numberOfBillingCycles.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 }

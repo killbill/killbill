@@ -184,7 +184,7 @@ public class DefaultInvoice implements Invoice {
             return true;
         }
 
-        return lastPaymentAttempt.plusDays(numberOfDays).isBefore(targetDate);
+        return !lastPaymentAttempt.plusDays(numberOfDays).isAfter(targetDate);
     }
 
     @Override

@@ -52,10 +52,6 @@ public class InvoiceModule extends AbstractModule {
         bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
     }
 
-    protected void installClock() {
-    	install(new ClockModule());
-    }
-
     protected void installConfig() {
         final InvoiceConfig config = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
         bind(InvoiceConfig.class).toInstance(config);

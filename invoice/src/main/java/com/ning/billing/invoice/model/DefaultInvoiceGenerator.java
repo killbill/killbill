@@ -233,34 +233,4 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             return fixedPriceInvoiceItem;
         }
     }
-
-//    // assumption: startDate is in the user's time zone
-//    private DateTime calculateSegmentEndDate(final DateTime startDate, final DateTime nextEndDate,
-//                                             final int billCycleDay, final BillingPeriod billingPeriod) {
-//        int dayOfMonth = startDate.getDayOfMonth();
-//        int maxDayOfMonth = startDate.dayOfMonth().getMaximumValue();
-//
-//        DateTime nextBillingDate;
-//
-//        // if the start date is not on the bill cycle day, move it to the nearest following date that works
-//        if ((billCycleDay > maxDayOfMonth) || (dayOfMonth == billCycleDay)) {
-//            nextBillingDate = startDate.plusMonths(billingPeriod.getNumberOfMonths());
-//        } else {
-//            MutableDateTime proposedDate = startDate.toMutableDateTime();
-//
-//            if (dayOfMonth < billCycleDay) {
-//                // move the end date forward to the bill cycle date (same month)
-//                int effectiveBillCycleDay = (billCycleDay > maxDayOfMonth) ? maxDayOfMonth : billCycleDay;
-//                nextBillingDate = proposedDate.dayOfMonth().set(effectiveBillCycleDay).toDateTime();
-//            } else {
-//                // go to the next month
-//                proposedDate = proposedDate.monthOfYear().add(1);
-//                maxDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
-//                int effectiveBillCycleDay = (billCycleDay > maxDayOfMonth) ? maxDayOfMonth : billCycleDay;
-//                nextBillingDate = proposedDate.dayOfMonth().set(effectiveBillCycleDay).toDateTime();
-//            }
-//        }
-//
-//        return nextBillingDate.isAfter(nextEndDate) ? nextEndDate : nextBillingDate;
-//    }
 }
