@@ -28,6 +28,7 @@ import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.setup.PaymentConfig;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
@@ -96,7 +97,7 @@ public class RetryService implements KillbillService {
     private void retry(String paymentAttemptId) {
         PaymentInfo paymentInfo = paymentApi.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
 
-        if (paymentInfo != null && !"Processed".equalsIgnoreCase(paymentInfo.getStatus())) {
+        if (paymentInfo != null && !PaymentStatus.Processed.equals(PaymentStatus.valueOf(paymentInfo.getStatus()))) {
             paymentApi.createPayment(UUID.fromString(paymentAttemptId));
         }
     }
