@@ -95,6 +95,10 @@ public abstract class TestPaymentDao {
 
         Assert.assertEquals(attempt, attempt3);
 
+        PaymentAttempt attempt4 = paymentDao.getPaymentAttemptById(attempt3.getPaymentAttemptId());
+
+        Assert.assertEquals(attempt3, attempt4);
+
         PaymentInfo originalPaymentInfo = new PaymentInfo.Builder().setPaymentId(paymentId)
                                                            .setAmount(invoiceAmount)
                                                            .setStatus("Processed")

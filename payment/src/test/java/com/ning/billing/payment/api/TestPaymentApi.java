@@ -112,7 +112,7 @@ public abstract class TestPaymentApi {
 
     }
 
-    private PaymentProviderAccount setupAccountWithPaymentMethod() throws AccountApiException {
+    private PaymentProviderAccount setupAccountWithPaypalPaymentMethod() throws AccountApiException {
         final Account account = testHelper.createTestPayPalAccount();
         paymentApi.createPaymentProviderAccount(account);
 
@@ -141,9 +141,10 @@ public abstract class TestPaymentApi {
     }
 
     @Test(enabled=true)
-    public void testCreatePaymentMethod() throws AccountApiException {
-        PaymentProviderAccount account = setupAccountWithPaymentMethod();
+    public void testCreatePaypalPaymentMethod() throws AccountApiException {
+        PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
         assertNotNull(account);
+        Either<PaymentError, List<PaymentMethodInfo>> paymentMethodsOrError = paymentApi.getPaymentMethods(account.getAccountKey());
     }
 
     @Test(enabled=true)
@@ -170,7 +171,7 @@ public abstract class TestPaymentApi {
 
     @Test(enabled=true)
     public void testCannotDeleteDefaultPaymentMethod() throws AccountApiException {
-        PaymentProviderAccount account = setupAccountWithPaymentMethod();
+        PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
 
         Either<PaymentError, Void> errorOrVoid = paymentApi.deletePaymentMethod(account.getAccountKey(), account.getDefaultPaymentMethodId());
 
@@ -207,4 +208,5 @@ public abstract class TestPaymentApi {
         assertTrue(errorOrVoid1.isRight());
         assertTrue(errorOrVoid2.isLeft());
     }
+
 }

@@ -17,6 +17,7 @@
 package com.ning.billing.payment.api;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -38,6 +39,7 @@ public interface PaymentApi {
 
     List<Either<PaymentError, PaymentInfo>> createPayment(String accountKey, List<String> invoiceIds);
     List<Either<PaymentError, PaymentInfo>> createPayment(Account account, List<String> invoiceIds);
+    Either<PaymentError, PaymentInfo> createPayment(UUID paymentAttemptId);
 
     List<Either<PaymentError, PaymentInfo>> createRefund(Account account, List<String> invoiceIds); //TODO
 
@@ -52,5 +54,7 @@ public interface PaymentApi {
     List<PaymentInfo> getPaymentInfo(List<String> invoiceIds);
 
     PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId);
+
+    PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptId);
 
 }

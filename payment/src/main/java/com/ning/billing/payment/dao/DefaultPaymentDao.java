@@ -19,6 +19,7 @@ package com.ning.billing.payment.dao;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.Inject;
@@ -81,6 +82,21 @@ public class DefaultPaymentDao implements PaymentDao {
     @Override
     public List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<String> invoiceIds) {
         return sqlDao.getPaymentAttemptsForInvoiceIds(invoiceIds);
+    }
+
+    @Override
+    public void updatePaymentAttemptWithRetryInfo(UUID paymentAttemptId, int retryCount, DateTime nextRetryDate) {
+        sqlDao.updatePaymentAttemptWithRetryInfo(paymentAttemptId.toString(), retryCount, nextRetryDate);
+    }
+
+    @Override
+    public PaymentAttempt getPaymentAttemptById(UUID paymentAttemptId) {
+        return sqlDao.getPaymentAttemptById(paymentAttemptId.toString());
+    }
+
+    @Override
+    public PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptIdStr) {
+        return sqlDao.getPaymentInfoForPaymentAttemptId(paymentAttemptIdStr);
     }
 
 }

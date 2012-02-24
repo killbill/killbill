@@ -16,6 +16,8 @@
 
 package com.ning.billing.payment;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
@@ -23,6 +25,9 @@ import com.google.inject.Inject;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.setup.PaymentConfig;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
@@ -36,11 +41,15 @@ public class RetryService implements KillbillService {
 
     private final NotificationQueueService notificationQueueService;
     private final PaymentConfig config;
+    private final PaymentApi paymentApi;
     private NotificationQueue retryQueue;
 
     @Inject
-    public RetryService(NotificationQueueService notificationQueueService, PaymentConfig config) {
+    public RetryService(NotificationQueueService notificationQueueService,
+                        PaymentConfig config,
+                        PaymentApi paymentApi) {
         this.notificationQueueService = notificationQueueService;
+        this.paymentApi = paymentApi;
         this.config = config;
     }
 
@@ -85,6 +94,10 @@ public class RetryService implements KillbillService {
     }
 
     private void retry(String paymentAttemptId) {
-        // TODO
+        PaymentInfo paymentInfo = paymentApi.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
+
+        if (paymentInfo != null && !"Processed".equalsIgnoreCase(paymentInfo.getStatus())) {
+            paymentApi.createPayment(UUID.fromString(paymentAttemptId));
+        }
     }
 }
