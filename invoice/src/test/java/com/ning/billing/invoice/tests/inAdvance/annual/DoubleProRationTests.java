@@ -81,9 +81,10 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime endDate = buildDateTime(2012, 1, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(THREE_HUNDRED_AND_SIXTY_FIVE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(THREE_HUNDRED_AND_SIXTY_SIX, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.add(TWELVE.divide(THREE_HUNDRED_AND_SIXTY_SIX, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
@@ -95,9 +96,10 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime endDate = buildDateTime(2012, 1, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(THREE_HUNDRED_AND_SIXTY_FIVE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(THREE_HUNDRED_AND_SIXTY_SIX, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.add(TWELVE.divide(THREE_HUNDRED_AND_SIXTY_SIX, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
@@ -109,9 +111,10 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime endDate = buildDateTime(2012, 1, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(THREE_HUNDRED_AND_SIXTY_FIVE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(THREE_HUNDRED_AND_SIXTY_SIX, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.add(TWELVE.divide(THREE_HUNDRED_AND_SIXTY_SIX, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
@@ -123,9 +126,10 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
         DateTime endDate = buildDateTime(2012, 1, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(THREE_HUNDRED_AND_SIXTY_FIVE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(THREE_HUNDRED_AND_SIXTY_SIX, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.add(TWELVE.divide(THREE_HUNDRED_AND_SIXTY_SIX, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }

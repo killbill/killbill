@@ -23,6 +23,7 @@ import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
 import com.ning.billing.util.glue.GlobalLockerModule;
+import com.ning.billing.util.notificationq.NotificationConfig;
 import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -48,6 +49,10 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
 
     public void stopDb() {
         helper.stopMysql();
+    }
+
+    public IDBI getDbi() {
+        return dbi;
     }
 
     public RecurringInvoiceItemSqlDao getInvoiceItemSqlDao() {
@@ -79,5 +84,24 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
 
         install(new BusModule());
+    }
+
+    private class TestNotificationConfig implements NotificationConfig {
+        @Override
+        public boolean isNotificationProcessingOff() {
+            return false;
+        }
+        @Override
+        public long getNotificationSleepTimeMs() {
+            return 10;
+        }
+        @Override
+        public int getDaoMaxReadyEvents() {
+            return 1;
+        }
+        @Override
+        public long getDaoClaimTimeMs() {
+            return 60000;
+        }
     }
 }

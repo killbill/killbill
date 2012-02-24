@@ -16,14 +16,51 @@
 
 package com.ning.billing.catalog;
 
+import javax.annotation.Nullable;
+
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.TimeUnit;
 
-import javax.annotation.Nullable;
-
 public class MockPlanPhase extends DefaultPlanPhase {
+	
+	public static MockPlanPhase create1USDMonthlyEvergreen() {
+		return (MockPlanPhase) new MockPlanPhase(BillingPeriod.MONTHLY,
+				PhaseType.EVERGREEN,
+				new DefaultDuration().setUnit(TimeUnit.UNLIMITED),
+				MockInternationalPrice.create1USD(),
+				null).setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());
+	}
+	
+	public static MockPlanPhase createUSDMonthlyEvergreen(String reccuringUSDPrice, String fixedPrice) {
+		return new MockPlanPhase(BillingPeriod.MONTHLY,
+				PhaseType.EVERGREEN,
+				new DefaultDuration().setUnit(TimeUnit.UNLIMITED),
+				(reccuringUSDPrice == null) ? null : MockInternationalPrice.createUSD(reccuringUSDPrice),
+				(fixedPrice == null) ? null :MockInternationalPrice.createUSD(fixedPrice));
+	}
+
+	public static MockPlanPhase createUSDMonthlyFixedTerm(String reccuringUSDPrice, String fixedPrice, int durationInMonths) {
+		return new MockPlanPhase(BillingPeriod.MONTHLY,
+				PhaseType.FIXEDTERM,
+				new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(durationInMonths),
+				(reccuringUSDPrice == null) ? null : MockInternationalPrice.createUSD(reccuringUSDPrice),
+				(fixedPrice == null) ? null :MockInternationalPrice.createUSD(fixedPrice));
+	}
+
+	public static MockPlanPhase create30DayTrial() {
+		return createTrial(30);
+	}
+
+	public static MockPlanPhase createTrial(int days) {
+		return new MockPlanPhase(BillingPeriod.NO_BILLING_PERIOD,
+				PhaseType.TRIAL,
+				new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(days),
+				null,
+				MockInternationalPrice.create1USD()
+				);
+	}
 
     public MockPlanPhase(
     		BillingPeriod billingPeriod, 
@@ -38,6 +75,7 @@ public class MockPlanPhase extends DefaultPlanPhase {
 		setFixedPrice(fixedPrice);
 	}
     
+  
     public MockPlanPhase() {
         this(new MockInternationalPrice(), null);
 	}

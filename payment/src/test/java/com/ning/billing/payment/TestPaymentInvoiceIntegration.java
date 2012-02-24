@@ -90,7 +90,7 @@ public class TestPaymentInvoiceIntegration {
 
     @AfterClass(alwaysRun = true)
     public void stopMysql() {
-        helper.stopMysql();
+        if (helper != null) helper.stopMysql();
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -116,9 +116,11 @@ public class TestPaymentInvoiceIntegration {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws EventBusException {
-        eventBus.unregister(invoiceProcessor);
-        eventBus.unregister(paymentInfoReceiver);
-        eventBus.stop();
+        if (eventBus != null) {
+            eventBus.unregister(invoiceProcessor);
+            eventBus.unregister(paymentInfoReceiver);
+            eventBus.stop();
+        }
     }
 
     @Test

@@ -201,12 +201,14 @@ public class SubscriptionData implements Subscription {
         return null;
     }
 
+    @Override
     public SubscriptionTransition getPreviousTransition() {
-
         if (transitions == null) {
             return null;
         }
-        SubscriptionTransition latestSubscription = null;
+
+        // ensure that the latestSubscription is always set; prevents NPEs
+        SubscriptionTransition latestSubscription = transitions.get(0);
         for (SubscriptionTransition cur : transitions) {
             if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
                 break;
@@ -306,16 +308,12 @@ public class SubscriptionData implements Subscription {
             throw new EntitlementError(String.format("Unexpected policy type %s", policy.toString()));
         }
 
-        //
-        // If CTD is null or CTD in the past, we default to the start date of the current phase
-        //
-        DateTime effectiveDate = chargedThroughDate;
-        if (chargedThroughDate == null || chargedThroughDate.isBefore(clock.getUTCNow())) {
-            effectiveDate = getCurrentPhaseStart();
+        if (chargedThroughDate == null) {
+            return requestedDate;
+        } else {
+            return chargedThroughDate.isBefore(requestedDate) ? requestedDate : chargedThroughDate;
         }
-        return effectiveDate;
     }
-
 
     public DateTime getCurrentPhaseStart() {
 
@@ -330,10 +328,12 @@ public class SubscriptionData implements Subscription {
                 // Skip future events
                 continue;
             }
-            if (cur.getEventType() == EventType.PHASE) {
+            if (cur.getEventType() == EventType.PHASE
+                    || (cur.getEventType() == EventType.API_USER && cur.getApiEventType() == ApiEventType.CHANGE)) {
                 return cur.getEffectiveTransitionTime();
             }
         }
+
         // CREATE event
         return transitions.get(0).getEffectiveTransitionTime();
     }

@@ -16,16 +16,22 @@
 
 package com.ning.billing.catalog;
 
-import com.ning.billing.catalog.api.Currency;
-
 import java.math.BigDecimal;
 
-public class MockInternationalPrice extends DefaultInternationalPrice {
+import com.ning.billing.catalog.api.Currency;
 
-	public MockInternationalPrice() {
-		setPrices(new DefaultPrice[] {
-			new DefaultPrice().setCurrency(Currency.USD).setValue(new BigDecimal(1))
-		});
+public class MockInternationalPrice extends DefaultInternationalPrice {
+	
+	public static MockInternationalPrice create0USD() {
+		return new MockInternationalPrice(new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.ZERO));
+	}
+	
+	public static MockInternationalPrice create1USD() {
+		return new MockInternationalPrice(new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.ONE));
+	}
+
+	public static MockInternationalPrice createUSD(String value) {
+		return new MockInternationalPrice(new DefaultPrice().setCurrency(Currency.USD).setValue(new BigDecimal(value)));
 	}
 
 	public MockInternationalPrice(DefaultPrice... price) {

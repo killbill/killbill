@@ -16,6 +16,7 @@
 
 package com.ning.billing.account.dao;
 
+import java.sql.DataTruncation;
 import java.util.List;
 import java.util.UUID;
 
@@ -89,7 +90,6 @@ public class DefaultAccountDao implements AccountDao {
     public void create(final Account account) throws AccountApiException {
         final String key = account.getExternalKey();
         try {
-
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao transactionalDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
@@ -109,6 +109,8 @@ public class DefaultAccountDao implements AccountDao {
         } catch (RuntimeException re) {
             if (re.getCause() instanceof AccountApiException) {
                 throw (AccountApiException) re.getCause();
+            } else if (re.getCause() instanceof DataTruncation) {
+                throw new AccountApiException(ErrorCode.DATA_TRUNCATION, re.getCause().getMessage());
             } else {
                 throw re;
             }

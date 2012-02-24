@@ -166,7 +166,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
         for (TimedMigration cur : migrationEvents) {
 
             if (cur.getEventType() == EventType.PHASE) {
-                PhaseEvent nextPhaseEvent = PhaseEventData.getNextPhaseEvent(cur.getPhase().getName(), subscriptionData, now, cur.getEventTime());
+                PhaseEvent nextPhaseEvent = PhaseEventData.createNextPhaseEvent(cur.getPhase().getName(), subscriptionData, now, cur.getEventTime());
                 events.add(nextPhaseEvent);
 
             } else if (cur.getEventType() == EventType.API_USER) {

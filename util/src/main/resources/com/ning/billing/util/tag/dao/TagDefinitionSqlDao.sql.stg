@@ -1,24 +1,32 @@
 group TagDefinitionDao;
 
+fields(prefix) ::= <<
+    <prefix>id,
+    <prefix>name,
+    <prefix>created_by,
+    <prefix>description,
+    <prefix>created_date,
+    <prefix>updated_date
+>>
+
 get() ::= <<
-  SELECT id, name, created_by, creation_date, description
+  SELECT <fields()>
   FROM tag_definitions;
 >>
 
 create() ::= <<
-  INSERT INTO tag_definitions(id, name, created_by, creation_date, description)
-  VALUES(:id, :name, :createdBy, :creationDate, :description);
+  INSERT INTO tag_definitions(<fields()>)
+  VALUES(:id, :name, :createdBy, :description, NOW(), NOW());
 >>
 
 update() ::= <<
   UPDATE tag_definitions
-  SET name = :name, created_by = :createdBy, creation_date = :creationDate,
-      description = :description)
+  SET name = :name, created_by = :createdBy, description = :description, updated_date = NOW())
   WHERE id = :id;
 >>
 
 load() ::= <<
-  SELECT id, name, created_by, creation_date, description
+  SELECT <fields()>
   FROM tag_definitions
   WHERE id = :id;
 >>
@@ -40,7 +48,7 @@ tagDefinitionUsageCount() ::= <<
 >>
 
 getByName() ::= <<
-  SELECT id, name, created_by, creation_date, description
+  SELECT <fields()>
   FROM tag_definitions
   WHERE name = :name;
 >>

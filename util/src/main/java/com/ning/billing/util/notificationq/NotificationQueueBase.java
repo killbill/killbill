@@ -182,6 +182,11 @@ public abstract class NotificationQueueBase implements NotificationQueue {
         waitForNotificationStartCompletion();
     }
 
+    @Override
+    public String toString() {
+        return getFullQName();
+    }
+
     private void completedQueueStop() {
     	synchronized (this) {
     		stoppedComplete = true;

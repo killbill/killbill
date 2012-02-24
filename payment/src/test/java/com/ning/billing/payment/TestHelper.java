@@ -53,7 +53,7 @@ public class TestHelper {
                                                                      .firstNameLength(name.length())
                                                                      .externalKey(externalKey)
                                                                      .phone("123-456-7890")
-                                                                     .email("ccuser@example.com")
+                                                                     .email("ccuser" + RandomStringUtils.randomAlphanumeric(8) + "@example.com")
                                                                      .currency(Currency.USD)
                                                                      .billingCycleDay(1)
                                                                      .build();

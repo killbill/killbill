@@ -36,14 +36,15 @@ public class AnalyticsListener
     }
 
     @Subscribe
-    public void handleSubscriptionTransitionChange(final SubscriptionTransition event) throws AccountApiException {
+    public void handleSubscriptionTransitionChange(final SubscriptionTransition event) throws AccountApiException
+    {
         switch (event.getTransitionType()) {
             case MIGRATE_ENTITLEMENT:
                 // TODO do nothing for now
-            break;
+                break;
             case CREATE:
                 bstRecorder.subscriptionCreated(event);
-            break;
+                break;
             case CANCEL:
                 bstRecorder.subscriptionCancelled(event);
                 break;
