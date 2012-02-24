@@ -22,8 +22,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.joda.time.DateTime;
-
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
@@ -43,7 +41,7 @@ public class MockTagDefinitionDao implements TagDefinitionDao {
 
     @Override
     public TagDefinition create(String definitionName, String description, String createdBy) throws TagDefinitionApiException {
-        TagDefinition tag = new DefaultTagDefinition(UUID.randomUUID(), definitionName, description, createdBy, new DateTime());
+        TagDefinition tag = new DefaultTagDefinition(UUID.randomUUID(), definitionName, description, createdBy);
 
         tags.put(definitionName, tag);
         return tag;
