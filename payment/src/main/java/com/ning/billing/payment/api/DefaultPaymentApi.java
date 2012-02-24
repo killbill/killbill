@@ -142,10 +142,10 @@ public class DefaultPaymentApi implements PaymentApi {
             Account account = accountUserApi.getAccountById(paymentAttempt.getAccountId());
 
             if (invoice != null && account != null) {
-                if (invoice.getBalance().compareTo(BigDecimal.ZERO) == 0 ) {
+                if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
                     // TODO: send a notification that invoice was ignored?
                     log.info("Received invoice for payment with outstanding amount of 0 {} ", invoice);
-                    Either.left(new PaymentError("invoice_balance_0", "Invoice balance was 0"));
+                    return Either.left(new PaymentError("invoice_balance_0", "Invoice balance was 0 or less"));
                 }
                 else {
                     return processPayment(getPaymentProviderPlugin(account), account, invoice, paymentAttempt);
@@ -164,10 +164,11 @@ public class DefaultPaymentApi implements PaymentApi {
         for (String invoiceId : invoiceIds) {
             Invoice invoice = invoicePaymentApi.getInvoice(UUID.fromString(invoiceId));
 
-            if (invoice.getBalance().compareTo(BigDecimal.ZERO) == 0 ) {
+            if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
                 // TODO: send a notification that invoice was ignored?
                 log.info("Received invoice for payment with balance of 0 {} ", invoice);
-                Either.left(new PaymentError("invoice_balance_0", "Invoice balance was 0"));
+                Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("invoice_balance_0", "Invoice balance was 0 or less"));
+                processedPaymentsOrErrors.add(result);
             }
             else {
                 PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice);
