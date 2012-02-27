@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -37,6 +38,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.PaymentAttempt;
@@ -53,17 +55,38 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
 
     @SqlQuery
     @Mapper(PaymentAttemptMapper.class)
+    PaymentAttempt getPaymentAttemptById(@Bind("payment_attempt_id") String paymentAttemptId);
+
+    @SqlQuery
+    @Mapper(PaymentAttemptMapper.class)
     PaymentAttempt getPaymentAttemptForInvoiceId(@Bind("invoice_id") String invoiceId);
+
+    @SqlQuery
+    @Mapper(PaymentAttemptMapper.class)
+    List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(@BindIn("invoiceIds") List<String> invoiceIds);
+
+    @SqlQuery
+    @Mapper(PaymentInfoMapper.class)
+    PaymentInfo getPaymentInfoForPaymentAttemptId(@Bind("payment_attempt_id") String paymentAttemptId);
 
     @SqlUpdate
     void updatePaymentAttemptWithPaymentId(@Bind("payment_attempt_id") String paymentAttemptId,
                                            @Bind("payment_id") String paymentId);
 
     @SqlUpdate
+    void updatePaymentAttemptWithRetryInfo(@Bind("payment_attempt_id") String paymentAttemptId,
+                                           @Bind("retry_count") int retryCount,
+                                           @Bind("next_retry_dt") DateTime nextRetryDate);
+
+    @SqlUpdate
     void updatePaymentInfo(@Bind("payment_method") String paymentMethod,
                            @Bind("payment_id") String paymentId,
                            @Bind("card_type") String cardType,
                            @Bind("card_country") String cardCountry);
+
+    @SqlQuery
+    @Mapper(PaymentInfoMapper.class)
+    List<PaymentInfo> getPaymentInfos(@BindIn("invoiceIds") List<String> invoiceIds);
 
     @SqlUpdate
     void insertPaymentInfo(@Bind(binder = PaymentInfoBinder.class) PaymentInfo paymentInfo);

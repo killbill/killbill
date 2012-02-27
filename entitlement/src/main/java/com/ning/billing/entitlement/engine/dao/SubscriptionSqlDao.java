@@ -46,7 +46,8 @@ import java.util.UUID;
 @ExternalizedSqlViaStringTemplate3()
 public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, CloseMe, Transmogrifier {
 
-    @SqlUpdate
+
+	@SqlUpdate
     public void insertSubscription(@Bind(binder = ISubscriptionDaoBinder.class) SubscriptionData sub);
 
     @SqlUpdate
@@ -62,7 +63,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
 
     @SqlUpdate
     public void updateSubscription(@Bind("id") String id, @Bind("active_version") long activeVersion, @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd);
-
+   
     public static class ISubscriptionDaoBinder implements Binder<Bind, SubscriptionData> {
 
         private Date getDate(DateTime dateTime) {

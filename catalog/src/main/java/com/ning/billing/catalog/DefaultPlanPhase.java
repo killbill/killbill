@@ -77,7 +77,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 	 * @see com.ning.billing.catalog.IPlanPhase#getRecurringPrice()
 	 */
     @Override
-	public InternationalPrice getRecurringPrice() {
+	public DefaultInternationalPrice getRecurringPrice() {
         return recurringPrice;
     }
 

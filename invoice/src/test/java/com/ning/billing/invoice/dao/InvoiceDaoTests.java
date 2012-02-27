@@ -169,7 +169,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     @Test
     public void testGetInvoicesForPayment() {
         List<UUID> invoices;
-        DateTime notionalDate = new DateTime();
+        DateTime notionalDate = clock.getUTCNow();
 
         // create a new invoice with one item
         UUID accountId = UUID.randomUUID();

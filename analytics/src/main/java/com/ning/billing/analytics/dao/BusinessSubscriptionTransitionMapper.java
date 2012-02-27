@@ -38,20 +38,20 @@ public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<Bus
     public BusinessSubscriptionTransition map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException
     {
         BusinessSubscription prev = new BusinessSubscription(
-            r.getString(5), // productName
-            r.getString(6), // productType
-            r.getString(7) == null ? null : ProductCategory.valueOf(r.getString(7)), // productCategory
-            r.getString(8), // slug
-            r.getString(9),  // phase
-            r.getString(10),  // billing period
-            BigDecimal.valueOf(r.getDouble(11)), // price
-            r.getString(12), // priceList
-            BigDecimal.valueOf(r.getDouble(13)), // mrr
-            r.getString(14), // currency
-            r.getLong(15) == 0 ? null : new DateTime(r.getLong(15), DateTimeZone.UTC), // startDate
-            r.getString(16) == null ? null : SubscriptionState.valueOf(r.getString(16)), // state
-            r.getString(17) == null ? null : UUID.fromString(r.getString(17)), // subscriptionId
-            r.getString(18) == null ? null : UUID.fromString(r.getString(18)) //bundleId
+            r.getString(6), // productName
+            r.getString(7), // productType
+            r.getString(8) == null ? null : ProductCategory.valueOf(r.getString(8)), // productCategory
+            r.getString(9), // slug
+            r.getString(10),  // phase
+            r.getString(11),  // billing period
+            BigDecimal.valueOf(r.getDouble(12)), // price
+            r.getString(13), // priceList
+            BigDecimal.valueOf(r.getDouble(14)), // mrr
+            r.getString(15), // currency
+            r.getLong(16) == 0 ? null : new DateTime(r.getLong(16), DateTimeZone.UTC), // startDate
+            r.getString(17) == null ? null : SubscriptionState.valueOf(r.getString(17)), // state
+            r.getString(18) == null ? null : UUID.fromString(r.getString(18)), // subscriptionId
+            r.getString(19) == null ? null : UUID.fromString(r.getString(19)) //bundleId
         );
 
         // Avoid creating a dummy subscriptions with all null fields
@@ -60,20 +60,20 @@ public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<Bus
         }
 
         BusinessSubscription next = new BusinessSubscription(
-            r.getString(19), // productName
-            r.getString(20), // productType
-            r.getString(21) == null ? null : ProductCategory.valueOf(r.getString(21)), // productCategory
-            r.getString(22), // slug8
-            r.getString(23),  // phase
-            r.getString(24),  // billing period
-            BigDecimal.valueOf(r.getDouble(25)), // price
-            r.getString(26), // priceList
-            BigDecimal.valueOf(r.getDouble(27)), // mrr
-            r.getString(28), // currency
-            r.getLong(29) == 0 ? null : new DateTime(r.getLong(29), DateTimeZone.UTC), // startDate
-            r.getString(30) == null ? null : SubscriptionState.valueOf(r.getString(30)), // state
-            r.getString(31) == null ? null : UUID.fromString(r.getString(31)), // subscriptionId
-            r.getString(32) == null ? null : UUID.fromString(r.getString(32)) //bundleId
+            r.getString(20), // productName
+            r.getString(21), // productType
+            r.getString(22) == null ? null : ProductCategory.valueOf(r.getString(22)), // productCategory
+            r.getString(23), // slug8
+            r.getString(24),  // phase
+            r.getString(25),  // billing period
+            BigDecimal.valueOf(r.getDouble(26)), // price
+            r.getString(27), // priceList
+            BigDecimal.valueOf(r.getDouble(28)), // mrr
+            r.getString(29), // currency
+            r.getLong(30) == 0 ? null : new DateTime(r.getLong(30), DateTimeZone.UTC), // startDate
+            r.getString(31) == null ? null : SubscriptionState.valueOf(r.getString(31)), // state
+            r.getString(32) == null ? null : UUID.fromString(r.getString(32)), // subscriptionId
+            r.getString(33) == null ? null : UUID.fromString(r.getString(33)) //bundleId
         );
 
         // Avoid creating a dummy subscriptions with all null fields
@@ -81,12 +81,13 @@ public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<Bus
             next = null;
         }
 
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.valueOf(r.getString(4));
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.valueOf(r.getString(5));
 
         return new BusinessSubscriptionTransition(
-            r.getString(1),
+            UUID.fromString(r.getString(1)),
             r.getString(2),
-            new DateTime(r.getLong(3), DateTimeZone.UTC),
+            r.getString(3),
+            new DateTime(r.getLong(4), DateTimeZone.UTC),
             event,
             prev,
             next

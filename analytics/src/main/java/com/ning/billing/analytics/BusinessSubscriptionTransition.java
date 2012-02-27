@@ -18,6 +18,8 @@ package com.ning.billing.analytics;
 
 import org.joda.time.DateTime;
 
+import java.util.UUID;
+
 /**
  * Describe a state change between two BusinessSubscription
  * <p/>
@@ -25,6 +27,7 @@ import org.joda.time.DateTime;
  */
 public class BusinessSubscriptionTransition
 {
+    private final UUID id;
     private final String key;
     private final String accountKey;
     private final DateTime requestedTimestamp;
@@ -32,8 +35,11 @@ public class BusinessSubscriptionTransition
     private final BusinessSubscription previousSubscription;
     private final BusinessSubscription nextSubscription;
 
-    public BusinessSubscriptionTransition(final String key, final String accountKey, final DateTime requestedTimestamp, final BusinessSubscriptionEvent event, final BusinessSubscription previousSubscription, final BusinessSubscription nextsubscription)
+    public BusinessSubscriptionTransition(final UUID id, final String key, final String accountKey, final DateTime requestedTimestamp, final BusinessSubscriptionEvent event, final BusinessSubscription previousSubscription, final BusinessSubscription nextsubscription)
     {
+        if (id == null) {
+            throw new IllegalArgumentException("An event must have an id");
+        }
         if (key == null) {
             throw new IllegalArgumentException("An event must have an key");
         }
@@ -47,12 +53,18 @@ public class BusinessSubscriptionTransition
             throw new IllegalArgumentException("No event specified");
         }
 
+        this.id = id;
         this.key = key;
         this.accountKey = accountKey;
         this.requestedTimestamp = requestedTimestamp;
         this.event = event;
         this.previousSubscription = previousSubscription;
         this.nextSubscription = nextsubscription;
+    }
+
+    public UUID getId()
+    {
+        return id;
     }
 
     public BusinessSubscriptionEvent getEvent()
@@ -90,10 +102,11 @@ public class BusinessSubscriptionTransition
     {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessSubscriptionTransition");
-        sb.append("{event=").append(event);
+        sb.append("{accountKey='").append(accountKey).append('\'');
+        sb.append(", id=").append(id);
         sb.append(", key='").append(key).append('\'');
-        sb.append(", accountKey='").append(accountKey).append('\'');
         sb.append(", requestedTimestamp=").append(requestedTimestamp);
+        sb.append(", event=").append(event);
         sb.append(", previousSubscription=").append(previousSubscription);
         sb.append(", nextSubscription=").append(nextSubscription);
         sb.append('}');
@@ -112,13 +125,16 @@ public class BusinessSubscriptionTransition
 
         final BusinessSubscriptionTransition that = (BusinessSubscriptionTransition) o;
 
+        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
+            return false;
+        }
         if (event != null ? !event.equals(that.event) : that.event != null) {
             return false;
         }
-        if (key != null ? !key.equals(that.key) : that.key != null) {
+        if (id != null ? !id.equals(that.id) : that.id != null) {
             return false;
         }
-        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
+        if (key != null ? !key.equals(that.key) : that.key != null) {
             return false;
         }
         if (nextSubscription != null ? !nextSubscription.equals(that.nextSubscription) : that.nextSubscription != null) {
@@ -137,7 +153,8 @@ public class BusinessSubscriptionTransition
     @Override
     public int hashCode()
     {
-        int result = key != null ? key.hashCode() : 0;
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (key != null ? key.hashCode() : 0);
         result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (requestedTimestamp != null ? requestedTimestamp.hashCode() : 0);
         result = 31 * result + (event != null ? event.hashCode() : 0);

@@ -43,6 +43,7 @@ public @interface BusinessSubscriptionTransitionBinder
             {
                 public void bind(final SQLStatement q, final BusinessSubscriptionTransitionBinder bind, final BusinessSubscriptionTransition arg)
                 {
+                    q.bind("event_id", arg.getId().toString());
                     q.bind("event_key", arg.getKey());
                     q.bind("account_key", arg.getAccountKey());
                     q.bind("requested_timestamp", arg.getRequestedTimestamp().getMillis());

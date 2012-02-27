@@ -28,13 +28,11 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
-import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -42,13 +40,8 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.notificationq.NotificationKey;
-import com.ning.billing.util.notificationq.NotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
 public class DefaultInvoiceDao implements InvoiceDao {
     private final static Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
@@ -174,17 +167,22 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
                     InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
                     invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments);
-
-                    InvoiceCreationNotification event;
-                    event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
-                                                                  invoice.getBalance(), invoice.getCurrency(),
-                                                                  invoice.getInvoiceDate());
-                    eventBus.postFromTransaction(event, invoiceDao);
                 }
 
                 return null;
             }
         });
+
+        // TODO: move this inside the transaction once the bus is persistent
+        InvoiceCreationNotification event;
+        event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
+                                                      invoice.getBalance(), invoice.getCurrency(),
+                                                      invoice.getInvoiceDate());
+        try {
+            eventBus.post(event);
+        } catch (Bus.EventBusException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

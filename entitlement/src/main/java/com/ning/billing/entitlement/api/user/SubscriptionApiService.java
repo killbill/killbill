@@ -73,7 +73,7 @@ public class SubscriptionApiService {
 
             TimedPhase nextTimedPhase = curAndNextPhases[1];
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                    PhaseEventData.getNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, processedDate, nextTimedPhase.getStartPhase()) :
+                    PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, processedDate, nextTimedPhase.getStartPhase()) :
                         null;
             List<EntitlementEvent> events = new ArrayList<EntitlementEvent>();
             events.add(creationEvent);
@@ -147,7 +147,7 @@ public class SubscriptionApiService {
 
         TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now);
         PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                PhaseEventData.getNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
+                PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
                     null;
         if (nextPhaseEvent != null) {
             uncancelEvents.add(nextPhaseEvent);
@@ -199,7 +199,7 @@ public class SubscriptionApiService {
             ActionPolicy policy = planChangeResult.getPolicy();
             PriceList newPriceList = planChangeResult.getNewPriceList();
 
-            Plan newPlan = catalogService.getFullCatalog().findPlan(productName, term, newPriceList.getName(), requestedDate);
+            Plan newPlan = catalogService.getFullCatalog().findPlan(productName, term, newPriceList.getName(), requestedDate, subscription.getStartDate());
             DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, requestedDate);
 
             TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
@@ -216,7 +216,7 @@ public class SubscriptionApiService {
 
             TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                    PhaseEventData.getNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
+                    PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
                         null;
                     List<EntitlementEvent> changeEvents = new ArrayList<EntitlementEvent>();
                     // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.

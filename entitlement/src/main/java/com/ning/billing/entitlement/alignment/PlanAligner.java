@@ -236,7 +236,8 @@ public class PlanAligner  {
             planStartDate = bundleStartDate;
             break;
         case CHANGE_OF_PLAN:
-            throw new EntitlementError(String.format("Not implemented yet %s", alignment));
+            planStartDate = requestedDate;
+            break;
         case CHANGE_OF_PRICELIST:
             throw new EntitlementError(String.format("Not implemented yet %s", alignment));
         default:
@@ -267,6 +268,7 @@ public class PlanAligner  {
 
             result.add(new TimedPhase(cur, curPhaseStart));
 
+            // STEPH check for duration null instead TimeUnit UNLIMITED
             if (cur.getPhaseType() != PhaseType.EVERGREEN) {
                 Duration curPhaseDuration = cur.getDuration();
                 nextPhaseStart = DefaultClock.addDuration(curPhaseStart, curPhaseDuration);
@@ -283,6 +285,7 @@ public class PlanAligner  {
         return result;
     }
 
+    // STEPH check for non evergreen Plans and what happens
     private TimedPhase getTimedPhase(List<TimedPhase> timedPhases, DateTime effectiveDate, WhichPhase which) {
         TimedPhase cur = null;
         TimedPhase next = null;

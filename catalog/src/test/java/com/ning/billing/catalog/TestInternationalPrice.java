@@ -66,6 +66,7 @@ public class TestInternationalPrice {
   public void testPriceInitialization() throws URISyntaxException, CatalogApiException  {
 	  StandaloneCatalog c = new MockCatalog();
 	  c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
+	  c.getCurrentPlans()[0].getFinalPhase().getRecurringPrice().setPrices(null);
 	  c.initialize(c, new URI("foo://bar"));
 	  Assert.assertEquals(c.getCurrentPlans()[0].getFinalPhase().getRecurringPrice().getPrice(Currency.GBP), new BigDecimal(0));
   }

@@ -100,9 +100,19 @@ public abstract class TestPaymentApi {
         assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getPaymentId());
         assertEquals(paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0), now.withMillisOfSecond(0).withSecondOfMinute(0));
 
+        List<PaymentInfo> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        assertNotNull(paymentInfos);
+        assertTrue(paymentInfos.size() > 0);
+
+        PaymentInfo paymentInfoFromGet = paymentInfos.get(0);
+        assertEquals(paymentInfo, paymentInfoFromGet);
+
+        PaymentAttempt paymentAttemptFromGet = paymentApi.getPaymentAttemptForInvoiceId(invoice.getId().toString());
+        assertEquals(paymentAttempt, paymentAttemptFromGet);
+
     }
 
-    private PaymentProviderAccount setupAccountWithPaymentMethod() throws AccountApiException {
+    private PaymentProviderAccount setupAccountWithPaypalPaymentMethod() throws AccountApiException {
         final Account account = testHelper.createTestPayPalAccount();
         paymentApi.createPaymentProviderAccount(account);
 
@@ -131,9 +141,10 @@ public abstract class TestPaymentApi {
     }
 
     @Test(enabled=true)
-    public void testCreatePaymentMethod() throws AccountApiException {
-        PaymentProviderAccount account = setupAccountWithPaymentMethod();
+    public void testCreatePaypalPaymentMethod() throws AccountApiException {
+        PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
         assertNotNull(account);
+        Either<PaymentError, List<PaymentMethodInfo>> paymentMethodsOrError = paymentApi.getPaymentMethods(account.getAccountKey());
     }
 
     @Test(enabled=true)
@@ -160,7 +171,7 @@ public abstract class TestPaymentApi {
 
     @Test(enabled=true)
     public void testCannotDeleteDefaultPaymentMethod() throws AccountApiException {
-        PaymentProviderAccount account = setupAccountWithPaymentMethod();
+        PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
 
         Either<PaymentError, Void> errorOrVoid = paymentApi.deletePaymentMethod(account.getAccountKey(), account.getDefaultPaymentMethodId());
 
@@ -197,4 +208,5 @@ public abstract class TestPaymentApi {
         assertTrue(errorOrVoid1.isRight());
         assertTrue(errorOrVoid2.isLeft());
     }
+
 }

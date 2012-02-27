@@ -32,9 +32,9 @@ public class MockCatalog extends StandaloneCatalog {
 	
 	public MockCatalog() {
 		setEffectiveDate(new Date());
-		populateProducts();
+		setProducts(MockProduct.createAll());
+		setPlans(MockPlan.createAll());
 		populateRules();
-		populatePlans();
 		populatePriceLists();
 	}
 	
@@ -49,25 +49,6 @@ public class MockCatalog extends StandaloneCatalog {
 			CaseCreateAlignment[] caseCreateAlignment
 			){
 		
-	}
-
-	public void populateProducts() {
-		String[] names = getProductNames();
-		DefaultProduct[] products = new DefaultProduct[names.length];
-		for(int i = 0; i < names.length; i++) {
-			products[i] = new DefaultProduct(names[i], ProductCategory.BASE);
-		}
-		setProducts(products);
-	}
-	
-	public void populatePlans() {
-		DefaultProduct[] products = getCurrentProducts();
-		DefaultPlan[] plans = new DefaultPlan[products.length];
-		for(int i = 0; i < products.length; i++) {
-			DefaultPlanPhase phase = new DefaultPlanPhase().setPhaseType(PhaseType.EVERGREEN).setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice());
-			plans[i] = new MockPlan().setName(products[i].getName().toLowerCase() + "-plan").setProduct(products[i]).setFinalPhase(phase);
-		}
-		setPlans(plans);
 	}
 
 	public void populatePriceLists() {

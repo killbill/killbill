@@ -45,10 +45,9 @@ public class TagMapper implements ResultSetMapper<Tag> {
         } catch (Throwable t) {
             String description = result.getString("tag_description");
             String createdBy = result.getString("created_by");
-            DateTime creationDate = new DateTime(result.getDate("creation_date"));
 
             UUID tagDefinitionId = UUID.fromString(result.getString("tag_definition_id"));
-            TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, name, description, createdBy, creationDate);
+            TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, name, description, createdBy);
             tag = new DescriptiveTag(id, tagDefinition, addedBy, addedDate);
         }
 

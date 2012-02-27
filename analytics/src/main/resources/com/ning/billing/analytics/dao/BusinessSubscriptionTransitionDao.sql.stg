@@ -2,7 +2,8 @@ group BusinessSubscriptionTransition;
 
 getTransitions(event_key) ::= <<
   select
-    event_key
+    event_id
+  , event_key
   , account_key
   , requested_timestamp
   , event
@@ -41,8 +42,9 @@ getTransitions(event_key) ::= <<
 >>
 
 createTransition() ::= <<
-  insert into bst(
-    event_key
+  insert ignore into bst(
+    event_id
+  , event_key
   , account_key
   , requested_timestamp
   , event
@@ -75,7 +77,8 @@ createTransition() ::= <<
   , next_subscription_id
   , next_bundle_id
   ) values (
-    :event_key
+    :event_id
+  , :event_key
   , :account_key
   , :requested_timestamp
   , :event

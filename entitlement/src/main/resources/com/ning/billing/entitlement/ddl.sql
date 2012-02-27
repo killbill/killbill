@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS entitlement_events;
 CREATE TABLE entitlement_events (
     id int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -16,6 +17,9 @@ CREATE TABLE entitlement_events (
     is_active bool DEFAULT 1,
     PRIMARY KEY(id)
 ) ENGINE=innodb;
+CREATE INDEX idx_ent_1 ON entitlement_events(subscription_id,is_active,effective_dt);
+CREATE INDEX idx_ent_2 ON entitlement_events(subscription_id,effective_dt,created_dt,requested_dt,id);
+
 
 DROP TABLE IF EXISTS subscriptions;
 CREATE TABLE subscriptions (

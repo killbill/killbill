@@ -46,7 +46,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
 
         // add control tag definitions
         for (ControlTagType controlTag : ControlTagType.values()) {
-            definitionList.add(new DefaultTagDefinition(controlTag.toString(), controlTag.getDescription(), null, null));
+            definitionList.add(new DefaultTagDefinition(controlTag.toString(), controlTag.getDescription(), null));
         }
 
         return definitionList;
@@ -69,7 +69,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_ALREADY_EXISTS, definitionName);
         }
 
-        TagDefinition definition = new DefaultTagDefinition(definitionName, description, createdBy, clock.getUTCNow());
+        TagDefinition definition = new DefaultTagDefinition(definitionName, description, createdBy);
         dao.create(definition);
         return definition;
     }
