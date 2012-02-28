@@ -22,13 +22,18 @@ public class ColumnInfo {
     private final int scale;
     private final int precision;
     private final boolean isNullable;
+    private final int maximumLength;
+    private final String dataType;
 
-    public ColumnInfo(String tableName, String columnName, int scale, int precision, boolean nullable) {
+    public ColumnInfo(String tableName, String columnName, int scale, int precision,
+                      boolean nullable, int maximumLength, String dataType) {
         this.tableName = tableName;
         this.columnName = columnName;
         this.scale = scale;
         this.precision = precision;
         isNullable = nullable;
+        this.maximumLength = maximumLength;
+        this.dataType = dataType;
     }
 
     public String getTableName() {
@@ -49,5 +54,13 @@ public class ColumnInfo {
 
     public boolean getIsNullable() {
         return isNullable;
+    }
+
+    public int getMaximumLength() {
+        return maximumLength;
+    }
+
+    public String getDataType() {
+        return dataType;
     }
 }

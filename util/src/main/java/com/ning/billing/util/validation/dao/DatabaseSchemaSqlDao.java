@@ -42,8 +42,10 @@ public interface DatabaseSchemaSqlDao {
             final Integer scale = r.getInt("numeric_scale");
             final Integer precision = r.getInt("numeric_precision");
             final boolean isNullable = r.getBoolean("is_nullable");
+            final Integer maximumLength = r.getInt("character_maximum_length");
+            final String dataType = r.getString("data_type");
 
-            return new ColumnInfo(tableName, columnName, scale, precision, isNullable);
+            return new ColumnInfo(tableName, columnName, scale, precision, isNullable, maximumLength, dataType);
         }
     }
 }

@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -84,15 +85,77 @@ public class ValidationManager {
                     return true;
                 }
 
-                if (!columnInfo.getIsNullable()) {
-                    if (value == null) {return false;}
-                }
+                if (!hasValidNullability(columnInfo, value)) {return false;}
+                if (!isValidLengthString(columnInfo, value)) {return false;}
+                if (!isValidLengthChar(columnInfo, value)) {return false;}
+                if (!hasValidPrecision(columnInfo, value)) {return false;}
+                if (!hasValidScale(columnInfo, value)) {return false;}
             } catch (NoSuchFieldException e) {
                 // if the field doesn't exist, assume the configuration is faulty and skip this property
             } catch (IllegalAccessException e) {
                 // TODO: something? deliberate no op?
             }
 
+        }
+
+        return true;
+    }
+
+    private boolean hasValidNullability(final ColumnInfo columnInfo, final Object value) {
+        if (!columnInfo.getIsNullable()) {
+            if (value == null) {return false;}
+        }
+
+        return true;
+    }
+
+    private boolean isValidLengthString(final ColumnInfo columnInfo, final Object value) {
+        if (columnInfo.getMaximumLength() != 0) {
+            if (value != null) {
+                if (value.toString().length() > columnInfo.getMaximumLength()) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean isValidLengthChar(final ColumnInfo columnInfo, final Object value) {
+        if (columnInfo.getDataType().equals("char")) {
+            if (value== null) {
+                return false;
+            } else {
+                if (value.toString().length() != columnInfo.getMaximumLength()) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean hasValidPrecision(final ColumnInfo columnInfo, final Object value) {
+        if (columnInfo.getPrecision() != 0) {
+            if (value != null) {
+                BigDecimal bigDecimalValue = new BigDecimal(value.toString());
+                if (bigDecimalValue.precision() > columnInfo.getPrecision()) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean hasValidScale(final ColumnInfo columnInfo, final Object value) {
+        if (columnInfo.getScale() != 0) {
+            if (value != null) {
+                BigDecimal bigDecimalValue = new BigDecimal(value.toString());
+                if (bigDecimalValue.scale() > columnInfo.getScale()) {
+                    return false;
+                }
+            }
         }
 
         return true;

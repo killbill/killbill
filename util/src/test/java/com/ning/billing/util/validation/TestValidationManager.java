@@ -56,7 +56,7 @@ public class TestValidationManager {
         helper.startMysql();
         StringBuilder ddl = new StringBuilder();
         ddl.append(String.format("DROP TABLE IF EXISTS %s;", TABLE_NAME));
-        ddl.append(String.format("CREATE TABLE %s (column1 varchar(1), column2 char(2) NOT NULL, column3 numeric(10,4), column4 datetime) ENGINE = innodb;", TABLE_NAME));
+        ddl.append(String.format("CREATE TABLE %s (column1 varchar(25), column2 char(2) NOT NULL, column3 numeric(10,4), column4 datetime) ENGINE = innodb;", TABLE_NAME));
         helper.initDb(ddl.toString());
     }
 
@@ -87,7 +87,7 @@ public class TestValidationManager {
         String STRING_FIELD_2 = "column2";
         String STRING_FIELD_2_PROPERTY = "stringField2";
 
-        SimpleTestClass testObject = new SimpleTestClass("a", null, 7.9, new DateTime());
+        SimpleTestClass testObject = new SimpleTestClass(null, null, 7.9, new DateTime());
 
         vm.setConfiguration(testObject.getClass(), STRING_FIELD_2_PROPERTY, vm.getColumnInfo(TABLE_NAME, STRING_FIELD_2));
 
@@ -98,9 +98,56 @@ public class TestValidationManager {
         assertNotNull(configuration);
         assertTrue(configuration.hasMapping(STRING_FIELD_2_PROPERTY));
 
+        // set char field to value that is too short
         assertFalse(vm.validate(testObject));
+        testObject.setStringField2("a");
+        assertFalse(vm.validate(testObject));
+
+        // set char to excessively long string
+        testObject.setStringField2("abc");
+        assertFalse(vm.validate(testObject));
+
+        // set char to proper length
         testObject.setStringField2("ab");
         assertTrue(vm.validate(testObject));
+
+        // add the first string field and add a string that exceeds the length
+        final String STRING_FIELD_1 = "column1";
+        final String STRING_FIELD_1_PROPERTY = "stringField1";
+        vm.setConfiguration(testObject.getClass(), STRING_FIELD_1_PROPERTY, vm.getColumnInfo(TABLE_NAME, STRING_FIELD_1));
+
+        assertTrue(vm.validate(testObject));
+        testObject.setStringField1("This is a long string that exceeds the length limit for column 1.");
+        assertFalse(vm.validate(testObject));
+        testObject.setStringField1("This is a short string.");
+        assertTrue(vm.validate(testObject));
+
+        // verify numeric values
+        final String NUMERIC_FIELD = "column3";
+        final String NUMERIC_FIELD_PROPERTY = "numericField1";
+        vm.setConfiguration(testObject.getClass(), NUMERIC_FIELD_PROPERTY, vm.getColumnInfo(TABLE_NAME, NUMERIC_FIELD));
+        assertTrue(vm.validate(testObject));
+
+        // set the value to have more than 4 decimal places
+        testObject.setNumericField1(0.123456);
+        assertFalse(vm.validate(testObject));
+
+        // set the value to have more than 10 digits
+        testObject.setNumericField1(12345678901234D);
+        assertFalse(vm.validate(testObject));
+
+        // set to a valid value
+        testObject.setNumericField1(1234567890);
+        assertTrue(vm.validate(testObject));
+
+        // check another valid number
+        testObject.setNumericField1(123456.7891);
+        assertTrue(vm.validate(testObject));
+
+        // check another valid number
+        testObject.setNumericField1(12345678.91);
+        assertTrue(vm.validate(testObject));
+
 
     }
 
