@@ -29,6 +29,7 @@ import com.google.common.collect.Collections2;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
+import org.joda.time.DateTimeZone;
 
 public class MockPaymentDao implements PaymentDao {
     private final Map<String, PaymentInfo> payments = new ConcurrentHashMap<String, PaymentInfo>();
@@ -86,7 +87,13 @@ public class MockPaymentDao implements PaymentDao {
     public void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry) {
         PaymentInfo existingPayment = payments.get(paymentId);
         if (existingPayment != null) {
-            PaymentInfo payment = existingPayment.cloner().setPaymentMethod(paymentMethodType).setCardType(cardType).setCardCountry(cardCountry).build();
+            PaymentInfo payment = existingPayment.cloner()
+                    .setPaymentMethod(paymentMethodType)
+                    .setCardType(cardType)
+                    .setCardCountry(cardCountry)
+                    // TODO pass the clock?
+                    .setUpdatedDate(new DateTime(DateTimeZone.UTC))
+                    .build();
             payments.put(paymentId, payment);
         }
     }

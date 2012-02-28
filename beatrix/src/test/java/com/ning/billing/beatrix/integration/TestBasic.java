@@ -356,7 +356,7 @@ public class TestBasic {
             busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         }
 
-        clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
 
         assertTrue(busHandler.isCompleted(DELAY));
 

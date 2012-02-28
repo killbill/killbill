@@ -167,20 +167,22 @@ public class TestBusHandler {
 
     private void assertEqualsNicely(NextEvent received) {
 
-        boolean foundIt = false;
-        Iterator<NextEvent> it = nextExpectedEvent.iterator();
-        while (it.hasNext()) {
-            NextEvent ev = it.next();
-            if (ev == received) {
-                it.remove();
-                foundIt = true;
-                break;
+        synchronized(this) {
+            boolean foundIt = false;
+            Iterator<NextEvent> it = nextExpectedEvent.iterator();
+            while (it.hasNext()) {
+                NextEvent ev = it.next();
+                if (ev == received) {
+                    it.remove();
+                    foundIt = true;
+                    break;
+                }
             }
-        }
-        if (!foundIt) {
-            Joiner joiner = Joiner.on(" ");
-            log.error("TestBusHandler Received event " + received + "; expected " + joiner.join(nextExpectedEvent));
-            Assert.fail();
+            if (!foundIt) {
+                Joiner joiner = Joiner.on(" ");
+                log.error("TestBusHandler Received event " + received + "; expected " + joiner.join(nextExpectedEvent));
+                Assert.fail();
+            }
         }
     }
 }

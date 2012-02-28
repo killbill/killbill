@@ -65,7 +65,7 @@ getPaymentAttemptForInvoiceId() ::= <<
 updatePaymentAttemptWithPaymentId() ::= <<
     UPDATE payment_attempts
        SET payment_id = :payment_id,
-           updated_dt = NOW()
+           updated_dt = :updated_dt
      WHERE payment_attempt_id = :payment_attempt_id
 >>
 
@@ -79,7 +79,7 @@ updatePaymentInfo() ::= <<
        SET payment_method = :payment_method,
            card_type = :card_type,
            card_country = :card_country,
-           updated_dt = NOW()
+           updated_dt = :updated_dt
      WHERE payment_id = :payment_id
 >>
 
@@ -87,7 +87,7 @@ updatePaymentAttemptWithRetryInfo() ::= <<
     UPDATE payment_attempts
        SET retry_count = :retry_count,
            next_retry_dt = :next_retry_dt,
-           updated_dt = NOW()
+           updated_dt = :updated_dt
      WHERE payment_attempt_id = :payment_attempt_id
 >>
 
