@@ -60,7 +60,7 @@ public class PaymentAttempt {
         this.invoiceDate = invoiceDate;
         this.paymentAttemptDate = paymentAttemptDate == null ? new DateTime(DateTimeZone.UTC) : paymentAttemptDate;
         this.paymentId = paymentId;
-        this.retryCount = retryCount;
+        this.retryCount = retryCount == null ? 0 : retryCount;
         this.nextRetryDate = nextRetryDate;
         this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
         this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
@@ -285,26 +285,32 @@ public class PaymentAttempt {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (getClass() == obj.getClass()) {
-            PaymentAttempt other = (PaymentAttempt)obj;
-            if (obj == other) {
-                return true;
-            }
-            else {
-                return Objects.equal(paymentAttemptId, other.paymentAttemptId) &&
-                       Objects.equal(invoiceId, other.invoiceId) &&
-                       Objects.equal(accountId, other.accountId) &&
-                       Objects.equal(amount, other.amount) &&
-                       Objects.equal(currency, other.currency) &&
-                       Objects.equal(invoiceDate, other.invoiceDate) &&
-                       Objects.equal(paymentAttemptDate, other.paymentAttemptDate) &&
-                       Objects.equal(retryCount, other.retryCount) &&
-                       Objects.equal(nextRetryDate, other.nextRetryDate) &&
-                       Objects.equal(paymentId, other.paymentId);
-            }
-        }
-        return false;
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final PaymentAttempt that = (PaymentAttempt) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) return false;
+        if (amount != null ? !(amount.compareTo(that.amount) == 0) : that.amount != null) return false;
+        if (createdDate != null ? !(getUnixTimestamp(createdDate) == getUnixTimestamp(that.createdDate)) : that.createdDate != null) return false;
+        if (currency != that.currency) return false;
+        if (invoiceDate != null ? !(getUnixTimestamp(invoiceDate) == getUnixTimestamp(that.invoiceDate)) : that.invoiceDate != null) return false;
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) return false;
+        if (nextRetryDate != null ? !(getUnixTimestamp(nextRetryDate) == getUnixTimestamp(that.nextRetryDate)) : that.nextRetryDate != null)
+            return false;
+        if (paymentAttemptDate != null ? !(getUnixTimestamp(paymentAttemptDate) == getUnixTimestamp(that.paymentAttemptDate)) : that.paymentAttemptDate != null)
+            return false;
+        if (paymentAttemptId != null ? !paymentAttemptId.equals(that.paymentAttemptId) : that.paymentAttemptId != null)
+            return false;
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) return false;
+        if (retryCount != null ? !retryCount.equals(that.retryCount) : that.retryCount != null) return false;
+        if (updatedDate != null ? !(getUnixTimestamp(updatedDate) == getUnixTimestamp(that.updatedDate)) : that.updatedDate != null) return false;
+
+        return true;
     }
 
+    private static long getUnixTimestamp(final DateTime dateTime) {
+        return dateTime.getMillis() / 1000;
+    }
 }

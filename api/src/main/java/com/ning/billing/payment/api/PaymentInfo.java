@@ -310,31 +310,34 @@ public class PaymentInfo implements BusEvent {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (getClass() == obj.getClass()) {
-            PaymentInfo other = (PaymentInfo)obj;
-            if (obj == other) {
-                return true;
-            }
-            else {
-                return Objects.equal(amount, other.amount) &&
-                       Objects.equal(bankIdentificationNumber, other.bankIdentificationNumber) &&
-                       Objects.equal(paymentId, other.paymentId) &&
-                       Objects.equal(paymentNumber, other.paymentNumber) &&
-                       Objects.equal(referenceId, other.referenceId) &&
-                       Objects.equal(refundAmount, other.refundAmount) &&
-                       Objects.equal(status, other.status) &&
-                       Objects.equal(type, other.type) &&
-                       Objects.equal(paymentMethodId, other.paymentMethodId) &&
-                       Objects.equal(paymentMethod, other.paymentMethod) &&
-                       Objects.equal(cardType, other.cardType) &&
-                       Objects.equal(cardCoutry, other.cardCoutry) &&
-                       Objects.equal(effectiveDate, other.effectiveDate) &&
-                       Objects.equal(createdDate, other.createdDate) &&
-                       Objects.equal(updatedDate, other.updatedDate);
-            }
-        }
-        return false;
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final PaymentInfo that = (PaymentInfo) o;
+
+        if (amount != null ? !(amount.compareTo(that.amount) == 0) : that.amount != null) return false;
+        if (bankIdentificationNumber != null ? !bankIdentificationNumber.equals(that.bankIdentificationNumber) : that.bankIdentificationNumber != null)
+            return false;
+        if (cardCoutry != null ? !cardCoutry.equals(that.cardCoutry) : that.cardCoutry != null) return false;
+        if (cardType != null ? !cardType.equals(that.cardType) : that.cardType != null) return false;
+        if (createdDate != null ? !(getUnixTimestamp(createdDate) == getUnixTimestamp(that.createdDate)) : that.createdDate != null) return false;
+        if (effectiveDate != null ? !(getUnixTimestamp(effectiveDate) == getUnixTimestamp(that.effectiveDate)) : that.effectiveDate != null)
+            return false;
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) return false;
+        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
+            return false;
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null)
+            return false;
+        if (paymentNumber != null ? !paymentNumber.equals(that.paymentNumber) : that.paymentNumber != null)
+            return false;
+        if (referenceId != null ? !referenceId.equals(that.referenceId) : that.referenceId != null) return false;
+        if (refundAmount != null ? !refundAmount.equals(that.refundAmount) : that.refundAmount != null) return false;
+        if (status != null ? !status.equals(that.status) : that.status != null) return false;
+        if (type != null ? !type.equals(that.type) : that.type != null) return false;
+        if (updatedDate != null ? !(getUnixTimestamp(updatedDate) == getUnixTimestamp(that.updatedDate)) : that.updatedDate != null) return false;
+
+        return true;
     }
 
     @Override
@@ -342,4 +345,7 @@ public class PaymentInfo implements BusEvent {
         return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethod=" + paymentMethod + ", cardType=" + cardType + ", cardCountry=" + cardCoutry + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
     }
 
+    private static long getUnixTimestamp(final DateTime dateTime) {
+        return dateTime.getMillis() / 1000;
+    }
 }
