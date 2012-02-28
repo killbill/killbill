@@ -266,7 +266,7 @@ public class TestBasic {
         Thread.sleep(600000);
     }
 
-    @Test(groups = "stress", enabled = false)
+    @Test(groups = "stress", enabled = true)
     public void stressTest() throws Exception {
         final int maxIterations = 7;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
