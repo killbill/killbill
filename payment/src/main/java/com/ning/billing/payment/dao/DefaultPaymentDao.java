@@ -16,23 +16,28 @@
 
 package com.ning.billing.payment.dao;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.util.clock.Clock;
 
 public class DefaultPaymentDao implements PaymentDao {
     private final PaymentSqlDao sqlDao;
+    private final Clock clock;
 
     @Inject
-    public DefaultPaymentDao(IDBI dbi) {
+    public DefaultPaymentDao(IDBI dbi, Clock clock) {
         this.sqlDao = dbi.onDemand(PaymentSqlDao.class);
+        this.clock = clock;
     }
 
     @Override
@@ -66,27 +71,37 @@ public class DefaultPaymentDao implements PaymentDao {
 
     @Override
     public void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String paymentId) {
-        sqlDao.updatePaymentAttemptWithPaymentId(paymentAttemptId.toString(), paymentId);
+        sqlDao.updatePaymentAttemptWithPaymentId(paymentAttemptId.toString(), paymentId, clock.getUTCNow().toDate());
     }
 
     @Override
     public void updatePaymentInfo(String type, String paymentId, String cardType, String cardCountry) {
-        sqlDao.updatePaymentInfo(type, paymentId, cardType, cardCountry);
+        sqlDao.updatePaymentInfo(type, paymentId, cardType, cardCountry, clock.getUTCNow().toDate());
     }
 
     @Override
     public List<PaymentInfo> getPaymentInfo(List<String> invoiceIds) {
-        return sqlDao.getPaymentInfos(invoiceIds);
+        if (invoiceIds == null || invoiceIds.size() == 0) {
+            return ImmutableList.<PaymentInfo>of();
+        } else {
+            return sqlDao.getPaymentInfos(invoiceIds);
+        }
     }
 
     @Override
     public List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<String> invoiceIds) {
-        return sqlDao.getPaymentAttemptsForInvoiceIds(invoiceIds);
+        if (invoiceIds == null || invoiceIds.size() == 0) {
+            return ImmutableList.<PaymentAttempt>of();
+        } else {
+            return sqlDao.getPaymentAttemptsForInvoiceIds(invoiceIds);
+        }
     }
 
     @Override
     public void updatePaymentAttemptWithRetryInfo(UUID paymentAttemptId, int retryCount, DateTime nextRetryDate) {
-        sqlDao.updatePaymentAttemptWithRetryInfo(paymentAttemptId.toString(), retryCount, nextRetryDate == null ? null : nextRetryDate.toDate());
+
+        final Date retryDate = nextRetryDate == null ? null : nextRetryDate.toDate();
+        sqlDao.updatePaymentAttemptWithRetryInfo(paymentAttemptId.toString(), retryCount, retryDate, clock.getUTCNow().toDate());
     }
 
     @Override

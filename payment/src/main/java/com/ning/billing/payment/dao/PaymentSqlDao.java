@@ -71,18 +71,22 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
 
     @SqlUpdate
     void updatePaymentAttemptWithPaymentId(@Bind("payment_attempt_id") String paymentAttemptId,
-                                           @Bind("payment_id") String paymentId);
+                                           @Bind("payment_id") String paymentId,
+                                           @Bind("updated_dt") Date updatedDate);
 
     @SqlUpdate
     void updatePaymentAttemptWithRetryInfo(@Bind("payment_attempt_id") String paymentAttemptId,
                                            @Bind("retry_count") int retryCount,
-                                           @Bind("next_retry_dt") Date nextRetryDate);
+                                           @Bind("next_retry_dt") Date nextRetryDate,
+                                           @Bind("updated_dt") Date updatedDate);
 
     @SqlUpdate
+
     void updatePaymentInfo(@Bind("payment_method") String paymentMethod,
                            @Bind("payment_id") String paymentId,
                            @Bind("card_type") String cardType,
-                           @Bind("card_country") String cardCountry);
+                           @Bind("card_country") String cardCountry,
+                           @Bind("updated_dt") Date updatedDate);
 
     @SqlQuery
     @Mapper(PaymentInfoMapper.class)

@@ -18,6 +18,7 @@ package com.ning.billing.payment.dao;
 
 import java.io.IOException;
 
+import com.ning.billing.util.clock.DefaultClock;
 import org.apache.commons.io.IOUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -45,6 +46,6 @@ public class TestPaymentDaoWithEmbeddedDb extends TestPaymentDao {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws IOException {
-        paymentDao = new DefaultPaymentDao(helper.getDBI());
+        paymentDao = new DefaultPaymentDao(helper.getDBI(), new DefaultClock());
     }
 }

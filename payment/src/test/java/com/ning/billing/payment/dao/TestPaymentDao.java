@@ -16,19 +16,18 @@
 
 package com.ning.billing.payment.dao;
 
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.UUID;
-
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfo;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.UUID;
 
 public abstract class TestPaymentDao {
 
@@ -37,40 +36,58 @@ public abstract class TestPaymentDao {
     @Test
     public void testCreatePayment() {
         PaymentInfo paymentInfo = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
-                                                           .setAmount(BigDecimal.TEN)
-                                                           .setStatus("Processed")
-                                                           .setBankIdentificationNumber("1234")
-                                                           .setPaymentNumber("12345")
-                                                           .setPaymentMethodId("12345")
-                                                           .setReferenceId("12345")
-                                                           .setType("Electronic")
-                                                           .setCreatedDate(new DateTime(DateTimeZone.UTC))
-                                                           .setUpdatedDate(new DateTime(DateTimeZone.UTC))
-                                                           .setEffectiveDate(new DateTime(DateTimeZone.UTC))
-                                                           .build();
+                .setAmount(BigDecimal.TEN)
+                .setStatus("Processed")
+                .setBankIdentificationNumber("1234")
+                .setPaymentNumber("12345")
+                .setPaymentMethodId("12345")
+                .setReferenceId("12345")
+                .setType("Electronic")
+                .setCreatedDate(new DateTime(DateTimeZone.UTC))
+                .setUpdatedDate(new DateTime(DateTimeZone.UTC))
+                .setEffectiveDate(new DateTime(DateTimeZone.UTC))
+                .build();
 
         paymentDao.savePaymentInfo(paymentInfo);
     }
 
     @Test
-    public void testUpdatePayment() {
+    public void testUpdatePaymenInfo() {
         PaymentInfo paymentInfo = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
-                                                           .setAmount(BigDecimal.TEN)
-                                                           .setStatus("Processed")
-                                                           .setBankIdentificationNumber("1234")
-                                                           .setPaymentNumber("12345")
-                                                           .setPaymentMethodId("12345")
-                                                           .setReferenceId("12345")
-                                                           .setType("Electronic")
-                                                           .setCreatedDate(new DateTime(DateTimeZone.UTC))
-                                                           .setUpdatedDate(new DateTime(DateTimeZone.UTC))
-                                                           .setEffectiveDate(new DateTime(DateTimeZone.UTC))
-                                                           .build();
+                .setAmount(BigDecimal.TEN)
+                .setStatus("Processed")
+                .setBankIdentificationNumber("1234")
+                .setPaymentNumber("12345")
+                .setPaymentMethodId("12345")
+                .setReferenceId("12345")
+                .setType("Electronic")
+                .setCreatedDate(new DateTime(DateTimeZone.UTC))
+                .setUpdatedDate(new DateTime(DateTimeZone.UTC))
+                .setEffectiveDate(new DateTime(DateTimeZone.UTC))
+                .build();
 
         paymentDao.savePaymentInfo(paymentInfo);
 
         paymentDao.updatePaymentInfo("CreditCard", paymentInfo.getPaymentId(), "Visa", "US");
 
+    }
+
+    @Test
+    public void testUpdatePaymentAttempt() {
+        PaymentAttempt paymentAttempt = new PaymentAttempt.Builder().setPaymentAttemptId(UUID.randomUUID())
+                .setPaymentId(UUID.randomUUID().toString())
+                .setInvoiceId(UUID.randomUUID())
+                .setAccountId(UUID.randomUUID())
+                .setAmount(BigDecimal.TEN)
+                .setCurrency(Currency.USD)
+                .setInvoiceDate(new DateTime(DateTimeZone.UTC))
+                .setCreatedDate(new DateTime(DateTimeZone.UTC))
+                .setUpdatedDate(new DateTime(DateTimeZone.UTC))
+                .build();
+
+        paymentDao.createPaymentAttempt(paymentAttempt);
+
+        paymentDao.updatePaymentAttemptWithRetryInfo(paymentAttempt.getPaymentAttemptId(), 1, paymentAttempt.getCreatedDate().plusDays(1));
     }
 
     @Test
@@ -81,7 +98,8 @@ public abstract class TestPaymentDao {
         final String paymentId = UUID.randomUUID().toString();
         final BigDecimal invoiceAmount = BigDecimal.TEN;
 
-        final DateTime now = new DateTime(DateTimeZone.UTC);
+        // Move the clock backwards to test the updated_date field (see below)
+        final DateTime now = new DateTime(DateTimeZone.UTC).minusDays(1);
 
         PaymentAttempt originalPaymenAttempt = new PaymentAttempt(paymentAttemptId, invoiceId, accountId, invoiceAmount, Currency.USD, now, now, paymentId, null, null);
 
@@ -100,22 +118,25 @@ public abstract class TestPaymentDao {
         Assert.assertEquals(attempt3, attempt4);
 
         PaymentInfo originalPaymentInfo = new PaymentInfo.Builder().setPaymentId(paymentId)
-                                                           .setAmount(invoiceAmount)
-                                                           .setStatus("Processed")
-                                                           .setBankIdentificationNumber("1234")
-                                                           .setPaymentNumber("12345")
-                                                           .setPaymentMethodId("12345")
-                                                           .setReferenceId("12345")
-                                                           .setType("Electronic")
-                                                           .setCreatedDate(now)
-                                                           .setUpdatedDate(now)
-                                                           .setEffectiveDate(now)
-                                                           .build();
+                .setAmount(invoiceAmount)
+                .setStatus("Processed")
+                .setBankIdentificationNumber("1234")
+                .setPaymentNumber("12345")
+                .setPaymentMethodId("12345")
+                .setReferenceId("12345")
+                .setType("Electronic")
+                .setCreatedDate(now)
+                .setUpdatedDate(now)
+                .setEffectiveDate(now)
+                .build();
 
         paymentDao.savePaymentInfo(originalPaymentInfo);
         PaymentInfo paymentInfo = paymentDao.getPaymentInfo(Arrays.asList(invoiceId.toString())).get(0);
+        Assert.assertEquals(paymentInfo, originalPaymentInfo);
 
-        Assert.assertEquals(originalPaymentInfo, paymentInfo);
+        paymentDao.updatePaymentInfo(originalPaymentInfo.getPaymentMethod(), originalPaymentInfo.getPaymentId(), originalPaymentInfo.getCardType(), originalPaymentInfo.getCardCountry());
+        paymentInfo = paymentDao.getPaymentInfo(Arrays.asList(invoiceId.toString())).get(0);
+        Assert.assertEquals(paymentInfo.getCreatedDate().getMillis() / 1000, originalPaymentInfo.getCreatedDate().getMillis() / 1000);
+        Assert.assertTrue(paymentInfo.getUpdatedDate().isAfter(originalPaymentInfo.getUpdatedDate()));
     }
-
 }
