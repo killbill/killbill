@@ -38,6 +38,12 @@ public class TestMigrationSql extends TestMigration {
 
     @Override
     @Test(enabled=true, groups="sql")
+    public void testPlanWithAddOn() {
+        super.testPlanWithAddOn();
+    }
+
+    @Override
+    @Test(enabled=true, groups="sql")
     public void testSingleBasePlanFutureCancelled() {
         super.testSingleBasePlanFutureCancelled();
     }
