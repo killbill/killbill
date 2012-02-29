@@ -234,6 +234,7 @@ public class Engine implements EventListener, EntitlementService {
                 continue;
             }
             Plan addonCurrentPlan = cur.getCurrentPlan();
+            // If base Plan has been canceled, that will cancel all the OA
             if (addonUtils.isAddonIncluded(baseSubscription, addonCurrentPlan) ||
                     ! addonUtils.isAddonAvailable(baseSubscription, addonCurrentPlan)) {
                 //

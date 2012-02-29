@@ -134,6 +134,13 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                 checkAddonCreationRights(baseSubscription, plan);
                 bundleStartDate = baseSubscription.getStartDate();
                 break;
+            case STANDALONE:
+                if (baseSubscription != null) {
+                    throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
+                }
+                // Not really but we don't care, there is no alignment for STANDALONE subscriptions
+                bundleStartDate = requestedDate;
+                break;
             default:
                 throw new EntitlementError(String.format("Can't create subscription of type %s",
                         plan.getProduct().getCategory().toString()));

@@ -96,6 +96,7 @@ public class TestUserApiAddOn extends TestApiBase {
             // MOVE AFTER CANCELLATION
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
             clock.addDeltaFromReality(ctd);
             now = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
@@ -150,6 +151,7 @@ public class TestUserApiAddOn extends TestApiBase {
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
             baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now);
             assertTrue(testListener.isCompleted(5000));
 
@@ -210,6 +212,7 @@ public class TestUserApiAddOn extends TestApiBase {
             // MOVE AFTER CHANGE
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
             clock.addDeltaFromReality(ctd);
             now = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));

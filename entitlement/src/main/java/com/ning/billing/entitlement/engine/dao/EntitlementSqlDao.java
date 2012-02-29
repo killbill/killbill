@@ -243,7 +243,7 @@ public class EntitlementSqlDao implements EntitlementDao {
             @Override
             public Void inTransaction(EventSqlDao dao,
                     TransactionStatus status) throws Exception {
-                // STEPH what about future cancel events : seems like this is missing?
+                cancelNextCancelEventFromTransaction(subscriptionId, dao);
                 cancelNextChangeEventFromTransaction(subscriptionId, dao);
                 cancelNextPhaseEventFromTransaction(subscriptionId, dao);
                 dao.insertEvent(cancelEvent);
@@ -331,6 +331,10 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     private void cancelNextChangeEventFromTransaction(final UUID subscriptionId, final EventSqlDao dao) {
         cancelFutureEventFromTransaction(subscriptionId, dao, EventType.API_USER, ApiEventType.CHANGE);
+    }
+
+    private void cancelNextCancelEventFromTransaction(final UUID subscriptionId, final EventSqlDao dao) {
+        cancelFutureEventFromTransaction(subscriptionId, dao, EventType.API_USER, ApiEventType.CANCEL);
     }
 
     private void cancelFutureEventFromTransaction(final UUID subscriptionId, final EventSqlDao dao, EventType type, ApiEventType apiType) {
