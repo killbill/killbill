@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.common.collect.ImmutableList;
 import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
@@ -28,6 +29,8 @@ import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
+
+import javax.annotation.concurrent.Immutable;
 
 public class DefaultPaymentDao implements PaymentDao {
     private final PaymentSqlDao sqlDao;
@@ -80,12 +83,20 @@ public class DefaultPaymentDao implements PaymentDao {
 
     @Override
     public List<PaymentInfo> getPaymentInfo(List<String> invoiceIds) {
-        return sqlDao.getPaymentInfos(invoiceIds);
+        if (invoiceIds == null || invoiceIds.size() == 0) {
+            return ImmutableList.<PaymentInfo>of();
+        } else {
+            return sqlDao.getPaymentInfos(invoiceIds);
+        }
     }
 
     @Override
     public List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<String> invoiceIds) {
-        return sqlDao.getPaymentAttemptsForInvoiceIds(invoiceIds);
+        if (invoiceIds == null || invoiceIds.size() == 0) {
+            return ImmutableList.<PaymentAttempt>of();
+        } else {
+            return sqlDao.getPaymentAttemptsForInvoiceIds(invoiceIds);
+        }
     }
 
     @Override
