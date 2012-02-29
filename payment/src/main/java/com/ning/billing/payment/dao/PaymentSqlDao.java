@@ -76,7 +76,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
     @SqlUpdate
     void updatePaymentAttemptWithRetryInfo(@Bind("payment_attempt_id") String paymentAttemptId,
                                            @Bind("retry_count") int retryCount,
-                                           @Bind("next_retry_dt") DateTime nextRetryDate);
+                                           @Bind("next_retry_dt") Date nextRetryDate);
 
     @SqlUpdate
     void updatePaymentInfo(@Bind("payment_method") String paymentMethod,

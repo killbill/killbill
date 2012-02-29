@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
@@ -39,24 +40,34 @@ import com.ning.billing.payment.api.PaymentProviderAccount;
 import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
 
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
+    private final AtomicBoolean makeNextInvoiceFail = new AtomicBoolean(false);
     private final Map<String, PaymentInfo> payments = new ConcurrentHashMap<String, PaymentInfo>();
     private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
     private final Map<String, PaymentMethodInfo> paymentMethods = new ConcurrentHashMap<String, PaymentMethodInfo>();
 
+    public void makeNextInvoiceFail() {
+        makeNextInvoiceFail.set(true);
+    }
+
     @Override
     public Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice) {
-        PaymentInfo payment = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
-                                             .setAmount(invoice.getBalance())
-                                             .setStatus("Processed")
-                                             .setBankIdentificationNumber("1234")
-                                             .setCreatedDate(new DateTime())
-                                             .setEffectiveDate(new DateTime())
-                                             .setPaymentNumber("12345")
-                                             .setReferenceId("12345")
-                                             .setType("Electronic")
-                                             .build();
-        payments.put(payment.getPaymentId(), payment);
-        return Either.right(payment);
+        if (makeNextInvoiceFail.getAndSet(false)) {
+            return Either.left(new PaymentError("unknown", "test error"));
+        }
+        else {
+            PaymentInfo payment = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
+                                                 .setAmount(invoice.getBalance())
+                                                 .setStatus("Processed")
+                                                 .setBankIdentificationNumber("1234")
+                                                 .setCreatedDate(new DateTime())
+                                                 .setEffectiveDate(new DateTime())
+                                                 .setPaymentNumber("12345")
+                                                 .setReferenceId("12345")
+                                                 .setType("Electronic")
+                                                 .build();
+            payments.put(payment.getPaymentId(), payment);
+            return Either.right(payment);
+        }
     }
 
     @Override

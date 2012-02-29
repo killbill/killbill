@@ -49,13 +49,29 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public void recordFutureNotificationFromTransaction(
-            Transmogrifier transactionalDao, DateTime futureNotificationTime,
-            NotificationKey notificationKey) {
+    public void recordFutureNotification(DateTime futureNotificationTime, NotificationKey notificationKey) {
         Notification notification = new DefaultNotification("MockQueue", notificationKey.toString(), futureNotificationTime);
         synchronized(notifications) {
             notifications.add(notification);
         }
+    }
+
+    @Override
+    public void recordFutureNotificationFromTransaction(
+            Transmogrifier transactionalDao, DateTime futureNotificationTime,
+            NotificationKey notificationKey) {
+        recordFutureNotification(futureNotificationTime, notificationKey);
+    }
+
+    public List<Notification> getPendingEvents() {
+        List<Notification> result = new ArrayList<Notification>();
+
+        for (Notification notification : notifications) {
+            if (notification.getProcessingState() == NotificationLifecycleState.AVAILABLE) {
+                result.add(notification);
+            }
+        }
+        return result;
     }
 
     @Override

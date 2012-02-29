@@ -39,7 +39,7 @@ public interface PaymentApi {
 
     List<Either<PaymentError, PaymentInfo>> createPayment(String accountKey, List<String> invoiceIds);
     List<Either<PaymentError, PaymentInfo>> createPayment(Account account, List<String> invoiceIds);
-    Either<PaymentError, PaymentInfo> createPayment(UUID paymentAttemptId);
+    Either<PaymentError, PaymentInfo> createPaymentForPaymentAttempt(UUID paymentAttemptId);
 
     List<Either<PaymentError, PaymentInfo>> createRefund(Account account, List<String> invoiceIds); //TODO
 

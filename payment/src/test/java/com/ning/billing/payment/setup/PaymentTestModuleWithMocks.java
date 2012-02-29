@@ -31,6 +31,8 @@ import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
+import com.ning.billing.util.notificationq.MockNotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService;
 
 public class PaymentTestModuleWithMocks extends PaymentModule {
 	public static class MockProvider implements Provider<EntitlementBillingApi> {
@@ -38,12 +40,13 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
 		public EntitlementBillingApi get() {
 			return BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
 		}
-		
+
 	}
-	
-	
+
+
     public PaymentTestModuleWithMocks() {
-        super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock")));
+        super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock",
+                                                    "killbill.payment.engine.events.off", "false")));
     }
 
     @Override
@@ -65,5 +68,6 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
         bind(MockInvoiceDao.class).asEagerSingleton();
         bind(InvoiceDao.class).to(MockInvoiceDao.class);
         bind(EntitlementBillingApi.class).toProvider( MockProvider.class );
+        bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
     }
 }

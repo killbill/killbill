@@ -86,7 +86,7 @@ public class DefaultPaymentDao implements PaymentDao {
 
     @Override
     public void updatePaymentAttemptWithRetryInfo(UUID paymentAttemptId, int retryCount, DateTime nextRetryDate) {
-        sqlDao.updatePaymentAttemptWithRetryInfo(paymentAttemptId.toString(), retryCount, nextRetryDate);
+        sqlDao.updatePaymentAttemptWithRetryInfo(paymentAttemptId.toString(), retryCount, nextRetryDate == null ? null : nextRetryDate.toDate());
     }
 
     @Override
