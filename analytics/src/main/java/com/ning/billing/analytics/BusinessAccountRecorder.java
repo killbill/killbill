@@ -98,11 +98,14 @@ public class BusinessAccountRecorder {
      */
     public void accountUpdated(final UUID accountId) {
         final Account account = accountApi.getAccountById(accountId);
-        BusinessAccount bac = dao.getAccount(accountId.toString());
 
         if (account == null) {
             log.warn("Couldn't find account {}", accountId);
-        } else if (bac == null) {
+            return;
+        }
+
+        BusinessAccount bac = dao.getAccount(account.getExternalKey());
+        if (bac == null) {
             bac = createBusinessAccountFromAccount(account);
             log.info("ACCOUNT CREATION " + bac);
             dao.createAccount(bac);
@@ -121,7 +124,7 @@ public class BusinessAccountRecorder {
 
         final BusinessAccount bac = new BusinessAccount(
                 account.getExternalKey(),
-                null, // TODO We need an API for the account balance
+                invoiceUserApi.getAccountBalance(account.getId()),
                 tags,
                 // These fields will be updated below
                 null,
@@ -181,5 +184,7 @@ public class BusinessAccountRecorder {
         bac.setBillingAddressCountry(billingAddressCountry);
         bac.setLastInvoiceDate(lastInvoiceDate);
         bac.setTotalInvoiceBalance(totalInvoiceBalance);
+
+        bac.setBalance(invoiceUserApi.getAccountBalance(account.getId()));
     }
 }
