@@ -148,14 +148,20 @@ public class DefaultPaymentApi implements PaymentApi {
                 if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
                     // TODO: send a notification that invoice was ignored?
                     log.info("Received invoice for payment with outstanding amount of 0 {} ", invoice);
-                    return Either.left(new PaymentError("invoice_balance_0", "Invoice balance was 0 or less"));
+                    return Either.left(new PaymentError("invoice_balance_0",
+                                                        "Invoice balance was 0 or less",
+                                                        paymentAttempt.getAccountId(),
+                                                        paymentAttempt.getInvoiceId()));
                 }
                 else {
                     return processPayment(getPaymentProviderPlugin(account), account, invoice, paymentAttempt);
                 }
             }
         }
-        return Either.left(new PaymentError("retry_payment_error", "Could not load payment attempt, invoice or account for id " + paymentAttemptId));
+        return Either.left(new PaymentError("retry_payment_error",
+                                            "Could not load payment attempt, invoice or account for id " + paymentAttemptId,
+                                            paymentAttempt.getAccountId(),
+                                            paymentAttempt.getInvoiceId()));
     }
 
     @Override
@@ -170,7 +176,10 @@ public class DefaultPaymentApi implements PaymentApi {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
                 // TODO: send a notification that invoice was ignored?
                 log.info("Received invoice for payment with balance of 0 {} ", invoice);
-                Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("invoice_balance_0", "Invoice balance was 0 or less"));
+                Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("invoice_balance_0",
+                                                                                        "Invoice balance was 0 or less",
+                                                                                        account.getId(),
+                                                                                        UUID.fromString(invoiceId)));
                 processedPaymentsOrErrors.add(result);
             }
             else {
