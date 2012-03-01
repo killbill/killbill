@@ -26,6 +26,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -33,8 +34,10 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 
 import com.google.inject.Injector;
 import com.ning.billing.account.api.AccountData;
@@ -49,6 +52,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
@@ -60,11 +64,11 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDao;
+import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.bus.DefaultBusService;
@@ -94,8 +98,9 @@ public abstract class TestApiBase {
     protected ApiTestListener testListener;
     protected SubscriptionBundle bundle;
 
-    public static void loadSystemPropertiesFromClasspath(final String resource)
-    {
+    private MysqlTestingHelper helper;
+
+    public static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestApiBase.class.getResource(resource);
         assertNotNull(url);
 
@@ -106,7 +111,9 @@ public abstract class TestApiBase {
         }
     }
 
-    @AfterClass(groups={"setup"})
+    protected abstract Injector getInjector();
+
+    @AfterClass(alwaysRun=true)
     public void tearDown() {
         try {
             busService.getBus().register(testListener);
@@ -117,7 +124,7 @@ public abstract class TestApiBase {
 
     }
 
-    @BeforeClass(groups={"setup"})
+    @BeforeClass(alwaysRun=true)
     public void setup() {
 
         loadSystemPropertiesFromClasspath("/entitlement.properties");
@@ -129,21 +136,35 @@ public abstract class TestApiBase {
         config = g.getInstance(EntitlementConfig.class);
         dao = g.getInstance(EntitlementDao.class);
         clock = (ClockMock) g.getInstance(Clock.class);
+        helper = (isSqlTest(dao)) ? g.getInstance(MysqlTestingHelper.class) : null;
+
         try {
             ((DefaultCatalogService) catalogService).loadCatalog();
             ((DefaultBusService) busService).startBus();
             ((Engine) entitlementService).initialize();
             init();
-        } catch (EntitlementUserApiException e) {
-            Assert.fail(e.getMessage());
-        } catch (ServiceException e) {
-            Assert.fail(e.getMessage());
+        } catch (Exception e) {
         }
     }
 
-    protected abstract Injector getInjector();
+    private static boolean isSqlTest(EntitlementDao theDao) {
+        return (! (theDao instanceof MockEntitlementDaoMemory));
+    }
 
-    private void init() throws EntitlementUserApiException {
+    private void setupMySQL() throws IOException {
+        if (helper != null) {
+            final String entitlementDdl = IOUtils.toString(TestApiBase.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+            final String utilDdl = IOUtils.toString(TestApiBase.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+            helper.startMysql();
+            helper.initDb(entitlementDdl);
+            helper.initDb(utilDdl);
+        }
+    }
+
+    private void init() throws Exception {
+
+        setupMySQL();
+
         accountData = getAccountData();
         assertNotNull(accountData);
 
@@ -155,10 +176,9 @@ public abstract class TestApiBase {
         entitlementApi = entitlementService.getUserApi();
         billingApi = entitlementService.getBillingApi();
         migrationApi = entitlementService.getMigrationApi();
-
     }
 
-    @BeforeMethod(groups={"setup"})
+    @BeforeMethod(alwaysRun=true)
     public void setupTest() {
 
         log.warn("\n");
@@ -180,7 +200,7 @@ public abstract class TestApiBase {
         ((Engine)entitlementService).start();
     }
 
-    @AfterMethod(groups={"setup"})
+    @AfterMethod(alwaysRun=true)
     public void cleanupTest() {
         ((Engine)entitlementService).stop();
         log.warn("DONE WITH TEST\n");
@@ -345,12 +365,12 @@ public abstract class TestApiBase {
 
             @Override
             public String getAddress1() {
-                return null;  
+                return null;
             }
 
             @Override
             public String getAddress2() {
-                return null;  
+                return null;
             }
 
             @Override
@@ -360,22 +380,22 @@ public abstract class TestApiBase {
 
             @Override
             public String getCity() {
-                return null;  
+                return null;
             }
 
             @Override
             public String getStateOrProvince() {
-                return null;  
+                return null;
             }
 
             @Override
             public String getPostalCode() {
-                return null;  
+                return null;
             }
 
             @Override
             public String getCountry() {
-                return null;  
+                return null;
             }
         };
         return accountData;

@@ -53,7 +53,38 @@ public class TestUserApiAddOn extends TestApiBase {
     }
 
 
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
+    public void testCreateCancelAddon() {
+
+        try {
+            String baseProduct = "Shotgun";
+            BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+
+            String aoProduct = "Telescopic-Scope";
+            BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+            SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+            assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+
+            DateTime now = clock.getUTCNow();
+            aoSubscription.cancel(now, false);
+
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            assertTrue(testListener.isCompleted(5000));
+
+            assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
+
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
+    @Test(enabled=true, groups={"slow"})
     public void testCancelBPWthAddon() {
         try {
 
@@ -111,7 +142,7 @@ public class TestUserApiAddOn extends TestApiBase {
     }
 
 
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testChangeBPWthAddonNonIncluded() {
         try {
 
@@ -164,7 +195,7 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testChangeBPWthAddonNonAvailable() {
         try {
 
@@ -228,7 +259,7 @@ public class TestUserApiAddOn extends TestApiBase {
     }
 
 
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testAddonCreateWithBundleAlign() {
         try {
             String aoProduct = "Telescopic-Scope";
@@ -250,7 +281,7 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testAddonCreateWithSubscriptionAlign() {
 
         try {
