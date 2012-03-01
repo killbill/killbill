@@ -19,13 +19,13 @@ package com.ning.billing.payment;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityPersistenceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.catalog.api.Currency;
@@ -46,7 +46,7 @@ public class TestHelper {
     }
 
     // These helper methods can be overridden in a plugin implementation
-    public Account createTestCreditCardAccount() throws AccountApiException {
+    public Account createTestCreditCardAccount() throws EntityPersistenceException {
         final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
         final String externalKey = RandomStringUtils.randomAlphanumeric(10);
         final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
@@ -61,7 +61,7 @@ public class TestHelper {
         return account;
     }
 
-    public Account createTestPayPalAccount() throws AccountApiException {
+    public Account createTestPayPalAccount() throws EntityPersistenceException {
         final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
         final String externalKey = RandomStringUtils.randomAlphanumeric(10);
         final Account account = new AccountBuilder(UUID.randomUUID()).name(name)

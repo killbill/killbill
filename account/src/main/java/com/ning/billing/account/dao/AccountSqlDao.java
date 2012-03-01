@@ -66,7 +66,6 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     @SqlUpdate
     public void update(@AccountBinder Account account);
 
-    @Override
     @SqlUpdate
     public void deleteByKey(@Bind("externalKey") final String key);
 

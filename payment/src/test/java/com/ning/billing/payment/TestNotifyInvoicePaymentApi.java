@@ -20,6 +20,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityPersistenceException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -63,7 +64,7 @@ public class TestNotifyInvoicePaymentApi {
     }
 
     @Test
-    public void testNotifyPaymentSuccess() throws AccountApiException {
+    public void testNotifyPaymentSuccess() throws AccountApiException, EntityPersistenceException {
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
@@ -81,7 +82,7 @@ public class TestNotifyInvoicePaymentApi {
     }
 
     @Test
-    public void testNotifyPaymentFailure() throws AccountApiException {
+    public void testNotifyPaymentFailure() throws AccountApiException, EntityPersistenceException {
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 

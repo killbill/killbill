@@ -20,6 +20,7 @@ import java.sql.DataTruncation;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityPersistenceException;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -87,7 +88,7 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     @Override
-    public void create(final Account account) throws AccountApiException {
+    public void create(final Account account) throws EntityPersistenceException {
         final String key = account.getExternalKey();
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
@@ -107,10 +108,10 @@ public class DefaultAccountDao implements AccountDao {
                 }
             });
         } catch (RuntimeException re) {
-            if (re.getCause() instanceof AccountApiException) {
-                throw (AccountApiException) re.getCause();
+            if (re.getCause() instanceof EntityPersistenceException) {
+                throw (EntityPersistenceException) re.getCause();
             } else if (re.getCause() instanceof DataTruncation) {
-                throw new AccountApiException(ErrorCode.DATA_TRUNCATION, re.getCause().getMessage());
+                throw new EntityPersistenceException(ErrorCode.DATA_TRUNCATION, re.getCause().getMessage());
             } else {
                 throw re;
             }
@@ -118,7 +119,7 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     @Override
-    public void update(final Account account) throws AccountApiException {
+    public void update(final Account account) throws EntityPersistenceException {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
@@ -147,8 +148,8 @@ public class DefaultAccountDao implements AccountDao {
                 }
             });
         } catch (RuntimeException re) {
-            if (re.getCause() instanceof AccountApiException) {
-                throw (AccountApiException) re.getCause();
+            if (re.getCause() instanceof EntityPersistenceException) {
+                throw (EntityPersistenceException) re.getCause();
             } else {
                 throw re;
             }
