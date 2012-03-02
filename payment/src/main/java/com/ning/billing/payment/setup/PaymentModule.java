@@ -64,5 +64,6 @@ public class PaymentModule extends AbstractModule {
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();
         installPaymentProviderPlugins(paymentConfig);
         installPaymentDao();
+        installRetryEngine();
     }
 }

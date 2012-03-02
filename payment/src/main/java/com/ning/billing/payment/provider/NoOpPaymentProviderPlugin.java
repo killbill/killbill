@@ -53,7 +53,10 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, String> createPaymentProviderAccount(Account account) {
-        return Either.left(new PaymentError("unsupported", "Account creation not supported in this plugin"));
+        return Either.left(new PaymentError("unsupported",
+                                            "Account creation not supported in this plugin",
+                                            account.getId(),
+                                            null));
     }
 
     @Override

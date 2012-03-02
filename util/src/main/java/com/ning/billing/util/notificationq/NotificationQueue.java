@@ -23,9 +23,18 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 
 public interface NotificationQueue {
 
-    /**
+   /**
     *
-    *  Record from within a transaction the need to be called back when the notification is ready
+    * Record the need to be called back when the notification is ready
+    *
+    * @param futureNotificationTime the time at which the notification is ready
+    * @param notificationKey the key for that notification
+    */
+   public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey);
+
+   /**
+    *
+    * Record from within a transaction the need to be called back when the notification is ready
     *
     * @param transactionalDao the transactionalDao
     * @param futureNotificationTime the time at which the notification is ready

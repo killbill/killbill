@@ -16,28 +16,27 @@
 
 package com.ning.billing.invoice.model;
 
+import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.entitlement.api.billing.BillingModeType;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.clock.Clock;
+import org.joda.time.DateTime;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
-import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.InternationalPrice;
-import com.ning.billing.entitlement.api.billing.BillingModeType;
-import com.ning.billing.invoice.api.InvoiceApiException;
-import org.joda.time.DateTime;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.billing.BillingEvent;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.util.clock.Clock;
-
 import javax.annotation.Nullable;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
@@ -84,7 +83,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             }
         }
 
-        if (proposedItems == null || proposedItems.size()  == 0) {
+        if (proposedItems == null || proposedItems.size() == 0) {
             return null;
         } else {
             invoice.addInvoiceItems(proposedItems);
@@ -92,7 +91,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-   /*
+    /*
     * removes all matching items from both submitted collections
     */
     private void removeDuplicatedInvoiceItems(final List<InvoiceItem> proposedItems,
@@ -188,10 +187,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                         BigDecimal amount = itemDatum.getNumberOfCycles().multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
 
                         RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
-                                                                                      thisEvent.getPlan().getName(),
-                                                                                      thisEvent.getPlanPhase().getName(),
-                                                                                      itemDatum.getStartDate(), itemDatum.getEndDate(),
-                                                                                      amount, rate, currency);
+                                thisEvent.getPlan().getName(),
+                                thisEvent.getPlanPhase().getName(),
+                                itemDatum.getStartDate(), itemDatum.getEndDate(),
+                                amount, rate, currency, clock.getUTCNow(), clock.getUTCNow());
                         items.add(recurringItem);
                     }
                 }
@@ -223,8 +222,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     DateTime endDate = duration.addToDateTime(thisEvent.getEffectiveDate());
                     BigDecimal fixedPrice = thisEvent.getFixedPrice().getPrice(currency);
                     fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
-                                                                      thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
-                                                                      thisEvent.getEffectiveDate(), endDate, fixedPrice, currency);
+                            thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
+                            thisEvent.getEffectiveDate(), endDate, fixedPrice, currency,
+                            clock.getUTCNow(), clock.getUTCNow());
                 } catch (CatalogApiException e) {
                     throw new InvoiceApiException(e, ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency.toString());
                 }

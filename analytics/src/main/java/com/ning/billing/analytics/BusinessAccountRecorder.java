@@ -22,57 +22,169 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.analytics.dao.BusinessAccountDao;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.util.tag.Tag;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class BusinessAccountRecorder
-{
+public class BusinessAccountRecorder {
     private static final Logger log = LoggerFactory.getLogger(BusinessAccountRecorder.class);
 
     private final BusinessAccountDao dao;
     private final AccountUserApi accountApi;
+    private final InvoiceUserApi invoiceUserApi;
+    private final PaymentApi paymentApi;
 
     @Inject
-    public BusinessAccountRecorder(final BusinessAccountDao dao, final AccountUserApi accountApi)
-    {
+    public BusinessAccountRecorder(final BusinessAccountDao dao, final AccountUserApi accountApi, final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi) {
         this.dao = dao;
         this.accountApi = accountApi;
+        this.invoiceUserApi = invoiceUserApi;
+        this.paymentApi = paymentApi;
     }
 
-    public void accountCreated(final AccountData data)
-    {
+    public void accountCreated(final AccountData data) {
         final Account account = accountApi.getAccountByKey(data.getExternalKey());
-
-        final List<String> tags = new ArrayList<String>();
-        for (final Tag tag : account.getTagList()) {
-            tags.add(tag.getTagDefinitionName());
-        }
-
-        // TODO Need payment and invoice api to fill most fields
-        final BusinessAccount bac = new BusinessAccount(
-            account.getExternalKey(),
-            null, // TODO
-            tags,
-            null, // TODO
-            null, // TODO
-            null, // TODO
-            null, // TODO
-            null, // TODO
-            null // TODO
-        );
+        final BusinessAccount bac = createBusinessAccountFromAccount(account);
 
         log.info("ACCOUNT CREATION " + bac);
         dao.createAccount(bac);
     }
 
-    public void accountUpdated(final UUID accountId, final List<ChangedField> changedFields)
-    {
+    /**
+     * Notification handler for Account changes
+     *
+     * @param accountId     account id changed
+     * @param changedFields list of changed fields
+     */
+    public void accountUpdated(final UUID accountId, final List<ChangedField> changedFields) {
         // None of the fields updated interest us so far - see DefaultAccountChangeNotification
         // TODO We'll need notifications for tags changes eventually
+    }
+
+    /**
+     * Notification handler for Payment creations
+     *
+     * @param paymentInfo payment object (from the payment plugin)
+     */
+    public void accountUpdated(final PaymentInfo paymentInfo) {
+        final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
+        if (paymentAttempt == null) {
+            return;
+        }
+
+        final Account account = accountApi.getAccountById(paymentAttempt.getAccountId());
+        if (account == null) {
+            return;
+        }
+
+        accountUpdated(account.getId());
+    }
+
+    /**
+     * Notification handler for Invoice creations
+     *
+     * @param accountId account id associated with the created invoice
+     */
+    public void accountUpdated(final UUID accountId) {
+        final Account account = accountApi.getAccountById(accountId);
+
+        if (account == null) {
+            log.warn("Couldn't find account {}", accountId);
+            return;
+        }
+
+        BusinessAccount bac = dao.getAccount(account.getExternalKey());
+        if (bac == null) {
+            bac = createBusinessAccountFromAccount(account);
+            log.info("ACCOUNT CREATION " + bac);
+            dao.createAccount(bac);
+        } else {
+            updateBusinessAccountFromAccount(account, bac);
+            log.info("ACCOUNT UPDATE " + bac);
+            dao.saveAccount(bac);
+        }
+    }
+
+    private BusinessAccount createBusinessAccountFromAccount(final Account account) {
+        final List<String> tags = new ArrayList<String>();
+        for (final Tag tag : account.getTagList()) {
+            tags.add(tag.getTagDefinitionName());
+        }
+
+        final BusinessAccount bac = new BusinessAccount(
+                account.getExternalKey(),
+                invoiceUserApi.getAccountBalance(account.getId()),
+                tags,
+                // These fields will be updated below
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        updateBusinessAccountFromAccount(account, bac);
+
+        return bac;
+    }
+
+    private void updateBusinessAccountFromAccount(final Account account, final BusinessAccount bac) {
+        DateTime lastInvoiceDate = null;
+        BigDecimal totalInvoiceBalance = BigDecimal.ZERO;
+        String lastPaymentStatus = null;
+        String paymentMethod = null;
+        String creditCardType = null;
+        String billingAddressCountry = null;
+
+        // Retrieve invoices information
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId());
+        if (invoices != null && invoices.size() > 0) {
+            final List<String> invoiceIds = new ArrayList<String>();
+            for (final Invoice invoice : invoices) {
+                invoiceIds.add(invoice.getId().toString());
+                totalInvoiceBalance = totalInvoiceBalance.add(invoice.getBalance());
+
+                if (lastInvoiceDate == null || invoice.getInvoiceDate().isAfter(lastInvoiceDate)) {
+                    lastInvoiceDate = invoice.getInvoiceDate();
+                }
+            }
+
+            // Retrieve payments information for these invoices
+            DateTime lastPaymentDate = null;
+            final List<PaymentInfo> payments = paymentApi.getPaymentInfo(invoiceIds);
+            if (payments != null) {
+                for (final PaymentInfo payment : payments) {
+                    // Use the last payment method/type/country as the default one for the account
+                    if (lastPaymentDate == null || payment.getCreatedDate().isAfter(lastPaymentDate)) {
+                        lastPaymentDate = payment.getCreatedDate();
+
+                        lastPaymentStatus = payment.getStatus();
+                        paymentMethod = payment.getPaymentMethod();
+                        creditCardType = payment.getCardType();
+                        billingAddressCountry = payment.getCardCountry();
+                    }
+                }
+            }
+        }
+
+        bac.setLastPaymentStatus(lastPaymentStatus);
+        bac.setPaymentMethod(paymentMethod);
+        bac.setCreditCardType(creditCardType);
+        bac.setBillingAddressCountry(billingAddressCountry);
+        bac.setLastInvoiceDate(lastInvoiceDate);
+        bac.setTotalInvoiceBalance(totalInvoiceBalance);
+
+        bac.setBalance(invoiceUserApi.getAccountBalance(account.getId()));
     }
 }

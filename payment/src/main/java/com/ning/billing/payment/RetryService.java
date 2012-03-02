@@ -19,7 +19,6 @@ package com.ning.billing.payment;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.google.inject.Inject;
 import com.ning.billing.lifecycle.KillbillService;
@@ -82,7 +81,7 @@ public class RetryService implements KillbillService {
          }
     }
 
-    public void scheduleRetry(Transmogrifier transactionalDao, PaymentAttempt paymentAttempt, DateTime timeOfRetry) {
+    public void scheduleRetry(PaymentAttempt paymentAttempt, DateTime timeOfRetry) {
         final String id = paymentAttempt.getPaymentAttemptId().toString();
 
         NotificationKey key = new NotificationKey() {
@@ -91,14 +90,14 @@ public class RetryService implements KillbillService {
                 return id;
             }
         };
-        retryQueue.recordFutureNotificationFromTransaction(transactionalDao, timeOfRetry, key);
+        retryQueue.recordFutureNotification(timeOfRetry, key);
     }
 
     private void retry(String paymentAttemptId) {
         PaymentInfo paymentInfo = paymentApi.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
 
-        if (paymentInfo != null && !PaymentStatus.Processed.equals(PaymentStatus.valueOf(paymentInfo.getStatus()))) {
-            paymentApi.createPayment(UUID.fromString(paymentAttemptId));
+        if (paymentInfo == null || !PaymentStatus.Processed.equals(PaymentStatus.valueOf(paymentInfo.getStatus()))) {
+            paymentApi.createPaymentForPaymentAttempt(UUID.fromString(paymentAttemptId));
         }
     }
 }
