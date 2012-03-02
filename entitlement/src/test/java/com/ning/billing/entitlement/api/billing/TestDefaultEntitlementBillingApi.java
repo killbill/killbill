@@ -155,7 +155,8 @@ public class TestDefaultEntitlementBillingApi {
 
         };
 		AccountUserApi accountApi = new BrainDeadAccountUserApi() ;
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+		BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(accountApi, catalogService);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,bcdCalculator);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
@@ -180,7 +181,8 @@ public class TestDefaultEntitlementBillingApi {
 					return 32;
 				}};
 			}} ;
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+			BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(accountApi, catalogService);
+			DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,bcdCalculator);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
@@ -202,7 +204,8 @@ public class TestDefaultEntitlementBillingApi {
 		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);			
 		((ZombieControl)accountApi).addResult("getAccountById", account);
 				
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+		BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(accountApi, catalogService);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,bcdCalculator);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
@@ -227,7 +230,8 @@ public class TestDefaultEntitlementBillingApi {
 					return 32;
 				}};
 			}} ;
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+			BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(accountApi, catalogService);
+			DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,bcdCalculator);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
@@ -249,7 +253,8 @@ public class TestDefaultEntitlementBillingApi {
 		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);			
 		((ZombieControl)accountApi).addResult("getAccountById", account);
 				
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+		BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(accountApi, catalogService);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,bcdCalculator);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, bundles.get(0).getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
