@@ -54,16 +54,25 @@ public class DefaultBillingEvent implements BillingEvent {
                 transition.getNextPlan() : transition.getPreviousPlan();
         fixedPrice = (transition.getNextPhase() == null) ? null :
         		transition.getNextPhase().getFixedPrice();
-        recurringPrice = (transition.getNextPhase() == null) ? null :
-        	transition.getNextPhase().getRecurringPrice();
+        recurringPrice = calculateRecurringPrice(transition);
         description = transition.getTransitionType().toString();
         billingModeType = BillingModeType.IN_ADVANCE;
         billingPeriod =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPhase().getBillingPeriod() : transition.getPreviousPhase().getBillingPeriod();
-        type = transition.getTransitionType();
+       type = transition.getTransitionType();
     }
 
-    // Intended for test only
+    private InternationalPrice calculateRecurringPrice(
+    		SubscriptionTransition transition) {
+    	// MDW Note - we are assuming that the only things that can follow a PAUSE are RESUME or CANCEL
+    	if (transition.getNextPhase() == null || transition.getTransitionType() == SubscriptionTransitionType.PAUSE){
+    		return	null;
+    	} 
+    	return transition.getNextPhase().getRecurringPrice();
+    	
+    }
+
+	// Intended for test only
     public DefaultBillingEvent(Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase, InternationalPrice fixedPrice,
             InternationalPrice recurringPrice, BillingPeriod billingPeriod, int billCycleDay, BillingModeType billingModeType, String description, SubscriptionTransitionType type) {
         this.subscription = subscription;
