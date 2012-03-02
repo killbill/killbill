@@ -16,6 +16,10 @@
 
 package com.ning.billing.entitlement.engine.addon;
 
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -26,9 +30,11 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.exceptions.EntitlementError;
 
 public class AddonUtils {
 
+    private static final Logger logger = LoggerFactory.getLogger(AddonUtils.class);
 
     private final CatalogService catalogService;
 
@@ -37,14 +43,19 @@ public class AddonUtils {
         this.catalogService = catalogService;
     }
 
-    public boolean isAddonAvailable(SubscriptionData baseSubscription, Plan targetAddOnPlan) {
 
-        if (baseSubscription.getState() == SubscriptionState.CANCELLED) {
-            return false;
+    public boolean isAddonAvailable(final String basePlanName, final DateTime requestedDate, final Plan targetAddOnPlan) {
+        try {
+            Plan plan = catalogService.getFullCatalog().findPlan(basePlanName, requestedDate);
+            Product product = plan.getProduct();
+            return isAddonAvailable(product, targetAddOnPlan);
+        } catch (CatalogApiException e) {
+            throw new EntitlementError(e);
         }
+    }
 
+    public boolean isAddonAvailable(final Product baseProduct, final Plan targetAddOnPlan) {
         Product targetAddonProduct = targetAddOnPlan.getProduct();
-        Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
         Product[] availableAddOns = baseProduct.getAvailable();
 
         for (Product curAv : availableAddOns) {
@@ -55,15 +66,18 @@ public class AddonUtils {
         return false;
     }
 
-    public boolean isAddonIncluded(SubscriptionData baseSubscription, Plan targetAddOnPlan) {
-
-        if (baseSubscription.getState() == SubscriptionState.CANCELLED) {
-            return false;
+    public boolean isAddonIncluded(final String basePlanName,  final DateTime requestedDate, final Plan targetAddOnPlan) {
+        try {
+            Plan plan = catalogService.getFullCatalog().findPlan(basePlanName, requestedDate);
+            Product product = plan.getProduct();
+            return isAddonIncluded(product, targetAddOnPlan);
+        } catch (CatalogApiException e) {
+            throw new EntitlementError(e);
         }
+    }
 
+    public boolean isAddonIncluded(final Product baseProduct, final Plan targetAddOnPlan) {
         Product targetAddonProduct = targetAddOnPlan.getProduct();
-        Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
-
         Product[] includedAddOns = baseProduct.getIncluded();
         for (Product curAv : includedAddOns) {
             if (curAv.getName().equals(targetAddonProduct.getName())) {

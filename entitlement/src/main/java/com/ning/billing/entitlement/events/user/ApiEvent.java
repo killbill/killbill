@@ -29,4 +29,6 @@ public interface ApiEvent extends EntitlementEvent {
 
     public String getPriceList();
 
+    public boolean isFromDisk();
+
 }

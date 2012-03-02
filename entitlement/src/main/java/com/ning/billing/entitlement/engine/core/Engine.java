@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 
 import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.PlanAligner;
@@ -225,7 +226,11 @@ public class Engine implements EventListener, EntitlementService {
 
         DateTime now = clock.getUTCNow();
 
+        Product baseProduct = (baseSubscription.getState() == SubscriptionState.CANCELLED ) ?
+                null : baseSubscription.getCurrentPlan().getProduct();
+
         List<Subscription> subscriptions = dao.getSubscriptions(baseSubscription.getBundleId());
+
         Iterator<Subscription> it = subscriptions.iterator();
         while (it.hasNext()) {
             SubscriptionData cur = (SubscriptionData) it.next();
@@ -234,9 +239,9 @@ public class Engine implements EventListener, EntitlementService {
                 continue;
             }
             Plan addonCurrentPlan = cur.getCurrentPlan();
-            // If base Plan has been canceled, that will cancel all the OA
-            if (addonUtils.isAddonIncluded(baseSubscription, addonCurrentPlan) ||
-                    ! addonUtils.isAddonAvailable(baseSubscription, addonCurrentPlan)) {
+            if (baseProduct == null ||
+                    addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
+                    ! addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
                 //
                 // Perform AO cancellation using the effectiveDate of the BP
                 //
@@ -245,7 +250,8 @@ public class Engine implements EventListener, EntitlementService {
                 .setActiveVersion(cur.getActiveVersion())
                 .setProcessedDate(now)
                 .setEffectiveDate(event.getEffectiveDate())
-                .setRequestedDate(now));
+                .setRequestedDate(now)
+                .setFromDisk(true));
                 dao.cancelSubscription(cur.getId(), cancelEvent);
             }
         }

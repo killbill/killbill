@@ -189,7 +189,8 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                 .setActiveVersion(subscriptionData.getActiveVersion())
                 .setEffectiveDate(cur.getEventTime())
                 .setProcessedDate(now)
-                .setRequestedDate(now);
+                .setRequestedDate(now)
+                .setFromDisk(true);
 
                 switch(cur.getApiEventType()) {
                 case MIGRATE_ENTITLEMENT:

@@ -209,9 +209,11 @@ public class SubscriptionData implements Subscription {
         }
 
         // ensure that the latestSubscription is always set; prevents NPEs
-        SubscriptionTransition latestSubscription = transitions.get(0);
-        for (SubscriptionTransition cur : transitions) {
-            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
+        SubscriptionTransitionData latestSubscription = transitions.get(0);
+        for (SubscriptionTransitionData cur : transitions) {
+            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow()) ||
+                    // We are not looking at events that were patched on the fly-- such as future ADDON cancelation from Base Plan
+                   !cur.isFromDisk()) {
                 break;
             }
             latestSubscription = cur;
@@ -236,6 +238,7 @@ public class SubscriptionData implements Subscription {
         return activeVersion;
     }
 
+    @Override
     public ProductCategory getCategory() {
         return category;
     }
@@ -359,6 +362,8 @@ public class SubscriptionData implements Subscription {
 
             ApiEventType apiEventType = null;
 
+            boolean isFromDisk = true;
+
             switch (cur.getType()) {
 
             case PHASE:
@@ -369,6 +374,7 @@ public class SubscriptionData implements Subscription {
             case API_USER:
                 ApiEvent userEV = (ApiEvent) cur;
                 apiEventType = userEV.getEventType();
+                isFromDisk = userEV.isFromDisk();
                 switch(apiEventType) {
                 case MIGRATE_ENTITLEMENT:
                 case CREATE:
@@ -430,7 +436,8 @@ public class SubscriptionData implements Subscription {
                         nextState,
                         nextPlan,
                         nextPhase,
-                        nextPriceList);
+                        nextPriceList,
+                        isFromDisk);
             transitions.add(transition);
 
             previousState = nextState;

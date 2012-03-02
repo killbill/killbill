@@ -69,7 +69,8 @@ public class SubscriptionApiService {
             .setActiveVersion(subscription.getActiveVersion())
             .setProcessedDate(processedDate)
             .setEffectiveDate(effectiveDate)
-            .setRequestedDate(requestedDate));
+            .setRequestedDate(requestedDate)
+            .setFromDisk(true));
 
             TimedPhase nextTimedPhase = curAndNextPhases[1];
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
@@ -117,7 +118,8 @@ public class SubscriptionApiService {
             .setActiveVersion(subscription.getActiveVersion())
             .setProcessedDate(now)
             .setEffectiveDate(effectiveDate)
-            .setRequestedDate(now));
+            .setRequestedDate(now)
+            .setFromDisk(true));
 
             dao.cancelSubscription(subscription.getId(), cancelEvent);
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
@@ -140,7 +142,8 @@ public class SubscriptionApiService {
         .setActiveVersion(subscription.getActiveVersion())
         .setProcessedDate(now)
         .setRequestedDate(now)
-        .setEffectiveDate(now));
+        .setEffectiveDate(now)
+        .setFromDisk(true));
 
         List<EntitlementEvent> uncancelEvents = new ArrayList<EntitlementEvent>();
         uncancelEvents.add(uncancelEvent);
@@ -212,7 +215,8 @@ public class SubscriptionApiService {
             .setActiveVersion(subscription.getActiveVersion())
             .setProcessedDate(now)
             .setEffectiveDate(effectiveDate)
-            .setRequestedDate(now));
+            .setRequestedDate(now)
+            .setFromDisk(true));
 
             TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?

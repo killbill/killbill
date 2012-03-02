@@ -180,7 +180,8 @@ public class TestAnalyticsService
             Subscription.SubscriptionState.ACTIVE,
             plan,
             phase,
-            priceList
+            priceList,
+            true
         );
         expectedTransition = new BusinessSubscriptionTransition(
             ID,

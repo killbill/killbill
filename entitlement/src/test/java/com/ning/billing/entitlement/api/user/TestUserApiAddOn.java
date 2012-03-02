@@ -123,6 +123,8 @@ public class TestUserApiAddOn extends TestApiBase {
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+            assertTrue(aoSubscription.isSubscriptionFutureCancelled());
+
 
             // MOVE AFTER CANCELLATION
             testListener.reset();
@@ -168,7 +170,7 @@ public class TestUserApiAddOn extends TestApiBase {
             clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
             assertTrue(testListener.isCompleted(5000));
 
-            // SET CTD TO CANCEL IN FUTURE
+            // SET CTD TO CHANGE IN FUTURE
             DateTime now = clock.getUTCNow();
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
@@ -239,13 +241,13 @@ public class TestUserApiAddOn extends TestApiBase {
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+            assertTrue(aoSubscription.isSubscriptionFutureCancelled());
 
             // MOVE AFTER CHANGE
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             clock.addDeltaFromReality(ctd);
-            now = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
 
 

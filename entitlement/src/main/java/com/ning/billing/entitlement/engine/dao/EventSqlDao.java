@@ -139,7 +139,8 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
                     .setEventPlan(planName)
                     .setEventPlanPhase(phaseName)
                     .setEventPriceList(priceListName)
-                    .setEventType(userType);
+                    .setEventType(userType)
+                    .setFromDisk(true);
 
                 if (userType == ApiEventType.CREATE) {
                     result = new ApiEventCreate(builder);

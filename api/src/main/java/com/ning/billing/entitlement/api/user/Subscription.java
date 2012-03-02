@@ -19,6 +19,8 @@ package com.ning.billing.entitlement.api.user;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.ProductCategory;
+
 import org.joda.time.DateTime;
 
 import java.util.List;
@@ -69,6 +71,7 @@ public interface Subscription {
 
     public DateTime getPaidThroughDate();
 
+    public ProductCategory getCategory();
 
     public List<SubscriptionTransition> getActiveTransitions();
 

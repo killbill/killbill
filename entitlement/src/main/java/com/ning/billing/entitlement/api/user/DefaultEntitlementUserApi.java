@@ -168,12 +168,13 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
         }
 
-        if (addonUtils.isAddonIncluded(baseSubscription, targetAddOnPlan)) {
+        Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
+        if (addonUtils.isAddonIncluded(baseProduct, targetAddOnPlan)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED,
                     targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
         }
 
-        if (!addonUtils.isAddonAvailable(baseSubscription, targetAddOnPlan)) {
+        if (!addonUtils.isAddonAvailable(baseProduct, targetAddOnPlan)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE,
                     targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
         }
