@@ -42,7 +42,6 @@ import javax.annotation.Nullable;
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
-    //private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceGenerator.class);
 
     private final Clock clock;
 
@@ -190,7 +189,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                 thisEvent.getPlan().getName(),
                                 thisEvent.getPlanPhase().getName(),
                                 itemDatum.getStartDate(), itemDatum.getEndDate(),
-                                amount, rate, currency, clock.getUTCNow(), clock.getUTCNow());
+                                amount, rate, currency, clock.getUTCNow());
                         items.add(recurringItem);
                     }
                 }
@@ -224,7 +223,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
                             thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
                             thisEvent.getEffectiveDate(), endDate, fixedPrice, currency,
-                            clock.getUTCNow(), clock.getUTCNow());
+                            clock.getUTCNow());
                 } catch (CatalogApiException e) {
                     throw new InvoiceApiException(e, ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency.toString());
                 }

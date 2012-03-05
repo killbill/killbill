@@ -56,10 +56,6 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     @SqlUpdate
     void create(@InvoiceBinder Invoice invoice);
 
-    @Override
-    @SqlUpdate
-    void update(@InvoiceBinder Invoice invoice);
-
     @SqlQuery
     List<Invoice> getInvoicesByAccount(@Bind("accountId") final String accountId);
 

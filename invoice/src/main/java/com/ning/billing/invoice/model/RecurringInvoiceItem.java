@@ -31,26 +31,26 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
                                 Currency currency,
-                                DateTime createdDate, DateTime updatedDate) {
+                                DateTime createdDate) {
         this(UUID.randomUUID(), invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
-                amount, rate, currency, createdDate, updatedDate);
+                amount, rate, currency, createdDate);
     }
 
     public RecurringInvoiceItem(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
                                 Currency currency, UUID reversedItemId,
-                                DateTime createdDate, DateTime updatedDate) {
+                                DateTime createdDate) {
         this(UUID.randomUUID(), invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
-                amount, rate, currency, reversedItemId, createdDate, updatedDate);
+                amount, rate, currency, reversedItemId, createdDate);
     }
 
     public RecurringInvoiceItem(UUID id, UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
                                 Currency currency,
-                                DateTime createdDate, DateTime updatedDate) {
-        super(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdDate, updatedDate);
+                                DateTime createdDate) {
+        super(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdDate);
 
         this.rate = rate;
         this.reversedItemId = null;
@@ -60,8 +60,8 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
                                 Currency currency, UUID reversedItemId,
-                                DateTime createdDate, DateTime updatedDate) {
-        super(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdDate, updatedDate);
+                                DateTime createdDate) {
+        super(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdDate);
 
         this.rate = rate;
         this.reversedItemId = reversedItemId;
@@ -71,7 +71,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
     public InvoiceItem asCredit() {
         BigDecimal amountNegated = amount == null ? null : amount.negate();
         return new RecurringInvoiceItem(invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
-                amountNegated, rate, currency, id, createdDate, updatedDate);
+                amountNegated, rate, currency, id, createdDate);
     }
 
     @Override

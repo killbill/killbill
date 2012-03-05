@@ -16,10 +16,9 @@
 
 package com.ning.billing.util.tag;
 
-import org.joda.time.DateTime;
-import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.UpdatableEntity;
 
-public interface TagDefinition extends Entity {
+public interface TagDefinition extends UpdatableEntity {
     String getName();
 
     String getCreatedBy();

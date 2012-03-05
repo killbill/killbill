@@ -34,18 +34,17 @@ public abstract class InvoiceItemBase implements InvoiceItem {
     protected final BigDecimal amount;
     protected final Currency currency;
     protected final DateTime createdDate;
-    protected final DateTime updatedDate;
 
     public InvoiceItemBase(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
                            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                           DateTime createdDate, DateTime updatedDate) {
+                           DateTime createdDate) {
         this(UUID.randomUUID(), invoiceId, subscriptionId, planName, phaseName,
-                startDate, endDate, amount, currency, createdDate, updatedDate);
+                startDate, endDate, amount, currency, createdDate);
     }
 
     public InvoiceItemBase(UUID id, UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
                            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                           DateTime createdDate, DateTime updatedDate) {
+                           DateTime createdDate) {
         this.id = id;
         this.invoiceId = invoiceId;
         this.subscriptionId = subscriptionId;
@@ -56,15 +55,10 @@ public abstract class InvoiceItemBase implements InvoiceItem {
         this.amount = amount;
         this.currency = currency;
         this.createdDate = createdDate;
-        this.updatedDate = updatedDate;
     }
 
     public DateTime getCreatedDate() {
         return createdDate;
-    }
-
-    public DateTime getUpdatedDate() {
-        return updatedDate;
     }
 
     @Override

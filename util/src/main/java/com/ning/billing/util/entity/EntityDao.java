@@ -29,9 +29,6 @@ public interface EntityDao<T extends Entity> {
     @SqlUpdate
     public void create(@BindBean final T entity) throws EntityPersistenceException;
 
-    @SqlUpdate
-    public void update(@BindBean final T entity) throws EntityPersistenceException;
-
     @SqlQuery
     public T getById(@Bind("id") final String id);
 

@@ -79,7 +79,6 @@ public abstract class TestPaymentApi {
                                                        amount,
                                                        new BigDecimal("1.0"),
                                                        Currency.USD,
-                                                       now,
                                                        now));
 
         List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()));
