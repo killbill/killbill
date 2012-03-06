@@ -56,6 +56,9 @@ Use Cases to do:
 				<addonProduct>Laser-Scope</addonProduct>
 			</available>
 		</product>
+        <product name="Blowdart">
+            <category>BASE</category>
+        </product>
 		<product name="Shotgun">
 			<category>BASE</category>
 		</product>
@@ -194,6 +197,43 @@ Use Cases to do:
 					<price><currency>GBP</currency><value>29.95</value></price>
 					<price><currency>EUR</currency><value>29.95</value></price> 
 					<price><currency>USD</currency><value>29.95</value></price>								
+				</recurringPrice>
+			</finalPhase>
+		</plan>
+        <plan name="blowdart-monthly-with-discount">
+			<product>Blowdart</product>
+			<initialPhases>
+				<phase type="TRIAL">
+					<duration>
+						<unit>DAYS</unit>
+						<number>30</number>
+					</duration>
+					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+					<fixedPrice>
+					</fixedPrice>
+				</phase>
+				<phase type="DISCOUNT">
+					<duration>
+						<unit>MONTHS</unit>
+						<number>6</number>
+					</duration>
+					<billingPeriod>MONTHLY</billingPeriod>
+					<recurringPrice>
+						<price><currency>USD</currency><value>9.95</value></price>
+						<price><currency>EUR</currency><value>9.95</value></price>
+						<price><currency>GBP</currency><value>9.95</value></price>
+					</recurringPrice>
+				</phase>
+			</initialPhases>
+			<finalPhase type="EVERGREEN">
+				<duration>
+					<unit>UNLIMITED</unit>
+				</duration>
+				<billingPeriod>MONTHLY</billingPeriod>
+				<recurringPrice>
+					<price><currency>USD</currency><value>29.95</value></price>
+					<price><currency>EUR</currency><value>29.95</value></price>
+					<price><currency>GBP</currency><value>29.95</value></price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -604,9 +644,11 @@ Use Cases to do:
 			</finalPhase>
 		</plan>
 	</plans>
+
 	<priceLists>
 		<defaultPriceList name="DEFAULT"> 
 			<plans>
+                <plan>blowdart-monthly-with-discount</plan>
 				<plan>pistol-monthly</plan>
 				<plan>shotgun-monthly</plan>
 				<plan>assault-rifle-monthly</plan>

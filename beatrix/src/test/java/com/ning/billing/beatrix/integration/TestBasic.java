@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
@@ -266,7 +267,7 @@ public class TestBasic {
         Thread.sleep(600000);
     }
 
-    @Test(groups = "stress", enabled = true)
+    @Test(groups = "stress", enabled = false)
     public void stressTest() throws Exception {
         final int maxIterations = 7;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
@@ -481,7 +482,7 @@ public class TestBasic {
         log.info("TEST PASSED !");
     }
 
-    @Test(enabled=false)
+    @Test()
     public void testHappyPath() throws AccountApiException, EntitlementUserApiException {
         long DELAY = 5000 * 10;
 
@@ -515,6 +516,21 @@ public class TestBasic {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         clock.setDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertTrue(busHandler.isCompleted(DELAY));
+
+    }
+
+    @Test
+    public void testForMultipleRecurringPhases() throws AccountApiException, EntitlementUserApiException {
+        Account account = accountUserApi.createAccount(getAccountData(15), null, null);
+        UUID accountId = account.getId();
+
+        String productName = "Blowdart";
+        String planSetName = "DEFAULT";
+
+        SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(accountId, "testKey");
+        SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
+                                        new PlanPhaseSpecifier(productName, ProductCategory.BASE,
+                                        BillingPeriod.NO_BILLING_PERIOD, planSetName, PhaseType.TRIAL), null);
 
     }
 
