@@ -17,7 +17,9 @@
 package com.ning.billing.entitlement.engine.dao;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -30,8 +32,12 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
@@ -42,10 +48,14 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEvent;
+import com.ning.billing.entitlement.events.user.ApiEventBuilder;
+import com.ning.billing.entitlement.events.user.ApiEventCancel;
+import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
@@ -65,16 +75,18 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final EventSqlDao eventsDao;
     private final SubscriptionFactory factory;
     private final NotificationQueueService notificationQueueService;
+    private final AddonUtils addonUtils;
 
     @Inject
     public EntitlementSqlDao(final IDBI dbi, final Clock clock, final SubscriptionFactory factory,
-                             final NotificationQueueService notificationQueueService) {
+            final AddonUtils addonUtils, final NotificationQueueService notificationQueueService) {
         this.clock = clock;
         this.factory = factory;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
         this.eventsDao = dbi.onDemand(EventSqlDao.class);
         this.bundlesDao = dbi.onDemand(BundleSqlDao.class);
         this.notificationQueueService = notificationQueueService;
+        this.addonUtils = addonUtils;
     }
 
     @Override
@@ -104,10 +116,6 @@ public class EntitlementSqlDao implements EntitlementDao {
         });
     }
 
-    @Override
-    public Subscription getSubscriptionFromId(final UUID subscriptionId) {
-        return buildSubscription(subscriptionsDao.getSubscriptionFromId(subscriptionId.toString()));
-    }
 
     @Override
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
@@ -134,19 +142,18 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     @Override
     public Subscription getBaseSubscription(final UUID bundleId) {
+        return getBaseSubscription(bundleId, true);
+    }
 
-        List<Subscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
-        for (Subscription cur : subscriptions) {
-            if (((SubscriptionData)cur).getCategory() == ProductCategory.BASE) {
-                return  buildSubscription(cur);
-            }
-        }
-        return null;
+
+    @Override
+    public Subscription getSubscriptionFromId(final UUID subscriptionId) {
+        return buildSubscription(subscriptionsDao.getSubscriptionFromId(subscriptionId.toString()));
     }
 
     @Override
     public List<Subscription> getSubscriptions(UUID bundleId) {
-        return buildSubscription(subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString()));
+        return buildBundleSubscriptions(subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString()));
     }
 
     @Override
@@ -155,7 +162,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         if (bundle == null) {
             return Collections.emptyList();
         }
-        return buildSubscription(subscriptionsDao.getSubscriptionsFromBundleId(bundle.getId().toString()));
+        return getSubscriptions(bundle.getId());
     }
 
     @Override
@@ -243,6 +250,7 @@ public class EntitlementSqlDao implements EntitlementDao {
             @Override
             public Void inTransaction(EventSqlDao dao,
                     TransactionStatus status) throws Exception {
+                cancelNextCancelEventFromTransaction(subscriptionId, dao);
                 cancelNextChangeEventFromTransaction(subscriptionId, dao);
                 cancelNextPhaseEventFromTransaction(subscriptionId, dao);
                 dao.insertEvent(cancelEvent);
@@ -332,6 +340,10 @@ public class EntitlementSqlDao implements EntitlementDao {
         cancelFutureEventFromTransaction(subscriptionId, dao, EventType.API_USER, ApiEventType.CHANGE);
     }
 
+    private void cancelNextCancelEventFromTransaction(final UUID subscriptionId, final EventSqlDao dao) {
+        cancelFutureEventFromTransaction(subscriptionId, dao, EventType.API_USER, ApiEventType.CANCEL);
+    }
+
     private void cancelFutureEventFromTransaction(final UUID subscriptionId, final EventSqlDao dao, EventType type, ApiEventType apiType) {
 
         UUID futureEventId = null;
@@ -354,18 +366,106 @@ public class EntitlementSqlDao implements EntitlementDao {
         }
     }
 
+    public Subscription getBaseSubscription(final UUID bundleId, boolean rebuildSubscription) {
+        List<Subscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
+        for (Subscription cur : subscriptions) {
+            if (((SubscriptionData)cur).getCategory() == ProductCategory.BASE) {
+                return  rebuildSubscription ? buildSubscription(cur) : cur;
+            }
+        }
+        return null;
+    }
+
+
     private Subscription buildSubscription(Subscription input) {
         if (input == null) {
             return null;
         }
-        return buildSubscription(Collections.singletonList(input)).get(0);
+        List<Subscription> bundleInput = new ArrayList<Subscription>();
+        Subscription baseSubscription = null;
+        if (input.getCategory() == ProductCategory.ADD_ON) {
+            baseSubscription = getBaseSubscription(input.getBundleId(), false);
+            bundleInput.add(baseSubscription);
+            bundleInput.add(input);
+        } else {
+            bundleInput.add(input);
+        }
+        List<Subscription> reloadedSubscriptions = buildBundleSubscriptions(bundleInput);
+        for (Subscription cur : reloadedSubscriptions) {
+            if (cur.getId().equals(input.getId())) {
+                return cur;
+            }
+         }
+         throw new EntitlementError(String.format("Unexpected code path in buildSubscription"));
     }
 
-    private List<Subscription> buildSubscription(List<Subscription> input) {
-        List<Subscription> result = new ArrayList<Subscription>(input.size());
+
+
+    private List<Subscription> buildBundleSubscriptions(List<Subscription> input) {
+
+        // Make sure BasePlan -- if exists-- is first
+        Collections.sort(input, new Comparator<Subscription>() {
+            @Override
+            public int compare(Subscription o1, Subscription o2) {
+                if (o1.getCategory() == ProductCategory.BASE) {
+                    return -1;
+                } else if (o2.getCategory() == ProductCategory.BASE) {
+                    return 1;
+                } else {
+                    return o1.getStartDate().compareTo(o2.getStartDate());
+                }
+            }
+        });
+
+        EntitlementEvent futureBaseEvent = null;
+                List<Subscription> result = new ArrayList<Subscription>(input.size());
         for (Subscription cur : input) {
+
             List<EntitlementEvent> events = eventsDao.getEventsForSubscription(cur.getId().toString());
-            Subscription reloaded =   factory.createSubscription(new SubscriptionBuilder((SubscriptionData) cur), events);
+            Subscription reloaded = factory.createSubscription(new SubscriptionBuilder((SubscriptionData) cur), events);
+
+            switch (cur.getCategory()) {
+            case BASE:
+                Collection<EntitlementEvent> futureApiEvents = Collections2.filter(events, new Predicate<EntitlementEvent>() {
+                    @Override
+                    public boolean apply(EntitlementEvent input) {
+                        return (input.getEffectiveDate().isAfter(clock.getUTCNow()) &&
+                                ((input instanceof ApiEventCancel) || (input instanceof ApiEventChange)));
+                    }
+                });
+                futureBaseEvent = (futureApiEvents.size() == 0) ? null : futureApiEvents.iterator().next();
+                break;
+
+            case ADD_ON:
+                Plan targetAddOnPlan = reloaded.getCurrentPlan();
+                String baseProductName = (futureBaseEvent instanceof ApiEventChange) ?
+                        ((ApiEventChange) futureBaseEvent).getEventPlan() : null;
+
+                boolean createCancelEvent = (futureBaseEvent != null) &&
+                    ((futureBaseEvent instanceof ApiEventCancel) ||
+                            ((! addonUtils.isAddonAvailable(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan)) ||
+                                    (addonUtils.isAddonIncluded(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan))));
+
+                if (createCancelEvent) {
+                    DateTime now = clock.getUTCNow();
+                    EntitlementEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                    .setSubscriptionId(reloaded.getId())
+                    .setActiveVersion(((SubscriptionData) reloaded).getActiveVersion())
+                    .setProcessedDate(now)
+                    .setEffectiveDate(futureBaseEvent.getEffectiveDate())
+                    .setRequestedDate(now)
+                    // This event is only there to indicate the ADD_ON is future canceled, but it is not there
+                    // on disk until the base plan cancellation becomes effective
+                    .setFromDisk(false));
+
+                    events.add(addOnCancelEvent);
+                    // Finally reload subscription with full set of events
+                    reloaded = factory.createSubscription(new SubscriptionBuilder((SubscriptionData) cur), events);
+                }
+                break;
+            default:
+                break;
+            }
             result.add(reloaded);
         }
         return result;

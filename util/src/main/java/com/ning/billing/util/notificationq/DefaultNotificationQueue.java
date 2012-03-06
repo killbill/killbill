@@ -19,6 +19,7 @@ package com.ning.billing.util.notificationq;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -61,6 +62,12 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
                     cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate());
         }
         return result;
+    }
+
+    @Override
+    public void recordFutureNotification(DateTime futureNotificationTime, NotificationKey notificationKey) {
+        Notification notification = new DefaultNotification(getFullQName(), notificationKey.toString(), futureNotificationTime);
+        dao.insertNotification(notification);
     }
 
     @Override

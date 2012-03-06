@@ -89,6 +89,16 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-invoice</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-payment</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-util</artifactId>
             <scope>test</scope>
         </dependency>

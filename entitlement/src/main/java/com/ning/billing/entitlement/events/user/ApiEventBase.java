@@ -28,7 +28,7 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     private final String eventPlan;
     private final String eventPlanPhase;
     private final String eventPriceList;
-
+    private final boolean fromDisk;
 
     public ApiEventBase(ApiEventBuilder builder) {
         super(builder);
@@ -36,9 +36,10 @@ public class ApiEventBase extends EventBase implements ApiEvent {
         this.eventPriceList = builder.getEventPriceList();
         this.eventPlan = builder.getEventPlan();
         this.eventPlanPhase = builder.getEventPlanPhase();
+        this.fromDisk = builder.isFromDisk();
     }
 
-
+/*
     public ApiEventBase(UUID subscriptionId, DateTime bundleStartDate, DateTime processed, String planName, String phaseName,
             String priceList, DateTime requestedDate,  ApiEventType eventType, DateTime effectiveDate, long activeVersion) {
         super(subscriptionId, requestedDate, effectiveDate, processed, activeVersion, true);
@@ -56,7 +57,7 @@ public class ApiEventBase extends EventBase implements ApiEvent {
         this.eventPlan = null;
         this.eventPlanPhase = null;
     }
-
+*/
 
     @Override
     public ApiEventType getEventType() {
@@ -81,6 +82,11 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     @Override
     public String getPriceList() {
         return eventPriceList;
+    }
+
+    @Override
+    public boolean isFromDisk() {
+        return fromDisk;
     }
 
 

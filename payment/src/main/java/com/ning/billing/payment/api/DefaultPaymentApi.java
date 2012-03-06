@@ -25,7 +25,6 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +34,7 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
+import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
@@ -44,6 +44,7 @@ public class DefaultPaymentApi implements PaymentApi {
     private final PaymentProviderPluginRegistry pluginRegistry;
     private final AccountUserApi accountUserApi;
     private final InvoicePaymentApi invoicePaymentApi;
+    private final RetryService retryService;
     private final PaymentDao paymentDao;
     private final PaymentConfig config;
 
@@ -53,11 +54,13 @@ public class DefaultPaymentApi implements PaymentApi {
     public DefaultPaymentApi(PaymentProviderPluginRegistry pluginRegistry,
                              AccountUserApi accountUserApi,
                              InvoicePaymentApi invoicePaymentApi,
+                             RetryService retryService,
                              PaymentDao paymentDao,
                              PaymentConfig config) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
         this.invoicePaymentApi = invoicePaymentApi;
+        this.retryService = retryService;
         this.paymentDao = paymentDao;
         this.config = config;
     }
@@ -134,7 +137,7 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentError, PaymentInfo> createPayment(UUID paymentAttemptId) {
+    public Either<PaymentError, PaymentInfo> createPaymentForPaymentAttempt(UUID paymentAttemptId) {
         PaymentAttempt paymentAttempt = paymentDao.getPaymentAttemptById(paymentAttemptId);
 
         if (paymentAttempt != null) {
@@ -142,17 +145,23 @@ public class DefaultPaymentApi implements PaymentApi {
             Account account = accountUserApi.getAccountById(paymentAttempt.getAccountId());
 
             if (invoice != null && account != null) {
-                if (invoice.getBalance().compareTo(BigDecimal.ZERO) == 0 ) {
+                if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
                     // TODO: send a notification that invoice was ignored?
                     log.info("Received invoice for payment with outstanding amount of 0 {} ", invoice);
-                    Either.left(new PaymentError("invoice_balance_0", "Invoice balance was 0"));
+                    return Either.left(new PaymentError("invoice_balance_0",
+                                                        "Invoice balance was 0 or less",
+                                                        paymentAttempt.getAccountId(),
+                                                        paymentAttempt.getInvoiceId()));
                 }
                 else {
                     return processPayment(getPaymentProviderPlugin(account), account, invoice, paymentAttempt);
                 }
             }
         }
-        return Either.left(new PaymentError("retry_payment_error", "Could not load payment attempt, invoice or account for id " + paymentAttemptId));
+        return Either.left(new PaymentError("retry_payment_error",
+                                            "Could not load payment attempt, invoice or account for id " + paymentAttemptId,
+                                            paymentAttempt.getAccountId(),
+                                            paymentAttempt.getInvoiceId()));
     }
 
     @Override
@@ -164,10 +173,14 @@ public class DefaultPaymentApi implements PaymentApi {
         for (String invoiceId : invoiceIds) {
             Invoice invoice = invoicePaymentApi.getInvoice(UUID.fromString(invoiceId));
 
-            if (invoice.getBalance().compareTo(BigDecimal.ZERO) == 0 ) {
+            if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
                 // TODO: send a notification that invoice was ignored?
                 log.info("Received invoice for payment with balance of 0 {} ", invoice);
-                Either.left(new PaymentError("invoice_balance_0", "Invoice balance was 0"));
+                Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("invoice_balance_0",
+                                                                                        "Invoice balance was 0 or less",
+                                                                                        account.getId(),
+                                                                                        UUID.fromString(invoiceId)));
+                processedPaymentsOrErrors.add(result);
             }
             else {
                 PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice);
@@ -234,7 +247,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
         if (retryCount < retryDays.size()) {
             int retryInDays = 0;
-            DateTime nextRetryDate = new DateTime(DateTimeZone.UTC);
+            DateTime nextRetryDate = paymentAttempt.getPaymentAttemptDate();
 
             try {
                 retryInDays = retryDays.get(retryCount);
@@ -244,6 +257,7 @@ public class DefaultPaymentApi implements PaymentApi {
                 log.error("Could not get retry day for retry count {}", retryCount);
             }
 
+            retryService.scheduleRetry(paymentAttempt, nextRetryDate);
             paymentDao.updatePaymentAttemptWithRetryInfo(paymentAttempt.getPaymentAttemptId(), retryCount + 1, nextRetryDate);
         }
         else if (retryCount == retryDays.size()) {

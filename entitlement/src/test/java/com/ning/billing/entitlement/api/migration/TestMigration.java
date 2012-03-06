@@ -29,6 +29,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 
+import com.google.common.collect.Lists;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
@@ -72,6 +73,48 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
             assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
+        } catch (EntitlementMigrationApiException e) {
+            Assert.fail("", e);
+        }
+    }
+
+
+    public void testPlanWithAddOn() {
+        try {
+            DateTime beforeMigration = clock.getUTCNow();
+            final DateTime initalAddonStart = clock.getUTCNow().minusMonths(1).plusDays(7);
+            EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlanAndAddons(initalAddonStart);
+            DateTime afterMigration = clock.getUTCNow();
+
+            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
+            migrationApi.migrate(toBeMigrated);
+            assertTrue(testListener.isCompleted(5000));
+
+            List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
+            assertEquals(bundles.size(), 1);
+            SubscriptionBundle bundle = bundles.get(0);
+
+            List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId());
+            assertEquals(subscriptions.size(), 2);
+
+            Subscription baseSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) ?
+                    subscriptions.get(0) : subscriptions.get(1);
+            assertDateWithin(baseSubscription.getStartDate(), beforeMigration, afterMigration);
+            assertEquals(baseSubscription.getEndDate(), null);
+            assertEquals(baseSubscription.getCurrentPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME);
+            assertEquals(baseSubscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
+            assertEquals(baseSubscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(baseSubscription.getCurrentPlan().getName(), "assault-rifle-annual");
+
+            Subscription aoSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.ADD_ON) ?
+                    subscriptions.get(0) : subscriptions.get(1);
+            assertEquals(aoSubscription.getStartDate(), initalAddonStart);
+            assertEquals(aoSubscription.getEndDate(), null);
+            assertEquals(aoSubscription.getCurrentPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME);
+            assertEquals(aoSubscription.getCurrentPhase().getPhaseType(), PhaseType.DISCOUNT);
+            assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(aoSubscription.getCurrentPlan().getName(), "telescopic-scope-monthly");
+
         } catch (EntitlementMigrationApiException e) {
             Assert.fail("", e);
         }
@@ -212,7 +255,7 @@ public abstract class TestMigration extends TestApiBase {
     }
 
 
-    private EntitlementAccountMigration createAccountWithSingleBasePlan(final List<EntitlementSubscriptionMigrationCase> cases) {
+    private EntitlementAccountMigration createAccountWithSingleBasePlan(final List<List<EntitlementSubscriptionMigrationCase>> cases) {
 
         return new EntitlementAccountMigration() {
 
@@ -225,18 +268,24 @@ public abstract class TestMigration extends TestApiBase {
 
                     @Override
                     public EntitlementSubscriptionMigration[] getSubscriptions() {
-                        EntitlementSubscriptionMigration subscription = new EntitlementSubscriptionMigration() {
-                            @Override
-                            public EntitlementSubscriptionMigrationCase[] getSubscriptionCases() {
-                                return cases.toArray(new EntitlementSubscriptionMigrationCase[cases.size()]);
-                            }
-                            @Override
-                            public ProductCategory getCategory() {
-                                return ProductCategory.BASE;
-                            }
-                        };
-                        EntitlementSubscriptionMigration[] result = new EntitlementSubscriptionMigration[1];
-                        result[0] = subscription;
+
+                        EntitlementSubscriptionMigration[] result = new EntitlementSubscriptionMigration[cases.size()];
+
+                        for (int i = 0; i < cases.size(); i++) {
+
+                            final List<EntitlementSubscriptionMigrationCase> curCases = cases.get(i);
+                            EntitlementSubscriptionMigration subscription = new EntitlementSubscriptionMigration() {
+                                @Override
+                                public EntitlementSubscriptionMigrationCase[] getSubscriptionCases() {
+                                    return curCases.toArray(new EntitlementSubscriptionMigrationCase[curCases.size()]);
+                                }
+                                @Override
+                                public ProductCategory getCategory() {
+                                    return ProductCategory.BASE;
+                                }
+                            };
+                            result[i] = subscription;
+                        }
                         return result;
                     }
                     @Override
@@ -255,6 +304,61 @@ public abstract class TestMigration extends TestApiBase {
         };
     }
 
+    private EntitlementAccountMigration createAccountWithRegularBasePlanAndAddons(final DateTime initalAddonStart) {
+
+        List<EntitlementSubscriptionMigrationCase> cases = new LinkedList<EntitlementSubscriptionMigrationCase>();
+        cases.add(new EntitlementSubscriptionMigrationCase() {
+            @Override
+            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
+                return new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
+            }
+            @Override
+            public DateTime getEffectiveDate() {
+                return clock.getUTCNow().minusMonths(3);
+            }
+            @Override
+            public DateTime getCancelledDate() {
+                return null;
+            }
+        });
+
+        List<EntitlementSubscriptionMigrationCase> firstAddOnCases = new LinkedList<EntitlementSubscriptionMigrationCase>();
+
+        firstAddOnCases.add(new EntitlementSubscriptionMigrationCase() {
+            @Override
+            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
+                return new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.DISCOUNT);
+            }
+            @Override
+            public DateTime getEffectiveDate() {
+                return initalAddonStart;
+            }
+            @Override
+            public DateTime getCancelledDate() {
+                return initalAddonStart.plusMonths(1);
+            }
+        });
+        firstAddOnCases.add(new EntitlementSubscriptionMigrationCase() {
+            @Override
+            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
+                return new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
+            }
+            @Override
+            public DateTime getEffectiveDate() {
+                return initalAddonStart.plusMonths(1);
+            }
+            @Override
+            public DateTime getCancelledDate() {
+                return null;
+            }
+        });
+
+        List<List<EntitlementSubscriptionMigrationCase>> input = new ArrayList<List<EntitlementSubscriptionMigrationCase>>();
+        input.add(cases);
+        input.add(firstAddOnCases);
+        return createAccountWithSingleBasePlan(input);
+    }
+
     private EntitlementAccountMigration createAccountWithRegularBasePlan() {
         List<EntitlementSubscriptionMigrationCase> cases = new LinkedList<EntitlementSubscriptionMigrationCase>();
         cases.add(new EntitlementSubscriptionMigrationCase() {
@@ -271,7 +375,9 @@ public abstract class TestMigration extends TestApiBase {
                 return null;
             }
         });
-        return createAccountWithSingleBasePlan(cases);
+        List<List<EntitlementSubscriptionMigrationCase>> input = new ArrayList<List<EntitlementSubscriptionMigrationCase>>();
+        input.add(cases);
+        return createAccountWithSingleBasePlan(input);
     }
 
     private EntitlementAccountMigration createAccountWithRegularBasePlanFutreCancelled() {
@@ -291,7 +397,9 @@ public abstract class TestMigration extends TestApiBase {
                 return effectiveDate.plusYears(1);
             }
         });
-        return createAccountWithSingleBasePlan(cases);
+        List<List<EntitlementSubscriptionMigrationCase>> input = new ArrayList<List<EntitlementSubscriptionMigrationCase>>();
+        input.add(cases);
+        return createAccountWithSingleBasePlan(input);
     }
 
 
@@ -325,7 +433,9 @@ public abstract class TestMigration extends TestApiBase {
                 return null;
             }
         });
-        return createAccountWithSingleBasePlan(cases);
+        List<List<EntitlementSubscriptionMigrationCase>> input = new ArrayList<List<EntitlementSubscriptionMigrationCase>>();
+        input.add(cases);
+        return createAccountWithSingleBasePlan(input);
     }
 
     private EntitlementAccountMigration createAccountFuturePendingChange() {
@@ -359,7 +469,9 @@ public abstract class TestMigration extends TestApiBase {
                 return null;
             }
         });
-        return createAccountWithSingleBasePlan(cases);
+        List<List<EntitlementSubscriptionMigrationCase>> input = new ArrayList<List<EntitlementSubscriptionMigrationCase>>();
+        input.add(cases);
+        return createAccountWithSingleBasePlan(input);
     }
 
 }

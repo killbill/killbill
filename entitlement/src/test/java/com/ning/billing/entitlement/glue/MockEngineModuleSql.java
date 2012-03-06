@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.glue;
 
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoSql;
 import com.ning.billing.util.clock.Clock;
@@ -36,9 +37,16 @@ public class MockEngineModuleSql extends MockEngineModule {
     }
 
     protected void installDBI() {
-        bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-        final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-        bind(DbiConfig.class).toInstance(config);
+        final MysqlTestingHelper helper = new MysqlTestingHelper();
+        bind(MysqlTestingHelper.class).toInstance(helper);
+        if (helper.isUsingLocalInstance()) {
+            bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
+            final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
+            bind(DbiConfig.class).toInstance(config);
+        } else {
+            final IDBI dbi = helper.getDBI();
+            bind(IDBI.class).toInstance(dbi);
+        }
     }
 
     @Override

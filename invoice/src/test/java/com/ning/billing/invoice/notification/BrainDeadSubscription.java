@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
@@ -47,103 +48,108 @@ public class BrainDeadSubscription implements Subscription {
 			throws EntitlementUserApiException {
 		throw new UnsupportedOperationException();
 
-		
+
 	}
 
 	@Override
 	public void pause() throws EntitlementUserApiException {
 		throw new UnsupportedOperationException();
 
-		
+
 	}
 
 	@Override
 	public void resume() throws EntitlementUserApiException {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public UUID getId() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public UUID getBundleId() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public SubscriptionState getState() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public DateTime getStartDate() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public DateTime getEndDate() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public Plan getCurrentPlan() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public String getCurrentPriceList() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public PlanPhase getCurrentPhase() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public DateTime getChargedThroughDate() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public DateTime getPaidThroughDate() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public List<SubscriptionTransition> getActiveTransitions() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public List<SubscriptionTransition> getAllTransitions() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public SubscriptionTransition getPendingTransition() {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public SubscriptionTransition getPreviousTransition() {
-		throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
 	}
+
+    @Override
+    public ProductCategory getCategory() {
+        throw new UnsupportedOperationException();
+    }
 
 }

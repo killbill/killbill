@@ -16,13 +16,22 @@
 
 package com.ning.billing.entitlement.engine.core;
 
+
+
+import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
+
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
@@ -33,12 +42,18 @@ import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
+import com.ning.billing.entitlement.events.user.ApiEvent;
+import com.ning.billing.entitlement.events.user.ApiEventBuilder;
+import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
@@ -64,7 +79,9 @@ public class Engine implements EventListener, EntitlementService {
     private final EntitlementUserApi userApi;
     private final EntitlementBillingApi billingApi;
     private final EntitlementMigrationApi migrationApi;
+    private final AddonUtils addonUtils;
     private final Bus eventBus;
+
     private final EntitlementConfig config;
     private final NotificationQueueService notificationQueueService;
 
@@ -74,7 +91,7 @@ public class Engine implements EventListener, EntitlementService {
     public Engine(Clock clock, EntitlementDao dao, PlanAligner planAligner,
             EntitlementConfig config, DefaultEntitlementUserApi userApi,
             DefaultEntitlementBillingApi billingApi,
-            DefaultEntitlementMigrationApi migrationApi, Bus eventBus,
+            DefaultEntitlementMigrationApi migrationApi, AddonUtils addonUtils, Bus eventBus,
             NotificationQueueService notificationQueueService) {
         super();
         this.clock = clock;
@@ -83,6 +100,7 @@ public class Engine implements EventListener, EntitlementService {
         this.userApi = userApi;
         this.billingApi = billingApi;
         this.migrationApi = migrationApi;
+        this.addonUtils = addonUtils;
         this.config = config;
         this.eventBus = eventBus;
         this.notificationQueueService = notificationQueueService;
@@ -172,8 +190,14 @@ public class Engine implements EventListener, EntitlementService {
             log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
             return;
         }
+        //
+        // Do any internal processing on that event before we send the event to the bus
+        //
         if (event.getType() == EventType.PHASE) {
-            insertNextPhaseEvent(subscription);
+            onPhaseEvent(subscription);
+        } else if (event.getType() == EventType.API_USER &&
+                subscription.getCategory() == ProductCategory.BASE) {
+            onBasePlanEvent(subscription, (ApiEvent) event);
         }
         try {
             eventBus.post(subscription.getTransitionFromEvent(event));
@@ -182,10 +206,11 @@ public class Engine implements EventListener, EntitlementService {
         }
     }
 
-    private void insertNextPhaseEvent(SubscriptionData subscription) {
+
+    private void onPhaseEvent(SubscriptionData subscription) {
         try {
             DateTime now = clock.getUTCNow();
-            TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription.getCurrentPlan(), subscription.getInitialPhaseOnCurrentPlan().getPhaseType(), now, subscription.getCurrentPlanStart());
+            TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now);
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                     PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
                         null;
@@ -197,4 +222,38 @@ public class Engine implements EventListener, EntitlementService {
         }
     }
 
+    private void onBasePlanEvent(SubscriptionData baseSubscription, ApiEvent event) {
+
+        DateTime now = clock.getUTCNow();
+
+        Product baseProduct = (baseSubscription.getState() == SubscriptionState.CANCELLED ) ?
+                null : baseSubscription.getCurrentPlan().getProduct();
+
+        List<Subscription> subscriptions = dao.getSubscriptions(baseSubscription.getBundleId());
+
+        Iterator<Subscription> it = subscriptions.iterator();
+        while (it.hasNext()) {
+            SubscriptionData cur = (SubscriptionData) it.next();
+            if (cur.getState() == SubscriptionState.CANCELLED ||
+                    cur.getCategory() != ProductCategory.ADD_ON) {
+                continue;
+            }
+            Plan addonCurrentPlan = cur.getCurrentPlan();
+            if (baseProduct == null ||
+                    addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
+                    ! addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
+                //
+                // Perform AO cancellation using the effectiveDate of the BP
+                //
+                EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                .setSubscriptionId(cur.getId())
+                .setActiveVersion(cur.getActiveVersion())
+                .setProcessedDate(now)
+                .setEffectiveDate(event.getEffectiveDate())
+                .setRequestedDate(now)
+                .setFromDisk(true));
+                dao.cancelSubscription(cur.getId(), cancelEvent);
+            }
+        }
+    }
 }

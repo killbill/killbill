@@ -19,6 +19,7 @@ package com.ning.billing.invoice.dao;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
@@ -123,5 +124,10 @@ public class MockSubscription implements Subscription {
     @Override
     public SubscriptionTransition getPreviousTransition() {
         return null;
+    }
+
+    @Override
+    public ProductCategory getCategory() {
+        throw new UnsupportedOperationException();
     }
 }

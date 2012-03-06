@@ -49,25 +49,25 @@ public class TestUserApiCancelSql extends TestUserApiCancel {
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testCancelSubscriptionIMM() {
         super.testCancelSubscriptionIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testCancelSubscriptionEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testCancelSubscriptionEOTWithChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testCancelSubscriptionEOTWithNoChargeThroughDate() {
         super.testCancelSubscriptionEOTWithNoChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testUncancel() throws EntitlementBillingApiException {
         super.testUncancel();
     }

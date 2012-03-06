@@ -175,7 +175,8 @@ public class TestAnalyticsListener
             nextState,
             plan,
             phase,
-            priceList
+            priceList,
+            true
         );
     }
 
@@ -212,7 +213,8 @@ public class TestAnalyticsListener
             null,
             null,
             null,
-            null
+            null,
+            true
         );
     }
 
@@ -239,7 +241,8 @@ public class TestAnalyticsListener
             nextState,
             plan,
             phase,
-            priceList
+            priceList,
+            true
         );
     }
 }

@@ -54,6 +54,7 @@ public class SubscriptionBundleData implements SubscriptionBundle {
         return accountId;
     }
 
+
     // STEPH do we need it ? and should we return that and when is that populated/updated?
     @Override
     public DateTime getStartDate() {

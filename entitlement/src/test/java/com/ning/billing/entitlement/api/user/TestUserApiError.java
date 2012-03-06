@@ -36,6 +36,7 @@ import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class TestUserApiError extends TestApiBase {
 
@@ -46,7 +47,7 @@ public class TestUserApiError extends TestApiBase {
     }
 
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionBadCatalog() {
         // WRONG PRODUTCS
         tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NULL_PRODUCT_NAME);
@@ -62,17 +63,17 @@ public class TestUserApiError extends TestApiBase {
 
     }
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionNoBundle() {
         tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BUNDLE);
     }
 
-    @Test(enabled=false)
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionNoBP() {
-        //tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, IPriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BP);
+        tCreateSubscriptionInternal(bundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BP);
     }
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionBPExists() {
         try {
             createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -82,6 +83,33 @@ public class TestUserApiError extends TestApiBase {
             Assert.assertFalse(true);
         }
     }
+
+    @Test(enabled=true, groups={"fast"})
+    public void testCreateSubscriptionAddOnNotAvailable() {
+        try {
+            UUID accountId = UUID.randomUUID();
+            SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle");
+            createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.assertFalse(true);
+        }
+    }
+
+    @Test(enabled=true, groups={"fast"})
+    public void testCreateSubscriptionAddOnIncluded() {
+        try {
+            UUID accountId = UUID.randomUUID();
+            SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle");
+            createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.assertFalse(true);
+        }
+    }
+
 
     private void tCreateSubscriptionInternal(UUID bundleId, String productName,
             BillingPeriod term, String planSet, ErrorCode expected)  {
@@ -101,7 +129,7 @@ public class TestUserApiError extends TestApiBase {
     }
 
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testChangeSubscriptionNonActive() {
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -125,17 +153,25 @@ public class TestUserApiError extends TestApiBase {
     }
 
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testChangeSubscriptionFutureCancelled() {
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            PlanPhase trialPhase = subscription.getCurrentPhase();
+
+            // MOVE TO NEXT PHASE
+            PlanPhase currentPhase = subscription.getCurrentPhase();
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
+            assertTrue(testListener.isCompleted(3000));
+
 
             // SET CTD TO CANCEL IN FUTURE
-            PlanPhase trialPhase = subscription.getCurrentPhase();
             DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId());
 
             subscription.cancel(clock.getUTCNow(), false);
@@ -156,11 +192,11 @@ public class TestUserApiError extends TestApiBase {
     }
 
 
-    @Test(enabled=false)
+    @Test(enabled=false, groups={"fast"})
     public void testCancelBadState() {
     }
 
-    @Test(enabled=true)
+    @Test(enabled=true, groups={"fast"})
     public void testUncancelBadState() {
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
