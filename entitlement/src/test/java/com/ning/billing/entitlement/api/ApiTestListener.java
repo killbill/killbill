@@ -38,10 +38,9 @@ public class ApiTestListener {
     public enum NextEvent {
         MIGRATE_ENTITLEMENT,
         CREATE,
+        RE_CREATE,
         CHANGE,
         CANCEL,
-        PAUSE,
-        RESUME,
         PHASE
     }
 
@@ -59,17 +58,14 @@ public class ApiTestListener {
         case CREATE:
             subscriptionCreated(event);
             break;
+        case RE_CREATE:
+            subscriptionReCreated(event);
+            break;
         case CANCEL:
             subscriptionCancelled(event);
             break;
         case CHANGE:
             subscriptionChanged(event);
-            break;
-        case PAUSE:
-            subscriptionPaused(event);
-            break;
-        case RESUME:
-            subscriptionResumed(event);
             break;
         case UNCANCEL:
             break;
@@ -151,6 +147,12 @@ public class ApiTestListener {
         notifyIfStackEmpty();
     }
 
+    public void subscriptionReCreated(SubscriptionTransition recreated) {
+        log.debug("-> Got event RE_CREATED");
+        assertEqualsNicely(NextEvent.RE_CREATE);
+        notifyIfStackEmpty();
+    }
+
 
     public void subscriptionCancelled(SubscriptionTransition cancelled) {
         log.debug("-> Got event CANCEL");
@@ -162,20 +164,6 @@ public class ApiTestListener {
     public void subscriptionChanged(SubscriptionTransition changed) {
         log.debug("-> Got event CHANGE");
         assertEqualsNicely(NextEvent.CHANGE);
-        notifyIfStackEmpty();
-    }
-
-
-    public void subscriptionPaused(SubscriptionTransition paused) {
-        log.debug("-> Got event PAUSE");
-        assertEqualsNicely(NextEvent.PAUSE);
-        notifyIfStackEmpty();
-    }
-
-
-    public void subscriptionResumed(SubscriptionTransition resumed) {
-        log.debug("-> Got event RESUME");
-        assertEqualsNicely(NextEvent.RESUME);
         notifyIfStackEmpty();
     }
 

@@ -85,6 +85,22 @@ public class TestUserApiError extends TestApiBase {
     }
 
     @Test(enabled=true, groups={"fast"})
+    public void testRecreateSubscriptionBPNotCancelled() {
+        try {
+            SubscriptionData subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
+            try {
+                subscription.recreate(getProductSpecifier("Pistol", PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, null), clock.getUTCNow());
+                Assert.assertFalse(true);
+            } catch (EntitlementUserApiException e) {
+                assertEquals(e.getCode(), ErrorCode.ENT_RECREATE_BAD_STATE.getCode());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.assertFalse(true);
+        }
+    }
+
+    @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionAddOnNotAvailable() {
         try {
             UUID accountId = UUID.randomUUID();

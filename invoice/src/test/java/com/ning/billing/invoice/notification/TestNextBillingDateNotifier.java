@@ -73,7 +73,7 @@ public class TestNextBillingDateNotifier {
 	private DummySqlTest dao;
 	private Bus eventBus;
 	private MysqlTestingHelper helper;
-	private InvoiceListenerMock listener = new InvoiceListenerMock();
+	private final InvoiceListenerMock listener = new InvoiceListenerMock();
 	private NotificationQueueService notificationQueueService;
 
 	private static final class InvoiceListenerMock extends InvoiceListener {
@@ -83,7 +83,7 @@ public class TestNextBillingDateNotifier {
 		public InvoiceListenerMock() {
 			super(null);
 		}
-		
+
 
 		@Override
 		public void handleNextBillingDateEvent(UUID subscriptionId,
@@ -91,17 +91,17 @@ public class TestNextBillingDateNotifier {
 			eventCount++;
 			latestSubscriptionId=subscriptionId;
 		}
-		
+
 		public int getEventCount() {
 			return eventCount;
 		}
-		
+
 		public UUID getLatestSubscriptionId(){
 			return latestSubscriptionId;
 		}
-		
+
 	}
-	
+
 	private class MockEntitlementDao implements EntitlementDao {
 
 		@Override
@@ -123,7 +123,7 @@ public class TestNextBillingDateNotifier {
 		@Override
 		public SubscriptionBundle createSubscriptionBundle(
 				SubscriptionBundleData bundle) {
-			throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException();
 
 		}
 
@@ -205,7 +205,7 @@ public class TestNextBillingDateNotifier {
 		public void uncancelSubscription(UUID subscriptionId,
 				List<EntitlementEvent> uncancelEvents) {
 			throw new UnsupportedOperationException();
-	
+
 		}
 
 		@Override
@@ -223,14 +223,21 @@ public class TestNextBillingDateNotifier {
 		public void undoMigration(UUID accountId) {
 			throw new UnsupportedOperationException();
 		}
-		
+
+        @Override
+        public void recreateSubscription(UUID subscriptionId,
+                List<EntitlementEvent> recreateEvents) {
+            throw new UnsupportedOperationException();
+        }
+
 	}
-	
+
 	@BeforeClass(groups={"setup"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
-			protected void configure() {
+			@Override
+            protected void configure() {
 				 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
 				 bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
 				 bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
@@ -273,12 +280,12 @@ public class TestNextBillingDateNotifier {
 		final UUID subscriptionId = new UUID(0L,1L);
 		final DateTime now = new DateTime();
 		final DateTime readyTime = now.plusMillis(2000);
-		final NextBillingDatePoster poster = new DefaultNextBillingDatePoster(notificationQueueService); 
+		final NextBillingDatePoster poster = new DefaultNextBillingDatePoster(notificationQueueService);
 
 		eventBus.start();
 		notifier.initialize();
 		notifier.start();
-		
+
 
 		dao.inTransaction(new Transaction<Void, DummySqlTest>() {
 			@Override
@@ -289,8 +296,8 @@ public class TestNextBillingDateNotifier {
 				return null;
 			}
 		});
-		
-		
+
+
 		// Move time in the future after the notification effectiveDate
 		((ClockMock) clock).setDeltaFromReality(3000);
 

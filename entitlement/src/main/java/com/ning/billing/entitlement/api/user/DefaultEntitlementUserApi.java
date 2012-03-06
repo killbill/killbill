@@ -123,7 +123,13 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             switch(plan.getProduct().getCategory()) {
             case BASE:
                 if (baseSubscription != null) {
-                    throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
+                    if (baseSubscription.getState() == SubscriptionState.ACTIVE) {
+                        throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
+                    } else {
+                        // If we do create on an existing CANCELLED BP, this is equivalent to call recreate on that Subscription.
+                        baseSubscription.recreate(spec, requestedDate);
+                        return baseSubscription;
+                    }
                 }
                 bundleStartDate = requestedDate;
                 break;

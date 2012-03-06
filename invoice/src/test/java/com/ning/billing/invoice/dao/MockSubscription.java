@@ -19,6 +19,7 @@ package com.ning.billing.invoice.dao;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -43,16 +44,6 @@ public class MockSubscription implements Subscription {
 
     @Override
     public void changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate) throws EntitlementUserApiException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void pause() throws EntitlementUserApiException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void resume() throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
     }
 
@@ -128,6 +119,12 @@ public class MockSubscription implements Subscription {
 
     @Override
     public ProductCategory getCategory() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate)
+            throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
     }
 }

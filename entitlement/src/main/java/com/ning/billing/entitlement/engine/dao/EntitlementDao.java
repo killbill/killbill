@@ -67,6 +67,8 @@ public interface EntitlementDao {
     // Subscription creation, cancellation, changePlan apis
     public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents);
 
+    public void recreateSubscription(UUID subscriptionId, List<EntitlementEvent> recreateEvents);
+
     public void cancelSubscription(UUID subscriptionId, EntitlementEvent cancelEvent);
 
     public void uncancelSubscription(UUID subscriptionId, List<EntitlementEvent> uncancelEvents);

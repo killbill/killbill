@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -47,21 +48,6 @@ public class BrainDeadSubscription implements Subscription {
 			String planSet, DateTime requestedDate)
 			throws EntitlementUserApiException {
 		throw new UnsupportedOperationException();
-
-
-	}
-
-	@Override
-	public void pause() throws EntitlementUserApiException {
-		throw new UnsupportedOperationException();
-
-
-	}
-
-	@Override
-	public void resume() throws EntitlementUserApiException {
-		throw new UnsupportedOperationException();
-
 	}
 
 	@Override
@@ -152,4 +138,9 @@ public class BrainDeadSubscription implements Subscription {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate)
+            throws EntitlementUserApiException {
+        throw new UnsupportedOperationException();
+    }
 }

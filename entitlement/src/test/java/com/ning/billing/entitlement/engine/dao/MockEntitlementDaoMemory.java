@@ -169,6 +169,23 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
+    public void recreateSubscription(final UUID subscriptionId,
+            final List<EntitlementEvent> recreateEvents) {
+
+        synchronized(events) {
+            events.addAll(recreateEvents);
+            for (final EntitlementEvent cur : recreateEvents) {
+                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new NotificationKey() {
+                    @Override
+                    public String toString() {
+                        return cur.getId().toString();
+                    }
+                });
+            }
+        }
+    }
+
+    @Override
     public List<Subscription> getSubscriptions(final UUID bundleId) {
 
         List<Subscription> results = new ArrayList<Subscription>();
@@ -429,4 +446,5 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             throw new RuntimeException(e);
         }
     }
+
 }

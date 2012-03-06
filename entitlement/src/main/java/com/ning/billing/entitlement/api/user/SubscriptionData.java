@@ -16,9 +16,14 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.*;
-import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
@@ -152,13 +157,9 @@ public class SubscriptionData implements Subscription {
     }
 
     @Override
-    public void pause() throws EntitlementUserApiException {
-        throw new EntitlementUserApiException(ErrorCode.NOT_IMPLEMENTED);
-    }
-
-    @Override
-    public void resume() throws EntitlementUserApiException  {
-        throw new EntitlementUserApiException(ErrorCode.NOT_IMPLEMENTED);
+    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate)
+            throws EntitlementUserApiException {
+        apiService.recreatePlan(this, spec, requestedDate);
     }
 
     @Override
@@ -185,7 +186,7 @@ public class SubscriptionData implements Subscription {
         List<SubscriptionTransition> result = new ArrayList<SubscriptionTransition>();
         for (SubscriptionTransition cur : transitions) {
             result.add(cur);
-               }
+        }
         return result;
     }
 
@@ -270,7 +271,8 @@ public class SubscriptionData implements Subscription {
                 continue;
             }
             if (cur.getEventType() == EventType.API_USER &&
-                    cur.getApiEventType() == ApiEventType.CHANGE) {
+                    (cur.getApiEventType() == ApiEventType.CHANGE ||
+                            cur.getApiEventType() == ApiEventType.RE_CREATE)) {
                 return cur;
             }
         }
@@ -325,11 +327,12 @@ public class SubscriptionData implements Subscription {
                 continue;
             }
             if (cur.getEventType() == EventType.PHASE
-                    || (cur.getEventType() == EventType.API_USER && cur.getApiEventType() == ApiEventType.CHANGE)) {
+                    || (cur.getEventType() == EventType.API_USER &&
+                            (cur.getApiEventType() == ApiEventType.CHANGE ||
+                                    cur.getApiEventType() == ApiEventType.RE_CREATE))) {
                 return cur.getEffectiveTransitionTime();
             }
         }
-
         // CREATE event
         return transitions.get(0).getEffectiveTransitionTime();
     }
@@ -378,6 +381,7 @@ public class SubscriptionData implements Subscription {
                 switch(apiEventType) {
                 case MIGRATE_ENTITLEMENT:
                 case CREATE:
+                case RE_CREATE:
                     nextState = SubscriptionState.ACTIVE;
                     nextPlanName = userEV.getEventPlan();
                     nextPhaseName = userEV.getEventPlanPhase();
@@ -387,12 +391,6 @@ public class SubscriptionData implements Subscription {
                     nextPlanName = userEV.getEventPlan();
                     nextPhaseName = userEV.getEventPlanPhase();
                     nextPriceList = userEV.getPriceList();
-                    break;
-                case PAUSE:
-                    nextState = SubscriptionState.PAUSED;
-                    break;
-                case RESUME:
-                    nextState = SubscriptionState.ACTIVE;
                     break;
                 case CANCEL:
                     nextState = SubscriptionState.CANCELLED;

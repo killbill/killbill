@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api.user;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 
 import org.joda.time.DateTime;
@@ -36,18 +37,13 @@ public interface Subscription {
     throws EntitlementUserApiException;
 
     public void changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate)
-        throws EntitlementUserApiException ;
+        throws EntitlementUserApiException;
 
-    public void pause()
-        throws EntitlementUserApiException ;
-
-    public void resume()
-        throws EntitlementUserApiException ;
-
+    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate)
+        throws EntitlementUserApiException;
 
     public enum SubscriptionState {
         ACTIVE,
-        PAUSED,
         CANCELLED
     }
 

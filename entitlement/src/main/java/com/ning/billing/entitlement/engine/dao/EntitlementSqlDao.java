@@ -244,6 +244,31 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
+    public void recreateSubscription(final UUID subscriptionId,
+            final List<EntitlementEvent> recreateEvents) {
+
+        eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
+            @Override
+            public Void inTransaction(EventSqlDao dao,
+                    TransactionStatus status) throws Exception {
+
+                for (final EntitlementEvent cur : recreateEvents) {
+                    dao.insertEvent(cur);
+                    recordFutureNotificationFromTransaction(dao,
+                            cur.getEffectiveDate(),
+                            new NotificationKey() {
+                        @Override
+                        public String toString() {
+                            return cur.getId().toString();
+                        }
+                    });
+                }
+                return null;
+            }
+        });
+    }
+
+    @Override
     public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent) {
 
         eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
@@ -549,4 +574,5 @@ public class EntitlementSqlDao implements EntitlementDao {
             throw new RuntimeException(e);
         }
     }
+
 }

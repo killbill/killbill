@@ -80,16 +80,6 @@ public class TestBusHandler {
             notifyIfStackEmpty();
 
             break;
-        case PAUSE:
-            assertEqualsNicely(NextEvent.PAUSE);
-            notifyIfStackEmpty();
-
-            break;
-        case RESUME:
-            assertEqualsNicely(NextEvent.RESUME);
-            notifyIfStackEmpty();
-
-            break;
         case UNCANCEL:
             assertEqualsNicely(NextEvent.UNCANCEL);
             notifyIfStackEmpty();
