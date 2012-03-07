@@ -23,6 +23,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
+
+import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
@@ -445,6 +447,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void saveCustomFields(SubscriptionData subscription) {
+        throw new NotImplementedException();
     }
 
 }

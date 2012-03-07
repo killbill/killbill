@@ -32,6 +32,9 @@ import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.CustomizableEntityBase;
+
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +46,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-public class SubscriptionData implements Subscription {
+public class SubscriptionData extends CustomizableEntityBase implements Subscription {
 
     private final static Logger log = LoggerFactory.getLogger(SubscriptionData.class);
 
@@ -52,7 +55,6 @@ public class SubscriptionData implements Subscription {
     //
     // Final subscription fields
     //
-    private final UUID id;
     private final UUID bundleId;
     private final DateTime startDate;
     private final DateTime bundleStartDate;
@@ -78,10 +80,9 @@ public class SubscriptionData implements Subscription {
     }
 
     public SubscriptionData(SubscriptionBuilder builder, SubscriptionApiService apiService, Clock clock) {
-        super();
+        super(builder.getId());
         this.apiService = apiService;
         this.clock = clock;
-        this.id = builder.getId();
         this.bundleId = builder.getBundleId();
         this.startDate = builder.getStartDate();
         this.bundleStartDate = builder.getBundleStartDate();
@@ -92,8 +93,27 @@ public class SubscriptionData implements Subscription {
     }
 
     @Override
-    public UUID getId() {
-        return id;
+    public String getObjectName() {
+        return "Subscription";
+    }
+
+
+    @Override
+    public void setFieldValue(String fieldName, String fieldValue) {
+        super.setFieldValue(fieldName, fieldValue);
+        apiService.commitCustomFields(this);
+    }
+
+    @Override
+    public void addFields(List<CustomField> fields) {
+        super.addFields(fields);
+        apiService.commitCustomFields(this);
+    }
+
+    @Override
+    public void clearFields() {
+        super.clearFields();
+        apiService.commitCustomFields(this);
     }
 
     @Override
@@ -444,4 +464,5 @@ public class SubscriptionData implements Subscription {
             previousPriceList = nextPriceList;
         }
     }
+
 }

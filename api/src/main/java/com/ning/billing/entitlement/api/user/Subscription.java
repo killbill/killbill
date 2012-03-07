@@ -21,6 +21,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.util.customfield.CustomizableEntity;
 
 import org.joda.time.DateTime;
 
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 
-public interface Subscription {
+public interface Subscription extends CustomizableEntity {
 
     public void cancel(DateTime requestedDate, boolean eot)
     throws EntitlementUserApiException;
@@ -46,8 +47,6 @@ public interface Subscription {
         ACTIVE,
         CANCELLED
     }
-
-    public UUID getId();
 
     public UUID getBundleId();
 

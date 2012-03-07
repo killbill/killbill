@@ -57,6 +57,8 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.clock.Clock;
@@ -102,135 +104,6 @@ public class TestNextBillingDateNotifier {
 
 	}
 
-	private class MockEntitlementDao implements EntitlementDao {
-
-		@Override
-		public List<SubscriptionBundle> getSubscriptionBundleForAccount(
-				UUID accountId) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public SubscriptionBundle createSubscriptionBundle(
-				SubscriptionBundleData bundle) {
-            throw new UnsupportedOperationException();
-
-		}
-
-		@Override
-		public Subscription getSubscriptionFromId(UUID subscriptionId) {
-			return new BrainDeadSubscription();
-
-		}
-
-		@Override
-		public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) {
-			throw new UnsupportedOperationException();
-
-		}
-
-		@Override
-		public Subscription getBaseSubscription(UUID bundleId) {
-			throw new UnsupportedOperationException();
-
-		}
-
-		@Override
-		public List<Subscription> getSubscriptions(UUID bundleId) {
-			throw new UnsupportedOperationException();
-
-		}
-
-		@Override
-		public List<Subscription> getSubscriptionsForKey(String bundleKey) {
-			throw new UnsupportedOperationException();
-
-		}
-
-		@Override
-		public void updateSubscription(SubscriptionData subscription) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void createNextPhaseEvent(UUID subscriptionId,
-				EntitlementEvent nextPhase) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public EntitlementEvent getEventById(UUID eventId) {
-			throw new UnsupportedOperationException();
-
-		}
-
-		@Override
-		public List<EntitlementEvent> getEventsForSubscription(
-				UUID subscriptionId) {
-			throw new UnsupportedOperationException();
-
-		}
-
-		@Override
-		public List<EntitlementEvent> getPendingEventsForSubscription(
-				UUID subscriptionId) {
-			throw new UnsupportedOperationException();
-
-		}
-
-		@Override
-		public void createSubscription(SubscriptionData subscription,
-				List<EntitlementEvent> initialEvents) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void cancelSubscription(UUID subscriptionId,
-				EntitlementEvent cancelEvent) {
-			throw new UnsupportedOperationException();
-
-		}
-
-		@Override
-		public void uncancelSubscription(UUID subscriptionId,
-				List<EntitlementEvent> uncancelEvents) {
-			throw new UnsupportedOperationException();
-
-		}
-
-		@Override
-		public void changePlan(UUID subscriptionId,
-				List<EntitlementEvent> changeEvents) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void migrate(UUID acountId, AccountMigrationData data) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void undoMigration(UUID accountId) {
-			throw new UnsupportedOperationException();
-		}
-
-        @Override
-        public void recreateSubscription(UUID subscriptionId,
-                List<EntitlementEvent> recreateEvents) {
-            throw new UnsupportedOperationException();
-        }
-
-	}
 
 	@BeforeClass(groups={"setup"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
@@ -260,7 +133,13 @@ public class TestNextBillingDateNotifier {
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
-        notifier = new DefaultNextBillingDateNotifier(notificationQueueService,g.getInstance(InvoiceConfig.class), new MockEntitlementDao(), listener);
+
+
+        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        EntitlementDao entitlementDao = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class);
+        ((ZombieControl) entitlementDao).addResult("getSubscriptionFromId", subscription);
+
+        notifier = new DefaultNextBillingDateNotifier(notificationQueueService,g.getInstance(InvoiceConfig.class), entitlementDao, listener);
         startMysql();
 	}
 

@@ -278,6 +278,10 @@ public class SubscriptionApiService {
         }
     }
 
+    public void commitCustomFields(SubscriptionData subscription) {
+        dao.saveCustomFields(subscription);
+    }
+
     private void validateRequestedDate(SubscriptionData subscription, DateTime now, DateTime requestedDate)
         throws EntitlementUserApiException {
 

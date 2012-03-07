@@ -36,6 +36,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.dao.AccountSqlDao;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -59,6 +61,8 @@ import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.dao.FieldStoreDao;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -166,11 +170,24 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public void updateSubscription(SubscriptionData subscription) {
-        Date ctd = (subscription.getChargedThroughDate() != null)  ? subscription.getChargedThroughDate().toDate() : null;
-        Date ptd = (subscription.getPaidThroughDate() != null)  ? subscription.getPaidThroughDate().toDate() : null;
-        subscriptionsDao.updateSubscription(subscription.getId().toString(), subscription.getActiveVersion(), ctd, ptd);
+    public void updateSubscription(final SubscriptionData subscription) {
+
+        final Date ctd = (subscription.getChargedThroughDate() != null)  ? subscription.getChargedThroughDate().toDate() : null;
+        final Date ptd = (subscription.getPaidThroughDate() != null)  ? subscription.getPaidThroughDate().toDate() : null;
+
+
+        subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
+
+            @Override
+            public Void inTransaction(SubscriptionSqlDao transactionalDao,
+                    TransactionStatus status) throws Exception {
+                transactionalDao.updateSubscription(subscription.getId().toString(), subscription.getActiveVersion(), ctd, ptd);
+                return null;
+            }
+        });
     }
+
+
 
     @Override
     public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase) {
@@ -391,16 +408,19 @@ public class EntitlementSqlDao implements EntitlementDao {
         }
     }
 
-    public Subscription getBaseSubscription(final UUID bundleId, boolean rebuildSubscription) {
-        List<Subscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
-        for (Subscription cur : subscriptions) {
-            if (((SubscriptionData)cur).getCategory() == ProductCategory.BASE) {
-                return  rebuildSubscription ? buildSubscription(cur) : cur;
-            }
-        }
-        return null;
-    }
+    private void updateCustomFieldsFromTransaction(SubscriptionSqlDao transactionalDao, final SubscriptionData subscription) {
 
+        String SubscriptionId = subscription.getId().toString();
+        String objectType = subscription.getObjectName();
+
+        FieldStoreDao fieldStoreDao = transactionalDao.become(FieldStoreDao.class);
+        fieldStoreDao.clear(SubscriptionId, objectType);
+
+        List<CustomField> fieldList = subscription.getFieldList();
+        if (fieldList != null) {
+            fieldStoreDao.batchSaveFromTransaction(SubscriptionId, objectType, fieldList);
+        }
+    }
 
     private Subscription buildSubscription(Subscription input) {
         if (input == null) {
@@ -491,6 +511,7 @@ public class EntitlementSqlDao implements EntitlementDao {
             default:
                 break;
             }
+            loadCustomFields(reloaded);
             result.add(reloaded);
         }
         return result;
@@ -536,6 +557,16 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
 
+    public Subscription getBaseSubscription(final UUID bundleId, boolean rebuildSubscription) {
+        List<Subscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
+        for (Subscription cur : subscriptions) {
+            if (((SubscriptionData)cur).getCategory() == ProductCategory.BASE) {
+                return  rebuildSubscription ? buildSubscription(cur) : cur;
+            }
+        }
+        return null;
+    }
+
     @Override
     public void undoMigration(final UUID accountId) {
 
@@ -575,4 +606,25 @@ public class EntitlementSqlDao implements EntitlementDao {
         }
     }
 
+    @Override
+    public void saveCustomFields(final SubscriptionData subscription) {
+        subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
+            @Override
+            public Void inTransaction(SubscriptionSqlDao transactionalDao,
+                    TransactionStatus status) throws Exception {
+                updateCustomFieldsFromTransaction(transactionalDao, subscription);
+                return null;
+            }
+        });
+    }
+
+
+    private void loadCustomFields(final Subscription subscription) {
+        FieldStoreDao fieldStoreDao = subscriptionsDao.become(FieldStoreDao.class);
+        List<CustomField> fields = fieldStoreDao.load(subscription.getId().toString(), subscription.getObjectName());
+        subscription.clearFields();
+        if (fields != null) {
+            subscription.addFields(fields);
+        }
+    }
 }
