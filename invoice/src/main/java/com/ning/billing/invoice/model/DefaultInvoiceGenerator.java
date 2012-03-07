@@ -54,7 +54,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     * adjusts target date to the maximum invoice target date, if future invoices exist
     */
     @Override
-    public Invoice generateInvoice(final UUID accountId, final BillingEventSet events,
+    public Invoice generateInvoice(final UUID accountId, @Nullable final BillingEventSet events,
                                    @Nullable final List<Invoice> existingInvoices,
                                    DateTime targetDate,
                                    final Currency targetCurrency) throws InvoiceApiException {
@@ -67,7 +67,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         if (existingInvoices != null) {
             for (Invoice invoice : existingInvoices) {
-                existingItems = new ArrayList<InvoiceItem>(invoice.getInvoiceItems());
+                existingItems.addAll(invoice.getInvoiceItems());
             }
 
             Collections.sort(existingItems);

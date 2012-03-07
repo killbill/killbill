@@ -26,5 +26,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface InvoiceGenerator {
-    public Invoice generateInvoice(UUID accountId, BillingEventSet events, @Nullable List<Invoice> existingInvoices, DateTime targetDate, Currency targetCurrency) throws InvoiceApiException;
+    public Invoice generateInvoice(UUID accountId, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices, DateTime targetDate, Currency targetCurrency) throws InvoiceApiException;
 }

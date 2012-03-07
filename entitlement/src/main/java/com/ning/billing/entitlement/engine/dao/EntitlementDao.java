@@ -21,12 +21,16 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.dao.AccountSqlDao;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.dao.FieldStoreDao;
 
 public interface EntitlementDao {
 
@@ -67,6 +71,8 @@ public interface EntitlementDao {
     // Subscription creation, cancellation, changePlan apis
     public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents);
 
+    public void recreateSubscription(UUID subscriptionId, List<EntitlementEvent> recreateEvents);
+
     public void cancelSubscription(UUID subscriptionId, EntitlementEvent cancelEvent);
 
     public void uncancelSubscription(UUID subscriptionId, List<EntitlementEvent> uncancelEvents);
@@ -77,4 +83,7 @@ public interface EntitlementDao {
 
     public void undoMigration(UUID accountId);
 
-	}
+    // Custom Fields
+    public void saveCustomFields(SubscriptionData subscription);
+}
+

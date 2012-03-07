@@ -100,7 +100,9 @@ public abstract class TestPaymentApi {
         assertTrue(paymentAttempt.getAmount().compareTo(amount) == 0);
         assertEquals(paymentAttempt.getCurrency(), Currency.USD);
         assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getPaymentId());
-        assertEquals(paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0), now.withMillisOfSecond(0).withSecondOfMinute(0));
+        DateTime nowTruncated = now.withMillisOfSecond(0).withSecondOfMinute(0);
+        DateTime paymentAttemptDateTruncated = paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0);
+        assertEquals(paymentAttemptDateTruncated.compareTo(nowTruncated), 0);
 
         List<PaymentInfo> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
         assertNotNull(paymentInfos);

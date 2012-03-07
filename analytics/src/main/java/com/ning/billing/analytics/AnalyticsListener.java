@@ -51,12 +51,6 @@ public class AnalyticsListener {
             case CHANGE:
                 bstRecorder.subscriptionChanged(event);
                 break;
-            case PAUSE:
-                bstRecorder.subscriptionPaused(event);
-                break;
-            case RESUME:
-                bstRecorder.subscriptionResumed(event);
-                break;
             case UNCANCEL:
                 break;
             case PHASE:

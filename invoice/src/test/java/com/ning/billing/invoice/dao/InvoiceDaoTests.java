@@ -38,6 +38,8 @@ import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
@@ -511,7 +513,9 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         MockPlanPhase phase1 = new MockPlanPhase(recurringPrice, null, BillingPeriod.MONTHLY, PhaseType.TRIAL);
         MockPlan plan1 = new MockPlan(phase1);
 
-        Subscription subscription = new MockSubscription();
+        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+
         DateTime effectiveDate1 = new DateTime(2011, 2, 1, 0, 0, 0, 0);
         BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan1, phase1, null,
                 recurringPrice, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
@@ -559,7 +563,8 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         MockPlanPhase phase = new MockPlanPhase(recurringPrice, null);
         MockPlan plan = new MockPlan(phase);
 
-        Subscription subscription = new MockSubscription();
+        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
         DateTime effectiveDate = buildDateTime(2011, 1, 1);
 
         BillingEvent event = new DefaultBillingEvent(subscription, effectiveDate, plan, phase, null,
@@ -588,7 +593,9 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         MockPlanPhase phase2 = new MockPlanPhase(recurringPrice, null);
 
         MockPlan plan = new MockPlan();
-        Subscription subscription = new MockSubscription();
+
+        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
         DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
 
         BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan, phase1, fixedPrice,
@@ -644,7 +651,9 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         MockPlanPhase phase2 = new MockPlanPhase(recurringPrice, null);
 
         MockPlan plan = new MockPlan();
-        Subscription subscription = new MockSubscription();
+
+        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
         DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
 
         BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan, phase1, fixedPrice,

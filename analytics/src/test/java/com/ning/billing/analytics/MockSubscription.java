@@ -19,10 +19,13 @@ package com.ning.billing.analytics;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.util.customfield.CustomField;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -54,18 +57,6 @@ public class MockSubscription implements Subscription
 
     @Override
     public void changePlan(final String productName, final BillingPeriod term, final String planSet, DateTime requestedDate)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void pause()
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void resume()
     {
         throw new UnsupportedOperationException();
     }
@@ -157,6 +148,42 @@ public class MockSubscription implements Subscription
 
     @Override
     public ProductCategory getCategory() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate)
+            throws EntitlementUserApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getFieldValue(String fieldName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setFieldValue(String fieldName, String fieldValue) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<CustomField> getFieldList() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addFields(List<CustomField> fields) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clearFields() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getObjectName() {
         throw new UnsupportedOperationException();
     }
 }

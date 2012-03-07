@@ -43,6 +43,13 @@ public class PaymentError implements BusEvent {
         this.invoiceId = invoiceId;
     }
 
+    public PaymentError(String type, String message) {
+        this.type = type;
+        this.message = message;
+        this.accountId = null;
+        this.invoiceId = null;
+    }
+
     public String getType() {
         return type;
     }
