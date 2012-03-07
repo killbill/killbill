@@ -50,9 +50,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         this.clock = clock;
     }
 
+   /*
+    * adjusts target date to the maximum invoice target date, if future invoices exist
+    */
     @Override
     public Invoice generateInvoice(final UUID accountId, final BillingEventSet events,
-                                   @Nullable final List<InvoiceItem> items, final DateTime targetDate,
+                                   @Nullable final List<Invoice> existingInvoices,
+                                   DateTime targetDate,
                                    final Currency targetCurrency) throws InvoiceApiException {
         if ((events == null) || (events.size() == 0)) {
             return null;
@@ -61,24 +65,27 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         Collections.sort(events);
 
         List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
-        if (items != null) {
-            existingItems = new ArrayList<InvoiceItem>(items);
+        if (existingInvoices != null) {
+            for (Invoice invoice : existingInvoices) {
+                existingItems = new ArrayList<InvoiceItem>(invoice.getInvoiceItems());
+            }
+
             Collections.sort(existingItems);
         }
+
+        targetDate = adjustTargetDate(existingInvoices, targetDate);
 
         DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, targetCurrency, clock);
         UUID invoiceId = invoice.getId();
         List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, events, targetDate, targetCurrency);
 
-        if (existingItems != null) {
-            removeCancellingInvoiceItems(existingItems);
-            removeDuplicatedInvoiceItems(proposedItems, existingItems);
+        removeCancellingInvoiceItems(existingItems);
+        removeDuplicatedInvoiceItems(proposedItems, existingItems);
 
-            for (InvoiceItem existingItem : existingItems) {
-                if (existingItem instanceof RecurringInvoiceItem) {
-                    RecurringInvoiceItem recurringItem = (RecurringInvoiceItem) existingItem;
-                    proposedItems.add(recurringItem.asCredit());
-                }
+        for (InvoiceItem existingItem : existingItems) {
+            if (existingItem instanceof RecurringInvoiceItem) {
+                RecurringInvoiceItem recurringItem = (RecurringInvoiceItem) existingItem;
+                proposedItems.add(recurringItem.asCredit());
             }
         }
 
@@ -88,6 +95,18 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             invoice.addInvoiceItems(proposedItems);
             return invoice;
         }
+    }
+
+    private DateTime adjustTargetDate(final List<Invoice> existingInvoices, final DateTime targetDate) {
+        DateTime maxDate = targetDate;
+
+        for (Invoice invoice : existingInvoices) {
+            if (invoice.getTargetDate().isAfter(maxDate)) {
+                maxDate = invoice.getTargetDate();
+            }
+        }
+
+        return maxDate;
     }
 
     /*

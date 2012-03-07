@@ -21,13 +21,13 @@ Use cases covered so far:
 	Multiple changeEvent plan policies
 	Multiple PlanAlignment (see below, trial add-on alignments and rescue discount package)
 	Product transition rules
-	Add on (Scopes, Hoster)
+	Add on (Scopes, Holster)
 	Multi-pack addon (Extra-Ammo)
 	Addon Trial aligned to base plan (holster-monthly-regular)
 	Addon Trial aligned to creation (holster-monthly-special)
 	Rescue discount package (assault-rifle-annual-rescue)
-	Plan phase with a reccurring and a one off (refurbish-maintenance)
-	Phan with more than 2 phase (gunclub discount plans)
+	Plan phase with a recurring and a one off (refurbish-maintenance)
+	Plan with more than 2 phase (gunclub discount plans)
 		
 Use Cases to do:
 	Tiered Add On
@@ -37,7 +37,7 @@ Use Cases to do:
 
  -->
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+	xsi:noNamespaceSchemaLocation="CatalogSchema.xsd">
 
 	<effectiveDate>2011-01-01T00:00:00+00:00</effectiveDate>
 	<catalogName>Firearms</catalogName>
@@ -200,7 +200,7 @@ Use Cases to do:
 				</recurringPrice>
 			</finalPhase>
 		</plan>
-        <plan name="blowdart-monthly-with-discount">
+        <plan name="blowdart-monthly">
 			<product>Blowdart</product>
 			<initialPhases>
 				<phase type="TRIAL">
@@ -271,9 +271,9 @@ Use Cases to do:
 						<unit>DAYS</unit>
 						<number>30</number>
 					</duration>
-                                        <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
-                                        <fixedPrice>
-                                        </fixedPrice>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                    <fixedPrice>
+                    </fixedPrice>
 				    <!-- no price implies $0 -->
 				</phase>
 			</initialPhases>
@@ -648,7 +648,7 @@ Use Cases to do:
 	<priceLists>
 		<defaultPriceList name="DEFAULT"> 
 			<plans>
-                <plan>blowdart-monthly-with-discount</plan>
+                <plan>blowdart-monthly</plan>
 				<plan>pistol-monthly</plan>
 				<plan>shotgun-monthly</plan>
 				<plan>assault-rifle-monthly</plan>

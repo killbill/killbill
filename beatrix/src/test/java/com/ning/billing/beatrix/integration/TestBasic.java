@@ -30,6 +30,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
@@ -86,6 +87,8 @@ public class TestBasic {
 
     private static final Logger log = LoggerFactory.getLogger(TestBasic.class);
     private static long AT_LEAST_ONE_MONTH_MS =  31L * 24L * 3600L * 1000L;
+
+    private static final long DELAY = 5000;
 
     @Inject IDBI dbi;
 
@@ -239,25 +242,25 @@ public class TestBasic {
         assertTrue(ctd.compareTo(chargeThroughDate) == 0);
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 31, false);
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 1, false);
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 2, false);
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast", enabled = false)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 3, true);
@@ -289,7 +292,6 @@ public class TestBasic {
 
     private void testBasePlanComplete(DateTime initialCreationDate, int billingDay,
                                       boolean proRationExpected) throws Exception {
-        long DELAY = 5000;
 
         log.info("Beginning test with BCD of " + billingDay);
         Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
@@ -482,7 +484,7 @@ public class TestBasic {
         log.info("TEST PASSED !");
     }
 
-    @Test()
+    @Test(enabled=false)
     public void testHappyPath() throws AccountApiException, EntitlementUserApiException {
         long DELAY = 5000 * 10;
 
@@ -520,18 +522,45 @@ public class TestBasic {
     }
 
     @Test
-    public void testForMultipleRecurringPhases() throws AccountApiException, EntitlementUserApiException {
+    public void testForMultipleRecurringPhases() throws AccountApiException, EntitlementUserApiException, InterruptedException {
+        final long DELAY = 50000;
+
+        clock.setDeltaFromReality(new DateTime().getMillis() - clock.getUTCNow().getMillis());
+
         Account account = accountUserApi.createAccount(getAccountData(15), null, null);
         UUID accountId = account.getId();
 
         String productName = "Blowdart";
         String planSetName = "DEFAULT";
 
+        busHandler.pushExpectedEvent(NextEvent.CREATE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
         SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(accountId, "testKey");
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE,
-                                        BillingPeriod.NO_BILLING_PERIOD, planSetName, PhaseType.TRIAL), null);
+                                        BillingPeriod.MONTHLY, planSetName, PhaseType.TRIAL), null);
+        assertTrue(busHandler.isCompleted(DELAY));
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
+        assertNotNull(invoices);
+        assertTrue(invoices.size() == 1);
 
+        busHandler.pushExpectedEvent(NextEvent.PHASE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        clock.addDeltaFromReality(6 * AT_LEAST_ONE_MONTH_MS);
+        assertTrue(busHandler.isCompleted(DELAY));
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId);
+        assertNotNull(invoices);
+        assertTrue(invoices.size() == 2);
+
+        busHandler.pushExpectedEvent(NextEvent.PHASE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        clock.addDeltaFromReality(6 * AT_LEAST_ONE_MONTH_MS);
+        assertTrue(busHandler.isCompleted(DELAY));
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId);
+        assertNotNull(invoices);
+        assertTrue(invoices.size() == 3);
     }
 
     protected AccountData getAccountData(final int billingDay) {

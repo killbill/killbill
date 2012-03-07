@@ -18,6 +18,7 @@ package com.ning.billing.invoice.glue;
 
 import java.io.IOException;
 
+import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;

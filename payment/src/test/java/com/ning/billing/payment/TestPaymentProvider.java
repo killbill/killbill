@@ -88,6 +88,5 @@ public class TestPaymentProvider {
 
         assertFalse(paymentInfoReceiver.getProcessedPayments().isEmpty());
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
-
     }
 }

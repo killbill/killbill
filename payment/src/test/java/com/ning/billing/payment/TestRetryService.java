@@ -115,7 +115,6 @@ public class TestRetryService {
                                                        amount,
                                                        new BigDecimal("1.0"),
                                                        Currency.USD,
-                                                       new DateTime(DateTimeZone.UTC),
                                                        new DateTime(DateTimeZone.UTC)));
 
         mockPaymentProviderPlugin.makeNextInvoiceFail();
@@ -158,7 +157,6 @@ public class TestRetryService {
                                                        amount,
                                                        new BigDecimal("1.0"),
                                                        Currency.USD,
-                                                       new DateTime(DateTimeZone.UTC),
                                                        new DateTime(DateTimeZone.UTC)));
 
         DateTime nextRetryDate = new DateTime(DateTimeZone.UTC).minusDays(1);

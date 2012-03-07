@@ -21,11 +21,9 @@ import static org.testng.Assert.fail;
 
 import java.io.IOException;
 
-import com.google.inject.Inject;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.annotations.AfterClass;
