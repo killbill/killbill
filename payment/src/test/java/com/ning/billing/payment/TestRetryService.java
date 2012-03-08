@@ -134,12 +134,10 @@ public class TestRetryService {
 
         assertNotNull(paymentAttempt);
         assertEquals(notification.getNotificationKey(), paymentAttempt.getPaymentAttemptId().toString());
-        assertEquals(paymentAttempt.getRetryCount(), new Integer(1));
 
         DateTime expectedRetryDate = paymentAttempt.getPaymentAttemptDate().plusDays(paymentConfig.getPaymentRetryDays().get(0));
 
         assertEquals(notification.getEffectiveDate(), expectedRetryDate);
-        assertEquals(paymentAttempt.getNextRetryDate(), expectedRetryDate);
     }
 
     @Test
@@ -166,14 +164,13 @@ public class TestRetryService {
         PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice).cloner()
                                                                                       .setRetryCount(1)
                                                                                       .setPaymentAttemptDate(paymentAttemptDate)
-                                                                                      .setNextRetryDate(nextRetryDate)
                                                                                       .build();
 
         paymentDao.createPaymentAttempt(paymentAttempt);
         retryService.scheduleRetry(paymentAttempt, nextRetryDate);
 
         // wait a little to give the queue time to process
-        Thread.sleep(paymentConfig.getNotificationSleepTimeMs() * 2);
+        Thread.sleep(paymentConfig.getNotificationSleepTimeMs() * 10);
 
         List<Notification> pendingNotifications = mockNotificationQueue.getPendingEvents();
 
@@ -189,7 +186,6 @@ public class TestRetryService {
 
         PaymentAttempt updatedAttempt = paymentApi.getPaymentAttemptForInvoiceId(invoice.getId().toString());
 
-        assertEquals(updatedAttempt.getPaymentAttemptId(), paymentAttempt.getPaymentAttemptId());
         assertEquals(paymentInfo.getPaymentId(), updatedAttempt.getPaymentId());
 
     }

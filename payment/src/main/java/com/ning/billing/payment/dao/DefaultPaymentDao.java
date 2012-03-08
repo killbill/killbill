@@ -16,11 +16,9 @@
 
 package com.ning.billing.payment.dao;
 
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.collect.ImmutableList;
@@ -95,13 +93,6 @@ public class DefaultPaymentDao implements PaymentDao {
         } else {
             return sqlDao.getPaymentAttemptsForInvoiceIds(invoiceIds);
         }
-    }
-
-    @Override
-    public void updatePaymentAttemptWithRetryInfo(UUID paymentAttemptId, int retryCount, DateTime nextRetryDate) {
-
-        final Date retryDate = nextRetryDate == null ? null : nextRetryDate.toDate();
-        sqlDao.updatePaymentAttemptWithRetryInfo(paymentAttemptId.toString(), retryCount, retryDate, clock.getUTCNow().toDate());
     }
 
     @Override
