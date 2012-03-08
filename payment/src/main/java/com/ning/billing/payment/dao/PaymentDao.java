@@ -19,8 +19,6 @@ package com.ning.billing.payment.dao;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
@@ -36,7 +34,6 @@ public interface PaymentDao {
     List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<String> invoiceIds);
 
     void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String paymentId);
-    void updatePaymentAttemptWithRetryInfo(UUID paymentAttemptId, int retryCount, DateTime nextRetryDate);
 
     PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId);
 
@@ -46,5 +43,4 @@ public interface PaymentDao {
 
     PaymentAttempt getPaymentAttemptById(UUID paymentAttemptId);
     PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptId);
-
 }
