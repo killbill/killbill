@@ -55,7 +55,6 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 	//Not included in XML
 	private String catalogName;
 	
-	
 	@Override
 	public String getCatalogName() {
 		return catalogName;
