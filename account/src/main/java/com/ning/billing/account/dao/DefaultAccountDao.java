@@ -73,18 +73,33 @@ public class DefaultAccountDao implements AccountDao {
 
     @Override
     public Account getById(final String id) {
-        Account account = accountSqlDao.getById(id);
-        if (account != null) {
-            setCustomFieldsFromWithinTransaction(account, accountSqlDao);
-            setTagsFromWithinTransaction(account, accountSqlDao);
-        }
-        return account;
+        return accountSqlDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
+            @Override
+            public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
+                Account account = accountSqlDao.getById(id);
+                if (account != null) {
+                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
+                    setTagsFromWithinTransaction(account, accountSqlDao);
+                }
+                return account;
+            }
+        });
     }
-
 
     @Override
     public List<Account> get() {
-        return accountSqlDao.get();
+        return accountSqlDao.inTransaction(new Transaction<List<Account>, AccountSqlDao>() {
+            @Override
+            public List<Account> inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
+                List<Account> accounts = accountSqlDao.get();
+                for (Account account : accounts) {
+                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
+                    setTagsFromWithinTransaction(account, accountSqlDao);
+                }
+
+                return accounts;
+            }
+        });
     }
 
     @Override
@@ -162,7 +177,6 @@ public class DefaultAccountDao implements AccountDao {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
-
                     accountSqlDao.deleteByKey(externalKey);
 
                     return null;
@@ -231,6 +245,4 @@ public class DefaultAccountDao implements AccountDao {
             fieldStoreDao.batchSaveFromTransaction(accountId, objectType, fieldList);
         }
     }
-
-
 }

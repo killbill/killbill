@@ -410,15 +410,15 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     private void updateCustomFieldsFromTransaction(SubscriptionSqlDao transactionalDao, final SubscriptionData subscription) {
 
-        String SubscriptionId = subscription.getId().toString();
+        String subscriptionId = subscription.getId().toString();
         String objectType = subscription.getObjectName();
 
         FieldStoreDao fieldStoreDao = transactionalDao.become(FieldStoreDao.class);
-        fieldStoreDao.clear(SubscriptionId, objectType);
+        fieldStoreDao.clear(subscriptionId, objectType);
 
         List<CustomField> fieldList = subscription.getFieldList();
         if (fieldList != null) {
-            fieldStoreDao.batchSaveFromTransaction(SubscriptionId, objectType, fieldList);
+            fieldStoreDao.batchSaveFromTransaction(subscriptionId, objectType, fieldList);
         }
     }
 
@@ -617,7 +617,6 @@ public class EntitlementSqlDao implements EntitlementDao {
             }
         });
     }
-
 
     private void loadCustomFields(final Subscription subscription) {
         FieldStoreDao fieldStoreDao = subscriptionsDao.become(FieldStoreDao.class);
