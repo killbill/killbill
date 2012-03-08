@@ -23,13 +23,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
-import org.joda.time.DateTimeZone;
 
 public class MockPaymentDao implements PaymentDao {
     private final Map<String, PaymentInfo> payments = new ConcurrentHashMap<String, PaymentInfo>();
@@ -124,15 +124,6 @@ public class MockPaymentDao implements PaymentDao {
             }
         }
         return paymentAttempts;
-    }
-
-    @Override
-    public void updatePaymentAttemptWithRetryInfo(UUID paymentAttemptId, int retryCount, DateTime nextRetryDate) {
-        PaymentAttempt existingAttempt = paymentAttempts.get(paymentAttemptId);
-        if (existingAttempt != null) {
-            PaymentAttempt attempt = existingAttempt.cloner().setPaymentAttemptId(paymentAttemptId).setRetryCount(retryCount).setNextRetryDate(nextRetryDate).build();
-            paymentAttempts.put(paymentAttemptId, attempt);
-        }
     }
 
     @Override

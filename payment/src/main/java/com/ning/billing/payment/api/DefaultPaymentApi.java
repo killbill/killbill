@@ -154,7 +154,13 @@ public class DefaultPaymentApi implements PaymentApi {
                                                         paymentAttempt.getInvoiceId()));
                 }
                 else {
-                    return processPayment(getPaymentProviderPlugin(account), account, invoice, paymentAttempt);
+                    PaymentAttempt newPaymentAttempt = new PaymentAttempt.Builder(paymentAttempt)
+                                                                         .setRetryCount(paymentAttempt.getRetryCount() + 1)
+                                                                         .setPaymentAttemptId(UUID.randomUUID())
+                                                                         .build();
+
+                    paymentDao.createPaymentAttempt(newPaymentAttempt);
+                    return processPayment(getPaymentProviderPlugin(account), account, invoice, newPaymentAttempt);
                 }
             }
         }
@@ -258,7 +264,6 @@ public class DefaultPaymentApi implements PaymentApi {
             }
 
             retryService.scheduleRetry(paymentAttempt, nextRetryDate);
-            paymentDao.updatePaymentAttemptWithRetryInfo(paymentAttempt.getPaymentAttemptId(), retryCount + 1, nextRetryDate);
         }
         else if (retryCount == retryDays.size()) {
             log.info("Last payment retry failed for {} ", paymentAttempt);
