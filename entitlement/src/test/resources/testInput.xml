@@ -51,13 +51,13 @@ Use Cases to do:
 	<products>
 		<product name="Pistol">
 			<category>BASE</category>
-			<available>
-				<addonProduct>Telescopic-Scope</addonProduct>
-				<addonProduct>Laser-Scope</addonProduct>
-			</available>
 		</product>
 		<product name="Shotgun">
 			<category>BASE</category>
+            <available>
+                <addonProduct>Telescopic-Scope</addonProduct>
+                <addonProduct>Laser-Scope</addonProduct>
+            </available>
 		</product>
 		<product name="Assault-Rifle">
 			<category>BASE</category>
@@ -91,33 +91,18 @@ Use Cases to do:
 				<phaseType>TRIAL</phaseType>
 				<policy>IMMEDIATE</policy>
 			</changePolicyCase>
-			<changePolicyCase> 
-				<toProduct>Pistol</toProduct>
-				<policy>END_OF_TERM</policy>
-			</changePolicyCase>
+            <changePolicyCase> 
+                <toProduct>Assault-Rifle</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase> 
+                <fromProduct>Pistol</fromProduct>            
+                <toProduct>Shotgun</toProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
 			<changePolicyCase> 
 				<toPriceList>rescue</toPriceList>
 				<policy>END_OF_TERM</policy>
-			</changePolicyCase>		
-			<changePolicyCase> 
-				<fromProduct>Pistol</fromProduct>
-				<toProduct>Shotgun</toProduct>
-				<policy>IMMEDIATE</policy>
-			</changePolicyCase>
-			<changePolicyCase> 
-				<fromProduct>Assault-Rifle</fromProduct>
-				<toProduct>Shotgun</toProduct>
-				<policy>END_OF_TERM</policy>
-			</changePolicyCase>
-			<changePolicyCase> 
-				<fromBillingPeriod>MONTHLY</fromBillingPeriod>
-				<toProduct>Assault-Rifle</toProduct>
-				<toBillingPeriod>MONTHLY</toBillingPeriod>
-				<policy>END_OF_TERM</policy>
-			</changePolicyCase>
-			<changePolicyCase> 
-				<toProduct>Assault-Rifle</toProduct>
-				<policy>IMMEDIATE</policy>
 			</changePolicyCase>
 			<changePolicyCase> 
 				<fromBillingPeriod>MONTHLY</fromBillingPeriod>
@@ -135,9 +120,6 @@ Use Cases to do:
 		</changePolicy>
 		<changeAlignment>
 			<changeAlignmentCase>
-				<alignment>START_OF_SUBSCRIPTION</alignment>
-			</changeAlignmentCase>
-			<changeAlignmentCase>
 				<toPriceList>rescue</toPriceList>
 				<alignment>CHANGE_OF_PLAN</alignment>
 			</changeAlignmentCase>
@@ -146,20 +128,27 @@ Use Cases to do:
 				<toPriceList>rescue</toPriceList>
 				<alignment>CHANGE_OF_PRICELIST</alignment>
 			</changeAlignmentCase>
+            <changeAlignmentCase>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </changeAlignmentCase>
 		</changeAlignment>
 		<cancelPolicy>
-			<cancelPolicyCase>
-				<policy>END_OF_TERM</policy>
-			</cancelPolicyCase>
 			<cancelPolicyCase>
 				<phaseType>TRIAL</phaseType>
 				<policy>IMMEDIATE</policy>
 			</cancelPolicyCase>
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
 		</cancelPolicy>
 		<createAlignment>
-			<createAlignmentCase>
-				<alignment>START_OF_BUNDLE</alignment>
-			</createAlignmentCase>
+		    <createAlignmentCase>
+		        <product>Laser-Scope</product>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </createAlignmentCase>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
 		</createAlignment>
 		<billingAlignment>
 			<billingAlignmentCase>
@@ -447,6 +436,20 @@ Use Cases to do:
 		</plan>
 		<plan name="laser-scope-monthly">
 		<product>Laser-Scope</product>
+           <initialPhases>
+              <phase type="DISCOUNT">
+                 <duration>
+                    <unit>MONTHS</unit>
+                    <number>1</number>
+                  </duration>
+                 <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                      <price><currency>USD</currency><value>999.95</value></price>                             
+                      <price><currency>EUR</currency><value>499.95</value></price>
+                      <price><currency>GBP</currency><value>999.95</value></price>
+                      </recurringPrice>
+                </phase>
+            </initialPhases>
 			<finalPhase type="EVERGREEN">
 				<duration>
 					<unit>UNLIMITED</unit>
@@ -461,6 +464,20 @@ Use Cases to do:
 		</plan>
 		<plan name="telescopic-scope-monthly">
 			<product>Telescopic-Scope</product>
+			<initialPhases>
+              <phase type="DISCOUNT">
+                 <duration>
+                    <unit>MONTHS</unit>
+                    <number>1</number>
+                  </duration>
+                 <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                      <price><currency>USD</currency><value>399.95</value></price>                             
+                      <price><currency>EUR</currency><value>299.95</value></price>
+                      <price><currency>GBP</currency><value>399.95</value></price>
+                      </recurringPrice>
+                </phase>
+            </initialPhases>
 			<finalPhase type="EVERGREEN">
 				<duration>
 					<unit>UNLIMITED</unit>

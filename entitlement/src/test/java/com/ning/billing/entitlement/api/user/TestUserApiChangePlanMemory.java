@@ -67,4 +67,10 @@ public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
     public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testChangePlanChangePlanAlignEOTWithChargeThroughDate();
     }
+
+    @Override
+    @Test(enabled=true, groups={"fast"})
+    public void testCorrectPhaseAlignmentOnChange() {
+        super.testCorrectPhaseAlignmentOnChange();
+    }
 }

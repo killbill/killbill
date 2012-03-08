@@ -54,38 +54,44 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
+    public void testCorrectPhaseAlignmentOnChange() {
+        super.testCorrectPhaseAlignmentOnChange();
+    }
+
+    @Override
+    @Test(enabled=true, groups={"slow"})
     public void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
         super.testChangePlanBundleAlignEOTWithNoChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testChangePlanBundleAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testChangePlanBundleAlignEOTWithChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testChangePlanBundleAlignIMM() {
         super.testChangePlanBundleAlignIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testMultipleChangeLastIMM() throws EntitlementBillingApiException {
         super.testMultipleChangeLastIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"sql"})
+    @Test(enabled=true, groups={"slow"})
     public void testMultipleChangeLastEOT() throws EntitlementBillingApiException {
         super.testMultipleChangeLastEOT();
     }
 
     // rescue not implemented yet
     @Override
-    @Test(enabled=false, groups={"sql"})
+    @Test(enabled=false, groups={"slow"})
     public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testChangePlanChangePlanAlignEOTWithChargeThroughDate();
     }

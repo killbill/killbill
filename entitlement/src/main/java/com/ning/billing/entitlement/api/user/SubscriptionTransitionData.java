@@ -44,11 +44,12 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     private final String nextPriceList;
     private final Plan nextPlan;
     private final PlanPhase nextPhase;
+    private final boolean isFromDisk;
 
     public SubscriptionTransitionData(UUID eventId, UUID subscriptionId, UUID bundleId, EventType eventType,
             ApiEventType apiEventType, DateTime requestedTransitionTime, DateTime effectiveTransitionTime,
             SubscriptionState previousState, Plan previousPlan, PlanPhase previousPhase, String previousPriceList,
-            SubscriptionState nextState, Plan nextPlan, PlanPhase nextPhase, String nextPriceList) {
+            SubscriptionState nextState, Plan nextPlan, PlanPhase nextPhase, String nextPriceList, boolean isFromDisk) {
         super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
@@ -65,6 +66,7 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
         this.nextPlan = nextPlan;
         this.nextPriceList = nextPriceList;
         this.nextPhase = nextPhase;
+        this.isFromDisk = isFromDisk;
     }
 
     @Override
@@ -136,14 +138,6 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
         }
     }
 
-    public ApiEventType getApiEventType() {
-        return apiEventType;
-    }
-
-    public EventType getEventType() {
-        return eventType;
-    }
-
     @Override
     public DateTime getRequestedTransitionTime() {
         return requestedTransitionTime;
@@ -153,6 +147,19 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     public DateTime getEffectiveTransitionTime() {
         return effectiveTransitionTime;
     }
+
+    public boolean isFromDisk() {
+        return isFromDisk;
+    }
+
+    public ApiEventType getApiEventType() {
+        return apiEventType;
+    }
+
+    public EventType getEventType() {
+        return eventType;
+    }
+
 
 
     @Override

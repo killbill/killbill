@@ -30,8 +30,7 @@ public interface SubscriptionTransition extends BusEvent {
         MIGRATE_ENTITLEMENT,
         CREATE,
         CHANGE,
-        PAUSE,
-        RESUME,
+        RE_CREATE,
         CANCEL,
         UNCANCEL,
         PHASE

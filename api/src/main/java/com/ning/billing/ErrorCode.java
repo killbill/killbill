@@ -37,13 +37,21 @@ public enum ErrorCode {
     ENT_CREATE_NO_BUNDLE(1012, "Bundle %s does not exist"),
     ENT_CREATE_NO_BP(1013, "Missing Base Subscription for bundle %s"),
     ENT_CREATE_BP_EXISTS(1015, "Subscription bundle %s already has a base subscription"),
+    ENT_CREATE_AO_BP_NON_ACTIVE(1017, "Can't create AddOn %s for non active Base Plan"),
+    ENT_CREATE_AO_ALREADY_INCLUDED(1018, "Can't create AddOn %s for BasePlan %s (Already included)"),
+    ENT_CREATE_AO_NOT_AVAILABLE(1019, "Can't create AddOn %s for BasePlan %s (Not available)"),
+
     /* Change plan */
-    ENT_CHANGE_NON_ACTIVE(1021, "Subscription %s is in state %s"),
-    ENT_CHANGE_FUTURE_CANCELLED(1022, "Subscription %s is future cancelled"),
+    ENT_CHANGE_NON_ACTIVE(1021, "Subscription %s is in state %s: Failed to change plan"),
+    ENT_CHANGE_FUTURE_CANCELLED(1022, "Subscription %s is future cancelled: Failed to change plan"),
     /* Cancellation */
-    ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s"),
+    ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s: Failed to cancel"),
+    /* Recreation */
+    ENT_RECREATE_BAD_STATE(1041, "Subscription %s is in state %s: Failed to recreate"),
+
     /* Un-cancellation */
-    ENT_UNCANCEL_BAD_STATE(1070, "Subscription %s was not in a cancelled state"),
+    ENT_UNCANCEL_BAD_STATE(1070, "Subscription %s was not in a cancelled state: Failed to uncancel plan"),
+
     /* Fetch */
     ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION(1080, "Could not find a bundle for subscription %s"),
     ENT_GET_INVALID_BUNDLE_ID(1081, "Could not find a bundle matching id %s"),

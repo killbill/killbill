@@ -19,13 +19,17 @@ package com.ning.billing.entitlement.api.user;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.util.customfield.CustomizableEntity;
+
 import org.joda.time.DateTime;
 
 import java.util.List;
 import java.util.UUID;
 
 
-public interface Subscription {
+public interface Subscription extends CustomizableEntity {
 
     public void cancel(DateTime requestedDate, boolean eot)
     throws EntitlementUserApiException;
@@ -34,22 +38,15 @@ public interface Subscription {
     throws EntitlementUserApiException;
 
     public void changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate)
-        throws EntitlementUserApiException ;
+        throws EntitlementUserApiException;
 
-    public void pause()
-        throws EntitlementUserApiException ;
-
-    public void resume()
-        throws EntitlementUserApiException ;
-
+    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate)
+        throws EntitlementUserApiException;
 
     public enum SubscriptionState {
         ACTIVE,
-        PAUSED,
         CANCELLED
     }
-
-    public UUID getId();
 
     public UUID getBundleId();
 
@@ -69,6 +66,7 @@ public interface Subscription {
 
     public DateTime getPaidThroughDate();
 
+    public ProductCategory getCategory();
 
     public List<SubscriptionTransition> getActiveTransitions();
 

@@ -35,13 +35,14 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition.Subscription
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.dao.MockSubscription;
 import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceItemList;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -452,7 +453,9 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     @Test
     public void testFixedPriceLifeCycle() throws InvoiceApiException {
         UUID accountId = UUID.randomUUID();
-        Subscription subscription = new MockSubscription();
+        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+
         Plan plan = new MockPlan("plan 1");
         MockInternationalPrice zeroPrice = new MockInternationalPrice(new DefaultPrice(ZERO, Currency.USD));
         MockInternationalPrice cheapPrice = new MockInternationalPrice(new DefaultPrice(ONE, Currency.USD));

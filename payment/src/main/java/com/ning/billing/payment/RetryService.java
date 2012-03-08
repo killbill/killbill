@@ -96,7 +96,10 @@ public class RetryService implements KillbillService {
     private void retry(String paymentAttemptId) {
         PaymentInfo paymentInfo = paymentApi.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
 
-        if (paymentInfo == null || !PaymentStatus.Processed.equals(PaymentStatus.valueOf(paymentInfo.getStatus()))) {
+        if (paymentInfo != null && PaymentStatus.Processed.equals(PaymentStatus.valueOf(paymentInfo.getStatus()))) {
+            // update payment attempt with success and notify invoice api of payment
+        }
+        else {
             paymentApi.createPaymentForPaymentAttempt(UUID.fromString(paymentAttemptId));
         }
     }

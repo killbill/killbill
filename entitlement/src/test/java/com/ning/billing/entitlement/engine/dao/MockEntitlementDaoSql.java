@@ -25,6 +25,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory;
+import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
@@ -33,8 +34,8 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
     private final ResetSqlDao resetDao;
 
     @Inject
-    public MockEntitlementDaoSql(IDBI dbi, Clock clock, SubscriptionFactory factory, NotificationQueueService notificationQueueService) {
-        super(dbi, clock, factory, notificationQueueService);
+    public MockEntitlementDaoSql(IDBI dbi, Clock clock, SubscriptionFactory factory, AddonUtils addonUtils, NotificationQueueService notificationQueueService) {
+        super(dbi, clock, factory, addonUtils, notificationQueueService);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
     }
 

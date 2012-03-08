@@ -16,13 +16,14 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import org.testng.annotations.Test;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
-import org.testng.annotations.Test;
 
-public class TestUserApiCreateSql extends TestUserApiCreate {
+public class TestUserApiRecreateSql extends TestUserApiRecreate {
 
     @Override
     protected Injector getInjector() {
@@ -31,32 +32,13 @@ public class TestUserApiCreateSql extends TestUserApiCreate {
 
     @Override
     @Test(enabled=true, groups={"slow"})
-    public void testCreateWithRequestedDate() {
-        super.testCreateWithRequestedDate();
+    protected void testRecreateWithBPCanceledThroughSubscription() {
+        super.testRecreateWithBPCanceledThroughSubscription();
     }
 
     @Override
     @Test(enabled=true, groups={"slow"})
-    public void testCreateWithInitialPhase() {
-        super.testCreateWithInitialPhase();
+    protected void testCreateWithBPCanceledFromUserApi() {
+        super.testRecreateWithBPCanceledThroughSubscription();
     }
-
-    @Override
-    @Test(enabled=true, groups={"slow"})
-    public void testSimpleCreateSubscription() {
-        super.testSimpleCreateSubscription();
-    }
-
-    @Override
-    @Test(enabled=true, groups={"slow"})
-    protected void testSimpleSubscriptionThroughPhases() {
-        super.testSimpleSubscriptionThroughPhases();
-    }
-
-    @Override
-    @Test(enabled=false, groups={"slow"})
-    protected void testSubscriptionWithAddOn() {
-        super.testSubscriptionWithAddOn();
-    }
-
 }
