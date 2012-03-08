@@ -19,10 +19,8 @@ package com.ning.billing.invoice.model;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.invoice.api.Invoice;
@@ -30,6 +28,7 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
+import org.joda.time.Months;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -42,6 +41,7 @@ import javax.annotation.Nullable;
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
+    public static final String NUMBER_OF_MONTHS = "com.ning.billing.invoice.maxNumberOfMonthsInFuture";
 
     private final Clock clock;
 
@@ -61,6 +61,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         if ((events == null) || (events.size() == 0)) {
             return null;
         }
+
+        validateTargetDate(targetDate);
 
         Collections.sort(events);
 
@@ -97,7 +99,18 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
+    private void validateTargetDate(DateTime targetDate) throws InvoiceApiException {
+        String maximumNumberOfMonthsValue = System.getProperty(NUMBER_OF_MONTHS);
+        int maximumNumberOfMonths= (maximumNumberOfMonthsValue == null) ? 36 : Integer.parseInt(maximumNumberOfMonthsValue);
+
+        if (Months.monthsBetween(clock.getUTCNow(), targetDate).getMonths() > maximumNumberOfMonths) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE, targetDate.toString());
+        }
+    }
+
     private DateTime adjustTargetDate(final List<Invoice> existingInvoices, final DateTime targetDate) {
+        if (existingInvoices == null) {return targetDate;}
+
         DateTime maxDate = targetDate;
 
         for (Invoice invoice : existingInvoices) {
@@ -192,16 +205,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 }
 
                 for (RecurringInvoiceItemData itemDatum : itemData) {
-                    InternationalPrice price = thisEvent.getRecurringPrice();
-                    if (price != null) {
-                        BigDecimal rate;
+                    BigDecimal rate = thisEvent.getRecurringPrice();
 
-                        try {
-                            rate = thisEvent.getRecurringPrice().getPrice(currency);
-                        } catch (CatalogApiException e) {
-                            throw new InvoiceApiException(e, ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency.toString());
-                        }
-
+                    if (rate != null) {
                         BigDecimal amount = itemDatum.getNumberOfCycles().multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
 
                         RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
@@ -232,23 +238,19 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         if (thisEvent.getEffectiveDate().isAfter(targetDate)) {
             return null;
         } else {
-            FixedPriceInvoiceItem fixedPriceInvoiceItem = null;
+            BigDecimal fixedPrice = thisEvent.getFixedPrice();
 
-            if (thisEvent.getFixedPrice() != null) {
-                try {
-                    Duration duration = thisEvent.getPlanPhase().getDuration();
-                    DateTime endDate = duration.addToDateTime(thisEvent.getEffectiveDate());
-                    BigDecimal fixedPrice = thisEvent.getFixedPrice().getPrice(currency);
-                    fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
-                            thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
-                            thisEvent.getEffectiveDate(), endDate, fixedPrice, currency,
-                            clock.getUTCNow());
-                } catch (CatalogApiException e) {
-                    throw new InvoiceApiException(e, ErrorCode.CAT_NO_PRICE_FOR_CURRENCY, currency.toString());
-                }
+            if (fixedPrice != null) {
+                Duration duration = thisEvent.getPlanPhase().getDuration();
+                DateTime endDate = duration.addToDateTime(thisEvent.getEffectiveDate());
+
+                return new FixedPriceInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
+                                                 thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
+                                                 thisEvent.getEffectiveDate(), endDate, fixedPrice, currency,
+                                                 clock.getUTCNow());
+            } else {
+                return null;
             }
-
-            return fixedPriceInvoiceItem;
         }
     }
 }

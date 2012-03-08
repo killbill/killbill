@@ -17,6 +17,7 @@
 package com.ning.billing.invoice;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -57,6 +58,7 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.globallocker.GlobalLocker;
+import sun.security.util.BigInt;
 
 @Guice(modules = {MockModule.class})
 public class TestInvoiceDispatcher {
@@ -123,13 +125,15 @@ public class TestInvoiceDispatcher {
 	    	Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
 	    	PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();
 			DateTime effectiveDate = new DateTime().minusDays(1);
-			InternationalPrice reccurringPrice = MockInternationalPrice.create1USD();
-			InternationalPrice fixedPrice = null;
-			events.add(new DefaultBillingEvent(subscription, effectiveDate,plan,planPhase, fixedPrice , reccurringPrice, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,"", SubscriptionTransitionType.CREATE));
+            Currency currency = Currency.USD;
+			BigDecimal fixedPrice = null;
+			events.add(new DefaultBillingEvent(subscription, effectiveDate,plan, planPhase,
+                                               fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
+                                               BillingModeType.IN_ADVANCE, "", SubscriptionTransitionType.CREATE));
+
 	    	EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
 	    	((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccount", events);
-	    	
-	    	
+
 	    	DateTime target = new DateTime();
 	    	
 	    	InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);

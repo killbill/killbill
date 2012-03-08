@@ -22,6 +22,7 @@ import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
@@ -502,10 +503,11 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
      *
      */
     @Test
-    public void testInvoiceGenerationForImmediateChanges() throws InvoiceApiException {
+    public void testInvoiceGenerationForImmediateChanges() throws InvoiceApiException, CatalogApiException {
         UUID accountId = UUID.randomUUID();
         List<Invoice> invoiceList = new ArrayList<Invoice>();
         DateTime targetDate = new DateTime(2011, 2, 16, 0, 0, 0, 0);
+        Currency currency = Currency.USD;
 
         // generate first invoice
         DefaultPrice price1 = new DefaultPrice(TEN, Currency.USD);
@@ -518,7 +520,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         DateTime effectiveDate1 = new DateTime(2011, 2, 1, 0, 0, 0, 0);
         BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan1, phase1, null,
-                recurringPrice, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", SubscriptionTransitionType.CREATE);
 
         BillingEventSet events = new BillingEventSet();
@@ -536,7 +538,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         DateTime effectiveDate2 = new DateTime(2011, 2, 15, 0, 0, 0, 0);
         BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan2, phase2, null,
-                recurringPrice2, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+                recurringPrice2.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent2", SubscriptionTransitionType.CREATE);
         events.add(event2);
 
@@ -557,7 +559,8 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     }
 
     @Test
-    public void testInvoiceForFreeTrial() throws InvoiceApiException {
+    public void testInvoiceForFreeTrial() throws InvoiceApiException, CatalogApiException {
+        Currency currency = Currency.USD;
         DefaultPrice price = new DefaultPrice(BigDecimal.ZERO, Currency.USD);
         MockInternationalPrice recurringPrice = new MockInternationalPrice(price);
         MockPlanPhase phase = new MockPlanPhase(recurringPrice, null);
@@ -568,7 +571,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime effectiveDate = buildDateTime(2011, 1, 1);
 
         BillingEvent event = new DefaultBillingEvent(subscription, effectiveDate, plan, phase, null,
-                recurringPrice, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
+                recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
                 "testEvent", SubscriptionTransitionType.CREATE);
         BillingEventSet events = new BillingEventSet();
         events.add(event);
@@ -582,7 +585,9 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     }
 
     @Test
-    public void testInvoiceForFreeTrialWithRecurringDiscount() throws InvoiceApiException {
+    public void testInvoiceForFreeTrialWithRecurringDiscount() throws InvoiceApiException, CatalogApiException {
+        Currency currency = Currency.USD;
+
         DefaultPrice zeroPrice = new DefaultPrice(BigDecimal.ZERO, Currency.USD);
         MockInternationalPrice fixedPrice = new MockInternationalPrice(zeroPrice);
         MockPlanPhase phase1 = new MockPlanPhase(null, fixedPrice);
@@ -598,8 +603,8 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
         DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
 
-        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan, phase1, fixedPrice,
-                null, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan, phase1, fixedPrice.getPrice(currency),
+                null, currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", SubscriptionTransitionType.CREATE);
         BillingEventSet events = new BillingEventSet();
         events.add(event1);
@@ -614,7 +619,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         DateTime effectiveDate2 = effectiveDate1.plusDays(30);
         BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan, phase2, null,
-                recurringPrice, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                 "testEvent2", SubscriptionTransitionType.CHANGE);
         events.add(event2);
 
@@ -640,7 +645,8 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     }
 
     @Test
-    public void testMixedModeInvoicePersistence() throws InvoiceApiException {
+    public void testMixedModeInvoicePersistence() throws InvoiceApiException, CatalogApiException {
+        Currency currency = Currency.USD;
         DefaultPrice zeroPrice = new DefaultPrice(BigDecimal.ZERO, Currency.USD);
         MockInternationalPrice fixedPrice = new MockInternationalPrice(zeroPrice);
         MockPlanPhase phase1 = new MockPlanPhase(null, fixedPrice);
@@ -656,15 +662,16 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
         DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
 
-        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan, phase1, fixedPrice,
-                null, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
+        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan, phase1,
+                fixedPrice.getPrice(currency), null, currency,
+                BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", SubscriptionTransitionType.CREATE);
         BillingEventSet events = new BillingEventSet();
         events.add(event1);
 
         DateTime effectiveDate2 = effectiveDate1.plusDays(30);
         BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan, phase2, null,
-                recurringPrice, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                 "testEvent2", SubscriptionTransitionType.CHANGE);
         events.add(event2);
 
@@ -680,79 +687,4 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         assertEquals(savedInvoice.getNumberOfItems(), 2);
         assertEquals(savedInvoice.getTotalAmount().compareTo(cheapAmount), 0);
     }
-
-//    @Test
-//    public void testCancellationWithMultipleBillingPeriodsFollowing() throws InvoiceApiException {
-//        UUID accountId = UUID.randomUUID();
-//
-//        BigDecimal fixedValue = FIVE;
-//        DefaultPrice fixedAmount = new DefaultPrice(fixedValue, Currency.USD);
-//        MockInternationalPrice fixedPrice = new MockInternationalPrice(fixedAmount);
-//        MockPlanPhase plan1phase1 = new MockPlanPhase(null, fixedPrice);
-//
-//        BigDecimal trialValue = new BigDecimal("9.95");
-//        DefaultPrice trialAmount = new DefaultPrice(trialValue, Currency.USD);
-//        MockInternationalPrice trialPrice = new MockInternationalPrice(trialAmount);
-//        MockPlanPhase plan2phase1 = new MockPlanPhase(trialPrice, null);
-//
-//        BigDecimal discountValue = new BigDecimal("24.95");
-//        DefaultPrice discountAmount = new DefaultPrice(discountValue, Currency.USD);
-//        MockInternationalPrice discountPrice = new MockInternationalPrice(discountAmount);
-//        MockPlanPhase plan2phase2 = new MockPlanPhase(discountPrice, null);
-//
-//        MockPlan plan1 = new MockPlan();
-//        MockPlan plan2 = new MockPlan();
-//        Subscription subscription = new MockSubscription();
-//        DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
-//
-//        BillingEvent creationEvent = new DefaultBillingEvent(subscription, effectiveDate1, plan1, plan1phase1, fixedPrice,
-//                                                     null, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
-//                                                     "trial", SubscriptionTransitionType.CREATE);
-//        BillingEventSet events = new BillingEventSet();
-//        events.add(creationEvent);
-//
-//        InvoiceItemList existingItems;
-//
-//        existingItems = new InvoiceItemList(invoiceDao.getInvoiceItemsByAccount(accountId));
-//        Invoice invoice1 = generator.generateInvoice(accountId, events, existingItems, effectiveDate1, Currency.USD);
-//
-//        assertNotNull(invoice1);
-//        assertEquals(invoice1.getNumberOfItems(), 1);
-//        assertEquals(invoice1.getTotalAmount().compareTo(fixedValue), 0);
-//        invoiceDao.create(invoice1);
-//
-//        DateTime effectiveDate2 = effectiveDate1.plusSeconds(1);
-//        BillingEvent changeEvent = new DefaultBillingEvent(subscription, effectiveDate2, plan2, plan2phase1, null,
-//                                                     trialPrice, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
-//                                                     "discount", SubscriptionTransitionType.CHANGE);
-//        events.add(changeEvent);
-//
-//        existingItems = new InvoiceItemList(invoiceDao.getInvoiceItemsByAccount(accountId));
-//        Invoice invoice2 = generator.generateInvoice(accountId, events, existingItems, effectiveDate2, Currency.USD);
-//        assertNotNull(invoice2);
-//        assertEquals(invoice2.getNumberOfItems(), 2);
-//        assertEquals(invoice2.getTotalAmount().compareTo(trialValue), 0);
-//        invoiceDao.create(invoice2);
-//
-//        DateTime effectiveDate3 = effectiveDate2.plusMonths(1);
-//        BillingEvent phaseEvent = new DefaultBillingEvent(subscription, effectiveDate3, plan2, plan2phase2, null,
-//                                                     discountPrice, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
-//                                                     "discount", SubscriptionTransitionType.PHASE);
-//        events.add(phaseEvent);
-//
-//        existingItems = new InvoiceItemList(invoiceDao.getInvoiceItemsByAccount(accountId));
-//        Invoice invoice3 = generator.generateInvoice(accountId, events, existingItems, effectiveDate3, Currency.USD);
-//        assertNotNull(invoice3);
-//        assertEquals(invoice3.getNumberOfItems(), 1);
-//        assertEquals(invoice3.getTotalAmount().compareTo(discountValue), 0);
-//        invoiceDao.create(invoice3);
-//
-//        DateTime effectiveDate4 = effectiveDate3.plusMonths(1);
-//        existingItems = new InvoiceItemList(invoiceDao.getInvoiceItemsByAccount(accountId));
-//        Invoice invoice4 = generator.generateInvoice(accountId, events, existingItems, effectiveDate4, Currency.USD);
-//        assertNotNull(invoice4);
-//        assertEquals(invoice4.getNumberOfItems(), 1);
-//        assertEquals(invoice4.getTotalAmount().compareTo(discountValue), 0);
-//        invoiceDao.create(invoice4);
-//    }
 }

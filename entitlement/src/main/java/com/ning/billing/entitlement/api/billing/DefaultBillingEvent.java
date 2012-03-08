@@ -16,35 +16,34 @@
 
 package com.ning.billing.entitlement.api.billing;
 
+import com.ning.billing.catalog.api.CatalogApiException;
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 
-public class DefaultBillingEvent implements BillingEvent {
-	Logger log = LoggerFactory.getLogger(DefaultBillingEvent.class);
+import java.math.BigDecimal;
 
+public class DefaultBillingEvent implements BillingEvent {
     final private int billCycleDay;
     final private Subscription subscription;
     final private DateTime effectiveDate;
     final private PlanPhase planPhase;
     final private Plan plan;
-    final private InternationalPrice fixedPrice;
-    final private InternationalPrice recurringPrice;
+    final private BigDecimal fixedPrice;
+    final private BigDecimal recurringPrice;
+    final private Currency currency;
     final private String description;
     final private BillingModeType billingModeType;
     final private BillingPeriod billingPeriod;
     final private SubscriptionTransitionType type;
 
-    public DefaultBillingEvent(SubscriptionTransition transition, Subscription subscription, int billCycleDay) {
+    public DefaultBillingEvent(SubscriptionTransition transition, Subscription subscription, int billCycleDay, Currency currency) throws CatalogApiException {
         this.billCycleDay = billCycleDay;
         this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();
@@ -53,9 +52,10 @@ public class DefaultBillingEvent implements BillingEvent {
         plan = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPlan() : transition.getPreviousPlan();
         fixedPrice = (transition.getNextPhase() == null) ? null :
-        		transition.getNextPhase().getFixedPrice();
+        		transition.getNextPhase().getFixedPrice().getPrice(currency);
         recurringPrice = (transition.getNextPhase() == null) ? null :
-        	transition.getNextPhase().getRecurringPrice();
+        	transition.getNextPhase().getRecurringPrice().getPrice(currency);
+        this.currency = currency;
         description = transition.getTransitionType().toString();
         billingModeType = BillingModeType.IN_ADVANCE;
         billingPeriod =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
@@ -64,14 +64,17 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     // Intended for test only
-    public DefaultBillingEvent(Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase, InternationalPrice fixedPrice,
-            InternationalPrice recurringPrice, BillingPeriod billingPeriod, int billCycleDay, BillingModeType billingModeType, String description, SubscriptionTransitionType type) {
+    public DefaultBillingEvent(Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase,
+                               BigDecimal fixedPrice, BigDecimal recurringPrice, Currency currency,
+                               BillingPeriod billingPeriod, int billCycleDay, BillingModeType billingModeType,
+                               String description, SubscriptionTransitionType type) {
         this.subscription = subscription;
         this.effectiveDate = effectiveDate;
         this.plan = plan;
         this.planPhase = planPhase;
         this.fixedPrice = fixedPrice;
         this.recurringPrice = recurringPrice;
+        this.currency = currency;
         this.billingPeriod = billingPeriod;
         this.billCycleDay = billCycleDay;
         this.billingModeType = billingModeType;
@@ -137,13 +140,18 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public InternationalPrice getFixedPrice() {
+    public BigDecimal getFixedPrice() {
         return fixedPrice;
     }
 
     @Override
-    public InternationalPrice getRecurringPrice() {
+    public BigDecimal getRecurringPrice() {
         return recurringPrice;
+    }
+
+    @Override
+    public Currency getCurrency() {
+        return currency;
     }
 
     @Override
@@ -159,25 +167,26 @@ public class DefaultBillingEvent implements BillingEvent {
         sb.append("phase = ").append(planPhase.getName()).append(", ");
         sb.append("effectiveDate = ").append(effectiveDate.toString()).append(", ");
         sb.append("billCycleDay = ").append(billCycleDay).append(", ");
-        sb.append("recurringPrice(USD) = ");
+        sb.append("recurringPrice = ");
 
         try {
-            sb.append(recurringPrice.getPrice(Currency.USD).toString());
+            sb.append(recurringPrice.toString());
         } catch (Exception e) {
             sb.append("null");
         }
 
         sb.append(", ");
-        sb.append("fixedPrice(USD) = ");
+        sb.append("fixedPrice = ");
 
         try {
-            sb.append(fixedPrice.getPrice(Currency.USD).toString());
+            sb.append(fixedPrice.toString());
         } catch (Exception e) {
             sb.append("null");
         }
 
         sb.append(", ");
 
+        sb.append("currency = ").append(currency.toString()).append(", ");
         sb.append("billingPeriod = ").append(billingPeriod.toString());
         sb.append("}");
 

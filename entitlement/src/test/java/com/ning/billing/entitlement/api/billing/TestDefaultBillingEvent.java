@@ -34,7 +34,6 @@ import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -126,7 +125,6 @@ public class TestDefaultBillingEvent {
 
 
 	private BillingEvent createEvent(Subscription sub, DateTime effectiveDate, SubscriptionTransitionType type) {
-		InternationalPrice zeroPrice = new MockInternationalPrice(new DefaultPrice(BigDecimal.ZERO, Currency.USD));
 		int billCycleDay = 1;
 
 		Plan shotgun = new MockPlan();
@@ -134,7 +132,7 @@ public class TestDefaultBillingEvent {
 
 		return new DefaultBillingEvent(sub , effectiveDate,
 				shotgun, shotgunMonthly,
-				zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
+				BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
 				BillingModeType.IN_ADVANCE, "Test Event 1", type);
 	}
 
