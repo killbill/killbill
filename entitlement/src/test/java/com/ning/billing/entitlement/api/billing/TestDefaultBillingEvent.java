@@ -86,11 +86,11 @@ public class TestDefaultBillingEvent {
 	}
 
 	@Test(groups={"fast"})
-	public void testEventOrderingType() {
+	public void testEventTotalOrdering() {
 
-		BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
-		BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CHANGE);
-		BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CANCEL);
+		BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE, 1L);
+		BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CANCEL, 2L);
+		BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.RE_CREATE, 3L);
 
 		SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
 		set.add(event2);
@@ -123,8 +123,11 @@ public class TestDefaultBillingEvent {
 		Assert.assertEquals(event2, it.next());
 	}
 
+    private BillingEvent createEvent(Subscription sub, DateTime effectiveDate, SubscriptionTransitionType type) {
+        return createEvent(sub, effectiveDate, type, 1L);
+    }
 
-	private BillingEvent createEvent(Subscription sub, DateTime effectiveDate, SubscriptionTransitionType type) {
+    private BillingEvent createEvent(Subscription sub, DateTime effectiveDate, SubscriptionTransitionType type, long totalOrdering) {
 		int billCycleDay = 1;
 
 		Plan shotgun = new MockPlan();
@@ -133,7 +136,7 @@ public class TestDefaultBillingEvent {
 		return new DefaultBillingEvent(sub , effectiveDate,
 				shotgun, shotgunMonthly,
 				BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-				BillingModeType.IN_ADVANCE, "Test Event 1", 1L, type);
+				BillingModeType.IN_ADVANCE, "Test Event 1", totalOrdering, type);
 	}
 
 	private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,

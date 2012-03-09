@@ -246,7 +246,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
                 return new FixedPriceInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
                                                  thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
-                                                 thisEvent.getEffectiveDate(), endDate, fixedPrice, currency);
+                                                 thisEvent.getEffectiveDate(), endDate, fixedPrice, currency,
+                                                 clock.getUTCNow());
             } else {
                 return null;
             }

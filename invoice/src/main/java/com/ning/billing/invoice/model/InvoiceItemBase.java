@@ -16,13 +16,10 @@
 
 package com.ning.billing.invoice.model;
 
-import com.google.inject.Inject;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -38,18 +35,16 @@ public abstract class InvoiceItemBase implements InvoiceItem {
     protected final Currency currency;
     protected final DateTime createdDate;
 
-    @Inject
-    private Clock clock;
-
     public InvoiceItemBase(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
-                           DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
+                           DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
+                           DateTime createdDate) {
         this(UUID.randomUUID(), invoiceId, subscriptionId, planName, phaseName,
-                startDate, endDate, amount, currency, null);
+                startDate, endDate, amount, currency, createdDate);
     }
 
     public InvoiceItemBase(UUID id, UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
                            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                           @Nullable DateTime createdDate) {
+                           DateTime createdDate) {
         this.id = id;
         this.invoiceId = invoiceId;
         this.subscriptionId = subscriptionId;
@@ -59,7 +54,7 @@ public abstract class InvoiceItemBase implements InvoiceItem {
         this.endDate = endDate;
         this.amount = amount;
         this.currency = currency;
-        this.createdDate = (createdDate == null) ? clock.getUTCNow() : createdDate;
+        this.createdDate = createdDate;
     }
 
     public DateTime getCreatedDate() {

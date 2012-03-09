@@ -560,8 +560,6 @@ public class TestIntegration {
 
     @Test(enabled = true)
     public void testHappyPath() throws AccountApiException, EntitlementUserApiException {
-        long DELAY = 5000 * 10;
-
         Account account = accountUserApi.createAccount(getAccountData(3), null, null);
         assertNotNull(account);
 
@@ -597,8 +595,6 @@ public class TestIntegration {
 
     @Test
     public void testForMultipleRecurringPhases() throws AccountApiException, EntitlementUserApiException, InterruptedException {
-        final long DELAY = 50000;
-
         clock.setDeltaFromReality(new DateTime().getMillis() - clock.getUTCNow().getMillis());
 
         Account account = accountUserApi.createAccount(getAccountData(15), null, null);
