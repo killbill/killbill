@@ -139,52 +139,48 @@ public class TestRetryService {
         assertEquals(notification.getEffectiveDate(), expectedRetryDate);
     }
 
-//    @Test
-//    public void testRetries() throws Exception {
-//        final DateTime now = new DateTime(DateTimeZone.UTC);
-//        final Account account = testHelper.createTestCreditCardAccount();
-//        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
-//        final BigDecimal amount = new BigDecimal("10.00");
-//        final UUID subscriptionId = UUID.randomUUID();
-//
-//        invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
-//                                                       subscriptionId,
-//                                                       "test plan", "test phase",
-//                                                       now,
-//                                                       now.plusMonths(1),
-//                                                       amount,
-//                                                       new BigDecimal("1.0"),
-//                                                       Currency.USD,
-//                                                       new DateTime(DateTimeZone.UTC)));
-//
-//        DateTime nextRetryDate = new DateTime(DateTimeZone.UTC).minusDays(1);
-//        DateTime paymentAttemptDate = nextRetryDate.minusDays(paymentConfig.getPaymentRetryDays().get(0));
-//        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice).cloner()
-//                                                                                      .setRetryCount(1)
-//                                                                                      .setPaymentAttemptDate(paymentAttemptDate)
-//                                                                                      .build();
-//
-//        paymentDao.createPaymentAttempt(paymentAttempt);
-//        retryService.scheduleRetry(paymentAttempt, nextRetryDate);
-//
-//        // wait a little to give the queue time to process
-//        Thread.sleep(paymentConfig.getNotificationSleepTimeMs() * 10);
-//
-//        List<Notification> pendingNotifications = mockNotificationQueue.getPendingEvents();
-//
-//        assertEquals(pendingNotifications.size(), 0);
-//
-//        List<PaymentInfo> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
-//
-//        assertEquals(paymentInfos.size(), 1);
-//
-//        PaymentInfo paymentInfo = paymentInfos.get(0);
-//
-//        assertEquals(paymentInfo.getStatus(), PaymentStatus.Processed.toString());
-//
-//        PaymentAttempt updatedAttempt = paymentApi.getPaymentAttemptForInvoiceId(invoice.getId().toString());
-//
-//        assertEquals(paymentInfo.getPaymentId(), updatedAttempt.getPaymentId());
-//
-//    }
+    @Test
+    public void testRetries() throws Exception {
+        final DateTime now = new DateTime(DateTimeZone.UTC);
+        final Account account = testHelper.createTestCreditCardAccount();
+        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
+        final BigDecimal amount = new BigDecimal("10.00");
+        final UUID subscriptionId = UUID.randomUUID();
+
+        invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+                                                       subscriptionId,
+                                                       "test plan", "test phase",
+                                                       now,
+                                                       now.plusMonths(1),
+                                                       amount,
+                                                       new BigDecimal("1.0"),
+                                                       Currency.USD,
+                                                       new DateTime(DateTimeZone.UTC)));
+
+        DateTime nextRetryDate = new DateTime(DateTimeZone.UTC).minusDays(1);
+        DateTime paymentAttemptDate = nextRetryDate.minusDays(paymentConfig.getPaymentRetryDays().get(0));
+        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice).cloner()
+                                                                                      .setRetryCount(1)
+                                                                                      .setPaymentAttemptDate(paymentAttemptDate)
+                                                                                      .build();
+
+        paymentDao.createPaymentAttempt(paymentAttempt);
+        retryService.scheduleRetry(paymentAttempt, nextRetryDate);
+
+        // wait a little to give the queue time to process
+        Thread.sleep(paymentConfig.getNotificationSleepTimeMs() * 10);
+
+        List<Notification> pendingNotifications = mockNotificationQueue.getPendingEvents();
+        assertEquals(pendingNotifications.size(), 0);
+
+        List<PaymentInfo> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        assertEquals(paymentInfos.size(), 1);
+
+        PaymentInfo paymentInfo = paymentInfos.get(0);
+        assertEquals(paymentInfo.getStatus(), PaymentStatus.Processed.toString());
+
+        PaymentAttempt updatedAttempt = paymentApi.getPaymentAttemptForInvoiceId(invoice.getId().toString());
+        assertEquals(paymentInfo.getPaymentId(), updatedAttempt.getPaymentId());
+
+    }
 }
