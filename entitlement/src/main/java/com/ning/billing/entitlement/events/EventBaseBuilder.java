@@ -48,6 +48,7 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
         this.activeVersion = copy.activeVersion;
         this.isActive = copy.isActive;
+        this.totalOrdering = copy.totalOrdering;
     }
 
     public T setTotalOrdering(long totalOrdering) {

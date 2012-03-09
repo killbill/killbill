@@ -44,7 +44,7 @@ public class DefaultBillingEvent implements BillingEvent {
     final private BillingModeType billingModeType;
     final private BillingPeriod billingPeriod;
     final private SubscriptionTransitionType type;
-    final private long totalOrdering;
+    final private Long totalOrdering;
 
     public DefaultBillingEvent(SubscriptionTransition transition, Subscription subscription, int billCycleDay) {
         this.billCycleDay = billCycleDay;
@@ -93,11 +93,7 @@ public class DefaultBillingEvent implements BillingEvent {
     		 if (! getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
                  return getEffectiveDate().compareTo(e1.getEffectiveDate());
     		 } else { // dates and subscriptions are the same
-    			 if (!getTransitionType().equals(e1.getTransitionType())) { // Finally compare by transition type
-    				 return getTransitionType().ordinal() - e1.getTransitionType().ordinal();
-    			 } else {
-    				 return hashCode() - e1.hashCode();
-    			 }
+    			 return getTotalOrdering().compareTo(e1.getTotalOrdering());
     		 }
     	 }
     }
@@ -158,7 +154,7 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public long getTotalOrdering() {
+    public Long getTotalOrdering() {
         return totalOrdering;
     }
 
@@ -186,10 +182,10 @@ public class DefaultBillingEvent implements BillingEvent {
         } catch (Exception e) {
             sb.append("null");
         }
-
         sb.append(", ");
-
         sb.append("billingPeriod = ").append(billingPeriod.toString());
+        sb.append(", ");
+        sb.append("totalOrdering = ").append(getTotalOrdering().toString());
         sb.append("}");
 
         return sb.toString();
