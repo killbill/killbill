@@ -54,7 +54,7 @@ public class InvoiceDispatcher {
     private final InvoiceDao invoiceDao;
     private final GlobalLocker locker;
 
-    private final static boolean VERBOSE_OUTPUT = false;
+    private final boolean VERBOSE_OUTPUT;
 
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
@@ -66,6 +66,9 @@ public class InvoiceDispatcher {
         this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
         this.locker = locker;
+
+        String verboseOutputValue = System.getProperty("VERBOSE_OUTPUT");
+        VERBOSE_OUTPUT = (verboseOutputValue == null) ? false : Boolean.parseBoolean(verboseOutputValue);
     }
 
     public void processSubscription(final SubscriptionTransition transition) throws InvoiceApiException {

@@ -16,7 +16,6 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.google.inject.Inject;
 import com.ning.billing.catalog.DefaultPrice;
 import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
@@ -25,6 +24,8 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
@@ -36,6 +37,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
@@ -61,13 +63,7 @@ import static org.testng.Assert.assertTrue;
 public class InvoiceDaoTests extends InvoiceDaoTestBase {
     private final int NUMBER_OF_DAY_BETWEEN_RETRIES = 8;
     private final Clock clock = new DefaultClock();
-    private final InvoiceGenerator generator;
-
-    @Inject
-    public InvoiceDaoTests(InvoiceGenerator generator) {
-        super();
-        this.generator = generator;
-    }
+    private final InvoiceGenerator generator = new DefaultInvoiceGenerator(clock);
 
     @Test
     public void testCreationAndRetrievalByAccount() {
@@ -686,5 +682,49 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         assertNotNull(savedInvoice);
         assertEquals(savedInvoice.getNumberOfItems(), 2);
         assertEquals(savedInvoice.getTotalAmount().compareTo(cheapAmount), 0);
+    }
+
+    @Test
+    public void testInvoiceNumber() throws InvoiceApiException {
+        Currency currency = Currency.USD;
+        DateTime targetDate1 = DateTime.now().plusMonths(1);
+        DateTime targetDate2 = DateTime.now().plusMonths(2);
+
+        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+
+        Plan plan = BrainDeadProxyFactory.createBrainDeadProxyFor(Plan.class);
+        ((ZombieControl) plan).addResult("getName", "plan");
+
+        PlanPhase phase1 = BrainDeadProxyFactory.createBrainDeadProxyFor(PlanPhase.class);
+        ((ZombieControl) phase1).addResult("getName", "plan-phase1");
+
+        PlanPhase phase2 = BrainDeadProxyFactory.createBrainDeadProxyFor(PlanPhase.class);
+        ((ZombieControl) phase2).addResult("getName", "plan-phase2");
+
+        BillingEventSet events = new BillingEventSet();
+        List<Invoice> invoices = new ArrayList<Invoice>();
+
+        BillingEvent event1 = new DefaultBillingEvent(subscription, targetDate1, plan, phase1, null,
+                                                      TEN, currency,
+                                                      BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                                                      "testEvent1", SubscriptionTransitionType.CHANGE);
+        events.add(event1);
+
+        Invoice invoice1 = generator.generateInvoice(UUID.randomUUID(), events, invoices, targetDate1, Currency.USD);
+        invoices.add(invoice1);
+        invoiceDao.create(invoice1);
+        invoice1 = invoiceDao.getById(invoice1.getId());
+        assertNotNull(invoice1.getInvoiceNumber());
+
+        BillingEvent event2 = new DefaultBillingEvent(subscription, targetDate1, plan, phase2, null,
+                                                      TWENTY, currency,
+                                                      BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
+                                                      "testEvent2", SubscriptionTransitionType.CHANGE);
+        events.add(event2);
+        Invoice invoice2 = generator.generateInvoice(UUID.randomUUID(), events, invoices, targetDate2, Currency.USD);
+        invoiceDao.create(invoice2);
+        invoice2 = invoiceDao.getById(invoice2.getId());
+        assertNotNull(invoice2.getInvoiceNumber());
     }
 }

@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
-    public static final String NUMBER_OF_MONTHS = "com.ning.billing.invoice.maxNumberOfMonthsInFuture";
+    public static final String NUMBER_OF_MONTHS = "killbill.invoice.maxNumberOfMonthsInFuture";
 
     private final Clock clock;
 

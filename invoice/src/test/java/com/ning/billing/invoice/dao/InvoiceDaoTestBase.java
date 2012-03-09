@@ -48,10 +48,12 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         // Health check test to make sure MySQL is setup properly
         try {
             module = new InvoiceModuleWithEmbeddedDb();
+            final String accountDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
             final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             final String entitlementDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 
             module.startDb();
+            module.initDb(accountDdl);
             module.initDb(invoiceDdl);
             module.initDb(entitlementDdl);
 
@@ -81,20 +83,21 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
             public Void inTransaction(Handle h, TransactionStatus status)
                     throws Exception {
                 h.execute("truncate table accounts");
-                h.execute("truncate table entitlement_events");
-                h.execute("truncate table subscriptions");
-                h.execute("truncate table bundles");
-                h.execute("truncate table notifications");
-                h.execute("truncate table claimed_notifications");
+                //h.execute("truncate table entitlement_events");
+                //h.execute("truncate table subscriptions");
+                //h.execute("truncate table bundles");
+                //h.execute("truncate table notifications");
+                //h.execute("truncate table claimed_notifications");
                 h.execute("truncate table invoices");
                 h.execute("truncate table fixed_invoice_items");
                 h.execute("truncate table recurring_invoice_items");
-                h.execute("truncate table tag_definitions");
-                h.execute("truncate table tags");
-                h.execute("truncate table custom_fields");
-                h.execute("truncate table invoice_payments");
-                h.execute("truncate table payment_attempts");
-                h.execute("truncate table payments");
+                //h.execute("truncate table tag_definitions");
+                //h.execute("truncate table tags");
+                //h.execute("truncate table custom_fields");
+                //h.execute("truncate table invoice_payments");
+                //h.execute("truncate table payment_attempts");
+                //h.execute("truncate table payments");
+
                 return null;
             }
         });

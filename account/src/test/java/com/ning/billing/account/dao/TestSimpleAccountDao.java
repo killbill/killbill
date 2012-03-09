@@ -99,7 +99,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     // simple test to ensure excessively long phone numbers cannot be stored
-    @Test(expectedExceptions = {AccountApiException.class})
+    @Test(expectedExceptions = {EntityPersistenceException.class})
     public void testOverlyLongPhoneNumber() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().phone("12345678901234567890123456").build();
         accountDao.create(account);
@@ -364,7 +364,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getPhone(), null);
     }
 
-    @Test(expectedExceptions = AccountApiException.class)
+    @Test(expectedExceptions = EntityPersistenceException.class)
     public void testExternalKeyCannotBeUpdated() throws Exception {
         UUID accountId = UUID.randomUUID();
         String originalExternalKey = "extKey1337";

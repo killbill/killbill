@@ -52,9 +52,11 @@ public class DefaultBillingEvent implements BillingEvent {
         plan = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPlan() : transition.getPreviousPlan();
         fixedPrice = (transition.getNextPhase() == null) ? null :
-        		transition.getNextPhase().getFixedPrice().getPrice(currency);
+        		(transition.getNextPhase().getFixedPrice() == null) ? null :
+                        transition.getNextPhase().getFixedPrice().getPrice(currency);
         recurringPrice = (transition.getNextPhase() == null) ? null :
-        	transition.getNextPhase().getRecurringPrice().getPrice(currency);
+                (transition.getNextPhase().getRecurringPrice() == null) ? null :
+                        transition.getNextPhase().getRecurringPrice().getPrice(currency);
         this.currency = currency;
         description = transition.getTransitionType().toString();
         billingModeType = BillingModeType.IN_ADVANCE;

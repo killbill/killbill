@@ -39,13 +39,16 @@ DROP TABLE IF EXISTS invoice_locking;
 
 DROP TABLE IF EXISTS invoices;
 CREATE TABLE invoices (
+  invoice_number int NOT NULL AUTO_INCREMENT,
   id char(36) NOT NULL,
   account_id char(36) NOT NULL,
   invoice_date datetime NOT NULL,
   target_date datetime NOT NULL,
   currency char(3) NOT NULL,
-  PRIMARY KEY(id)
+  PRIMARY KEY(invoice_number)
 ) ENGINE=innodb;
+CREATE INDEX invoices_invoice_number ON invoices(invoice_number ASC);
+CREATE INDEX invoices_id ON invoices(id ASC);
 CREATE INDEX invoices_account_id ON invoices(account_id ASC);
 
 DROP TABLE IF EXISTS invoice_payments;

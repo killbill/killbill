@@ -17,6 +17,7 @@
 package com.ning.billing.entitlement.api.billing;
 
 
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -128,10 +129,10 @@ public class TestDefaultEntitlementBillingApi {
         ((ZombieControl) dao).addResult("getSubscriptionBundleForAccount", new ArrayList<SubscriptionBundle>());
 
         UUID accountId = UUID.randomUUID();
-        Account account = new BrainDeadAccount();
-        ((ZombieControl) account).addResult("getId", accountId);
+        Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        ((ZombieControl) account).addResult("getId", accountId).addResult("getCurrency", Currency.USD);
 
-		AccountUserApi accountApi = new BrainDeadAccountUserApi() ;
+		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         ((ZombieControl) accountApi).addResult("getAccountById", account);
 
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao, accountApi, catalogService);
@@ -255,11 +256,17 @@ public class TestDefaultEntitlementBillingApi {
 			int BCD, UUID id, DateTime time, PlanPhase nextPhase, String desc) throws CatalogApiException {
 		Assert.assertEquals(events.size(), 1);
 		BillingEvent event = events.first();
-		if(nextPhase.getFixedPrice() != null) {
+
+        if(nextPhase.getFixedPrice() != null) {
 			Assert.assertEquals(nextPhase.getFixedPrice().getPrice(Currency.USD), event.getFixedPrice());
+        } else {
+            assertNull(event.getFixedPrice());
 		}
+
 		if(nextPhase.getRecurringPrice() != null) {
 			Assert.assertEquals(nextPhase.getRecurringPrice().getPrice(Currency.USD), event.getRecurringPrice());
+        } else {
+            assertNull(event.getRecurringPrice());
 		}
 
 		Assert.assertEquals(BCD, event.getBillCycleDay());
@@ -270,8 +277,6 @@ public class TestDefaultEntitlementBillingApi {
 		Assert.assertEquals(nextPhase.getBillingPeriod(), event.getBillingPeriod());
 		Assert.assertEquals(BillingModeType.IN_ADVANCE, event.getBillingMode());
 		Assert.assertEquals(desc, event.getDescription());
-		Assert.assertEquals(nextPhase.getFixedPrice(), event.getFixedPrice());
-		Assert.assertEquals(nextPhase.getRecurringPrice(), event.getRecurringPrice());
 	}
 
 

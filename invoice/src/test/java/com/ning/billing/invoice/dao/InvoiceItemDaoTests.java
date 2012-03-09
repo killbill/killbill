@@ -32,9 +32,8 @@ import java.util.UUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-
+@Test(groups = {"invoicing", "invoicing-invoiceDao"})
 public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
-
     private final Clock clock = new DefaultClock();
 
     @Test(groups = "slow")
@@ -60,7 +59,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         assertEquals(thisItem.getAmount().compareTo(item.getRate()), 0);
         assertEquals(thisItem.getRate().compareTo(item.getRate()), 0);
         assertEquals(thisItem.getCurrency(), item.getCurrency());
-        assertEquals(thisItem.getCreatedDate(), item.getCreatedDate());
+        assertEquals(thisItem.getCreatedDate().compareTo(item.getCreatedDate()), 0);
     }
 
     @Test(groups = "slow")

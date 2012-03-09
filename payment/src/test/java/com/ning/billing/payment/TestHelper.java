@@ -80,7 +80,7 @@ public class TestHelper {
                                      DateTime targetDate,
                                      Currency currency,
                                      InvoiceItem... items) {
-        Invoice invoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), new DateTime(), targetDate, currency);
+        Invoice invoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), 1, new DateTime(), targetDate, currency);
 
         for (InvoiceItem item : items) {
             if (item instanceof RecurringInvoiceItem) {
