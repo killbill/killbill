@@ -470,13 +470,13 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BillingEvent event1 = new DefaultBillingEvent(subscription, new DateTime("2012-01-1T00:00:00.000-08:00"),
                                                       plan, phase1,
                                                       zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, 1,
-                                                      BillingModeType.IN_ADVANCE, "Test Event 1",
+                                                      BillingModeType.IN_ADVANCE, "Test Event 1", 1L,
                                                       SubscriptionTransitionType.CREATE);
 
         BillingEvent event2 = new DefaultBillingEvent(subscription, changeDate,
                                                       plan, phase2,
                                                       zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, 1,
-                                                      BillingModeType.IN_ADVANCE, "Test Event 2",
+                                                      BillingModeType.IN_ADVANCE, "Test Event 2", 1L,
                                                       SubscriptionTransitionType.PHASE);
 
         events.add(event2);
@@ -597,7 +597,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         return new DefaultBillingEvent(sub, startDate, plan, planPhase,
                                        planPhase.getFixedPrice(),
                                        planPhase.getRecurringPrice(), planPhase.getBillingPeriod(),
-                                       billCycleDay, BillingModeType.IN_ADVANCE,"Test", SubscriptionTransitionType.CREATE);
+                                       billCycleDay, BillingModeType.IN_ADVANCE,"Test", 1L, SubscriptionTransitionType.CREATE);
     }
 
     private void testInvoiceGeneration(final BillingEventSet events, final InvoiceItemList existingInvoiceItems,

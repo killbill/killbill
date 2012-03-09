@@ -475,6 +475,7 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
                         nextPlan,
                         nextPhase,
                         nextPriceList,
+                        cur.getTotalOrdering(),
                         isFromDisk);
             transitions.add(transition);
 

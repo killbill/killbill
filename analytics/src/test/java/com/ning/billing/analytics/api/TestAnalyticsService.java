@@ -208,6 +208,7 @@ public class TestAnalyticsService {
                 plan,
                 phase,
                 priceList,
+                1L,
                 true
         );
         expectedTransition = new BusinessSubscriptionTransition(

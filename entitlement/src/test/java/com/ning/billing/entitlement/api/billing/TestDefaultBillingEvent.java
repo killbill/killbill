@@ -135,7 +135,7 @@ public class TestDefaultBillingEvent {
 		return new DefaultBillingEvent(sub , effectiveDate,
 				shotgun, shotgunMonthly,
 				zeroPrice, null, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-				BillingModeType.IN_ADVANCE, "Test Event 1", type);
+				BillingModeType.IN_ADVANCE, "Test Event 1", 1L, type);
 	}
 
 	private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,

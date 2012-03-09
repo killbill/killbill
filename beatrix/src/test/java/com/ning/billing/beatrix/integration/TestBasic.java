@@ -238,25 +238,25 @@ public class TestBasic {
         assertTrue(ctd.compareTo(chargeThroughDate) == 0);
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 31, false);
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 1, false);
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 2, false);
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 3, true);
@@ -266,7 +266,7 @@ public class TestBasic {
         Thread.sleep(600000);
     }
 
-    @Test(groups = "stress", enabled = true)
+    @Test(groups = "stress", enabled = false)
     public void stressTest() throws Exception {
         final int maxIterations = 7;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {

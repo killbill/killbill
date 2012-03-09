@@ -69,13 +69,13 @@ public class TestInvoiceDispatcher {
     private InvoiceDao invoiceDao;
     @Inject
     private GlobalLocker locker;
-    
+
     @Inject
     private MysqlTestingHelper helper;
-    
+
     @Inject
     NextBillingDateNotifier notifier;
-    
+
     @Inject
     private BusService busService;
 
@@ -101,7 +101,7 @@ public class TestInvoiceDispatcher {
         helper.initDb(utilDdl);
         notifier.initialize();
         notifier.start();
-        
+
         busService.getBus().start();
     }
 
@@ -116,7 +116,7 @@ public class TestInvoiceDispatcher {
 	    	((ZombieControl)accountUserApi).addResult("getAccountById", account);
 	    	((ZombieControl)account).addResult("getCurrency", Currency.USD);
 	    	((ZombieControl)account).addResult("getId", accountId);
-	    	
+
 	    	Subscription subscription =  BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
 	    	((ZombieControl)subscription).addResult("getId", subscriptionId);
 	    	SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
@@ -125,34 +125,34 @@ public class TestInvoiceDispatcher {
 			DateTime effectiveDate = new DateTime().minusDays(1);
 			InternationalPrice reccurringPrice = MockInternationalPrice.create1USD();
 			InternationalPrice fixedPrice = null;
-			events.add(new DefaultBillingEvent(subscription, effectiveDate,plan,planPhase, fixedPrice , reccurringPrice, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,"", SubscriptionTransitionType.CREATE));
+			events.add(new DefaultBillingEvent(subscription, effectiveDate,plan,planPhase, fixedPrice , reccurringPrice, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,"", 1L, SubscriptionTransitionType.CREATE));
 	    	EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
 	    	((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccount", events);
-	    	
-	    	
+
+
 	    	DateTime target = new DateTime();
-	    	
+
 	    	InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);
-	    	
+
 	    	Invoice invoice = dispatcher.processAccount(accountId, target, true);
 	    	Assert.assertNotNull(invoice);
-	    	
+
 	    	List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
 	    	Assert.assertEquals(invoices.size(),0);
-	    	
+
 	    	// Try it again to double check
 	    	invoice = dispatcher.processAccount(accountId, target, true);
 	    	Assert.assertNotNull(invoice);
-	    	
+
 	    	invoices = invoiceDao.getInvoicesByAccount(accountId);
 	    	Assert.assertEquals(invoices.size(),0);
-	    	
+
 	    	// This time no dry run
 	    	invoice = dispatcher.processAccount(accountId, target, false);
 	    	Assert.assertNotNull(invoice);
-	    	
+
 	    	invoices = invoiceDao.getInvoicesByAccount(accountId);
 	    	Assert.assertEquals(invoices.size(),1);
-	    	
+
 	    }
 }

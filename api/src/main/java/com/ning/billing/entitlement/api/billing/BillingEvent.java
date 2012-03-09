@@ -79,13 +79,13 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     public String getDescription();
 
     /**
-     * 
+     *
      * @return the fixed price for the phase
      */
     public InternationalPrice getFixedPrice();
 
     /**
-     * 
+     *
      * @return the recurring price for the phase
      */
     public InternationalPrice getRecurringPrice();
@@ -94,4 +94,10 @@ public interface BillingEvent extends Comparable<BillingEvent> {
 	 * @return the transition type of the underlying subscription event that triggered this
 	 */
 	public SubscriptionTransitionType getTransitionType();
+
+	/**
+	 * @return a unique long indicating the ordering on which events got inserted on disk-- used for sorting only
+	 */
+	public long getTotalOrdering();
+
 }

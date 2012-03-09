@@ -23,6 +23,7 @@ import java.util.UUID;
 @SuppressWarnings("unchecked")
 public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
+    private long totalOrdering;
     private UUID uuid;
     private UUID subscriptionId;
     private DateTime requestedDate;
@@ -47,6 +48,11 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
         this.activeVersion = copy.activeVersion;
         this.isActive = copy.isActive;
+    }
+
+    public T setTotalOrdering(long totalOrdering) {
+        this.totalOrdering = totalOrdering;
+        return (T) this;
     }
 
     public T setUuid(UUID uuid) {
@@ -82,6 +88,10 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     public T setActive(boolean isActive) {
         this.isActive = isActive;
         return (T) this;
+    }
+
+    public long getTotalOrdering() {
+        return totalOrdering;
     }
 
     public UUID getUuid() {

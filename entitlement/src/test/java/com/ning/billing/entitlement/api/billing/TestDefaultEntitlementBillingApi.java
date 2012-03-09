@@ -141,7 +141,7 @@ public class TestDefaultEntitlementBillingApi {
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0]; // The trial has no billing period
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, true);
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
 
 		AccountUserApi accountApi = new BrainDeadAccountUserApi(){
@@ -166,7 +166,7 @@ public class TestDefaultEntitlementBillingApi {
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, true);
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
 
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -188,18 +188,19 @@ public class TestDefaultEntitlementBillingApi {
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, true);
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
 
 		AccountUserApi accountApi = new BrainDeadAccountUserApi(){
 
-			@Override
-			public Account getAccountById(UUID accountId) {
-				return new BrainDeadAccount(){@Override
-				public int getBillCycleDay() {
-					return 32;
-				}};
-			}} ;
+		    @Override
+		    public Account getAccountById(UUID accountId) {
+		        return new BrainDeadAccount(){
+		            @Override
+		            public int getBillCycleDay() {
+		                return 32;
+		            }};
+		    }} ;
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
@@ -213,7 +214,7 @@ public class TestDefaultEntitlementBillingApi {
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0];
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, true);
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
 
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
