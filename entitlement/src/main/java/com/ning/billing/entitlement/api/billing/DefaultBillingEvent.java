@@ -201,4 +201,47 @@ public class DefaultBillingEvent implements BillingEvent {
 
         return sb.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DefaultBillingEvent that = (DefaultBillingEvent) o;
+
+        if (billCycleDay != that.billCycleDay) return false;
+        if (billingModeType != that.billingModeType) return false;
+        if (billingPeriod != that.billingPeriod) return false;
+        if (currency != that.currency) return false;
+        if (!description.equals(that.description)) return false;
+        if (!effectiveDate.equals(that.effectiveDate)) return false;
+        if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) return false;
+        if (!plan.equals(that.plan)) return false;
+        if (!planPhase.equals(that.planPhase)) return false;
+        if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null)
+            return false;
+        if (!subscription.equals(that.subscription)) return false;
+        if (!totalOrdering.equals(that.totalOrdering)) return false;
+        if (type != that.type) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = billCycleDay;
+        result = 31 * result + subscription.hashCode();
+        result = 31 * result + effectiveDate.hashCode();
+        result = 31 * result + planPhase.hashCode();
+        result = 31 * result + plan.hashCode();
+        result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);
+        result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
+        result = 31 * result + currency.hashCode();
+        result = 31 * result + description.hashCode();
+        result = 31 * result + billingModeType.hashCode();
+        result = 31 * result + billingPeriod.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + totalOrdering.hashCode();
+        return result;
+    }
 }

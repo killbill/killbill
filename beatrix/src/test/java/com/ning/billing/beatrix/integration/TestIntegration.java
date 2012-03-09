@@ -22,6 +22,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -217,7 +218,11 @@ public class TestIntegration {
                                   int totalInvoiceItemCount) {
         SubscriptionData subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscriptionId);
 
-        List<InvoiceItem> invoiceItems = invoiceUserApi.getInvoiceItemsByAccount(accountId);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
+        List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
+        for (Invoice invoice : invoices) {
+            invoiceItems.addAll(invoice.getInvoiceItems());
+        }
         assertEquals(invoiceItems.size(), totalInvoiceItemCount);
 
         boolean wasFound = false;
@@ -241,9 +246,6 @@ public class TestIntegration {
         assertTrue(clock.getUTCNow().isBefore(ctd));
         assertTrue(ctd.compareTo(chargeThroughDate) == 0);
     }
-
-
-
 
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
@@ -292,10 +294,6 @@ public class TestIntegration {
             testBasePlanCompleteWithBillingDayInFuture();
         }
     }
-
-
-
-    private static final long DELAY = 5000;
 
     @Test(groups = "slow", enabled = true)
     public void testWithRecreatePlan() throws Exception {

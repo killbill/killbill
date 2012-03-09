@@ -26,7 +26,6 @@ import com.google.inject.Inject;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -66,11 +65,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 		BigDecimal result = dao.getAccountBalance(accountId);
 		return result == null ? BigDecimal.ZERO : result;
 	}
-
-    @Override
-    public List<InvoiceItem> getInvoiceItemsByAccount(final UUID accountId) {
-        return dao.getInvoiceItemsByAccount(accountId);
-    }
 
     @Override
     public Invoice getInvoice(final UUID invoiceId) {

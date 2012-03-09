@@ -101,21 +101,6 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoiceItem> getInvoiceItemsByAccount(UUID accountId) {
-        List<InvoiceItem> invoiceItemsForAccount = new ArrayList<InvoiceItem>();
-
-        synchronized (monitor) {
-            for (Invoice invoice : get()) {
-                if (accountId.equals(invoice.getAccountId())) {
-                    invoiceItemsForAccount.addAll(invoice.getInvoiceItems());
-                }
-            }
-        }
-
-        return invoiceItemsForAccount;
-    }
-
-    @Override
     public List<Invoice> getInvoicesBySubscription(UUID subscriptionId) {
         List<Invoice> result = new ArrayList<Invoice>();
 

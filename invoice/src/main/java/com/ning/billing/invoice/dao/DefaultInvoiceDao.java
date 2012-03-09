@@ -100,14 +100,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoiceItem> getInvoiceItemsByAccount(final UUID accountId) {
-        List<InvoiceItem> results = new ArrayList<InvoiceItem>();
-        results.addAll(recurringInvoiceItemSqlDao.getInvoiceItemsByAccount(accountId.toString()));
-        results.addAll(fixedPriceInvoiceItemSqlDao.getInvoiceItemsByAccount(accountId.toString()));
-        return results;
-    }
-
-    @Override
     public List<Invoice> get() {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
              @Override

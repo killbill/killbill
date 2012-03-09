@@ -39,7 +39,6 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class DefaultEntitlementUserApi implements EntitlementUserApi {
-
     private final Clock clock;
     private final EntitlementDao dao;
     private final CatalogService catalogService;
@@ -82,7 +81,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         return dao.getSubscriptionsForKey(bundleKey);
     }
 
-
     @Override
     public List<Subscription> getSubscriptionsForBundle(UUID bundleId) {
         return dao.getSubscriptions(bundleId);
@@ -94,7 +92,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId);
         return dao.createSubscriptionBundle(bundle);
     }
-
 
     @Override
     public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate) throws EntitlementUserApiException {
