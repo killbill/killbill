@@ -24,6 +24,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.inject.Inject;
+import com.ning.billing.util.clock.Clock;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 
@@ -44,6 +46,12 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     private final Map<String, PaymentInfo> payments = new ConcurrentHashMap<String, PaymentInfo>();
     private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
     private final Map<String, PaymentMethodInfo> paymentMethods = new ConcurrentHashMap<String, PaymentMethodInfo>();
+    private final Clock clock;
+
+    @Inject
+    public MockPaymentProviderPlugin(Clock clock) {
+        this.clock = clock;
+    }
 
     public void makeNextInvoiceFail() {
         makeNextInvoiceFail.set(true);
@@ -59,8 +67,8 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
                                                  .setAmount(invoice.getBalance())
                                                  .setStatus("Processed")
                                                  .setBankIdentificationNumber("1234")
-                                                 .setCreatedDate(new DateTime())
-                                                 .setEffectiveDate(new DateTime())
+                                                 .setCreatedDate(clock.getUTCNow())
+                                                 .setEffectiveDate(clock.getUTCNow())
                                                  .setPaymentNumber("12345")
                                                  .setReferenceId("12345")
                                                  .setType("Electronic")

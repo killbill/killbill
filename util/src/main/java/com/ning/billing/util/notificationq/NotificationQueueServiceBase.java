@@ -39,7 +39,6 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
 
     @Inject
     public NotificationQueueServiceBase(final Clock clock) {
-
         this.clock = clock;
         this.queues = new TreeMap<String, NotificationQueue>();
     }

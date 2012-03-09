@@ -212,7 +212,9 @@ public class DefaultPaymentApi implements PaymentApi {
             paymentInfo = paymentOrError.getRight();
             paymentDao.savePaymentInfo(paymentInfo);
 
-            Either<PaymentError, PaymentMethodInfo> paymentMethodInfoOrError = plugin.getPaymentMethodInfo(paymentInfo.getPaymentMethodId());
+            final String paymentMethodId = paymentInfo.getPaymentMethodId();
+            log.debug("Fetching payment method info for payment method id " + ((paymentMethodId == null) ? "null" : paymentMethodId));
+            Either<PaymentError, PaymentMethodInfo> paymentMethodInfoOrError = plugin.getPaymentMethodInfo(paymentMethodId);
 
             if (paymentMethodInfoOrError.isRight()) {
                 PaymentMethodInfo paymentMethodInfo = paymentMethodInfoOrError.getRight();
@@ -225,6 +227,8 @@ public class DefaultPaymentApi implements PaymentApi {
                     PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
                     paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getPaymentId(), null, null);
                 }
+            } else {
+                log.info(paymentMethodInfoOrError.getLeft().getMessage());
             }
 
             if (paymentInfo.getPaymentId() != null) {
