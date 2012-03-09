@@ -100,21 +100,41 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
 
     @Override
     public void setFieldValue(String fieldName, String fieldValue) {
-        super.setFieldValue(fieldName, fieldValue);
-        apiService.commitCustomFields(this);
+        setFieldValueInternal(fieldName, fieldValue, true);
     }
+
+    public void setFieldValueInternal(String fieldName, String fieldValue, boolean commit) {
+        super.setFieldValue(fieldName, fieldValue);
+        if (commit) {
+            apiService.commitCustomFields(this);
+        }
+    }
+
 
     @Override
     public void addFields(List<CustomField> fields) {
+        addFieldsInternal(fields, true);
+    }
+
+    public void addFieldsInternal(List<CustomField> fields, boolean commit) {
         super.addFields(fields);
-        apiService.commitCustomFields(this);
+        if (commit) {
+            apiService.commitCustomFields(this);
+        }
     }
 
     @Override
     public void clearFields() {
-        super.clearFields();
-        apiService.commitCustomFields(this);
+        clearFieldsInternal(true);
     }
+
+    public void clearFieldsInternal(boolean commit) {
+        super.clearFields();
+        if (commit) {
+            apiService.commitCustomFields(this);
+        }
+    }
+
 
     @Override
     public UUID getBundleId() {
@@ -455,6 +475,7 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
                         nextPlan,
                         nextPhase,
                         nextPriceList,
+                        cur.getTotalOrdering(),
                         isFromDisk);
             transitions.add(transition);
 

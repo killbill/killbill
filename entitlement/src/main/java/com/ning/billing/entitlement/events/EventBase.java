@@ -24,6 +24,7 @@ import java.util.UUID;
 
 public abstract class EventBase implements EntitlementEvent {
 
+    private final long totalOrdering;
     private final UUID uuid;
     private final UUID subscriptionId;
     private final DateTime requestedDate;
@@ -34,6 +35,7 @@ public abstract class EventBase implements EntitlementEvent {
     private boolean isActive;
 
     public EventBase(EventBaseBuilder<?> builder) {
+        this.totalOrdering = builder.getTotalOrdering();
         this.uuid = builder.getUuid();
         this.subscriptionId = builder.getSubscriptionId();
         this.requestedDate = builder.getRequestedDate();
@@ -43,7 +45,7 @@ public abstract class EventBase implements EntitlementEvent {
         this.activeVersion = builder.getActiveVersion();
         this.isActive = builder.isActive();
     }
-
+/*
     public EventBase(UUID subscriptionId, DateTime requestedDate,
             DateTime effectiveDate, DateTime processedDate,
             long activeVersion, boolean isActive) {
@@ -62,7 +64,7 @@ public abstract class EventBase implements EntitlementEvent {
         this.activeVersion = activeVersion;
         this.isActive = isActive;
     }
-
+*/
 
     @Override
     public DateTime getRequestedDate() {
@@ -85,10 +87,15 @@ public abstract class EventBase implements EntitlementEvent {
     }
 
     @Override
+    public long getTotalOrdering() {
+        return totalOrdering;
+    }
+
+
+    @Override
     public UUID getId() {
         return uuid;
     }
-
 
     @Override
     public long getActiveVersion() {

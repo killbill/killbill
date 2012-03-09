@@ -26,6 +26,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 
 import java.math.BigDecimal;
 
@@ -42,6 +43,7 @@ public class DefaultBillingEvent implements BillingEvent {
     final private BillingModeType billingModeType;
     final private BillingPeriod billingPeriod;
     final private SubscriptionTransitionType type;
+    final private long totalOrdering;
 
     public DefaultBillingEvent(SubscriptionTransition transition, Subscription subscription, int billCycleDay, Currency currency) throws CatalogApiException {
         this.billCycleDay = billCycleDay;
@@ -63,13 +65,14 @@ public class DefaultBillingEvent implements BillingEvent {
         billingPeriod =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPhase().getBillingPeriod() : transition.getPreviousPhase().getBillingPeriod();
         type = transition.getTransitionType();
+        totalOrdering = ((SubscriptionTransitionData) transition).getTotalOrdering();
     }
 
     // Intended for test only
     public DefaultBillingEvent(Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase,
                                BigDecimal fixedPrice, BigDecimal recurringPrice, Currency currency,
                                BillingPeriod billingPeriod, int billCycleDay, BillingModeType billingModeType,
-                               String description, SubscriptionTransitionType type) {
+                               String description, long totalOrdering, SubscriptionTransitionType type) {
         this.subscription = subscription;
         this.effectiveDate = effectiveDate;
         this.plan = plan;
@@ -82,7 +85,9 @@ public class DefaultBillingEvent implements BillingEvent {
         this.billingModeType = billingModeType;
         this.description = description;
         this.type = type;
+        this.totalOrdering = totalOrdering;
     }
+
 
     @Override
     public int compareTo(BillingEvent e1) {
@@ -159,6 +164,11 @@ public class DefaultBillingEvent implements BillingEvent {
     @Override
     public SubscriptionTransitionType getTransitionType() {
         return type;
+    }
+
+    @Override
+    public long getTotalOrdering() {
+        return totalOrdering;
     }
 
     @Override

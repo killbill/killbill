@@ -30,6 +30,8 @@ public interface EntitlementEvent extends Comparable<EntitlementEvent> {
 
     public EventType getType();
 
+    public long getTotalOrdering();
+
     public UUID getId();
 
     public long getActiveVersion();

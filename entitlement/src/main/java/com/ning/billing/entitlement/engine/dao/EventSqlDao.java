@@ -107,6 +107,7 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
         public EntitlementEvent map(int index, ResultSet r, StatementContext ctx)
         throws SQLException {
 
+            long totalOrdering = r.getLong("id");
             UUID id = UUID.fromString(r.getString("event_id"));
             EventType eventType = EventType.valueOf(r.getString("event_type"));
             ApiEventType userType = (eventType == EventType.API_USER) ? ApiEventType.valueOf(r.getString("user_type")) : null;
@@ -123,6 +124,7 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
             EventBaseBuilder<?> base = ((eventType == EventType.PHASE) ?
                     new PhaseEventBuilder() :
                         new ApiEventBuilder())
+                        .setTotalOrdering(totalOrdering)
                         .setUuid(id)
                         .setSubscriptionId(subscriptionId)
                         .setRequestedDate(requestedDate)
