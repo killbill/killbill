@@ -76,7 +76,7 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.bus.BusService;
 
 @Guice(modules = {MockModule.class})
-public class TestBasic {
+public class TestIntegration {
     private static final int NUMBER_OF_DECIMALS = 4;
     private static final int ROUNDING_METHOD = BigDecimal.ROUND_HALF_EVEN;
 
@@ -85,7 +85,7 @@ public class TestBasic {
     private static final BigDecimal THIRTY = new BigDecimal("30.0000").setScale(NUMBER_OF_DECIMALS);
     private static final BigDecimal THIRTY_ONE = new BigDecimal("31.0000").setScale(NUMBER_OF_DECIMALS);
 
-    private static final Logger log = LoggerFactory.getLogger(TestBasic.class);
+    private static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
     private static long AT_LEAST_ONE_MONTH_MS =  31L * 24L * 3600L * 1000L;
 
     private static final long DELAY = 5000;
@@ -125,11 +125,11 @@ public class TestBasic {
     {
 
 
-        final String accountDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-        final String entitlementDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
-        final String invoiceDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-        final String paymentDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
-        final String utilDdl = IOUtils.toString(TestBasic.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        final String accountDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+        final String entitlementDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+        final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+        final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
+        final String utilDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
         helper.startMysql();
 
@@ -242,6 +242,9 @@ public class TestBasic {
         assertTrue(ctd.compareTo(chargeThroughDate) == 0);
     }
 
+
+
+
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
@@ -291,6 +294,78 @@ public class TestBasic {
     }
 
 
+
+    private static final long DELAY = 5000;
+
+    @Test(groups = "slow", enabled = true)
+    public void testWithRecreatePlan() throws Exception {
+
+        DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        int billingDay = 2;
+
+        log.info("Beginning test with BCD of " + billingDay);
+        Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
+        UUID accountId = account.getId();
+        assertNotNull(account);
+
+        // set clock to the initial start date
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever2");
+
+        String productName = "Shotgun";
+        BillingPeriod term = BillingPeriod.MONTHLY;
+        String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        //
+        busHandler.pushExpectedEvent(NextEvent.CREATE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        SubscriptionData subscription = (SubscriptionData) entitlementUserApi.createSubscription(bundle.getId(),
+                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null);
+        assertNotNull(subscription);
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        //
+        // VERIFY CTD HAS BEEN SET
+        //
+        DateTime startDate = subscription.getCurrentPhaseStart();
+        DateTime endDate = startDate.plusDays(30);
+        BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
+        int invoiceItemCount = 1;
+        verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate, invoiceItemCount);
+
+        //
+        // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
+        //
+        busHandler.pushExpectedEvent(NextEvent.PHASE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscription.getId());
+        subscription.cancel(clock.getUTCNow(), false);
+
+        // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
+        busHandler.pushExpectedEvent(NextEvent.CANCEL);
+        endDate = subscription.getChargedThroughDate();
+        Interval it = new Interval(clock.getUTCNow(), endDate);
+        clock.addDeltaFromReality(it.toDurationMillis());
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        productName = "Assault-Rifle";
+        term = BillingPeriod.MONTHLY;
+        planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        busHandler.pushExpectedEvent(NextEvent.CREATE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        subscription.recreate(new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), endDate);
+        assertTrue(busHandler.isCompleted(DELAY));
+
+
+    }
     private void testBasePlanComplete(DateTime initialCreationDate, int billingDay,
                                       boolean proRationExpected) throws Exception {
 

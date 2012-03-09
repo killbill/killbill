@@ -98,7 +98,7 @@ public class MockModule extends AbstractModule {
     }
 
     private static void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = TestBasic.class.getResource(resource);
+        final URL url = TestIntegration.class.getResource(resource);
         assertNotNull(url);
         try {
             System.getProperties().load( url.openStream() );
