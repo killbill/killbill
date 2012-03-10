@@ -119,8 +119,9 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             DateTime invoiceDate = new DateTime(result.getTimestamp("invoice_date"));
             DateTime targetDate = new DateTime(result.getTimestamp("target_date"));
             Currency currency = Currency.valueOf(result.getString("currency"));
+            boolean isMigrationInvoice = result.getBoolean("migration_invoice");
 
-            return new DefaultInvoice(id, accountId, invoiceDate, targetDate, currency);
+            return new DefaultInvoice(id, accountId, invoiceDate, targetDate, currency, isMigrationInvoice);
         }
     }
 

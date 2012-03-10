@@ -46,6 +46,7 @@ CREATE TABLE invoices (
   invoice_date datetime NOT NULL,
   target_date datetime NOT NULL,
   currency char(3) NOT NULL,
+  migration_invoice bool NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE INDEX invoices_account_id ON invoices(account_id ASC);
