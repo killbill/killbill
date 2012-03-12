@@ -558,7 +558,7 @@ public class TestIntegration {
         log.info("TEST PASSED !");
     }
 
-    @Test(enabled = true)
+    @Test(groups = "slow")
     public void testHappyPath() throws AccountApiException, EntitlementUserApiException {
         Account account = accountUserApi.createAccount(getAccountData(3), null, null);
         assertNotNull(account);
@@ -593,7 +593,7 @@ public class TestIntegration {
 
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testForMultipleRecurringPhases() throws AccountApiException, EntitlementUserApiException, InterruptedException {
         clock.setDeltaFromReality(new DateTime().getMillis() - clock.getUTCNow().getMillis());
 
