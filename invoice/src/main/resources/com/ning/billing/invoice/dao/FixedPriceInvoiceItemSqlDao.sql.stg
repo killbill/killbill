@@ -10,8 +10,7 @@ fields(prefix) ::= <<
   <prefix>end_date,
   <prefix>amount,
   <prefix>currency,
-  <prefix>created_date,
-  <prefix>updated_date
+  <prefix>created_date
 >>
 
 getById() ::= <<
@@ -42,20 +41,13 @@ getInvoiceItemsBySubscription() ::= <<
 create() ::= <<
   INSERT INTO fixed_invoice_items(<fields()>)
   VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName,
-         :startDate, :endDate, :amount, :currency, :createdDate, :updatedDate);
+         :startDate, :endDate, :amount, :currency, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO fixed_invoice_items(<fields()>)
   VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName,
-         :startDate, :endDate, :amount, :currency, :createdDate, :updatedDate);
->>
-
-update() ::= <<
-  UPDATE fixed_invoice_items
-  SET invoice_id = :invoiceId, subscription_id = :subscriptionId, plan_name = :planName, phase_name = :phaseName,
-      start_date = :startDate, end_date = :endDate, amount = :amount, currency = :currency, updated_date = :updatedDate
-  WHERE id = :id;
+         :startDate, :endDate, :amount, :currency, :createdDate);
 >>
 
 test() ::= <<

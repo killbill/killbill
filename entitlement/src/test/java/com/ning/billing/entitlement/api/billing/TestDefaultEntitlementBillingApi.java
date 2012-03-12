@@ -17,6 +17,7 @@
 package com.ning.billing.entitlement.api.billing;
 
 
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -127,8 +128,14 @@ public class TestDefaultEntitlementBillingApi {
         dao = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class);
         ((ZombieControl) dao).addResult("getSubscriptionBundleForAccount", new ArrayList<SubscriptionBundle>());
 
-		AccountUserApi accountApi = new BrainDeadAccountUserApi() ;
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+        UUID accountId = UUID.randomUUID();
+        Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        ((ZombieControl) account).addResult("getId", accountId).addResult("getCurrency", Currency.USD);
+
+		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+        ((ZombieControl) accountApi).addResult("getAccountById", account);
+
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao, accountApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
@@ -148,10 +155,17 @@ public class TestDefaultEntitlementBillingApi {
 
 			@Override
 			public Account getAccountById(UUID accountId) {
-				return new BrainDeadAccount(){@Override
-				public int getBillCycleDay() {
-					return 32;
-				}};
+				return new BrainDeadAccount(){
+                    @Override
+                    public int getBillCycleDay() {
+                        return 32;
+                    }
+
+                    @Override
+                    public Currency getCurrency() {
+                        return Currency.USD;
+                    }
+                };
 			}} ;
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
@@ -159,7 +173,7 @@ public class TestDefaultEntitlementBillingApi {
 	}
 
     @Test(enabled=true, groups="fast")
-	public void testBillingEventsAnual() throws CatalogApiException {
+	public void testBillingEventsAnnual() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-annual", now);
@@ -170,7 +184,9 @@ public class TestDefaultEntitlementBillingApi {
 		transitions.add(t);
 
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC);
+		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC)
+                                .addResult("getCurrency", Currency.USD);
+
 
 		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
 		((ZombieControl)accountApi).addResult("getAccountById", account);
@@ -193,14 +209,20 @@ public class TestDefaultEntitlementBillingApi {
 
 		AccountUserApi accountApi = new BrainDeadAccountUserApi(){
 
-		    @Override
-		    public Account getAccountById(UUID accountId) {
-		        return new BrainDeadAccount(){
-		            @Override
-		            public int getBillCycleDay() {
-		                return 32;
-		            }};
-		    }} ;
+			@Override
+			public Account getAccountById(UUID accountId) {
+				return new BrainDeadAccount(){
+                    @Override
+				    public int getBillCycleDay() {
+					    return 32;
+				    }
+
+                    @Override
+                    public Currency getCurrency() {
+                        return Currency.USD;
+                    }
+                };
+			}} ;
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
@@ -219,6 +241,7 @@ public class TestDefaultEntitlementBillingApi {
 
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
 		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC);
+        ((ZombieControl)account).addResult("getCurrency", Currency.USD);
 
 		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
 		((ZombieControl)accountApi).addResult("getAccountById", account);
@@ -233,11 +256,17 @@ public class TestDefaultEntitlementBillingApi {
 			int BCD, UUID id, DateTime time, PlanPhase nextPhase, String desc) throws CatalogApiException {
 		Assert.assertEquals(events.size(), 1);
 		BillingEvent event = events.first();
-		if(nextPhase.getFixedPrice() != null) {
-			Assert.assertEquals(nextPhase.getFixedPrice().getPrice(Currency.USD), event.getFixedPrice().getPrice(Currency.USD));
+
+        if(nextPhase.getFixedPrice() != null) {
+			Assert.assertEquals(nextPhase.getFixedPrice().getPrice(Currency.USD), event.getFixedPrice());
+        } else {
+            assertNull(event.getFixedPrice());
 		}
+
 		if(nextPhase.getRecurringPrice() != null) {
-			Assert.assertEquals(nextPhase.getRecurringPrice().getPrice(Currency.USD), event.getRecurringPrice().getPrice(Currency.USD));
+			Assert.assertEquals(nextPhase.getRecurringPrice().getPrice(Currency.USD), event.getRecurringPrice());
+        } else {
+            assertNull(event.getRecurringPrice());
 		}
 
 		Assert.assertEquals(BCD, event.getBillCycleDay());
@@ -248,8 +277,6 @@ public class TestDefaultEntitlementBillingApi {
 		Assert.assertEquals(nextPhase.getBillingPeriod(), event.getBillingPeriod());
 		Assert.assertEquals(BillingModeType.IN_ADVANCE, event.getBillingMode());
 		Assert.assertEquals(desc, event.getDescription());
-		Assert.assertEquals(nextPhase.getFixedPrice(), event.getFixedPrice());
-		Assert.assertEquals(nextPhase.getRecurringPrice(), event.getRecurringPrice());
 	}
 
 

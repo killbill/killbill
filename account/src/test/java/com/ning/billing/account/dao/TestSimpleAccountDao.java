@@ -24,6 +24,7 @@ import static org.testng.Assert.fail;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityPersistenceException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.annotations.Test;
@@ -69,7 +70,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testBasic() throws AccountApiException {
+    public void testBasic() throws EntityPersistenceException {
         Account a = createTestAccountBuilder().build();
         accountDao.create(a);
         String key = a.getExternalKey();
@@ -89,7 +90,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
 
     // simple test to ensure long phone numbers can be stored
     @Test
-    public void testLongPhoneNumber() throws AccountApiException {
+    public void testLongPhoneNumber() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().phone("123456789012345678901234").build();
         accountDao.create(account);
 
@@ -98,14 +99,14 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     // simple test to ensure excessively long phone numbers cannot be stored
-    @Test(expectedExceptions = {AccountApiException.class})
-    public void testOverlyLongPhoneNumber() throws AccountApiException {
+    @Test(expectedExceptions = {EntityPersistenceException.class})
+    public void testOverlyLongPhoneNumber() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().phone("12345678901234567890123456").build();
         accountDao.create(account);
     }
 
     @Test
-    public void testGetById() throws AccountApiException {
+    public void testGetById() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().build();
         UUID id = account.getId();
         String key = account.getExternalKey();
@@ -124,7 +125,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testCustomFields() throws AccountApiException {
+    public void testCustomFields() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().build();
         String fieldName = "testField1";
         String fieldValue = "testField1_value";
@@ -139,7 +140,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testTags() throws AccountApiException {
+    public void testTags() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().build();
         TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", "Test System");
         TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
@@ -161,7 +162,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testGetIdFromKey() throws AccountApiException {
+    public void testGetIdFromKey() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().build();
         accountDao.create(account);
 
@@ -363,7 +364,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getPhone(), null);
     }
 
-    @Test(expectedExceptions = AccountApiException.class)
+    @Test(expectedExceptions = EntityPersistenceException.class)
     public void testExternalKeyCannotBeUpdated() throws Exception {
         UUID accountId = UUID.randomUUID();
         String originalExternalKey = "extKey1337";
@@ -378,9 +379,9 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                                     null, null, null, null, null, null, null, null, null, null,null, null);
         accountDao.update(updatedAccount);
     }
-    
+
     @Test(groups={"slow"},enabled=true)
-    public void testDelete() throws AccountApiException {
+    public void testDelete() throws AccountApiException, EntityPersistenceException {
 
         Account a = createTestAccountBuilder().build();
         accountDao.create(a);

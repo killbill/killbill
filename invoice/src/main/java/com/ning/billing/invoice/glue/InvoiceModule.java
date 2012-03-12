@@ -22,10 +22,12 @@ import com.google.inject.AbstractModule;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
+import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
+import com.ning.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -35,7 +37,6 @@ import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.DefaultNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 
 
@@ -60,6 +61,10 @@ public class InvoiceModule extends AbstractModule {
     protected void installInvoiceService() {
         bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
     }
+    
+    protected void installInvoiceMigrationApi() {
+    	bind(InvoiceMigrationApi.class).to(DefaultInvoiceMigrationApi.class).asEagerSingleton();
+	}
 
     protected void installNotifier() {
         bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
@@ -71,6 +76,7 @@ public class InvoiceModule extends AbstractModule {
     }
 
     protected void installInvoiceListener() {
+
         bind(InvoiceListener.class).asEagerSingleton();
     }
 
@@ -78,12 +84,16 @@ public class InvoiceModule extends AbstractModule {
     protected void configure() {
         installInvoiceService();
         installNotifier();
+
         installInvoiceListener();
         bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
         installConfig();
         installInvoiceDao();
         installInvoiceUserApi();
         installInvoicePaymentApi();
+        installInvoiceMigrationApi();
         installGlobalLocker();
     }
+
+
 }

@@ -26,7 +26,11 @@ import com.ning.billing.catalog.api.Currency;
 
 public interface InvoicePaymentApi {
 
-    public List<Invoice> getInvoicesByAccount(UUID accountId);
+    /**
+     * @param accountId
+     * @return All invoices, including migrated invoices
+     */
+    public List<Invoice> getAllInvoicesByAccount(UUID accountId);
 
     public Invoice getInvoice(UUID invoiceId);
 

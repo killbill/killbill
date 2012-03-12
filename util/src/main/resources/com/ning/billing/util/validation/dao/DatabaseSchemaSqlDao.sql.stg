@@ -1,0 +1,10 @@
+group DatabaseSchemaSqlDao;
+
+getSchemaInfo() ::= <<
+    SELECT TABLE_NAME, COLUMN_NAME, IS_NULLABLE, DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE
+    FROM information_schema.columns
+    WHERE TABLE_SCHEMA = :schemaName
+    ORDER BY TABLE_NAME, COLUMN_NAME;
+>>
+

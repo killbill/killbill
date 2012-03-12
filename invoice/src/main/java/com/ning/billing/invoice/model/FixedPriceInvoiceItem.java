@@ -26,14 +26,14 @@ import java.util.UUID;
 public class FixedPriceInvoiceItem extends InvoiceItemBase {
     public FixedPriceInvoiceItem(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
                                  DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                                 DateTime createdDate, DateTime updatedDate) {
-        super(invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdDate, updatedDate);
+                                 DateTime createdDate) {
+        super(invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdDate);
     }
 
     public FixedPriceInvoiceItem(UUID id, UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
                                  DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                                 DateTime createdDate, DateTime updatedDate) {
-        super(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdDate, updatedDate);
+                                 DateTime createdDate) {
+        super(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdDate);
     }
 
     @Override
@@ -77,31 +77,23 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
+        sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
+        sb.append("subscriptionId = ").append(subscriptionId.toString()).append(", ");
+        sb.append("planName = ").append(planName).append(", ");
+        sb.append("phaseName = ").append(phaseName).append(", ");
+        sb.append("startDate = ").append(startDate.toString()).append(", ");
+        sb.append("endDate = ").append(endDate.toString()).append(", ");
 
-        sb.append(phaseName).append(", ");
-        sb.append(startDate.toString()).append(", ");
-        sb.append(endDate.toString()).append(", ");
-        sb.append(amount.toString()).append(", ");
+        sb.append("amount = ");
+        if (amount == null) {
+            sb.append("null");
+        } else {
+            sb.append(amount.toString());
+        }
 
+        sb.append("}");
         return sb.toString();
-//        StringBuilder sb = new StringBuilder();
-//        sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
-//        sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
-//        sb.append("subscriptionId = ").append(subscriptionId.toString()).append(", ");
-//        sb.append("planName = ").append(planName).append(", ");
-//        sb.append("phaseName = ").append(phaseName).append(", ");
-//        sb.append("startDate = ").append(startDate.toString()).append(", ");
-//        sb.append("endDate = ").append(endDate.toString()).append(", ");
-//
-//        sb.append("amount = ");
-//        if (amount == null) {
-//            sb.append("null");
-//        } else {
-//            sb.append(amount.toString());
-//        }
-//
-//        sb.append("}");
-//        return sb.toString();
     }
 
     @Override

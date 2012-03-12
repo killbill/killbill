@@ -27,6 +27,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.UpdatableEntityDao;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
@@ -51,7 +52,7 @@ import com.ning.billing.util.entity.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper({UuidMapper.class, AccountSqlDao.AccountMapper.class})
-public interface AccountSqlDao extends EntityDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
+public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
     @SqlQuery
     public Account getAccountByKey(@Bind("externalKey") final String key);
 
@@ -66,7 +67,6 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     @SqlUpdate
     public void update(@AccountBinder Account account);
 
-    @Override
     @SqlUpdate
     public void deleteByKey(@Bind("externalKey") final String key);
 

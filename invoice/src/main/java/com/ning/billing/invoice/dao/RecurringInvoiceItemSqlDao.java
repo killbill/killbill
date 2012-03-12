@@ -61,10 +61,6 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
     @SqlUpdate
     void create(@RecurringInvoiceItemBinder final InvoiceItem invoiceItem);
 
-    @Override
-    @SqlUpdate
-    void update(@RecurringInvoiceItemBinder final InvoiceItem invoiceItem);
-
     @SqlBatch(transactional = false)
     void batchCreateFromTransaction(@RecurringInvoiceItemBinder final List<InvoiceItem> items);
 
@@ -90,7 +86,6 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                         q.bind("currency", item.getCurrency().toString());
                         q.bind("reversedItemId", (item.getReversedItemId() == null) ? null : item.getReversedItemId().toString());
                         q.bind("createdDate", item.getCreatedDate().toDate());
-                        q.bind("updatedDate", item.getUpdatedDate().toDate());
                     }
                 };
             }
@@ -113,10 +108,9 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             String reversedItemString = result.getString("reversed_item_id");
             UUID reversedItemId = (reversedItemString == null) ? null : UUID.fromString(reversedItemString);
             DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
-            DateTime updatedDate = new DateTime(result.getTimestamp("updated_date"));
 
             return new RecurringInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
-                    amount, rate, currency, reversedItemId, createdDate, updatedDate);
+                    amount, rate, currency, reversedItemId, createdDate);
         }
     }
 }

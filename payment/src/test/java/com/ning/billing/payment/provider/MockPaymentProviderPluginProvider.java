@@ -18,10 +18,14 @@ package com.ning.billing.payment.provider;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.ning.billing.util.clock.Clock;
 
 public class MockPaymentProviderPluginProvider implements Provider<MockPaymentProviderPlugin> {
     private PaymentProviderPluginRegistry registry;
     private final String instanceName;
+
+    @Inject
+    private Clock clock;
 
     public MockPaymentProviderPluginProvider(String instanceName) {
         this.instanceName = instanceName;
@@ -34,7 +38,7 @@ public class MockPaymentProviderPluginProvider implements Provider<MockPaymentPr
 
     @Override
     public MockPaymentProviderPlugin get() {
-        MockPaymentProviderPlugin plugin = new MockPaymentProviderPlugin();
+        MockPaymentProviderPlugin plugin = new MockPaymentProviderPlugin(clock);
 
         registry.register(plugin, instanceName);
         return plugin;

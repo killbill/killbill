@@ -160,4 +160,8 @@ public class MysqlTestingHelper
             }
         });
     }
+
+    public String getDbName() {
+        return DB_NAME;
+    }
 }

@@ -30,8 +30,6 @@ import com.ning.billing.util.notificationq.NotificationLifecycle.NotificationLif
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public class MockNotificationQueue extends NotificationQueueBase implements NotificationQueue {
-
-
     private final TreeSet<Notification> notifications;
 
     public MockNotificationQueue(final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
@@ -103,6 +101,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
             if (oldNotifications.size() > 0) {
                 notifications.removeAll(oldNotifications);
             }
+
             if (processedNotifications.size() > 0) {
                 notifications.addAll(processedNotifications);
             }

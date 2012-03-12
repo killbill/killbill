@@ -45,6 +45,8 @@ public interface Invoice extends Entity {
 
     UUID getAccountId();
 
+    Integer getInvoiceNumber();
+
     DateTime getInvoiceDate();
 
     DateTime getTargetDate();

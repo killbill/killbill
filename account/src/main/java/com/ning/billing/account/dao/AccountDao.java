@@ -20,8 +20,9 @@ import java.util.UUID;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.util.entity.EntityDao;
+import com.ning.billing.util.entity.UpdatableEntityDao;
 
-public interface AccountDao extends EntityDao<Account> {
+public interface AccountDao extends UpdatableEntityDao<Account> {
     public Account getAccountByKey(String key);
 
     /***

@@ -47,7 +47,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(UUID accountId) {
+    public List<Invoice> getAllInvoicesByAccount(UUID accountId) {
         ArrayList<Invoice> result = new ArrayList<Invoice>();
 
         for (Invoice invoice : invoices) {

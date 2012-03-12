@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.api.billing;
 
+import com.ning.billing.catalog.api.Currency;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -24,6 +25,8 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+
+import java.math.BigDecimal;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
@@ -82,13 +85,19 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      *
      * @return the fixed price for the phase
      */
-    public InternationalPrice getFixedPrice();
+    public BigDecimal getFixedPrice();
 
     /**
      *
      * @return the recurring price for the phase
      */
-    public InternationalPrice getRecurringPrice();
+    public BigDecimal getRecurringPrice();
+
+    /**
+     *
+     * @return the currency for the account being invoiced
+     */
+    public Currency getCurrency();
 
 	/**
 	 * @return the transition type of the underlying subscription event that triggered this

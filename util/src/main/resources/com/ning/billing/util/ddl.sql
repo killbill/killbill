@@ -4,7 +4,7 @@ CREATE TABLE custom_fields (
   object_id char(36) NOT NULL,
   object_type varchar(30) NOT NULL,
   field_name varchar(30) NOT NULL,
-  field_value varchar(255) NOT NULL,
+  field_value varchar(255),
   created_date datetime NOT NULL,
   updated_date datetime NOT NULL,
   PRIMARY KEY(id)

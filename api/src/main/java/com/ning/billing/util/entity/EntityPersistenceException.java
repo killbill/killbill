@@ -14,19 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api.migration;
+package com.ning.billing.util.entity;
 
-import java.math.BigDecimal;
-import java.util.UUID;
+import com.ning.billing.BillingExceptionBase;
+import com.ning.billing.ErrorCode;
 
-import org.joda.time.DateTime;
+public class EntityPersistenceException extends BillingExceptionBase {
+    private static final long serialVersionUID = 1L;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.clock.Clock;
+    public EntityPersistenceException(Throwable cause, int code, final String msg) {
+        super(cause, code, msg);
+    }
 
-public interface InvoiceMigrationApi {
+    public EntityPersistenceException(Throwable cause, ErrorCode code, final Object... args) {
+        super(cause, code, args);
+    }
 
-	UUID createMigrationInvoice(UUID accountId, DateTime targetDate,
-			BigDecimal balance, Currency currency, Clock clock);
-
+    public EntityPersistenceException(ErrorCode code, final Object... args) {
+        super(code, args);
+    }
 }

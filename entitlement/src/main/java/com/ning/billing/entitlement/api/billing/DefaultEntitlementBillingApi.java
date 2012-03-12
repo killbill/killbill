@@ -22,6 +22,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.ning.billing.catalog.api.Currency;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -70,6 +71,8 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     @Override
     public SortedSet<BillingEvent> getBillingEventsForAccount(
             final UUID accountId) {
+        Account account = accountApi.getAccountById(accountId);
+        Currency currency = account.getCurrency();
 
         List<SubscriptionBundle> bundles = entitlementDao.getSubscriptionBundleForAccount(accountId);
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
@@ -79,7 +82,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         	for (final Subscription subscription: subscriptions) {
         		for (final SubscriptionTransition transition : subscription.getAllTransitions()) {
         			try {
-        				BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBcd(bundle, subscription, transition, accountId));
+        				BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBcd(bundle, subscription, transition, accountId), currency);
         				result.add(event);
         			} catch (CatalogApiException e) {
         				log.error("Failing to identify catalog components while creating BillingEvent from transition: " +

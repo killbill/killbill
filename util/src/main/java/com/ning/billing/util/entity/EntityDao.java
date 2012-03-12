@@ -27,10 +27,7 @@ import com.ning.billing.account.api.AccountApiException;
 
 public interface EntityDao<T extends Entity> {
     @SqlUpdate
-    public void create(@BindBean final T entity) throws AccountApiException;
-
-    @SqlUpdate
-    public void update(@BindBean final T entity) throws AccountApiException;
+    public void create(@BindBean final T entity) throws EntityPersistenceException;
 
     @SqlQuery
     public T getById(@Bind("id") final String id);
@@ -40,7 +37,4 @@ public interface EntityDao<T extends Entity> {
 
     @SqlUpdate
     public void test();
-
-    @SqlUpdate
-    public void deleteByKey(String key) throws AccountApiException;
 }

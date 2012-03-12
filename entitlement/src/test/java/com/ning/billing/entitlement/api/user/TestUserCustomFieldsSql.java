@@ -16,15 +16,10 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import static org.testng.Assert.assertNotNull;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 import org.joda.time.DateTime;
 import org.testng.Assert;

@@ -100,7 +100,15 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         subscription.cancel(null, false);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        testListener.pushExpectedEvent(NextEvent.CREATE);
+        testListener.pushExpectedEvent(NextEvent.RE_CREATE);
+
+        // Avoid ordering issue for events at excat same date; this is actually a real good test, we
+        // we test it at Beatrix level. At this level that would work for sql tests but not for in memory.
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+
+        }
 
         if (fromUserAPi) {
             subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),

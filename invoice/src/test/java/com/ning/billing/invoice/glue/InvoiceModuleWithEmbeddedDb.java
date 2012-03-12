@@ -17,13 +17,13 @@
 package com.ning.billing.invoice.glue;
 
 import java.io.IOException;
+import java.net.URL;
 
 import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
 import com.ning.billing.util.glue.GlobalLockerModule;
-import com.ning.billing.util.notificationq.NotificationConfig;
 import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -34,6 +34,8 @@ import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+
+import static org.testng.Assert.assertNotNull;
 
 public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
@@ -69,6 +71,8 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
 
     @Override
     public void configure() {
+        loadSystemPropertiesFromClasspath("/resource.properties");
+
         dbi = helper.getDBI();
         bind(IDBI.class).toInstance(dbi);
 
@@ -86,22 +90,13 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         install(new BusModule());
     }
 
-    private class TestNotificationConfig implements NotificationConfig {
-        @Override
-        public boolean isNotificationProcessingOff() {
-            return false;
-        }
-        @Override
-        public long getNotificationSleepTimeMs() {
-            return 10;
-        }
-        @Override
-        public int getDaoMaxReadyEvents() {
-            return 1;
-        }
-        @Override
-        public long getDaoClaimTimeMs() {
-            return 60000;
+    private static void loadSystemPropertiesFromClasspath(final String resource) {
+        final URL url = InvoiceModuleWithEmbeddedDb.class.getResource(resource);
+        assertNotNull(url);
+        try {
+            System.getProperties().load( url.openStream() );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
