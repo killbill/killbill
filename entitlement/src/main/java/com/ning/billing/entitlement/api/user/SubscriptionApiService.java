@@ -35,6 +35,7 @@ import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class SubscriptionApiService {
 
@@ -98,7 +99,8 @@ public class SubscriptionApiService {
 
         try {
             TimedPhase [] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate);
-            ApiEventCreate creationEvent = new ApiEventCreate(new ApiEventBuilder()
+
+            ApiEventBuilder createBuilder = new ApiEventBuilder()
             .setSubscriptionId(subscription.getId())
             .setEventPlan(plan.getName())
             .setEventPlanPhase(curAndNextPhases[0].getPhase().getName())
@@ -107,7 +109,8 @@ public class SubscriptionApiService {
             .setProcessedDate(processedDate)
             .setEffectiveDate(effectiveDate)
             .setRequestedDate(requestedDate)
-            .setFromDisk(true));
+            .setFromDisk(true);
+            ApiEvent creationEvent = (reCreate) ? new ApiEventReCreate(createBuilder) : new ApiEventCreate(createBuilder);
 
             TimedPhase nextTimedPhase = curAndNextPhases[1];
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
@@ -123,7 +126,7 @@ public class SubscriptionApiService {
             } else {
                 dao.createSubscription(subscription, events);
             }
-            subscription.rebuildTransitions(events, catalogService.getFullCatalog());
+            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }
@@ -161,7 +164,7 @@ public class SubscriptionApiService {
             .setActiveVersion(subscription.getActiveVersion())
             .setProcessedDate(now)
             .setEffectiveDate(effectiveDate)
-            .setRequestedDate(now)
+            .setRequestedDate(requestedDate)
             .setFromDisk(true));
 
             dao.cancelSubscription(subscription.getId(), cancelEvent);
@@ -258,7 +261,7 @@ public class SubscriptionApiService {
             .setActiveVersion(subscription.getActiveVersion())
             .setProcessedDate(now)
             .setEffectiveDate(effectiveDate)
-            .setRequestedDate(now)
+            .setRequestedDate(requestedDate)
             .setFromDisk(true));
 
             TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);

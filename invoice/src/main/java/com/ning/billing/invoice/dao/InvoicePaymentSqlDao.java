@@ -33,7 +33,13 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.sqlobject.*;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -54,9 +60,6 @@ public interface InvoicePaymentSqlDao {
 
     @SqlBatch(transactional=false)
     void batchCreateFromTransaction(@InvoicePaymentBinder List<InvoicePayment> items);
-
-    @SqlUpdate
-    public void update(@InvoicePaymentBinder  InvoicePayment invoicePayment);
 
     @SqlQuery
     public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") String invoiceId);
@@ -82,11 +85,8 @@ public interface InvoicePaymentSqlDao {
             final String currencyString = result.getString("currency");
             final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
             final DateTime createdDate = getDate(result, "created_date");
-            final DateTime updatedDate = getDate(result, "updated_date");
 
             return new InvoicePayment() {
-                private final  DateTime now = new DateTime();
-
                 @Override
                 public UUID getPaymentAttemptId() {
                     return paymentAttemptId;
@@ -111,10 +111,6 @@ public interface InvoicePaymentSqlDao {
                 public DateTime getCreatedDate() {
                     return createdDate ;
                 }
-                @Override
-                public DateTime getUpdatedDate() {
-                    return updatedDate;
-                }
             };
         }
     }
@@ -137,8 +133,6 @@ public interface InvoicePaymentSqlDao {
                         q.bind("currency", (currency == null) ? null : currency.toString());
                         DateTime createdDate = payment.getCreatedDate();
                         q.bind("createdDate", (createdDate == null) ? new DateTime().toDate() : createdDate.toDate());
-                        DateTime updatedDate = payment.getUpdatedDate();
-                        q.bind("updatedDate", (updatedDate == null) ? new DateTime().toDate() : updatedDate.toDate());
                     }
                 };
             }

@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -66,6 +67,7 @@ public class TestBusHandler {
             notifyIfStackEmpty();
             break;
         case CREATE:
+        case RE_CREATE:
             assertEqualsNicely(NextEvent.CREATE);
             notifyIfStackEmpty();
 
@@ -131,10 +133,21 @@ public class TestBusHandler {
             if (completed) {
                 return completed;
             }
-            try {
-                wait(timeout);
-            } catch (Exception ignore) {
-            }
+            long waitTimeMs = timeout;
+            do {
+                try {
+                    DateTime before = new DateTime();
+                    wait(waitTimeMs);
+                    if (completed) {
+                        return completed;
+                    }
+                    DateTime after = new DateTime();
+                    waitTimeMs -= after.getMillis() - before.getMillis();
+                } catch (Exception ignore) {
+                    log.error("isCompleted got interrupted ", ignore);
+                    return false;
+                }
+            } while (waitTimeMs > 0 && !completed);
         }
         if (!completed) {
             Joiner joiner = Joiner.on(" ");

@@ -35,7 +35,6 @@ import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.DefaultNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 
 
@@ -71,6 +70,7 @@ public class InvoiceModule extends AbstractModule {
     }
 
     protected void installInvoiceListener() {
+
         bind(InvoiceListener.class).asEagerSingleton();
     }
 
@@ -78,6 +78,7 @@ public class InvoiceModule extends AbstractModule {
     protected void configure() {
         installInvoiceService();
         installNotifier();
+
         installInvoiceListener();
         bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
         installConfig();

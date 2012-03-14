@@ -29,6 +29,7 @@ import java.util.UUID;
 public class SubscriptionTransitionData implements SubscriptionTransition {
 
 
+    private final long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;
     private final UUID eventId;
@@ -49,7 +50,8 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     public SubscriptionTransitionData(UUID eventId, UUID subscriptionId, UUID bundleId, EventType eventType,
             ApiEventType apiEventType, DateTime requestedTransitionTime, DateTime effectiveTransitionTime,
             SubscriptionState previousState, Plan previousPlan, PlanPhase previousPhase, String previousPriceList,
-            SubscriptionState nextState, Plan nextPlan, PlanPhase nextPhase, String nextPriceList, boolean isFromDisk) {
+            SubscriptionState nextState, Plan nextPlan, PlanPhase nextPhase, String nextPriceList,
+            long totalOrdering, boolean isFromDisk) {
         super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
@@ -66,6 +68,7 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
         this.nextPlan = nextPlan;
         this.nextPriceList = nextPriceList;
         this.nextPhase = nextPhase;
+        this.totalOrdering = totalOrdering;
         this.isFromDisk = isFromDisk;
     }
 
@@ -146,6 +149,10 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     @Override
     public DateTime getEffectiveTransitionTime() {
         return effectiveTransitionTime;
+    }
+
+    public long getTotalOrdering() {
+        return totalOrdering;
     }
 
     public boolean isFromDisk() {

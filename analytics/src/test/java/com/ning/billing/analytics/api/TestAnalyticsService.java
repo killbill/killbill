@@ -208,6 +208,7 @@ public class TestAnalyticsService {
                 plan,
                 phase,
                 priceList,
+                1L,
                 true
         );
         expectedTransition = new BusinessSubscriptionTransition(
@@ -229,7 +230,7 @@ public class TestAnalyticsService {
         final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCNow(), ACCOUNT_CURRENCY, clock);
         final FixedPriceInvoiceItem invoiceItem = new FixedPriceInvoiceItem(
                 UUID.randomUUID(), invoice.getId(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
-                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow()
+                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow()
         );
         invoice.addInvoiceItem(invoiceItem);
 

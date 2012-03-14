@@ -410,15 +410,15 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     private void updateCustomFieldsFromTransaction(SubscriptionSqlDao transactionalDao, final SubscriptionData subscription) {
 
-        String SubscriptionId = subscription.getId().toString();
+        String subscriptionId = subscription.getId().toString();
         String objectType = subscription.getObjectName();
 
         FieldStoreDao fieldStoreDao = transactionalDao.become(FieldStoreDao.class);
-        fieldStoreDao.clear(SubscriptionId, objectType);
+        fieldStoreDao.clear(subscriptionId, objectType);
 
         List<CustomField> fieldList = subscription.getFieldList();
         if (fieldList != null) {
-            fieldStoreDao.batchSaveFromTransaction(SubscriptionId, objectType, fieldList);
+            fieldStoreDao.batchSaveFromTransaction(subscriptionId, objectType, fieldList);
         }
     }
 
@@ -511,7 +511,7 @@ public class EntitlementSqlDao implements EntitlementDao {
             default:
                 break;
             }
-            loadCustomFields(reloaded);
+            loadCustomFields((SubscriptionData) reloaded);
             result.add(reloaded);
         }
         return result;
@@ -618,13 +618,12 @@ public class EntitlementSqlDao implements EntitlementDao {
         });
     }
 
-
-    private void loadCustomFields(final Subscription subscription) {
+    private void loadCustomFields(final SubscriptionData subscription) {
         FieldStoreDao fieldStoreDao = subscriptionsDao.become(FieldStoreDao.class);
         List<CustomField> fields = fieldStoreDao.load(subscription.getId().toString(), subscription.getObjectName());
-        subscription.clearFields();
+        subscription.clearFieldsInternal(false);
         if (fields != null) {
-            subscription.addFields(fields);
+            subscription.addFieldsInternal(fields, false);
         }
     }
 }

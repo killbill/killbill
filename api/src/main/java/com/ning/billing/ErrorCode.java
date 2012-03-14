@@ -119,6 +119,8 @@ public enum ErrorCode {
     ACCOUNT_DOES_NOT_EXIST_FOR_KEY(3003, "Account does not exist for key %s"),
     ACCOUNT_CANNOT_MAP_NULL_KEY(3004, "An attempt was made to get the id for a <null> external key."),
     ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY(3005, "External keys cannot be updated. Original key remains: %s"),
+    ACCOUNT_CREATION_FAILED(3006, "Account creation failed."),
+    ACCOUNT_UPDATE_FAILED(3007, "Account update failed."),
 
    /*
     *
@@ -138,7 +140,8 @@ public enum ErrorCode {
     INVOICE_ACCOUNT_ID_INVALID(4001, "No account could be retrieved for id %s"),
     INVOICE_INVALID_TRANSITION(4002, "Transition did not contain a subscription id."),
     INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID(4003, "No account id was retrieved for subscription id %s"),
-    INVOICE_INVALID_DATE_SEQUENCE(4004, "Date sequence was invalid. Start Date: %s; End Date: %s; Target Date: %s")
+    INVOICE_INVALID_DATE_SEQUENCE(4004, "Date sequence was invalid. Start Date: %s; End Date: %s; Target Date: %s"),
+    INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s")
     ;
 
     private int code;

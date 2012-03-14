@@ -32,8 +32,6 @@ public interface InvoiceUserApi {
 
     public BigDecimal getAccountBalance(UUID accountId);
 
-    public List<InvoiceItem> getInvoiceItemsByAccount(UUID accountId);
-
     public Invoice getInvoice(UUID invoiceId);
 
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);

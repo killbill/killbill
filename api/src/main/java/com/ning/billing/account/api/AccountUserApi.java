@@ -31,6 +31,7 @@ public interface AccountUserApi {
      *
      * Note: does not update the external key
      * @param account
+     * @throws AccountApiException
      */
     public void updateAccount(Account account) throws AccountApiException;
 

@@ -21,38 +21,33 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.util.clock.DefaultClock;
 
 public class DefaultInvoice implements Invoice {
     private final InvoiceItemList invoiceItems = new InvoiceItemList();
     private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
     private final UUID id;
     private final UUID accountId;
+    private final Integer invoiceNumber;
     private final DateTime invoiceDate;
     private final DateTime targetDate;
     private final Currency currency;
 
     public DefaultInvoice(UUID accountId, DateTime targetDate, Currency currency, Clock clock) {
-        this(UUID.randomUUID(), accountId, clock.getUTCNow(), targetDate, currency);
+        this(UUID.randomUUID(), accountId, null, clock.getUTCNow(), targetDate, currency);
     }
 
-    public DefaultInvoice(UUID invoiceId, UUID accountId, DateTime invoiceDate, DateTime targetDate,
+    public DefaultInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber, DateTime invoiceDate, DateTime targetDate,
                           Currency currency) {
         this.id = invoiceId;
         this.accountId = accountId;
+        this.invoiceNumber = invoiceNumber;
         this.invoiceDate = invoiceDate;
         this.targetDate = targetDate;
         this.currency = currency;
@@ -117,6 +112,15 @@ public class DefaultInvoice implements Invoice {
     @Override
     public UUID getAccountId() {
         return accountId;
+    }
+
+    /**
+     * null until retrieved from the database
+     * @return the invoice number
+     */
+    @Override
+    public Integer getInvoiceNumber() {
+        return invoiceNumber;
     }
 
     @Override

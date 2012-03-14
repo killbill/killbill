@@ -25,6 +25,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 import com.ning.billing.util.entity.EntityDao;
+import com.ning.billing.util.entity.UpdatableEntityDao;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTime;
@@ -42,7 +43,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
-public interface TagDefinitionSqlDao extends EntityDao<TagDefinition> {
+public interface TagDefinitionSqlDao extends UpdatableEntityDao<TagDefinition> {
     @Override
     @SqlUpdate
     public void create(@TagDefinitionBinder final TagDefinition entity);

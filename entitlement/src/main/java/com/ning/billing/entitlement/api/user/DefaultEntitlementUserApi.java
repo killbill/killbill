@@ -18,6 +18,8 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.catalog.api.Catalog;
 import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
@@ -37,7 +39,6 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class DefaultEntitlementUserApi implements EntitlementUserApi {
-
     private final Clock clock;
     private final EntitlementDao dao;
     private final CatalogService catalogService;
@@ -80,7 +81,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         return dao.getSubscriptionsForKey(bundleKey);
     }
 
-
     @Override
     public List<Subscription> getSubscriptionsForBundle(UUID bundleId) {
         return dao.getSubscriptions(bundleId);
@@ -93,19 +93,19 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         return dao.createSubscriptionBundle(bundle);
     }
 
-
     @Override
     public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate) throws EntitlementUserApiException {
         try {
             String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
-            if (requestedDate != null && requestedDate.isAfter(now)) {
+            if (requestedDate.isAfter(now)) {
                 throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
             }
             DateTime effectiveDate = requestedDate;
 
-            Plan plan = catalogService.getFullCatalog().findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);
+            Catalog catalog = catalogService.getFullCatalog();
+            Plan plan = catalog.findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);
 
             PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {

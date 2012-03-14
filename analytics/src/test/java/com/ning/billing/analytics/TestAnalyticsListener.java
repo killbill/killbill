@@ -144,6 +144,7 @@ public class TestAnalyticsListener
             plan,
             phase,
             priceList,
+            1L,
             true
         );
     }
@@ -169,6 +170,7 @@ public class TestAnalyticsListener
             null,
             null,
             null,
+            1L,
             true
         );
     }
@@ -197,6 +199,7 @@ public class TestAnalyticsListener
             plan,
             phase,
             priceList,
+            1L,
             true
         );
     }

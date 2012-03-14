@@ -20,6 +20,7 @@ import java.sql.DataTruncation;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityPersistenceException;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -72,22 +73,37 @@ public class DefaultAccountDao implements AccountDao {
 
     @Override
     public Account getById(final String id) {
-        Account account = accountSqlDao.getById(id);
-        if (account != null) {
-            setCustomFieldsFromWithinTransaction(account, accountSqlDao);
-            setTagsFromWithinTransaction(account, accountSqlDao);
-        }
-        return account;
+        return accountSqlDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
+            @Override
+            public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
+                Account account = accountSqlDao.getById(id);
+                if (account != null) {
+                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
+                    setTagsFromWithinTransaction(account, accountSqlDao);
+                }
+                return account;
+            }
+        });
     }
-
 
     @Override
     public List<Account> get() {
-        return accountSqlDao.get();
+        return accountSqlDao.inTransaction(new Transaction<List<Account>, AccountSqlDao>() {
+            @Override
+            public List<Account> inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
+                List<Account> accounts = accountSqlDao.get();
+                for (Account account : accounts) {
+                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
+                    setTagsFromWithinTransaction(account, accountSqlDao);
+                }
+
+                return accounts;
+            }
+        });
     }
 
     @Override
-    public void create(final Account account) throws AccountApiException {
+    public void create(final Account account) throws EntityPersistenceException {
         final String key = account.getExternalKey();
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
@@ -107,10 +123,10 @@ public class DefaultAccountDao implements AccountDao {
                 }
             });
         } catch (RuntimeException re) {
-            if (re.getCause() instanceof AccountApiException) {
-                throw (AccountApiException) re.getCause();
+            if (re.getCause() instanceof EntityPersistenceException) {
+                throw (EntityPersistenceException) re.getCause();
             } else if (re.getCause() instanceof DataTruncation) {
-                throw new AccountApiException(ErrorCode.DATA_TRUNCATION, re.getCause().getMessage());
+                throw new EntityPersistenceException(ErrorCode.DATA_TRUNCATION, re.getCause().getMessage());
             } else {
                 throw re;
             }
@@ -118,20 +134,20 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     @Override
-    public void update(final Account account) throws AccountApiException {
+    public void update(final Account account) throws EntityPersistenceException {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
+                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
                     String accountId = account.getId().toString();
                     Account currentAccount = accountSqlDao.getById(accountId);
                     if (currentAccount == null) {
-                        throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
+                        throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                     }
 
                     String currentKey = currentAccount.getExternalKey();
                     if (!currentKey.equals(account.getExternalKey())) {
-                        throw new AccountApiException(ErrorCode.ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY, currentKey);
+                        throw new EntityPersistenceException(ErrorCode.ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY, currentKey);
                     }
 
                     accountSqlDao.update(account);
@@ -147,8 +163,8 @@ public class DefaultAccountDao implements AccountDao {
                 }
             });
         } catch (RuntimeException re) {
-            if (re.getCause() instanceof AccountApiException) {
-                throw (AccountApiException) re.getCause();
+            if (re.getCause() instanceof EntityPersistenceException) {
+                throw (EntityPersistenceException) re.getCause();
             } else {
                 throw re;
             }
@@ -161,7 +177,6 @@ public class DefaultAccountDao implements AccountDao {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
-
                     accountSqlDao.deleteByKey(externalKey);
 
                     return null;
@@ -230,6 +245,4 @@ public class DefaultAccountDao implements AccountDao {
             fieldStoreDao.batchSaveFromTransaction(accountId, objectType, fieldList);
         }
     }
-
-
 }
