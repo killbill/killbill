@@ -379,7 +379,7 @@ public class TestNotificationQueue {
 
 		Assert.assertTrue(expectedNotificationsFred.get(notificationKeyFred.toString()));
 		Assert.assertFalse(expectedNotificationsFred.get(notificationKeyBarney.toString()));
-
+		queueFred.stopQueue();
 	}
 
 	NotificationConfig getNotificationConfig(final boolean off,
