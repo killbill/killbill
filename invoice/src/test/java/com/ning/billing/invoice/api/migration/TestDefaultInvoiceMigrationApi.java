@@ -200,7 +200,7 @@ public class TestDefaultInvoiceMigrationApi {
 	}
 	
 	// Check migration invoice is NOT returned for all user api invoice calls
-	@Test(groups={"fast"},enabled=true)
+	@Test(groups={"slow"},enabled=false)
 	public void testUserApiAccess(){
 		List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId);
 		Assert.assertEquals(byAccount.size(),1);
@@ -218,7 +218,7 @@ public class TestDefaultInvoiceMigrationApi {
 
 	
 	// Check migration invoice IS returned for payment api calls
-	@Test(groups={"fast"},enabled=true)
+	@Test(groups={"slow"},enabled=false)
 	public void testPaymentApi(){
 		List<Invoice> allByAccount = invoicePaymentApi.getAllInvoicesByAccount(accountId);
 		Assert.assertEquals(allByAccount.size(),2);
@@ -228,7 +228,7 @@ public class TestDefaultInvoiceMigrationApi {
 	
 	
 	// Account balance should reflect total of migration and non-migration invoices
-	@Test(groups={"fast"},enabled=true)
+	@Test(groups={"slow"},enabled=false)
 	public void testBalance(){
 		Invoice migrationInvoice = invoiceDao.getById(migrationInvoiceId);
 		Invoice regularInvoice = invoiceDao.getById(regularInvoiceId);

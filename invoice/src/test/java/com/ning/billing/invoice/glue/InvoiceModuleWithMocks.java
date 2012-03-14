@@ -49,4 +49,8 @@ public class InvoiceModuleWithMocks extends InvoiceModule {
     protected void installInvoiceService() {
 
     }
+    
+    protected void installInvoiceMigrationApi() {
+
+    }
 }
