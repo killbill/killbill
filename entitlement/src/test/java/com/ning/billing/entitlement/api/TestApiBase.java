@@ -116,8 +116,11 @@ public abstract class TestApiBase {
     @AfterClass(alwaysRun=true)
     public void tearDown() {
         try {
-            busService.getBus().register(testListener);
+            busService.getBus().unregister(testListener);
             ((DefaultBusService) busService).stopBus();
+            if (helper != null) {
+                helper.stopMysql();
+            }
         } catch (Exception e) {
             log.warn("Failed to tearDown test properly ", e);
         }
