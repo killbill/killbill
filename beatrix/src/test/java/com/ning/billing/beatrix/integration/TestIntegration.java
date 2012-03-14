@@ -169,6 +169,7 @@ public class TestIntegration {
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
+        helper.stopMysql();
     }
 
 

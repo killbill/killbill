@@ -50,4 +50,10 @@ public class DefaultTagDefinitionUserApi implements TagDefinitionUserApi {
     public void deleteTagDefinition(final String definitionName) throws TagDefinitionApiException {
         dao.deleteAllTagsForDefinition(definitionName);
     }
+
+	@Override
+	public TagDefinition getTagDefinition(String name)
+			throws TagDefinitionApiException {
+		return dao.getByName(name);
+	}
 }

@@ -58,13 +58,20 @@ public class MockModule extends AbstractModule {
 
         install(new GlobalLockerModule());
         install(new NotificationQueueModule());
-        install(new InvoiceModule());
         install(new AccountModule());
-        install(new EntitlementModule());
+        installEntitlementModule();
         install(new CatalogModule());
         install(new BusModule());
+        installInvoiceModule();
 
     }
+    
+    protected void installEntitlementModule() {
+    	install(new EntitlementModule());
+    }
 
- 
+    protected void installInvoiceModule() {
+    	install(new InvoiceModule());
+    }
+
 }

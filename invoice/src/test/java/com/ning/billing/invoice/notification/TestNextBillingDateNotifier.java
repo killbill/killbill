@@ -34,6 +34,7 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -191,4 +192,10 @@ public class TestNextBillingDateNotifier {
 		Assert.assertEquals(listener.getEventCount(), 1);
 		Assert.assertEquals(listener.getLatestSubscriptionId(), subscriptionId);
 	}
+
+	@AfterClass(alwaysRun = true)
+    public void tearDown() {
+    	helper.stopMysql();
+    }
+
 }

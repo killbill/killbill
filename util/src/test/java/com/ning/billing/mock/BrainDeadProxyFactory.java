@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 
 public class BrainDeadProxyFactory {
     private static final Logger log = LoggerFactory.getLogger(BrainDeadProxyFactory.class);
+    
+    public static final Object ZOMBIE_VOID = new Object(); 
 
     public static interface ZombieControl {
 
@@ -59,7 +61,12 @@ public class BrainDeadProxyFactory {
                 } else {
 
                     Object result = results.get(method.getName());
-                    if (result != null) {
+                    if (result == ZOMBIE_VOID) {
+                    	return (Void) null;
+                    } else if (result != null) {
+                    	if(result instanceof Throwable) {
+                    		throw ((Throwable) result);
+                    	}
                         return result;
                     } else {
                         log.error(String.format("No result for Method: '%s' on Class '%s'",method.getName(), method.getDeclaringClass().getName()));

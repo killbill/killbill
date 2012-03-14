@@ -39,6 +39,7 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
@@ -86,6 +87,11 @@ public class TestNotificationQueue {
 		startMysql();
 		dao = dbi.onDemand(DummySqlTest.class);
 	}
+	
+    @AfterClass(alwaysRun = true)
+    public void tearDown() {
+    	helper.stopMysql();
+    }
 
 	@BeforeTest
 	public void beforeTest() {
