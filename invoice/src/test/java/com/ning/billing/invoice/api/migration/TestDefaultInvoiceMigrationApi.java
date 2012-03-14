@@ -25,6 +25,8 @@ import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -65,6 +67,7 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 
 @Guice(modules = {MockModule.class})
 public class TestDefaultInvoiceMigrationApi {
+	Logger log = LoggerFactory.getLogger(TestDefaultInvoiceMigrationApi.class);
 	
     @Inject
     InvoiceUserApi invoiceUserApi;
@@ -108,6 +111,7 @@ public class TestDefaultInvoiceMigrationApi {
     @BeforeClass(alwaysRun = true)
     public void setup() throws Exception
     {
+    	log.info("Starting set up");
 		accountId = UUID.randomUUID();
     	subscriptionId = UUID.randomUUID();
     	now = new ClockMock().getUTCNow();
