@@ -27,7 +27,6 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
 
-import com.ning.billing.util.entity.UpdatableEntityDao;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
@@ -48,7 +47,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.UuidMapper;
-import com.ning.billing.util.entity.EntityDao;
+import com.ning.billing.util.entity.UpdatableEntityDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper({UuidMapper.class, AccountSqlDao.AccountMapper.class})

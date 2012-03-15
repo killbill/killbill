@@ -112,7 +112,7 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 			List<CustomField> fields, List<Tag> tags)
 			throws AccountApiException {
 		
-		Account account = new DefaultAccount(data);
+		Account account = new DefaultAccount(data, data.getCreatedDate(), data.getUpdatedDate());
         account.addFields(fields);
         account.addTags(tags);
 
