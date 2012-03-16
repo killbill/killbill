@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.util.tag;
 
 public enum ControlTagType {
     AUTO_BILLING_OFF("Suspends billing until removed.", true, false),

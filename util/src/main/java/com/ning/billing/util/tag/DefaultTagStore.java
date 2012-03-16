@@ -17,7 +17,6 @@
 package com.ning.billing.util.tag;
 
 import java.util.UUID;
-import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.util.entity.EntityCollectionBase;
 
 public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagStore {
