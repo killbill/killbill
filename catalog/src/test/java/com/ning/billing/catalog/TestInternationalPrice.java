@@ -71,7 +71,7 @@ public class TestInternationalPrice {
 	  Assert.assertEquals(c.getCurrentPlans()[0].getFinalPhase().getRecurringPrice().getPrice(Currency.GBP), new BigDecimal(0));
   }
   
-  @Test
+   @Test
   public void testNegativeValuePrices(){
 	  StandaloneCatalog c = new MockCatalog();
 	  c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});

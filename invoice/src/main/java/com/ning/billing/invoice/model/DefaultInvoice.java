@@ -16,18 +16,21 @@
 
 package com.ning.billing.invoice.model;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.clock.Clock;
-import org.joda.time.DateTime;
 
-import javax.annotation.Nullable;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 public class DefaultInvoice implements Invoice {
     private final InvoiceItemList invoiceItems = new InvoiceItemList();
@@ -38,19 +41,30 @@ public class DefaultInvoice implements Invoice {
     private final DateTime invoiceDate;
     private final DateTime targetDate;
     private final Currency currency;
+    private final boolean migrationInvoice;
 
     public DefaultInvoice(UUID accountId, DateTime targetDate, Currency currency, Clock clock) {
         this(UUID.randomUUID(), accountId, null, clock.getUTCNow(), targetDate, currency);
     }
 
+    public DefaultInvoice(UUID accountId, DateTime targetDate, Currency currency, Clock clock, boolean migrationInvoice) {
+        this(UUID.randomUUID(), accountId, null, clock.getUTCNow(), targetDate, currency, migrationInvoice);
+    }
+
     public DefaultInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber, DateTime invoiceDate, DateTime targetDate,
                           Currency currency) {
+    	this(invoiceId, accountId, invoiceNumber, invoiceDate, targetDate, currency, false);
+    }
+    
+    public DefaultInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber,DateTime invoiceDate, DateTime targetDate,
+                Currency currency, boolean migrationInvoice) {
         this.id = invoiceId;
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
         this.invoiceDate = invoiceDate;
         this.targetDate = targetDate;
         this.currency = currency;
+        this.migrationInvoice = migrationInvoice;
     }
 
     @Override
@@ -69,10 +83,10 @@ public class DefaultInvoice implements Invoice {
     }
 
     @Override
-    public List<InvoiceItem> getInvoiceItems(Class clazz) {
+    public <T extends InvoiceItem> List<InvoiceItem> getInvoiceItems(Class<T> clazz) {
         List<InvoiceItem> results = new ArrayList<InvoiceItem>();
         for (InvoiceItem item : invoiceItems) {
-            if (item.getClass() == clazz) {
+            if ( clazz.isInstance(item) ) {
                 results.add(item);
             }
         }
@@ -137,8 +151,13 @@ public class DefaultInvoice implements Invoice {
     public Currency getCurrency() {
         return currency;
     }
-
+    
     @Override
+    public boolean isMigrationInvoice() {
+		return migrationInvoice;
+	}
+
+	@Override
     public DateTime getLastPaymentAttempt() {
         DateTime lastPaymentAttempt = null;
 

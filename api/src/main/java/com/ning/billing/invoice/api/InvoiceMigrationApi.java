@@ -16,25 +16,25 @@
 
 package com.ning.billing.invoice.api;
 
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
-public interface InvoiceUserApi {
-    public List<Invoice> getInvoicesByAccount(UUID accountId);
+import org.joda.time.DateTime;
 
-    public List<Invoice> getInvoicesByAccount(UUID accountId, DateTime fromDate);
+import com.ning.billing.catalog.api.Currency;
 
-    public BigDecimal getAccountBalance(UUID accountId);
+public interface InvoiceMigrationApi {
 
-    public Invoice getInvoice(UUID invoiceId);
 
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
+	/**
+	 * @param accountId
+	 * @param targetDate
+	 * @param balance
+	 * @param currency
+	 * 
+	 * @return The UUID of the created invoice
+	 */
+	public UUID createMigrationInvoice(UUID accountId, DateTime targetDate,
+			BigDecimal balance, Currency currency);
 
-    public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate);
-    
-    public Invoice triggerInvoiceGeneration(UUID accountId, DateTime targetDate, boolean dryrun) throws InvoiceApiException;
 }

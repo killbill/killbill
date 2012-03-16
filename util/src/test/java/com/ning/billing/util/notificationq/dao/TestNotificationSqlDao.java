@@ -59,8 +59,6 @@ public class TestNotificationSqlDao {
     private NotificationSqlDao dao;
 
     private void startMysql() throws IOException, ClassNotFoundException, SQLException {
-
-
         final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
         helper.startMysql();
         helper.initDb(ddl);

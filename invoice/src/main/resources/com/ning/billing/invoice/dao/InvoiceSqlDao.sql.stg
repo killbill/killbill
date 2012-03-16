@@ -6,7 +6,8 @@ invoiceFetchFields(prefix) ::= <<
     <prefix>account_id,
     <prefix>invoice_date,
     <prefix>target_date,
-    <prefix>currency
+    <prefix>currency,
+  	<prefix>migrated
 >>
 
 invoiceSetFields(prefix) ::= <<
@@ -14,7 +15,8 @@ invoiceSetFields(prefix) ::= <<
     <prefix>account_id,
     <prefix>invoice_date,
     <prefix>target_date,
-    <prefix>currency
+    <prefix>currency,
+    <prefix>migrated
 >>
 
 get() ::= <<
@@ -26,6 +28,13 @@ get() ::= <<
 getInvoicesByAccount() ::= <<
   SELECT <invoiceFetchFields()>
   FROM invoices
+  WHERE account_id = :accountId AND migrated = 'FALSE'
+  ORDER BY target_date ASC;
+>>
+
+getAllInvoicesByAccount() ::= <<
+  SELECT <invoiceFetchFields()>
+  FROM invoices
   WHERE account_id = :accountId
   ORDER BY target_date ASC;
 >>
@@ -33,7 +42,7 @@ getInvoicesByAccount() ::= <<
 getInvoicesByAccountAfterDate() ::= <<
   SELECT <invoiceFetchFields()>
   FROM invoices
-  WHERE account_id = :accountId AND target_date >= :fromDate
+  WHERE account_id = :accountId AND target_date >= :fromDate AND migrated = 'FALSE'
   ORDER BY target_date ASC;
 >>
 
@@ -41,18 +50,7 @@ getInvoicesBySubscription() ::= <<
   SELECT <invoiceFetchFields("i.")>
   FROM invoices i
   LEFT JOIN recurring_invoice_items rii ON i.id = rii.invoice_id
-  WHERE rii.subscription_id = :subscriptionId
-  GROUP BY <invoiceFetchFields("i.")>;
->>
-
-getInvoicesForPayment() ::= <<
-  SELECT i.id
-  FROM invoices i
-  LEFT JOIN invoice_payment_summary ips ON ips.invoice_id = i.id
-  LEFT JOIN invoice_item_summary iis ON iis.invoice_id = i.id
-  WHERE ((ips.last_payment_date IS NULL) OR (DATEDIFF(:targetDate, ips.last_payment_date) >= :numberOfDays))
-        AND ((ips.total_paid IS NULL) OR (iis.amount_invoiced >= ips.total_paid))
-        AND ((iis.amount_invoiced IS NOT NULL) AND (iis.amount_invoiced > 0))
+  WHERE rii.subscription_id = :subscriptionId  AND migrated = 'FALSE'
   GROUP BY <invoiceFetchFields("i.")>;
 >>
 
@@ -74,7 +72,7 @@ getAccountBalance() ::= <<
 
 create() ::= <<
   INSERT INTO invoices(<invoiceSetFields()>)
-  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency);
+  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :migrated);
 >>
 
 getInvoiceIdByPaymentAttemptId() ::= <<
@@ -89,7 +87,7 @@ getUnpaidInvoicesByAccountId() ::= <<
   FROM invoices i
   LEFT JOIN invoice_payment_summary ips ON i.id = ips.invoice_id
   LEFT JOIN invoice_item_summary iis ON i.id = iis.invoice_id
-  WHERE i.account_id = :accountId AND NOT (i.target_date > :upToDate)
+  WHERE i.account_id = :accountId AND NOT (i.target_date > :upToDate) AND migrated = 'FALSE'
   GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
   HAVING (SUM(iis.amount_invoiced) > SUM(ips.total_paid)) OR (SUM(ips.total_paid) IS NULL)
   ORDER BY i.target_date ASC;

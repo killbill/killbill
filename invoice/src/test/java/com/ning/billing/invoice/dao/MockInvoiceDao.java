@@ -77,7 +77,7 @@ public class MockInvoiceDao implements InvoiceDao {
 
         synchronized (monitor) {
             for (Invoice invoice : invoices.values()) {
-                if (accountId.equals(invoice.getAccountId())) {
+                if (accountId.equals(invoice.getAccountId()) && !invoice.isMigrationInvoice()) {
                     result.add(invoice);
                 }
             }
@@ -91,7 +91,7 @@ public class MockInvoiceDao implements InvoiceDao {
 
         synchronized (monitor) {
             for (Invoice invoice : get()) {
-                if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate)) {
+                if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate) && !invoice.isMigrationInvoice()) {
                     invoicesForAccount.add(invoice);
                 }
             }
@@ -107,28 +107,13 @@ public class MockInvoiceDao implements InvoiceDao {
         synchronized (monitor) {
             for (Invoice invoice : invoices.values()) {
                 for (InvoiceItem item : invoice.getInvoiceItems()) {
-                    if (subscriptionId.equals(item.getSubscriptionId())) {
+                    if (subscriptionId.equals(item.getSubscriptionId()) && !invoice.isMigrationInvoice()) {
                         result.add(invoice);
                         break;
                     }
                 }
             }
         }
-        return result;
-    }
-
-    @Override
-    public List<UUID> getInvoicesForPayment(DateTime targetDate, int numberOfDays) {
-        List<UUID> result = new ArrayList<UUID>();
-
-        synchronized (monitor) {
-            for (Invoice invoice : invoices.values()) {
-                if (invoice.isDueForPayment(targetDate, numberOfDays)) {
-                    result.add(invoice.getId());
-                }
-            }
-        }
-
         return result;
     }
 
@@ -193,11 +178,25 @@ public class MockInvoiceDao implements InvoiceDao {
         List<Invoice> unpaidInvoices = new ArrayList<Invoice>();
 
         for (Invoice invoice : get()) {
-            if (accountId.equals(invoice.getAccountId()) && (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0)) {
+            if (accountId.equals(invoice.getAccountId()) && (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) && !invoice.isMigrationInvoice()) {
                 unpaidInvoices.add(invoice);
             }
         }
 
         return unpaidInvoices;
     }
+
+	@Override
+	public List<Invoice> getAllInvoicesByAccount(UUID accountId) {
+		  List<Invoice> result = new ArrayList<Invoice>();
+
+	        synchronized (monitor) {
+	            for (Invoice invoice : invoices.values()) {
+	                if (accountId.equals(invoice.getAccountId())) {
+	                    result.add(invoice);
+	                }
+	            }
+	        }
+	        return result;
+	}
 }

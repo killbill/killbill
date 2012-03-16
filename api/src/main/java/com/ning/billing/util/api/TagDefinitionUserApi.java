@@ -17,7 +17,7 @@
 package com.ning.billing.util.api;
 
 import java.util.List;
-import java.util.UUID;
+
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDefinitionUserApi {
@@ -50,4 +50,13 @@ public interface TagDefinitionUserApi {
      * @throws TagDefinitionApiException
      */
     public void deleteTagDefinition(String definitionName) throws TagDefinitionApiException;
+
+    
+	/**
+	 * 
+	 * @param name
+	 * @return the tag with this definition
+     * @throws TagDefinitionApiException
+	 */
+	public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
 }

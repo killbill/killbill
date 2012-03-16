@@ -22,10 +22,12 @@ import com.google.inject.AbstractModule;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
+import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
+import com.ning.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -59,6 +61,10 @@ public class InvoiceModule extends AbstractModule {
     protected void installInvoiceService() {
         bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
     }
+    
+    protected void installInvoiceMigrationApi() {
+    	bind(InvoiceMigrationApi.class).to(DefaultInvoiceMigrationApi.class).asEagerSingleton();
+	}
 
     protected void installNotifier() {
         bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
@@ -85,6 +91,9 @@ public class InvoiceModule extends AbstractModule {
         installInvoiceDao();
         installInvoiceUserApi();
         installInvoicePaymentApi();
+        installInvoiceMigrationApi();
         installGlobalLocker();
     }
+
+
 }

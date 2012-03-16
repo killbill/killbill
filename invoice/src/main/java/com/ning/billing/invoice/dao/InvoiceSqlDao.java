@@ -58,6 +58,9 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
 
     @SqlQuery
     List<Invoice> getInvoicesByAccount(@Bind("accountId") final String accountId);
+    
+    @SqlQuery
+    List<Invoice> getAllInvoicesByAccount(@Bind("accountId") final String string);
 
     @SqlQuery
     List<Invoice> getInvoicesByAccountAfterDate(@Bind("accountId") final String accountId,
@@ -82,6 +85,8 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
     @SqlQuery
     List<Invoice> getUnpaidInvoicesByAccountId(@Bind("accountId") final String accountId,
                                                @Bind("upToDate") final Date upToDate);
+    
+    
 
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
@@ -98,6 +103,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
                         q.bind("invoiceDate", invoice.getInvoiceDate().toDate());
                         q.bind("targetDate", invoice.getTargetDate().toDate());
                         q.bind("currency", invoice.getCurrency().toString());
+                        q.bind("migrated", invoice.isMigrationInvoice());
                     }
                 };
             }
@@ -113,8 +119,9 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             DateTime invoiceDate = new DateTime(result.getTimestamp("invoice_date"));
             DateTime targetDate = new DateTime(result.getTimestamp("target_date"));
             Currency currency = Currency.valueOf(result.getString("currency"));
+            boolean isMigrationInvoice = result.getBoolean("migrated");
 
-            return new DefaultInvoice(id, accountId, invoiceNumber, invoiceDate, targetDate, currency);
+            return new DefaultInvoice(id, accountId, invoiceNumber, invoiceDate, targetDate, currency, isMigrationInvoice);
         }
     }
 
@@ -135,6 +142,7 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             return amountInvoiced.subtract(amountPaid);
         }
     }
+
 
 
 }

@@ -31,7 +31,7 @@ public interface Invoice extends Entity {
 
     List<InvoiceItem> getInvoiceItems();
 
-    List<InvoiceItem> getInvoiceItems(Class clazz);
+    public <T extends InvoiceItem> List<InvoiceItem> getInvoiceItems(Class<T> clazz);
 
     int getNumberOfItems();
 
@@ -62,4 +62,6 @@ public interface Invoice extends Entity {
     BigDecimal getBalance();
 
     boolean isDueForPayment(DateTime targetDate, int numberOfDays);
+
+	boolean isMigrationInvoice();
 }

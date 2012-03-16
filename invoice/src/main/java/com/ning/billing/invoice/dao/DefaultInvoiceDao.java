@@ -17,7 +17,6 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -47,8 +46,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final static Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
 
     private final InvoiceSqlDao invoiceSqlDao;
-    private final RecurringInvoiceItemSqlDao recurringInvoiceItemSqlDao;
-    private final FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final EntitlementBillingApi entitlementBillingApi;
 
@@ -61,8 +58,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
                              final EntitlementBillingApi entitlementBillingApi,
                              NextBillingDatePoster nextBillingDatePoster) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
-        this.recurringInvoiceItemSqlDao = dbi.onDemand(RecurringInvoiceItemSqlDao.class);
-        this.fixedPriceInvoiceItemSqlDao = dbi.onDemand(FixedPriceInvoiceItemSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.eventBus = eventBus;
         this.entitlementBillingApi = entitlementBillingApi;
@@ -82,6 +77,21 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 return invoices;
             }
         });
+    }
+
+    @Override
+    public List<Invoice> getAllInvoicesByAccount(final UUID accountId) {
+    	return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
+    		@Override
+    		public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+    			List<Invoice> invoices = invoiceDao.getAllInvoicesByAccount(accountId.toString());
+
+    			getInvoiceItemsWithinTransaction(invoices, invoiceDao);
+    			getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
+
+    			return invoices;
+    		}
+    	});
     }
 
     @Override
@@ -193,11 +203,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<UUID> getInvoicesForPayment(final DateTime targetDate, final int numberOfDays) {
-        return invoiceSqlDao.getInvoicesForPayment(targetDate.toDate(), numberOfDays);
-    }
-
-    @Override
     public BigDecimal getAccountBalance(final UUID accountId) {
         return invoiceSqlDao.getAccountBalance(accountId.toString());
     }
@@ -306,4 +311,5 @@ public class DefaultInvoiceDao implements InvoiceDao {
             }
         }
     }
+
 }

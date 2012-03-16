@@ -38,9 +38,6 @@ public interface InvoiceDao {
 
     List<Invoice> getInvoicesBySubscription(final UUID subscriptionId);
 
-    List<UUID> getInvoicesForPayment(final DateTime targetDate,
-                                     final int numberOfDays);
-
     UUID getInvoiceIdByPaymentAttemptId(final UUID paymentAttemptId);
 
     InvoicePayment getInvoicePayment(final UUID paymentAttemptId);
@@ -52,4 +49,6 @@ public interface InvoiceDao {
     List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate);
 
     void test();
+
+	List<Invoice> getAllInvoicesByAccount(UUID accountId);
 }

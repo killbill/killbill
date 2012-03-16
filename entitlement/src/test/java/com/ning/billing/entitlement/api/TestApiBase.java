@@ -124,7 +124,7 @@ public abstract class TestApiBase {
         } catch (Exception e) {
             log.warn("Failed to tearDown test properly ", e);
         }
-
+        //if(helper != null) { helper.stopMysql(); }
     }
 
     @BeforeClass(alwaysRun=true)

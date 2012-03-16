@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.invoice;
+package com.ning.billing.invoice.api.migration;
 
-import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -49,24 +49,31 @@ import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.invoice.InvoiceDispatcher;
+import com.ning.billing.invoice.TestInvoiceDispatcher;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceMigrationApi;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
-import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
-@Guice(modules = {MockModule.class})
-public class TestInvoiceDispatcher {
-	Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
+@Guice(modules = {MockModuleNoEntitlement.class})
+public class TestDefaultInvoiceMigrationApi {
+	Logger log = LoggerFactory.getLogger(TestDefaultInvoiceMigrationApi.class);
 
 	@Inject
 	InvoiceUserApi invoiceUserApi;
+
+	@Inject
+	InvoicePaymentApi invoicePaymentApi;
+
 	@Inject
 	private InvoiceGenerator generator;
 	@Inject
@@ -78,54 +85,78 @@ public class TestInvoiceDispatcher {
 	private MysqlTestingHelper helper;
 
 	@Inject
-	NextBillingDateNotifier notifier;
-
-	@Inject
 	private BusService busService;
 
+	@Inject
+	private InvoiceMigrationApi migrationApi;
 
 
-	@BeforeSuite(alwaysRun = true)
-	public void setup() throws IOException
+
+	private UUID accountId ;
+	private UUID subscriptionId ;
+	private DateTime now;
+
+	private UUID migrationInvoiceId;
+	private UUID regularInvoiceId;
+
+	private static final BigDecimal MIGRATION_INVOICE_AMOUNT =  new BigDecimal("100.00");
+	private static final Currency MIGRATION_INVOICE_CURRENCY =  Currency.USD;
+
+
+
+	@BeforeClass(alwaysRun = true)
+	public void setup() throws Exception
 	{
+		log.info("Starting set up");
+		accountId = UUID.randomUUID();
+		subscriptionId = UUID.randomUUID();
+		now = new ClockMock().getUTCNow();
 
-
-		final String accountDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-		final String entitlementDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 		final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-		//        final String paymentDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
 		final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
 		helper.startMysql();
 
-		helper.initDb(accountDdl);
-		helper.initDb(entitlementDdl);
 		helper.initDb(invoiceDdl);
-		//        helper.initDb(paymentDdl);
 		helper.initDb(utilDdl);
-		notifier.initialize();
-		notifier.start();
 
 		busService.getBus().start();
+
+		migrationInvoiceId = createAndCheckMigrationInvoice();
+		regularInvoiceId = generateRegularInvoice();
 	}
 
 	@AfterClass(alwaysRun = true)
 	public void tearDown() {
 		try {
 			((DefaultBusService) busService).stopBus();
-			notifier.stop();
 			helper.stopMysql();
 		} catch (Exception e) {
 			log.warn("Failed to tearDown test properly ", e);
 		}
-
 	}
 
-	@Test(groups={"fast"}, enabled=true)
-	public void testDryrunInvoice() throws InvoiceApiException {
-		UUID accountId = UUID.randomUUID();
-		UUID subscriptionId = UUID.randomUUID();
+	private UUID createAndCheckMigrationInvoice(){
+		UUID migrationInvoiceId = migrationApi.createMigrationInvoice(accountId, now, MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_CURRENCY);
+		Assert.assertNotNull(migrationInvoiceId);
+		//Double check it was created and values are correct
 
+		Invoice invoice = invoiceDao.getById(migrationInvoiceId);
+		Assert.assertNotNull(invoice);
+
+		Assert.assertEquals(invoice.getAccountId(), accountId);
+		Assert.assertEquals(invoice.getTargetDate().compareTo(now), 0); //temp to avoid tz test artifact
+		//		Assert.assertEquals(invoice.getTargetDate(),now);
+		Assert.assertEquals(invoice.getNumberOfItems(), 1);
+		Assert.assertEquals(invoice.getInvoiceItems().get(0).getAmount().compareTo(MIGRATION_INVOICE_AMOUNT), 0 );
+		Assert.assertEquals(invoice.getBalance().compareTo(MIGRATION_INVOICE_AMOUNT),0);
+		Assert.assertEquals(invoice.getCurrency(), MIGRATION_INVOICE_CURRENCY);
+		Assert.assertTrue(invoice.isMigrationInvoice());
+
+		return migrationInvoiceId;
+	}
+
+	private UUID generateRegularInvoice()  throws Exception {
 		AccountUserApi accountUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
 		((ZombieControl)accountUserApi).addResult("getAccountById", account);
@@ -157,20 +188,63 @@ public class TestInvoiceDispatcher {
 		List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
 		Assert.assertEquals(invoices.size(),0);
 
-		// Try it again to double check
-		invoice = dispatcher.processAccount(accountId, target, true);
-		Assert.assertNotNull(invoice);
-
-		invoices = invoiceDao.getInvoicesByAccount(accountId);
-		Assert.assertEquals(invoices.size(),0);
-
-		// This time no dry run
 		invoice = dispatcher.processAccount(accountId, target, false);
 		Assert.assertNotNull(invoice);
 
 		invoices = invoiceDao.getInvoicesByAccount(accountId);
 		Assert.assertEquals(invoices.size(),1);
 
+		return invoice.getId();
 	}
 
+	// Check migration invoice is NOT returned for all user api invoice calls
+	@Test(groups={"slow"},enabled=true)
+	public void testUserApiAccess(){
+		List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId);
+		Assert.assertEquals(byAccount.size(),1);
+		Assert.assertEquals(byAccount.get(0).getId(), regularInvoiceId);
+
+		List<Invoice> byAccountAndDate = invoiceUserApi.getInvoicesByAccount(accountId, now.minusDays(1));
+		Assert.assertEquals(byAccountAndDate.size(),1);
+		Assert.assertEquals(byAccountAndDate.get(0).getId(), regularInvoiceId);
+
+		Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, now.plusDays(1));
+		Assert.assertEquals(unpaid.size(),1);
+		Assert.assertEquals(unpaid.iterator().next().getId(), regularInvoiceId);
+
+	}
+
+
+	// Check migration invoice IS returned for payment api calls
+	@Test(groups={"slow"},enabled=true)
+	public void testPaymentApi(){
+		List<Invoice> allByAccount = invoicePaymentApi.getAllInvoicesByAccount(accountId);
+		Assert.assertEquals(allByAccount.size(),2);
+		Assert.assertTrue(checkContains(allByAccount, regularInvoiceId));
+		Assert.assertTrue(checkContains(allByAccount, migrationInvoiceId));
+	}
+
+
+	// Account balance should reflect total of migration and non-migration invoices
+	@Test(groups={"slow"},enabled=true)
+	public void testBalance(){
+		Invoice migrationInvoice = invoiceDao.getById(migrationInvoiceId);
+		Invoice regularInvoice = invoiceDao.getById(regularInvoiceId);
+		BigDecimal balanceOfAllInvoices = migrationInvoice.getBalance().add(regularInvoice.getBalance());
+
+		BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId);
+		System.out.println("Account balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);
+		Assert.assertEquals(accountBalance.compareTo(balanceOfAllInvoices), 0);
+
+
+	}
+
+	private boolean checkContains(List<Invoice> invoices, UUID invoiceId) {
+		for(Invoice invoice : invoices) {
+			if(invoice.getId().equals(invoiceId)) {
+				return true;
+			}
+		}
+		return false;		
+	}
 }

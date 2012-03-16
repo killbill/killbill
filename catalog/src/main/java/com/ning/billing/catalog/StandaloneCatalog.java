@@ -17,6 +17,7 @@
 package com.ning.billing.catalog;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
@@ -254,6 +255,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		for(DefaultPlan p : plans) {
 			p.initialize(catalog, sourceURI);
 		}
+		
 	}
 
 

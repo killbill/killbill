@@ -42,6 +42,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected RecurringInvoiceItemSqlDao recurringInvoiceItemDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
     protected InvoiceModuleWithEmbeddedDb module;
+    private BusService busService;
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
@@ -65,8 +66,8 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
             recurringInvoiceItemDao = module.getInvoiceItemSqlDao();
 
             invoicePaymentDao = module.getInvoicePaymentSqlDao();
-
-            BusService busService = injector.getInstance(BusService.class);
+            
+            busService = injector.getInstance(BusService.class);
             ((DefaultBusService) busService).startBus();
 
             assertTrue(true);
@@ -105,6 +106,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
     @AfterClass(alwaysRun = true)
     protected void tearDown() {
+    	((DefaultBusService) busService).stopBus();
         module.stopDb();
         assertTrue(true);
     }
