@@ -38,7 +38,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
         for (Tag tag : entities.values()) {
             if (tag instanceof ControlTag) {
                 ControlTag controlTag = (ControlTag) tag;
-                if (controlTag.getControlTagType() == ControlTagType.AUTO_BILLING_OFF) {
+                if (controlTag.getControlTagType() == ControlTagType.AUTO_PAY_OFF) {
                     return false;
                 }
             }
