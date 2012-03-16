@@ -63,7 +63,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
 
     @SqlUpdate
     public void updateSubscription(@Bind("id") String id, @Bind("active_version") long activeVersion, @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd);
-   
+
     public static class ISubscriptionDaoBinder implements Binder<Bind, SubscriptionData> {
 
         private Date getDate(DateTime dateTime) {
@@ -78,7 +78,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
             stmt.bind("start_dt", getDate(sub.getStartDate()));
             stmt.bind("bundle_start_dt", getDate(sub.getBundleStartDate()));
             stmt.bind("active_version", sub.getActiveVersion());
-            stmt.bind("ctd_dt", getDate(sub.getPaidThroughDate()));
+            stmt.bind("ctd_dt", getDate(sub.getChargedThroughDate()));
             stmt.bind("ptd_dt", getDate(sub.getPaidThroughDate()));
         }
     }

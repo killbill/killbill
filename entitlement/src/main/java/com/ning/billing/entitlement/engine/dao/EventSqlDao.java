@@ -149,7 +149,9 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
                 } else if (userType == ApiEventType.RE_CREATE) {
                     result = new ApiEventReCreate(builder);
                 } else if (userType == ApiEventType.MIGRATE_ENTITLEMENT) {
-                    result = new ApiEventMigrate(builder);
+                    result = new ApiEventMigrateEntitlement(builder);
+                } else if (userType == ApiEventType.MIGRATE_BILLING) {
+                    result = new ApiEventMigrateBilling(builder);
                 } else if (userType == ApiEventType.CHANGE) {
                     result = new ApiEventChange(builder);
                 } else if (userType == ApiEventType.CANCEL) {

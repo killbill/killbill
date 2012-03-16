@@ -25,6 +25,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
@@ -236,6 +237,9 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
             return null;
         }
         for (SubscriptionTransition cur : transitions) {
+            if (cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) {
+                continue;
+            }
             if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
                 return cur;
             }
@@ -252,6 +256,9 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         // ensure that the latestSubscription is always set; prevents NPEs
         SubscriptionTransitionData latestSubscription = transitions.get(0);
         for (SubscriptionTransitionData cur : transitions) {
+            if (cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) {
+                continue;
+            }
             if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow()) ||
                     // We are not looking at events that were patched on the fly-- such as future ADDON cancelation from Base Plan
                    !cur.isFromDisk()) {
@@ -310,6 +317,9 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
                 // Skip future events
                 continue;
             }
+            if (cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) {
+                continue;
+            }
             if (cur.getEventType() == EventType.API_USER &&
                     (cur.getApiEventType() == ApiEventType.CHANGE ||
                             cur.getApiEventType() == ApiEventType.RE_CREATE)) {
@@ -326,6 +336,9 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         }
 
         for (SubscriptionTransitionData cur : transitions) {
+            if (cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) {
+                continue;
+            }
             if (cur.getEffectiveTransitionTime().isBefore(clock.getUTCNow()) ||
                     cur.getEventType() == EventType.PHASE ||
                         cur.getApiEventType() != ApiEventType.CANCEL) {
@@ -362,6 +375,9 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         Iterator<SubscriptionTransitionData> it = ((LinkedList<SubscriptionTransitionData>) transitions).descendingIterator();
         while (it.hasNext()) {
             SubscriptionTransitionData cur = it.next();
+            if (cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) {
+                continue;
+            }
             if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
                 // Skip future events
                 continue;
@@ -389,8 +405,6 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         String nextPriceList = null;
 
         SubscriptionState previousState = null;
-        //String previousPlanName = null;
-        //String previousPhaseName = null;
         String previousPriceList = null;
 
         transitions = new LinkedList<SubscriptionTransitionData>();
@@ -419,9 +433,14 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
                 apiEventType = userEV.getEventType();
                 isFromDisk = userEV.isFromDisk();
                 switch(apiEventType) {
+                case MIGRATE_BILLING:
                 case MIGRATE_ENTITLEMENT:
                 case CREATE:
                 case RE_CREATE:
+                    previousState = null;
+                    previousPlan = null;
+                    previousPhase = null;
+                    previousPriceList = null;
                     nextState = SubscriptionState.ACTIVE;
                     nextPlanName = userEV.getEventPlan();
                     nextPhaseName = userEV.getEventPlanPhase();
@@ -444,7 +463,6 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
                             userEV.getEventType().toString()));
                 }
                 break;
-
             default:
                 throw new EntitlementError(String.format("Unexpected Event type = %s",
                         cur.getType()));

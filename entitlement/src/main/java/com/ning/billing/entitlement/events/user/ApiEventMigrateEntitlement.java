@@ -16,9 +16,9 @@
 
 package com.ning.billing.entitlement.events.user;
 
-public class ApiEventMigrate extends ApiEventBase {
+public class ApiEventMigrateEntitlement extends ApiEventBase {
 
-    public ApiEventMigrate(ApiEventBuilder builder) {
+    public ApiEventMigrateEntitlement(ApiEventBuilder builder) {
         super(builder.setEventType(ApiEventType.MIGRATE_ENTITLEMENT));
     }
 }

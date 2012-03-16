@@ -32,6 +32,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.ITestResult;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
@@ -116,7 +117,6 @@ public abstract class TestApiBase {
     @AfterClass(alwaysRun=true)
     public void tearDown() {
         try {
-            busService.getBus().unregister(testListener);
             ((DefaultBusService) busService).stopBus();
             if (helper != null) {
                 helper.stopMysql();
@@ -184,7 +184,6 @@ public abstract class TestApiBase {
     @BeforeMethod(alwaysRun=true)
     public void setupTest() {
 
-        log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
 
         testListener.reset();
@@ -205,8 +204,18 @@ public abstract class TestApiBase {
 
     @AfterMethod(alwaysRun=true)
     public void cleanupTest() {
-        ((Engine)entitlementService).stop();
+        try {
+            busService.getBus().unregister(testListener);
+            ((Engine)entitlementService).stop();
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
         log.warn("DONE WITH TEST\n");
+    }
+
+    @AfterMethod
+    public void am(ITestResult result) {
+      System.out.println("CURRENT METHOD NAME :" + result.getMethod().getMethodName());
     }
 
     protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet) throws EntitlementUserApiException {

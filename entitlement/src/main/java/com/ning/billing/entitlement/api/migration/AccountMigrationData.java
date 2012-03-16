@@ -20,7 +20,9 @@ import java.util.List;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.user.ApiEventMigrateBilling;
 
 public class AccountMigrationData {
 
@@ -62,10 +64,16 @@ public class AccountMigrationData {
         private final List<EntitlementEvent> initialEvents;
 
         public SubscriptionMigrationData(SubscriptionData data,
-
-                List<EntitlementEvent> initialEvents) {
+                    List<EntitlementEvent> initialEvents) {
             super();
-            this.data = data;
+            // Set CTD to subscription object from MIGRATION_BILLING event
+            SubscriptionBuilder builder = new SubscriptionBuilder(data);
+            for (EntitlementEvent cur : initialEvents) {
+                if (cur instanceof ApiEventMigrateBilling) {
+                    builder.setChargedThroughDate(cur.getEffectiveDate());
+                }
+            }
+            this.data = new SubscriptionData(builder);
             this.initialEvents = initialEvents;
         }
 

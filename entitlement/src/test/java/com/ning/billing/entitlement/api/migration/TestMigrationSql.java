@@ -53,10 +53,4 @@ public class TestMigrationSql extends TestMigration {
     public void testSingleBasePlanWithPendingPhase() {
         super.testSingleBasePlanWithPendingPhase();
     }
-
-    @Override
-    @Test(enabled=true, groups="slow")
-    public void testSingleBasePlanWithPendingChange() {
-        super.testSingleBasePlanWithPendingChange();
-    }
 }

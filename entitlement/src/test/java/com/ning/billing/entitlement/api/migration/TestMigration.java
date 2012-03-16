@@ -52,8 +52,9 @@ public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlan() {
 
         try {
+            final DateTime startDate = clock.getUTCNow().minusMonths(2);
             DateTime beforeMigration = clock.getUTCNow();
-            EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlan();
+            EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlan(startDate);
             DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
@@ -73,6 +74,7 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
             assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
+            assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
         } catch (EntitlementMigrationApiException e) {
             Assert.fail("", e);
         }
@@ -82,10 +84,12 @@ public abstract class TestMigration extends TestApiBase {
     public void testPlanWithAddOn() {
         try {
             DateTime beforeMigration = clock.getUTCNow();
+            final DateTime initalBPStart = clock.getUTCNow().minusMonths(3);
             final DateTime initalAddonStart = clock.getUTCNow().minusMonths(1).plusDays(7);
-            EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlanAndAddons(initalAddonStart);
+            EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlanAndAddons(initalBPStart, initalAddonStart);
             DateTime afterMigration = clock.getUTCNow();
 
+            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated);
             assertTrue(testListener.isCompleted(5000));
@@ -104,7 +108,8 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(baseSubscription.getCurrentPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(baseSubscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
             assertEquals(baseSubscription.getState(), SubscriptionState.ACTIVE);
-            assertEquals(baseSubscription.getCurrentPlan().getName(), "assault-rifle-annual");
+            assertEquals(baseSubscription.getCurrentPlan().getName(), "shotgun-annual");
+            assertEquals(baseSubscription.getChargedThroughDate(), initalBPStart.plusYears(1));
 
             Subscription aoSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.ADD_ON) ?
                     subscriptions.get(0) : subscriptions.get(1);
@@ -114,6 +119,7 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(aoSubscription.getCurrentPhase().getPhaseType(), PhaseType.DISCOUNT);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(aoSubscription.getCurrentPlan().getName(), "telescopic-scope-monthly");
+            assertEquals(aoSubscription.getChargedThroughDate(), initalAddonStart.plusMonths(1));
 
         } catch (EntitlementMigrationApiException e) {
             Assert.fail("", e);
@@ -125,8 +131,9 @@ public abstract class TestMigration extends TestApiBase {
 
         try {
 
+            final DateTime startDate = clock.getUTCNow().minusMonths(1);
             DateTime beforeMigration = clock.getUTCNow();
-            EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlanFutreCancelled();
+            EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlanFutreCancelled(startDate);
             DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
@@ -146,7 +153,9 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
             assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
+            assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
 
+            testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             Duration oneYear = getDurationYear(1);
             clock.setDeltaFromReality(oneYear, 0);
@@ -191,7 +200,9 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.TRIAL);
             assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-monthly");
+            assertEquals(subscription.getChargedThroughDate(), trialDate.plusDays(30));
 
+            testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
             testListener.pushExpectedEvent(NextEvent.PHASE);
             Duration thirtyDays = getDurationDay(30);
             clock.setDeltaFromReality(thirtyDays, 0);
@@ -255,7 +266,7 @@ public abstract class TestMigration extends TestApiBase {
     }
 
 
-    private EntitlementAccountMigration createAccountWithSingleBasePlan(final List<List<EntitlementSubscriptionMigrationCase>> cases) {
+    private EntitlementAccountMigration createAccountTest(final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> cases) {
 
         return new EntitlementAccountMigration() {
 
@@ -273,15 +284,24 @@ public abstract class TestMigration extends TestApiBase {
 
                         for (int i = 0; i < cases.size(); i++) {
 
-                            final List<EntitlementSubscriptionMigrationCase> curCases = cases.get(i);
+                            final List<EntitlementSubscriptionMigrationCaseWithCTD> curCases = cases.get(i);
                             EntitlementSubscriptionMigration subscription = new EntitlementSubscriptionMigration() {
                                 @Override
-                                public EntitlementSubscriptionMigrationCase[] getSubscriptionCases() {
-                                    return curCases.toArray(new EntitlementSubscriptionMigrationCase[curCases.size()]);
+                                public EntitlementSubscriptionMigrationCaseWithCTD[] getSubscriptionCases() {
+                                    return curCases.toArray(new EntitlementSubscriptionMigrationCaseWithCTD[curCases.size()]);
                                 }
                                 @Override
                                 public ProductCategory getCategory() {
-                                    return ProductCategory.BASE;
+                                    return curCases.get(0).getPlanPhaseSpecifer().getProductCategory();
+                                }
+                                @Override
+                                public DateTime getChargedThroughDate() {
+                                    for (EntitlementSubscriptionMigrationCaseWithCTD cur :curCases) {
+                                        if (cur.getChargedThroughDate() != null) {
+                                            return cur.getChargedThroughDate();
+                                        }
+                                    }
+                                    return null;
                                 }
                             };
                             result[i] = subscription;
@@ -304,174 +324,126 @@ public abstract class TestMigration extends TestApiBase {
         };
     }
 
-    private EntitlementAccountMigration createAccountWithRegularBasePlanAndAddons(final DateTime initalAddonStart) {
+    private EntitlementAccountMigration createAccountWithRegularBasePlanAndAddons(final DateTime initialBPstart, final DateTime initalAddonStart) {
 
-        List<EntitlementSubscriptionMigrationCase> cases = new LinkedList<EntitlementSubscriptionMigrationCase>();
-        cases.add(new EntitlementSubscriptionMigrationCase() {
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
-                return new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-            }
-            @Override
-            public DateTime getEffectiveDate() {
-                return clock.getUTCNow().minusMonths(3);
-            }
-            @Override
-            public DateTime getCancelledDate() {
-                return null;
-            }
-        });
+        List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                initialBPstart,
+                null,
+                initialBPstart.plusYears(1)));
 
-        List<EntitlementSubscriptionMigrationCase> firstAddOnCases = new LinkedList<EntitlementSubscriptionMigrationCase>();
+        List<EntitlementSubscriptionMigrationCaseWithCTD> firstAddOnCases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        firstAddOnCases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.DISCOUNT),
+                initalAddonStart,
+                initalAddonStart.plusMonths(1),
+                initalAddonStart.plusMonths(1)));
+        firstAddOnCases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                initalAddonStart.plusMonths(1),
+                null,
+                null));
 
-        firstAddOnCases.add(new EntitlementSubscriptionMigrationCase() {
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
-                return new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.DISCOUNT);
-            }
-            @Override
-            public DateTime getEffectiveDate() {
-                return initalAddonStart;
-            }
-            @Override
-            public DateTime getCancelledDate() {
-                return initalAddonStart.plusMonths(1);
-            }
-        });
-        firstAddOnCases.add(new EntitlementSubscriptionMigrationCase() {
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
-                return new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-            }
-            @Override
-            public DateTime getEffectiveDate() {
-                return initalAddonStart.plusMonths(1);
-            }
-            @Override
-            public DateTime getCancelledDate() {
-                return null;
-            }
-        });
 
-        List<List<EntitlementSubscriptionMigrationCase>> input = new ArrayList<List<EntitlementSubscriptionMigrationCase>>();
+        List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
         input.add(cases);
         input.add(firstAddOnCases);
-        return createAccountWithSingleBasePlan(input);
+        return createAccountTest(input);
     }
 
-    private EntitlementAccountMigration createAccountWithRegularBasePlan() {
-        List<EntitlementSubscriptionMigrationCase> cases = new LinkedList<EntitlementSubscriptionMigrationCase>();
-        cases.add(new EntitlementSubscriptionMigrationCase() {
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
-                return new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-            }
-            @Override
-            public DateTime getEffectiveDate() {
-                return clock.getUTCNow().minusMonths(3);
-            }
-            @Override
-            public DateTime getCancelledDate() {
-                return null;
-            }
-        });
-        List<List<EntitlementSubscriptionMigrationCase>> input = new ArrayList<List<EntitlementSubscriptionMigrationCase>>();
+    private EntitlementAccountMigration createAccountWithRegularBasePlan(final DateTime startDate) {
+        List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                startDate,
+                null,
+                startDate.plusYears(1)));
+        List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
         input.add(cases);
-        return createAccountWithSingleBasePlan(input);
+        return createAccountTest(input);
     }
 
-    private EntitlementAccountMigration createAccountWithRegularBasePlanFutreCancelled() {
-        List<EntitlementSubscriptionMigrationCase> cases = new LinkedList<EntitlementSubscriptionMigrationCase>();
-        final DateTime effectiveDate = clock.getUTCNow().minusMonths(3);
-        cases.add(new EntitlementSubscriptionMigrationCase() {
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
-                return new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-            }
-            @Override
-            public DateTime getEffectiveDate() {
-                return effectiveDate;
-            }
-            @Override
-            public DateTime getCancelledDate() {
-                return effectiveDate.plusYears(1);
-            }
-        });
-        List<List<EntitlementSubscriptionMigrationCase>> input = new ArrayList<List<EntitlementSubscriptionMigrationCase>>();
+    private EntitlementAccountMigration createAccountWithRegularBasePlanFutreCancelled(final DateTime startDate) {
+        List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                startDate,
+                startDate.plusYears(1),
+                startDate.plusYears(1)));
+        List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
         input.add(cases);
-        return createAccountWithSingleBasePlan(input);
+        return createAccountTest(input);
     }
 
 
     private EntitlementAccountMigration createAccountFuturePendingPhase(final DateTime trialDate) {
-        List<EntitlementSubscriptionMigrationCase> cases = new LinkedList<EntitlementSubscriptionMigrationCase>();
-        cases.add(new EntitlementSubscriptionMigrationCase() {
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
-                return new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
-            }
-            @Override
-            public DateTime getEffectiveDate() {
-                return trialDate;
-            }
-            @Override
-            public DateTime getCancelledDate() {
-                return trialDate.plusDays(30);
-            }
-        });
-        cases.add(new EntitlementSubscriptionMigrationCase() {
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
-                return new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-            }
-            @Override
-            public DateTime getEffectiveDate() {
-                return trialDate.plusDays(30);
-            }
-            @Override
-            public DateTime getCancelledDate() {
-                return null;
-            }
-        });
-        List<List<EntitlementSubscriptionMigrationCase>> input = new ArrayList<List<EntitlementSubscriptionMigrationCase>>();
+        List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL),
+                trialDate,
+                trialDate.plusDays(30),
+                trialDate.plusDays(30)));
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                trialDate.plusDays(30),
+                null,
+                null));
+        List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
         input.add(cases);
-        return createAccountWithSingleBasePlan(input);
+        return createAccountTest(input);
     }
 
     private EntitlementAccountMigration createAccountFuturePendingChange() {
-        List<EntitlementSubscriptionMigrationCase> cases = new LinkedList<EntitlementSubscriptionMigrationCase>();
+        List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
         final DateTime effectiveDate = clock.getUTCNow().minusDays(10);
-        cases.add(new EntitlementSubscriptionMigrationCase() {
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
-                return new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-            }
-            @Override
-            public DateTime getEffectiveDate() {
-                return effectiveDate;
-            }
-            @Override
-            public DateTime getCancelledDate() {
-                return effectiveDate.plusMonths(1);
-            }
-        });
-        cases.add(new EntitlementSubscriptionMigrationCase() {
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifer() {
-                return new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-            }
-            @Override
-            public DateTime getEffectiveDate() {
-                return effectiveDate.plusMonths(1).plusDays(1);
-            }
-            @Override
-            public DateTime getCancelledDate() {
-                return null;
-            }
-        });
-        List<List<EntitlementSubscriptionMigrationCase>> input = new ArrayList<List<EntitlementSubscriptionMigrationCase>>();
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                effectiveDate,
+                effectiveDate.plusMonths(1),
+                effectiveDate.plusMonths(1)));
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                effectiveDate.plusMonths(1).plusDays(1),
+                null,
+                null));
+        List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
         input.add(cases);
-        return createAccountWithSingleBasePlan(input);
+        return createAccountTest(input);
     }
 
+
+    public static class EntitlementSubscriptionMigrationCaseWithCTD implements EntitlementSubscriptionMigrationCase {
+
+        private final PlanPhaseSpecifier pps;
+        private final DateTime effDt;
+        private final DateTime cancelDt;
+        private final DateTime ctd;
+
+        public EntitlementSubscriptionMigrationCaseWithCTD(PlanPhaseSpecifier pps, DateTime effDt, DateTime cancelDt, DateTime ctd) {
+            this.pps = pps;
+            this.cancelDt = cancelDt;
+            this.effDt = effDt;
+            this.ctd = ctd;
+        }
+
+        @Override
+        public PlanPhaseSpecifier getPlanPhaseSpecifer() {
+            return pps;
+        }
+
+        @Override
+        public DateTime getEffectiveDate() {
+            return effDt;
+        }
+
+        @Override
+        public DateTime getCancelledDate() {
+            return cancelDt;
+        }
+
+        public DateTime getChargedThroughDate() {
+            return ctd;
+        }
+    }
 }

@@ -29,6 +29,7 @@ public interface SubscriptionTransition extends BusEvent {
     public enum SubscriptionTransitionType {
         MIGRATE_ENTITLEMENT,
         CREATE,
+        MIGRATE_BILLING,
         CHANGE,
         RE_CREATE,
         CANCEL,
