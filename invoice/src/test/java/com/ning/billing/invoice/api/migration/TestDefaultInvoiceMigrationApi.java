@@ -94,7 +94,8 @@ public class TestDefaultInvoiceMigrationApi {
 
 	private UUID accountId ;
 	private UUID subscriptionId ;
-	private DateTime now;
+	private DateTime date_migrated;
+	private DateTime date_regular;
 
 	private UUID migrationInvoiceId;
 	private UUID regularInvoiceId;
@@ -110,7 +111,8 @@ public class TestDefaultInvoiceMigrationApi {
 		log.info("Starting set up");
 		accountId = UUID.randomUUID();
 		subscriptionId = UUID.randomUUID();
-		now = new ClockMock().getUTCNow();
+		date_migrated = new ClockMock().getUTCNow().minusYears(1);
+		date_regular = new ClockMock().getUTCNow();
 
 		final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
 		final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
@@ -137,7 +139,7 @@ public class TestDefaultInvoiceMigrationApi {
 	}
 
 	private UUID createAndCheckMigrationInvoice(){
-		UUID migrationInvoiceId = migrationApi.createMigrationInvoice(accountId, now, MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_CURRENCY);
+		UUID migrationInvoiceId = migrationApi.createMigrationInvoice(accountId, date_migrated, MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_CURRENCY);
 		Assert.assertNotNull(migrationInvoiceId);
 		//Double check it was created and values are correct
 
@@ -145,7 +147,7 @@ public class TestDefaultInvoiceMigrationApi {
 		Assert.assertNotNull(invoice);
 
 		Assert.assertEquals(invoice.getAccountId(), accountId);
-		Assert.assertEquals(invoice.getTargetDate().compareTo(now), 0); //temp to avoid tz test artifact
+		Assert.assertEquals(invoice.getTargetDate().compareTo(date_migrated), 0); //temp to avoid tz test artifact
 		//		Assert.assertEquals(invoice.getTargetDate(),now);
 		Assert.assertEquals(invoice.getNumberOfItems(), 1);
 		Assert.assertEquals(invoice.getInvoiceItems().get(0).getAmount().compareTo(MIGRATION_INVOICE_AMOUNT), 0 );
@@ -178,17 +180,15 @@ public class TestDefaultInvoiceMigrationApi {
 		EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
 		((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccount", events);
 
-		DateTime target = new DateTime();
-
 		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);
 
-		Invoice invoice = dispatcher.processAccount(accountId, target, true);
+		Invoice invoice = dispatcher.processAccount(accountId, date_regular, true);
 		Assert.assertNotNull(invoice);
 
 		List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
 		Assert.assertEquals(invoices.size(),0);
 
-		invoice = dispatcher.processAccount(accountId, target, false);
+		invoice = dispatcher.processAccount(accountId, date_regular, false);
 		Assert.assertNotNull(invoice);
 
 		invoices = invoiceDao.getInvoicesByAccount(accountId);
@@ -204,13 +204,13 @@ public class TestDefaultInvoiceMigrationApi {
 		Assert.assertEquals(byAccount.size(),1);
 		Assert.assertEquals(byAccount.get(0).getId(), regularInvoiceId);
 
-		List<Invoice> byAccountAndDate = invoiceUserApi.getInvoicesByAccount(accountId, now.minusDays(1));
+		List<Invoice> byAccountAndDate = invoiceUserApi.getInvoicesByAccount(accountId, date_migrated.minusDays(1));
 		Assert.assertEquals(byAccountAndDate.size(),1);
 		Assert.assertEquals(byAccountAndDate.get(0).getId(), regularInvoiceId);
 
-		Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, now.plusDays(1));
-		Assert.assertEquals(unpaid.size(),1);
-		Assert.assertEquals(unpaid.iterator().next().getId(), regularInvoiceId);
+		Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, date_regular.plusDays(1));
+		Assert.assertEquals(unpaid.size(), 1);
+		Assert.assertEquals(regularInvoiceId, unpaid.iterator().next().getId());
 
 	}
 
