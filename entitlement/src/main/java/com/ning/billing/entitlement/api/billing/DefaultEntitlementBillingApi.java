@@ -80,7 +80,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         	List<Subscription> subscriptions = entitlementDao.getSubscriptions(bundle.getId());
 
         	for (final Subscription subscription: subscriptions) {
-        		for (final SubscriptionTransition transition : subscription.getAllTransitions()) {
+        		for (final SubscriptionTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
         			try {
         				BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBcd(bundle, subscription, transition, accountId), currency);
         				result.add(event);
@@ -122,7 +122,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 		switch (alignment) {
     		case ACCOUNT :
     			result = account.getBillCycleDay();
-    			
+
     			if(result == 0) {
     				result = calculateBcdFromSubscription(subscription, plan, account);
     			}
@@ -140,7 +140,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     	return result;
 
     }
-    
+
    	private int calculateBcdFromSubscription(Subscription subscription, Plan plan, Account account) throws AccountApiException {
 		int result = account.getBillCycleDay();
         if(result != 0) {
@@ -153,7 +153,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         } catch (CatalogApiException e) {
             log.error("Unexpected catalog error encountered when updating BCD",e);
         }
-        
+
 
         Account modifiedAccount = new DefaultAccount(
                 account.getId(),
@@ -181,15 +181,15 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         return result;
     }
 
-    private int billCycleDay(DateTime requestedDate, DateTimeZone timeZone, 
+    private int billCycleDay(DateTime requestedDate, DateTimeZone timeZone,
     		Plan plan) throws CatalogApiException {
 
         DateTime date = plan.dateOfFirstRecurringNonZeroCharge(requestedDate);
         return date.toDateTime(timeZone).getDayOfMonth();
 
     }
-    
-    
+
+
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
         SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionId);

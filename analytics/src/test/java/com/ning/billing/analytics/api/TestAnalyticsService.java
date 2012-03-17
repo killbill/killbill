@@ -31,6 +31,7 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -132,10 +133,20 @@ public class TestAnalyticsService {
     private InvoiceCreationNotification invoiceCreationNotification;
     private PaymentInfo paymentInfoNotification;
 
+    @BeforeMethod
+    public void cleanup() throws Exception
+    {
+        helper.cleanupTable("bst");
+        helper.cleanupTable("bac");
+
+    }
+
+
     @BeforeClass(alwaysRun = true)
     public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
         // Killbill generic setup
         setupBusAndMySQL();
+
 
         tagDao.create(TAG_ONE);
         tagDao.create(TAG_TWO);
@@ -174,6 +185,9 @@ public class TestAnalyticsService {
         helper.initDb(invoiceDdl);
         helper.initDb(paymentDdl);
         helper.initDb(utilDdl);
+
+        helper.cleanupTable("tag_definitions");
+        helper.cleanupTable("accounts");
     }
 
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {

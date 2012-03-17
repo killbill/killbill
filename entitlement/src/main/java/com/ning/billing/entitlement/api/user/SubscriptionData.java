@@ -26,6 +26,10 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Kind;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Order;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.TimeLimit;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Visibility;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
@@ -42,7 +46,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -73,7 +76,7 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
     // so the user holding that subscription object get the correct state when
     // the call completes
     //
-    private List<SubscriptionTransitionData> transitions;
+    private LinkedList<SubscriptionTransitionData> transitions;
 
     // Transient object never returned at the API
     public SubscriptionData(SubscriptionBuilder builder) {
@@ -203,48 +206,29 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         apiService.recreatePlan(this, spec, requestedDate);
     }
 
-    @Override
-    public List<SubscriptionTransition> getActiveTransitions() {
+    public List<SubscriptionTransition> getBillingTransitions() {
+
         if (transitions == null) {
             return Collections.emptyList();
         }
-
-        List<SubscriptionTransition> activeTransitions = new ArrayList<SubscriptionTransition>();
-        for (SubscriptionTransition cur : transitions) {
-            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
-                activeTransitions.add(cur);
-            }
-        }
-        return activeTransitions;
-    }
-
-    @Override
-    public List<SubscriptionTransition> getAllTransitions() {
-        if (transitions == null) {
-            return Collections.emptyList();
-        }
-
         List<SubscriptionTransition> result = new ArrayList<SubscriptionTransition>();
-        for (SubscriptionTransition cur : transitions) {
-            result.add(cur);
+        SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions,
+                Order.ASC_FROM_PAST, Kind.BILLING, Visibility.ALL, TimeLimit.ALL);
+        while (it.hasNext()) {
+            result.add(it.next());
         }
         return result;
     }
 
     @Override
     public SubscriptionTransition getPendingTransition() {
+
         if (transitions == null) {
             return null;
         }
-        for (SubscriptionTransition cur : transitions) {
-            if (cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) {
-                continue;
-            }
-            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
-                return cur;
-            }
-        }
-        return null;
+        SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions,
+                Order.ASC_FROM_PAST, Kind.ENTITLEMENT, Visibility.ALL, TimeLimit.FUTURE_ONLY);
+        return it.hasNext() ? it.next() : null;
     }
 
     @Override
@@ -252,28 +236,15 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         if (transitions == null) {
             return null;
         }
-
-        // ensure that the latestSubscription is always set; prevents NPEs
-        SubscriptionTransitionData latestSubscription = transitions.get(0);
-        for (SubscriptionTransitionData cur : transitions) {
-            if (cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) {
-                continue;
-            }
-            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow()) ||
-                    // We are not looking at events that were patched on the fly-- such as future ADDON cancelation from Base Plan
-                   !cur.isFromDisk()) {
-                break;
-            }
-            latestSubscription = cur;
-        }
-        return latestSubscription;
+        SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions,
+                Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT, Visibility.FROM_DISK_ONLY, TimeLimit.PAST_OR_PRESENT_ONLY);
+        return it.hasNext() ? it.next() : null;
     }
 
     public SubscriptionTransition getTransitionFromEvent(EntitlementEvent event) {
         if (transitions == null || event == null) {
             return null;
         }
-
         for (SubscriptionTransition cur : transitions) {
             if (cur.getId().equals(event.getId())) {
                 return cur;
@@ -310,41 +281,32 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
             throw new EntitlementError(String.format("No transitions for subscription %s", getId()));
         }
 
-        Iterator<SubscriptionTransitionData> it = ((LinkedList<SubscriptionTransitionData>) transitions).descendingIterator();
+
+        SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions,
+                Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT, Visibility.ALL, TimeLimit.PAST_OR_PRESENT_ONLY);
         while (it.hasNext()) {
             SubscriptionTransitionData cur = it.next();
-            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
-                // Skip future events
-                continue;
-            }
-            if (cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) {
-                continue;
-            }
-            if (cur.getEventType() == EventType.API_USER &&
-                    (cur.getApiEventType() == ApiEventType.CHANGE ||
-                            cur.getApiEventType() == ApiEventType.RE_CREATE)) {
+            if (cur.getTransitionType() == SubscriptionTransitionType.CREATE ||
+                    cur.getTransitionType() == SubscriptionTransitionType.RE_CREATE ||
+                    cur.getTransitionType() == SubscriptionTransitionType.CHANGE ||
+                    cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT) {
                 return cur;
             }
         }
-        // CREATE event
-        return transitions.get(0);
+        throw new EntitlementError(String.format("Failed to find InitialTransitionForCurrentPlan id = %s", getId().toString()));
     }
 
     public boolean isSubscriptionFutureCancelled() {
         if (transitions == null) {
             return false;
         }
-
-        for (SubscriptionTransitionData cur : transitions) {
-            if (cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) {
-                continue;
+        SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions,
+                Order.ASC_FROM_PAST, Kind.ENTITLEMENT, Visibility.ALL, TimeLimit.FUTURE_ONLY);
+        while (it.hasNext()) {
+            SubscriptionTransitionData cur = it.next();
+            if (cur.getTransitionType() == SubscriptionTransitionType.CANCEL) {
+                return true;
             }
-            if (cur.getEffectiveTransitionTime().isBefore(clock.getUTCNow()) ||
-                    cur.getEventType() == EventType.PHASE ||
-                        cur.getApiEventType() != ApiEventType.CANCEL) {
-                continue;
-            }
-            return true;
         }
         return false;
     }
@@ -371,26 +333,20 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         if (transitions == null) {
             throw new EntitlementError(String.format("No transitions for subscription %s", getId()));
         }
-
-        Iterator<SubscriptionTransitionData> it = ((LinkedList<SubscriptionTransitionData>) transitions).descendingIterator();
+        SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions,
+                Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT, Visibility.ALL, TimeLimit.PAST_OR_PRESENT_ONLY);
         while (it.hasNext()) {
             SubscriptionTransitionData cur = it.next();
-            if (cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_BILLING) {
-                continue;
-            }
-            if (cur.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
-                // Skip future events
-                continue;
-            }
-            if (cur.getEventType() == EventType.PHASE
-                    || (cur.getEventType() == EventType.API_USER &&
-                            (cur.getApiEventType() == ApiEventType.CHANGE ||
-                                    cur.getApiEventType() == ApiEventType.RE_CREATE))) {
+
+            if (cur.getTransitionType() == SubscriptionTransitionType.PHASE ||
+                    cur.getTransitionType() == SubscriptionTransitionType.CREATE ||
+                    cur.getTransitionType() == SubscriptionTransitionType.RE_CREATE ||
+                    cur.getTransitionType() == SubscriptionTransitionType.CHANGE ||
+                    cur.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT) {
                 return cur.getEffectiveTransitionTime();
             }
         }
-        // CREATE event
-        return transitions.get(0).getEffectiveTransitionTime();
+        throw new EntitlementError(String.format("Failed to find CurrentPhaseStart id = %s", getId().toString()));
     }
 
     public void rebuildTransitions(final List<EntitlementEvent> events, final Catalog catalog) {

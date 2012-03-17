@@ -106,7 +106,7 @@ public class TestDefaultEntitlementBillingApi {
 		builder.setStartDate(subscriptionStartDate).setId(oneId);
 		subscription = new SubscriptionData(builder) {
 		    @Override
-            public List<SubscriptionTransition> getAllTransitions() {
+            public List<SubscriptionTransition> getBillingTransitions() {
 		    	return transitions;
 		    }
 		};

@@ -116,17 +116,6 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public List<SubscriptionTransition> getActiveTransitions() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-
-    public List<SubscriptionTransition> getAllTransitions() {
-        throw new UnsupportedOperationException();
-     }
-
-    @Override
     public SubscriptionTransition getPendingTransition() {
         throw new UnsupportedOperationException();
     }

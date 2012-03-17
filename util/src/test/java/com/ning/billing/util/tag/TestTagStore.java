@@ -20,24 +20,26 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import org.apache.commons.io.IOUtils;
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Guice;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
+import com.google.inject.Inject;
 import com.ning.billing.account.api.ControlTagType;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagStoreSqlDao;
+
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -45,37 +47,47 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-@Test(groups={"util"})
+
+@Test(groups={"slow"})
+@Guice(modules = TagStoreModuleMock.class)
 public class TestTagStore {
     private final static String ACCOUNT_TYPE = "ACCOUNT";
-    private final Clock clock = new DefaultClock();
+
+    @Inject
+    private MysqlTestingHelper helper;
+
+    @Inject
     private IDBI dbi;
+
+    @Inject
+    private TagStoreSqlDao tagStoreSqlDao;
+
+    @Inject
+    private TagDefinitionDao tagDefinitionDao;
+
+    @Inject
+    private Clock clock;
+
     private TagDefinition tag1;
     private TagDefinition tag2;
-    private TagStoreModuleMock module;
-    private TagStoreSqlDao tagStoreSqlDao;
-    private TagDefinitionDao tagDefinitionDao;
+
+
     private final Logger log = LoggerFactory.getLogger(TestTagStore.class);
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
-            module = new TagStoreModuleMock();
             final String utilDdl = IOUtils.toString(TestTagStore.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
-            module.startDb();
-            module.initDb(utilDdl);
-
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module, new MockClockModule());
-            dbi = injector.getInstance(IDBI.class);
-
-            tagStoreSqlDao = injector.getInstance(TagStoreSqlDao.class);
+            helper.startMysql();
+            helper.initDb(utilDdl);
             tagStoreSqlDao.test();
 
-            tagDefinitionDao = injector.getInstance(TagDefinitionDao.class);
+            cleanupTags();
             tag1 = tagDefinitionDao.create("tag1", "First tag", "test");
             tag2 = tagDefinitionDao.create("tag2", "Second tag", "test");
+
         }
         catch (Throwable t) {
             log.error("Failed to start tag store tests", t);
@@ -86,7 +98,7 @@ public class TestTagStore {
     @AfterClass(alwaysRun = true)
     public void stopMysql()
     {
-        module.stopDb();
+        helper.stopMysql();
     }
 
     private void saveTags(final TagStoreSqlDao dao, final String objectType, final String accountId, final List<Tag> tagList)  {
@@ -100,6 +112,22 @@ public class TestTagStore {
         });
     }
 
+
+    private void cleanupTags() {
+        try {
+            helper.getDBI().withHandle(new HandleCallback<Void>() {
+                @Override
+                public Void withHandle(Handle handle) throws Exception {
+                    handle.createScript("delete from tag_definitions").execute();
+                    handle.createScript("delete from tag_definition_history").execute();
+                    handle.createScript("delete from tags").execute();
+                    handle.createScript("delete from tag_history").execute();
+                    return null;
+                }
+            });
+        } catch (Throwable ignore) {
+        }
+    }
     @Test
     public void testTagCreationAndRetrieval() {
         UUID accountId = UUID.randomUUID();

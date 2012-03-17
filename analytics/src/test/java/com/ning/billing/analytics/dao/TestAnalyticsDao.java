@@ -128,6 +128,7 @@ public class TestAnalyticsDao
     public void cleanup() throws Exception
     {
         helper.cleanupTable("bst");
+        helper.cleanupTable("bac");
     }
 
     @Test(groups = "slow")
