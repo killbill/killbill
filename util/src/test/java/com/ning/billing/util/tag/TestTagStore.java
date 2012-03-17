@@ -30,11 +30,11 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Guice;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
 import com.google.inject.Inject;
-import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.dbi.MysqlTestingHelper;
+
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
@@ -248,7 +248,7 @@ public class TestTagStore {
         assertEquals(tagStore.generateInvoice(), false);
         assertEquals(tagStore.processPayment(), true);
 
-        ControlTag paymentTag = new DefaultControlTag("testUser", clock.getUTCNow(), ControlTagType.AUTO_BILLING_OFF);
+        ControlTag paymentTag = new DefaultControlTag("testUser", clock.getUTCNow(), ControlTagType.AUTO_PAY_OFF);
         tagStore.add(paymentTag);
         assertEquals(tagStore.generateInvoice(), false);
         assertEquals(tagStore.processPayment(), false);
@@ -256,7 +256,7 @@ public class TestTagStore {
 
     @Test(expectedExceptions = TagDefinitionApiException.class)
     public void testTagDefinitionCreationWithControlTagName() throws TagDefinitionApiException {
-        String definitionName = ControlTagType.AUTO_BILLING_OFF.toString();
+        String definitionName = ControlTagType.AUTO_PAY_OFF.toString();
         tagDefinitionDao.create(definitionName, "This should break", "test");
     }
 

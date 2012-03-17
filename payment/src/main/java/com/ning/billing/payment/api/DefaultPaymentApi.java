@@ -188,6 +188,14 @@ public class DefaultPaymentApi implements PaymentApi {
                                                                                         UUID.fromString(invoiceId)));
                 processedPaymentsOrErrors.add(result);
             }
+            else if (invoice.isMigrationInvoice()) {
+            	log.info("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
+            	Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("migration invoice",
+                        "Invoice balance was a migration invoice",
+                        account.getId(),
+                        UUID.fromString(invoiceId)));
+            			processedPaymentsOrErrors.add(result);
+            }
             else {
                 PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice);
 
