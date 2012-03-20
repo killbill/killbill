@@ -60,10 +60,10 @@ public class TestPlanPhase {
 		DefaultPlanPhase ppEvergreen = MockPlanPhase.create1USDMonthlyEvergreen().setPhaseType(PhaseType.EVERGREEN).setPlan(p);
 		DefaultPlanPhase ppFixedterm = MockPlanPhase.create1USDMonthlyEvergreen().setPhaseType(PhaseType.FIXEDTERM).setPlan(p);
 		
-		String ppnDiscount = DefaultPlanPhase.phaseName(p, ppDiscount);
-		String ppnTrial = DefaultPlanPhase.phaseName(p, ppTrial);
-		String ppnEvergreen = DefaultPlanPhase.phaseName(p, ppEvergreen);
-		String ppnFixedterm = DefaultPlanPhase.phaseName(p, ppFixedterm);
+		String ppnDiscount = DefaultPlanPhase.phaseName(p.getName(), ppDiscount.getPhaseType());
+		String ppnTrial = DefaultPlanPhase.phaseName(p.getName(), ppTrial.getPhaseType());
+		String ppnEvergreen = DefaultPlanPhase.phaseName(p.getName(), ppEvergreen.getPhaseType());
+		String ppnFixedterm = DefaultPlanPhase.phaseName(p.getName(), ppFixedterm.getPhaseType());
 		
 		Assert.assertEquals(ppnTrial, planNameExt + "trial");
 		Assert.assertEquals(ppnEvergreen, planNameExt + "evergreen");

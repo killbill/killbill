@@ -6,5 +6,6 @@ public interface CallContext {
     public String getUserName();
     public CallOrigin getCallOrigin();
     public UserType getUserType();
-    public DateTime getUTCNow();
+    public DateTime getCreatedDate();
+    public DateTime getUpdatedDate();
 }

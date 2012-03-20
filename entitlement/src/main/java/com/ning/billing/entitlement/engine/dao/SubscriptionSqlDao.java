@@ -75,7 +75,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
             stmt.bind("start_dt", getDate(sub.getStartDate()));
             stmt.bind("bundle_start_dt", getDate(sub.getBundleStartDate()));
             stmt.bind("active_version", sub.getActiveVersion());
-            stmt.bind("ctd_dt", getDate(sub.getPaidThroughDate()));
+            stmt.bind("ctd_dt", getDate(sub.getChargedThroughDate()));
             stmt.bind("ptd_dt", getDate(sub.getPaidThroughDate()));
         }
     }

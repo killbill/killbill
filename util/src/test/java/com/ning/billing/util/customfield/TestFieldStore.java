@@ -28,7 +28,7 @@ import com.ning.billing.util.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
-import com.ning.billing.util.entity.DefaultCallContext;
+import com.ning.billing.util.entity.CallContextFactory;
 import com.ning.billing.util.glue.FieldStoreModule;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
@@ -64,7 +64,7 @@ public class TestFieldStore {
             FieldStoreModule module = new FieldStoreModule();
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module, new MockClockModule());
             Clock clock = injector.getInstance(Clock.class);
-            context = new DefaultCallContext(clock, "Fezzik", CallOrigin.TEST, UserType.TEST);
+            context = new CallContextFactory(clock).createCallContext("Fezzik", CallOrigin.TEST, UserType.TEST);
 
         }
         catch (Throwable t) {

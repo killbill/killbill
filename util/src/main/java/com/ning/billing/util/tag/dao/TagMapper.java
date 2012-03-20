@@ -24,7 +24,8 @@ import com.ning.billing.util.entity.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
-import com.ning.billing.account.api.ControlTagType;
+
+import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;

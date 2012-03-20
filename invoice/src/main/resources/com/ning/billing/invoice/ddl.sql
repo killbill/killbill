@@ -45,6 +45,7 @@ CREATE TABLE invoices (
   invoice_date datetime NOT NULL,
   target_date datetime NOT NULL,
   currency char(3) NOT NULL,
+  migrated bool NOT NULL,
   updated_by varchar(30) NOT NULL,
   PRIMARY KEY(invoice_number)
 ) ENGINE=innodb;
@@ -74,7 +75,11 @@ GROUP BY invoice_id;
 
 DROP VIEW IF EXISTS invoice_item_summary;
 CREATE VIEW invoice_item_summary AS
-SELECT invoice_id,
-       CASE WHEN SUM(amount) IS NULL THEN 0 ELSE SUM(amount) END AS amount_invoiced
-FROM recurring_invoice_items
+SELECT i.id as invoice_id, 
+    CASE WHEN SUM(rii.amount) IS NULL THEN 0 ELSE SUM(rii.amount) END 
+    + CASE WHEN SUM(fii.amount) IS NULL THEN 0 ELSE SUM(fii.amount) END AS amount_invoiced
+FROM invoices i 
+LEFT JOIN recurring_invoice_items rii ON i.id = rii.invoice_id
+LEFT JOIN fixed_invoice_items fii ON i.id = fii.invoice_id
 GROUP BY invoice_id;
+

@@ -29,6 +29,7 @@ import com.ning.billing.util.CallContext;
 import com.ning.billing.util.CallOrigin;
 import com.ning.billing.util.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.CallContextFactory;
 import com.ning.billing.util.entity.DefaultCallContext;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
@@ -53,6 +54,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected Clock clock;
     protected CallContext context;
     protected InvoiceGenerator generator;
+    private BusService busService;
 
     private final InvoiceConfig invoiceConfig = new InvoiceConfig() {
         @Override
@@ -89,7 +91,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
             invoicePaymentDao = module.getInvoicePaymentSqlDao();
             clock = injector.getInstance(Clock.class);
-            context = new DefaultCallContext(clock, "Count Rogan", CallOrigin.TEST, UserType.TEST);
+            context = new CallContextFactory(clock).createCallContext("Count Rogan", CallOrigin.TEST, UserType.TEST);
             generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
 
             BusService busService = injector.getInstance(BusService.class);
@@ -131,6 +133,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
     @AfterClass(alwaysRun = true)
     protected void tearDown() {
+    	((DefaultBusService) busService).stopBus();
         module.stopDb();
         assertTrue(true);
     }

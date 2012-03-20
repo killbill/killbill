@@ -163,7 +163,7 @@ public class SubscriptionApiService {
             .setActiveVersion(subscription.getActiveVersion())
             .setProcessedDate(now)
             .setEffectiveDate(effectiveDate)
-            .setRequestedDate(now)
+            .setRequestedDate(requestedDate)
             .setFromDisk(true));
 
             dao.cancelSubscription(subscription.getId(), cancelEvent);
@@ -260,7 +260,7 @@ public class SubscriptionApiService {
             .setActiveVersion(subscription.getActiveVersion())
             .setProcessedDate(now)
             .setEffectiveDate(effectiveDate)
-            .setRequestedDate(now)
+            .setRequestedDate(requestedDate)
             .setFromDisk(true));
 
             TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);

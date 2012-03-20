@@ -53,4 +53,13 @@ public interface TagDefinitionUserApi {
      * @throws TagDefinitionApiException
      */
     public void deleteTagDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
+
+    
+	/**
+	 * 
+	 * @param name
+	 * @return the tag with this definition
+     * @throws TagDefinitionApiException
+	 */
+	public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
 }

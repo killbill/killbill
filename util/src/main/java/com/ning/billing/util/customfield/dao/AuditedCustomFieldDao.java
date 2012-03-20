@@ -39,8 +39,8 @@ public class AuditedCustomFieldDao {
         customFieldSqlDao.batchDeleteFromTransaction(objectId.toString(), objectType, existingFields, context);
 
         CustomFieldAuditSqlDao auditDao = dao.become(CustomFieldAuditSqlDao.class);
-  //      auditDao.batchInsertFromTransaction(objectId.toString(), objectType, fields, context);
-//        auditDao.batchUpdateFromTransaction(objectId.toString(), objectType, fieldsToUpdate, context);
+        auditDao.batchInsertFromTransaction(objectId.toString(), objectType, fields, context);
+        auditDao.batchUpdateFromTransaction(objectId.toString(), objectType, fieldsToUpdate, context);
         auditDao.batchDeleteFromTransaction(objectId.toString(), objectType, existingFields, context);
     }
 }

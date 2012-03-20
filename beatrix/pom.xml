@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.7-SNAPSHOT</version>
+        <version>0.1.8-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-beatrix</artifactId>
@@ -81,11 +81,6 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>management</artifactId>
-            <version>5.0.11</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

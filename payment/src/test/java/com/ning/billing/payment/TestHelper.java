@@ -22,8 +22,7 @@ import java.util.UUID;
 import com.ning.billing.util.CallContext;
 import com.ning.billing.util.CallOrigin;
 import com.ning.billing.util.UserType;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.entity.DefaultCallContext;
+import com.ning.billing.util.entity.CallContextFactory;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
@@ -46,10 +45,10 @@ public class TestHelper {
     private final CallContext context;
 
     @Inject
-    public TestHelper(Clock clock, AccountDao accountDao, InvoiceDao invoiceDao) {
+    public TestHelper(CallContextFactory factory, AccountDao accountDao, InvoiceDao invoiceDao) {
         this.accountDao = accountDao;
         this.invoiceDao = invoiceDao;
-        context = new DefaultCallContext(clock, "Princess Buttercup", CallOrigin.TEST, UserType.TEST);
+        context = factory.createCallContext("Princess Buttercup", CallOrigin.TEST, UserType.TEST);
     }
 
     // These helper methods can be overridden in a plugin implementation

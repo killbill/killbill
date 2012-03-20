@@ -42,7 +42,7 @@ CREATE UNIQUE INDEX tag_definitions_name ON tag_definitions(name);
 DROP TABLE IF EXISTS tag_definition_history;
 CREATE TABLE tag_definition_history (
   id char(36) NOT NULL,
-  name varchar(20) NOT NULL,
+  name varchar(30) NOT NULL,
   created_by varchar(50),
   description varchar(200),
   change_type char(6) NOT NULL,

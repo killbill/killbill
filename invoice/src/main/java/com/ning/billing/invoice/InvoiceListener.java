@@ -21,8 +21,7 @@ import java.util.UUID;
 import com.ning.billing.util.CallContext;
 import com.ning.billing.util.CallOrigin;
 import com.ning.billing.util.UserType;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.entity.DefaultCallContext;
+import com.ning.billing.util.entity.CallContextFactory;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,18 +34,18 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 public class InvoiceListener {
     private final static Logger log = LoggerFactory.getLogger(InvoiceListener.class);
 	private final InvoiceDispatcher dispatcher;
-    private final Clock clock;
+    private final CallContextFactory factory;
 
     @Inject
-    public InvoiceListener(Clock clock, InvoiceDispatcher dispatcher) {
-        this.clock = clock;
+    public InvoiceListener(CallContextFactory factory,InvoiceDispatcher dispatcher) {
         this.dispatcher = dispatcher;
+        this.factory = factory;
     }
 
     @Subscribe
     public void handleSubscriptionTransition(final SubscriptionTransition transition) {
         try {
-            CallContext context = new DefaultCallContext(clock, "Transition", CallOrigin.INTERNAL, UserType.SYSTEM);
+            CallContext context = factory.createCallContext("Transition", CallOrigin.INTERNAL, UserType.SYSTEM);
         	dispatcher.processSubscription(transition, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
@@ -55,7 +54,7 @@ public class InvoiceListener {
 
     public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime) {
         try {
-            CallContext context = new DefaultCallContext(clock, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM);
+            CallContext context = factory.createCallContext("Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM);
         	dispatcher.processSubscription(subscriptionId, eventDateTime, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());

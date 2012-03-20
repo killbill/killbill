@@ -36,6 +36,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.util.CallContext;
 import com.ning.billing.util.CallOrigin;
 import com.ning.billing.util.UserType;
+import com.ning.billing.util.entity.CallContextFactory;
 import com.ning.billing.util.entity.DefaultCallContext;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
@@ -98,7 +99,7 @@ public class TestIntegration {
 
     @Inject
     private ClockMock clock;
-    private final CallContext context = new DefaultCallContext(clock, "Integration Test", CallOrigin.TEST, UserType.TEST);
+    private final CallContext context = new CallContextFactory(clock).createCallContext("Integration Test", CallOrigin.TEST, UserType.TEST);
 
     @Inject
     private Lifecycle lifecycle;
@@ -173,6 +174,7 @@ public class TestIntegration {
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
+        helper.stopMysql();
     }
 
 

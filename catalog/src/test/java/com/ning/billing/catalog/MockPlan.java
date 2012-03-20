@@ -117,7 +117,7 @@ public class MockPlan extends DefaultPlan {
 
 
 	public static DefaultPlan[] createAll() {
-		return new MockPlan[]{
+		return new DefaultPlan[]{
 				createBicycleTrialEvergreen1USD(),
 				createBicycleNoTrialEvergreen1USD(),
 				createPickupTrialEvergreen10USD(),

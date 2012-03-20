@@ -44,11 +44,11 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         dao.notifyOfPaymentAttempt(invoicePayment);
     }
 
-    @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId) {
-        return dao.getInvoicesByAccount(accountId);
-    }
-
+	@Override
+	public List<Invoice> getAllInvoicesByAccount(UUID accountId) {
+		return dao.getAllInvoicesByAccount(accountId);
+	}
+ 
     @Override
     public Invoice getInvoice(final UUID invoiceId) {
         return dao.getById(invoiceId);
@@ -76,5 +76,6 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
         dao.notifyOfPaymentAttempt(invoicePayment);
     }
-    
+
+
 }

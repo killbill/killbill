@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ning.billing.util.CallContext;
+import com.ning.billing.util.tag.ControlTagType;
 import org.skife.jdbi.v2.IDBI;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;

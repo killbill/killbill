@@ -99,7 +99,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
-            if (requestedDate != null && requestedDate.isAfter(now)) {
+            if (requestedDate.isAfter(now)) {
                 throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
             }
             DateTime effectiveDate = requestedDate;

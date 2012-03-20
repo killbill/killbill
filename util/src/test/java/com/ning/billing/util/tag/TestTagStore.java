@@ -23,27 +23,25 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.entity.DefaultCallContext;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Guice;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
-import com.ning.billing.account.api.ControlTagType;
+
+import com.google.inject.Inject;
+import com.ning.billing.dbi.MysqlTestingHelper;
+
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagSqlDao;
 
@@ -53,15 +51,31 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-@Test(groups={"util"})
+
+@Test(groups={"slow"})
+@Guice(modules = TagStoreModuleMock.class)
 public class TestTagStore {
     private final static String ACCOUNT_TYPE = "ACCOUNT";
+
+    @Inject
+    private MysqlTestingHelper helper;
+
+    @Inject
     private IDBI dbi;
+
+    @Inject
+    private TagSqlDao tagSqlDao;
+
+    @Inject
+    private TagDefinitionDao tagDefinitionDao;
+
+    @Inject
+    private Clock clock;
+
     private TagDefinition tag1;
     private TagDefinition tag2;
-    private TagStoreModuleMock module;
-    private TagSqlDao tagSqlDao;
-    private TagDefinitionDao tagDefinitionDao;
+
+
     private final Logger log = LoggerFactory.getLogger(TestTagStore.class);
     private CallContext context;
 
@@ -69,26 +83,16 @@ public class TestTagStore {
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
-            module = new TagStoreModuleMock();
             final String utilDdl = IOUtils.toString(TestTagStore.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
-            module.startDb();
-            module.initDb(utilDdl);
-
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module, new MockClockModule());
-            dbi = injector.getInstance(IDBI.class);
-
-            tagSqlDao = injector.getInstance(TagSqlDao.class);
+            helper.startMysql();
+            helper.initDb(utilDdl);
             tagSqlDao.test();
 
-            module.execute("truncate tag_definitions;");
-
-            Clock clock = injector.getInstance(Clock.class);
-            context = new DefaultCallContext(clock, "Inigo Montoya", CallOrigin.TEST, UserType.TEST);
-
-            tagDefinitionDao = injector.getInstance(TagDefinitionDao.class);
+            cleanupTags();
             tag1 = tagDefinitionDao.create("tag1", "First tag", context);
             tag2 = tagDefinitionDao.create("tag2", "Second tag", context);
+
         }
         catch (Throwable t) {
             log.error("Failed to start tag store tests", t);
@@ -99,7 +103,7 @@ public class TestTagStore {
     @AfterClass(alwaysRun = true)
     public void stopMysql()
     {
-        module.stopDb();
+        helper.stopMysql();
     }
 
     private void saveTags(final TagSqlDao dao, final String objectType, final UUID accountId,
@@ -108,6 +112,22 @@ public class TestTagStore {
         auditedTagDao.saveTags(dao, accountId, objectType, tagList, context);
     }
 
+
+    private void cleanupTags() {
+        try {
+            helper.getDBI().withHandle(new HandleCallback<Void>() {
+                @Override
+                public Void withHandle(Handle handle) throws Exception {
+                    handle.createScript("delete from tag_definitions").execute();
+                    handle.createScript("delete from tag_definition_history").execute();
+                    handle.createScript("delete from tags").execute();
+                    handle.createScript("delete from tag_history").execute();
+                    return null;
+                }
+            });
+        } catch (Throwable ignore) {
+        }
+    }
     @Test
     public void testTagCreationAndRetrieval() {
         UUID accountId = UUID.randomUUID();
@@ -225,7 +245,7 @@ public class TestTagStore {
         assertEquals(tagStore.generateInvoice(), false);
         assertEquals(tagStore.processPayment(), true);
 
-        ControlTag paymentTag = new DefaultControlTag(ControlTagType.AUTO_BILLING_OFF);
+        ControlTag paymentTag = new DefaultControlTag(ControlTagType.AUTO_PAY_OFF);
         tagStore.add(paymentTag);
         assertEquals(tagStore.generateInvoice(), false);
         assertEquals(tagStore.processPayment(), false);
@@ -233,7 +253,7 @@ public class TestTagStore {
 
     @Test(expectedExceptions = TagDefinitionApiException.class)
     public void testTagDefinitionCreationWithControlTagName() throws TagDefinitionApiException {
-        String definitionName = ControlTagType.AUTO_BILLING_OFF.toString();
+        String definitionName = ControlTagType.AUTO_PAY_OFF.toString();
         tagDefinitionDao.create(definitionName, "This should break", context);
     }
 
@@ -388,7 +408,7 @@ public class TestTagStore {
         assertEquals(result.get(0).get("change_type"), "INSERT");
         assertNotNull(result.get(0).get("change_date"));
         DateTime changeDate = new DateTime(result.get(0).get("change_date"));
-        assertTrue(Seconds.secondsBetween(changeDate, context.getUTCNow()).getSeconds() < 2);
+        assertTrue(Seconds.secondsBetween(changeDate, context.getCreatedDate()).getSeconds() < 2);
         assertEquals(result.get(0).get("changed_by"), context.getUserName());
     }
 
@@ -415,7 +435,7 @@ public class TestTagStore {
         assertEquals(result.size(), 1);
         assertNotNull(result.get(0).get("change_date"));
         DateTime changeDate = new DateTime(result.get(0).get("change_date"));
-        assertTrue(Seconds.secondsBetween(changeDate, context.getUTCNow()).getSeconds() < 2);
+        assertTrue(Seconds.secondsBetween(changeDate, context.getUpdatedDate()).getSeconds() < 2);
         assertEquals(result.get(0).get("changed_by"), context.getUserName());
     }
 

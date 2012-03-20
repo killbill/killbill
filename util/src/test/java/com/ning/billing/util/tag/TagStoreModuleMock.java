@@ -16,33 +16,24 @@
 
 package com.ning.billing.util.tag;
 
-import java.io.IOException;
 
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 
 public class TagStoreModuleMock extends TagStoreModule {
-    private final MysqlTestingHelper helper = new MysqlTestingHelper();
-
-    public void startDb() throws IOException {
-        helper.startMysql();
-    }
-
-    public void initDb(String ddl) throws IOException {
-        helper.initDb(ddl);
-    }
-
-    public void stopDb() {
-        helper.stopMysql();
-    }
+    private MysqlTestingHelper helper;
 
     @Override
     protected void configure() {
+        helper = new MysqlTestingHelper();
         bind(IDBI.class).toInstance(helper.getDBI());
+        bind(MysqlTestingHelper.class).toInstance(helper);
+        install(new MockClockModule());
         super.configure();
     }
 

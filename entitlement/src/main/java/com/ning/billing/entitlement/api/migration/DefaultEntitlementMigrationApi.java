@@ -41,10 +41,13 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
+import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
-import com.ning.billing.entitlement.events.user.ApiEventMigrate;
+import com.ning.billing.entitlement.events.user.ApiEventMigrateBilling;
+import com.ning.billing.entitlement.events.user.ApiEventMigrateEntitlement;
+import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
 
@@ -121,10 +124,10 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             for (EntitlementSubscriptionMigration curSub : sortedSubscriptions) {
                 SubscriptionMigrationData data = null;
                 if (bundleStartDate == null) {
-                    data = createInitialSubscription(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now);
+                    data = createInitialSubscription(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now, curSub.getChargedThroughDate());
                     bundleStartDate = data.getInitialEvents().get(0).getEffectiveDate();
                 } else {
-                    data = createSubscriptionMigrationDataWithBundleDate(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now, bundleStartDate);
+                    data = createSubscriptionMigrationDataWithBundleDate(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now, bundleStartDate, curSub.getChargedThroughDate());
                 }
                 if (data != null) {
                     bundleSubscriptionData.add(data);
@@ -138,7 +141,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
     }
 
     private SubscriptionMigrationData createInitialSubscription(UUID bundleId, ProductCategory productCategory,
-            EntitlementSubscriptionMigrationCase [] input, DateTime now)
+            EntitlementSubscriptionMigrationCase [] input, DateTime now, DateTime ctd)
         throws EntitlementMigrationApiException {
 
         TimedMigration [] events = migrationAligner.getEventsMigration(input, now);
@@ -151,11 +154,11 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             .setBundleStartDate(migrationStartDate)
             .setStartDate(migrationStartDate),
             emptyEvents);
-        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, events));
+        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events));
     }
 
     private SubscriptionMigrationData createSubscriptionMigrationDataWithBundleDate(UUID bundleId, ProductCategory productCategory,
-            EntitlementSubscriptionMigrationCase [] input, DateTime now, DateTime bundleStartDate)
+            EntitlementSubscriptionMigrationCase [] input, DateTime now, DateTime bundleStartDate, DateTime ctd)
     throws EntitlementMigrationApiException {
         TimedMigration [] events = migrationAligner.getEventsMigration(input, now);
         DateTime migrationStartDate= events[0].getEventTime();
@@ -167,11 +170,13 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             .setBundleStartDate(bundleStartDate)
             .setStartDate(migrationStartDate),
             emptyEvents);
-        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, events));
+        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events));
     }
 
-    private List<EntitlementEvent> toEvents(SubscriptionData subscriptionData, DateTime now, TimedMigration [] migrationEvents) {
+    private List<EntitlementEvent> toEvents(SubscriptionData subscriptionData, DateTime now, DateTime ctd, TimedMigration [] migrationEvents) {
 
+
+        ApiEventMigrateEntitlement creationEvent = null;
         List<EntitlementEvent> events = new ArrayList<EntitlementEvent>(migrationEvents.length);
         for (TimedMigration cur : migrationEvents) {
 
@@ -194,7 +199,8 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
 
                 switch(cur.getApiEventType()) {
                 case MIGRATE_ENTITLEMENT:
-                    events.add(new ApiEventMigrate(builder));
+                    creationEvent = new ApiEventMigrateEntitlement(builder);
+                    events.add(creationEvent);
                     break;
 
                 case CHANGE:
@@ -210,6 +216,44 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                 throw new EntitlementError(String.format("Unexpected type of migration event %s", cur.getEventType()));
             }
         }
+        if (creationEvent == null || ctd == null) {
+            throw new EntitlementError(String.format("Could not create migration billing event ctd = %s", ctd));
+        }
+        events.add(new ApiEventMigrateBilling(creationEvent, ctd));
+        Collections.sort(events, new Comparator<EntitlementEvent>() {
+
+            int compForApiType(EntitlementEvent o1, EntitlementEvent o2, ApiEventType type) {
+
+                ApiEventType apiO1 = null;
+                if (o1.getType() == EventType.API_USER) {
+                    apiO1 = ((ApiEvent) o1).getEventType();
+                }
+                ApiEventType apiO2 = null;
+                if (o2.getType() == EventType.API_USER) {
+                    apiO2 = ((ApiEvent) o2).getEventType();
+                }
+                if (apiO1 != null && apiO1 == type) {
+                    return -1;
+                } else if (apiO2 != null && apiO2 == type) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+
+            @Override
+            public int compare(EntitlementEvent o1, EntitlementEvent o2) {
+
+                int comp = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
+                if (comp == 0) {
+                    comp = compForApiType(o1, o2, ApiEventType.MIGRATE_ENTITLEMENT);
+                }
+                if (comp == 0) {
+                    comp = compForApiType(o1, o2, ApiEventType.MIGRATE_BILLING);
+                }
+                return comp;
+            }
+        });
         return events;
     }
 }

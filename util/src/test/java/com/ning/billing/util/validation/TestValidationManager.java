@@ -17,7 +17,10 @@
 package com.ning.billing.util.validation;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.globallocker.TestMysqlGlobalLocker;
 import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
+
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.AfterClass;
@@ -38,7 +41,7 @@ public class TestValidationManager {
     private static final String TABLE_NAME = "validation_test";
 
     private ValidationManager vm;
-    
+
     @BeforeClass(alwaysRun = true)
     public void setup() throws IOException {
         setupDatabase();
@@ -53,11 +56,9 @@ public class TestValidationManager {
     }
 
     private void setupDatabase() throws IOException {
+        final String testDdl = IOUtils.toString(TestMysqlGlobalLocker.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
         helper.startMysql();
-        StringBuilder ddl = new StringBuilder();
-        ddl.append(String.format("DROP TABLE IF EXISTS %s;", TABLE_NAME));
-        ddl.append(String.format("CREATE TABLE %s (column1 varchar(25), column2 char(2) NOT NULL, column3 numeric(10,4), column4 datetime) ENGINE = innodb;", TABLE_NAME));
-        helper.initDb(ddl.toString());
+        helper.initDb(testDdl);
     }
 
     @AfterClass(alwaysRun = true)

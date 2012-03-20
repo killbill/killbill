@@ -4,5 +4,6 @@ public enum UserType {
     SYSTEM,
     ADMIN,
     CUSTOMER,
+    MIGRATION,
     TEST
 }

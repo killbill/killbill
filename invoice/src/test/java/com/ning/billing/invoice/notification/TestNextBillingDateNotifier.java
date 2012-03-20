@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import com.ning.billing.invoice.InvoiceDispatcher;
+import com.ning.billing.util.entity.CallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
@@ -32,6 +33,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -73,8 +75,8 @@ public class TestNextBillingDateNotifier {
 		int eventCount = 0;
 		UUID latestSubscriptionId = null;
 
-		public InvoiceListenerMock(Clock clock, InvoiceDispatcher dispatcher) {
-			super(clock, dispatcher);
+		public InvoiceListenerMock(CallContextFactory factory, InvoiceDispatcher dispatcher) {
+			super(factory, dispatcher);
 		}
 
 		@Override
@@ -131,7 +133,8 @@ public class TestNextBillingDateNotifier {
         notifier = new DefaultNextBillingDateNotifier(notificationQueueService,g.getInstance(InvoiceConfig.class), entitlementDao, listener);
         startMysql();
 
-        listener = new InvoiceListenerMock(clock, dispatcher);
+        CallContextFactory factory = new CallContextFactory(clock);
+        listener = new InvoiceListenerMock(factory, dispatcher);
 	}
 
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {
@@ -182,4 +185,10 @@ public class TestNextBillingDateNotifier {
 		Assert.assertEquals(listener.getEventCount(), 1);
 		Assert.assertEquals(listener.getLatestSubscriptionId(), subscriptionId);
 	}
+
+	@AfterClass(alwaysRun = true)
+    public void tearDown() {
+    	helper.stopMysql();
+    }
+
 }

@@ -24,7 +24,7 @@ import com.ning.billing.util.CallContext;
 import com.ning.billing.util.CallOrigin;
 import com.ning.billing.util.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.entity.DefaultCallContext;
+import com.ning.billing.util.entity.CallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -67,7 +67,7 @@ public abstract class AccountDaoTestBase {
             accountDao.test();
 
             Clock clock = injector.getInstance(Clock.class);
-            context = new DefaultCallContext(clock, "Vizzini", CallOrigin.TEST, UserType.TEST);
+            context = new CallContextFactory(clock).createCallContext("Vizzini", CallOrigin.TEST, UserType.TEST);
 
 
             BusService busService = injector.getInstance(BusService.class);

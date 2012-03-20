@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.UUID;
 
 public interface InvoiceUserApi {
-    public List<UUID> getInvoicesForPayment(DateTime targetDate, int numberOfDays);
-
     public List<Invoice> getInvoicesByAccount(UUID accountId);
 
     public List<Invoice> getInvoicesByAccount(UUID accountId, DateTime fromDate);

@@ -89,15 +89,16 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
                     readyNotifications.add(cur);
                 }
             }
+        }
 
-            result = readyNotifications.size();
-            for (Notification cur : readyNotifications) {
-                handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
-                DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getUUID(), hostname, "MockQueue", clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
-                oldNotifications.add(cur);
-                processedNotifications.add(processedNotification);
-
-            }
+        result = readyNotifications.size();
+        for (Notification cur : readyNotifications) {
+            handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
+            DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getUUID(), hostname, "MockQueue", clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
+            oldNotifications.add(cur);
+            processedNotifications.add(processedNotification);
+        }
+        synchronized(notifications) {
             if (oldNotifications.size() > 0) {
                 notifications.removeAll(oldNotifications);
             }

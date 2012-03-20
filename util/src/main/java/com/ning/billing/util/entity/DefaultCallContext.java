@@ -16,42 +16,28 @@
 
 package com.ning.billing.util.entity;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.util.CallContext;
 import com.ning.billing.util.CallOrigin;
 import com.ning.billing.util.UserType;
 import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 
-public class DefaultCallContext implements CallContext {
+public class DefaultCallContext extends CallContextBase {
     private final Clock clock;
-    private final String userName;
-    private final CallOrigin callOrigin;
-    private final UserType userType;
 
-    public DefaultCallContext(Clock clock, String userName, CallOrigin callOrigin, UserType userType) {
+    public DefaultCallContext(String userName, CallOrigin callOrigin, UserType userType, Clock clock) {
+        super(userName, callOrigin, userType);
         this.clock = clock;
-        this.userName = userName;
-        this.callOrigin = callOrigin;
-        this.userType = userType;
     }
 
     @Override
-    public String getUserName() {
-        return userName;
+    public DateTime getCreatedDate() {
+        return clock.getUTCNow();
     }
 
     @Override
-    public CallOrigin getCallOrigin() {
-        return callOrigin;
-    }
-
-    @Override
-    public UserType getUserType() {
-        return userType;
-    }
-
-    @Override
-    public DateTime getUTCNow() {
+    public DateTime getUpdatedDate() {
         return clock.getUTCNow();
     }
 }

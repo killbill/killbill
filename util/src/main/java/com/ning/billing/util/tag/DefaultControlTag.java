@@ -17,7 +17,6 @@
 package com.ning.billing.util.tag;
 
 import java.util.UUID;
-import com.ning.billing.account.api.ControlTagType;
 import org.joda.time.DateTime;
 
 public class DefaultControlTag extends DescriptiveTag implements ControlTag {

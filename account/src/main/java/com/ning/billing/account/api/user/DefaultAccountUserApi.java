@@ -29,14 +29,17 @@ import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.util.CallContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.entity.CallContextFactory;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.Tag;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
+    private final CallContextFactory factory;
     private final AccountDao dao;
 
     @Inject
-    public DefaultAccountUserApi(final AccountDao dao) {
+    public DefaultAccountUserApi(final CallContextFactory factory, final AccountDao dao) {
+        this.factory = factory;
         this.dao = dao;
     }
 
@@ -111,13 +114,13 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 	public Account migrateAccount(final MigrationAccountData data, final List<CustomField> fields,
                                   final List<Tag> tags, final CallContext context)
             throws AccountApiException {
-		
+        CallContext migrationContext = factory.toMigrationCallContext(context, data.getCreatedDate(), data.getUpdatedDate());
 		Account account = new DefaultAccount(data);
         account.setFields(fields);
         account.addTags(tags);
 
         try {
-            dao.create(account, context);
+            dao.create(account, migrationContext);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }

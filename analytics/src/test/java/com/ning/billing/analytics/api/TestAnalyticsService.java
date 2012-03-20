@@ -29,12 +29,13 @@ import java.util.UUID;
 import com.ning.billing.util.CallContext;
 import com.ning.billing.util.CallOrigin;
 import com.ning.billing.util.UserType;
-import com.ning.billing.util.entity.DefaultCallContext;
+import com.ning.billing.util.entity.CallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -98,7 +99,7 @@ public class TestAnalyticsService {
     private static final String CARD_COUNTRY = "France";
 
     private final Clock clock = new DefaultClock();
-    private final CallContext context = new DefaultCallContext(clock, "Analytics Test", CallOrigin.TEST, UserType.TEST);
+    private final CallContext context = new CallContextFactory(clock).createCallContext("Analytics Test", CallOrigin.TEST, UserType.TEST);
 
     @Inject
     private AccountUserApi accountApi;
@@ -136,6 +137,15 @@ public class TestAnalyticsService {
     private AccountCreationNotification accountCreationNotification;
     private InvoiceCreationNotification invoiceCreationNotification;
     private PaymentInfo paymentInfoNotification;
+
+    @BeforeMethod
+    public void cleanup() throws Exception
+    {
+        helper.cleanupTable("bst");
+        helper.cleanupTable("bac");
+
+    }
+
 
     @BeforeClass(alwaysRun = true)
     public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
@@ -179,6 +189,9 @@ public class TestAnalyticsService {
         helper.initDb(invoiceDdl);
         helper.initDb(paymentDdl);
         helper.initDb(utilDdl);
+
+        helper.cleanupTable("tag_definitions");
+        helper.cleanupTable("accounts");
     }
 
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {

@@ -42,11 +42,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<UUID> getInvoicesForPayment(final DateTime targetDate, final int numberOfDays) {
-        return dao.getInvoicesForPayment(targetDate, numberOfDays);
-    }
-
-    @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId) {
         return dao.getInvoicesByAccount(accountId);
     }

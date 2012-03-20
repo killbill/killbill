@@ -68,10 +68,6 @@ public interface Subscription extends CustomizableEntity {
 
     public ProductCategory getCategory();
 
-    public List<SubscriptionTransition> getActiveTransitions();
-
-    public List<SubscriptionTransition> getAllTransitions();
-
     public SubscriptionTransition getPendingTransition();
 
     public SubscriptionTransition getPreviousTransition();

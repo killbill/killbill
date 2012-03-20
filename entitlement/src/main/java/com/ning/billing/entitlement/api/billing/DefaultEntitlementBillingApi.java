@@ -26,8 +26,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.CallContext;
 import com.ning.billing.util.CallOrigin;
 import com.ning.billing.util.UserType;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.entity.DefaultCallContext;
+import com.ning.billing.util.entity.CallContextFactory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -61,15 +60,15 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
     private static final String API_USER_NAME = "Entitlement Billing Api";
 
-    private final Clock clock;
+    private final CallContextFactory factory;
     private final EntitlementDao entitlementDao;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
 
     @Inject
-    public DefaultEntitlementBillingApi(final Clock clock, final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
+    public DefaultEntitlementBillingApi(final CallContextFactory factory, final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
         super();
-        this.clock = clock;
+        this.factory = factory;
         this.entitlementDao = dao;
         this.accountApi = accountApi;
         this.catalogService = catalogService;
@@ -86,7 +85,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         	List<Subscription> subscriptions = entitlementDao.getSubscriptions(bundle.getId());
 
         	for (final Subscription subscription: subscriptions) {
-        		for (final SubscriptionTransition transition : subscription.getAllTransitions()) {
+        		for (final SubscriptionTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
         			try {
         				BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBcd(bundle, subscription, transition, accountId), currency);
         				result.add(event);
@@ -129,10 +128,10 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 		switch (alignment) {
     		case ACCOUNT :
     			result = account.getBillCycleDay();
-    			
+
     			if(result == 0) {
                     // in this case, we're making an internal call from the entitlement API to set the BCD for the account
-                    CallContext context = new DefaultCallContext(clock, API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
+                    CallContext context = factory.createCallContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
     				result = calculateBcdFromSubscription(subscription, plan, account, context);
     			}
     		break;
@@ -164,6 +163,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             log.error("Unexpected catalog error encountered when updating BCD",e);
         }
 
+
         Account modifiedAccount = new DefaultAccount(
                 account.getId(),
                 account.getExternalKey(),
@@ -188,15 +188,15 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         return result;
     }
 
-    private int billCycleDay(DateTime requestedDate, DateTimeZone timeZone, 
+    private int billCycleDay(DateTime requestedDate, DateTimeZone timeZone,
     		Plan plan) throws CatalogApiException {
 
         DateTime date = plan.dateOfFirstRecurringNonZeroCharge(requestedDate);
         return date.toDateTime(timeZone).getDayOfMonth();
 
     }
-    
-    
+
+
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
         SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionId);

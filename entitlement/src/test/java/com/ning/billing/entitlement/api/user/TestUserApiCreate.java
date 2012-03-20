@@ -100,8 +100,6 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
             assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
 
-            printSubscriptionTransitions(subscription.getActiveTransitions());
-
             Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), productName);
@@ -141,8 +139,6 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
             assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
 
-            printSubscriptionTransitions(subscription.getActiveTransitions());
-
             Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), productName);
@@ -152,11 +148,6 @@ public abstract class TestUserApiCreate extends TestApiBase {
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
-
-            List<SubscriptionTransition> transitions = subscription.getActiveTransitions();
-            assertNotNull(transitions);
-            assertEquals(transitions.size(), 1);
-
             assertTrue(testListener.isCompleted(5000));
 
             List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());

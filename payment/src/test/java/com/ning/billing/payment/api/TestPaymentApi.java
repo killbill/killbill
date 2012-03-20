@@ -108,7 +108,15 @@ public abstract class TestPaymentApi {
         assertTrue(paymentInfos.size() > 0);
 
         PaymentInfo paymentInfoFromGet = paymentInfos.get(0);
-        assertEquals(paymentInfo, paymentInfoFromGet);
+        assertEquals(paymentInfo.getAmount(), paymentInfoFromGet.getAmount());
+        assertEquals(paymentInfo.getRefundAmount(), paymentInfoFromGet.getRefundAmount());
+        assertEquals(paymentInfo.getPaymentId(), paymentInfoFromGet.getPaymentId());
+        assertEquals(paymentInfo.getPaymentNumber(), paymentInfoFromGet.getPaymentNumber());
+        assertEquals(paymentInfo.getStatus(), paymentInfoFromGet.getStatus());
+        assertEquals(paymentInfo.getBankIdentificationNumber(), paymentInfoFromGet.getBankIdentificationNumber());
+        assertEquals(paymentInfo.getReferenceId(), paymentInfoFromGet.getReferenceId());
+        assertEquals(paymentInfo.getPaymentMethodId(), paymentInfoFromGet.getPaymentMethodId());
+        assertEquals(paymentInfo.getEffectiveDate(), paymentInfoFromGet.getEffectiveDate());
 
         PaymentAttempt paymentAttemptFromGet = paymentApi.getPaymentAttemptForInvoiceId(invoice.getId().toString());
         assertEquals(paymentAttempt, paymentAttemptFromGet);
