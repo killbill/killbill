@@ -18,13 +18,13 @@ package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.entity.EntityBase;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public abstract class InvoiceItemBase implements InvoiceItem {
-    protected final UUID id;
+public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem {
     protected final UUID invoiceId;
     protected final UUID subscriptionId;
     protected final String planName;
@@ -33,19 +33,17 @@ public abstract class InvoiceItemBase implements InvoiceItem {
     protected final DateTime endDate;
     protected final BigDecimal amount;
     protected final Currency currency;
-    protected final DateTime createdDate;
 
     public InvoiceItemBase(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
-                           DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                           DateTime createdDate) {
+                           DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
         this(UUID.randomUUID(), invoiceId, subscriptionId, planName, phaseName,
-                startDate, endDate, amount, currency, createdDate);
+                startDate, endDate, amount, currency, null, null);
     }
 
     public InvoiceItemBase(UUID id, UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
                            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                           DateTime createdDate) {
-        this.id = id;
+                           String createdBy, DateTime createdDate) {
+        super(id, createdBy, createdDate);
         this.invoiceId = invoiceId;
         this.subscriptionId = subscriptionId;
         this.planName = planName;
@@ -54,7 +52,6 @@ public abstract class InvoiceItemBase implements InvoiceItem {
         this.endDate = endDate;
         this.amount = amount;
         this.currency = currency;
-        this.createdDate = createdDate;
     }
 
     public DateTime getCreatedDate() {

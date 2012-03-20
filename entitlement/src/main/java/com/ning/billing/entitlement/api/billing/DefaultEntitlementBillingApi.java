@@ -23,6 +23,11 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.CallContext;
+import com.ning.billing.util.CallOrigin;
+import com.ning.billing.util.UserType;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.DefaultCallContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -52,25 +57,26 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition.Subscription
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
 
-
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
+    private static final String API_USER_NAME = "Entitlement Billing Api";
 
+    private final Clock clock;
     private final EntitlementDao entitlementDao;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
 
     @Inject
-    public DefaultEntitlementBillingApi(final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
+    public DefaultEntitlementBillingApi(final Clock clock, final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
         super();
+        this.clock = clock;
         this.entitlementDao = dao;
         this.accountApi = accountApi;
         this.catalogService = catalogService;
     }
 
     @Override
-    public SortedSet<BillingEvent> getBillingEventsForAccount(
-            final UUID accountId) {
+    public SortedSet<BillingEvent> getBillingEventsForAccount(final UUID accountId) {
         Account account = accountApi.getAccountById(accountId);
         Currency currency = account.getCurrency();
 
@@ -101,7 +107,8 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         return entitlementDao.getAccountIdFromSubscriptionId(subscriptionId);
     }
 
-    private int calculateBcd(SubscriptionBundle bundle, Subscription subscription, final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException, AccountApiException {
+    private int calculateBcd(final SubscriptionBundle bundle, final Subscription subscription,
+                             final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException, AccountApiException {
     	Catalog catalog = catalogService.getFullCatalog();
     	Plan plan =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
     	        transition.getNextPlan() : transition.getPreviousPlan();
@@ -124,7 +131,9 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     			result = account.getBillCycleDay();
     			
     			if(result == 0) {
-    				result = calculateBcdFromSubscription(subscription, plan, account);
+                    // in this case, we're making an internal call from the entitlement API to set the BCD for the account
+                    CallContext context = new DefaultCallContext(clock, API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
+    				result = calculateBcdFromSubscription(subscription, plan, account, context);
     			}
     		break;
     		case BUNDLE :
@@ -141,7 +150,8 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
     }
     
-   	private int calculateBcdFromSubscription(Subscription subscription, Plan plan, Account account) throws AccountApiException {
+   	private int calculateBcdFromSubscription(Subscription subscription, Plan plan, Account account,
+                                             final CallContext context) throws AccountApiException {
 		int result = account.getBillCycleDay();
         if(result != 0) {
             return result;
@@ -153,7 +163,6 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         } catch (CatalogApiException e) {
             log.error("Unexpected catalog error encountered when updating BCD",e);
         }
-        
 
         Account modifiedAccount = new DefaultAccount(
                 account.getId(),
@@ -174,10 +183,8 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
                 account.getCountry(),
                 account.getPostalCode(),
                 account.getPhone(),
-                account.getCreatedDate(),
-                null // Updated date will be set internally
-        );
-        accountApi.updateAccount(modifiedAccount);
+                null, null, null, null);
+        accountApi.updateAccount(modifiedAccount, context);
         return result;
     }
 

@@ -19,6 +19,11 @@ package com.ning.billing.payment;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.ning.billing.util.CallContext;
+import com.ning.billing.util.CallOrigin;
+import com.ning.billing.util.UserType;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.DefaultCallContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
@@ -38,11 +43,13 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 public class TestHelper {
     protected final AccountDao accountDao;
     protected final InvoiceDao invoiceDao;
+    private final CallContext context;
 
     @Inject
-    public TestHelper(AccountDao accountDao, InvoiceDao invoiceDao) {
+    public TestHelper(Clock clock, AccountDao accountDao, InvoiceDao invoiceDao) {
         this.accountDao = accountDao;
         this.invoiceDao = invoiceDao;
+        context = new DefaultCallContext(clock, "Princess Buttercup", CallOrigin.TEST, UserType.TEST);
     }
 
     // These helper methods can be overridden in a plugin implementation
@@ -57,7 +64,7 @@ public class TestHelper {
                                                                      .currency(Currency.USD)
                                                                      .billingCycleDay(1)
                                                                      .build();
-        accountDao.create(account);
+        accountDao.create(account, context);
         return account;
     }
 
@@ -72,7 +79,7 @@ public class TestHelper {
                                                                      .currency(Currency.USD)
                                                                      .billingCycleDay(1)
                                                                      .build();
-        accountDao.create(account);
+        accountDao.create(account, context);
         return account;
     }
 
@@ -80,7 +87,7 @@ public class TestHelper {
                                      DateTime targetDate,
                                      Currency currency,
                                      InvoiceItem... items) {
-        Invoice invoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), 1, new DateTime(), targetDate, currency);
+        Invoice invoice = new DefaultInvoice(account.getId(), new DateTime(), targetDate, currency);
 
         for (InvoiceItem item : items) {
             if (item instanceof RecurringInvoiceItem) {
@@ -93,11 +100,10 @@ public class TestHelper {
                                                                recurringInvoiceItem.getEndDate(),
                                                                recurringInvoiceItem.getAmount(),
                                                                recurringInvoiceItem.getRate(),
-                                                               recurringInvoiceItem.getCurrency(),
-                                                               recurringInvoiceItem.getCreatedDate()));
+                                                               recurringInvoiceItem.getCurrency()));
             }
         }
-        invoiceDao.create(invoice);
+        invoiceDao.create(invoice, context);
         return invoice;
     }
 
@@ -106,7 +112,7 @@ public class TestHelper {
         final UUID subscriptionId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal("10.00");
         final InvoiceItem item = new RecurringInvoiceItem(null, subscriptionId, "test plan", "test phase", now, now.plusMonths(1),
-                amount, new BigDecimal("1.0"), Currency.USD, now);
+                amount, new BigDecimal("1.0"), Currency.USD);
 
         return createTestInvoice(account, now, Currency.USD, item);
     }

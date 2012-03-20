@@ -74,6 +74,8 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.BusService;
 
+import javax.annotation.Nullable;
+
 
 public abstract class TestApiBase {
 
@@ -401,7 +403,9 @@ public abstract class TestApiBase {
         return accountData;
     }
 
-    protected PlanPhaseSpecifier getProductSpecifier(final String productName, final String priceList, final BillingPeriod term, final PhaseType phaseType) {
+    protected PlanPhaseSpecifier getProductSpecifier(final String productName, final String priceList,
+                                                     final BillingPeriod term,
+                                                     @Nullable final PhaseType phaseType) {
         return new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, priceList, phaseType);
     }
 

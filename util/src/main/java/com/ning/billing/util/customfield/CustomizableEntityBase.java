@@ -19,12 +19,18 @@ package com.ning.billing.util.customfield;
 import java.util.List;
 import java.util.UUID;
 import com.ning.billing.util.entity.EntityBase;
+import org.joda.time.DateTime;
 
 public abstract class CustomizableEntityBase extends EntityBase implements CustomizableEntity {
     protected final FieldStore fields;
 
-    public CustomizableEntityBase(final UUID id) {
-        super(id);
+    public CustomizableEntityBase() {
+        super();
+        fields = DefaultFieldStore.create(getId(), getObjectName());
+    }
+
+    public CustomizableEntityBase(final UUID id, String createdBy, DateTime createdDate) {
+        super(id, createdBy, createdDate);
         fields = DefaultFieldStore.create(getId(), getObjectName());
     }
 
@@ -44,7 +50,7 @@ public abstract class CustomizableEntityBase extends EntityBase implements Custo
     }
 
     @Override
-    public void addFields(final List<CustomField> fields) {
+    public void setFields(final List<CustomField> fields) {
         if (fields != null) {
             this.fields.add(fields);
         }

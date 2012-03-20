@@ -19,6 +19,7 @@ package com.ning.billing.invoice.dao;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.CallContext;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface InvoiceDao {
-    void create(Invoice invoice);
+    void create(Invoice invoice, CallContext context);
 
     Invoice getById(final UUID id);
 

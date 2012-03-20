@@ -19,6 +19,8 @@ package com.ning.billing.invoice.dao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.util.CallContext;
+import com.ning.billing.util.entity.CallContextBinder;
 import com.ning.billing.util.entity.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
@@ -59,7 +61,7 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
 
     @Override
     @SqlUpdate
-    void create(@RecurringInvoiceItemBinder final InvoiceItem invoiceItem);
+    void create(@RecurringInvoiceItemBinder final InvoiceItem invoiceItem, @CallContextBinder final CallContext context);
 
     @SqlBatch(transactional = false)
     void batchCreateFromTransaction(@RecurringInvoiceItemBinder final List<InvoiceItem> items);
@@ -107,10 +109,11 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             Currency currency = Currency.valueOf(result.getString("currency"));
             String reversedItemString = result.getString("reversed_item_id");
             UUID reversedItemId = (reversedItemString == null) ? null : UUID.fromString(reversedItemString);
+            String createdBy = result.getString("created_by");
             DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
             return new RecurringInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
-                    amount, rate, currency, reversedItemId, createdDate);
+                    amount, rate, currency, reversedItemId, createdBy, createdDate);
         }
     }
 }

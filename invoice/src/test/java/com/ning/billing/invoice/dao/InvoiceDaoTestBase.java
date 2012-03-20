@@ -21,7 +21,15 @@ import static org.testng.Assert.fail;
 
 import java.io.IOException;
 
+import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
+import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
+import com.ning.billing.util.CallContext;
+import com.ning.billing.util.CallOrigin;
+import com.ning.billing.util.UserType;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.DefaultCallContext;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -42,10 +50,25 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected RecurringInvoiceItemSqlDao recurringInvoiceItemDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
     protected InvoiceModuleWithEmbeddedDb module;
+    protected Clock clock;
+    protected CallContext context;
+    protected InvoiceGenerator generator;
+
+    private final InvoiceConfig invoiceConfig = new InvoiceConfig() {
+        @Override
+        public long getDaoClaimTimeMs() {throw new UnsupportedOperationException();}
+        @Override
+        public int getDaoMaxReadyEvents() {throw new UnsupportedOperationException();}
+        @Override
+        public long getNotificationSleepTimeMs() {throw new UnsupportedOperationException();}
+        @Override
+        public boolean isEventProcessingOff() {throw new UnsupportedOperationException();}
+        @Override
+        public int getNumberOfMonthsInFuture() {return 36;}
+    };
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
-        // Health check test to make sure MySQL is setup properly
         try {
             module = new InvoiceModuleWithEmbeddedDb();
             final String accountDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
@@ -65,6 +88,9 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
             recurringInvoiceItemDao = module.getInvoiceItemSqlDao();
 
             invoicePaymentDao = module.getInvoicePaymentSqlDao();
+            clock = injector.getInstance(Clock.class);
+            context = new DefaultCallContext(clock, "Count Rogan", CallOrigin.TEST, UserType.TEST);
+            generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
 
             BusService busService = injector.getInstance(BusService.class);
             ((DefaultBusService) busService).startBus();

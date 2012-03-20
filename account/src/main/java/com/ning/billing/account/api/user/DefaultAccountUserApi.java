@@ -27,29 +27,28 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.Tag;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
     private final AccountDao dao;
-	private Clock clock;
 
     @Inject
-    public DefaultAccountUserApi(final AccountDao dao, final Clock clock) {
+    public DefaultAccountUserApi(final AccountDao dao) {
         this.dao = dao;
-        this.clock = clock;
     }
 
     @Override
-    public Account createAccount(final AccountData data, final List<CustomField> fields, List<Tag> tags) throws AccountApiException {
-        Account account = new DefaultAccount(data, clock.getUTCNow());
-        account.addFields(fields);
+    public Account createAccount(final AccountData data, final List<CustomField> fields,
+                                 final List<Tag> tags, final CallContext context) throws AccountApiException {
+        Account account = new DefaultAccount(data);
+        account.setFields(fields);
         account.addTags(tags);
 
         try {
-            dao.create(account);
+            dao.create(account, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }
@@ -78,16 +77,17 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
-    public void updateAccount(final Account account) throws AccountApiException {
+    public void updateAccount(final Account account, final CallContext context) throws AccountApiException {
         try {
-            dao.update(account);
+            dao.update(account, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
         }
     }
 
     @Override
-    public void updateAccount(final String externalKey, final AccountData accountData) throws AccountApiException {
+    public void updateAccount(final String externalKey, final AccountData accountData,
+                              final CallContext context) throws AccountApiException {
     	UUID accountId = getIdFromKey(externalKey);
     	if(accountId == null) {
     		throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
@@ -96,28 +96,28 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
         Account account = new DefaultAccount(accountId, accountData);
 
         try {
-            dao.update(account);
+            dao.update(account, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
         }
     }
 
 	@Override
-	public void deleteAccountByKey(String externalKey) throws AccountApiException {
-		dao.deleteByKey(externalKey);
+	public void deleteAccountByKey(final String externalKey, final CallContext context) throws AccountApiException {
+		dao.deleteByKey(externalKey, context);
 	}
 
 	@Override
-	public Account migrateAccount(MigrationAccountData data,
-			List<CustomField> fields, List<Tag> tags)
-			throws AccountApiException {
+	public Account migrateAccount(final MigrationAccountData data, final List<CustomField> fields,
+                                  final List<Tag> tags, final CallContext context)
+            throws AccountApiException {
 		
 		Account account = new DefaultAccount(data);
-        account.addFields(fields);
+        account.setFields(fields);
         account.addTags(tags);
 
         try {
-            dao.create(account);
+            dao.create(account, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }

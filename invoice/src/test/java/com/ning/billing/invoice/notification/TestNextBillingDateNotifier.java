@@ -21,18 +21,16 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import com.ning.billing.invoice.InvoiceDispatcher;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -46,16 +44,10 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
-import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
-import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.invoice.InvoiceListener;
-import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
@@ -69,23 +61,21 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
 public class TestNextBillingDateNotifier {
-    private static Logger log = LoggerFactory.getLogger(TestNextBillingDateNotifier.class);
 	private Clock clock;
 	private DefaultNextBillingDateNotifier notifier;
 	private DummySqlTest dao;
 	private Bus eventBus;
 	private MysqlTestingHelper helper;
-	private final InvoiceListenerMock listener = new InvoiceListenerMock();
+	private InvoiceListenerMock listener;
 	private NotificationQueueService notificationQueueService;
 
 	private static final class InvoiceListenerMock extends InvoiceListener {
 		int eventCount = 0;
 		UUID latestSubscriptionId = null;
 
-		public InvoiceListenerMock() {
-			super(null);
+		public InvoiceListenerMock(Clock clock, InvoiceDispatcher dispatcher) {
+			super(clock, dispatcher);
 		}
-
 
 		@Override
 		public void handleNextBillingDateEvent(UUID subscriptionId,
@@ -103,7 +93,6 @@ public class TestNextBillingDateNotifier {
 		}
 
 	}
-
 
 	@BeforeClass(groups={"setup"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
@@ -133,7 +122,7 @@ public class TestNextBillingDateNotifier {
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
-
+        InvoiceDispatcher dispatcher = g.getInstance(InvoiceDispatcher.class);
 
         Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
         EntitlementDao entitlementDao = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class);
@@ -141,6 +130,8 @@ public class TestNextBillingDateNotifier {
 
         notifier = new DefaultNextBillingDateNotifier(notificationQueueService,g.getInstance(InvoiceConfig.class), entitlementDao, listener);
         startMysql();
+
+        listener = new InvoiceListenerMock(clock, dispatcher);
 	}
 
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {

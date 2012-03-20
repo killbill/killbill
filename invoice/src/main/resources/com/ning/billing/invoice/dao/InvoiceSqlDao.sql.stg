@@ -14,7 +14,8 @@ invoiceSetFields(prefix) ::= <<
     <prefix>account_id,
     <prefix>invoice_date,
     <prefix>target_date,
-    <prefix>currency
+    <prefix>currency,
+    <prefix>updated_by
 >>
 
 get() ::= <<
@@ -74,7 +75,7 @@ getAccountBalance() ::= <<
 
 create() ::= <<
   INSERT INTO invoices(<invoiceSetFields()>)
-  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency);
+  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :userName);
 >>
 
 getInvoiceIdByPaymentAttemptId() ::= <<
@@ -94,7 +95,6 @@ getUnpaidInvoicesByAccountId() ::= <<
   HAVING (SUM(iis.amount_invoiced) > SUM(ips.total_paid)) OR (SUM(ips.total_paid) IS NULL)
   ORDER BY i.target_date ASC;
 >>
-
 
 test() ::= <<
   SELECT 1

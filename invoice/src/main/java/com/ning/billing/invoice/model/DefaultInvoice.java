@@ -20,7 +20,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.EntityBase;
 import org.joda.time.DateTime;
 
 import javax.annotation.Nullable;
@@ -29,23 +29,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class DefaultInvoice implements Invoice {
+public class DefaultInvoice extends EntityBase implements Invoice {
     private final InvoiceItemList invoiceItems = new InvoiceItemList();
     private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
-    private final UUID id;
     private final UUID accountId;
     private final Integer invoiceNumber;
     private final DateTime invoiceDate;
     private final DateTime targetDate;
     private final Currency currency;
 
-    public DefaultInvoice(UUID accountId, DateTime targetDate, Currency currency, Clock clock) {
-        this(UUID.randomUUID(), accountId, null, clock.getUTCNow(), targetDate, currency);
+    // used to create a new invoice
+    public DefaultInvoice(UUID accountId, DateTime invoiceDate, DateTime targetDate, Currency currency) {
+        this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, null, null);
     }
 
-    public DefaultInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber, DateTime invoiceDate, DateTime targetDate,
-                          Currency currency) {
-        this.id = invoiceId;
+    // used to hydrate invoice from persistence layer
+    public DefaultInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber, DateTime invoiceDate,
+                          DateTime targetDate, Currency currency, @Nullable String createdBy, @Nullable DateTime createdDate) {
+        super(invoiceId, createdBy, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
         this.invoiceDate = invoiceDate;

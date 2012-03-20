@@ -18,10 +18,10 @@ package com.ning.billing.util.glue;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.ning.billing.util.tag.dao.TagStoreSqlDao;
+import com.ning.billing.util.tag.dao.TagSqlDao;
 import org.skife.jdbi.v2.IDBI;
 
-public class TagStoreDaoProvider implements Provider<TagStoreSqlDao>
+public class TagStoreDaoProvider implements Provider<TagSqlDao>
 {
     private final IDBI dbi;
 
@@ -32,8 +32,8 @@ public class TagStoreDaoProvider implements Provider<TagStoreSqlDao>
     }
 
     @Override
-    public TagStoreSqlDao get()
+    public TagSqlDao get()
     {
-        return dbi.onDemand(TagStoreSqlDao.class);
+        return dbi.onDemand(TagSqlDao.class);
     }
 }

@@ -27,6 +27,9 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
 
+import com.ning.billing.util.CallContext;
+import com.ning.billing.util.entity.CallContextBinder;
+import com.ning.billing.util.entity.MapperBase;
 import com.ning.billing.util.entity.UpdatableEntityDao;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -48,7 +51,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.UuidMapper;
-import com.ning.billing.util.entity.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper({UuidMapper.class, AccountSqlDao.AccountMapper.class})
@@ -61,22 +63,16 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
 
     @Override
     @SqlUpdate
-    public void create(@AccountBinder Account account);
+    public void create(@AccountBinder Account account, @CallContextBinder final CallContext context);
 
     @Override
     @SqlUpdate
-    public void update(@AccountBinder Account account);
+    public void update(@AccountBinder Account account, @CallContextBinder final CallContext context);
 
     @SqlUpdate
     public void deleteByKey(@Bind("externalKey") final String key);
 
-    public static class AccountMapper implements ResultSetMapper<Account> {
-
-        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
-            final Timestamp resultStamp = rs.getTimestamp(fieldName);
-            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
-        }
-
+    public static class AccountMapper extends MapperBase implements ResultSetMapper<Account> {
         @Override
         public Account map(int index, ResultSet result, StatementContext context) throws SQLException {
 
@@ -91,8 +87,6 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
             Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
 
             String paymentProviderName = result.getString("payment_provider_name");
-            DateTime createdDate = getDate(result, "created_dt");
-            DateTime updatedDate = getDate(result, "updated_dt");
 
             String timeZoneId = result.getString("time_zone");
             DateTimeZone timeZone = (timeZoneId == null) ? null : DateTimeZone.forID(timeZoneId);
@@ -108,6 +102,11 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
             String country = result.getString("country");
             String phone = result.getString("phone");
 
+            String createdBy = result.getString("created_by");
+            DateTime createdDate = getDate(result, "created_date");
+            String updatedBy = result.getString("updated_by");
+            DateTime updatedDate = getDate(result, "updated_date");
+
             return new AccountBuilder(id).externalKey(externalKey).email(email)
                                          .name(name).firstNameLength(firstNameLength)
                                          .phone(phone).currency(currency)
@@ -118,8 +117,8 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
                                          .companyName(companyName)
                                          .city(city).stateOrProvince(stateOrProvince)
                                          .postalCode(postalCode).country(country)
-                                         .createdDate(createdDate)
-                                         .updatedDate(updatedDate)
+                                         .createdBy(createdBy).createdDate(createdDate)
+                                         .updatedBy(updatedBy).updatedDate(updatedDate)
                                          .build();
         }
     }
@@ -158,8 +157,6 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
                         q.bind("country", account.getCountry());
                         q.bind("postalCode", account.getPostalCode());
                         q.bind("phone", account.getPhone());
-                        q.bind("createdDate", getDate(account.getCreatedDate()));
-                        q.bind("updatedDate", getDate(account.getUpdatedDate()));
                     }
                 };
             }

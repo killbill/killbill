@@ -24,6 +24,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 
 import org.joda.time.DateTime;
@@ -65,6 +66,16 @@ public class MockSubscription implements Subscription
     public UUID getId()
     {
         return ID;
+    }
+
+    @Override
+    public String getCreatedBy() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -168,17 +179,32 @@ public class MockSubscription implements Subscription
     }
 
     @Override
+    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public List<CustomField> getFieldList() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void addFields(List<CustomField> fields) {
+    public void setFields(List<CustomField> fields) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveFields(List<CustomField> fields, CallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void clearFields() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clearPersistedFields(CallContext context) {
         throw new UnsupportedOperationException();
     }
 

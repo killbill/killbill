@@ -19,9 +19,9 @@ package com.ning.billing.util.tag.dao;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
@@ -35,25 +35,26 @@ public class MockTagDefinitionDao implements TagDefinitionDao {
     }
 
     @Override
-    public TagDefinition getByName(String definitionName) {
+    public TagDefinition getByName(final String definitionName) {
         return tags.get(definitionName);
     }
 
     @Override
-    public TagDefinition create(String definitionName, String description, String createdBy) throws TagDefinitionApiException {
-        TagDefinition tag = new DefaultTagDefinition(UUID.randomUUID(), definitionName, description, createdBy);
+    public TagDefinition create(final String definitionName, final String description,
+                                final CallContext context) throws TagDefinitionApiException {
+        TagDefinition tag = new DefaultTagDefinition(definitionName, description);
 
         tags.put(definitionName, tag);
         return tag;
     }
 
     @Override
-    public void deleteAllTagsForDefinition(String definitionName) throws TagDefinitionApiException {
+    public void deleteAllTagsForDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
         tags.remove(definitionName);
     }
 
     @Override
-    public void deleteTagDefinition(String definitionName) throws TagDefinitionApiException {
+    public void deleteTagDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
         tags.remove(definitionName);
     }
 }

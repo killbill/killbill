@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.entity;
 
+import com.ning.billing.util.CallContext;
 import org.skife.jdbi.v2.sqlobject.*;
 
 import java.util.List;
@@ -26,15 +27,17 @@ import java.util.List;
  * @param <T>
  */
 public interface EntityCollectionDao<T extends Entity> {
+    @SqlBatch(transactional=false)
+    public void batchInsertFromTransaction(@Bind("objectId") final String objectId,
+                                           @Bind("objectType") final String objectType,
+                                           @BindBean final List<T> entities,
+                                           @CallContextBinder final CallContext context);
 
     @SqlBatch(transactional=false)
-    public void batchSaveFromTransaction(@Bind("objectId") final String objectId,
-                     @Bind("objectType") final String objectType,
-                     @BindBean final List<T> entities);
-
-    @SqlUpdate
-    public void clear(@Bind("objectId") final String objectId,
-                      @Bind("objectType") final String objectType);
+    public void batchDeleteFromTransaction(@Bind("objectId") final String objectId,
+                                           @Bind("objectType") final String objectType,
+                                           @BindBean final List<T> entities,
+                                           @CallContextBinder final CallContext context);
 
     @SqlQuery
     public List<T> load(@Bind("objectId") final String objectId,

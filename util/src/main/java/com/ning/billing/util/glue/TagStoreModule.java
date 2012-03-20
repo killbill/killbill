@@ -22,14 +22,14 @@ import com.ning.billing.util.tag.api.DefaultTagDefinitionUserApi;
 import com.ning.billing.util.tag.dao.DefaultTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
-import com.ning.billing.util.tag.dao.TagStoreSqlDao;
+import com.ning.billing.util.tag.dao.TagSqlDao;
 
 public class TagStoreModule extends AbstractModule
 {
     protected void installDaos() {
         bind(TagDefinitionSqlDao.class).toProvider(TagDescriptionDaoProvider.class).asEagerSingleton();
         bind(TagDefinitionDao.class).to(DefaultTagDefinitionDao.class).asEagerSingleton();
-        bind(TagStoreSqlDao.class).toProvider(TagStoreDaoProvider.class).asEagerSingleton();
+        bind(TagSqlDao.class).toProvider(TagStoreDaoProvider.class).asEagerSingleton();
     }
 
     @Override

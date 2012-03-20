@@ -19,10 +19,11 @@ accountFields(prefix) ::= <<
     <prefix>country, 
     <prefix>postal_code,
     <prefix>phone,	
-    <prefix>created_dt,
-    <prefix>updated_dt
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date
 >>
-
 
 create() ::= <<
     INSERT INTO accounts
@@ -31,7 +32,7 @@ create() ::= <<
       (:id, :externalKey, :email, :name, :firstNameLength, :currency, :billingCycleDay,
       :paymentProviderName, :timeZone, :locale,
       :address1, :address2, :companyName, :city, :stateOrProvince, :country, :postalCode, :phone,
-      :createdDate, :updatedDate);
+      :userName, :date, null, null);
 >>
 
 update() ::= <<
@@ -41,7 +42,7 @@ update() ::= <<
         time_zone = :timeZone, locale = :locale,
         address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
         country = :country, postal_code = :postalCode, phone = :phone,
-        updated_dt = NOW()
+        updated_date = :date, updated_by = :userName
     WHERE id = :id;
 >>
 
@@ -59,19 +60,19 @@ getAccountByKey() ::= <<
 
 getById() ::= <<
     SELECT <accountFields()>
-      FROM accounts
-     WHERE id = :id;
+    FROM accounts
+    WHERE id = :id;
 >>
 
 get() ::= <<
     SELECT <accountFields()>
-      FROM accounts;
+    FROM accounts;
 >>
 
 getIdFromKey() ::= <<
     SELECT id
-      FROM accounts
-     WHERE external_key = :externalKey;
+    FROM accounts
+    WHERE external_key = :externalKey;
 >>
 
 test() ::= <<

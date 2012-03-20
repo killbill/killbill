@@ -17,13 +17,13 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.util.CallContext;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -47,8 +47,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final static Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
 
     private final InvoiceSqlDao invoiceSqlDao;
-    private final RecurringInvoiceItemSqlDao recurringInvoiceItemSqlDao;
-    private final FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final EntitlementBillingApi entitlementBillingApi;
 
@@ -61,8 +59,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
                              final EntitlementBillingApi entitlementBillingApi,
                              NextBillingDatePoster nextBillingDatePoster) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
-        this.recurringInvoiceItemSqlDao = dbi.onDemand(RecurringInvoiceItemSqlDao.class);
-        this.fixedPriceInvoiceItemSqlDao = dbi.onDemand(FixedPriceInvoiceItemSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.eventBus = eventBus;
         this.entitlementBillingApi = entitlementBillingApi;
@@ -132,7 +128,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(final Invoice invoice) {
+    public void create(final Invoice invoice, final CallContext context) {
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
@@ -141,7 +137,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 Invoice currentInvoice = invoiceDao.getById(invoice.getId().toString());
 
                 if (currentInvoice == null) {
-                    invoiceDao.create(invoice);
+                    invoiceDao.create(invoice, context);
 
                     List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                     RecurringInvoiceItemSqlDao recurringInvoiceItemDao = invoiceDao.become(RecurringInvoiceItemSqlDao.class);
@@ -151,7 +147,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                     List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = invoiceDao.become(FixedPriceInvoiceItemSqlDao.class);
-                    fixedPriceInvoiceItemDao.batchCreateFromTransaction(fixedPriceInvoiceItems);
+                    fixedPriceInvoiceItemDao.batchCreateFromTransaction(fixedPriceInvoiceItems, context);
 
                     setChargedThroughDates(invoiceSqlDao, fixedPriceInvoiceItems, recurringInvoiceItems);
 

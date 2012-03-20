@@ -18,6 +18,7 @@ package com.ning.billing.util.tag.api;
 
 import java.util.List;
 import com.google.inject.Inject;
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagDefinitionUserApi;
 import com.ning.billing.util.tag.TagDefinition;
@@ -37,17 +38,18 @@ public class DefaultTagDefinitionUserApi implements TagDefinitionUserApi {
     }
 
     @Override
-    public TagDefinition create(final String name, final String description, final String createdBy) throws TagDefinitionApiException {
-        return dao.create(name, description, createdBy);
+    public TagDefinition create(final String name, final String description, final CallContext context) throws TagDefinitionApiException {
+        return dao.create(name, description, context);
     }
 
     @Override
-    public void deleteAllTagsForDefinition(final String definitionName) throws TagDefinitionApiException {
-        dao.deleteAllTagsForDefinition(definitionName);
+    public void deleteAllTagsForDefinition(final String definitionName, final CallContext context)
+            throws TagDefinitionApiException {
+        dao.deleteAllTagsForDefinition(definitionName, context);
     }
 
     @Override
-    public void deleteTagDefinition(final String definitionName) throws TagDefinitionApiException {
-        dao.deleteAllTagsForDefinition(definitionName);
+    public void deleteTagDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
+        dao.deleteAllTagsForDefinition(definitionName, context);
     }
 }

@@ -18,14 +18,19 @@ package com.ning.billing.account.api;
 
 import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 
+import javax.annotation.Nullable;
+
 public interface AccountUserApi {
+    public Account createAccount(AccountData data, @Nullable List<CustomField> fields,
+                                 @Nullable List<Tag> tags, CallContext context) throws AccountApiException;
 
-    public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException;
-
-    public Account migrateAccount(MigrationAccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException;
+    public Account migrateAccount(MigrationAccountData data, @Nullable List<CustomField> fields,
+                                  @Nullable List<Tag> tags, CallContext context) throws AccountApiException;
 
     /***
      *
@@ -33,9 +38,9 @@ public interface AccountUserApi {
      * @param account
      * @throws AccountApiException
      */
-    public void updateAccount(Account account) throws AccountApiException;
+    public void updateAccount(Account account, CallContext context) throws AccountApiException;
 
-    public void updateAccount(String key, AccountData accountData) throws AccountApiException;
+    public void updateAccount(String key, AccountData accountData, CallContext context) throws AccountApiException;
 
     public Account getAccountByKey(String key);
 
@@ -45,5 +50,5 @@ public interface AccountUserApi {
 
     public UUID getIdFromKey(String externalKey) throws AccountApiException;
 
-	public void deleteAccountByKey(String externalKey) throws AccountApiException;
+	public void deleteAccountByKey(String externalKey, CallContext context) throws AccountApiException;
 }

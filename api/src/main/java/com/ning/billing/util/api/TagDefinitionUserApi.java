@@ -17,13 +17,14 @@
 package com.ning.billing.util.api;
 
 import java.util.List;
-import java.util.UUID;
+
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDefinitionUserApi {
     /***
      *
-     * @return
+     * @return the list of all available tag definitions
      */
     public List<TagDefinition> getTagDefinitions();
 
@@ -31,23 +32,25 @@ public interface TagDefinitionUserApi {
      *
      * @param name Identifies the definition.
      * @param description Describes the use of the definition.
-     * @param createdBy The name of person who created the definition.
-     * @return
+     * @param context The call context, for auditing purposes
+     * @return the newly created tag definition
      * @throws TagDefinitionApiException
      */
-    public TagDefinition create(String name, String description, String createdBy) throws TagDefinitionApiException;
+    public TagDefinition create(String name, String description, CallContext context) throws TagDefinitionApiException;
 
     /***
      *
      * @param definitionName Identifies the definition.
+     * @param context The call context, for auditing purposes
      * @throws TagDefinitionApiException
      */
-    public void deleteAllTagsForDefinition(String definitionName) throws TagDefinitionApiException;
+    public void deleteAllTagsForDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
 
     /***
      *
      * @param definitionName Identifies the definition.
+     * @param context The call context, for auditing purposes
      * @throws TagDefinitionApiException
      */
-    public void deleteTagDefinition(String definitionName) throws TagDefinitionApiException;
+    public void deleteTagDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
 }

@@ -23,6 +23,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.ning.billing.util.CallContext;
+import com.ning.billing.util.CallOrigin;
+import com.ning.billing.util.UserType;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.DefaultCallContext;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -33,12 +38,10 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -58,7 +61,6 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.globallocker.GlobalLocker;
-import sun.security.util.BigInt;
 
 @Guice(modules = {MockModule.class})
 public class TestInvoiceDispatcher {
@@ -81,13 +83,14 @@ public class TestInvoiceDispatcher {
     @Inject
     private BusService busService;
 
+    @Inject
+    private Clock clock;
 
+    private final CallContext context = new DefaultCallContext(clock, "Miracle Max", CallOrigin.TEST, UserType.TEST);
 
     @BeforeSuite(alwaysRun = true)
     public void setup() throws IOException
     {
-
-
         final String accountDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
         final String entitlementDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
         final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
@@ -109,7 +112,7 @@ public class TestInvoiceDispatcher {
 
 
 	    @Test(groups={"fast"}, enabled=true)
-	    public void testDryrunInvoice() throws InvoiceApiException {
+	    public void testDryRunInvoice() throws InvoiceApiException {
 	    	UUID accountId = UUID.randomUUID();
 	    	UUID subscriptionId = UUID.randomUUID();
 
@@ -138,21 +141,21 @@ public class TestInvoiceDispatcher {
 
 	    	InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);
 
-	    	Invoice invoice = dispatcher.processAccount(accountId, target, true);
+	    	Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
 	    	Assert.assertNotNull(invoice);
 
 	    	List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
 	    	Assert.assertEquals(invoices.size(),0);
 
 	    	// Try it again to double check
-	    	invoice = dispatcher.processAccount(accountId, target, true);
+	    	invoice = dispatcher.processAccount(accountId, target, true, context);
 	    	Assert.assertNotNull(invoice);
 
 	    	invoices = invoiceDao.getInvoicesByAccount(accountId);
 	    	Assert.assertEquals(invoices.size(),0);
 
 	    	// This time no dry run
-	    	invoice = dispatcher.processAccount(accountId, target, false);
+	    	invoice = dispatcher.processAccount(accountId, target, false, context);
 	    	Assert.assertNotNull(invoice);
 
 	    	invoices = invoiceDao.getInvoicesByAccount(accountId);

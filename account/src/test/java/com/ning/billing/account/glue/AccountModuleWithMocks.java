@@ -27,7 +27,6 @@ public class AccountModuleWithMocks extends AccountModule {
         bind(AccountDao.class).to(MockAccountDao.class);
     }
 
-
     @Override
     protected void configure() {
         super.configure();

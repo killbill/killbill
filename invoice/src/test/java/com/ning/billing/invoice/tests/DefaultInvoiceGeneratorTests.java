@@ -16,7 +16,6 @@
 
 package com.ning.billing.invoice.tests;
 
-import com.google.inject.Inject;
 import com.ning.billing.catalog.DefaultPrice;
 import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
@@ -27,6 +26,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
@@ -62,11 +62,38 @@ import static org.testng.Assert.assertNull;
 @Test(groups = {"fast", "invoicing", "invoiceGenerator"})
 public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     private final Clock clock = new DefaultClock();
+    private final InvoiceConfig invoiceConfig = new InvoiceConfig() {
+        @Override
+        public long getDaoClaimTimeMs() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getDaoMaxReadyEvents() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public long getNotificationSleepTimeMs() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isEventProcessingOff() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getNumberOfMonthsInFuture() {
+            return 36;
+        }
+    };
+
     private final InvoiceGenerator generator;
 
     public DefaultInvoiceGeneratorTests() {
         super();
-        this.generator = new DefaultInvoiceGenerator(clock);
+        this.generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
     }
 
     @Test

@@ -24,12 +24,11 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MigrationAccountData;
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 
 public class BrainDeadAccountUserApi implements AccountUserApi {
-
-
 	@Override
 	public Account getAccountByKey(String key) {
 		throw new UnsupportedOperationException();
@@ -52,30 +51,30 @@ public class BrainDeadAccountUserApi implements AccountUserApi {
 
 	@Override
 	public Account createAccount(AccountData data, List<CustomField> fields,
-			List<Tag> tags) throws AccountApiException {
+			List<Tag> tags, CallContext context) throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void updateAccount(Account account) {
+	public void updateAccount(Account account, CallContext context) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void deleteAccountByKey(String externalKey)
+	public void deleteAccountByKey(String externalKey, CallContext context)
 			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Account migrateAccount(MigrationAccountData data,
-			List<CustomField> fields, List<Tag> tags)
+			List<CustomField> fields, List<Tag> tags, CallContext context)
 			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void updateAccount(String key, AccountData accountData)
+	public void updateAccount(String key, AccountData accountData, CallContext context)
 			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}

@@ -19,22 +19,16 @@ package com.ning.billing.entitlement.engine.dao;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import com.ning.billing.util.CallContext;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.dao.AccountSqlDao;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.dao.FieldStoreDao;
 
 public interface EntitlementDao {
-
-
     // Bundle apis
     public List<SubscriptionBundle> getSubscriptionBundleForAccount(UUID accountId);
 
@@ -79,11 +73,11 @@ public interface EntitlementDao {
 
     public void changePlan(UUID subscriptionId, List<EntitlementEvent> changeEvents);
 
-    public void migrate(UUID acountId, AccountMigrationData data);
+    public void migrate(UUID accountId, AccountMigrationData data);
 
     public void undoMigration(UUID accountId);
 
     // Custom Fields
-    public void saveCustomFields(SubscriptionData subscription);
+    public void saveCustomFields(SubscriptionData subscription, CallContext context);
 }
 

@@ -24,6 +24,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.BinderBase;
+import com.ning.billing.util.entity.MapperBase;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
@@ -93,12 +95,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
     @SqlUpdate
     void insertPaymentInfo(@Bind(binder = PaymentInfoBinder.class) PaymentInfo paymentInfo);
 
-    public static final class PaymentAttemptBinder implements Binder<Bind, PaymentAttempt> {
-
-        private Date getDate(DateTime dateTime) {
-            return dateTime == null ? null : dateTime.toDate();
-        }
-
+    public static final class PaymentAttemptBinder extends BinderBase implements Binder<Bind, PaymentAttempt> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentAttempt paymentAttempt) {
             stmt.bind("payment_attempt_id", paymentAttempt.getPaymentAttemptId().toString());
@@ -115,13 +112,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         }
     }
 
-    public static class PaymentAttemptMapper implements ResultSetMapper<PaymentAttempt> {
-
-        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
-            final Timestamp resultStamp = rs.getTimestamp(fieldName);
-            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
-        }
-
+    public static class PaymentAttemptMapper extends MapperBase implements ResultSetMapper<PaymentAttempt> {
         @Override
         public PaymentAttempt map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
 
@@ -151,12 +142,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         }
     }
 
-    public static final class PaymentInfoBinder implements Binder<Bind, PaymentInfo> {
-
-        private Date getDate(DateTime dateTime) {
-            return dateTime == null ? null : dateTime.toDate();
-        }
-
+    public static final class PaymentInfoBinder extends BinderBase implements Binder<Bind, PaymentInfo> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentInfo paymentInfo) {
             stmt.bind("payment_id", paymentInfo.getPaymentId().toString());
@@ -177,13 +163,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         }
     }
 
-    public static class PaymentInfoMapper implements ResultSetMapper<PaymentInfo> {
-
-        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
-            final Timestamp resultStamp = rs.getTimestamp(fieldName);
-            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
-        }
-
+    public static class PaymentInfoMapper extends MapperBase implements ResultSetMapper<PaymentInfo> {
         @Override
         public PaymentInfo map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
 

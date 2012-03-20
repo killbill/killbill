@@ -26,6 +26,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.CallContext;
+import com.ning.billing.util.CallOrigin;
+import com.ning.billing.util.UserType;
+import com.ning.billing.util.entity.DefaultCallContext;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -87,13 +91,14 @@ public class TestAnalyticsService {
     private static final String KEY = "12345";
     private static final String ACCOUNT_KEY = "pierre-12345";
     private static final Currency ACCOUNT_CURRENCY = Currency.EUR;
-    private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something", "pierre");
-    private static final DefaultTagDefinition TAG_TWO = new DefaultTagDefinition("awesome", "something", "pierre");
+    private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something");
+    private static final DefaultTagDefinition TAG_TWO = new DefaultTagDefinition("awesome", "something");
     private static final BigDecimal INVOICE_AMOUNT = BigDecimal.valueOf(1243.11);
     private static final String PAYMENT_METHOD = "Paypal";
     private static final String CARD_COUNTRY = "France";
 
     private final Clock clock = new DefaultClock();
+    private final CallContext context = new DefaultCallContext(clock, "Analytics Test", CallOrigin.TEST, UserType.TEST);
 
     @Inject
     private AccountUserApi accountApi;
@@ -137,16 +142,16 @@ public class TestAnalyticsService {
         // Killbill generic setup
         setupBusAndMySQL();
 
-        tagDao.create(TAG_ONE);
-        tagDao.create(TAG_TWO);
+        tagDao.create(TAG_ONE, context);
+        tagDao.create(TAG_TWO, context);
 
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, ACCOUNT_CURRENCY);
         try {
             final List<Tag> tags = new ArrayList<Tag>();
-            tags.add(new DescriptiveTag(TAG_ONE, "pierre", clock.getUTCNow()));
-            tags.add(new DescriptiveTag(TAG_TWO, "pierre", clock.getUTCNow()));
+            tags.add(new DescriptiveTag(TAG_ONE));
+            tags.add(new DescriptiveTag(TAG_TWO));
 
-            final Account storedAccount = accountApi.createAccount(account, null, tags);
+            final Account storedAccount = accountApi.createAccount(account, null, tags, context);
 
             // Create events for the bus and expected results
             createSubscriptionTransitionEvent(storedAccount);
@@ -227,14 +232,13 @@ public class TestAnalyticsService {
     }
 
     private void createInvoiceAndPaymentCreationEvents(final Account account) {
-        final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCNow(), ACCOUNT_CURRENCY, clock);
+        final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCNow(), clock.getUTCNow(), ACCOUNT_CURRENCY);
         final FixedPriceInvoiceItem invoiceItem = new FixedPriceInvoiceItem(
                 UUID.randomUUID(), invoice.getId(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
-                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow()
-        );
+                INVOICE_AMOUNT, ACCOUNT_CURRENCY, context.getUserName(), clock.getUTCNow());
         invoice.addInvoiceItem(invoiceItem);
 
-        invoiceDao.create(invoice);
+        invoiceDao.create(invoice, context);
         Assert.assertEquals(invoiceDao.getInvoicesByAccount(account.getId()).size(), 1);
         Assert.assertEquals(invoiceDao.getInvoicesByAccount(account.getId()).get(0).getInvoiceItems().size(), 1);
 

@@ -19,38 +19,30 @@ package com.ning.billing.util.tag.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
+
+import com.ning.billing.util.entity.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.util.tag.DefaultControlTag;
-import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 
-public class TagMapper implements ResultSetMapper<Tag> {
+public class TagMapper extends MapperBase implements ResultSetMapper<Tag> {
     @Override
     public Tag map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
         String name = result.getString("tag_definition_name");
 
-        UUID id = UUID.fromString(result.getString("id"));
-        String addedBy = result.getString("added_by");
-        DateTime addedDate = new DateTime(result.getTimestamp("added_date"));
-
-        Tag tag;
         try {
             ControlTagType controlTagType = ControlTagType.valueOf(name);
-            tag = new DefaultControlTag(id, addedBy, addedDate, controlTagType);
+            return new DefaultControlTag(controlTagType);
         } catch (Throwable t) {
-            String description = result.getString("tag_description");
+            UUID id = UUID.fromString(result.getString("id"));
             String createdBy = result.getString("created_by");
+            DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
-            UUID tagDefinitionId = UUID.fromString(result.getString("tag_definition_id"));
-            TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, name, description, createdBy);
-            tag = new DescriptiveTag(id, tagDefinition, addedBy, addedDate);
+            return new DescriptiveTag(id, createdBy, createdDate, name);
         }
-
-        return tag;
     }
 }

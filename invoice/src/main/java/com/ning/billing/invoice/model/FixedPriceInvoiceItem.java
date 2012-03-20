@@ -25,15 +25,14 @@ import java.util.UUID;
 
 public class FixedPriceInvoiceItem extends InvoiceItemBase {
     public FixedPriceInvoiceItem(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
-                                 DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                                 DateTime createdDate) {
-        super(invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdDate);
+                                 DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
+        super(invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
     }
 
     public FixedPriceInvoiceItem(UUID id, UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
                                  DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                                 DateTime createdDate) {
-        super(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdDate);
+                                 String createdBy, DateTime createdDate) {
+        super(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdBy, createdDate);
     }
 
     @Override

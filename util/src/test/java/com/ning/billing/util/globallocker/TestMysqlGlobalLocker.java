@@ -71,7 +71,7 @@ public class TestMysqlGlobalLocker {
             @Override
             public Void inTransaction(Handle conn, TransactionStatus status)
                     throws Exception {
-                conn.execute("insert into dummy (dummy_id) values ('" + UUID.randomUUID().toString()  + "')");
+                conn.execute("insert into dummy (dummy_id, value) values ('" + UUID.randomUUID().toString()  + "', 'test')");
                 return null;
             }
         });
@@ -96,9 +96,12 @@ public class TestMysqlGlobalLocker {
             @Override
             public Void inTransaction(Handle h, TransactionStatus status)
                     throws Exception {
+                h.execute("DROP TABLE IF EXISTS dummy;");
+
                 h.execute("create table dummy " +
                         "(id int(11) unsigned NOT NULL AUTO_INCREMENT, " +
                         "dummy_id char(36) NOT NULL, " +
+                        "value varchar(256) NOT NULL," +
                         "PRIMARY KEY(id)" +
                 		") ENGINE=innodb;");
                 return null;

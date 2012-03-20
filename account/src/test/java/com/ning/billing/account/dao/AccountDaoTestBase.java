@@ -20,6 +20,11 @@ import static org.testng.Assert.fail;
 
 import java.io.IOException;
 
+import com.ning.billing.util.CallContext;
+import com.ning.billing.util.CallOrigin;
+import com.ning.billing.util.UserType;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.entity.DefaultCallContext;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -41,6 +46,8 @@ public abstract class AccountDaoTestBase {
     protected AccountDao accountDao;
     protected IDBI dbi;
 
+    protected CallContext context;
+
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
@@ -58,6 +65,10 @@ public abstract class AccountDaoTestBase {
 
             accountDao = injector.getInstance(AccountDao.class);
             accountDao.test();
+
+            Clock clock = injector.getInstance(Clock.class);
+            context = new DefaultCallContext(clock, "Vizzini", CallOrigin.TEST, UserType.TEST);
+
 
             BusService busService = injector.getInstance(BusService.class);
             ((DefaultBusService) busService).startBus();

@@ -139,7 +139,7 @@ public class MysqlTestingHelper
 
     public IDBI getDBI()
     {
-        final String dbiString = "jdbc:mysql://localhost:" + port + "/" + DB_NAME + "?createDatabaseIfNotExist=true";
+        final String dbiString = "jdbc:mysql://localhost:" + port + "/" + DB_NAME + "?createDatabaseIfNotExist=true&allowMultiQueries=true";
         return new DBI(dbiString, USERNAME, PASSWORD);
     }
 

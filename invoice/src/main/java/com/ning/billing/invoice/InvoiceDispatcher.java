@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import com.ning.billing.util.CallContext;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,18 +69,20 @@ public class InvoiceDispatcher {
         this.locker = locker;
 
         String verboseOutputValue = System.getProperty("VERBOSE_OUTPUT");
-        VERBOSE_OUTPUT = (verboseOutputValue == null) ? false : Boolean.parseBoolean(verboseOutputValue);
+        VERBOSE_OUTPUT = (verboseOutputValue != null) && Boolean.parseBoolean(verboseOutputValue);
     }
 
-    public void processSubscription(final SubscriptionTransition transition) throws InvoiceApiException {
+    public void processSubscription(final SubscriptionTransition transition,
+                                    final CallContext context) throws InvoiceApiException {
         UUID subscriptionId = transition.getSubscriptionId();
         DateTime targetDate = transition.getEffectiveTransitionTime();
         log.info("Got subscription transition from InvoiceListener. id: " + subscriptionId.toString() + "; targetDate: " + targetDate.toString());
         log.info("Transition type: " + transition.getTransitionType().toString());
-        processSubscription(subscriptionId, targetDate);
+        processSubscription(subscriptionId, targetDate, context);
     }
 
-    public void processSubscription(final UUID subscriptionId, final DateTime targetDate) throws InvoiceApiException {
+    public void processSubscription(final UUID subscriptionId, final DateTime targetDate,
+                                    final CallContext context) throws InvoiceApiException {
         if (subscriptionId == null) {
             log.error("Failed handling entitlement change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
             return;
@@ -92,15 +95,16 @@ public class InvoiceDispatcher {
             return;
         }
 
-        processAccount(accountId, targetDate, false);
+        processAccount(accountId, targetDate, false, context);
     }
     
-    public Invoice processAccount(UUID accountId, DateTime targetDate, boolean dryrun) throws InvoiceApiException {
+    public Invoice processAccount(final UUID accountId, final DateTime targetDate,
+                                  final boolean dryRun, final CallContext context) throws InvoiceApiException {
 		GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerService.INVOICE, accountId.toString(), NB_LOCK_TRY);
 
-            return processAccountWithLock(accountId, targetDate, dryrun);
+            return processAccountWithLock(accountId, targetDate, dryRun, context);
 
         } catch (LockFailedException e) {
             // Not good!
@@ -114,7 +118,8 @@ public class InvoiceDispatcher {
         return null;
     }
 
-    private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDate, boolean dryrun) throws InvoiceApiException {
+    private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDate,
+                                           final boolean dryRun, final CallContext context) throws InvoiceApiException {
 
         Account account = accountUserApi.getAccountById(accountId);
         if (account == null) {
@@ -145,8 +150,8 @@ public class InvoiceDispatcher {
             }
             outputDebugData(events, invoices);
 
-            if (invoice.getNumberOfItems() > 0 && !dryrun) {
-                invoiceDao.create(invoice);
+            if (invoice.getNumberOfItems() > 0 && !dryRun) {
+                invoiceDao.create(invoice, context);
             }
         }
         

@@ -3,10 +3,9 @@ group TagDefinitionDao;
 fields(prefix) ::= <<
     <prefix>id,
     <prefix>name,
-    <prefix>created_by,
     <prefix>description,
-    <prefix>created_date,
-    <prefix>updated_date
+    <prefix>created_by,
+    <prefix>created_date
 >>
 
 get() ::= <<
@@ -16,13 +15,7 @@ get() ::= <<
 
 create() ::= <<
   INSERT INTO tag_definitions(<fields()>)
-  VALUES(:id, :name, :createdBy, :description, NOW(), NOW());
->>
-
-update() ::= <<
-  UPDATE tag_definitions
-  SET name = :name, created_by = :createdBy, description = :description, updated_date = NOW())
-  WHERE id = :id;
+  VALUES(:id, :name, :description, :userName, :date);
 >>
 
 load() ::= <<

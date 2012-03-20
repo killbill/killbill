@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.bus.Bus;
 import org.joda.time.DateTime;
 
@@ -43,7 +44,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(Invoice invoice) {
+    public void create(final Invoice invoice, final CallContext context) {
         synchronized (monitor) {
             invoices.put(invoice.getId(), invoice);
         }

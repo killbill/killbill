@@ -31,6 +31,7 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.CustomizableEntityBase;
@@ -39,6 +40,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -79,8 +81,9 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         this(builder, null, null);
     }
 
-    public SubscriptionData(SubscriptionBuilder builder, SubscriptionApiService apiService, Clock clock) {
-        super(builder.getId());
+    public SubscriptionData(SubscriptionBuilder builder, @Nullable SubscriptionApiService apiService,
+                            @Nullable Clock clock) {
+        super(builder.getId(), null, null);
         this.apiService = apiService;
         this.clock = clock;
         this.bundleId = builder.getBundleId();
@@ -97,56 +100,33 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         return "Subscription";
     }
 
-
     @Override
-    public void setFieldValue(String fieldName, String fieldValue) {
-        setFieldValueInternal(fieldName, fieldValue, true);
-    }
-
-    public void setFieldValueInternal(String fieldName, String fieldValue, boolean commit) {
+    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
         super.setFieldValue(fieldName, fieldValue);
-        if (commit) {
-            apiService.commitCustomFields(this);
-        }
-    }
-
-
-    @Override
-    public void addFields(List<CustomField> fields) {
-        addFieldsInternal(fields, true);
-    }
-
-    public void addFieldsInternal(List<CustomField> fields, boolean commit) {
-        super.addFields(fields);
-        if (commit) {
-            apiService.commitCustomFields(this);
-        }
+        apiService.commitCustomFields(this, context);
     }
 
     @Override
-    public void clearFields() {
-        clearFieldsInternal(true);
+    public void saveFields(List<CustomField> fields, CallContext context) {
+        super.setFields(fields);
+        apiService.commitCustomFields(this, context);
     }
 
-    public void clearFieldsInternal(boolean commit) {
+    @Override
+    public void clearPersistedFields(CallContext context) {
         super.clearFields();
-        if (commit) {
-            apiService.commitCustomFields(this);
-        }
+        apiService.commitCustomFields(this, context);
     }
-
 
     @Override
     public UUID getBundleId() {
         return bundleId;
     }
 
-
     @Override
     public DateTime getStartDate() {
         return startDate;
     }
-
 
     @Override
     public SubscriptionState getState() {
@@ -335,7 +315,6 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         }
         return false;
     }
-
 
     public DateTime getPlanChangeEffectiveDate(ActionPolicy policy, DateTime requestedDate) {
 

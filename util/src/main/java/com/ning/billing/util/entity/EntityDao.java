@@ -18,16 +18,15 @@ package com.ning.billing.util.entity;
 
 import java.util.List;
 
+import com.ning.billing.util.CallContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-import com.ning.billing.account.api.AccountApiException;
-
 public interface EntityDao<T extends Entity> {
     @SqlUpdate
-    public void create(@BindBean final T entity) throws EntityPersistenceException;
+    public void create(@BindBean final T entity, @CallContextBinder final CallContext context) throws EntityPersistenceException;
 
     @SqlQuery
     public T getById(@Bind("id") final String id);

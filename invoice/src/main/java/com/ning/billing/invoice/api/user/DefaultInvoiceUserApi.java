@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.CallContext;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -77,8 +78,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
 	@Override
-	public Invoice triggerInvoiceGeneration(UUID accountId,
-			DateTime targetDate, boolean dryrun) throws InvoiceApiException {
-		return dispatcher.processAccount(accountId, targetDate, dryrun);
+	public Invoice triggerInvoiceGeneration(final UUID accountId,
+			final DateTime targetDate, final boolean dryRun,
+            final CallContext context) throws InvoiceApiException {
+		return dispatcher.processAccount(accountId, targetDate, dryRun, context);
 	}
 }

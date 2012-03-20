@@ -28,6 +28,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 
@@ -41,7 +42,7 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public void create(Account account) {
+    public void create(Account account, CallContext context) {
         accounts.put(account.getId().toString(), account);
 
         try {
@@ -83,7 +84,7 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public void update(Account account) {
+    public void update(Account account, CallContext context) {
         Account currentAccount = accounts.put(account.getId().toString(), account);
 
         AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
@@ -98,10 +99,10 @@ public class MockAccountDao implements AccountDao {
     }
 
 	@Override
-	public void deleteByKey(String externalKey) throws AccountApiException {
+	public void deleteByKey(String externalKey, CallContext context) throws AccountApiException {
 		for (Account account : accounts.values()) {
             if (externalKey.equals(account.getExternalKey())) {
-                accounts.remove(account.getId());
+                accounts.remove(account.getId().toString());
             }
         }		
 	}

@@ -19,6 +19,8 @@ package com.ning.billing.invoice.dao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
+import com.ning.billing.util.CallContext;
+import com.ning.billing.util.entity.CallContextBinder;
 import com.ning.billing.util.entity.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
@@ -59,13 +61,13 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
 
     @Override
     @SqlUpdate
-    void create(@FixedPriceInvoiceItemBinder final InvoiceItem invoiceItem);
+    void create(@FixedPriceInvoiceItemBinder final InvoiceItem invoiceItem, @CallContextBinder final CallContext context);
 
     @SqlBatch
-    void create(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items);
+    void create(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items, @CallContextBinder final CallContext context);
 
     @SqlBatch(transactional=false)
-    void batchCreateFromTransaction(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items);
+    void batchCreateFromTransaction(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items, @CallContextBinder final CallContext context);
 
     @BindingAnnotation(FixedPriceInvoiceItemBinder.FixedPriceInvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
@@ -103,10 +105,11 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             DateTime endDate = new DateTime(result.getTimestamp("end_date"));
             BigDecimal amount = result.getBigDecimal("amount");
             Currency currency = Currency.valueOf(result.getString("currency"));
+            String createdBy = result.getString("created_by");
             DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
             return new FixedPriceInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName,
-                                            startDate, endDate, amount, currency, createdDate);
+                                            startDate, endDate, amount, currency, createdBy, createdDate);
         }
     }
 }

@@ -45,6 +45,7 @@ CREATE TABLE invoices (
   invoice_date datetime NOT NULL,
   target_date datetime NOT NULL,
   currency char(3) NOT NULL,
+  updated_by varchar(30) NOT NULL,
   PRIMARY KEY(invoice_number)
 ) ENGINE=innodb;
 CREATE INDEX invoices_invoice_number ON invoices(invoice_number ASC);

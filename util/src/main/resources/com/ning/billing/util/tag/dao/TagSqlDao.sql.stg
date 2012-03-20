@@ -1,0 +1,28 @@
+group TagDao;
+
+batchInsertFromTransaction() ::= <<
+  INSERT INTO tags(id, tag_definition_name, object_id, object_type, created_by, created_date)
+  VALUES (:id, :tagDefinitionName, :objectId, :objectType, :userName, :date);
+>>
+
+batchDeleteFromTransaction() ::= <<
+    DELETE FROM tags
+    WHERE tag_definition_name = :tagDefinitionName
+        AND object_id = :objectId AND object_type = :objectType;
+>>
+
+load() ::= <<
+    SELECT t.id, t.object_id, t.object_type, t.created_by, t.created_date,
+           td.id AS tag_definition_id,
+           t.tag_definition_name AS tag_definition_name,
+           td.description AS tag_description,
+           td.created_by
+    FROM tags t
+    LEFT JOIN tag_definitions td ON t.tag_definition_name = td.name
+    WHERE t.object_id = :objectId AND t.object_type = :objectType;
+>>
+
+test() ::= <<
+  SELECT 1 FROM tags;
+>>
+;

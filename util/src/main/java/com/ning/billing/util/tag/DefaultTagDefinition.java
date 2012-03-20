@@ -18,33 +18,27 @@ package com.ning.billing.util.tag;
 
 import java.util.UUID;
 import com.ning.billing.util.entity.EntityBase;
+import org.joda.time.DateTime;
 
 public class DefaultTagDefinition extends EntityBase implements TagDefinition {
     private String name;
     private String description;
-    private String createdBy;
 
-    public DefaultTagDefinition(String name, String description,
-                                String createdBy) {
-        this(UUID.randomUUID(), name, description, createdBy);
-    }
-
-    public DefaultTagDefinition(UUID id, String name, String description,
-                                String createdBy) {
-        super(id);
+    public DefaultTagDefinition(String name, String description) {
+        super();
         this.name = name;
         this.description = description;
-        this.createdBy = createdBy;
+    }
+
+    public DefaultTagDefinition(UUID id, String createdBy, DateTime createdDate, String name, String description) {
+        super(id, createdBy, createdDate);
+        this.name = name;
+        this.description = description;
     }
     
     @Override
     public String getName() {
         return name;
-    }
-
-    @Override
-    public String getCreatedBy() {
-        return createdBy;
     }
 
     @Override

@@ -24,6 +24,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.CallContext;
+import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -36,10 +38,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.dao.AccountSqlDao;
 import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
@@ -62,7 +61,7 @@ import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.dao.FieldStoreDao;
+import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -408,18 +407,11 @@ public class EntitlementSqlDao implements EntitlementDao {
         }
     }
 
-    private void updateCustomFieldsFromTransaction(SubscriptionSqlDao transactionalDao, final SubscriptionData subscription) {
-
-        String subscriptionId = subscription.getId().toString();
-        String objectType = subscription.getObjectName();
-
-        FieldStoreDao fieldStoreDao = transactionalDao.become(FieldStoreDao.class);
-        fieldStoreDao.clear(subscriptionId, objectType);
-
-        List<CustomField> fieldList = subscription.getFieldList();
-        if (fieldList != null) {
-            fieldStoreDao.batchSaveFromTransaction(subscriptionId, objectType, fieldList);
-        }
+    private void updateCustomFieldsFromTransaction(final SubscriptionSqlDao transactionalDao,
+                                                   final SubscriptionData subscription,
+                                                   final CallContext context) {
+        AuditedCustomFieldDao auditedDao = new AuditedCustomFieldDao();
+        auditedDao.saveFields(transactionalDao, subscription.getId(), subscription.getObjectName(), subscription.getFieldList(), context);
     }
 
     private Subscription buildSubscription(Subscription input) {
@@ -444,10 +436,7 @@ public class EntitlementSqlDao implements EntitlementDao {
          throw new EntitlementError(String.format("Unexpected code path in buildSubscription"));
     }
 
-
-
     private List<Subscription> buildBundleSubscriptions(List<Subscription> input) {
-
         // Make sure BasePlan -- if exists-- is first
         Collections.sort(input, new Comparator<Subscription>() {
             @Override
@@ -607,23 +596,23 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public void saveCustomFields(final SubscriptionData subscription) {
+    public void saveCustomFields(final SubscriptionData subscription, final CallContext context) {
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
             @Override
             public Void inTransaction(SubscriptionSqlDao transactionalDao,
                     TransactionStatus status) throws Exception {
-                updateCustomFieldsFromTransaction(transactionalDao, subscription);
+                updateCustomFieldsFromTransaction(transactionalDao, subscription, context);
                 return null;
             }
         });
     }
 
     private void loadCustomFields(final SubscriptionData subscription) {
-        FieldStoreDao fieldStoreDao = subscriptionsDao.become(FieldStoreDao.class);
-        List<CustomField> fields = fieldStoreDao.load(subscription.getId().toString(), subscription.getObjectName());
-        subscription.clearFieldsInternal(false);
+        CustomFieldSqlDao customFieldSqlDao = subscriptionsDao.become(CustomFieldSqlDao.class);
+        List<CustomField> fields = customFieldSqlDao.load(subscription.getId().toString(), subscription.getObjectName());
+        subscription.clearFields();
         if (fields != null) {
-            subscription.addFieldsInternal(fields, false);
+            subscription.setFields(fields);
         }
     }
 }

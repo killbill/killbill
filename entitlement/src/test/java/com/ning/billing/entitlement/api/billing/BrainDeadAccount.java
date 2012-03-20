@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api.billing;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.CallContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -37,7 +38,8 @@ public class BrainDeadAccount implements Account {
 
 	@Override
 	public String getName() {
-		throw new UnsupportedOperationException();	}
+		throw new UnsupportedOperationException();
+    }
 
 	@Override
 	public int getFirstNameLength() {
@@ -124,17 +126,37 @@ public class BrainDeadAccount implements Account {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
+    @Override
+    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
 	public List<CustomField> getFieldList() {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
+    @Override
+    public void setFields(List<CustomField> fields) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveFields(List<CustomField> fields, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
 	public void clearFields() {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
+    @Override
+    public void clearPersistedFields(CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
 	public String getObjectName() {
 		throw new UnsupportedOperationException();
 	}
@@ -144,7 +166,17 @@ public class BrainDeadAccount implements Account {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
+    @Override
+    public String getCreatedBy() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
 	public List<Tag> getTagList() {
 		throw new UnsupportedOperationException();
 	}
@@ -155,7 +187,7 @@ public class BrainDeadAccount implements Account {
 	}
 
     @Override
-    public void addTag(final TagDefinition definition, final String addedBy, final DateTime dateAdded) {
+    public void addTag(final TagDefinition definition) {
         throw new UnsupportedOperationException();
     }
 
@@ -183,20 +215,14 @@ public class BrainDeadAccount implements Account {
 	public boolean processPayment() {
 		throw new UnsupportedOperationException();
 	}
-	@Override
-	public void addFields(List<CustomField> fields) {
-		throw new UnsupportedOperationException();
-
-	}
 
     @Override
-    public DateTime getCreatedDate() {
-        return new DateTime(DateTimeZone.UTC);
+    public String getUpdatedBy() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public DateTime getUpdatedDate() {
-        return new DateTime(DateTimeZone.UTC);
+        throw new UnsupportedOperationException();
     }
-
 }

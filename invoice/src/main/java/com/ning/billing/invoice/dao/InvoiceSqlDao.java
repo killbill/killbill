@@ -19,7 +19,9 @@ package com.ning.billing.invoice.dao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.util.CallContext;
 import com.ning.billing.util.UuidMapper;
+import com.ning.billing.util.entity.CallContextBinder;
 import com.ning.billing.util.entity.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
@@ -54,7 +56,7 @@ import java.util.UUID;
 public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<InvoiceSqlDao>, Transmogrifier, CloseMe {
     @Override
     @SqlUpdate
-    void create(@InvoiceBinder Invoice invoice);
+    void create(@InvoiceBinder Invoice invoice, @CallContextBinder final CallContext context);
 
     @SqlQuery
     List<Invoice> getInvoicesByAccount(@Bind("accountId") final String accountId);
@@ -113,8 +115,10 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             DateTime invoiceDate = new DateTime(result.getTimestamp("invoice_date"));
             DateTime targetDate = new DateTime(result.getTimestamp("target_date"));
             Currency currency = Currency.valueOf(result.getString("currency"));
+            String createdBy = result.getString("created_by");
+            DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
-            return new DefaultInvoice(id, accountId, invoiceNumber, invoiceDate, targetDate, currency);
+            return new DefaultInvoice(id, accountId, invoiceNumber, invoiceDate, targetDate, currency, createdBy, createdDate);
         }
     }
 

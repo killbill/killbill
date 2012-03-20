@@ -18,10 +18,12 @@ package com.ning.billing.util.tag;
 
 import java.io.IOException;
 
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.glue.TagStoreModule;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 
 public class TagStoreModuleMock extends TagStoreModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
@@ -42,5 +44,15 @@ public class TagStoreModuleMock extends TagStoreModule {
     protected void configure() {
         bind(IDBI.class).toInstance(helper.getDBI());
         super.configure();
+    }
+
+    public void execute(final String ddl) {
+        helper.getDBI().withHandle(new HandleCallback<Void>() {
+            @Override
+            public Void withHandle(Handle handle) throws Exception {
+                handle.execute(ddl);
+                return null;
+            }
+        });
     }
 }

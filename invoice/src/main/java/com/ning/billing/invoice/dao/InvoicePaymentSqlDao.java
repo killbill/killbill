@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.entity.MapperBase;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
@@ -70,12 +71,7 @@ public interface InvoicePaymentSqlDao {
     @SqlUpdate
     void notifyOfPaymentAttempt(@InvoicePaymentBinder InvoicePayment invoicePayment);
 
-    public static class InvoicePaymentMapper implements ResultSetMapper<InvoicePayment> {
-        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
-            final Timestamp resultStamp = rs.getTimestamp(fieldName);
-            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
-        }
-
+    public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
         @Override
         public InvoicePayment map(int index, ResultSet result, StatementContext context) throws SQLException {
             final UUID paymentAttemptId = UUID.fromString(result.getString("payment_attempt_id"));

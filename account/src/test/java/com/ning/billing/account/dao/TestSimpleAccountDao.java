@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.entity.EntityPersistenceException;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.annotations.Test;
 
@@ -35,7 +34,6 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
@@ -53,9 +51,6 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         String locale = "EN-US";
         DateTimeZone timeZone = DateTimeZone.forID("America/Los_Angeles");
 
-        DateTime createdDate = new DateTime(DateTimeZone.UTC);
-        DateTime updatedDate = new DateTime(DateTimeZone.UTC);
-
         int firstNameLength = firstName.length();
         return new AccountBuilder().externalKey(thisKey)
                                    .name(name)
@@ -64,15 +59,13 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                    .email(thisEmail)
                                    .currency(Currency.USD)
                                    .locale(locale)
-                                   .timeZone(timeZone)
-                                   .createdDate(createdDate)
-                                   .updatedDate(updatedDate);
+                                   .timeZone(timeZone);
     }
 
     @Test
     public void testBasic() throws EntityPersistenceException {
         Account a = createTestAccountBuilder().build();
-        accountDao.create(a);
+        accountDao.create(a, context);
         String key = a.getExternalKey();
 
         Account r = accountDao.getAccountByKey(key);
@@ -92,7 +85,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     @Test
     public void testLongPhoneNumber() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().phone("123456789012345678901234").build();
-        accountDao.create(account);
+        accountDao.create(account, context);
 
         Account saved = accountDao.getAccountByKey(account.getExternalKey());
         assertNotNull(saved);
@@ -102,7 +95,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     @Test(expectedExceptions = {EntityPersistenceException.class})
     public void testOverlyLongPhoneNumber() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().phone("12345678901234567890123456").build();
-        accountDao.create(account);
+        accountDao.create(account, context);
     }
 
     @Test
@@ -113,7 +106,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         String name = account.getName();
         int firstNameLength = account.getFirstNameLength();
 
-        accountDao.create(account);
+        accountDao.create(account, context);
 
         account = accountDao.getById(id.toString());
         assertNotNull(account);
@@ -131,7 +124,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         String fieldValue = "testField1_value";
         account.setFieldValue(fieldName, fieldValue);
 
-        accountDao.create(account);
+        accountDao.create(account, context);
 
         Account thisAccount = accountDao.getAccountByKey(account.getExternalKey());
         assertNotNull(thisAccount);
@@ -142,29 +135,25 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     @Test
     public void testTags() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().build();
-        TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", "Test System");
+        TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only");
         TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
-        tagDescriptionDao.create(definition);
+        tagDescriptionDao.create(definition, context);
 
-        String addedBy = "testTags()";
-        DateTime dateAdded = new DefaultClock().getUTCNow();
-        account.addTag(definition, addedBy, dateAdded);
+        account.addTag(definition);
         assertEquals(account.getTagList().size(), 1);
-        accountDao.create(account);
+        accountDao.create(account, context);
 
         Account thisAccount = accountDao.getById(account.getId().toString());
         List<Tag> tagList = thisAccount.getTagList();
         assertEquals(tagList.size(), 1);
         Tag tag = tagList.get(0);
         assertEquals(tag.getTagDefinitionName(), definition.getName());
-        assertEquals(tag.getAddedBy(), addedBy);
-        assertEquals(tag.getAddedDate().compareTo(dateAdded), 0);
     }
 
     @Test
     public void testGetIdFromKey() throws EntityPersistenceException {
         Account account = createTestAccountBuilder().build();
-        accountDao.create(account);
+        accountDao.create(account, context);
 
         try {
             UUID accountId = accountDao.getIdFromKey(account.getExternalKey());
@@ -183,7 +172,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     @Test
     public void testUpdate() throws Exception {
         final Account account = createTestAccountBuilder().build();
-        accountDao.create(account);
+        accountDao.create(account, context);
 
         AccountData accountData = new AccountData() {
             @Override
@@ -270,8 +259,8 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
             }
         };
 
-        Account updatedAccount = new DefaultAccount(account.getId(), accountData);
-        accountDao.update(updatedAccount);
+        Account updatedAccount = new DefaultAccount(account.getId(), null, null, null, null, accountData);
+        accountDao.update(updatedAccount, context);
 
         Account savedAccount = accountDao.getAccountByKey(account.getExternalKey());
 
@@ -298,8 +287,8 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         DefaultAccount account = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null, null,null,null);
-        accountDao.create(account);
+                                                    null, null, null, null, null, null, null, null, null, null, null, null);
+        accountDao.create(account, context);
 
         String address1 = "123 address 1";
         String address2 = "456 address 2";
@@ -314,9 +303,9 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     address1, address2, companyName, city, stateOrProvince, country,
-                                                    postalCode, phone, null,null);
+                                                    postalCode, phone, null, null, null, null);
 
-        accountDao.update(updatedAccount);
+        accountDao.update(updatedAccount, context);
 
         Account savedAccount = accountDao.getById(accountId.toString());
 
@@ -340,15 +329,17 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     "123 address 1", "456 address 2", null, "Cambridge Bay",
-                                                    "Nunavut", "Canada", "X0B 0C0", "18001112222", null, null);
-        accountDao.create(account);
+                                                    "Nunavut", "Canada", "X0B 0C0", "18001112222",
+                                                    null, null, null, null);
+        accountDao.create(account, context);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null,
+                                                    null, null, null, null);
 
-        accountDao.update(updatedAccount);
+        accountDao.update(updatedAccount, context);
 
         Account savedAccount = accountDao.getById(accountId.toString());
 
@@ -371,27 +362,29 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
 
         DefaultAccount account = new DefaultAccount(accountId, originalExternalKey, "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
-                                                    null, null, null, null, null, null, null, null, null, null, null, null);
-        accountDao.create(account);
+                                                    null, null, null, null, null, null, null, null, null, null,
+                                                    null, null, null, null);
+        accountDao.create(account, context);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey1338", "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
-                                                    null, null, null, null, null, null, null, null, null, null,null, null);
-        accountDao.update(updatedAccount);
+                                                    null, null, null, null, null, null, null, null, null, null,
+                                                    null, null, null, null);
+        accountDao.update(updatedAccount, context);
     }
 
     @Test(groups={"slow"},enabled=true)
     public void testDelete() throws AccountApiException, EntityPersistenceException {
 
         Account a = createTestAccountBuilder().build();
-        accountDao.create(a);
+        accountDao.create(a, context);
         String key = a.getExternalKey();
 
         Account r = accountDao.getAccountByKey(key);
         assertNotNull(r);
         assertEquals(r.getExternalKey(), a.getExternalKey());
         
-        accountDao.deleteByKey(key);
+        accountDao.deleteByKey(key, context);
         
         Account s = accountDao.getAccountByKey(key);
         assertTrue(s==null);
