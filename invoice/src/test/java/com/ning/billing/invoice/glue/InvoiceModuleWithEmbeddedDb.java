@@ -23,6 +23,9 @@ import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
@@ -77,6 +80,7 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         bind(IDBI.class).toInstance(dbi);
 
         bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
+        bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
         installNotificationQueue();
         install(new AccountModule());
         install(new CatalogModule());
@@ -86,7 +90,6 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         super.configure();
 
         bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
-
         install(new BusModule());
     }
 

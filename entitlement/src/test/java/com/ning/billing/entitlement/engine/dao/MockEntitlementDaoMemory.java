@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;

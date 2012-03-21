@@ -19,7 +19,7 @@ package com.ning.billing.util.tag.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.tag.ControlTagType;
 import org.skife.jdbi.v2.IDBI;
 import com.google.inject.Inject;

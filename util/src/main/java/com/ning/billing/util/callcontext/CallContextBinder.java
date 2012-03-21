@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.util.entity;
+package com.ning.billing.util.callcontext;
 
-import com.ning.billing.util.CallContext;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;

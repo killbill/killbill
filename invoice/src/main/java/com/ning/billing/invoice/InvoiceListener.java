@@ -18,10 +18,10 @@ package com.ning.billing.invoice;
 
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
-import com.ning.billing.util.entity.CallContextFactory;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.CallContextFactory;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +37,7 @@ public class InvoiceListener {
     private final CallContextFactory factory;
 
     @Inject
-    public InvoiceListener(CallContextFactory factory,InvoiceDispatcher dispatcher) {
+    public InvoiceListener(CallContextFactory factory, InvoiceDispatcher dispatcher) {
         this.dispatcher = dispatcher;
         this.factory = factory;
     }

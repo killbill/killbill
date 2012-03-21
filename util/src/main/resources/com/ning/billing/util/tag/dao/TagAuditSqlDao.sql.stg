@@ -7,15 +7,15 @@ fields(prefix) ::= <<
     <prefix>change_date,
     <prefix>changed_by,
     <prefix>reason_code,
-    <prefix>comment
+    <prefix>comments
 >>
 
 batchInsertFromTransaction() ::= <<
     INSERT INTO audit_log(<fields()>)
-    VALUES('tag', :id, 'INSERT', :date, :userName, NULL, NULL);
+    VALUES('tag', :id, 'INSERT', :createdDate, :userName, NULL, NULL);
 >>
 
 batchDeleteFromTransaction() ::= <<
     INSERT INTO audit_log(<fields()>)
-    VALUES('tag', :id, 'DELETE', :date, :userName, NULL, NULL);
+    VALUES('tag', :id, 'DELETE', :updatedDate, :userName, NULL, NULL);
 >>

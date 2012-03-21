@@ -23,11 +23,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.entity.CallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -187,7 +187,7 @@ public class TestDefaultInvoiceMigrationApi {
 
 		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);
 
-        CallContext context = new CallContextFactory(clock).createCallContext("Migration test", CallOrigin.TEST, UserType.TEST);
+        CallContext context = new DefaultCallContextFactory(clock).createCallContext("Migration test", CallOrigin.TEST, UserType.TEST);
 		Invoice invoice = dispatcher.processAccount(accountId, date_regular, true, context);
 		Assert.assertNotNull(invoice);
 

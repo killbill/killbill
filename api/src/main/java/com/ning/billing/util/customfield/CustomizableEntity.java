@@ -18,7 +18,7 @@ package com.ning.billing.util.customfield;
 
 import java.util.List;
 
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.Entity;
 
 public interface CustomizableEntity extends Entity {

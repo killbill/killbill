@@ -31,12 +31,11 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.TimeLimit;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Visibility;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.CustomizableEntityBase;

@@ -14,15 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.util.entity;
+package com.ning.billing.util.callcontext;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.joda.time.DateTime;
 
-public interface UpdatableEntityDao<T extends UpdatableEntity> extends EntityDao<T> {
-    @SqlUpdate
-    public void update(@BindBean final T entity, @CallContextBinder final CallContext context)
-            throws EntityPersistenceException;
+public interface CallContext {
+    public String getUserName();
+    public CallOrigin getCallOrigin();
+    public UserType getUserType();
+    public DateTime getCreatedDate();
+    public DateTime getUpdatedDate();
 }

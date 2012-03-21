@@ -19,10 +19,10 @@ package com.ning.billing.payment;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
-import com.ning.billing.util.entity.CallContextFactory;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;

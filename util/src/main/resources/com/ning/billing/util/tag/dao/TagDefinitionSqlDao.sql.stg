@@ -15,7 +15,7 @@ get() ::= <<
 
 create() ::= <<
   INSERT INTO tag_definitions(<fields()>)
-  VALUES(:id, :name, :description, :userName, :date);
+  VALUES(:id, :name, :description, :userName, :createdDate);
 >>
 
 load() ::= <<

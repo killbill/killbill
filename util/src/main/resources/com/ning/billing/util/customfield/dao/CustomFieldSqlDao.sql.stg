@@ -1,13 +1,13 @@
 group CustomFieldSqlDao;
 
 batchInsertFromTransaction() ::= <<
-    INSERT INTO custom_fields(id, object_id, object_type, field_name, field_value, created_by, created_date)
-    VALUES (:id, :objectId, :objectType, :fieldName, :fieldValue, :userName, :date);
+    INSERT INTO custom_fields(id, object_id, object_type, field_name, field_value, created_by, created_date, updated_by, updated_date)
+    VALUES (:id, :objectId, :objectType, :fieldName, :fieldValue, :userName, :createdDate, :userName, :updatedDate);
 >>
 
 batchUpdateFromTransaction() ::= <<
     UPDATE custom_fields
-    SET field_value = :fieldValue, updated_by = :userName, created_date = :date
+    SET field_value = :fieldValue, updated_by = :userName, updated_date = :updatedDate
     WHERE object_id = :objectId AND object_type = :objectType AND field_name = :fieldName;
 >>
 

@@ -24,8 +24,21 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.user.DefaultAccountUserApi;
+import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.DefaultAccountDao;
+import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.invoice.InvoiceDispatcher;
-import com.ning.billing.util.entity.CallContextFactory;
+import com.ning.billing.invoice.dao.DefaultInvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
+import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
@@ -102,19 +115,27 @@ public class TestNextBillingDateNotifier {
         final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
 			@Override
             protected void configure() {
-				 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-				 bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
-				 bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
-				 final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
-				 bind(InvoiceConfig.class).toInstance(invoiceConfig);
-				 final CatalogConfig catalogConfig = new ConfigurationObjectFactory(System.getProperties()).build(CatalogConfig.class);
-                 bind(CatalogConfig.class).toInstance(catalogConfig);
-                 bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
-                 final MysqlTestingHelper helper = new MysqlTestingHelper();
-				 bind(MysqlTestingHelper.class).toInstance(helper);
-				 IDBI dbi = helper.getDBI();
-				 bind(IDBI.class).toInstance(dbi);
-                 bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
+                bind(Clock.class).to(ClockMock.class).asEagerSingleton();
+                bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
+                bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
+                bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
+                final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
+                bind(InvoiceConfig.class).toInstance(invoiceConfig);
+                final CatalogConfig catalogConfig = new ConfigurationObjectFactory(System.getProperties()).build(CatalogConfig.class);
+                bind(CatalogConfig.class).toInstance(catalogConfig);
+                bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
+                final MysqlTestingHelper helper = new MysqlTestingHelper();
+                bind(MysqlTestingHelper.class).toInstance(helper);
+                IDBI dbi = helper.getDBI();
+                bind(IDBI.class).toInstance(dbi);
+                bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
+                bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
+                bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
+                bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
+                bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
+                bind(AccountDao.class).to(DefaultAccountDao.class).asEagerSingleton();
+                bind(AccountUserApi.class).to(DefaultAccountUserApi.class).asEagerSingleton();
+                bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
 			}
         });
 
@@ -130,11 +151,10 @@ public class TestNextBillingDateNotifier {
         EntitlementDao entitlementDao = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class);
         ((ZombieControl) entitlementDao).addResult("getSubscriptionFromId", subscription);
 
+        CallContextFactory factory = new DefaultCallContextFactory(clock);
+        listener = new InvoiceListenerMock(factory, dispatcher);
         notifier = new DefaultNextBillingDateNotifier(notificationQueueService,g.getInstance(InvoiceConfig.class), entitlementDao, listener);
         startMysql();
-
-        CallContextFactory factory = new CallContextFactory(clock);
-        listener = new InvoiceListenerMock(factory, dispatcher);
 	}
 
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {

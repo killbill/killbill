@@ -14,12 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.util.entity;
+package com.ning.billing.util.callcontext;
 
-import com.ning.billing.ErrorCode;
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
 import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 

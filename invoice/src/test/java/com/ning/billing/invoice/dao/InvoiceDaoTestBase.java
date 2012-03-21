@@ -25,12 +25,11 @@ import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.entity.CallContextFactory;
-import com.ning.billing.util.entity.DefaultCallContext;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -91,7 +90,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
             invoicePaymentDao = module.getInvoicePaymentSqlDao();
             clock = injector.getInstance(Clock.class);
-            context = new CallContextFactory(clock).createCallContext("Count Rogan", CallOrigin.TEST, UserType.TEST);
+            context = new DefaultCallContextFactory(clock).createCallContext("Count Rogan", CallOrigin.TEST, UserType.TEST);
             generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
 
             BusService busService = injector.getInstance(BusService.class);
@@ -133,7 +132,9 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
     @AfterClass(alwaysRun = true)
     protected void tearDown() {
-    	((DefaultBusService) busService).stopBus();
+    	if (busService != null) {
+            ((DefaultBusService) busService).stopBus();
+        }
         module.stopDb();
         assertTrue(true);
     }

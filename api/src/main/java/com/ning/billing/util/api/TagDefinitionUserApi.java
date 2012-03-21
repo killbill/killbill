@@ -18,7 +18,7 @@ package com.ning.billing.util.api;
 
 import java.util.List;
 
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDefinitionUserApi {

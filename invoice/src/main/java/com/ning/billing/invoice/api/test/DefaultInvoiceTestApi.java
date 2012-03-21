@@ -19,7 +19,7 @@ package com.ning.billing.invoice.api.test;
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 
 public class DefaultInvoiceTestApi implements InvoiceTestApi {
     private final InvoiceDao invoiceDao;

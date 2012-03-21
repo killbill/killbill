@@ -20,6 +20,7 @@ import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.CallContextModule;
 
 public class MockEngineModule extends EntitlementModule {
 
@@ -30,5 +31,6 @@ public class MockEngineModule extends EntitlementModule {
         install(new CatalogModule());
         install(new AccountModuleWithMocks());
         install(new MockClockModule());
+        install(new CallContextModule());
     }
 }

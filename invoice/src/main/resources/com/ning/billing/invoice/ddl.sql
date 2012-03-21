@@ -12,6 +12,7 @@ CREATE TABLE recurring_invoice_items (
   rate numeric(10,4) NULL,
   currency char(3) NOT NULL,
   reversed_item_id char(36),
+  created_by varchar(30) NOT NULL,
   created_date datetime NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
@@ -29,6 +30,7 @@ CREATE TABLE fixed_invoice_items (
   end_date datetime NOT NULL,
   amount numeric(10,4) NULL,
   currency char(3) NOT NULL,
+  created_by varchar(30) NOT NULL,
   created_date datetime NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
@@ -46,7 +48,8 @@ CREATE TABLE invoices (
   target_date datetime NOT NULL,
   currency char(3) NOT NULL,
   migrated bool NOT NULL,
-  updated_by varchar(30) NOT NULL,
+  created_by varchar(30) NOT NULL,
+  created_date datetime NOT NULL,
   PRIMARY KEY(invoice_number)
 ) ENGINE=innodb;
 CREATE INDEX invoices_invoice_number ON invoices(invoice_number ASC);

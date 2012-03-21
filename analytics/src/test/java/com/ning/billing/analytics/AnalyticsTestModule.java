@@ -18,6 +18,7 @@ package com.ning.billing.analytics;
 
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.payment.setup.PaymentModule;
+import com.ning.billing.util.glue.CallContextModule;
 import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
@@ -39,13 +40,14 @@ public class AnalyticsTestModule extends AnalyticsModule
         super.configure();
 
         // Need to configure a few more things for the EventBus
+        install(new ClockModule());
+        install(new CallContextModule());
         install(new AccountModule());
         install(new CatalogModule());
         install(new BusModule());
         install(new EntitlementModule());
         install(new InvoiceModule());
         install(new PaymentModule());
-        install(new ClockModule());
         install(new TagStoreModule());
         install(new NotificationQueueModule());
 

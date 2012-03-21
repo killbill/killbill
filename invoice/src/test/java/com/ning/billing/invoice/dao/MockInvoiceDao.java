@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.bus.Bus;
 import org.joda.time.DateTime;
 

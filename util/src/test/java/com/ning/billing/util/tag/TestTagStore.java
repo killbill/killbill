@@ -22,7 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import org.apache.commons.io.IOUtils;
@@ -89,10 +92,11 @@ public class TestTagStore {
             helper.initDb(utilDdl);
             tagSqlDao.test();
 
+            context = new DefaultCallContextFactory(clock).createCallContext("Tag store test", CallOrigin.TEST, UserType.TEST);
+
             cleanupTags();
             tag1 = tagDefinitionDao.create("tag1", "First tag", context);
             tag2 = tagDefinitionDao.create("tag2", "Second tag", context);
-
         }
         catch (Throwable t) {
             log.error("Failed to start tag store tests", t);

@@ -14,24 +14,31 @@
  * under the License.
  */
 
-package com.ning.billing.account.glue;
+package com.ning.billing.util.callcontext;
 
-import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.MockAccountDao;
-import com.ning.billing.util.clock.MockClockModule;
-import com.ning.billing.util.glue.CallContextModule;
+public abstract class CallContextBase implements CallContext {
+    private final String userName;
+    private final CallOrigin callOrigin;
+    private final UserType userType;
 
-public class AccountModuleWithMocks extends AccountModule {
-    @Override
-    protected void installAccountDao() {
-        bind(MockAccountDao.class).asEagerSingleton();
-        bind(AccountDao.class).to(MockAccountDao.class);
+    public CallContextBase(String userName, CallOrigin callOrigin, UserType userType) {
+        this.userName = userName;
+        this.callOrigin = callOrigin;
+        this.userType = userType;
     }
 
     @Override
-    protected void configure() {
-        super.configure();
-        install(new MockClockModule());
-        install(new CallContextModule());
+    public String getUserName() {
+        return userName;
+    }
+
+    @Override
+    public CallOrigin getCallOrigin() {
+        return callOrigin;
+    }
+
+    @Override
+    public UserType getUserType() {
+        return userType;
     }
 }

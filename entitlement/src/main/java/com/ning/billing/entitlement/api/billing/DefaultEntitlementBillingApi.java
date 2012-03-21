@@ -23,10 +23,10 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
-import com.ning.billing.util.entity.CallContextFactory;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.CallContextFactory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;

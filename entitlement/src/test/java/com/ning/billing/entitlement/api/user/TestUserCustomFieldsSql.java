@@ -21,11 +21,11 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.entity.CallContextFactory;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -43,7 +43,7 @@ import com.ning.billing.util.customfield.CustomField;
 
 public class TestUserCustomFieldsSql extends TestApiBase {
     private static final String USER_NAME = "Entitlement Test";
-    private final CallContext context = new CallContextFactory(new DefaultClock()).createCallContext(USER_NAME, CallOrigin.TEST, UserType.TEST);
+    private final CallContext context = new DefaultCallContextFactory(new DefaultClock()).createCallContext(USER_NAME, CallOrigin.TEST, UserType.TEST);
 
     @Override
     protected Injector getInjector() {

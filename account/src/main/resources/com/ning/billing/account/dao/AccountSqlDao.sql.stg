@@ -32,7 +32,7 @@ create() ::= <<
       (:id, :externalKey, :email, :name, :firstNameLength, :currency, :billingCycleDay,
       :paymentProviderName, :timeZone, :locale,
       :address1, :address2, :companyName, :city, :stateOrProvince, :country, :postalCode, :phone,
-      :userName, :date, null, null);
+      :userName, :createdDate, :userName, :updatedDate);
 >>
 
 update() ::= <<

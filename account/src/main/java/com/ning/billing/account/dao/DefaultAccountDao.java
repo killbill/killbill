@@ -20,7 +20,7 @@ import java.sql.DataTruncation;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.dao.AuditedTagDao;

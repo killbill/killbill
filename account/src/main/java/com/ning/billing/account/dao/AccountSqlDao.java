@@ -23,12 +23,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.entity.CallContextBinder;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.entity.MapperBase;
 import com.ning.billing.util.entity.UpdatableEntityDao;
 import org.joda.time.DateTime;

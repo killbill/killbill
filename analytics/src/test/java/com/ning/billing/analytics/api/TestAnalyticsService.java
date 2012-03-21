@@ -26,10 +26,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
-import com.ning.billing.util.entity.CallContextFactory;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -99,7 +99,7 @@ public class TestAnalyticsService {
     private static final String CARD_COUNTRY = "France";
 
     private final Clock clock = new DefaultClock();
-    private final CallContext context = new CallContextFactory(clock).createCallContext("Analytics Test", CallOrigin.TEST, UserType.TEST);
+    private final CallContext context = new DefaultCallContextFactory(clock).createCallContext("Analytics Test", CallOrigin.TEST, UserType.TEST);
 
     @Inject
     private AccountUserApi accountApi;

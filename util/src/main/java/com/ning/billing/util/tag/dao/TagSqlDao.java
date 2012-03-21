@@ -19,8 +19,8 @@ package com.ning.billing.util.tag.dao;
 
 import java.util.List;
 
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.entity.CallContextBinder;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;

@@ -19,7 +19,7 @@ package com.ning.billing.entitlement.engine.dao;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.user.Subscription;

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
+import com.ning.billing.util.glue.CallContextModule;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -79,6 +80,7 @@ public class MockModule extends AbstractModule {
             bind(IDBI.class).toInstance(dbi);
         }
 
+        install(new CallContextModule());
         install(new GlobalLockerModule());
         install(new BusModule());
         install(new NotificationQueueModule());

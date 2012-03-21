@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.ning.billing.util.glue.CallContextModule;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
@@ -101,6 +102,7 @@ public class TestPaymentInvoiceIntegration {
         Injector injector = Guice.createInjector(new PaymentTestModuleWithEmbeddedDb(),
                                                  new AccountModule(),
                                                  new InvoiceModuleWithMocks(),
+                                                 new CallContextModule(),
                                                  new MockClockModule(),
                                                  new AbstractModule() {
                                                     @Override

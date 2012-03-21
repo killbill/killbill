@@ -12,6 +12,7 @@ fields(prefix) ::= <<
   <prefix>rate,
   <prefix>currency,
   <prefix>reversed_item_id,
+  <prefix>created_by,
   <prefix>created_date
 >>
 
@@ -43,13 +44,13 @@ getInvoiceItemsBySubscription() ::= <<
 create() ::= <<
   INSERT INTO recurring_invoice_items(<fields()>)
   VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
-         :amount, :rate, :currency, :reversedItemId, :createdDate);
+         :amount, :rate, :currency, :reversedItemId, :userName, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO recurring_invoice_items(<fields()>)
   VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
-         :amount, :rate, :currency, :reversedItemId, :createdDate);
+         :amount, :rate, :currency, :reversedItemId, :userName, :createdDate);
 >>
 
 test() ::= <<

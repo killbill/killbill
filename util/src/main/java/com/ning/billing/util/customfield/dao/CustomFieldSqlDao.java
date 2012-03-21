@@ -18,10 +18,10 @@ package com.ning.billing.util.customfield.dao;
 
 import java.util.List;
 
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.customfield.CustomFieldBinder;
 import com.ning.billing.util.customfield.CustomFieldMapper;
-import com.ning.billing.util.entity.CallContextBinder;
 import com.ning.billing.util.entity.UpdatableEntityCollectionDao;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;

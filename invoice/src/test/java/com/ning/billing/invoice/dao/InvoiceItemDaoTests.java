@@ -20,12 +20,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.entity.DefaultCallContext;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
@@ -60,7 +54,8 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         assertEquals(thisItem.getAmount().compareTo(item.getRate()), 0);
         assertEquals(thisItem.getRate().compareTo(item.getRate()), 0);
         assertEquals(thisItem.getCurrency(), item.getCurrency());
-        assertEquals(thisItem.getCreatedDate().compareTo(item.getCreatedDate()), 0);
+        // created date is no longer set before persistence layer call
+        // assertEquals(thisItem.getCreatedDate().compareTo(item.getCreatedDate()), 0);
     }
 
     @Test(groups = "slow")

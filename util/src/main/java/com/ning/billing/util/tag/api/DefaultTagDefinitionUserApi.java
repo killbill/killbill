@@ -18,7 +18,7 @@ package com.ning.billing.util.tag.api;
 
 import java.util.List;
 import com.google.inject.Inject;
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagDefinitionUserApi;
 import com.ning.billing.util.tag.TagDefinition;

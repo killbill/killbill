@@ -33,11 +33,10 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
-import com.ning.billing.util.entity.CallContextFactory;
-import com.ning.billing.util.entity.DefaultCallContext;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
@@ -99,7 +98,7 @@ public class TestIntegration {
 
     @Inject
     private ClockMock clock;
-    private final CallContext context = new CallContextFactory(clock).createCallContext("Integration Test", CallOrigin.TEST, UserType.TEST);
+    private CallContext context;
 
     @Inject
     private Lifecycle lifecycle;
@@ -129,8 +128,6 @@ public class TestIntegration {
 
     private void setupMySQL() throws IOException
     {
-
-
         final String accountDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
         final String entitlementDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
         final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
@@ -150,6 +147,8 @@ public class TestIntegration {
     public void setup() throws Exception{
 
         setupMySQL();
+
+        context = new DefaultCallContextFactory(clock).createCallContext("Integration Test", CallOrigin.TEST, UserType.TEST);
 
         /**
          * Initialize lifecyle for subset of services

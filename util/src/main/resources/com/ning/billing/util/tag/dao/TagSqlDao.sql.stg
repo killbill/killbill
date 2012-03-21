@@ -2,7 +2,7 @@ group TagDao;
 
 batchInsertFromTransaction() ::= <<
   INSERT INTO tags(id, tag_definition_name, object_id, object_type, created_by, created_date)
-  VALUES (:id, :tagDefinitionName, :objectId, :objectType, :userName, :date);
+  VALUES (:id, :tagDefinitionName, :objectId, :objectType, :userName, :createdDate);
 >>
 
 batchDeleteFromTransaction() ::= <<

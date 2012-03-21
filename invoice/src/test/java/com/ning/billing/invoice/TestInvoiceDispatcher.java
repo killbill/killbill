@@ -23,11 +23,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.entity.CallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -41,12 +41,10 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -67,18 +65,20 @@ import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.globallocker.GlobalLocker;
-import sun.security.util.BigInt;
 
 @Guice(modules = {MockModule.class})
 public class TestInvoiceDispatcher {
-	Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
+	private Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
 
 	@Inject
-	InvoiceUserApi invoiceUserApi;
+	private InvoiceUserApi invoiceUserApi;
+
 	@Inject
 	private InvoiceGenerator generator;
+
 	@Inject
 	private InvoiceDao invoiceDao;
+
 	@Inject
 	private GlobalLocker locker;
 
@@ -86,7 +86,7 @@ public class TestInvoiceDispatcher {
 	private MysqlTestingHelper helper;
 
 	@Inject
-	NextBillingDateNotifier notifier;
+	private NextBillingDateNotifier notifier;
 
 	@Inject
 	private BusService busService;
@@ -94,13 +94,11 @@ public class TestInvoiceDispatcher {
     @Inject
     private Clock clock;
 
-    private final CallContext context = new CallContextFactory(clock).createCallContext("Miracle Max", CallOrigin.TEST, UserType.TEST);
+    private CallContext context;
 
 	@BeforeSuite(alwaysRun = true)
 	public void setup() throws IOException
 	{
-
-
 		final String accountDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
 		final String entitlementDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 		final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
@@ -116,6 +114,8 @@ public class TestInvoiceDispatcher {
 		helper.initDb(utilDdl);
 		notifier.initialize();
 		notifier.start();
+
+        context = new DefaultCallContextFactory(clock).createCallContext("Miracle Max", CallOrigin.TEST, UserType.TEST);
 
 		busService.getBus().start();
 	}
@@ -133,7 +133,7 @@ public class TestInvoiceDispatcher {
 	}
 
 	@Test(groups={"fast"}, enabled=true)
-	public void testDryrunInvoice() throws InvoiceApiException {
+	public void testDryRunInvoice() throws InvoiceApiException {
 		UUID accountId = UUID.randomUUID();
 		UUID subscriptionId = UUID.randomUUID();
 

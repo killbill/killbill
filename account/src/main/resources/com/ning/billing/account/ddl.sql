@@ -18,6 +18,7 @@ CREATE TABLE accounts (
     country varchar(50) DEFAULT NULL,
     postal_code varchar(11) DEFAULT NULL,
     phone varchar(25) DEFAULT NULL,
+    migrated bool DEFAULT false,
     created_date datetime NOT NULL,
     created_by varchar(30) NOT NULL,
     updated_date datetime DEFAULT NULL,

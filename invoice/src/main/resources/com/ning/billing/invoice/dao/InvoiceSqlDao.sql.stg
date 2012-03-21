@@ -7,7 +7,9 @@ invoiceFetchFields(prefix) ::= <<
     <prefix>invoice_date,
     <prefix>target_date,
     <prefix>currency,
-  	<prefix>migrated
+  	<prefix>migrated,
+    <prefix>created_by,
+    <prefix>created_date
 >>
 
 invoiceSetFields(prefix) ::= <<
@@ -17,7 +19,8 @@ invoiceSetFields(prefix) ::= <<
     <prefix>target_date,
     <prefix>currency,
     <prefix>migrated,
-    <prefix>updated_by
+    <prefix>created_by,
+    <prefix>created_date
 >>
 
 get() ::= <<
@@ -73,7 +76,7 @@ getAccountBalance() ::= <<
 
 create() ::= <<
   INSERT INTO invoices(<invoiceSetFields()>)
-  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :migrated, :userName);
+  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :migrated, :userName, :createdDate);
 >>
 
 getInvoiceIdByPaymentAttemptId() ::= <<

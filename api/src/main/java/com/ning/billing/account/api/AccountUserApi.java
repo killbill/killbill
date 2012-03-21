@@ -19,7 +19,7 @@ package com.ning.billing.account.api;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 

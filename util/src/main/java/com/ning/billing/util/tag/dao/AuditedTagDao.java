@@ -1,6 +1,6 @@
 package com.ning.billing.util.tag.dao;
 
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.tag.Tag;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 

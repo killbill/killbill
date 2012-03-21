@@ -17,9 +17,8 @@
 package com.ning.billing.invoice.dao;
 
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.util.CallContext;
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;

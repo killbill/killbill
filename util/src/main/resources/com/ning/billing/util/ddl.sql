@@ -113,6 +113,6 @@ CREATE TABLE audit_log (
     change_date datetime NOT NULL,
     changed_by varchar(50) NOT NULL,
     reason_code varchar(20) DEFAULT NULL,
-    comment varchar(255) DEFAULT NULL,
+    comments varchar(255) DEFAULT NULL,
     PRIMARY KEY(id)
 ) ENGINE=innodb;

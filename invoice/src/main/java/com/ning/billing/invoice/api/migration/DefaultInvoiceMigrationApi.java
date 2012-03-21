@@ -19,10 +19,10 @@ package com.ning.billing.invoice.api.migration;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.ning.billing.util.CallContext;
-import com.ning.billing.util.CallOrigin;
-import com.ning.billing.util.UserType;
-import com.ning.billing.util.entity.CallContextFactory;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -47,7 +47,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
 
 	@Override
 	public UUID createMigrationInvoice(UUID accountId, DateTime targetDate, BigDecimal balance, Currency currency) {
-        CallContext context = new CallContextFactory(clock).createMigrationCallContext("Migration", CallOrigin.INTERNAL, UserType.MIGRATION, clock.getUTCNow(), clock.getUTCNow());
+        CallContext context = new DefaultCallContextFactory(clock).createMigrationCallContext("Migration", CallOrigin.INTERNAL, UserType.MIGRATION, clock.getUTCNow(), clock.getUTCNow());
 		Invoice migrationInvoice = new MigrationInvoice(accountId, clock.getUTCNow(), targetDate, currency);
 		InvoiceItem migrationInvoiceItem = new MigrationInvoiceItem(migrationInvoice.getId(), targetDate, balance, currency );
 		migrationInvoice.addInvoiceItem(migrationInvoiceItem);
