@@ -23,6 +23,10 @@ import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
+import com.ning.billing.invoice.notification.MockNextBillingDateNotifier;
+import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
+import com.ning.billing.invoice.notification.NextBillingDateNotifier;
+import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.glue.CallContextModule;
@@ -70,6 +74,12 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
 
     private void installNotificationQueue() {
         bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
+    }
+
+    @Override
+    protected void installNotifier() {
+        bind(NextBillingDateNotifier.class).to(MockNextBillingDateNotifier.class).asEagerSingleton();
+        bind(NextBillingDatePoster.class).to(MockNextBillingDatePoster.class).asEagerSingleton();
     }
 
     @Override

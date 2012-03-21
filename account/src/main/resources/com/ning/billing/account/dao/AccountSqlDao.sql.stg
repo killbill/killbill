@@ -18,7 +18,7 @@ accountFields(prefix) ::= <<
 	<prefix>state_or_province, 
     <prefix>country, 
     <prefix>postal_code,
-    <prefix>phone,	
+    <prefix>phone,
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
@@ -42,7 +42,7 @@ update() ::= <<
         time_zone = :timeZone, locale = :locale,
         address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
         country = :country, postal_code = :postalCode, phone = :phone,
-        updated_date = :date, updated_by = :userName
+        updated_date = :updatedDate, updated_by = :userName
     WHERE id = :id;
 >>
 

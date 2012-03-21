@@ -52,12 +52,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     private final Bus eventBus;
 
-	private NextBillingDatePoster nextBillingDatePoster;
+	private final  NextBillingDatePoster nextBillingDatePoster;
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus,
                              final EntitlementBillingApi entitlementBillingApi,
-                             NextBillingDatePoster nextBillingDatePoster) {
+                             final NextBillingDatePoster nextBillingDatePoster) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.eventBus = eventBus;
