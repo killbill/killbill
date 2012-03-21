@@ -78,6 +78,16 @@ public class TestAnalyticsListener
         listener.handleSubscriptionTransitionChange(cancelledSubscriptionTransition);
         Assert.assertEquals(dao.getTransitions(KEY).size(), 2);
         Assert.assertEquals(dao.getTransitions(KEY).get(1), cancelledBST);
+
+       // Recreate it
+        final DateTime effectiveRecreatedTransitionTime = new DateTime(DateTimeZone.UTC);
+        final DateTime requestedRecreatedTransitionTime = new DateTime(DateTimeZone.UTC);
+        final SubscriptionTransitionData recreatedSubscriptionTransition = createRecreatedSubscriptionTransition(requestedRecreatedTransitionTime, effectiveRecreatedTransitionTime, cancelledSubscriptionTransition.getNextState());
+        final BusinessSubscriptionTransition recreatedBST = createExpectedRecreatedBST(recreatedSubscriptionTransition.getId(), requestedRecreatedTransitionTime, effectiveRecreatedTransitionTime, cancelledBST.getNextSubscription());
+        listener.handleSubscriptionTransitionChange(recreatedSubscriptionTransition);
+        Assert.assertEquals(dao.getTransitions(KEY).size(), 3);
+        Assert.assertEquals(dao.getTransitions(KEY).get(2), recreatedBST);
+
     }
 
     private BusinessSubscriptionTransition createExpectedFirstBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime)
@@ -92,6 +102,14 @@ public class TestAnalyticsListener
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan);
         return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, null);
     }
+
+    private BusinessSubscriptionTransition createExpectedRecreatedBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription)
+    {
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionRecreated(plan);
+        final Subscription.SubscriptionState subscriptionState = Subscription.SubscriptionState.ACTIVE;
+        return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, subscriptionState);
+    }
+
 
     private BusinessSubscriptionTransition createExpectedBST(
         final UUID eventId,
@@ -168,6 +186,61 @@ public class TestAnalyticsListener
             null,
             null,
             null,
+            1L,
+            true
+        );
+    }
+
+    private SubscriptionTransitionData createRecreatedSubscriptionTransition(final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final Subscription.SubscriptionState previousState)
+    {
+        final ApiEventType eventType = ApiEventType.RE_CREATE;
+        final Subscription.SubscriptionState nextState = Subscription.SubscriptionState.ACTIVE;
+        return new SubscriptionTransitionData(
+            UUID.randomUUID(),
+            subscriptionId,
+            bundleUUID,
+            EntitlementEvent.EventType.API_USER,
+            eventType,
+            requestedTransitionTime,
+            effectiveTransitionTime,
+            previousState,
+            null,
+            null,
+            null,
+            nextState,
+            plan,
+            phase,
+            priceList,
+            1L,
+            true
+        );
+    }
+
+
+    private SubscriptionTransitionData createSubscriptionTransition(
+        final ApiEventType eventType,
+        final DateTime requestedTransitionTime,
+        final DateTime effectiveTransitionTime,
+        final Subscription.SubscriptionState previousState,
+        final Subscription.SubscriptionState nextState
+    )
+    {
+        return new SubscriptionTransitionData(
+            UUID.randomUUID(),
+            subscriptionId,
+            bundleUUID,
+            EntitlementEvent.EventType.API_USER,
+            eventType,
+            requestedTransitionTime,
+            effectiveTransitionTime,
+            previousState,
+            plan,
+            phase,
+            priceList,
+            nextState,
+            plan,
+            phase,
+            priceList,
             1L,
             true
         );

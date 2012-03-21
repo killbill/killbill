@@ -90,6 +90,7 @@ public class TestNotificationQueue {
 	
     @AfterClass(alwaysRun = true)
     public void tearDown() {
+
     	helper.stopMysql();
     }
 
@@ -108,8 +109,6 @@ public class TestNotificationQueue {
 		// Reset time to real value
 		((ClockMock) clock).resetDeltaFromReality();
 	}
-
-
 
 	/**
 	 * Test that we can post a notification in the future from a transaction and get the notification
@@ -177,10 +176,11 @@ public class TestNotificationQueue {
             }
         });
 
-	Assert.assertTrue(expectedNotifications.get(notificationKey.toString()));
+        queue.stopQueue();
+	    Assert.assertTrue(expectedNotifications.get(notificationKey.toString()));
 	}
 
-	@Test
+	@Test(groups={"fast"}, enabled = true)
 	public void testManyNotifications() throws InterruptedException {
 		final Map<String, Boolean> expectedNotifications = new TreeMap<String, Boolean>();
 
@@ -258,8 +258,9 @@ public class TestNotificationQueue {
 				expectedNotifications.wait(1000);
 			}
 		} while (nbTry-- > 0);
-		assertEquals(success, true);
 
+        queue.stopQueue();
+		assertEquals(success, true);
 	}
 
 	/**
@@ -377,9 +378,9 @@ public class TestNotificationQueue {
 			// expected behavior
 		}
 
+        queueFred.stopQueue();
 		Assert.assertTrue(expectedNotificationsFred.get(notificationKeyFred.toString()));
 		Assert.assertFalse(expectedNotificationsFred.get(notificationKeyBarney.toString()));
-		queueFred.stopQueue();
 	}
 
 	NotificationConfig getNotificationConfig(final boolean off,
