@@ -33,9 +33,8 @@ public class BusinessSubscriptionEvent
     {
         ADD,
         CANCEL,
+        RE_ADD,
         CHANGE,
-        PAUSE,
-        RESUME,
         SYSTEM_CANCEL,
         SYSTEM_CHANGE
     }
@@ -94,14 +93,9 @@ public class BusinessSubscriptionEvent
         return eventFromType(EventType.CHANGE, plan);
     }
 
-    public static BusinessSubscriptionEvent subscriptionPaused(final Plan plan)
+    public static BusinessSubscriptionEvent subscriptionRecreated(final Plan plan)
     {
-        return eventFromType(EventType.PAUSE, plan);
-    }
-
-    public static BusinessSubscriptionEvent subscriptionResumed(final Plan plan)
-    {
-        return eventFromType(EventType.RESUME, plan);
+        return eventFromType(EventType.RE_ADD, plan);
     }
 
     public static BusinessSubscriptionEvent subscriptionPhaseChanged(final Plan plan, final SubscriptionState state)

@@ -86,9 +86,6 @@ public class TestBusinessSubscriptionTransition
         otherTransition = new BusinessSubscriptionTransition(id, "12345", accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(id, key, accountKey, requestedTimestamp, BusinessSubscriptionEvent.subscriptionPaused(null), prevSubscription, nextSubscription);
-        Assert.assertTrue(!transition.equals(otherTransition));
-
         otherTransition = new BusinessSubscriptionTransition(id, key, accountKey, requestedTimestamp, event, prevSubscription, prevSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
