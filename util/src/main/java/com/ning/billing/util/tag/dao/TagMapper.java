@@ -18,9 +18,13 @@ package com.ning.billing.util.tag.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.tag.ControlTag;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -35,15 +39,21 @@ public class TagMapper extends MapperBase implements ResultSetMapper<Tag> {
     public Tag map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
         String name = result.getString("tag_definition_name");
 
-        try {
-            ControlTagType controlTagType = ControlTagType.valueOf(name);
-            return new DefaultControlTag(controlTagType);
-        } catch (Throwable t) {
+        ControlTagType thisTagType = null;
+        for (ControlTagType controlTagType : ControlTagType.values()) {
+            if (name.equals(controlTagType.toString())) {
+                thisTagType = controlTagType;
+            }
+        }
+
+        if (thisTagType == null) {
             UUID id = UUID.fromString(result.getString("id"));
             String createdBy = result.getString("created_by");
             DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
             return new DescriptiveTag(id, createdBy, createdDate, name);
+        } else {
+            return new DefaultControlTag(thisTagType);
         }
     }
 }

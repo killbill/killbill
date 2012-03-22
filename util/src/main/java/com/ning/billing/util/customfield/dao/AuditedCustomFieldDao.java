@@ -17,7 +17,9 @@
 package com.ning.billing.util.customfield.dao;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.entity.ChangeType;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.CustomFieldHistory;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import java.util.ArrayList;
@@ -54,9 +56,25 @@ public class AuditedCustomFieldDao {
         customFieldSqlDao.batchUpdateFromTransaction(objectId.toString(), objectType, fieldsToUpdate, context);
         customFieldSqlDao.batchDeleteFromTransaction(objectId.toString(), objectType, existingFields, context);
 
+        List<CustomFieldHistory> fieldHistories = new ArrayList<CustomFieldHistory>();
+        fieldHistories.addAll(convertToHistoryEntry(fields, ChangeType.INSERT));
+        fieldHistories.addAll(convertToHistoryEntry(fieldsToUpdate, ChangeType.UPDATE));
+        fieldHistories.addAll(convertToHistoryEntry(existingFields, ChangeType.DELETE));
+
+        CustomFieldHistorySqlDao historyDao = dao.become(CustomFieldHistorySqlDao.class);
+        historyDao.batchAddHistoryFromTransaction(objectId.toString(), objectType, fieldHistories, context);
+
         CustomFieldAuditSqlDao auditDao = dao.become(CustomFieldAuditSqlDao.class);
-        auditDao.batchInsertFromTransaction(objectId.toString(), objectType, fields, context);
-        auditDao.batchUpdateFromTransaction(objectId.toString(), objectType, fieldsToUpdate, context);
-        auditDao.batchDeleteFromTransaction(objectId.toString(), objectType, existingFields, context);
+        auditDao.batchInsertAuditLogFromTransaction(objectId.toString(), objectType, fieldHistories, context);
+    }
+
+    private List<CustomFieldHistory> convertToHistoryEntry(List<CustomField> fields, ChangeType changeType) {
+        List<CustomFieldHistory> result = new ArrayList<CustomFieldHistory>();
+
+        for (CustomField field : fields) {
+            result.add(new CustomFieldHistory(field, changeType));
+        }
+
+        return result;
     }
 }

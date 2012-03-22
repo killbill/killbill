@@ -16,14 +16,8 @@
 
 package com.ning.billing.account.dao;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
@@ -32,12 +26,8 @@ import com.ning.billing.util.entity.MapperBase;
 import com.ning.billing.util.entity.UpdatableEntityDao;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -74,7 +64,6 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
     public static class AccountMapper extends MapperBase implements ResultSetMapper<Account> {
         @Override
         public Account map(int index, ResultSet result, StatementContext context) throws SQLException {
-
             UUID id = UUID.fromString(result.getString("id"));
             String externalKey = result.getString("external_key");
             String email = result.getString("email");
@@ -119,46 +108,6 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
                                          .createdBy(createdBy).createdDate(createdDate)
                                          .updatedBy(updatedBy).updatedDate(updatedDate)
                                          .build();
-        }
-    }
-
-    @BindingAnnotation(AccountBinder.AccountBinderFactory.class)
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.PARAMETER})
-    public @interface AccountBinder {
-        public static class AccountBinderFactory implements BinderFactory {
-            @Override
-            public Binder<AccountBinder, Account> build(Annotation annotation) {
-                return new Binder<AccountBinder, Account>() {
-                    private Date getDate(DateTime dateTime) {
-                        return dateTime == null ? null : dateTime.toDate();
-                    }
-
-                    @Override
-                    public void bind(@SuppressWarnings("rawtypes") SQLStatement q, AccountBinder bind, Account account) {
-                        q.bind("id", account.getId().toString());
-                        q.bind("externalKey", account.getExternalKey());
-                        q.bind("email", account.getEmail());
-                        q.bind("name", account.getName());
-                        q.bind("firstNameLength", account.getFirstNameLength());
-                        Currency currency = account.getCurrency();
-                        q.bind("currency", (currency == null) ? null : currency.toString());
-                        q.bind("billingCycleDay", account.getBillCycleDay());
-                        q.bind("paymentProviderName", account.getPaymentProviderName());
-                        DateTimeZone timeZone = account.getTimeZone();
-                        q.bind("timeZone", (timeZone == null) ? null : timeZone.toString());
-                        q.bind("locale", account.getLocale());
-                        q.bind("address1", account.getAddress1());
-                        q.bind("address2", account.getAddress2());
-                        q.bind("companyName", account.getCompanyName());
-                        q.bind("city", account.getCity());
-                        q.bind("stateOrProvince", account.getStateOrProvince());
-                        q.bind("country", account.getCountry());
-                        q.bind("postalCode", account.getPostalCode());
-                        q.bind("phone", account.getPhone());
-                    }
-                };
-            }
         }
     }
 }

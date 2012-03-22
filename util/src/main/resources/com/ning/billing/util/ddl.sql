@@ -16,13 +16,14 @@ CREATE UNIQUE INDEX custom_fields_unique ON custom_fields(object_id, object_type
 
 DROP TABLE IF EXISTS custom_field_history;
 CREATE TABLE custom_field_history (
+  history_id char(36) NOT NULL,
   id char(36) NOT NULL,
   object_id char(36) NOT NULL,
   object_type varchar(30) NOT NULL,
   field_name varchar(30),
   field_value varchar(255),
-  date datetime NOT NULL,
   updated_by varchar(30) NOT NULL,
+  date datetime NOT NULL,
   change_type char(6) NOT NULL
 ) ENGINE=innodb;
 CREATE INDEX custom_field_history_object_id_object_type ON custom_fields(object_id, object_type);

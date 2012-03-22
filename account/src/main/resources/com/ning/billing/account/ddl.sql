@@ -30,6 +30,7 @@ CREATE UNIQUE INDEX accounts_email ON accounts(email);
 
 DROP TABLE IF EXISTS account_history;
 CREATE TABLE account_history (
+    history_id char(36) NOT NULL,
     id char(36) NOT NULL,
     external_key varchar(128) NULL,
     email varchar(50) NOT NULL,

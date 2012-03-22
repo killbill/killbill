@@ -1,4 +1,4 @@
-group CustomFieldAuditSqlDao;
+group AuditSqlDao;
 
 fields(prefix) ::= <<
     <prefix>table_name,
@@ -10,8 +10,7 @@ fields(prefix) ::= <<
     <prefix>comments
 >>
 
-batchInsertAuditLogFromTransaction() ::= <<
+insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<fields()>)
-    VALUES('custom_field_history', :id, :changeType, :createdDate, :userName, NULL, NULL);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL);
 >>
-;

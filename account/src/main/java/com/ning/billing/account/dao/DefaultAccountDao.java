@@ -20,8 +20,10 @@ import java.sql.DataTruncation;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.entity.ChangeType;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import org.skife.jdbi.v2.IDBI;
@@ -117,8 +119,17 @@ public class DefaultAccountDao implements AccountDao {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
                     }
                     transactionalDao.create(account, context);
+                    UUID historyId = UUID.randomUUID();
 
-                    saveTagsFromWithinTransaction(account, transactionalDao , context);
+                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
+                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(),
+                            ChangeType.INSERT.toString(), context);
+
+                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
+                    auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
+                                                         ChangeType.INSERT.toString(), context);
+
+                    saveTagsFromWithinTransaction(account, transactionalDao, context);
                     saveCustomFieldsFromWithinTransaction(account, transactionalDao, context);
                     AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
                     eventBus.post(creationEvent);
@@ -155,6 +166,14 @@ public class DefaultAccountDao implements AccountDao {
 
                     accountSqlDao.update(account, context);
 
+                    UUID historyId = UUID.randomUUID();
+                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
+                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.UPDATE.toString(), context);
+
+                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
+                    auditDao.insertAuditFromTransaction("account_history" ,historyId.toString(),
+                                                        ChangeType.INSERT.toString(), context);
+
                     saveTagsFromWithinTransaction(account, accountSqlDao, context);
                     saveCustomFieldsFromWithinTransaction(account, accountSqlDao, context);
 
@@ -180,7 +199,17 @@ public class DefaultAccountDao implements AccountDao {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
+                    Account account = accountSqlDao.getAccountByKey(externalKey);
                     accountSqlDao.deleteByKey(externalKey);
+
+                    // TODO: ensure tags and fields aren't orphaned
+                    UUID historyId = UUID.randomUUID();
+                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
+                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.UPDATE.toString(), context);
+
+                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
+                    auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
+                                                        ChangeType.INSERT.toString(), context);
 
                     return null;
                 }

@@ -14,24 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.util.customfield.dao;
+package com.ning.billing.util.audit.dao;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.customfield.CustomFieldHistory;
-import com.ning.billing.util.customfield.CustomFieldHistoryBinder;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import java.util.List;
-
 @ExternalizedSqlViaStringTemplate3
-public interface CustomFieldAuditSqlDao extends Transactional<CustomFieldAuditSqlDao> {
-    @SqlBatch(transactional=false)
-    public void batchInsertAuditLogFromTransaction(@Bind("objectId") final String objectId,
-                                                   @Bind("objectType") final String objectType,
-                                                   @CustomFieldHistoryBinder final List<CustomFieldHistory> entities,
-                                                   @CallContextBinder final CallContext context);
+public interface AuditSqlDao {
+    @SqlUpdate
+    public void insertAuditFromTransaction(@Bind("tableName") final String tableName,
+                                           @Bind("recordId") final String recordId,
+                                           @Bind("changeType") String changeType,
+                                           @CallContextBinder CallContext context);
 }
