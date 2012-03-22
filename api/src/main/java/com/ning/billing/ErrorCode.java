@@ -131,6 +131,8 @@ public enum ErrorCode {
     TAG_DEFINITION_ALREADY_EXISTS(3901, "The tag definition name already exists (name: %s)"),
     TAG_DEFINITION_DOES_NOT_EXIST(3902, "The tag definition name does not exist (name: %s)"),
     TAG_DEFINITION_IN_USE(3903, "The tag definition name is currently in use (name: %s)"),
+    
+    CONTROL_TAG_DOES_NOT_EXIST(3904, "The control tag does not exist (name: %s)"),
 
    /*
     *
