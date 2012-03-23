@@ -6,25 +6,17 @@ invoicePaymentFields(prefix) ::= <<
   <prefix>payment_attempt_date,
   <prefix>amount,
   <prefix>currency,
-  <prefix>created_date,
-  <prefix>updated_date
+  <prefix>created_date
 >>
 
 create() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, :createdDate, :updatedDate);
+  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, :createdDate, :updatedDate);
->>
-
-
-update() ::= <<
-  UPDATE invoice_payments
-  SET payment_date = :paymentAttemptDate, amount = :amount, currency = :currency, created_date = :createdDate, updated_date = :updatedDate
-  WHERE invoice_id = :invoiceId, payment_attempt_id = :paymentAttemptId;
+  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, :createdDate);
 >>
 
 getByPaymentAttemptId() ::= <<
@@ -46,7 +38,7 @@ getPaymentsForInvoice() ::= <<
 
 notifyOfPaymentAttempt() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, NOW(), NOW());
+  VALUES(:invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, NOW());
 >>
 
 getInvoicePayment() ::= <<

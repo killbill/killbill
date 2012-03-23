@@ -28,12 +28,14 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
 import com.ning.billing.entitlement.events.user.*;
+import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class SubscriptionApiService {
 
@@ -52,16 +54,53 @@ public class SubscriptionApiService {
 
 
 
-    public SubscriptionData createBasePlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
+    public SubscriptionData createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
             String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate)
         throws EntitlementUserApiException {
 
+        SubscriptionData subscription = new SubscriptionData(builder, this, clock);
+        createFromSubscription(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate, processedDate, false);
+        return subscription;
+    }
+
+    public void recreatePlan(SubscriptionData subscription, PlanPhaseSpecifier spec, DateTime requestedDate)
+        throws EntitlementUserApiException {
+
+        SubscriptionState currentState = subscription.getState();
+        if (currentState != SubscriptionState.CANCELLED) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_RECREATE_BAD_STATE, subscription.getId(), currentState);
+        }
+        DateTime now = clock.getUTCNow();
+        requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
+        validateRequestedDate(subscription, now, requestedDate);
+
         try {
-            SubscriptionData subscription = new SubscriptionData(builder, this, clock);
+            String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
+            Plan plan = catalogService.getFullCatalog().findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);
+            PlanPhase phase = plan.getAllPhases()[0];
+            if (phase == null) {
+                throw new EntitlementError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
+                        spec.getProductName(), spec.getBillingPeriod().toString(), realPriceList));
+            }
+
+            DateTime effectiveDate = requestedDate;
+            DateTime processedDate = now;
+
+            createFromSubscription(subscription, plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, processedDate, true);
+        } catch (CatalogApiException e) {
+            throw new EntitlementUserApiException(e);
+        }
+    }
 
 
+    private void createFromSubscription(SubscriptionData subscription, Plan plan, PhaseType initialPhase,
+            String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate, boolean reCreate)
+        throws EntitlementUserApiException {
+
+        try {
             TimedPhase [] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate);
-            ApiEventCreate creationEvent = new ApiEventCreate(new ApiEventBuilder()
+
+            ApiEventBuilder createBuilder = new ApiEventBuilder()
             .setSubscriptionId(subscription.getId())
             .setEventPlan(plan.getName())
             .setEventPlanPhase(curAndNextPhases[0].getPhase().getName())
@@ -69,7 +108,9 @@ public class SubscriptionApiService {
             .setActiveVersion(subscription.getActiveVersion())
             .setProcessedDate(processedDate)
             .setEffectiveDate(effectiveDate)
-            .setRequestedDate(requestedDate));
+            .setRequestedDate(requestedDate)
+            .setFromDisk(true);
+            ApiEvent creationEvent = (reCreate) ? new ApiEventReCreate(createBuilder) : new ApiEventCreate(createBuilder);
 
             TimedPhase nextTimedPhase = curAndNextPhases[1];
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
@@ -80,13 +121,19 @@ public class SubscriptionApiService {
             if (nextPhaseEvent != null) {
                 events.add(nextPhaseEvent);
             }
-            dao.createSubscription(subscription, events);
-            subscription.rebuildTransitions(events, catalogService.getFullCatalog());
-            return subscription;
+            if (reCreate) {
+                dao.recreateSubscription(subscription.getId(), events);
+            } else {
+                dao.createSubscription(subscription, events);
+            }
+            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }
     }
+
+
+
 
     public void cancel(SubscriptionData subscription, DateTime requestedDate, boolean eot)
         throws EntitlementUserApiException {
@@ -99,7 +146,7 @@ public class SubscriptionApiService {
 
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
-            validateRequestedDateOnChangeOrCancel(subscription, now, requestedDate);
+            validateRequestedDate(subscription, now, requestedDate);
 
             Plan currentPlan = subscription.getCurrentPlan();
             PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
@@ -117,7 +164,8 @@ public class SubscriptionApiService {
             .setActiveVersion(subscription.getActiveVersion())
             .setProcessedDate(now)
             .setEffectiveDate(effectiveDate)
-            .setRequestedDate(now));
+            .setRequestedDate(requestedDate)
+            .setFromDisk(true));
 
             dao.cancelSubscription(subscription.getId(), cancelEvent);
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
@@ -128,7 +176,7 @@ public class SubscriptionApiService {
 
 
     public void uncancel(SubscriptionData subscription)
-    throws EntitlementUserApiException {
+        throws EntitlementUserApiException {
 
         if (!subscription.isSubscriptionFutureCancelled()) {
             throw new EntitlementUserApiException(ErrorCode.ENT_UNCANCEL_BAD_STATE, subscription.getId().toString());
@@ -140,13 +188,13 @@ public class SubscriptionApiService {
         .setActiveVersion(subscription.getActiveVersion())
         .setProcessedDate(now)
         .setRequestedDate(now)
-        .setEffectiveDate(now));
+        .setEffectiveDate(now)
+        .setFromDisk(true));
 
         List<EntitlementEvent> uncancelEvents = new ArrayList<EntitlementEvent>();
         uncancelEvents.add(uncancelEvent);
 
-        DateTime planStartDate = subscription.getCurrentPlanStart();
-        TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription.getCurrentPlan(), subscription.getInitialPhaseOnCurrentPlan().getPhaseType(), now, planStartDate);
+        TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now);
         PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                 PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
                     null;
@@ -164,10 +212,9 @@ public class SubscriptionApiService {
 
         try {
 
-
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
-            validateRequestedDateOnChangeOrCancel(subscription, now, requestedDate);
+            validateRequestedDate(subscription, now, requestedDate);
 
             String currentPriceList = subscription.getCurrentPriceList();
 
@@ -214,7 +261,8 @@ public class SubscriptionApiService {
             .setActiveVersion(subscription.getActiveVersion())
             .setProcessedDate(now)
             .setEffectiveDate(effectiveDate)
-            .setRequestedDate(now));
+            .setRequestedDate(requestedDate)
+            .setFromDisk(true));
 
             TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
@@ -233,7 +281,11 @@ public class SubscriptionApiService {
         }
     }
 
-    private void validateRequestedDateOnChangeOrCancel(SubscriptionData subscription, DateTime now, DateTime requestedDate)
+    public void commitCustomFields(SubscriptionData subscription) {
+        dao.saveCustomFields(subscription);
+    }
+
+    private void validateRequestedDate(SubscriptionData subscription, DateTime now, DateTime requestedDate)
         throws EntitlementUserApiException {
 
         if (requestedDate.isAfter(now) ) {

@@ -24,15 +24,11 @@ import java.util.List;
 import java.util.UUID;
 
 public interface InvoiceUserApi {
-    public List<UUID> getInvoicesForPayment(DateTime targetDate, int numberOfDays);
-
     public List<Invoice> getInvoicesByAccount(UUID accountId);
 
     public List<Invoice> getInvoicesByAccount(UUID accountId, DateTime fromDate);
 
     public BigDecimal getAccountBalance(UUID accountId);
-
-    public List<InvoiceItem> getInvoiceItemsByAccount(UUID accountId);
 
     public Invoice getInvoice(UUID invoiceId);
 

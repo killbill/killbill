@@ -40,7 +40,8 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.util.clock.DefaultClock;
 
 public abstract class TestUserApiCreate extends TestApiBase {
-	Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
+
+    private static Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
 
     public void testCreateWithRequestedDate() {
         log.info("Starting testCreateWithRequestedDate");
@@ -75,6 +76,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
         }
     }
 
+
     protected void testCreateWithInitialPhase() {
         log.info("Starting testCreateWithInitialPhase");
         try {
@@ -97,8 +99,6 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertEquals(subscription.getBundleId(), bundle.getId());
             assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
             assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
-
-            printSubscriptionTransitions(subscription.getActiveTransitions());
 
             Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
@@ -139,8 +139,6 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
             assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
 
-            printSubscriptionTransitions(subscription.getActiveTransitions());
-
             Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), productName);
@@ -150,11 +148,6 @@ public abstract class TestUserApiCreate extends TestApiBase {
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
-
-            List<SubscriptionTransition> transitions = subscription.getActiveTransitions();
-            assertNotNull(transitions);
-            assertEquals(transitions.size(), 1);
-
             assertTrue(testListener.isCompleted(5000));
 
             List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());

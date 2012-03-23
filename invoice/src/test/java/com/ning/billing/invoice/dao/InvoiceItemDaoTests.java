@@ -32,9 +32,8 @@ import java.util.UUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-
+@Test(groups = {"invoicing", "invoicing-invoiceDao"})
 public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
-
     private final Clock clock = new DefaultClock();
 
     @Test(groups = "slow")
@@ -47,7 +46,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
 
         final DateTime expectedCreatedDate = clock.getUTCNow();
         RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, subscriptionId, "test plan", "test phase", startDate, endDate,
-                rate, rate, Currency.USD, expectedCreatedDate, expectedCreatedDate);
+                rate, rate, Currency.USD, expectedCreatedDate);
         recurringInvoiceItemDao.create(item);
 
         RecurringInvoiceItem thisItem = (RecurringInvoiceItem) recurringInvoiceItemDao.getById(item.getId().toString());
@@ -60,23 +59,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         assertEquals(thisItem.getAmount().compareTo(item.getRate()), 0);
         assertEquals(thisItem.getRate().compareTo(item.getRate()), 0);
         assertEquals(thisItem.getCurrency(), item.getCurrency());
-        assertEquals(thisItem.getCreatedDate(), item.getCreatedDate());
-        assertEquals(thisItem.getUpdatedDate(), item.getUpdatedDate());
-        assertEquals(thisItem.getUpdatedDate(), thisItem.getUpdatedDate());
-        assertEquals(thisItem.getUpdatedDate(), expectedCreatedDate);
-
-        // Try to update the object and check the updated_date column
-        final DateTime updatedDate = clock.getUTCNow().plusDays(10);
-        RecurringInvoiceItem expectedUpdatedItem = new RecurringInvoiceItem(invoiceId, subscriptionId, "test plan", "test phase", startDate, endDate,
-                rate, rate, Currency.USD, expectedCreatedDate, updatedDate);
-        recurringInvoiceItemDao.update(item);
-
-        RecurringInvoiceItem updatedItem = (RecurringInvoiceItem) recurringInvoiceItemDao.getById(item.getId().toString());
-        assertNotNull(updatedItem);
-        assertEquals(updatedItem.getId(), item.getId());
-        assertEquals(updatedItem.getCreatedDate(), item.getCreatedDate());
-        assertEquals(updatedItem.getUpdatedDate(), expectedUpdatedItem.getUpdatedDate());
-        assertEquals(updatedItem.getUpdatedDate(), updatedDate);
+        assertEquals(thisItem.getCreatedDate().compareTo(item.getCreatedDate()), 0);
     }
 
     @Test(groups = "slow")
@@ -88,7 +71,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         for (int i = 0; i < 3; i++) {
             UUID invoiceId = UUID.randomUUID();
             RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, subscriptionId, "test plan", "test phase", startDate.plusMonths(i), startDate.plusMonths(i + 1),
-                    rate, rate, Currency.USD, clock.getUTCNow(), clock.getUTCNow());
+                    rate, rate, Currency.USD, clock.getUTCNow());
             recurringInvoiceItemDao.create(item);
         }
 
@@ -106,7 +89,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
             UUID subscriptionId = UUID.randomUUID();
             BigDecimal amount = rate.multiply(new BigDecimal(i + 1));
             RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, subscriptionId, "test plan", "test phase", startDate, startDate.plusMonths(1),
-                    amount, amount, Currency.USD, clock.getUTCNow(), clock.getUTCNow());
+                    amount, amount, Currency.USD, clock.getUTCNow());
             recurringInvoiceItemDao.create(item);
         }
 
@@ -128,7 +111,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
 
         UUID subscriptionId = UUID.randomUUID();
         RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, subscriptionId, "test plan", "test phase", startDate, startDate.plusMonths(1),
-                rate, rate, Currency.USD, clock.getUTCNow(), clock.getUTCNow());
+                rate, rate, Currency.USD, clock.getUTCNow());
         recurringInvoiceItemDao.create(item);
 
         List<InvoiceItem> items = recurringInvoiceItemDao.getInvoiceItemsByAccount(accountId.toString());

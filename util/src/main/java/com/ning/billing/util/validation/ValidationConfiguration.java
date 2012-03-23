@@ -14,11 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.events.user;
+package com.ning.billing.util.validation;
 
-public class ApiEventMigrate extends ApiEventBase {
+import java.util.HashMap;
+import java.util.Map;
 
-    public ApiEventMigrate(ApiEventBuilder builder) {
-        super(builder.setEventType(ApiEventType.MIGRATE_ENTITLEMENT));
+public class ValidationConfiguration extends HashMap<String, ColumnInfo> {
+    public void addMapping(String propertyName, ColumnInfo columnInfo) {
+        super.put(propertyName, columnInfo);
+    }
+
+    public boolean hasMapping(String propertyName) {
+        return super.get(propertyName) != null;
     }
 }

@@ -23,15 +23,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
+
+import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
@@ -166,6 +168,23 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         }
         Subscription updatedSubscription = buildSubscription(subscription);
         subscriptions.add(updatedSubscription);
+    }
+
+    @Override
+    public void recreateSubscription(final UUID subscriptionId,
+            final List<EntitlementEvent> recreateEvents) {
+
+        synchronized(events) {
+            events.addAll(recreateEvents);
+            for (final EntitlementEvent cur : recreateEvents) {
+                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new NotificationKey() {
+                    @Override
+                    public String toString() {
+                        return cur.getId().toString();
+                    }
+                });
+            }
+        }
     }
 
     @Override
@@ -429,4 +448,10 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void saveCustomFields(SubscriptionData subscription) {
+        throw new NotImplementedException();
+    }
+
 }

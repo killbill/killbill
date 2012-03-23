@@ -19,8 +19,6 @@ package com.ning.billing.entitlement.engine.dao;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -67,6 +65,8 @@ public interface EntitlementDao {
     // Subscription creation, cancellation, changePlan apis
     public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents);
 
+    public void recreateSubscription(UUID subscriptionId, List<EntitlementEvent> recreateEvents);
+
     public void cancelSubscription(UUID subscriptionId, EntitlementEvent cancelEvent);
 
     public void uncancelSubscription(UUID subscriptionId, List<EntitlementEvent> uncancelEvents);
@@ -77,4 +77,7 @@ public interface EntitlementDao {
 
     public void undoMigration(UUID accountId);
 
-	}
+    // Custom Fields
+    public void saveCustomFields(SubscriptionData subscription);
+}
+

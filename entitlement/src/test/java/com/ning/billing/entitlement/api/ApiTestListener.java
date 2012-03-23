@@ -22,6 +22,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.util.bus.Bus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import java.util.Iterator;
 import java.util.List;
@@ -37,11 +38,11 @@ public class ApiTestListener {
 
     public enum NextEvent {
         MIGRATE_ENTITLEMENT,
+        MIGRATE_BILLING,
         CREATE,
+        RE_CREATE,
         CHANGE,
         CANCEL,
-        PAUSE,
-        RESUME,
         PHASE
     }
 
@@ -59,22 +60,22 @@ public class ApiTestListener {
         case CREATE:
             subscriptionCreated(event);
             break;
+        case RE_CREATE:
+            subscriptionReCreated(event);
+            break;
         case CANCEL:
             subscriptionCancelled(event);
             break;
         case CHANGE:
             subscriptionChanged(event);
             break;
-        case PAUSE:
-            subscriptionPaused(event);
-            break;
-        case RESUME:
-            subscriptionResumed(event);
-            break;
         case UNCANCEL:
             break;
         case PHASE:
             subscriptionPhaseChanged(event);
+            break;
+        case MIGRATE_BILLING:
+            subscriptionMigratedBilling(event);
             break;
         default:
             throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
@@ -91,6 +92,9 @@ public class ApiTestListener {
 
     public boolean isCompleted(long timeout) {
         synchronized (this) {
+            if (completed) {
+                return completed;
+            }
             try {
                 wait(timeout);
             } catch (Exception ignore) {
@@ -133,8 +137,7 @@ public class ApiTestListener {
 
         if (!foundIt) {
             Joiner joiner = Joiner.on(" ");
-            System.err.println("Expected event " + expected + " got " + joiner.join(nextExpectedEvent));
-            System.exit(1);
+            Assert.fail("Expected event " + expected + " got " + joiner.join(nextExpectedEvent));
         }
     }
 
@@ -148,6 +151,12 @@ public class ApiTestListener {
     public void subscriptionCreated(SubscriptionTransition created) {
         log.debug("-> Got event CREATED");
         assertEqualsNicely(NextEvent.CREATE);
+        notifyIfStackEmpty();
+    }
+
+    public void subscriptionReCreated(SubscriptionTransition recreated) {
+        log.debug("-> Got event RE_CREATED");
+        assertEqualsNicely(NextEvent.RE_CREATE);
         notifyIfStackEmpty();
     }
 
@@ -166,24 +175,17 @@ public class ApiTestListener {
     }
 
 
-    public void subscriptionPaused(SubscriptionTransition paused) {
-        log.debug("-> Got event PAUSE");
-        assertEqualsNicely(NextEvent.PAUSE);
-        notifyIfStackEmpty();
-    }
-
-
-    public void subscriptionResumed(SubscriptionTransition resumed) {
-        log.debug("-> Got event RESUME");
-        assertEqualsNicely(NextEvent.RESUME);
-        notifyIfStackEmpty();
-    }
-
-
     public void subscriptionPhaseChanged(
             SubscriptionTransition phaseChanged) {
         log.debug("-> Got event PHASE");
         assertEqualsNicely(NextEvent.PHASE);
         notifyIfStackEmpty();
     }
+
+    public void subscriptionMigratedBilling(SubscriptionTransition migrated) {
+        log.debug("-> Got event MIGRATED_BLLING");
+        assertEqualsNicely(NextEvent.MIGRATE_BILLING);
+        notifyIfStackEmpty();
+    }
+
 }

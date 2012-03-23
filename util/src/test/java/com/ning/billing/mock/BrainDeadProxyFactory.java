@@ -26,48 +26,55 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BrainDeadProxyFactory {
-	private static final Logger log = LoggerFactory.getLogger(BrainDeadProxyFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(BrainDeadProxyFactory.class);
+    
+    public static final Object ZOMBIE_VOID = new Object(); 
 
-	public static interface ZombieControl {
-		
-		public ZombieControl addResult(String method, Object result);
-		
-		public ZombieControl clearResults();
-		
-	}
+    public static interface ZombieControl {
 
-	@SuppressWarnings("unchecked")
-	public static <T> T createBrainDeadProxyFor(final Class<T> clazz) {
-		return (T) Proxy.newProxyInstance(clazz.getClassLoader(),
+        public ZombieControl addResult(String method, Object result);
+
+        public ZombieControl clearResults();
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T createBrainDeadProxyFor(final Class<T> clazz) {
+        return (T) Proxy.newProxyInstance(clazz.getClassLoader(),
                 new Class[] { clazz , ZombieControl.class},
                 new InvocationHandler() {
-					private Map<String,Object> results = new HashMap<String,Object>();
-			
-					@Override
-					public Object invoke(Object proxy, Method method, Object[] args)
-							throws Throwable {
-						
-						if(method.getDeclaringClass().equals(ZombieControl.class)) {
-							if(method.getName().equals("addResult")) {
-								results.put((String) args[0], args[1]);
-								return proxy;
-							} else if(method.getName().equals("clearResults")) {
-								results.clear();
-								return proxy;
-							}
+            private final Map<String,Object> results = new HashMap<String,Object>();
 
-						} else {
-							
-							Object result = results.get(method.getName());
-							if (result != null) {
-								return result;
-							} else {
-								log.error(String.format("No result for Method: '%s' on Class '%s'",method.getName(), method.getDeclaringClass().getName()));
-								throw new UnsupportedOperationException();
-							}
-						}
-						return (Void) null;
-					}
-				});
-	}
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args)
+                throws Throwable {
+
+                if (method.getDeclaringClass().equals(ZombieControl.class)) {
+                    if(method.getName().equals("addResult")) {
+                        results.put((String) args[0], args[1]);
+                        return proxy;
+                    } else if(method.getName().equals("clearResults")) {
+                        results.clear();
+                        return proxy;
+                    }
+
+                } else {
+
+                    Object result = results.get(method.getName());
+                    if (result == ZOMBIE_VOID) {
+                    	return (Void) null;
+                    } else if (result != null) {
+                    	if(result instanceof Throwable) {
+                    		throw ((Throwable) result);
+                    	}
+                        return result;
+                    } else {
+                        log.error(String.format("No result for Method: '%s' on Class '%s'",method.getName(), method.getDeclaringClass().getName()));
+                        throw new UnsupportedOperationException();
+                    }
+                }
+                return null;
+            }
+        });
+    }
 }

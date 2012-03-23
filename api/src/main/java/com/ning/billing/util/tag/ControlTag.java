@@ -16,7 +16,6 @@
 
 package com.ning.billing.util.tag;
 
-import com.ning.billing.account.api.ControlTagType;
 
 public interface ControlTag extends Tag {
     public ControlTagType getControlTagType();

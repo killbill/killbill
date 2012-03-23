@@ -77,11 +77,9 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
     @SqlUpdate
     void updatePaymentAttemptWithRetryInfo(@Bind("payment_attempt_id") String paymentAttemptId,
                                            @Bind("retry_count") int retryCount,
-                                           @Bind("next_retry_dt") Date nextRetryDate,
                                            @Bind("updated_dt") Date updatedDate);
 
     @SqlUpdate
-
     void updatePaymentInfo(@Bind("payment_method") String paymentMethod,
                            @Bind("payment_id") String paymentId,
                            @Bind("card_type") String cardType,
@@ -112,7 +110,6 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             stmt.bind("payment_attempt_dt", getDate(paymentAttempt.getPaymentAttemptDate()));
             stmt.bind("payment_id", paymentAttempt.getPaymentId());
             stmt.bind("retry_count", paymentAttempt.getRetryCount());
-            stmt.bind("next_retry_dt", getDate(paymentAttempt.getNextRetryDate()));
             stmt.bind("created_dt", getDate(paymentAttempt.getCreatedDate()));
             stmt.bind("updated_dt", getDate(paymentAttempt.getUpdatedDate()));
         }
@@ -137,7 +134,6 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             DateTime paymentAttemptDate = getDate(rs, "payment_attempt_dt");
             String paymentId = rs.getString("payment_id");
             Integer retryCount = rs.getInt("retry_count");
-            DateTime nextRetryDate = getDate(rs, "next_retry_dt");
             DateTime createdDate = getDate(rs, "created_dt");
             DateTime updatedDate = getDate(rs, "updated_dt");
 
@@ -150,7 +146,6 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
                                       paymentAttemptDate,
                                       paymentId,
                                       retryCount,
-                                      nextRetryDate,
                                       createdDate,
                                       updatedDate);
         }

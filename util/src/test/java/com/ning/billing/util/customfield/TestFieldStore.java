@@ -17,6 +17,7 @@
 package com.ning.billing.util.customfield;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;

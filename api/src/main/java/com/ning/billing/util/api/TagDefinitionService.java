@@ -19,5 +19,5 @@ package com.ning.billing.util.api;
 import com.ning.billing.lifecycle.KillbillService;
 
 public interface TagDefinitionService extends KillbillService {
-    public TagDefinitionUserApi getTagDefinitionUserApi();
+    public TagUserApi getTagDefinitionUserApi();
 }

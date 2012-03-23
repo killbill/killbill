@@ -38,6 +38,7 @@ public interface EntitlementMigrationApi {
 
     public interface EntitlementSubscriptionMigration {
         public ProductCategory getCategory();
+        public DateTime getChargedThroughDate();
         public EntitlementSubscriptionMigrationCase [] getSubscriptionCases();
     }
 

@@ -54,6 +54,13 @@ public class BusinessSubscriptionTransitionRecorder
         recordTransition(event, created);
     }
 
+    public void subscriptionRecreated(final SubscriptionTransition recreated) throws AccountApiException
+    {
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionRecreated(recreated.getNextPlan());
+        recordTransition(event, recreated);
+    }
+
+
     public void subscriptionCancelled(final SubscriptionTransition cancelled) throws AccountApiException
     {
         // cancelled.getNextPlan() is null here - need to look at the previous one to create the correct event name
@@ -65,18 +72,6 @@ public class BusinessSubscriptionTransitionRecorder
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan());
         recordTransition(event, changed);
-    }
-
-    public void subscriptionPaused(final SubscriptionTransition paused) throws AccountApiException
-    {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPaused(paused.getNextPlan());
-        recordTransition(event, paused);
-    }
-
-    public void subscriptionResumed(final SubscriptionTransition resumed) throws AccountApiException
-    {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionResumed(resumed.getNextPlan());
-        recordTransition(event, resumed);
     }
 
     public void subscriptionPhaseChanged(final SubscriptionTransition phaseChanged) throws AccountApiException

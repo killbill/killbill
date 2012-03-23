@@ -17,10 +17,13 @@
 package com.ning.billing.util.api;
 
 import java.util.List;
-import java.util.UUID;
+
+import org.joda.time.DateTime;
+
+import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
-public interface TagDefinitionUserApi {
+public interface TagUserApi {
     /***
      *
      * @return
@@ -50,4 +53,31 @@ public interface TagDefinitionUserApi {
      * @throws TagDefinitionApiException
      */
     public void deleteTagDefinition(String definitionName) throws TagDefinitionApiException;
+
+    
+	/**
+	 * 
+	 * @param name
+	 * @return the tag with this definition
+     * @throws TagDefinitionApiException
+	 */
+	public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
+	
+	/**
+	 * @param addedBy
+	 * @param addedDate
+	 * @param controlTagType
+	 * @throws TagApiException 
+	 */
+	public Tag createControlTag(String controlTagName, String addedBy, DateTime addedDate) throws TagDefinitionApiException;
+	
+	
+	/**
+	 * @param tagDefinitionName
+	 * @param addedBy
+	 * @param addedDate
+	 * @return
+	 */
+	public Tag createDescriptiveTag(String tagDefinitionName, String addedBy, DateTime addedDate) throws TagDefinitionApiException;
+	
 }

@@ -30,8 +30,6 @@ import com.ning.billing.util.notificationq.NotificationLifecycle.NotificationLif
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public class MockNotificationQueue extends NotificationQueueBase implements NotificationQueue {
-
-
     private final TreeSet<Notification> notifications;
 
     public MockNotificationQueue(final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
@@ -91,18 +89,20 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
                     readyNotifications.add(cur);
                 }
             }
+        }
 
-            result = readyNotifications.size();
-            for (Notification cur : readyNotifications) {
-                handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
-                DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getUUID(), hostname, "MockQueue", clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
-                oldNotifications.add(cur);
-                processedNotifications.add(processedNotification);
-
-            }
+        result = readyNotifications.size();
+        for (Notification cur : readyNotifications) {
+            handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
+            DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getUUID(), hostname, "MockQueue", clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
+            oldNotifications.add(cur);
+            processedNotifications.add(processedNotification);
+        }
+        synchronized(notifications) {
             if (oldNotifications.size() > 0) {
                 notifications.removeAll(oldNotifications);
             }
+
             if (processedNotifications.size() > 0) {
                 notifications.addAll(processedNotifications);
             }

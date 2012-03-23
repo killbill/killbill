@@ -28,6 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -41,12 +44,13 @@ import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
 
+    private final AccountUserApi accountApi;
     private final EntitlementDao entitlementDao;
     private final BillCycleDayCalculator bcdCalculator;
 
     @Inject
-    public DefaultEntitlementBillingApi(final EntitlementDao dao, final BillCycleDayCalculator bcdCalculator) {
-        super();
+    public DefaultEntitlementBillingApi(final EntitlementDao dao, final BillCycleDayCalculator bcdCalculator, final AccountUserApi accountApi) {
+        this.accountApi = accountApi;    
         this.entitlementDao = dao;
         this.bcdCalculator = bcdCalculator;
     }
@@ -61,9 +65,18 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         	List<Subscription> subscriptions = entitlementDao.getSubscriptions(bundle.getId());
 
         	for (final Subscription subscription: subscriptions) {
-        		for (final SubscriptionTransition transition : subscription.getAllTransitions()) {
+        		for (final SubscriptionTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
         			try {
-        				BillingEvent event = new DefaultBillingEvent(transition, subscription, bcdCalculator.calculateBcd(bundle, subscription, transition, accountId));
+        			    Account account = accountApi.getAccountById(accountId);
+        			    int bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
+        			    
+        		        MutableAccountData modifiedData = account.toMutableAccountData();
+        		        modifiedData.setBillCycleDay(bcd);
+
+        		        accountApi.updateAccount(account.getExternalKey(), modifiedData);
+
+
+        				BillingEvent event = new DefaultBillingEvent(transition, subscription, bcd, account.getCurrency());
         				result.add(event);
         			} catch (CatalogApiException e) {
         				log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
@@ -82,7 +95,6 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         return entitlementDao.getAccountIdFromSubscriptionId(subscriptionId);
     }
 
-    
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
         SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionId);
@@ -111,4 +123,6 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             }
         }
     }
+    
+ 
 }

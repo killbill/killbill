@@ -14,12 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.util.tag;
 
 public enum ControlTagType {
-    AUTO_BILLING_OFF("Suspends billing until removed.", true, false),
-    AUTO_INVOICING_OFF("Suspends invoicing until removed.", false, true),
-    OVERDUE_ENFORCEMENT_OFF("Suspends invoicing until removed.", false, false);
+    AUTO_PAY_OFF("Suspends payments until removed.", true, false),
+    AUTO_INVOICING_OFF("Suspends invoicing until removed.", false, true);
 
     private final String description;
     private final boolean autoPaymentOff;

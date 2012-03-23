@@ -21,20 +21,17 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import javax.swing.DefaultDesktopManager;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.PaymentResponse;
 import com.ning.billing.util.config.XMLLoader;
-import com.ning.billing.util.tag.ControlTag;
+import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultControlTag;
-import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 
@@ -131,12 +128,12 @@ public class TestCondition {
 		
 		DateTime now = new DateTime();
 		
-		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_BILLING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
-		BillingState state1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
+		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
+		BillingState state1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_PAY_OFF)});
 		BillingState state2 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), 
 				PaymentResponse.TEMPORARY_ACCOUNT_ISSUE, 
-				new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF), 
-						  new DefaultControlTag("Martin", now, ControlTagType.AUTO_BILLING_OFF),
+				new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_PAY_OFF), 
+						  new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),
 						  new DescriptiveTag(null, "Tag", "Martin", now)});
 		
 		Assert.assertTrue(!c.evaluate(state0, now));

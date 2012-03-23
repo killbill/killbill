@@ -39,23 +39,21 @@ public class AnalyticsListener {
     @Subscribe
     public void handleSubscriptionTransitionChange(final SubscriptionTransition event) throws AccountApiException {
         switch (event.getTransitionType()) {
+            // A susbcription enters either through migration or as newly created subscription
             case MIGRATE_ENTITLEMENT:
-                // TODO do nothing for now
-                break;
             case CREATE:
                 bstRecorder.subscriptionCreated(event);
+                break;
+            case RE_CREATE:
+                bstRecorder.subscriptionRecreated(event);
+                break;
+            case MIGRATE_BILLING:
                 break;
             case CANCEL:
                 bstRecorder.subscriptionCancelled(event);
                 break;
             case CHANGE:
                 bstRecorder.subscriptionChanged(event);
-                break;
-            case PAUSE:
-                bstRecorder.subscriptionPaused(event);
-                break;
-            case RESUME:
-                bstRecorder.subscriptionResumed(event);
                 break;
             case UNCANCEL:
                 break;

@@ -18,6 +18,8 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.catalog.api.Catalog;
 import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
@@ -27,26 +29,31 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class DefaultEntitlementUserApi implements EntitlementUserApi {
-
     private final Clock clock;
     private final EntitlementDao dao;
     private final CatalogService catalogService;
     private final SubscriptionApiService apiService;
+    private final AddonUtils addonUtils;
 
     @Inject
-    public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, CatalogService catalogService, SubscriptionApiService apiService) {
+    public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, CatalogService catalogService,
+            SubscriptionApiService apiService, AddonUtils addonUtils) {
         super();
         this.clock = clock;
         this.apiService = apiService;
         this.dao = dao;
         this.catalogService = catalogService;
+        this.addonUtils = addonUtils;
     }
 
     @Override
@@ -74,7 +81,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         return dao.getSubscriptionsForKey(bundleKey);
     }
 
-
     @Override
     public List<Subscription> getSubscriptionsForBundle(UUID bundleId) {
         return dao.getSubscriptions(bundleId);
@@ -93,15 +99,15 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             DateTime now = clock.getUTCNow();
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
-            if (requestedDate != null && requestedDate.isAfter(now)) {
+            if (requestedDate.isAfter(now)) {
                 throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
             }
-            requestedDate = (requestedDate == null) ? now : requestedDate;
             DateTime effectiveDate = requestedDate;
 
-            Plan plan = catalogService.getFullCatalog().findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);
+            Catalog catalog = catalogService.getFullCatalog();
+            Plan plan = catalog.findPlan(spec.getProductName(), spec.getBillingPeriod(), realPriceList, requestedDate);
 
-            PlanPhase phase = (plan.getInitialPhases() != null) ? plan.getInitialPhases()[0] : plan.getFinalPhase();
+            PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new EntitlementError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
                         spec.getProductName(), spec.getBillingPeriod().toString(), realPriceList));
@@ -113,12 +119,17 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             }
 
             DateTime bundleStartDate = null;
-            Subscription baseSubscription = dao.getBaseSubscription(bundleId);
-
+            SubscriptionData baseSubscription = (SubscriptionData) dao.getBaseSubscription(bundleId);
             switch(plan.getProduct().getCategory()) {
             case BASE:
                 if (baseSubscription != null) {
-                    throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
+                    if (baseSubscription.getState() == SubscriptionState.ACTIVE) {
+                        throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
+                    } else {
+                        // If we do create on an existing CANCELLED BP, this is equivalent to call recreate on that Subscription.
+                        baseSubscription.recreate(spec, requestedDate);
+                        return baseSubscription;
+                    }
                 }
                 bundleStartDate = requestedDate;
                 break;
@@ -126,24 +137,52 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                 if (baseSubscription == null) {
                     throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_NO_BP, bundleId);
                 }
+                checkAddonCreationRights(baseSubscription, plan);
                 bundleStartDate = baseSubscription.getStartDate();
+                break;
+            case STANDALONE:
+                if (baseSubscription != null) {
+                    throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
+                }
+                // Not really but we don't care, there is no alignment for STANDALONE subscriptions
+                bundleStartDate = requestedDate;
                 break;
             default:
                 throw new EntitlementError(String.format("Can't create subscription of type %s",
                         plan.getProduct().getCategory().toString()));
             }
 
-            SubscriptionData subscription = apiService.createBasePlan(new SubscriptionBuilder()
-            .setId(UUID.randomUUID())
-            .setBundleId(bundleId)
-            .setCategory(plan.getProduct().getCategory())
-            .setBundleStartDate(bundleStartDate)
-            .setStartDate(effectiveDate),
+            SubscriptionData subscription = apiService.createPlan(new SubscriptionBuilder()
+                .setId(UUID.randomUUID())
+                .setBundleId(bundleId)
+                .setCategory(plan.getProduct().getCategory())
+                .setBundleStartDate(bundleStartDate)
+                .setStartDate(effectiveDate),
             plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now);
 
             return subscription;
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
+        }
+    }
+
+
+    private void checkAddonCreationRights(SubscriptionData baseSubscription, Plan targetAddOnPlan)
+        throws EntitlementUserApiException, CatalogApiException {
+
+        if (baseSubscription.getState() != SubscriptionState.ACTIVE) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
+        }
+
+        Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
+        if (addonUtils.isAddonIncluded(baseProduct, targetAddOnPlan)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED,
+                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
+        }
+
+        if (!addonUtils.isAddonAvailable(baseProduct, targetAddOnPlan)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE,
+                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
         }
     }
 
@@ -155,7 +194,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 			List<Subscription> subscriptions = getSubscriptionsForBundle(bundle.getId());
 			for(Subscription subscription : subscriptions) {
 				DateTime chargedThruDate = subscription.getChargedThroughDate();
-				if(result == null || 
+				if(result == null ||
 						(chargedThruDate != null && chargedThruDate.isBefore(result))) {
 					result = subscription.getChargedThroughDate();
 				}

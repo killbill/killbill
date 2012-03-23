@@ -30,26 +30,27 @@ public class TestMigrationMemory extends TestMigration {
     }
 
     @Override
-    @Test(enabled=true, groups="fast")
+    @Test(enabled=false, groups="fast")
     public void testSingleBasePlan() {
         super.testSingleBasePlan();
     }
 
     @Override
-    @Test(enabled=true, groups="fast")
+    @Test(enabled=false, groups="fast")
     public void testSingleBasePlanFutureCancelled() {
         super.testSingleBasePlanFutureCancelled();
     }
 
     @Override
-    @Test(enabled=true, groups="fast")
-    public void testSingleBasePlanWithPendingPhase() {
-        super.testSingleBasePlanWithPendingPhase();
+    @Test(enabled=false, groups="fast")
+    public void testPlanWithAddOn() {
+        super.testPlanWithAddOn();
     }
 
+
     @Override
-    @Test(enabled=true, groups="fast")
-    public void testSingleBasePlanWithPendingChange() {
-        super.testSingleBasePlanWithPendingChange();
+    @Test(enabled=false, groups="fast")
+    public void testSingleBasePlanWithPendingPhase() {
+        super.testSingleBasePlanWithPendingPhase();
     }
 }

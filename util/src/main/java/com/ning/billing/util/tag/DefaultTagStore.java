@@ -17,7 +17,6 @@
 package com.ning.billing.util.tag;
 
 import java.util.UUID;
-import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.util.entity.EntityCollectionBase;
 
 public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagStore {
@@ -39,7 +38,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
         for (Tag tag : entities.values()) {
             if (tag instanceof ControlTag) {
                 ControlTag controlTag = (ControlTag) tag;
-                if (controlTag.getControlTagType() == ControlTagType.AUTO_BILLING_OFF) {
+                if (controlTag.getControlTagType() == ControlTagType.AUTO_PAY_OFF) {
                     return false;
                 }
             }

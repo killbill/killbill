@@ -20,6 +20,8 @@ import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 
 public class TagDefinitionApiException extends BillingExceptionBase {
+    private static final long serialVersionUID = 1L;
+
     public TagDefinitionApiException(Throwable cause, int code, final String msg) {
         super(cause, code, msg);
     }

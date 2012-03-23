@@ -66,11 +66,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             // CANCEL in trial period to get IMM policy
             subscription.cancel(clock.getUTCNow(), false);
             currentPhase = subscription.getCurrentPhase();
-
             testListener.isCompleted(1000);
-
-            List<SubscriptionTransition> allTransitions = subscription.getActiveTransitions();
-            printSubscriptionTransitions(allTransitions);
 
             assertNull(currentPhase);
             checkNextPhaseChange(subscription, 0, null);

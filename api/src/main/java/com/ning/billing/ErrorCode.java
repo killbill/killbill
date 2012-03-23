@@ -37,13 +37,21 @@ public enum ErrorCode {
     ENT_CREATE_NO_BUNDLE(1012, "Bundle %s does not exist"),
     ENT_CREATE_NO_BP(1013, "Missing Base Subscription for bundle %s"),
     ENT_CREATE_BP_EXISTS(1015, "Subscription bundle %s already has a base subscription"),
+    ENT_CREATE_AO_BP_NON_ACTIVE(1017, "Can't create AddOn %s for non active Base Plan"),
+    ENT_CREATE_AO_ALREADY_INCLUDED(1018, "Can't create AddOn %s for BasePlan %s (Already included)"),
+    ENT_CREATE_AO_NOT_AVAILABLE(1019, "Can't create AddOn %s for BasePlan %s (Not available)"),
+
     /* Change plan */
-    ENT_CHANGE_NON_ACTIVE(1021, "Subscription %s is in state %s"),
-    ENT_CHANGE_FUTURE_CANCELLED(1022, "Subscription %s is future cancelled"),
+    ENT_CHANGE_NON_ACTIVE(1021, "Subscription %s is in state %s: Failed to change plan"),
+    ENT_CHANGE_FUTURE_CANCELLED(1022, "Subscription %s is future cancelled: Failed to change plan"),
     /* Cancellation */
-    ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s"),
+    ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s: Failed to cancel"),
+    /* Recreation */
+    ENT_RECREATE_BAD_STATE(1041, "Subscription %s is in state %s: Failed to recreate"),
+
     /* Un-cancellation */
-    ENT_UNCANCEL_BAD_STATE(1070, "Subscription %s was not in a cancelled state"),
+    ENT_UNCANCEL_BAD_STATE(1070, "Subscription %s was not in a cancelled state: Failed to uncancel plan"),
+
     /* Fetch */
     ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION(1080, "Could not find a bundle for subscription %s"),
     ENT_GET_INVALID_BUNDLE_ID(1081, "Could not find a bundle matching id %s"),
@@ -111,6 +119,8 @@ public enum ErrorCode {
     ACCOUNT_DOES_NOT_EXIST_FOR_KEY(3003, "Account does not exist for key %s"),
     ACCOUNT_CANNOT_MAP_NULL_KEY(3004, "An attempt was made to get the id for a <null> external key."),
     ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY(3005, "External keys cannot be updated. Original key remains: %s"),
+    ACCOUNT_CREATION_FAILED(3006, "Account creation failed."),
+    ACCOUNT_UPDATE_FAILED(3007, "Account update failed."),
 
    /*
     *
@@ -121,6 +131,8 @@ public enum ErrorCode {
     TAG_DEFINITION_ALREADY_EXISTS(3901, "The tag definition name already exists (name: %s)"),
     TAG_DEFINITION_DOES_NOT_EXIST(3902, "The tag definition name does not exist (name: %s)"),
     TAG_DEFINITION_IN_USE(3903, "The tag definition name is currently in use (name: %s)"),
+    
+    CONTROL_TAG_DOES_NOT_EXIST(3904, "The control tag does not exist (name: %s)"),
 
    /*
     *
@@ -130,7 +142,8 @@ public enum ErrorCode {
     INVOICE_ACCOUNT_ID_INVALID(4001, "No account could be retrieved for id %s"),
     INVOICE_INVALID_TRANSITION(4002, "Transition did not contain a subscription id."),
     INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID(4003, "No account id was retrieved for subscription id %s"),
-    INVOICE_INVALID_DATE_SEQUENCE(4004, "Date sequence was invalid. Start Date: %s; End Date: %s; Target Date: %s")
+    INVOICE_INVALID_DATE_SEQUENCE(4004, "Date sequence was invalid. Start Date: %s; End Date: %s; Target Date: %s"),
+    INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s")
     ;
 
     private int code;

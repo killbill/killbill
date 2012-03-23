@@ -28,17 +28,17 @@ public enum ApiEventType {
         @Override
         public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CREATE; }
     },
+    MIGRATE_BILLING {
+        @Override
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.MIGRATE_BILLING; }
+    },
     CHANGE {
         @Override
         public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CHANGE; }
     },
-    PAUSE {
+    RE_CREATE {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.PAUSE; }
-    },
-    RESUME {
-        @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.RESUME; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.RE_CREATE; }
     },
     CANCEL {
         @Override

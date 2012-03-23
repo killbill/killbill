@@ -26,13 +26,13 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.account.api.ControlTagType;
 import com.ning.billing.catalog.DefaultDuration;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.PaymentResponse;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
 @XmlAccessorType(XmlAccessType.NONE)

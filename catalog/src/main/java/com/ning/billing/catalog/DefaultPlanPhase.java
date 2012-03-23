@@ -16,6 +16,13 @@
 
 package com.ning.billing.catalog;
 
+import java.net.URI;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -27,12 +34,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import java.net.URI;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implements PlanPhase {
@@ -59,8 +60,8 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 	//Not exposed in XML
 	private Plan plan;
 	
-	public static String phaseName(Plan plan, PlanPhase phase) {
-		return plan.getName() + "-" + phase.getPhaseType().toString().toLowerCase();
+	public static String phaseName(String planName, PhaseType phasetype) {
+		return planName + "-" + phasetype.toString().toLowerCase();
 	}
 	
 	public static String planName(String phaseName) throws CatalogApiException {
@@ -110,7 +111,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 	 */
 	@Override
 	public String getName() {
-		return phaseName(plan,this);
+		return phaseName(plan.getName(),this.getPhaseType());
 	}
 
 	/* (non-Javadoc)

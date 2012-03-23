@@ -16,18 +16,19 @@
 
 package com.ning.billing.payment.dao;
 
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfo;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.UUID;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentInfo;
 
 public abstract class TestPaymentDao {
 
@@ -69,7 +70,6 @@ public abstract class TestPaymentDao {
         paymentDao.savePaymentInfo(paymentInfo);
 
         paymentDao.updatePaymentInfo("CreditCard", paymentInfo.getPaymentId(), "Visa", "US");
-
     }
 
     @Test
@@ -86,8 +86,6 @@ public abstract class TestPaymentDao {
                 .build();
 
         paymentDao.createPaymentAttempt(paymentAttempt);
-
-        paymentDao.updatePaymentAttemptWithRetryInfo(paymentAttempt.getPaymentAttemptId(), 1, paymentAttempt.getCreatedDate().plusDays(1));
     }
 
     @Test
@@ -101,7 +99,7 @@ public abstract class TestPaymentDao {
         // Move the clock backwards to test the updated_date field (see below)
         final DateTime now = new DateTime(DateTimeZone.UTC).minusDays(1);
 
-        PaymentAttempt originalPaymenAttempt = new PaymentAttempt(paymentAttemptId, invoiceId, accountId, invoiceAmount, Currency.USD, now, now, paymentId, null, null);
+        PaymentAttempt originalPaymenAttempt = new PaymentAttempt(paymentAttemptId, invoiceId, accountId, invoiceAmount, Currency.USD, now, now, paymentId, 0);
 
         PaymentAttempt attempt = paymentDao.createPaymentAttempt(originalPaymenAttempt);
 

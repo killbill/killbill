@@ -47,11 +47,11 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.UuidMapper;
-import com.ning.billing.util.entity.EntityDao;
+import com.ning.billing.util.entity.UpdatableEntityDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper({UuidMapper.class, AccountSqlDao.AccountMapper.class})
-public interface AccountSqlDao extends EntityDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
+public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
     @SqlQuery
     public Account getAccountByKey(@Bind("externalKey") final String key);
 
@@ -66,7 +66,6 @@ public interface AccountSqlDao extends EntityDao<Account>, Transactional<Account
     @SqlUpdate
     public void update(@AccountBinder Account account);
 
-    @Override
     @SqlUpdate
     public void deleteByKey(@Bind("externalKey") final String key);
 

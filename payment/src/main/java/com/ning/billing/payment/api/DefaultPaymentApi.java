@@ -154,7 +154,13 @@ public class DefaultPaymentApi implements PaymentApi {
                                                         paymentAttempt.getInvoiceId()));
                 }
                 else {
-                    return processPayment(getPaymentProviderPlugin(account), account, invoice, paymentAttempt);
+                    PaymentAttempt newPaymentAttempt = new PaymentAttempt.Builder(paymentAttempt)
+                                                                         .setRetryCount(paymentAttempt.getRetryCount() + 1)
+                                                                         .setPaymentAttemptId(UUID.randomUUID())
+                                                                         .build();
+
+                    paymentDao.createPaymentAttempt(newPaymentAttempt);
+                    return processPayment(getPaymentProviderPlugin(account), account, invoice, newPaymentAttempt);
                 }
             }
         }
@@ -182,6 +188,14 @@ public class DefaultPaymentApi implements PaymentApi {
                                                                                         UUID.fromString(invoiceId)));
                 processedPaymentsOrErrors.add(result);
             }
+            else if (invoice.isMigrationInvoice()) {
+            	log.info("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
+            	Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("migration invoice",
+                        "Invoice balance was a migration invoice",
+                        account.getId(),
+                        UUID.fromString(invoiceId)));
+            			processedPaymentsOrErrors.add(result);
+            }
             else {
                 PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice);
 
@@ -206,7 +220,9 @@ public class DefaultPaymentApi implements PaymentApi {
             paymentInfo = paymentOrError.getRight();
             paymentDao.savePaymentInfo(paymentInfo);
 
-            Either<PaymentError, PaymentMethodInfo> paymentMethodInfoOrError = plugin.getPaymentMethodInfo(paymentInfo.getPaymentMethodId());
+            final String paymentMethodId = paymentInfo.getPaymentMethodId();
+            log.debug("Fetching payment method info for payment method id " + ((paymentMethodId == null) ? "null" : paymentMethodId));
+            Either<PaymentError, PaymentMethodInfo> paymentMethodInfoOrError = plugin.getPaymentMethodInfo(paymentMethodId);
 
             if (paymentMethodInfoOrError.isRight()) {
                 PaymentMethodInfo paymentMethodInfo = paymentMethodInfoOrError.getRight();
@@ -219,6 +235,8 @@ public class DefaultPaymentApi implements PaymentApi {
                     PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
                     paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getPaymentId(), null, null);
                 }
+            } else {
+                log.info(paymentMethodInfoOrError.getLeft().getMessage());
             }
 
             if (paymentInfo.getPaymentId() != null) {
@@ -258,7 +276,6 @@ public class DefaultPaymentApi implements PaymentApi {
             }
 
             retryService.scheduleRetry(paymentAttempt, nextRetryDate);
-            paymentDao.updatePaymentAttemptWithRetryInfo(paymentAttempt.getPaymentAttemptId(), retryCount + 1, nextRetryDate);
         }
         else if (retryCount == retryDays.size()) {
             log.info("Last payment retry failed for {} ", paymentAttempt);

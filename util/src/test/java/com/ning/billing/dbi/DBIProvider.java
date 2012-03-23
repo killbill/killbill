@@ -57,6 +57,7 @@ public class DBIProvider implements Provider<IDBI>
         dbConfig.setPartitionCount(1);
         dbConfig.setDefaultTransactionIsolation("REPEATABLE_READ");
         dbConfig.setDisableJMX(false);
+        dbConfig.setLazyInit(true);
 
         final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);
         final DBI dbi = new DBI(ds);

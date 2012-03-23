@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
@@ -216,6 +217,11 @@ public class MockAccount implements Account
     @Override
     public DateTime getUpdatedDate() {
         return new DateTime(DateTimeZone.UTC);
+    }
+
+    @Override
+    public MutableAccountData toMutableAccountData() {
+        throw new NotImplementedException();
     }
 
 }

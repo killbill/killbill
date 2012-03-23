@@ -31,36 +31,34 @@ public class DefaultInvoicePayment implements InvoicePayment {
     private final BigDecimal amount;
     private final Currency currency;
     private final DateTime createdDate;
-    private final DateTime updatedDate;
 
     public DefaultInvoicePayment(final UUID invoiceId, final DateTime paymentDate) {
-        this(UUID.randomUUID(), invoiceId, paymentDate, null, null, null, null);
+        this(UUID.randomUUID(), invoiceId, paymentDate, null, null, null);
     }
 
     public DefaultInvoicePayment(final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate) {
-        this(paymentAttemptId, invoiceId, paymentDate, null, null, null, null);
+        this(paymentAttemptId, invoiceId, paymentDate, null, null, null);
     }
 
     public DefaultInvoicePayment(final UUID invoiceId, final DateTime paymentDate,
                                  final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), invoiceId, paymentDate, amount, currency, null, null);
+        this(UUID.randomUUID(), invoiceId, paymentDate, amount, currency, null);
     }
 
     public DefaultInvoicePayment(final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
                                  final BigDecimal amount, final Currency currency) {
-        this(paymentAttemptId, invoiceId, paymentDate, amount, currency, null, null);
+        this(paymentAttemptId, invoiceId, paymentDate, amount, currency, null);
     }
 
     public DefaultInvoicePayment(final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
                                  @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                                 @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate) {
+                                 @Nullable final DateTime createdDate) {
         this.paymentAttemptId = paymentAttemptId;
         this.amount = amount;
         this.invoiceId = invoiceId;
         this.paymentDate = paymentDate;
         this.currency = currency;
         this.createdDate = (createdDate == null) ? new DateTime() : createdDate;
-        this.updatedDate = (updatedDate == null) ? new DateTime() : updatedDate;
     }
 
     @Override
@@ -91,10 +89,5 @@ public class DefaultInvoicePayment implements InvoicePayment {
     @Override
     public DateTime getCreatedDate() {
         return createdDate;
-    }
-
-    @Override
-    public DateTime getUpdatedDate() {
-        return updatedDate;
     }
 }

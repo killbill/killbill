@@ -24,6 +24,8 @@ public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
     private String eventPlan;
     private String eventPlanPhase;
     private String eventPriceList;
+    private boolean fromDisk;
+
 
     public ApiEventBuilder() {
         super();
@@ -47,6 +49,15 @@ public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
 
     public String getEventPriceList() {
         return eventPriceList;
+    }
+
+    public boolean isFromDisk() {
+        return fromDisk;
+    }
+
+    public ApiEventBuilder setFromDisk(boolean fromDisk) {
+        this.fromDisk = fromDisk;
+        return this;
     }
 
     public ApiEventBuilder setEventType(ApiEventType eventType) {

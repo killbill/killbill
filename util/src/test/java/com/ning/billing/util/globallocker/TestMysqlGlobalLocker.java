@@ -19,6 +19,7 @@ package com.ning.billing.util.globallocker;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -49,8 +50,9 @@ public class TestMysqlGlobalLocker {
 
     @BeforeClass(alwaysRun=true)
     public void setup() throws IOException  {
+        final String testDdl = IOUtils.toString(TestMysqlGlobalLocker.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
         helper.startMysql();
-        createSimpleTable(dbi);
+        helper.initDb(testDdl);
     }
 
     @AfterClass(alwaysRun=true)
@@ -71,7 +73,7 @@ public class TestMysqlGlobalLocker {
             @Override
             public Void inTransaction(Handle conn, TransactionStatus status)
                     throws Exception {
-                conn.execute("insert into dummy (dummy_id) values ('" + UUID.randomUUID().toString()  + "')");
+                conn.execute("insert into dummy2 (dummy_id) values ('" + UUID.randomUUID().toString()  + "')");
                 return null;
             }
         });
@@ -88,22 +90,6 @@ public class TestMysqlGlobalLocker {
         lock.release();
 
         Assert.assertEquals(locker.isFree(LockerService.INVOICE, lockName), Boolean.TRUE);
-    }
-
-    private void createSimpleTable(IDBI dbi) {
-        dbi.inTransaction(new TransactionCallback<Void>() {
-
-            @Override
-            public Void inTransaction(Handle h, TransactionStatus status)
-                    throws Exception {
-                h.execute("create table dummy " +
-                        "(id int(11) unsigned NOT NULL AUTO_INCREMENT, " +
-                        "dummy_id char(36) NOT NULL, " +
-                        "PRIMARY KEY(id)" +
-                		") ENGINE=innodb;");
-                return null;
-            }
-        });
     }
 
     public final static class TestMysqlGlobalLockerModule extends AbstractModule {

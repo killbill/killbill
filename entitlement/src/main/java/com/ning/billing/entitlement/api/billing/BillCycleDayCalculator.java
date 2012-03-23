@@ -16,8 +16,6 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import java.util.UUID;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -27,8 +25,6 @@ import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -45,17 +41,15 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition.Subscription
 public class BillCycleDayCalculator {
 	private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 	
-	private final AccountUserApi accountApi;
 	private final CatalogService catalogService;
 
 	@Inject
-	public BillCycleDayCalculator(final AccountUserApi accountApi, final CatalogService catalogService) {
+	public BillCycleDayCalculator(final CatalogService catalogService) {
 		super();
-		this.accountApi = accountApi;
 		this.catalogService = catalogService;
 	}
 
-	protected int calculateBcd(SubscriptionBundle bundle, Subscription subscription, final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException, AccountApiException {
+	protected int calculateBcd(SubscriptionBundle bundle, Subscription subscription, final SubscriptionTransition transition, final Account account) throws CatalogApiException, AccountApiException {
 		Catalog catalog = catalogService.getFullCatalog();
 		Plan plan =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
 				transition.getNextPlan() : transition.getPreviousPlan();
@@ -72,7 +66,6 @@ public class BillCycleDayCalculator {
 										transition.getRequestedTransitionTime());
 						int result = -1;
 
-						Account account = accountApi.getAccountById(accountId);
 						switch (alignment) {
 						case ACCOUNT :
 							result = account.getBillCycleDay();
@@ -107,31 +100,6 @@ public class BillCycleDayCalculator {
 		} catch (CatalogApiException e) {
 			log.error("Unexpected catalog error encountered when updating BCD",e);
 		}
-
-
-		Account modifiedAccount = new DefaultAccount(
-				account.getId(),
-				account.getExternalKey(),
-				account.getEmail(),
-				account.getName(),
-				account.getFirstNameLength(),
-				account.getCurrency(),
-				result,
-				account.getPaymentProviderName(),
-				account.getTimeZone(),
-				account.getLocale(),
-				account.getAddress1(),
-				account.getAddress2(),
-				account.getCompanyName(),
-				account.getCity(),
-				account.getStateOrProvince(),
-				account.getCountry(),
-				account.getPostalCode(),
-				account.getPhone(),
-				account.getCreatedDate(),
-				null // Updated date will be set internally
-				);
-		accountApi.updateAccount(modifiedAccount);
 		return result;
 	}
 

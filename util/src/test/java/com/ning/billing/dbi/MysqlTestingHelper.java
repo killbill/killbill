@@ -110,11 +110,6 @@ public class MysqlTestingHelper
             return;
         }
 
-        if (mysqldResource == null || !mysqldResource.isRunning()) {
-            log.error("Asked to cleanup table " + table + " but MySQL is not running!");
-            return;
-        }
-
         log.info("Deleting table: " + table);
         final IDBI dbi = getDBI();
         dbi.withHandle(new HandleCallback<Void>()
@@ -159,5 +154,9 @@ public class MysqlTestingHelper
                 return null;
             }
         });
+    }
+
+    public String getDbName() {
+        return DB_NAME;
     }
 }
