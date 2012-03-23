@@ -22,7 +22,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.catalog.api.Currency;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -34,11 +33,12 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -153,31 +153,11 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         } catch (CatalogApiException e) {
             log.error("Unexpected catalog error encountered when updating BCD",e);
         }
+        
+        MutableAccountData modifiedData = account.toMutableAccountData();
+        modifiedData.setBillCycleDay(result);
 
-
-        Account modifiedAccount = new DefaultAccount(
-                account.getId(),
-                account.getExternalKey(),
-                account.getEmail(),
-                account.getName(),
-                account.getFirstNameLength(),
-                account.getCurrency(),
-                result,
-                account.getPaymentProviderName(),
-                account.getTimeZone(),
-                account.getLocale(),
-                account.getAddress1(),
-                account.getAddress2(),
-                account.getCompanyName(),
-                account.getCity(),
-                account.getStateOrProvince(),
-                account.getCountry(),
-                account.getPostalCode(),
-                account.getPhone(),
-                account.getCreatedDate(),
-                null // Updated date will be set internally
-        );
-        accountApi.updateAccount(modifiedAccount);
+        accountApi.updateAccount(account.getExternalKey(), modifiedData);
         return result;
     }
 
@@ -218,4 +198,6 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             }
         }
     }
+    
+ 
 }

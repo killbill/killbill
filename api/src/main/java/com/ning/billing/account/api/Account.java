@@ -28,4 +28,6 @@ public interface Account extends AccountData, CustomizableEntity, UpdatableEntit
 
     public DateTime getUpdatedDate();
 
+    public MutableAccountData toMutableAccountData();
+
 }

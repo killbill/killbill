@@ -52,12 +52,7 @@
             <artifactId>killbill-catalog</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Should be in test scope , but broken right now -->
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-account</artifactId>
-        </dependency>
-        <dependency>
+         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-util</artifactId>
             <type>test-jar</type>
@@ -82,14 +77,6 @@
             <artifactId>management-dbfiles</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Same here, this is really debatable whether or not we should keep that here -->
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-account</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>

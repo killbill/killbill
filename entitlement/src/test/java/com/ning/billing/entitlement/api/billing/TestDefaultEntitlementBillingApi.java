@@ -151,22 +151,12 @@ public class TestDefaultEntitlementBillingApi {
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
 
-		AccountUserApi accountApi = new BrainDeadAccountUserApi(){
-
-			@Override
-			public Account getAccountById(UUID accountId) {
-				return new BrainDeadAccount(){
-                    @Override
-                    public int getBillCycleDay() {
-                        return 32;
-                    }
-
-                    @Override
-                    public Currency getCurrency() {
-                        return Currency.USD;
-                    }
-                };
-			}} ;
+        AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+        Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        ((ZombieControl)account).addResult("getBillCycleDay", 32);
+        ((ZombieControl)account).addResult("getCurrency", Currency.USD);
+        ((ZombieControl)accountApi).addResult("getAccountById", account);
+		       
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
@@ -207,23 +197,13 @@ public class TestDefaultEntitlementBillingApi {
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
 
-		AccountUserApi accountApi = new BrainDeadAccountUserApi(){
+        AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+        Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        ((ZombieControl)account).addResult("getBillCycleDay", 32);
+        ((ZombieControl)account).addResult("getCurrency", Currency.USD);
+        ((ZombieControl)accountApi).addResult("getAccountById", account);
 
-			@Override
-			public Account getAccountById(UUID accountId) {
-				return new BrainDeadAccount(){
-                    @Override
-				    public int getBillCycleDay() {
-					    return 32;
-				    }
-
-                    @Override
-                    public Currency getCurrency() {
-                        return Currency.USD;
-                    }
-                };
-			}} ;
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}

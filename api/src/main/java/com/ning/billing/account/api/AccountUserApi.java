@@ -18,6 +18,10 @@ package com.ning.billing.account.api;
 
 import java.util.List;
 import java.util.UUID;
+
+import org.joda.time.DateTimeZone;
+
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 
@@ -36,7 +40,9 @@ public interface AccountUserApi {
     public void updateAccount(Account account) throws AccountApiException;
 
     public void updateAccount(String key, AccountData accountData) throws AccountApiException;
-
+    
+    public void updateAccount(UUID accountId, AccountData accountData) throws AccountApiException;
+    
     public Account getAccountByKey(String key);
 
     public Account getAccountById(UUID accountId);

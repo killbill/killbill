@@ -26,6 +26,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.MigrationAccountData;
+import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
@@ -43,7 +44,7 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
-    public Account createAccount(final AccountData data, final List<CustomField> fields, List<Tag> tags) throws AccountApiException {
+    public Account createAccount(final AccountData data, final List<CustomField> fields, final List<Tag> tags) throws AccountApiException {
         Account account = new DefaultAccount(data, clock.getUTCNow());
         account.addFields(fields);
         account.addTags(tags);
@@ -85,14 +86,10 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
             throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
         }
     }
-
+    
     @Override
-    public void updateAccount(final String externalKey, final AccountData accountData) throws AccountApiException {
-    	UUID accountId = getIdFromKey(externalKey);
-    	if(accountId == null) {
-    		throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
-    	}
-
+    public void updateAccount(final UUID accountId, final AccountData accountData)
+            throws AccountApiException {
         Account account = new DefaultAccount(accountId, accountData);
 
         try {
@@ -100,10 +97,20 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
         }
+  
     }
 
+    @Override
+    public void updateAccount(final String externalKey, final AccountData accountData) throws AccountApiException {
+    	UUID accountId = getIdFromKey(externalKey);
+    	if(accountId == null) {
+    		throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
+    	}
+    	updateAccount(accountId, accountData);
+     }
+
 	@Override
-	public void deleteAccountByKey(String externalKey) throws AccountApiException {
+	public void deleteAccountByKey(final String externalKey) throws AccountApiException {
 		dao.deleteByKey(externalKey);
 	}
 
@@ -124,4 +131,6 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 
         return account;
 	}
+
+
 }

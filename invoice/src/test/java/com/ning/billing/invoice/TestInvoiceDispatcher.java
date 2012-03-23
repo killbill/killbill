@@ -90,18 +90,14 @@ public class TestInvoiceDispatcher {
 	{
 
 
-		final String accountDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
 		final String entitlementDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 		final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-		//        final String paymentDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
 		final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
 		helper.startMysql();
 
-		helper.initDb(accountDdl);
 		helper.initDb(entitlementDdl);
 		helper.initDb(invoiceDdl);
-		//        helper.initDb(paymentDdl);
 		helper.initDb(utilDdl);
 		notifier.initialize();
 		notifier.start();

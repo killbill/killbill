@@ -104,7 +104,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 	}
 
 	/**
-	 * This call is used for testing 
+	 * This call is used for testing and update from an existing account
 	 * @param id
 	 * @param externalKey
 	 * @param email
@@ -301,6 +301,11 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 	@Override
 	public boolean processPayment() {
 		return tags.processPayment();
+	}
+	
+	@Override
+	public MutableAccountData toMutableAccountData() {
+	    return new MutableAccountData(this);
 	}
 
 	@Override
