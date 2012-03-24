@@ -135,7 +135,7 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService);
         DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,bcdCalculator, accountApi);
-        SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
+        SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
 
@@ -159,7 +159,7 @@ public class TestDefaultEntitlementBillingApi {
 		       
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService);
         DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,bcdCalculator, accountApi);
-        SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
+        SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
@@ -184,7 +184,7 @@ public class TestDefaultEntitlementBillingApi {
 			
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService);
         DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,bcdCalculator, accountApi);
-		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
+		SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
@@ -207,7 +207,7 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService);
         DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,bcdCalculator, accountApi);
-		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
+		SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
@@ -230,7 +230,7 @@ public class TestDefaultEntitlementBillingApi {
 		((ZombieControl)accountApi).addResult("getAccountById", account);
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService);
         DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,bcdCalculator, accountApi);
-		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
+		SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, bundles.get(0).getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 

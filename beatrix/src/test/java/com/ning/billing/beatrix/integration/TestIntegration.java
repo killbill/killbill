@@ -622,7 +622,7 @@ public class TestIntegration {
         assertTrue(busHandler.isCompleted(DELAY));
         invoices = invoiceUserApi.getInvoicesByAccount(accountId);
         assertNotNull(invoices);
-        assertTrue(invoices.size() == 2);
+        assertEquals(invoices.size(),2);
 
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -631,7 +631,7 @@ public class TestIntegration {
         assertTrue(busHandler.isCompleted(DELAY));
         invoices = invoiceUserApi.getInvoicesByAccount(accountId);
         assertNotNull(invoices);
-        assertTrue(invoices.size() == 3);
+        assertEquals(invoices.size(),3);
     }
 
     protected AccountData getAccountData(final int billingDay) {

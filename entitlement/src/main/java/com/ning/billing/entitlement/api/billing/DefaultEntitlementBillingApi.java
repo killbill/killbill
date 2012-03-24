@@ -56,7 +56,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     }
 
     @Override
-    public SortedSet<BillingEvent> getBillingEventsForAccount(
+    public SortedSet<BillingEvent> getBillingEventsForAccountAndUpdateAccountBCD(
             final UUID accountId) {
 
         List<SubscriptionBundle> bundles = entitlementDao.getSubscriptionBundleForAccount(accountId);
@@ -70,10 +70,12 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         			    Account account = accountApi.getAccountById(accountId);
         			    int bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
         			    
-        		        MutableAccountData modifiedData = account.toMutableAccountData();
-        		        modifiedData.setBillCycleDay(bcd);
-
-        		        accountApi.updateAccount(account.getExternalKey(), modifiedData);
+        			    if(account.getBillCycleDay() == 0) {
+        			        MutableAccountData modifiedData = account.toMutableAccountData();
+        			        modifiedData.setBillCycleDay(bcd);
+                            accountApi.updateAccount(account.getExternalKey(), modifiedData);
+        			    }
+        			    
 
 
         				BillingEvent event = new DefaultBillingEvent(transition, subscription, bcd, account.getCurrency());

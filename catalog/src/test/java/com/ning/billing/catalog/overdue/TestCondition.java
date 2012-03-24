@@ -101,16 +101,16 @@ public class TestCondition {
 	public void testResponseForLastFailedPaymentIn() throws Exception {
 		String xml = 
 				"<condition>" +
-				"	<responseForLastFailedPaymentIn><response>INSUFFICIENT_FUNDS</response><response>TEMPORARY_ACCOUNT_ISSUE</response></responseForLastFailedPaymentIn>" +
+				"	<responseForLastFailedPaymentIn><response>INSUFFICIENT_FUNDS</response><response>DO_NOT_HONOR</response></responseForLastFailedPaymentIn>" +
 				"</condition>";
 		InputStream is = new ByteArrayInputStream(xml.getBytes());
 		MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is,  MockCondition.class);
 		
 		DateTime now = new DateTime();
 		
-		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN, new Tag[]{});
+		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{});
 		BillingState state1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState state2 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), PaymentResponse.TEMPORARY_ACCOUNT_ISSUE, new Tag[]{});
+		BillingState state2 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), PaymentResponse.DO_NOT_HONOR , new Tag[]{});
 		
 		Assert.assertTrue(!c.evaluate(state0, now));
 		Assert.assertTrue(c.evaluate(state1, now));
@@ -128,11 +128,11 @@ public class TestCondition {
 		
 		DateTime now = new DateTime();
 		
-		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
-		BillingState state1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_PAY_OFF)});
+		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
+		BillingState state1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
 		BillingState state2 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), 
-				PaymentResponse.TEMPORARY_ACCOUNT_ISSUE, 
-				new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_PAY_OFF), 
+				PaymentResponse.DO_NOT_HONOR, 
+				new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF), 
 						  new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),
 						  new DescriptiveTag(null, "Tag", "Martin", now)});
 		

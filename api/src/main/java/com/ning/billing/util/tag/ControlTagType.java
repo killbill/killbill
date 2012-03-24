@@ -18,7 +18,8 @@ package com.ning.billing.util.tag;
 
 public enum ControlTagType {
     AUTO_PAY_OFF("Suspends payments until removed.", true, false),
-    AUTO_INVOICING_OFF("Suspends invoicing until removed.", false, true);
+    AUTO_INVOICING_OFF("Suspends invoicing until removed.", false, true), 
+    OVERDUE_ENFORCEMENT_OFF("Suspends overdue enforcement behaviour until removed.", false, false);;
 
     private final String description;
     private final boolean autoPaymentOff;

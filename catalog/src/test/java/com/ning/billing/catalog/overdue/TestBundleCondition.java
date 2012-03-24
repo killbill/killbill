@@ -59,11 +59,11 @@ public class TestBundleCondition {
 
 		DateTime now = new DateTime();
 		
-		BillingState accountState0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
-		BillingState accountState1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_PAY_OFF)});
+		BillingState accountState0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
+		BillingState accountState1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
 		BillingState accountState2 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), 
-				PaymentResponse.TEMPORARY_ACCOUNT_ISSUE, 
-				new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_PAY_OFF), 
+				PaymentResponse.DO_NOT_HONOR, 
+				new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF), 
 						  new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),
 						  new DescriptiveTag(null, "Tag", "Martin", now)});
 		
@@ -83,8 +83,8 @@ public class TestBundleCondition {
 
 		DateTime now = new DateTime();
 		
-		BillingState accountState0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
-		BillingState accountState1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_PAY_OFF)});
+		BillingState accountState0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
+		BillingState accountState1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
 		
 		BillingStateBundle state0 = new BillingStateBundle(new UUID(0L,1L), accountState0, 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{}, MockProduct.createJet(), BillingPeriod.MONTHLY, new MockPriceList() );
 		BillingStateBundle state1 = new BillingStateBundle(new UUID(0L,1L), accountState1, 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{}, prod, BillingPeriod.MONTHLY, new MockPriceList() );
@@ -100,8 +100,8 @@ public class TestBundleCondition {
 
 		DateTime now = new DateTime();
 		
-		BillingState accountState0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
-		BillingState accountState1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_PAY_OFF)});
+		BillingState accountState0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
+		BillingState accountState1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
 		
 		BillingStateBundle state0 = new BillingStateBundle(new UUID(0L,1L), accountState0, 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{}, MockProduct.createJet(), BillingPeriod.MONTHLY, new MockPriceList() );
 		BillingStateBundle state1 = new BillingStateBundle(new UUID(0L,1L), accountState1, 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{}, MockProduct.createJet(), BillingPeriod.ANNUAL, new MockPriceList() );
@@ -117,8 +117,8 @@ public class TestBundleCondition {
 
 		DateTime now = new DateTime();
 		
-		BillingState accountState0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
-		BillingState accountState1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_PAY_OFF)});
+		BillingState accountState0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
+		BillingState accountState1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
 		
 		BillingStateBundle state0 = new BillingStateBundle(new UUID(0L,1L), accountState0, 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{}, MockProduct.createJet(), BillingPeriod.MONTHLY, new MockPriceList() );
 		BillingStateBundle state1 = new BillingStateBundle(new UUID(0L,1L), accountState1, 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{},  MockProduct.createJet(), BillingPeriod.MONTHLY, pl );
@@ -126,8 +126,6 @@ public class TestBundleCondition {
 		Assert.assertTrue(!c.evaluate(state0, new DateTime()));
 		Assert.assertTrue(c.evaluate(state1, new DateTime()));
 	}
-
-	//MDW TODO: test Pricelist and billing period
 	
 	
 

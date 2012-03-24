@@ -305,7 +305,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 	
 	@Override
 	public MutableAccountData toMutableAccountData() {
-	    return new MutableAccountData(this);
+	    return new DefaultMutableAccountData(this);
 	}
 
 	@Override

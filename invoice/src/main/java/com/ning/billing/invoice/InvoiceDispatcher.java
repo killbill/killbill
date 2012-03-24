@@ -123,7 +123,7 @@ public class InvoiceDispatcher {
             return null;
         }
 
-        SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccount(accountId);
+        SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
         BillingEventSet billingEvents = new BillingEventSet(events);
 
         Currency targetCurrency = account.getCurrency();
