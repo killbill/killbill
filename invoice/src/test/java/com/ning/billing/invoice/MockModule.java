@@ -21,7 +21,6 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
@@ -54,7 +53,7 @@ public class MockModule extends AbstractModule {
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
             bind(DbiConfig.class).toInstance(config);
         } else {
-            final IDBI dbi = helper.getDBI();
+            final IDBI dbi = helper.getDBI(); 
             bind(IDBI.class).toInstance(dbi);
         }
 

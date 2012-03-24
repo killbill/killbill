@@ -23,9 +23,11 @@ import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
+import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import org.skife.jdbi.v2.IDBI;
-import com.ning.billing.account.glue.AccountModule;
+
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
@@ -78,7 +80,8 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
 
         bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
         installNotificationQueue();
-        install(new AccountModule());
+//      install(new AccountModule());
+      bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
         install(new CatalogModule());
         install(new EntitlementModule());
         install(new GlobalLockerModule());
