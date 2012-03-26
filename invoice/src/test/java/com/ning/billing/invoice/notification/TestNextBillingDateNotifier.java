@@ -27,7 +27,7 @@ import java.util.concurrent.Callable;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.DefaultAccountDao;
+import com.ning.billing.account.dao.AuditedAccountDao;
 import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.invoice.InvoiceDispatcher;
@@ -133,7 +133,7 @@ public class TestNextBillingDateNotifier {
                 bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
                 bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
                 bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-                bind(AccountDao.class).to(DefaultAccountDao.class).asEagerSingleton();
+                bind(AccountDao.class).to(AuditedAccountDao.class).asEagerSingleton();
                 bind(AccountUserApi.class).to(DefaultAccountUserApi.class).asEagerSingleton();
                 bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
 			}

@@ -14,15 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.util.glue;
+package com.ning.billing.util;
 
-import com.google.inject.AbstractModule;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-
-public class FieldStoreModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
-    }
+public enum ChangeType {
+    INSERT,
+    UPDATE,
+    DELETE
 }

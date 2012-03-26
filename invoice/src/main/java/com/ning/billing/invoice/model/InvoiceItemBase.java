@@ -21,11 +21,13 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.util.entity.EntityBase;
 import org.joda.time.DateTime;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem {
     protected final UUID invoiceId;
+    protected final UUID accountId;
     protected final UUID subscriptionId;
     protected final String planName;
     protected final String phaseName;
@@ -34,17 +36,18 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     protected final BigDecimal amount;
     protected final Currency currency;
 
-    public InvoiceItemBase(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
+    public InvoiceItemBase(UUID invoiceId, UUID accountId, @Nullable UUID subscriptionId, String planName, String phaseName,
                            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
-        this(UUID.randomUUID(), invoiceId, subscriptionId, planName, phaseName,
+        this(UUID.randomUUID(), invoiceId, accountId,  subscriptionId, planName, phaseName,
                 startDate, endDate, amount, currency, null, null);
     }
 
-    public InvoiceItemBase(UUID id, UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
+    public InvoiceItemBase(UUID id, UUID invoiceId, UUID accountId, @Nullable UUID subscriptionId, String planName, String phaseName,
                            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                           String createdBy, DateTime createdDate) {
+                           @Nullable String createdBy, @Nullable DateTime createdDate) {
         super(id, createdBy, createdDate);
         this.invoiceId = invoiceId;
+        this.accountId = accountId;
         this.subscriptionId = subscriptionId;
         this.planName = planName;
         this.phaseName = phaseName;
@@ -66,6 +69,11 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     @Override
     public UUID getInvoiceId() {
         return invoiceId;
+    }
+
+    @Override
+    public UUID getAccountId() {
+        return accountId;
     }
 
     @Override

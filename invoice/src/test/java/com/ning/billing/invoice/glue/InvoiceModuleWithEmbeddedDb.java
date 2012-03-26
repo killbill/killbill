@@ -30,7 +30,9 @@ import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.glue.CallContextModule;
+import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
+import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -91,6 +93,9 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
 
         bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
         bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
+                install(new FieldStoreModule());
+        install(new TagStoreModule());
+
         installNotificationQueue();
         install(new AccountModule());
         install(new CatalogModule());

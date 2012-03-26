@@ -20,6 +20,8 @@ import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.CallContextModule;
+import com.ning.billing.util.glue.FieldStoreModule;
+import com.ning.billing.util.glue.TagStoreModule;
 
 public class AccountModuleWithMocks extends AccountModule {
     @Override
@@ -33,5 +35,7 @@ public class AccountModuleWithMocks extends AccountModule {
         super.configure();
         install(new MockClockModule());
         install(new CallContextModule());
+        install(new TagStoreModule());
+        install(new FieldStoreModule());
     }
 }

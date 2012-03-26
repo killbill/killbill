@@ -79,6 +79,7 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                     public void bind(SQLStatement q, FixedPriceInvoiceItemBinder bind, FixedPriceInvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
+                        q.bind("accountId", item.getAccountId().toString());
                         q.bind("subscriptionId", item.getSubscriptionId().toString());
                         q.bind("planName", item.getPlanName());
                         q.bind("phaseName", item.getPhaseName());
@@ -97,6 +98,7 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
         public FixedPriceInvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
             UUID id = UUID.fromString(result.getString("id"));
             UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
+            UUID accountId = UUID.fromString(result.getString("account_id"));
             UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
             String planName = result.getString("plan_name");
             String phaseName = result.getString("phase_name");
@@ -107,7 +109,7 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             String createdBy = result.getString("created_by");
             DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
-            return new FixedPriceInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName,
+            return new FixedPriceInvoiceItem(id, invoiceId, accountId, subscriptionId, planName, phaseName,
                                             startDate, endDate, amount, currency, createdBy, createdDate);
         }
     }

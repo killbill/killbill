@@ -16,13 +16,14 @@
 
 package com.ning.billing.util.tag.dao;
 
-
 import java.util.List;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -46,4 +47,22 @@ public interface TagSqlDao extends EntityCollectionDao<Tag>, Transactional<TagSq
                                            @Bind("objectType") final String objectType,
                                            @TagBinder final List<Tag> entities,
                                            @CallContextBinder final CallContext context);
+
+    @SqlUpdate
+    public void addTagFromTransaction(@Bind("id") final String tagId,
+                                      @Bind("tagDefinitionName") final String tagName,
+                                      @Bind("objectId") final String objectId,
+                                      @Bind("objectType") final String objectType,
+                                      @CallContextBinder final CallContext context);
+
+    @SqlUpdate
+    public void removeTagFromTransaction(@Bind("tagDefinitionName") final String tagName,
+                                         @Bind("objectId") final String objectId,
+                                         @Bind("objectType") final String objectType,
+                                         @CallContextBinder final CallContext context);
+
+    @SqlQuery
+    public Tag findTag(@Bind("tagDefinitionName") final String tagName,
+                       @Bind("objectId") final String objectId,
+                       @Bind("objectType") final String objectType);
 }

@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -79,10 +79,12 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final SubscriptionFactory factory;
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
+    private final CustomFieldDao customFieldDao;
 
     @Inject
     public EntitlementSqlDao(final IDBI dbi, final Clock clock, final SubscriptionFactory factory,
-            final AddonUtils addonUtils, final NotificationQueueService notificationQueueService) {
+                             final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
+                             final CustomFieldDao customFieldDao) {
         this.clock = clock;
         this.factory = factory;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
@@ -90,6 +92,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         this.bundlesDao = dbi.onDemand(BundleSqlDao.class);
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
+        this.customFieldDao = customFieldDao;
     }
 
     @Override
@@ -119,7 +122,6 @@ public class EntitlementSqlDao implements EntitlementDao {
         });
     }
 
-
     @Override
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
         Subscription subscription = subscriptionsDao.getSubscriptionFromId(subscriptionId.toString());
@@ -147,7 +149,6 @@ public class EntitlementSqlDao implements EntitlementDao {
     public Subscription getBaseSubscription(final UUID bundleId) {
         return getBaseSubscription(bundleId, true);
     }
-
 
     @Override
     public Subscription getSubscriptionFromId(final UUID subscriptionId) {
@@ -410,8 +411,7 @@ public class EntitlementSqlDao implements EntitlementDao {
     private void updateCustomFieldsFromTransaction(final SubscriptionSqlDao transactionalDao,
                                                    final SubscriptionData subscription,
                                                    final CallContext context) {
-        AuditedCustomFieldDao auditedDao = new AuditedCustomFieldDao();
-        auditedDao.saveFields(transactionalDao, subscription.getId(), subscription.getObjectName(), subscription.getFieldList(), context);
+        customFieldDao.saveFields(transactionalDao, subscription.getId(), subscription.getObjectName(), subscription.getFieldList(), context);
     }
 
     private Subscription buildSubscription(Subscription input) {

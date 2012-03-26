@@ -16,16 +16,31 @@
 
 package com.ning.billing.util.tag.dao;
 
+import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.tag.Tag;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-public class AuditedTagDao {
-    public void saveTags(Transmogrifier dao, UUID objectId, String objectType, List<Tag> tags, CallContext context) {
+public class AuditedTagDao implements TagDao {
+    private final TagSqlDao tagSqlDao;
+
+    @Inject
+    public AuditedTagDao(final IDBI dbi) {
+        this.tagSqlDao = dbi.onDemand(TagSqlDao.class);
+    }
+
+    @Override
+    public void saveTags(final Transmogrifier dao, final UUID objectId, final String objectType,
+                         final List<Tag> tags, final CallContext context) {
         TagSqlDao tagSqlDao = dao.become(TagSqlDao.class);
 
         // get list of existing tags
@@ -52,7 +67,44 @@ public class AuditedTagDao {
         tagSqlDao.batchDeleteFromTransaction(objectId.toString(), objectType, existingTags, context);
 
         TagAuditSqlDao auditDao = dao.become(TagAuditSqlDao.class);
-        auditDao.batchInsertFromTransaction(objectId.toString(), objectType, tags, context);
-        auditDao.batchDeleteFromTransaction(objectId.toString(), objectType, existingTags, context);
+        auditDao.batchInsertFromTransaction(tags, context);
+        auditDao.batchDeleteFromTransaction(existingTags, context);
+    }
+
+    @Override
+    public void addTag(final String tagName, final UUID objectId, final String objectType, final CallContext context) {
+        tagSqlDao.inTransaction(new Transaction<Void, TagSqlDao>() {
+            @Override
+            public Void inTransaction(final TagSqlDao tagSqlDao, final TransactionStatus status) throws Exception {
+                String tagId = UUID.randomUUID().toString();
+                tagSqlDao.addTagFromTransaction(tagId, tagName, objectId.toString(), objectType, context);
+
+                TagAuditSqlDao auditDao = tagSqlDao.become(TagAuditSqlDao.class);
+                auditDao.addTagFromTransaction(tagId, context);
+
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void removeTag(final String tagName, final UUID objectId, final String objectType, final CallContext context) {
+        tagSqlDao.inTransaction(new Transaction<Void, TagSqlDao>() {
+            @Override
+            public Void inTransaction(final TagSqlDao tagSqlDao, final TransactionStatus status) throws Exception {
+                Tag tag = tagSqlDao.findTag(tagName, objectId.toString(), objectType);
+
+                if (tag == null) {
+                    throw new InvoiceApiException(ErrorCode.TAG_DOES_NOT_EXIST, tagName);
+                }
+
+                tagSqlDao.removeTagFromTransaction(tagName, objectId.toString(), objectType, context);
+
+                TagAuditSqlDao auditDao = tagSqlDao.become(TagAuditSqlDao.class);
+                auditDao.removeTagFromTransaction(tag.getId().toString(), context);
+
+                return null;
+            }
+        });
     }
 }

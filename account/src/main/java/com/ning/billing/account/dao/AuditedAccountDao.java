@@ -20,12 +20,12 @@ import java.sql.DataTruncation;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
-import com.ning.billing.util.entity.ChangeType;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -43,14 +43,18 @@ import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagSqlDao;
 
-public class DefaultAccountDao implements AccountDao {
+public class AuditedAccountDao implements AccountDao {
     private final AccountSqlDao accountSqlDao;
+    private final TagDao tagDao;
+    private final CustomFieldDao customFieldDao;
     private final Bus eventBus;
 
     @Inject
-    public DefaultAccountDao(IDBI dbi, Bus eventBus) {
+    public AuditedAccountDao(IDBI dbi, Bus eventBus, TagDao tagDao, CustomFieldDao customFieldDao) {
         this.eventBus = eventBus;
         this.accountSqlDao = dbi.onDemand(AccountSqlDao.class);
+        this.tagDao = tagDao;
+        this.customFieldDao = customFieldDao;
     }
 
     @Override
@@ -209,7 +213,7 @@ public class DefaultAccountDao implements AccountDao {
 
                     AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
                     auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
-                                                        ChangeType.INSERT.toString(), context);
+                            ChangeType.INSERT.toString(), context);
 
                     return null;
                 }
@@ -250,13 +254,11 @@ public class DefaultAccountDao implements AccountDao {
 
     private void saveTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
                                                final CallContext context) {
-        AuditedTagDao tagDao = new AuditedTagDao();
         tagDao.saveTags(transactionalDao, account.getId(), account.getObjectName(), account.getTagList(), context);
     }
 
     private void saveCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
                                                        final CallContext context) {
-        AuditedCustomFieldDao customFieldDao = new AuditedCustomFieldDao();
         customFieldDao.saveFields(transactionalDao, account.getId(), account.getObjectName(), account.getFieldList(), context);
     }
 }

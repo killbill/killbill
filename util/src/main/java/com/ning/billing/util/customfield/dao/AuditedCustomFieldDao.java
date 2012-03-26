@@ -16,8 +16,8 @@
 
 package com.ning.billing.util.customfield.dao;
 
+import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.entity.ChangeType;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.CustomFieldHistory;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -27,7 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-public class AuditedCustomFieldDao {
+public class AuditedCustomFieldDao implements CustomFieldDao {
+    @Override
     public void saveFields(Transmogrifier dao, UUID objectId, String objectType, List<CustomField> fields, CallContext context) {
         CustomFieldSqlDao customFieldSqlDao = dao.become(CustomFieldSqlDao.class);
 

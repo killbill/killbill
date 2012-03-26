@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.entity.ExtendedEntityBase;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -30,18 +31,17 @@ import com.ning.billing.util.tag.DefaultTagStore;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
- 
-public class DefaultAccount extends CustomizableEntityBase implements Account {
-	//public final static String OBJECT_TYPE = "Account";
 
-	private final String externalKey;
+import javax.annotation.Nullable;
+
+public class DefaultAccount extends ExtendedEntityBase implements Account {
+    private final String externalKey;
 	private final String email;
 	private final String name;
 	private final int firstNameLength;
 	private final Currency currency;
 	private final int billCycleDay;
 	private final String paymentProviderName;
-	private final DefaultTagStore tags;
 	private final DateTimeZone timeZone;
 	private final String locale;
 	private final String address1;
@@ -76,8 +76,9 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 	 * @param id UUID id of the existing account to update
 	 * @param data AccountData new data for the existing account
 	 */
-	public DefaultAccount(final UUID id, final String createdBy, final DateTime createdDate,
-                          final String updatedBy, final DateTime updatedDate, final AccountData data) {
+	public DefaultAccount(final UUID id, @Nullable final String createdBy, @Nullable final DateTime createdDate,
+                          @Nullable final String updatedBy, @Nullable final DateTime updatedDate,
+                          final AccountData data) {
 		this(id, data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
 				data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
 				data.getTimeZone(), data.getLocale(),
@@ -136,7 +137,6 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 		this.postalCode = postalCode;
 		this.country = country;
 		this.phone = phone;
-		this.tags = new DefaultTagStore(id, getObjectName());
         this.updatedBy = updatedBy;
         this.updatedDate = updatedDate;
 	}
@@ -158,7 +158,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 
     @Override
 	public String getObjectName() {
-		return "Account";
+		return ObjectType;
 	}
 
 	@Override
@@ -257,49 +257,6 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 	}
 
 	@Override
-	public List<Tag> getTagList() {
-		return tags.getEntityList();
-	}
-
-	@Override
-	public boolean hasTag(String tagName) {
-		return tags.containsTag(tagName);
-	}
-
-	@Override
-	public void addTag(TagDefinition definition) {
-		Tag tag = new DescriptiveTag(definition);
-		tags.add(tag) ;
-	}
-
-	@Override
-	public void addTags(List<Tag> tags) {
-		if (tags != null) {
-			this.tags.add(tags);
-		}
-	}
-
-	@Override
-	public void clearTags() {
-		this.tags.clear();
-	}
-
-	@Override
-	public void removeTag(TagDefinition definition) {
-		tags.remove(definition.getName());
-	}
-
-	@Override
-	public boolean generateInvoice() {
-		return tags.generateInvoice();
-	}
-
-	@Override
-	public boolean processPayment() {
-		return tags.processPayment();
-	}
-
-	@Override
 	public String toString() {
 		return "DefaultAccount [externalKey=" + externalKey +
                 ", email=" + email +
@@ -319,6 +276,7 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 				", postalCode=" + postalCode +
 				", country=" + country +
 				", tags=" + tags +
+                ", fields=" + fields +
                 "]";
 	}
 }

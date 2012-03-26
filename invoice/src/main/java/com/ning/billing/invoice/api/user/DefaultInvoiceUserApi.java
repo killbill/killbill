@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -78,4 +79,14 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             final CallContext context) throws InvoiceApiException {
 		return dispatcher.processAccount(accountId, targetDate, dryRun, context);
 	}
+
+    @Override
+    public void tagInvoiceAsWrittenOff(final UUID invoiceId, final CallContext context) {
+        dao.addControlTag(ControlTagType.WRITTEN_OFF, invoiceId, context);
+    }
+
+    @Override
+    public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) {
+        dao.removeControlTag(ControlTagType.WRITTEN_OFF, invoiceId, context);
+    }
 }

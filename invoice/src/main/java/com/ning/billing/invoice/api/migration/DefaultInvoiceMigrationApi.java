@@ -49,7 +49,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
 	public UUID createMigrationInvoice(UUID accountId, DateTime targetDate, BigDecimal balance, Currency currency) {
         CallContext context = new DefaultCallContextFactory(clock).createMigrationCallContext("Migration", CallOrigin.INTERNAL, UserType.MIGRATION, clock.getUTCNow(), clock.getUTCNow());
 		Invoice migrationInvoice = new MigrationInvoice(accountId, clock.getUTCNow(), targetDate, currency);
-		InvoiceItem migrationInvoiceItem = new MigrationInvoiceItem(migrationInvoice.getId(), targetDate, balance, currency );
+		InvoiceItem migrationInvoiceItem = new MigrationInvoiceItem(migrationInvoice.getId(), accountId, targetDate, balance, currency );
 		migrationInvoice.addInvoiceItem(migrationInvoiceItem);
 		dao.create(migrationInvoice, context);
 		return migrationInvoice.getId();

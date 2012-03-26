@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS recurring_invoice_items;
 CREATE TABLE recurring_invoice_items (
   id char(36) NOT NULL,
   invoice_id char(36) NOT NULL,
+  account_id char(36) NOT NULL,
   subscription_id char(36) NOT NULL,
   plan_name varchar(50) NOT NULL,
   phase_name varchar(50) NOT NULL,
@@ -23,6 +24,7 @@ DROP TABLE IF EXISTS fixed_invoice_items;
 CREATE TABLE fixed_invoice_items (
   id char(36) NOT NULL,
   invoice_id char(36) NOT NULL,
+  account_id char(36) NOT NULL,
   subscription_id char(36) NOT NULL,
   plan_name varchar(50) NOT NULL,
   phase_name varchar(50) NOT NULL,

@@ -16,7 +16,7 @@
 
 package com.ning.billing.util.customfield;
 
-import com.ning.billing.util.entity.ChangeType;
+import com.ning.billing.util.ChangeType;
 import org.joda.time.DateTime;
 
 import java.util.UUID;

@@ -16,15 +16,17 @@
 
 package com.ning.billing.invoice.api;
 
-import com.ning.billing.util.entity.Entity;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.entity.ExtendedEntity;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-public interface Invoice extends Entity {
+public interface Invoice extends ExtendedEntity {
+    public static String ObjectType = "invoice";
+
     boolean addInvoiceItem(InvoiceItem item);
 
     boolean addInvoiceItems(List<InvoiceItem> items);

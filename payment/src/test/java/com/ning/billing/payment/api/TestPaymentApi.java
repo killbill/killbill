@@ -71,7 +71,7 @@ public abstract class TestPaymentApi {
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();
 
-        invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+        invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(), account.getId(),
                                                        subscriptionId,
                                                        "test plan", "test phase",
                                                        now,

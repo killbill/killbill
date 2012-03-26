@@ -78,6 +78,7 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                     public void bind(SQLStatement q, RecurringInvoiceItemBinder bind, RecurringInvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
+                        q.bind("accountId", item.getAccountId().toString());
                         q.bind("subscriptionId", item.getSubscriptionId().toString());
                         q.bind("planName", item.getPlanName());
                         q.bind("phaseName", item.getPhaseName());
@@ -98,6 +99,7 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
         public InvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
             UUID id = UUID.fromString(result.getString("id"));
             UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
+            UUID accountId = UUID.fromString(result.getString("account_id"));
             UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
             String planName = result.getString("plan_name");
             String phaseName = result.getString("phase_name");
@@ -111,7 +113,7 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             String createdBy = result.getString("created_by");
             DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
-            return new RecurringInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName, startDate, endDate,
+            return new RecurringInvoiceItem(id, invoiceId, accountId, subscriptionId, planName, phaseName, startDate, endDate,
                     amount, rate, currency, reversedItemId, createdBy, createdDate);
         }
     }

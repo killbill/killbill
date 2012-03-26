@@ -134,6 +134,13 @@ public enum ErrorCode {
 
    /*
     *
+    * Range 3950: Tags
+    *
+    */
+    TAG_DOES_NOT_EXIST(3950, "The tag does not exist (name: %s)"),
+
+   /*
+    *
     * Range 4000: INVOICE
     *
     */

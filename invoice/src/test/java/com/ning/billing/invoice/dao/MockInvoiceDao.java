@@ -26,6 +26,7 @@ import java.util.UUID;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -200,4 +201,14 @@ public class MockInvoiceDao implements InvoiceDao {
 	        }
 	        return result;
 	}
+
+    @Override
+    public void addControlTag(ControlTagType controlTagType, UUID objectId, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void removeControlTag(ControlTagType controlTagType, UUID objectId, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
 }

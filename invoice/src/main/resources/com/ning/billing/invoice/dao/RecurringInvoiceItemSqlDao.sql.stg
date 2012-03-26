@@ -3,6 +3,7 @@ group RecurringInvoiceItemSqlDao;
 fields(prefix) ::= <<
   <prefix>id,
   <prefix>invoice_id,
+  <prefix>account_id,
   <prefix>subscription_id,
   <prefix>plan_name,
   <prefix>phase_name,
@@ -43,13 +44,13 @@ getInvoiceItemsBySubscription() ::= <<
 
 create() ::= <<
   INSERT INTO recurring_invoice_items(<fields()>)
-  VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
+  VALUES(:id, :invoiceId, :accountId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
          :amount, :rate, :currency, :reversedItemId, :userName, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO recurring_invoice_items(<fields()>)
-  VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
+  VALUES(:id, :invoiceId, :accountId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
          :amount, :rate, :currency, :reversedItemId, :userName, :createdDate);
 >>
 

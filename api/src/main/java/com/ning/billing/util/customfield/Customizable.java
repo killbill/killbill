@@ -21,7 +21,7 @@ import java.util.List;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.Entity;
 
-public interface CustomizableEntity extends Entity {
+public interface Customizable {
     public String getFieldValue(String fieldName);
 
     public void setFieldValue(String fieldName, String fieldValue);

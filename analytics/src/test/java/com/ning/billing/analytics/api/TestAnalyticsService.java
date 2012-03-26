@@ -247,7 +247,7 @@ public class TestAnalyticsService {
     private void createInvoiceAndPaymentCreationEvents(final Account account) {
         final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCNow(), clock.getUTCNow(), ACCOUNT_CURRENCY);
         final FixedPriceInvoiceItem invoiceItem = new FixedPriceInvoiceItem(
-                UUID.randomUUID(), invoice.getId(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
+                UUID.randomUUID(), account.getId(), invoice.getId(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
                 INVOICE_AMOUNT, ACCOUNT_CURRENCY, context.getUserName(), clock.getUTCNow());
         invoice.addInvoiceItem(invoiceItem);
 

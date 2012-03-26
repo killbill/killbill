@@ -38,8 +38,8 @@ import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.CustomizableEntityBase;
 
+import com.ning.billing.util.entity.ExtendedEntityBase;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-public class SubscriptionData extends CustomizableEntityBase implements Subscription {
+public class SubscriptionData extends ExtendedEntityBase implements Subscription {
 
     private final static Logger log = LoggerFactory.getLogger(SubscriptionData.class);
 

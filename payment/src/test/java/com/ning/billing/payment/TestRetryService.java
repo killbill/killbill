@@ -114,6 +114,7 @@ public class TestRetryService {
         final DateTime startDate = clock.getUTCNow();
         final DateTime endDate = startDate.plusMonths(1);
         invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+                                                       account.getId(),
                                                        subscriptionId,
                                                        "test plan", "test phase",
                                                        startDate,
@@ -154,6 +155,7 @@ public class TestRetryService {
         final DateTime now = clock.getUTCNow();
 
         invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+                                                       account.getId(),
                                                        subscriptionId,
                                                        "test plan", "test phase",
                                                        now,

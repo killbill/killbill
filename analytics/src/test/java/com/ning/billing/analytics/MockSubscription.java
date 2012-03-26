@@ -27,6 +27,8 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -199,6 +201,46 @@ public class MockSubscription implements Subscription
 
     @Override
     public String getObjectName() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<Tag> getTagList() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasTag(String tagName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addTag(TagDefinition definition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addTags(List<Tag> tags) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clearTags() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void removeTag(TagDefinition definition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean generateInvoice() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean processPayment() {
         throw new UnsupportedOperationException();
     }
 }

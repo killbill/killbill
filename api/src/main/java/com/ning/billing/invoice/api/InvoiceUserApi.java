@@ -38,4 +38,8 @@ public interface InvoiceUserApi {
     public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate);
     
     public Invoice triggerInvoiceGeneration(UUID accountId, DateTime targetDate, boolean dryRun, CallContext context) throws InvoiceApiException;
+
+    public void tagInvoiceAsWrittenOff(UUID invoiceId, CallContext context);
+
+    public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context);
 }

@@ -28,6 +28,7 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
@@ -66,7 +67,6 @@ public class TestTagStore {
     @Inject
     private IDBI dbi;
 
-    @Inject
     private TagSqlDao tagSqlDao;
 
     @Inject
@@ -93,6 +93,7 @@ public class TestTagStore {
             tagSqlDao.test();
 
             context = new DefaultCallContextFactory(clock).createCallContext("Tag store test", CallOrigin.TEST, UserType.TEST);
+            tagSqlDao = dbi.onDemand(TagSqlDao.class);
 
             cleanupTags();
             tag1 = tagDefinitionDao.create("tag1", "First tag", context);
@@ -112,8 +113,8 @@ public class TestTagStore {
 
     private void saveTags(final TagSqlDao dao, final String objectType, final UUID accountId,
                           final List<Tag> tagList, final CallContext context)  {
-        AuditedTagDao auditedTagDao = new AuditedTagDao();
-        auditedTagDao.saveTags(dao, accountId, objectType, tagList, context);
+        TagDao tagDao = new AuditedTagDao(dbi);
+        tagDao.saveTags(dao, accountId, objectType, tagList, context);
     }
 
 

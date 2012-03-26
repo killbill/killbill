@@ -19,3 +19,13 @@ batchDeleteFromTransaction() ::= <<
     INSERT INTO audit_log(<fields()>)
     VALUES('tag', :id, 'DELETE', :updatedDate, :userName, NULL, NULL);
 >>
+
+addTagFromTransaction() ::= <<
+    INSERT INTO audit_log(<fields()>)
+    VALUES('tag', :id, 'INSERT', :createdDate, :userName, NULL, NULL);
+>>
+
+removeTagFromTransaction() ::= <<
+    INSERT INTO audit_log(<fields()>)
+    VALUES('tag', :id, 'DELETE', :updatedDate, :userName, NULL, NULL);
+>>

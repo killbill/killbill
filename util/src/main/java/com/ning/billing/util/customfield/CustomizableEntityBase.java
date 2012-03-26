@@ -21,7 +21,7 @@ import java.util.UUID;
 import com.ning.billing.util.entity.EntityBase;
 import org.joda.time.DateTime;
 
-public abstract class CustomizableEntityBase extends EntityBase implements CustomizableEntity {
+public abstract class CustomizableEntityBase extends EntityBase implements Customizable {
     protected final FieldStore fields;
 
     public CustomizableEntityBase() {

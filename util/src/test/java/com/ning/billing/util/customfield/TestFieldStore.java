@@ -29,6 +29,7 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.glue.FieldStoreModule;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
@@ -49,6 +50,7 @@ public class TestFieldStore {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private CallContext context;
     private IDBI dbi;
+    private CustomFieldDao customFieldDao;
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
@@ -60,6 +62,7 @@ public class TestFieldStore {
             helper.initDb(utilDdl);
 
             dbi = helper.getDBI();
+            customFieldDao = new AuditedCustomFieldDao();
 
             FieldStoreModule module = new FieldStoreModule();
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module, new MockClockModule());
@@ -91,8 +94,7 @@ public class TestFieldStore {
         fieldStore1.setValue(fieldName, fieldValue);
 
         CustomFieldSqlDao customFieldSqlDao = dbi.onDemand(CustomFieldSqlDao.class);
-        AuditedCustomFieldDao auditedDao = new AuditedCustomFieldDao();
-        auditedDao.saveFields(customFieldSqlDao, id, objectType, fieldStore1.getEntityList(), context);
+        customFieldDao.saveFields(customFieldSqlDao, id, objectType, fieldStore1.getEntityList(), context);
 
         final FieldStore fieldStore2 = DefaultFieldStore.create(id, objectType);
         fieldStore2.add(customFieldSqlDao.load(id.toString(), objectType));
@@ -102,7 +104,7 @@ public class TestFieldStore {
         fieldValue = "Cape Canaveral";
         fieldStore2.setValue(fieldName, fieldValue);
         assertEquals(fieldStore2.getValue(fieldName), fieldValue);
-        auditedDao.saveFields(customFieldSqlDao, id, objectType, fieldStore2.getEntityList(), context);
+        customFieldDao.saveFields(customFieldSqlDao, id, objectType, fieldStore2.getEntityList(), context);
 
         final FieldStore fieldStore3 = DefaultFieldStore.create(id, objectType);
         assertEquals(fieldStore3.getValue(fieldName), null);
