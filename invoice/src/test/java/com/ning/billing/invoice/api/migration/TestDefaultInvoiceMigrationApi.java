@@ -178,8 +178,8 @@ public class TestDefaultInvoiceMigrationApi {
 				BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
 		EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
-		((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccount", events);
-
+        ((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
+        
 		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);
 
 		Invoice invoice = dispatcher.processAccount(accountId, date_regular, true);

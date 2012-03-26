@@ -141,7 +141,7 @@ public class TestInvoiceDispatcher {
 				BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
 		EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
-		((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccount", events);
+		((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
 
 		DateTime target = new DateTime();
 
