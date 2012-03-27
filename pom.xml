@@ -402,6 +402,7 @@
                                 <exclude>**/*.dont-let-git-remove-this-directory</exclude>
                                 <exclude>**/test-output/**</exclude>
                                 <exclude>**/bin/**</exclude>
+                                <exclude>.travis.yml</exclude>
                             </excludes>
                         </configuration>
                     </execution>
