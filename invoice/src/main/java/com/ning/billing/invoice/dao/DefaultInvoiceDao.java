@@ -29,11 +29,11 @@ import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagDao;
-import com.ning.billing.util.tag.dao.TagSqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -304,10 +304,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
         }
     }
 
-    private void getTagsWithinTransaction(final Invoice invoice, final InvoiceSqlDao invoiceSqlDao) {
-        TagSqlDao tagSqlDao = invoiceSqlDao.become(TagSqlDao.class);
-        String invoiceId = invoice.getId().toString();
-        List<Tag> tags = tagSqlDao.load(invoiceId, Invoice.ObjectType);
+    private void getTagsWithinTransaction(final Invoice invoice, final Transmogrifier dao) {
+        List<Tag> tags = tagDao.loadTagsFromTransaction(dao, invoice.getId(), Invoice.ObjectType);
         invoice.addTags(tags);
     }
 

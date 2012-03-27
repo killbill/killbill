@@ -32,15 +32,47 @@ import java.util.UUID;
 
 public class AuditedTagDao implements TagDao {
     private final TagSqlDao tagSqlDao;
+    private final TagAuditSqlDao tagAuditSqlDao;
 
     @Inject
     public AuditedTagDao(final IDBI dbi) {
         this.tagSqlDao = dbi.onDemand(TagSqlDao.class);
+        this.tagAuditSqlDao = dbi.onDemand(TagAuditSqlDao.class);
     }
 
     @Override
-    public void saveTags(final Transmogrifier dao, final UUID objectId, final String objectType,
+    public void saveTags(final UUID objectId, final String objectType,
                          final List<Tag> tags, final CallContext context) {
+        // get list of existing tags
+        List<Tag> existingTags = tagSqlDao.load(objectId.toString(), objectType);
+
+        // sort into tags to update (tagsToUpdate), tags to add (tags), and tags to delete (existingTags)
+        Iterator<Tag> tagIterator = tags.iterator();
+        while (tagIterator.hasNext()) {
+            Tag tag = tagIterator.next();
+
+            Iterator<Tag> existingTagIterator = existingTags.iterator();
+            while (existingTagIterator.hasNext()) {
+                Tag existingTag = existingTagIterator.next();
+                if (tag.getTagDefinitionName().equals(existingTag.getTagDefinitionName())) {
+                    // if the tags match, remove from both lists
+                    // in the case of tag, this just means the tag remains associated
+                    tagIterator.remove();
+                    existingTagIterator.remove();
+                }
+            }
+        }
+
+        tagSqlDao.batchInsertFromTransaction(objectId.toString(), objectType, tags, context);
+        tagSqlDao.batchDeleteFromTransaction(objectId.toString(), objectType, existingTags, context);
+
+        tagAuditSqlDao.batchInsertFromTransaction(tags, context);
+        tagAuditSqlDao.batchDeleteFromTransaction(existingTags, context);
+    }
+
+    @Override
+    public void saveTagsFromTransaction(final Transmogrifier dao, final UUID objectId, final String objectType,
+                                        final List<Tag> tags, final CallContext context) {
         TagSqlDao tagSqlDao = dao.become(TagSqlDao.class);
 
         // get list of existing tags
@@ -69,6 +101,17 @@ public class AuditedTagDao implements TagDao {
         TagAuditSqlDao auditDao = dao.become(TagAuditSqlDao.class);
         auditDao.batchInsertFromTransaction(tags, context);
         auditDao.batchDeleteFromTransaction(existingTags, context);
+    }
+
+    @Override
+    public List<Tag> loadTags(final UUID objectId, final String objectType) {
+        return tagSqlDao.load(objectId.toString(), objectType);
+    }
+
+    @Override
+    public List<Tag> loadTagsFromTransaction(final Transmogrifier dao, final UUID objectId, final String objectType) {
+        TagSqlDao tagSqlDao = dao.become(TagSqlDao.class);
+        return tagSqlDao.load(objectId.toString(), objectType);
     }
 
     @Override

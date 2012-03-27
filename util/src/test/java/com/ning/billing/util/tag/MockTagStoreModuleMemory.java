@@ -14,26 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.util.glue;
+package com.ning.billing.util.tag;
 
-import com.google.inject.AbstractModule;
-import com.ning.billing.util.api.TagDefinitionUserApi;
-import com.ning.billing.util.tag.api.DefaultTagDefinitionUserApi;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.DefaultTagDefinitionDao;
+import com.ning.billing.util.glue.TagStoreModule;
+import com.ning.billing.util.tag.dao.MockTagDao;
+import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
-public class TagStoreModule extends AbstractModule
-{
-    protected void installDaos() {
-        bind(TagDefinitionDao.class).to(DefaultTagDefinitionDao.class).asEagerSingleton();
-        bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
-    }
 
+public class MockTagStoreModuleMemory extends TagStoreModule {
     @Override
-    protected void configure()
-    {
-        installDaos();
-        bind(TagDefinitionUserApi.class).to(DefaultTagDefinitionUserApi.class).asEagerSingleton();
+    protected void installDaos() {
+        bind(TagDefinitionDao.class).to(MockTagDefinitionDao.class).asEagerSingleton();
+        bind(TagDao.class).to(MockTagDao.class).asEagerSingleton();
     }
 }

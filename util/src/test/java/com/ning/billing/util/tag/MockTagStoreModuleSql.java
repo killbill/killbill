@@ -25,7 +25,7 @@ import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 
-public class TagStoreModuleMock extends TagStoreModule {
+public class MockTagStoreModuleSql extends TagStoreModule {
     private MysqlTestingHelper helper;
 
     @Override

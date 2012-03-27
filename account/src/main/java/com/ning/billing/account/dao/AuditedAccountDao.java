@@ -41,7 +41,6 @@ import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.dao.TagSqlDao;
 
 public class AuditedAccountDao implements AccountDao {
     private final AccountSqlDao accountSqlDao;
@@ -243,8 +242,7 @@ public class AuditedAccountDao implements AccountDao {
     }
 
     private void setTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
-        TagSqlDao tagDao = transactionalDao.become(TagSqlDao.class);
-        List<Tag> tags = tagDao.load(account.getId().toString(), account.getObjectName());
+        List<Tag> tags = tagDao.loadTagsFromTransaction(transactionalDao, account.getId(), Account.ObjectType);
         account.clearTags();
 
         if (tags != null) {
@@ -254,7 +252,7 @@ public class AuditedAccountDao implements AccountDao {
 
     private void saveTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
                                                final CallContext context) {
-        tagDao.saveTags(transactionalDao, account.getId(), account.getObjectName(), account.getTagList(), context);
+        tagDao.saveTagsFromTransaction(transactionalDao, account.getId(), account.getObjectName(), account.getTagList(), context);
     }
 
     private void saveCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
