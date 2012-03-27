@@ -176,15 +176,15 @@
                 <version>1.2.0</version>
             </dependency>
             <dependency>
-                <groupId>com.mysql</groupId>
-                <artifactId>management</artifactId>
-                <version>5.0.11</version>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-mxj</artifactId>
+                <version>5.0.12</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>com.mysql</groupId>
-                <artifactId>management-dbfiles</artifactId>
-                <version>5.0.11</version>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-mxj-db-files</artifactId>
+                <version>5.0.12</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
