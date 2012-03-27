@@ -72,16 +72,6 @@
             <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>management</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>management-dbfiles</artifactId>
-            <scope>test</scope>
-        </dependency>
         <!-- Same here, this is really debatable whether or not we should keep that here -->
         <dependency>
             <groupId>com.ning.billing</groupId>
@@ -90,11 +80,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <scope>runtime</scope>
-        </dependency>
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
@@ -132,6 +117,16 @@
             <groupId>org.antlr</groupId>
             <artifactId>stringtemplate</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-mxj</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-mxj-db-files</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>

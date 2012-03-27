@@ -83,11 +83,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>management</artifactId>
-            <version>5.0.11</version>
-        </dependency>
-        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <scope>test</scope>
@@ -99,19 +94,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>management</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>management-dbfiles</artifactId>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-mxj</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <scope>runtime</scope>
+            <artifactId>mysql-connector-mxj-db-files</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>

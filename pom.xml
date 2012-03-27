@@ -59,6 +59,7 @@
                 <artifactId>killbill-api</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
@@ -70,6 +71,7 @@
                 <artifactId>killbill-account</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
@@ -81,6 +83,7 @@
                 <artifactId>killbill-entitlement</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
@@ -92,6 +95,7 @@
                 <artifactId>killbill-payment</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
@@ -103,6 +107,7 @@
                 <artifactId>killbill-catalog</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
@@ -114,6 +119,7 @@
                 <artifactId>killbill-invoice</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
@@ -125,6 +131,7 @@
                 <artifactId>killbill-util</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
