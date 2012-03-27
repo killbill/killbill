@@ -39,7 +39,7 @@ public class TestValidationManager {
 
     private ValidationManager vm;
     
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(groups = "slow")
     public void setup() throws IOException {
         setupDatabase();
         setupDao();
@@ -60,7 +60,7 @@ public class TestValidationManager {
         helper.initDb(ddl.toString());
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups = "slow")
     public void tearDown() {
         stopDatabase();
     }
@@ -69,7 +69,7 @@ public class TestValidationManager {
         helper.stopMysql();
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testRetrievingColumnInfo() {
         Collection<ColumnInfo> columnInfoList = vm.getTableInfo(TABLE_NAME);
         assertEquals(columnInfoList.size(), 4);
@@ -82,7 +82,7 @@ public class TestValidationManager {
         assertEquals(numericColumnInfo.getPrecision(), 10);
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testSimpleConfiguration() {
         String STRING_FIELD_2 = "column2";
         String STRING_FIELD_2_PROPERTY = "stringField2";

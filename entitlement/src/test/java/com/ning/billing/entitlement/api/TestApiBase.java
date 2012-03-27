@@ -113,7 +113,7 @@ public abstract class TestApiBase {
 
     protected abstract Injector getInjector();
 
-    @AfterClass(alwaysRun=true)
+    @AfterClass(alwaysRun = true)
     public void tearDown() {
         try {
             busService.getBus().register(testListener);
@@ -124,7 +124,7 @@ public abstract class TestApiBase {
 
     }
 
-    @BeforeClass(alwaysRun=true)
+    @BeforeClass(alwaysRun = true)
     public void setup() {
 
         loadSystemPropertiesFromClasspath("/entitlement.properties");
@@ -178,7 +178,7 @@ public abstract class TestApiBase {
         migrationApi = entitlementService.getMigrationApi();
     }
 
-    @BeforeMethod(alwaysRun=true)
+    @BeforeMethod(alwaysRun = true)
     public void setupTest() {
 
         log.warn("\n");
@@ -200,7 +200,7 @@ public abstract class TestApiBase {
         ((Engine)entitlementService).start();
     }
 
-    @AfterMethod(alwaysRun=true)
+    @AfterMethod(alwaysRun = true)
     public void cleanupTest() {
         ((Engine)entitlementService).stop();
         log.warn("DONE WITH TEST\n");

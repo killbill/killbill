@@ -23,6 +23,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 
+@Test(groups = "fast")
 public class TestMigrationMemory extends TestMigration {
     @Override
     protected Injector getInjector() {

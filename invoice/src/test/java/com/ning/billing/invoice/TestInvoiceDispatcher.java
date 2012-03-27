@@ -60,6 +60,7 @@ import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import sun.security.util.BigInt;
 
+@Test(groups = "slow")
 @Guice(modules = {MockModule.class})
 public class TestInvoiceDispatcher {
 
@@ -83,7 +84,7 @@ public class TestInvoiceDispatcher {
 
 
 
-    @BeforeSuite(alwaysRun = true)
+    @BeforeSuite(groups = "slow")
     public void setup() throws IOException
     {
 
@@ -108,7 +109,7 @@ public class TestInvoiceDispatcher {
     }
 
 
-	    @Test(groups={"fast"}, enabled=true)
+	    @Test(groups={"slow"}, enabled=true)
 	    public void testDryrunInvoice() throws InvoiceApiException {
 	    	UUID accountId = UUID.randomUUID();
 	    	UUID subscriptionId = UUID.randomUUID();
