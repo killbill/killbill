@@ -14,10 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.util.entity;
+package com.ning.billing.invoice.api;
 
-import com.ning.billing.util.customfield.Customizable;
-import com.ning.billing.util.tag.Taggable;
-
-public interface ExtendedEntity extends Entity, Taggable, Customizable {
+public enum InvoiceItemType {
+    FIXED,
+    RECURRING,
+    REVERSAL,
+    MIGRATION,
+    REFUND,
+    CHARGE_BACK,
+    ADD_CREDIT,
+    USE_CREDIT
 }

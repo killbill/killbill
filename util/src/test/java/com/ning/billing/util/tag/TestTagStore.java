@@ -90,10 +90,10 @@ public class TestTagStore {
 
             helper.startMysql();
             helper.initDb(utilDdl);
+            tagSqlDao = dbi.onDemand(TagSqlDao.class);
             tagSqlDao.test();
 
             context = new DefaultCallContextFactory(clock).createCallContext("Tag store test", CallOrigin.TEST, UserType.TEST);
-            tagSqlDao = dbi.onDemand(TagSqlDao.class);
 
             cleanupTags();
             tag1 = tagDefinitionDao.create("tag1", "First tag", context);
