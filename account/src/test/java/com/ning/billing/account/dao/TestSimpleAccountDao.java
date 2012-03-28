@@ -380,7 +380,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         accountDao.update(updatedAccount);
     }
 
-    @Test(groups={"slow"},enabled=true)
+    @Test
     public void testDelete() throws AccountApiException, EntityPersistenceException {
 
         Account a = createTestAccountBuilder().build();

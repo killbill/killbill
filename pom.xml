@@ -447,6 +447,7 @@
                 <version>2.11</version>
                 <configuration>
                     <useManifestOnlyJar>false</useManifestOnlyJar>
+                    <groups>fast,slow</groups>
                     <systemPropertyVariables>
                         <log4j.configuration>file:${project.basedir}/src/test/resources/log4j.xml</log4j.configuration>
                     </systemPropertyVariables>
