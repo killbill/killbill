@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+00 * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,6 +28,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.overdue.BillingState;
+import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.catalog.api.overdue.PaymentResponse;
 import com.ning.billing.util.config.XMLLoader;
 import com.ning.billing.util.tag.ControlTagType;
@@ -38,7 +39,7 @@ import com.ning.billing.util.tag.Tag;
 public class TestCondition {
 	
 	@XmlRootElement(name="condition")
-	private static class MockCondition extends Condition {}
+	private static class MockCondition extends DefaultCondition<Overdueable> {}
 
 	@Test(groups={"fast"}, enabled=true)
 	public void testNumberOfUnpaidInvoicesEqualsOrExceeds() throws Exception {
@@ -49,9 +50,9 @@ public class TestCondition {
 		InputStream is = new ByteArrayInputStream(xml.getBytes());
 		MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is,  MockCondition.class);
 		
-		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState state1 = new BillingState(new UUID(0L,1L), 1, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState state2 = new BillingState(new UUID(0L,1L), 2, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Overdueable> state0 = new BillingState<Overdueable>(new UUID(0L,1L), 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Overdueable> state1 = new BillingState<Overdueable>(new UUID(0L,1L), 1, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Overdueable> state2 = new BillingState<Overdueable>(new UUID(0L,1L), 2, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 		
 		Assert.assertTrue(!c.evaluate(state0, new DateTime()));
 		Assert.assertTrue(c.evaluate(state1, new DateTime()));
@@ -67,9 +68,9 @@ public class TestCondition {
 		InputStream is = new ByteArrayInputStream(xml.getBytes());
 		MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is,  MockCondition.class);
 		
-		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState state1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState state2 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("200.00"), new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Overdueable> state0 = new BillingState<Overdueable>(new UUID(0L,1L), 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Overdueable> state1 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Overdueable> state2 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 		
 		Assert.assertTrue(!c.evaluate(state0, new DateTime()));
 		Assert.assertTrue(c.evaluate(state1, new DateTime()));
@@ -88,9 +89,9 @@ public class TestCondition {
 		
 		DateTime now = new DateTime();
 		
-		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState state1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState state2 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Overdueable> state0 = new BillingState<Overdueable>(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Overdueable> state1 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Overdueable> state2 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 		
 		Assert.assertTrue(!c.evaluate(state0, now));
 		Assert.assertTrue(c.evaluate(state1, now));
@@ -108,9 +109,9 @@ public class TestCondition {
 		
 		DateTime now = new DateTime();
 		
-		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{});
-		BillingState state1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState state2 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), PaymentResponse.DO_NOT_HONOR , new Tag[]{});
+		BillingState<Overdueable> state0 = new BillingState<Overdueable>(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{});
+		BillingState<Overdueable> state1 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Overdueable> state2 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), PaymentResponse.DO_NOT_HONOR , new Tag[]{});
 		
 		Assert.assertTrue(!c.evaluate(state0, now));
 		Assert.assertTrue(c.evaluate(state1, now));
@@ -128,9 +129,9 @@ public class TestCondition {
 		
 		DateTime now = new DateTime();
 		
-		BillingState state0 = new BillingState(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
-		BillingState state1 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
-		BillingState state2 = new BillingState(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), 
+		BillingState<Overdueable> state0 = new BillingState<Overdueable>(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
+		BillingState<Overdueable> state1 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
+		BillingState<Overdueable> state2 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), 
 				PaymentResponse.DO_NOT_HONOR, 
 				new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF), 
 						  new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),

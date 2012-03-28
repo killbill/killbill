@@ -14,16 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.overdue;
+package com.ning.billing.catalog.api.overdue;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.overdue.BillingState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
+public interface OverdueStateSet<T extends Overdueable> {
 
+    public abstract OverdueState<T> findClearState();
 
-public interface Condition<T extends Overdueable> {
+    public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now);
 
-    public boolean evaluate(BillingState state, DateTime now);
+    public abstract DateTime dateOfNextCheck(BillingState<T> billingState, DateTime now);
 
 }

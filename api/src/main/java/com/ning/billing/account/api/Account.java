@@ -16,14 +16,14 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.util.entity.UpdatableEntity;
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.util.customfield.CustomizableEntity;
+import com.ning.billing.util.entity.UpdatableEntity;
 import com.ning.billing.util.tag.Taggable;
-import org.skife.jdbi.v2.Update;
 
-public interface Account extends AccountData, CustomizableEntity, UpdatableEntity, Taggable {
+public interface Account extends AccountData, CustomizableEntity, UpdatableEntity, Taggable, Overdueable {
     public DateTime getCreatedDate();
 
     public DateTime getUpdatedDate();

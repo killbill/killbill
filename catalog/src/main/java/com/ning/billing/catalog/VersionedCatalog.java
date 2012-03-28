@@ -48,6 +48,8 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.StaticCatalog;
+import com.ning.billing.catalog.api.overdue.OverdueStateSet;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
@@ -424,8 +426,12 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 		return versionForDate(clock.getUTCNow()).canCreatePlan(specifier);
 	}
 
-	
+    @Override
+    public OverdueStateSet<SubscriptionBundle> currentBundleOverdueStateSet()
+            throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).currentBundleOverdueStateSet();
+    }
 
-
+ 
  
 }

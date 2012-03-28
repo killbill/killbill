@@ -18,6 +18,9 @@ package com.ning.billing.catalog.api;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.overdue.OverdueStateSet;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+
 public interface Catalog {
 	//
     // Simple getters
@@ -74,7 +77,5 @@ public interface Catalog {
 			PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
 
     public abstract boolean canCreatePlan(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException;
-	
-	
-	
+		
 }

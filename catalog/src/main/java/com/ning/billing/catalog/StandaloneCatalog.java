@@ -17,7 +17,6 @@
 package com.ning.billing.catalog;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
@@ -42,7 +41,10 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.StaticCatalog;
+import com.ning.billing.catalog.api.overdue.OverdueStateSet;
+import com.ning.billing.catalog.overdue.OverdueRules;
 import com.ning.billing.catalog.rules.PlanRules;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
@@ -69,12 +71,15 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 	@XmlElement(name="rules", required=true)
 	private PlanRules planRules;
 
+    @XmlElement(name="overdueRules", required=true)
+    private OverdueRules overdueRules;
+
 	@XmlElementWrapper(name="plans", required=true)
 	@XmlElement(name="plan", required=true)
 	private DefaultPlan[] plans;
 
-	@XmlElement(name="priceLists", required=true)
-	private DefaultPriceListSet priceLists;
+    @XmlElement(name="priceLists", required=true)
+    private DefaultPriceListSet priceLists;
 
 	public StandaloneCatalog() {}
 
@@ -303,4 +308,13 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 				(!plan.isRetired()) &&
 				(!priceList.isRetired());
 	}
+
+    @Override
+    public OverdueStateSet<SubscriptionBundle> currentBundleOverdueStateSet()
+            throws CatalogApiException {
+         return overdueRules.getBundleStateSet();
+    }
+
+
+
 }

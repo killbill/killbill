@@ -14,16 +14,25 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.overdue;
+package com.ning.billing.overdue.dao;
 
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.overdue.BillingState;
+import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
 
+public class DefaultOverdueDao implements OverdueDao {
 
-public interface Condition<T extends Overdueable> {
+    @Override
+    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(
+            T overdueable) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-    public boolean evaluate(BillingState state, DateTime now);
+    @Override
+    public <T extends Overdueable> void setOverdueStateForBundle(T overdueable,
+            OverdueState<T> newOverdueState) {
+        // TODO Auto-generated method stub
+        
+    }
 
 }

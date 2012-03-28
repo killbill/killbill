@@ -14,16 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.overdue;
+package com.ning.billing.catalog.api.overdue;
 
-import org.joda.time.DateTime;
+import com.ning.billing.BillingExceptionBase;
+import com.ning.billing.ErrorCode;
 
-import com.ning.billing.catalog.api.overdue.BillingState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
+public class OverdueError extends BillingExceptionBase {
+    private static final long serialVersionUID = 1L;
 
+    public OverdueError(Throwable cause, ErrorCode code, Object... args) {
+        super(cause, code, args);
+    }
 
-public interface Condition<T extends Overdueable> {
-
-    public boolean evaluate(BillingState state, DateTime now);
+    public OverdueError(ErrorCode code, Object... args) {
+        super(code, args);
+    }
 
 }

@@ -22,33 +22,32 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.tag.Tag;
 
-public class BillingStateBundle extends BillingState {
-	private final BillingState accountState;
+public class BillingStateBundle extends BillingState<SubscriptionBundle> {
     private final Product basePlanProduct;
     private final BillingPeriod basePlanBillingPeriod;
     private final PriceList basePlanPriceList;
+    private final PhaseType basePlanPhaseType;
     
-	public BillingStateBundle(UUID id, BillingState accountState, int numberOfUnpaidInvoices, BigDecimal unpaidInvoiceBalance,
+	public BillingStateBundle(UUID id, int numberOfUnpaidInvoices, BigDecimal unpaidInvoiceBalance,
 			DateTime dateOfEarliestUnpaidInvoice,
 			PaymentResponse responseForLastFailedPayment,
 			Tag[] tags, 
 			Product basePlanProduct,
 			BillingPeriod basePlanBillingPeriod, 
-			PriceList basePlanPriceList) {
+			PriceList basePlanPriceList, PhaseType basePlanPhaseType) {
 		super(id, numberOfUnpaidInvoices, unpaidInvoiceBalance, 
 				dateOfEarliestUnpaidInvoice, responseForLastFailedPayment, tags);
-		this.accountState = accountState;
+		
 		this.basePlanProduct = basePlanProduct;
 		this.basePlanBillingPeriod = basePlanBillingPeriod;
 		this.basePlanPriceList = basePlanPriceList;
-	}
-	
-	public BillingState getAccountState() {
-		return accountState;
+		this.basePlanPhaseType = basePlanPhaseType;
 	}
 	
 	public Product getBasePlanProduct() {
@@ -62,4 +61,8 @@ public class BillingStateBundle extends BillingState {
 	public PriceList getBasePlanPriceList() {
 		return basePlanPriceList;
 	}
+
+    public PhaseType getBasePlanPhaseType() {
+        return basePlanPhaseType;
+    }
 }

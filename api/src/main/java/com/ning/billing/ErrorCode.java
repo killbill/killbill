@@ -143,7 +143,17 @@ public enum ErrorCode {
     INVOICE_INVALID_TRANSITION(4002, "Transition did not contain a subscription id."),
     INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID(4003, "No account id was retrieved for subscription id %s"),
     INVOICE_INVALID_DATE_SEQUENCE(4004, "Date sequence was invalid. Start Date: %s; End Date: %s; Target Date: %s"),
-    INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s")
+    INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s"),
+    
+    /*
+     * 
+     * Range 5000: Overdue system
+     * 
+     */
+    OVERDUE_OVERDUEABLE_NOT_SUPPORTED(5001, "The Overdueable type '%s' is not supported"), 
+    OVERDUE_CAT_ERROR_ENCOUNTERED(5002,"Catalog error encountered when attempting to refresh the state of Overdueable: id='%s', type='%s'")
+    
+    
     ;
 
     private int code;

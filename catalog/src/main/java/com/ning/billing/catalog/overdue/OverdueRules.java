@@ -16,14 +16,20 @@
 
 package com.ning.billing.catalog.overdue;
 
-import org.joda.time.DateTime;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.catalog.api.overdue.BillingState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+
+@XmlAccessorType(XmlAccessType.NONE)
+public class OverdueRules  {
+
+    @XmlElement(required=false, name="bundleOverdueStates")
+    private OverdueStatesBundle bundleOverdueStates;
 
 
-public interface Condition<T extends Overdueable> {
-
-    public boolean evaluate(BillingState state, DateTime now);
-
+    public DefaultOverdueStateSet<SubscriptionBundle> getBundleStateSet() {
+        return bundleOverdueStates;
+    }
 }

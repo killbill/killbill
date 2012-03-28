@@ -14,16 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.overdue;
+package com.ning.billing.catalog.api.overdue;
 
-import org.joda.time.DateTime;
+import java.util.UUID;
 
-import com.ning.billing.catalog.api.overdue.BillingState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
+public interface Overdueable {
 
-
-public interface Condition<T extends Overdueable> {
-
-    public boolean evaluate(BillingState state, DateTime now);
-
+    public UUID getId();
 }

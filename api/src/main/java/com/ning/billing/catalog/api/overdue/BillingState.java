@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.util.tag.Tag;
 
-public class BillingState {
+public class BillingState<T extends Overdueable> {
 	private final UUID objectId;
 	private final int numberOfUnpaidInvoices;
 	private final BigDecimal balanceOfUnpaidInvoices;

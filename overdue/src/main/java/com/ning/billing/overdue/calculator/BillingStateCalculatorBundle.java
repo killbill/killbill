@@ -14,16 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.overdue;
+package com.ning.billing.overdue.calculator;
 
-import org.joda.time.DateTime;
+import org.apache.commons.lang.NotImplementedException;
 
 import com.ning.billing.catalog.api.overdue.BillingState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
+public class BillingStateCalculatorBundle  implements BillingStateCalculator<SubscriptionBundle>{
 
-public interface Condition<T extends Overdueable> {
-
-    public boolean evaluate(BillingState state, DateTime now);
+    @Override
+    public BillingState<SubscriptionBundle> calculateBillingState(SubscriptionBundle overdueable) {
+        throw new NotImplementedException();
+    }
 
 }

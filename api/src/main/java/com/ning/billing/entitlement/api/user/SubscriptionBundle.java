@@ -16,11 +16,13 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import org.joda.time.DateTime;
-
 import java.util.UUID;
 
-public interface SubscriptionBundle {
+import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.api.overdue.Overdueable;
+
+public interface SubscriptionBundle extends Overdueable {
 
     public UUID getAccountId();
 

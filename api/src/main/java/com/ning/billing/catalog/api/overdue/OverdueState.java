@@ -16,34 +16,13 @@
 
 package com.ning.billing.catalog.api.overdue;
 
-import java.util.UUID;
 
-public class OverdueState {
-	private final UUID id;
-	private final String stageName;
-	private final String externalMessage;
-	private final boolean cancel;
-	
-	public OverdueState(UUID id, String stageName, String externalMessage, boolean cancel) {
-		this.id = id;
-		this.stageName = stageName;
-		this.externalMessage = externalMessage;
-		this.cancel = cancel;
-	}
+public interface OverdueState<T extends Overdueable> {
 
-	public UUID getId() {
-		return id;
-	}
+    public String getName();
 
-	public boolean cancel() {
-		return cancel;
-	}
-	
-	public String getStageName() {
-		return stageName;
-	}
-	public String getExternalMessage() {
-		return externalMessage;
-	}
+    public String getExternalMessage();
+
+    public boolean applyCancel();
 
 }
