@@ -1,0 +1,6 @@
+language: java
+script: mvn clean install -Ptravis
+
+notifications:
+  email:
+    - ri-dev@ning.com
