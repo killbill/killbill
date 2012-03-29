@@ -17,11 +17,13 @@
 package com.ning.billing.payment.dao;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -74,13 +76,14 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId) {
-        for (PaymentAttempt paymentAttempt : paymentAttempts.values()) {
-            if (invoiceId.equals(paymentAttempt.getInvoiceId().toString())) {
-                return paymentAttempt;
-            }
-        }
-        return null;
+    public List<PaymentAttempt> getPaymentAttemptsForInvoiceId(final String invoiceId) {
+        Collection<PaymentAttempt> attempts =  Collections2.filter(paymentAttempts.values(), new Predicate<PaymentAttempt>() {
+                @Override
+                public boolean apply(PaymentAttempt input) {
+                    return invoiceId.equals(input.getInvoiceId().toString());
+                }
+            });
+        return new ArrayList<PaymentAttempt>(attempts);
     }
 
     @Override
@@ -118,9 +121,9 @@ public class MockPaymentDao implements PaymentDao {
     public List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<String> invoiceIds) {
         List<PaymentAttempt> paymentAttempts = new ArrayList<PaymentAttempt>(invoiceIds.size());
         for (String invoiceId : invoiceIds) {
-            PaymentAttempt attempt = getPaymentAttemptForInvoiceId(invoiceId);
-            if (attempt != null) {
-                paymentAttempts.add(attempt);
+            List<PaymentAttempt> attempts = getPaymentAttemptsForInvoiceId(invoiceId);
+            if (CollectionUtils.isNotEmpty(attempts)) {
+                paymentAttempts.addAll(attempts);
             }
         }
         return paymentAttempts;

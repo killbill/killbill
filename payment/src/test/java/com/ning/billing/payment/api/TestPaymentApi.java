@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.entity.EntityPersistenceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -44,6 +43,7 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.entity.EntityPersistenceException;
 
 public abstract class TestPaymentApi {
     @Inject
@@ -119,8 +119,8 @@ public abstract class TestPaymentApi {
         assertEquals(paymentInfo.getPaymentMethodId(), paymentInfoFromGet.getPaymentMethodId());
         assertEquals(paymentInfo.getEffectiveDate(), paymentInfoFromGet.getEffectiveDate());
 
-        PaymentAttempt paymentAttemptFromGet = paymentApi.getPaymentAttemptForInvoiceId(invoice.getId().toString());
-        assertEquals(paymentAttempt, paymentAttemptFromGet);
+        List<PaymentAttempt> paymentAttemptsFromGet = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId().toString());
+        assertEquals(paymentAttempt, paymentAttemptsFromGet.get(0));
 
     }
 

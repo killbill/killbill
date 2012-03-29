@@ -35,7 +35,7 @@ public interface PaymentDao {
 
     void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String paymentId);
 
-    PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId);
+    List<PaymentAttempt> getPaymentAttemptsForInvoiceId(String invoiceId);
 
     void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry);
 

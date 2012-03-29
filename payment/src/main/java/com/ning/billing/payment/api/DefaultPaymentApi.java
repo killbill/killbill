@@ -315,8 +315,8 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId) {
-        return paymentDao.getPaymentAttemptForInvoiceId(invoiceId);
+    public List<PaymentAttempt> getPaymentAttemptsForInvoiceId(String invoiceId) {
+        return paymentDao.getPaymentAttemptsForInvoiceId(invoiceId);
     }
 
     @Override
