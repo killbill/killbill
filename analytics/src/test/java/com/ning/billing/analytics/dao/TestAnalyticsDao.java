@@ -118,13 +118,13 @@ public class TestAnalyticsDao
         }
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups = "slow")
     public void stopMysql()
     {
         helper.stopMysql();
     }
 
-    @BeforeMethod
+    @BeforeMethod(groups = "slow")
     public void cleanup() throws Exception
     {
         helper.cleanupTable("bst");

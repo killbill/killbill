@@ -45,6 +45,7 @@ import com.ning.billing.util.notificationq.dao.NotificationSqlDao.NotificationSq
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
+@Test(groups = "slow")
 @Guice(modules = TestNotificationSqlDao.TestNotificationSqlDaoModule.class)
 public class TestNotificationSqlDao {
 
@@ -64,7 +65,7 @@ public class TestNotificationSqlDao {
         helper.initDb(ddl);
     }
 
-    @BeforeSuite(alwaysRun = true)
+    @BeforeSuite(groups = "slow")
     public void setup()  {
         try {
             startMysql();
@@ -74,14 +75,14 @@ public class TestNotificationSqlDao {
         }
     }
 
-    @AfterSuite(alwaysRun = true)
+    @AfterSuite(groups = "slow")
     public void stopMysql()
     {
         helper.stopMysql();
     }
 
 
-    @BeforeTest
+    @BeforeTest(groups = "slow")
     public void cleanupDb() {
         dbi.withHandle(new HandleCallback<Void>() {
 

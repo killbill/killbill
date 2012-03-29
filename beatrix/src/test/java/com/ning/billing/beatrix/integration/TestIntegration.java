@@ -76,6 +76,7 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.bus.BusService;
 
+@Test(groups = "slow")
 @Guice(modules = {MockModule.class})
 public class TestIntegration {
     private static final int NUMBER_OF_DECIMALS = 4;
@@ -141,7 +142,7 @@ public class TestIntegration {
         helper.initDb(utilDdl);
     }
 
-    @BeforeSuite(alwaysRun = true)
+    @BeforeSuite(groups = "slow")
     public void setup() throws Exception{
 
         setupMySQL();
@@ -164,7 +165,7 @@ public class TestIntegration {
         accountUserApi = accountService.getAccountUserApi();
     }
 
-    @AfterSuite(alwaysRun = true)
+    @AfterSuite(groups = "slow")
     public void tearDown() throws Exception {
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
@@ -173,7 +174,7 @@ public class TestIntegration {
     }
 
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups = "slow")
     public void setupTest() {
 
         log.warn("\n");
@@ -183,7 +184,7 @@ public class TestIntegration {
         cleanupData();
     }
 
-    @AfterMethod(alwaysRun = true)
+    @AfterMethod(groups = "slow")
     public void cleanupTest() {
         log.warn("DONE WITH TEST\n");
     }
@@ -276,7 +277,7 @@ public class TestIntegration {
         Thread.sleep(600000);
     }
 
-    @Test(groups = "stress", enabled = false)
+    @Test(groups = {"slow", "stress"}, enabled = false)
     public void stressTest() throws Exception {
         final int maxIterations = 7;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
