@@ -60,13 +60,21 @@ public class MockPlan extends DefaultPlan {
 				-1);
 	}
 
-	public static MockPlan createJetTrialFixedTermEvergreen1000USD() {
-		return new MockPlan("JetTrialEvergreen1000USD",
-				MockProduct.createJet(),
-				new DefaultPlanPhase[]{ MockPlanPhase.create30DayTrial(), MockPlanPhase.createUSDMonthlyFixedTerm("500.00", null, 6) },
-				MockPlanPhase.create1USDMonthlyEvergreen(),
-				-1);
-	}
+    public static MockPlan createJetTrialFixedTermEvergreen1000USD() {
+        return new MockPlan("JetTrialEvergreen1000USD",
+                MockProduct.createJet(),
+                new DefaultPlanPhase[]{ MockPlanPhase.create30DayTrial(), MockPlanPhase.createUSDMonthlyFixedTerm("500.00", null, 6) },
+                MockPlanPhase.create1USDMonthlyEvergreen(),
+                -1);
+    }
+
+    public static MockPlan createHornMonthlyNoTrial1USD() {
+        return new MockPlan("Horn1USD",
+                MockProduct.createHorn(),
+                new DefaultPlanPhase[]{ },
+                MockPlanPhase.create1USDMonthlyEvergreen(),
+                -1);
+    }
 
 	public MockPlan() {
 		this("BicycleTrialEvergreen1USD",
