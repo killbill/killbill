@@ -39,6 +39,7 @@ import com.ning.billing.catalog.api.PlanChangeResult;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.catalog.api.overdue.OverdueStateSet;
@@ -71,7 +72,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 	@XmlElement(name="rules", required=true)
 	private PlanRules planRules;
 
-    @XmlElement(name="overdueRules", required=true)
+    @XmlElement(name="overdueRules", required=false)
     private OverdueRules overdueRules;
 
 	@XmlElementWrapper(name="plans", required=true)
@@ -147,7 +148,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 			throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND,priceListName);
 		}
 		Product product = findCurrentProduct(productName);
-		DefaultPlan result = priceLists.getPlanListFrom(priceListName, product, period);
+		DefaultPlan result = priceLists.getPlanFrom(priceListName, product, period);
 		if ( result == null) {
 			String periodString = (period == null) ? "NULL" :  period.toString();
 			throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, productName, periodString, priceListName);
@@ -191,6 +192,16 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		Plan plan = findCurrentPlan(planName);
 		return plan.findPhase(name);
 	}
+
+    @Override
+    public PriceList findCurrentPricelist(String name)
+            throws CatalogApiException {
+        if (name == null || priceLists == null) {
+            throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, name);
+        }
+        
+        return priceLists.findPriceListFrom(name);
+    }
 
 
 

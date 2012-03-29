@@ -55,7 +55,12 @@ public interface StaticCatalog {
     //
     // Find a phase
     //
-    public abstract PlanPhase findCurrentPhase(String name) throws CatalogApiException;
+    public abstract  PlanPhase findCurrentPhase(String name) throws CatalogApiException;
+    
+    //
+    // Find a pricelist
+    //
+    public abstract PriceList findCurrentPricelist(String name) throws CatalogApiException;
     
     //
     //  

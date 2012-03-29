@@ -43,6 +43,7 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.api.TestApiBase;
@@ -145,7 +146,7 @@ public class TestDefaultEntitlementBillingApi {
 		DateTime then = now.minusDays(1);
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-annual", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0]; // The trial has no billing period
-		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+        PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 		SubscriptionTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
@@ -169,7 +170,7 @@ public class TestDefaultEntitlementBillingApi {
 		DateTime then = now.minusDays(1);
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-annual", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
-		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+		PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 		SubscriptionTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
@@ -194,7 +195,7 @@ public class TestDefaultEntitlementBillingApi {
 		DateTime then = now.minusDays(1);
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-monthly", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
-		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+        PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 		SubscriptionTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
@@ -217,7 +218,7 @@ public class TestDefaultEntitlementBillingApi {
 		DateTime then = now.minusDays(1);
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("laser-scope-monthly", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0];
-		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+        PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 		SubscriptionTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);

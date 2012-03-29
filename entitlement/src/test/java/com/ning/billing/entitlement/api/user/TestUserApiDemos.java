@@ -174,7 +174,7 @@ public class TestUserApiDemos extends TestApiBase {
 
         Plan currentPlan = subscription.getCurrentPlan();
         PlanPhase currentPhase = subscription.getCurrentPhase();
-        String priceList = subscription.getCurrentPriceList();
+        String priceList = subscription.getCurrentPriceList().getName();
         System.out.println("");
         System.out.println("\t CURRENT TIME = " + clock.getUTCNow());
         System.out.println("");

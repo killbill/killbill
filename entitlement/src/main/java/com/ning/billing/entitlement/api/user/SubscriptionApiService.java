@@ -152,7 +152,7 @@ public class SubscriptionApiService {
             PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                     currentPlan.getProduct().getCategory(),
                     subscription.getCurrentPlan().getBillingPeriod(),
-                    subscription.getCurrentPriceList(),
+                    subscription.getCurrentPriceList().getName(),
                     subscription.getCurrentPhase().getPhaseType());
 
             ActionPolicy policy = null;
@@ -216,7 +216,7 @@ public class SubscriptionApiService {
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
             validateRequestedDate(subscription, now, requestedDate);
 
-            String currentPriceList = subscription.getCurrentPriceList();
+            PriceList currentPriceList = subscription.getCurrentPriceList();
 
             SubscriptionState currentState = subscription.getState();
             if (currentState != SubscriptionState.ACTIVE) {
@@ -234,7 +234,7 @@ public class SubscriptionApiService {
                 PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                         currentPlan.getProduct().getCategory(),
                         currentPlan.getBillingPeriod(),
-                        currentPriceList, subscription.getCurrentPhase().getPhaseType());
+                        currentPriceList.getName(), subscription.getCurrentPhase().getPhaseType());
                 PlanSpecifier toPlanPhase = new PlanSpecifier(productName,
                         destProduct.getCategory(),
                         term,

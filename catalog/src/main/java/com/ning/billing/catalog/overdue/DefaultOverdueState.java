@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 
 import com.ning.billing.catalog.api.overdue.OverdueState;
@@ -32,8 +33,8 @@ public class DefaultOverdueState<T extends Overdueable> implements OverdueState<
 	private DefaultCondition<T> condition;
 
 	@XmlAttribute(required=true, name="name")
-	@XmlIDREF
-	private String name; 
+    @XmlID
+    private String name; 
 
 	@XmlElement(required=false, name="externalMessage")
 	private String externalMessage = "";

@@ -16,10 +16,32 @@
 
 package com.ning.billing.overdue.calculator;
 
+import java.math.BigDecimal;
+import java.util.SortedSet;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.invoice.api.Invoice;
 
-public interface BillingStateCalculator<T extends Overdueable> {
+public abstract class BillingStateCalculator<T extends Overdueable> {
 
-    public BillingState<T> calculateBillingState(T overdueable);
+    public abstract BillingState<T> calculateBillingState(T overdueable);
+    
+    protected DateTime earliest(SortedSet<Invoice> unpaidInvoices) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    protected BigDecimal sumBalance(SortedSet<Invoice> unpaidInvoices) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    protected SortedSet<Invoice> unpaidInvoicesFor(UUID id) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

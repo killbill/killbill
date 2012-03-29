@@ -16,16 +16,68 @@
 
 package com.ning.billing.overdue.calculator;
 
-import org.apache.commons.lang.NotImplementedException;
+import java.math.BigDecimal;
+import java.util.SortedSet;
+import java.util.UUID;
 
+import org.joda.time.DateTime;
+
+import com.google.inject.Inject;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.overdue.BillingState;
+import com.ning.billing.catalog.api.overdue.BillingStateBundle;
+import com.ning.billing.catalog.api.overdue.PaymentResponse;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.util.tag.Tag;
 
-public class BillingStateCalculatorBundle  implements BillingStateCalculator<SubscriptionBundle>{
+public class BillingStateCalculatorBundle  extends BillingStateCalculator<SubscriptionBundle>{
 
-    @Override
-    public BillingState<SubscriptionBundle> calculateBillingState(SubscriptionBundle overdueable) {
-        throw new NotImplementedException();
+    private EntitlementUserApi entitlementApi;
+    private InvoiceUserApi invoiceApi;
+
+    @Inject 
+    public BillingStateCalculatorBundle(EntitlementUserApi entitlementApi, InvoiceUserApi invoiceApi) {
+        this.entitlementApi = entitlementApi;
+        this.invoiceApi = invoiceApi;
     }
+    
+    @Override
+    public BillingState<SubscriptionBundle> calculateBillingState(SubscriptionBundle bundle) {
+        
+        SortedSet<Invoice> unpaidInvoices = unpaidInvoicesFor(bundle.getId());
+        Subscription basePlan = null;
+        
+        UUID id = bundle.getId();
+        int numberOfUnpaidInvoices = unpaidInvoices.size(); 
+        BigDecimal unpaidInvoiceBalance = sumBalance(unpaidInvoices);
+        DateTime dateOfEarliestUnpaidInvoice = earliest(unpaidInvoices);
+        PaymentResponse responseForLastFailedPayment;
+        Tag[] tags = new Tag[]{}; //TODO
+        Product basePlanProduct = basePlan.getCurrentPlan().getProduct();
+        BillingPeriod basePlanBillingPeriod = basePlan.getCurrentPlan().getBillingPeriod();
+        PriceList basePlanPriceList = basePlan.getCurrentPriceList();
+        PhaseType basePlanPhaseType = basePlan.getCurrentPhase().getPhaseType();
+        
 
+//        return new BillingStateBundle( 
+//            id, 
+//            numberOfUnpaidInvoices, 
+//            unpaidInvoiceBalance,
+//            dateOfEarliestUnpaidInvoice,
+//            responseForLastFailedPayment,
+//            tags, 
+//            basePlanProduct,
+//            basePlanBillingPeriod, 
+//            basePlanPriceList, 
+//            basePlanPhaseType);
+        
+        return null;
+    }
 }

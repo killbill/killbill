@@ -16,6 +16,16 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Catalog;
@@ -23,6 +33,7 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
@@ -31,7 +42,6 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.TimeLimit;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Visibility;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -39,16 +49,6 @@ import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.CustomizableEntityBase;
-
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
 
 public class SubscriptionData extends CustomizableEntityBase implements Subscription {
 
@@ -169,7 +169,7 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
     }
 
     @Override
-    public String getCurrentPriceList() {
+    public PriceList getCurrentPriceList() {
         return (getPreviousTransition() == null) ? null : getPreviousTransition().getNextPriceList();
     }
 
@@ -358,10 +358,10 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         SubscriptionState nextState = null;
         String nextPlanName = null;
         String nextPhaseName = null;
-        String nextPriceList = null;
-
+        String nextPriceListName = null; 
+        
         SubscriptionState previousState = null;
-        String previousPriceList = null;
+        PriceList previousPriceList = null;
 
         transitions = new LinkedList<SubscriptionTransitionData>();
         Plan previousPlan = null;
@@ -400,12 +400,12 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
                     nextState = SubscriptionState.ACTIVE;
                     nextPlanName = userEV.getEventPlan();
                     nextPhaseName = userEV.getEventPlanPhase();
-                    nextPriceList = userEV.getPriceList();
+                    nextPriceListName = userEV.getPriceList();
                     break;
                 case CHANGE:
                     nextPlanName = userEV.getEventPlan();
                     nextPhaseName = userEV.getEventPlanPhase();
-                    nextPriceList = userEV.getPriceList();
+                    nextPriceListName = userEV.getPriceList();
                     break;
                 case CANCEL:
                     nextState = SubscriptionState.CANCELLED;
@@ -427,9 +427,12 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
 
             Plan nextPlan = null;
             PlanPhase nextPhase = null;
+            PriceList nextPriceList = null;
+
             try {
                 nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getRequestedDate(), getStartDate()) : null;
                 nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getStartDate()) : null;
+                nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, cur.getRequestedDate()) : null;
             } catch (CatalogApiException e) {
                 log.error(String.format("Failed to build transition for subscription %s", id), e);
             }

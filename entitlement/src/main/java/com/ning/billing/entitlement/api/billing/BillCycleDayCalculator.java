@@ -61,7 +61,7 @@ public class BillCycleDayCalculator {
 								new PlanPhaseSpecifier(product.getName(),
 										product.getCategory(),
 										phase.getBillingPeriod(),
-										transition.getNextPriceList(),
+										transition.getNextPriceList().getName(),
 										phase.getPhaseType()),
 										transition.getRequestedTransitionTime());
 						int result = -1;

@@ -18,9 +18,6 @@ package com.ning.billing.catalog.api;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.overdue.OverdueStateSet;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-
 public interface Catalog {
 	//
     // Simple getters
@@ -57,6 +54,11 @@ public interface Catalog {
     // Find a phase
     //  
     public abstract PlanPhase findPhase(String name, DateTime requestedDate, DateTime subscriptionStartDate) throws CatalogApiException;
+
+    //
+    // Find a priceList
+    //  
+    public abstract PriceList findPriceList(String name, DateTime requestedDate) throws CatalogApiException;
 
     //
     // Rules

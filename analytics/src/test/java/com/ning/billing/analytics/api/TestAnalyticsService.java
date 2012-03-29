@@ -51,10 +51,12 @@ import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.dao.BusinessAccountDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
+import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -204,7 +206,7 @@ public class TestAnalyticsService {
         final UUID subscriptionId = UUID.randomUUID();
         final DateTime effectiveTransitionTime = clock.getUTCNow();
         final DateTime requestedTransitionTime = clock.getUTCNow();
-        final String priceList = "something";
+        final PriceList priceList = new MockPriceList().setName("something");
 
         transition = new SubscriptionTransitionData(
                 ID,
@@ -232,7 +234,7 @@ public class TestAnalyticsService {
                 requestedTransitionTime,
                 BusinessSubscriptionEvent.subscriptionCreated(plan),
                 null,
-                new BusinessSubscription(priceList, plan, phase, ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
+                new BusinessSubscription(priceList.getName(), plan, phase, ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
         );
     }
 
