@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.tag.dao;
 
+import com.google.inject.Inject;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.Tag;
@@ -32,6 +33,7 @@ public class MockTagDao implements TagDao {
     private Map<UUID, List<Tag>> tagStore = new HashMap<UUID, List<Tag>>();
     private final Clock clock;
 
+    @Inject
     public MockTagDao(Clock clock) {
         this.clock = clock;
     }
