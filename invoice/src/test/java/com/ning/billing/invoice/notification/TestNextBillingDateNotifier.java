@@ -106,7 +106,7 @@ public class TestNextBillingDateNotifier {
 	}
 
 
-	@BeforeClass(groups={"setup"})
+	@BeforeClass(groups={"slow"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {

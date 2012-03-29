@@ -61,6 +61,7 @@ import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
+@Test(groups = "slow")
 @Guice(modules = {MockModule.class})
 public class TestInvoiceDispatcher {
 	Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
@@ -85,9 +86,9 @@ public class TestInvoiceDispatcher {
 
 
 
-	@BeforeSuite(alwaysRun = true)
-	public void setup() throws IOException
-	{
+    @BeforeSuite(groups = "slow")
+    public void setup() throws IOException
+    {
 
 
 		final String entitlementDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
@@ -114,16 +115,15 @@ public class TestInvoiceDispatcher {
 		} catch (Exception e) {
 			log.warn("Failed to tearDown test properly ", e);
 		}
-
-	}
-
-	@Test(groups={"fast"}, enabled=true)
-	public void testDryrunInvoice() throws InvoiceApiException {
-		UUID accountId = UUID.randomUUID();
-		UUID subscriptionId = UUID.randomUUID();
+        }
+	    @Test(groups={"slow"}, enabled=true)
+	    public void testDryrunInvoice() throws InvoiceApiException {
+	    	UUID accountId = UUID.randomUUID();
+	    	UUID subscriptionId = UUID.randomUUID();
 
 		AccountUserApi accountUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+
 		((ZombieControl)accountUserApi).addResult("getAccountById", account);
 		((ZombieControl)account).addResult("getCurrency", Currency.USD);
 		((ZombieControl)account).addResult("getId", accountId);

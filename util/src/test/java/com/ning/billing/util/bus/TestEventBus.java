@@ -31,13 +31,13 @@ public class TestEventBus {
     private Bus eventBus;
 
 
-    @BeforeClass
+    @BeforeClass(groups = "slow")
     public void setup() {
         eventBus = new InMemoryBus();
         eventBus.start();
     }
 
-    @AfterClass
+    @AfterClass(groups = "slow")
     public void tearDown() {
         eventBus.stop();
     }
@@ -97,7 +97,7 @@ public class TestEventBus {
         }
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testSimple() {
         try {
 
@@ -116,7 +116,7 @@ public class TestEventBus {
         }
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testDifferentType() {
         try {
 
