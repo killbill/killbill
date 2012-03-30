@@ -23,4 +23,6 @@ import com.ning.billing.util.tag.Taggable;
 
 public interface Account extends AccountData, Customizable, UpdatableEntity, Taggable {
     public static String ObjectType = "account";
+    
+    public MutableAccountData toMutableAccountData();    
 }

@@ -136,7 +136,7 @@ public class TestUserApiDemos extends TestApiBase {
             /* STEP 7.  MOVE TO NEXT PHASE */
             testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.addDeltaFromReality(currentPhase.getDuration());
-            assertTrue(testListener.isCompleted(3000));
+            assertTrue(testListener.isCompleted(5000));
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             currentPlan = subscription.getCurrentPlan();

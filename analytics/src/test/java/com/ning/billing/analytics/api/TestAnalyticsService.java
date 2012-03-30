@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
@@ -247,13 +248,14 @@ public class TestAnalyticsService {
     private void createInvoiceAndPaymentCreationEvents(final Account account) {
         final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCNow(), clock.getUTCNow(), ACCOUNT_CURRENCY);
         final FixedPriceInvoiceItem invoiceItem = new FixedPriceInvoiceItem(
-                UUID.randomUUID(), account.getId(), invoice.getId(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
+                UUID.randomUUID(), invoice.getId(), account.getId(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
                 INVOICE_AMOUNT, ACCOUNT_CURRENCY, context.getUserName(), clock.getUTCNow());
         invoice.addInvoiceItem(invoiceItem);
 
         invoiceDao.create(invoice, context);
-        Assert.assertEquals(invoiceDao.getInvoicesByAccount(account.getId()).size(), 1);
-        Assert.assertEquals(invoiceDao.getInvoicesByAccount(account.getId()).get(0).getInvoiceItems().size(), 1);
+        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
+        Assert.assertEquals(invoices.size(), 1);
+        Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
 
         // It doesn't really matter what the events contain - the listener will go back to the db
         invoiceCreationNotification = new DefaultInvoiceCreationNotification(invoice.getId(), account.getId(),

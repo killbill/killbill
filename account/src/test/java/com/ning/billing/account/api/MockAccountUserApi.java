@@ -127,8 +127,14 @@ public class MockAccountUserApi implements AccountUserApi {
 	}
 
 	@Override
-	public void updateAccount(String key, AccountData accountData, final CallContext context)
+	public void updateAccount(final String key, final AccountData accountData, final CallContext context)
 			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}
+
+    @Override
+    public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
+            throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
 }

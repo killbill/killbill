@@ -26,11 +26,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.customfield.CustomizableEntityBase;
-import com.ning.billing.util.tag.DefaultTagStore;
-import com.ning.billing.util.tag.DescriptiveTag;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 
 import javax.annotation.Nullable;
 
@@ -89,25 +84,27 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 	}
 
 	/**
-	 * This call is used for testing 
-	 * @param id UUID system-generated account id
-	 * @param externalKey String key for external systems
-	 * @param email String account owner's e-mail address
-	 * @param name String account owner's name
-	 * @param firstNameLength String the length of the account owner's first name
-	 * @param currency Currency the currency for billing for the account
-	 * @param billCycleDay int the day of the month upon which invoices should be generated for this account
-	 * @param paymentProviderName String payment provider name
-	 * @param timeZone String the name of the time zone to be used for invoice generation
-	 * @param locale String the locale for internationalization
-	 * @param address1 String address information for the account owner
-	 * @param address2 String (optional) more address information for the account owner
-	 * @param companyName String (optional) the company of the account owner
-	 * @param city String the city of the account owner
-	 * @param stateOrProvince String the state or province of the account owner
-	 * @param country String the country of the account owner
-	 * @param postalCode String the postal code of the account owner
-	 * @param phone String the phone number of the account owner
+	 * This call is used for testing and update from an existing account
+	 * @param id
+	 * @param externalKey
+	 * @param email
+	 * @param name
+	 * @param firstNameLength
+	 * @param currency
+	 * @param billCycleDay
+	 * @param paymentProviderName
+	 * @param timeZone
+	 * @param locale
+	 * @param address1
+	 * @param address2
+	 * @param companyName
+	 * @param city
+	 * @param stateOrProvince
+	 * @param country
+	 * @param postalCode
+	 * @param phone
+	 * @param createdDate
+	 * @param updatedDate
 	 */
 	public DefaultAccount(final UUID id, final String externalKey, final String email,
                           final String name, final int firstNameLength,
@@ -256,6 +253,11 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 		return phone;
 	}
 
+    @Override
+	public MutableAccountData toMutableAccountData() {
+	    return new MutableAccountData(this);
+	}
+    
 	@Override
 	public String toString() {
 		return "DefaultAccount [externalKey=" + externalKey +

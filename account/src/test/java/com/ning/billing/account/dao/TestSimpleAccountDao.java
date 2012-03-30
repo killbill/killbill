@@ -18,6 +18,7 @@ package com.ning.billing.account.dao;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -373,7 +374,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         accountDao.update(updatedAccount, context);
     }
 
-    @Test(groups={"slow"},enabled=true)
+    @Test
     public void testDelete() throws AccountApiException, EntityPersistenceException {
 
         Account a = createTestAccountBuilder().build();
@@ -387,8 +388,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         accountDao.deleteByKey(key, context);
         
         Account s = accountDao.getAccountByKey(key);
-        assertTrue(s==null);
-
+        assertNull(s);
     }
 
 }

@@ -44,7 +44,7 @@ import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-@Test(groups={"util"})
+@Test(groups = {"util", "slow"})
 public class TestFieldStore {
     Logger log = LoggerFactory.getLogger(TestFieldStore.class);
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
@@ -52,7 +52,7 @@ public class TestFieldStore {
     private IDBI dbi;
     private CustomFieldDao customFieldDao;
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(groups = {"util", "slow"})
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
@@ -76,7 +76,7 @@ public class TestFieldStore {
         }
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups = {"util", "slow"})
     public void stopMysql()
     {
         helper.stopMysql();

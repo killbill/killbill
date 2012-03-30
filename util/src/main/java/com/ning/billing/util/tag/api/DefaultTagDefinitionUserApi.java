@@ -17,14 +17,22 @@
 package com.ning.billing.util.tag.api;
 
 import java.util.List;
+
+import org.joda.time.DateTime;
+
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.api.TagDefinitionUserApi;
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.DefaultControlTag;
+import com.ning.billing.util.tag.DescriptiveTag;
+import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
-public class DefaultTagDefinitionUserApi implements TagDefinitionUserApi {
+public class DefaultTagDefinitionUserApi implements TagUserApi {
     private TagDefinitionDao dao;
 
     @Inject
@@ -58,4 +66,26 @@ public class DefaultTagDefinitionUserApi implements TagDefinitionUserApi {
 			throws TagDefinitionApiException {
 		return dao.getByName(name);
 	}
+
+    @Override
+    public Tag createControlTag(String controlTagName) throws TagDefinitionApiException {
+        ControlTagType type = null;
+        for(ControlTagType t : ControlTagType.values()) {
+            if(t.toString().equals(controlTagName)) {
+                type = t;
+            }
+        }
+        
+        if(type == null) {
+            throw new TagDefinitionApiException(ErrorCode.CONTROL_TAG_DOES_NOT_EXIST, controlTagName);
+        }
+        return new DefaultControlTag(type);
+    }
+
+    @Override
+    public Tag createDescriptiveTag(String tagDefinitionName) throws TagDefinitionApiException {
+        TagDefinition tagDefinition = getTagDefinition(tagDefinitionName);
+        
+        return new DescriptiveTag(tagDefinition);
+    }
 }

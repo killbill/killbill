@@ -66,6 +66,7 @@ import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
+@Test(groups = "slow")
 @Guice(modules = {MockModule.class})
 public class TestInvoiceDispatcher {
 	private Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
@@ -96,21 +97,17 @@ public class TestInvoiceDispatcher {
 
     private CallContext context;
 
-	@BeforeSuite(alwaysRun = true)
-	public void setup() throws IOException
-	{
-		final String accountDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+    @BeforeSuite(groups = "slow")
+    public void setup() throws IOException
+    {
 		final String entitlementDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 		final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-		//        final String paymentDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
 		final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
 		helper.startMysql();
 
-		helper.initDb(accountDdl);
 		helper.initDb(entitlementDdl);
 		helper.initDb(invoiceDdl);
-		//        helper.initDb(paymentDdl);
 		helper.initDb(utilDdl);
 		notifier.initialize();
 		notifier.start();
@@ -129,16 +126,16 @@ public class TestInvoiceDispatcher {
 		} catch (Exception e) {
 			log.warn("Failed to tearDown test properly ", e);
 		}
-
-	}
-
-	@Test(groups={"fast"}, enabled=true)
-	public void testDryRunInvoice() throws InvoiceApiException {
-		UUID accountId = UUID.randomUUID();
-		UUID subscriptionId = UUID.randomUUID();
+    }
+	    
+    @Test(groups={"slow"}, enabled=true)
+    public void testDryRunInvoice() throws InvoiceApiException {
+        UUID accountId = UUID.randomUUID();
+        UUID subscriptionId = UUID.randomUUID();
 
 		AccountUserApi accountUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+
 		((ZombieControl)accountUserApi).addResult("getAccountById", account);
 		((ZombieControl)account).addResult("getCurrency", Currency.USD);
 		((ZombieControl)account).addResult("getId", accountId);

@@ -19,9 +19,12 @@ package com.ning.billing.util.api;
 import java.util.List;
 
 import com.ning.billing.util.callcontext.CallContext;
+import org.joda.time.DateTime;
+
+import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
-public interface TagDefinitionUserApi {
+public interface TagUserApi {
     /***
      *
      * @return the list of all available tag definitions
@@ -62,4 +65,18 @@ public interface TagDefinitionUserApi {
      * @throws TagDefinitionApiException
 	 */
 	public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
+	
+	/**
+	 * @param controlTagName
+	 * @throws TagDefinitionApiException
+	 */
+	public Tag createControlTag(String controlTagName) throws TagDefinitionApiException;
+	
+	
+	/**
+	 * @param tagDefinitionName
+	 * @return
+	 */
+	public Tag createDescriptiveTag(String tagDefinitionName) throws TagDefinitionApiException;
+	
 }

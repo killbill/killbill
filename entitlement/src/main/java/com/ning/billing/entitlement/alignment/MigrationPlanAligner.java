@@ -194,7 +194,8 @@ public class MigrationPlanAligner {
 
     private boolean isSamePlan(PlanPhaseSpecifier plan0, PlanPhaseSpecifier plan1) {
         if (plan0.getPriceListName().equals(plan1.getPriceListName()) &&
-                plan0.getProductName().equals(plan1.getProductName())) {
+                plan0.getProductName().equals(plan1.getProductName()) &&
+                plan0.getBillingPeriod() == plan1.getBillingPeriod()) {
             return true;
         }
         return false;

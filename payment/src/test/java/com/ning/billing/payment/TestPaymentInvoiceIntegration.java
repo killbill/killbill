@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.util.glue.CallContextModule;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -100,7 +101,7 @@ public class TestPaymentInvoiceIntegration {
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws EventBusException {
         Injector injector = Guice.createInjector(new PaymentTestModuleWithEmbeddedDb(),
-                                                 new AccountModule(),
+                                                 new AccountModuleWithMocks(),
                                                  new InvoiceModuleWithMocks(),
                                                  new CallContextModule(),
                                                  new MockClockModule(),

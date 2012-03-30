@@ -24,13 +24,14 @@ import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.account.glue.AccountModule;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
+import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
@@ -56,13 +57,15 @@ public class MockModule extends AbstractModule {
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
             bind(DbiConfig.class).toInstance(config);
         } else {
-            final IDBI dbi = helper.getDBI();
+            final IDBI dbi = helper.getDBI(); 
             bind(IDBI.class).toInstance(dbi);
         }
 
         install(new GlobalLockerModule());
         install(new NotificationQueueModule());
-        install(new AccountModule());
+//        install(new AccountModule());
+        bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
+
         installEntitlementModule();
         install(new CatalogModule());
         install(new BusModule());

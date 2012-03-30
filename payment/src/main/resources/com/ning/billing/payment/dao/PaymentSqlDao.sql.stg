@@ -55,7 +55,7 @@ getPaymentAttemptsForInvoiceIds(invoiceIds) ::= <<
      WHERE invoice_id in (<invoiceIds>)
 >>
 
-getPaymentAttemptForInvoiceId() ::= <<
+getPaymentAttemptsForInvoiceId() ::= <<
     SELECT <paymentAttemptFields()>
       FROM payment_attempts
      WHERE invoice_id = :invoice_id

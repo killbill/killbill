@@ -54,7 +54,6 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-
 @Test(groups={"slow"})
 @Guice(modules = MockTagStoreModuleSql.class)
 public class TestTagStore {
@@ -79,7 +78,7 @@ public class TestTagStore {
     private final Logger log = LoggerFactory.getLogger(TestTagStore.class);
     private CallContext context;
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(groups="slow")
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
@@ -101,7 +100,7 @@ public class TestTagStore {
         }
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups="slow")
     public void stopMysql()
     {
         helper.stopMysql();
@@ -122,7 +121,7 @@ public class TestTagStore {
         } catch (Throwable ignore) {
         }
     }
-    @Test
+    @Test(groups="slow")
     public void testTagCreationAndRetrieval() {
         UUID accountId = UUID.randomUUID();
 
@@ -140,7 +139,8 @@ public class TestTagStore {
         assertEquals(savedTag.getId(), tag.getId());
     }
 
-    @Test
+
+    @Test(groups="slow")
     public void testControlTagCreation() {
         UUID accountId = UUID.randomUUID();
         TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
@@ -162,7 +162,7 @@ public class TestTagStore {
         assertEquals(tagStore.generateInvoice(), false);
     }
 
-    @Test
+    @Test(groups="slow")
     public void testDescriptiveTagCreation() {
         UUID accountId = UUID.randomUUID();
         TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
@@ -191,7 +191,7 @@ public class TestTagStore {
         assertEquals(tagStore.generateInvoice(), true);
     }
 
-    @Test
+    @Test(groups="slow")
     public void testMixedTagCreation() {
         UUID accountId = UUID.randomUUID();
         TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
@@ -224,7 +224,7 @@ public class TestTagStore {
         assertEquals(tagStore.generateInvoice(), false);
     }
 
-    @Test
+    @Test(groups="slow")
     public void testControlTags() {
         UUID accountId = UUID.randomUUID();
         TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
@@ -242,13 +242,13 @@ public class TestTagStore {
         assertEquals(tagStore.processPayment(), false);
     }
 
-    @Test(expectedExceptions = TagDefinitionApiException.class)
+    @Test(groups="slow", expectedExceptions = TagDefinitionApiException.class)
     public void testTagDefinitionCreationWithControlTagName() throws TagDefinitionApiException {
         String definitionName = ControlTagType.AUTO_PAY_OFF.toString();
         tagDefinitionDao.create(definitionName, "This should break", context);
     }
 
-    @Test
+    @Test(groups="slow")
     public void testTagDefinitionDeletionForUnusedDefinition() throws TagDefinitionApiException {
         String definitionName = "TestTag1234";
         tagDefinitionDao.create(definitionName, "Some test tag", context);
@@ -261,7 +261,7 @@ public class TestTagStore {
         assertNull(tagDefinition);
     }
 
-    @Test(expectedExceptions = TagDefinitionApiException.class)
+    @Test(groups="slow", expectedExceptions = TagDefinitionApiException.class)
     public void testTagDefinitionDeletionForDefinitionInUse() throws TagDefinitionApiException {
         String definitionName = "TestTag12345";
         tagDefinitionDao.create(definitionName, "Some test tag", context);
@@ -282,7 +282,7 @@ public class TestTagStore {
         tagDefinitionDao.deleteTagDefinition(definitionName, context);
     }
 
-    @Test
+    @Test(groups="slow")
     public void testDeleteAllTagsForDefinitionInUse() {
         String definitionName = "TestTag1234567";
         try {
@@ -317,7 +317,7 @@ public class TestTagStore {
         }
     }
 
-    @Test
+    @Test(groups="slow")
     public void testDeleteAllTagsForDefinitionNotInUse() {
         String definitionName = "TestTag4321";
         try {
@@ -342,7 +342,7 @@ public class TestTagStore {
         }
     }
 
-    @Test(expectedExceptions = TagDefinitionApiException.class)
+    @Test(groups="slow", expectedExceptions = TagDefinitionApiException.class)
     public void testDeleteAllTagsForDefinitionWithWrongName() throws TagDefinitionApiException {
         String definitionName = "TestTag654321";
         String wrongDefinitionName = "TestTag564321";
@@ -364,7 +364,7 @@ public class TestTagStore {
         }
     }
 
-    @Test
+    @Test(groups="slow")
     public void testGetTagDefinitions() {
         List<TagDefinition> definitionList = tagDefinitionDao.getTagDefinitions();
         assertTrue(definitionList.size() >= ControlTagType.values().length);

@@ -44,8 +44,8 @@ public class DefaultPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId) {
-        return sqlDao.getPaymentAttemptForInvoiceId(invoiceId);
+    public List<PaymentAttempt> getPaymentAttemptsForInvoiceId(String invoiceId) {
+        return sqlDao.getPaymentAttemptsForInvoiceId(invoiceId);
     }
 
     @Override

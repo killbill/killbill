@@ -25,9 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.user.DefaultAccountUserApi;
-import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.AuditedAccountDao;
+import com.ning.billing.account.api.MockAccountUserApi;
 import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.invoice.InvoiceDispatcher;
@@ -37,8 +35,12 @@ import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MySqlGlobalLocker;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
@@ -109,7 +111,8 @@ public class TestNextBillingDateNotifier {
 
 	}
 
-	@BeforeClass(groups={"setup"})
+
+	@BeforeClass(groups={"slow"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
@@ -128,13 +131,14 @@ public class TestNextBillingDateNotifier {
                 bind(MysqlTestingHelper.class).toInstance(helper);
                 IDBI dbi = helper.getDBI();
                 bind(IDBI.class).toInstance(dbi);
+                bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
+                bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
                 bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
                 bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
                 bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-                bind(AccountDao.class).to(AuditedAccountDao.class).asEagerSingleton();
-                bind(AccountUserApi.class).to(DefaultAccountUserApi.class).asEagerSingleton();
+                bind(AccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
                 bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
 			}
         });

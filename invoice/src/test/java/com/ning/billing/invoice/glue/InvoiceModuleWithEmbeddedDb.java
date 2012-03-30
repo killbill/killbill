@@ -27,14 +27,15 @@ import com.ning.billing.invoice.notification.MockNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.jdbi.v2.IDBI;
-import com.ning.billing.account.glue.AccountModule;
+
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
@@ -97,7 +98,8 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         install(new TagStoreModule());
 
         installNotificationQueue();
-        install(new AccountModule());
+//      install(new AccountModule());
+        bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
         install(new CatalogModule());
         install(new EntitlementModule());
         install(new GlobalLockerModule());

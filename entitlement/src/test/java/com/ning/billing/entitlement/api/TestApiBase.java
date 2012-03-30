@@ -116,7 +116,7 @@ public abstract class TestApiBase {
 
     protected abstract Injector getInjector();
 
-    @AfterClass(alwaysRun=true)
+    @AfterClass(alwaysRun = true)
     public void tearDown() {
         try {
             ((DefaultBusService) busService).stopBus();
@@ -129,7 +129,7 @@ public abstract class TestApiBase {
         //if(helper != null) { helper.stopMysql(); }
     }
 
-    @BeforeClass(alwaysRun=true)
+    @BeforeClass(alwaysRun = true)
     public void setup() {
 
         loadSystemPropertiesFromClasspath("/entitlement.properties");
@@ -183,7 +183,7 @@ public abstract class TestApiBase {
         migrationApi = entitlementService.getMigrationApi();
     }
 
-    @BeforeMethod(alwaysRun=true)
+    @BeforeMethod(alwaysRun = true)
     public void setupTest() {
 
         log.warn("RESET TEST FRAMEWORK\n\n");
@@ -204,7 +204,7 @@ public abstract class TestApiBase {
         ((Engine)entitlementService).start();
     }
 
-    @AfterMethod(alwaysRun=true)
+    @AfterMethod(alwaysRun = true)
     public void cleanupTest() {
         try {
             busService.getBus().unregister(testListener);
@@ -213,11 +213,6 @@ public abstract class TestApiBase {
             Assert.fail(e.getMessage());
         }
         log.warn("DONE WITH TEST\n");
-    }
-
-    @AfterMethod
-    public void am(ITestResult result) {
-      System.out.println("CURRENT METHOD NAME :" + result.getMethod().getMethodName());
     }
 
     protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet) throws EntitlementUserApiException {

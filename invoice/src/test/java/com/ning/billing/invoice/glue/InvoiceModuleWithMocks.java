@@ -64,6 +64,6 @@ public class InvoiceModuleWithMocks extends InvoiceModule {
         super.configure();
 
         install(new FieldStoreModule());
-        install(new TagStoreModule());
+        //install(new TagStoreModule());
     }
 }

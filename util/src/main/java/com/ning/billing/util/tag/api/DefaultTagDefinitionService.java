@@ -18,19 +18,19 @@ package com.ning.billing.util.tag.api;
 
 import com.google.inject.Inject;
 import com.ning.billing.util.api.TagDefinitionService;
-import com.ning.billing.util.api.TagDefinitionUserApi;
+import com.ning.billing.util.api.TagUserApi;
 
 public class DefaultTagDefinitionService implements TagDefinitionService {
     private static final String TAG_DEFINITION_SERVICE_NAME = "tag-service";
-    private final TagDefinitionUserApi api;
+    private final TagUserApi api;
 
     @Inject
-    public DefaultTagDefinitionService(final TagDefinitionUserApi api) {
+    public DefaultTagDefinitionService(final TagUserApi api) {
         this.api = api;
     }
 
     @Override
-    public TagDefinitionUserApi getTagDefinitionUserApi() {
+    public TagUserApi getTagDefinitionUserApi() {
         return api;
     }
 

@@ -19,6 +19,8 @@ package com.ning.billing.analytics;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.lang.NotImplementedException;
+
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
@@ -91,4 +93,10 @@ public class MockIAccountUserApi implements AccountUserApi
 			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}
+
+    @Override
+    public void updateAccount(UUID accountId, AccountData accountData, CallContext context)
+            throws AccountApiException {
+        throw new NotImplementedException();
+    }
 }

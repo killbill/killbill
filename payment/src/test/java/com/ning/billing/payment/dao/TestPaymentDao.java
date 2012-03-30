@@ -18,6 +18,7 @@ package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -103,9 +104,9 @@ public abstract class TestPaymentDao {
 
         PaymentAttempt attempt = paymentDao.createPaymentAttempt(originalPaymenAttempt);
 
-        PaymentAttempt attempt2 = paymentDao.getPaymentAttemptForInvoiceId(invoiceId.toString());
+        List<PaymentAttempt> attemptsFromGet = paymentDao.getPaymentAttemptsForInvoiceId(invoiceId.toString());
 
-        Assert.assertEquals(attempt, attempt2);
+        Assert.assertEquals(attempt, attemptsFromGet.get(0));
 
         PaymentAttempt attempt3 = paymentDao.getPaymentAttemptsForInvoiceIds(Arrays.asList(invoiceId.toString())).get(0);
 

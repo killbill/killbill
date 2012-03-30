@@ -19,6 +19,8 @@ package com.ning.billing.analytics;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.util.glue.CallContextModule;
+import com.ning.billing.util.glue.FieldStoreModule;
+import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
@@ -32,6 +34,8 @@ import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
+import java.lang.reflect.Field;
+
 public class AnalyticsTestModule extends AnalyticsModule
 {
     @Override
@@ -42,6 +46,8 @@ public class AnalyticsTestModule extends AnalyticsModule
         // Need to configure a few more things for the EventBus
         install(new ClockModule());
         install(new CallContextModule());
+        install(new FieldStoreModule());
+        install(new TagStoreModule());
         install(new AccountModule());
         install(new CatalogModule());
         install(new BusModule());
@@ -56,5 +62,7 @@ public class AnalyticsTestModule extends AnalyticsModule
         bind(MysqlTestingHelper.class).toInstance(helper);
         final IDBI dbi = helper.getDBI();
         bind(IDBI.class).toInstance(dbi);
+
+        bind(TagDefinitionSqlDao.class).toInstance(dbi.onDemand(TagDefinitionSqlDao.class));
     }
 }
