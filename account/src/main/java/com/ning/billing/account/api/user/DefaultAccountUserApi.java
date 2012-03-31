@@ -33,6 +33,7 @@ import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.Tag;
+import org.joda.time.DateTime;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
     private final CallContextFactory factory;
@@ -121,7 +122,9 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 	public Account migrateAccount(final MigrationAccountData data, final List<CustomField> fields,
                                   final List<Tag> tags, final CallContext context)
             throws AccountApiException {
-        CallContext migrationContext = factory.toMigrationCallContext(context, data.getCreatedDate(), data.getUpdatedDate());
+        DateTime createdDate = data.getCreatedDate() == null ? context.getCreatedDate() : data.getCreatedDate();
+        DateTime updatedDate = data.getUpdatedDate() == null ? context.getUpdatedDate() : data.getUpdatedDate();
+        CallContext migrationContext = factory.toMigrationCallContext(context, createdDate, updatedDate);
 		Account account = new DefaultAccount(data);
         account.setFields(fields);
         account.addTags(tags);
