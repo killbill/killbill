@@ -20,9 +20,9 @@ CREATE TABLE accounts (
     phone varchar(25) DEFAULT NULL,
     migrated bool DEFAULT false,
     created_date datetime NOT NULL,
-    created_by varchar(30) NOT NULL,
+    created_by varchar(50) NOT NULL,
     updated_date datetime DEFAULT NULL,
-    updated_by varchar(30) DEFAULT NULL,
+    updated_by varchar(50) DEFAULT NULL,
     PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key);
@@ -50,7 +50,7 @@ CREATE TABLE account_history (
     postal_code varchar(11) DEFAULT NULL,
     phone varchar(25) DEFAULT NULL,
     change_type char(6) NOT NULL,
-    updated_by varchar(30) NOT NULL,
+    updated_by varchar(50) NOT NULL,
     date datetime
 ) ENGINE=innodb;
 CREATE INDEX account_id ON account_history(id);

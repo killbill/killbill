@@ -18,47 +18,38 @@ package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.entity.EntityBase;
 import org.joda.time.DateTime;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public class DefaultInvoicePayment implements InvoicePayment {
+public class DefaultInvoicePayment extends EntityBase implements InvoicePayment {
     private final UUID paymentAttemptId;
     private final UUID invoiceId;
     private final DateTime paymentDate;
     private final BigDecimal amount;
     private final Currency currency;
-    private final DateTime createdDate;
-
-    public DefaultInvoicePayment(final UUID invoiceId, final DateTime paymentDate) {
-        this(UUID.randomUUID(), invoiceId, paymentDate, null, null, null);
-    }
 
     public DefaultInvoicePayment(final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate) {
-        this(paymentAttemptId, invoiceId, paymentDate, null, null, null);
-    }
-
-    public DefaultInvoicePayment(final UUID invoiceId, final DateTime paymentDate,
-                                 final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), invoiceId, paymentDate, amount, currency, null);
+        this(UUID.randomUUID(), paymentAttemptId, invoiceId, paymentDate, null, null, null, null);
     }
 
     public DefaultInvoicePayment(final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
                                  final BigDecimal amount, final Currency currency) {
-        this(paymentAttemptId, invoiceId, paymentDate, amount, currency, null);
+        this(UUID.randomUUID(), paymentAttemptId, invoiceId, paymentDate, amount, currency, null, null);
     }
 
-    public DefaultInvoicePayment(final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
+    public DefaultInvoicePayment(final UUID id, final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
                                  @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                                 @Nullable final DateTime createdDate) {
+                                 @Nullable final String createdBy, @Nullable final DateTime createdDate) {
+        super(id, createdBy, createdDate);
         this.paymentAttemptId = paymentAttemptId;
         this.amount = amount;
         this.invoiceId = invoiceId;
         this.paymentDate = paymentDate;
         this.currency = currency;
-        this.createdDate = (createdDate == null) ? new DateTime() : createdDate;
     }
 
     @Override
@@ -84,10 +75,5 @@ public class DefaultInvoicePayment implements InvoicePayment {
     @Override
     public Currency getCurrency() {
         return currency;
-    }
-
-    @Override
-    public DateTime getCreatedDate() {
-        return createdDate;
     }
 }

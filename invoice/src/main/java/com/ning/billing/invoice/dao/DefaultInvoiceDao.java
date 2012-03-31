@@ -17,12 +17,15 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
@@ -173,7 +176,14 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     // STEPH Why do we need that? Are the payments not always null at this point?
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
                     InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
-                    invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments);
+                    invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments, context);
+
+                    AuditSqlDao auditSqlDao = invoiceDao.become(AuditSqlDao.class);
+                    auditSqlDao.insertAuditFromTransaction("invoices", invoice.getId().toString(), ChangeType.INSERT.toString(), context);
+                    auditSqlDao.insertAuditFromTransaction("recurring_invoice_items", getIdsFromInvoiceItems(recurringInvoiceItems), ChangeType.INSERT.toString(), context);
+                    auditSqlDao.insertAuditFromTransaction("fixed_invoice_items", getIdsFromInvoiceItems(fixedPriceInvoiceItems), ChangeType.INSERT.toString(), context);
+                    auditSqlDao.insertAuditFromTransaction("invoice_payments", getIdsFromInvoicePayments(invoicePayments), ChangeType.INSERT.toString(), context);
+
                 }
 
                 return null;
@@ -190,6 +200,26 @@ public class DefaultInvoiceDao implements InvoiceDao {
         } catch (Bus.EventBusException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private List<String> getIdsFromInvoiceItems(List<InvoiceItem> invoiceItems) {
+        List<String> ids = new ArrayList<String>();
+
+        for (InvoiceItem item : invoiceItems) {
+            ids.add(item.getId().toString());
+        }
+
+        return ids;
+    }
+
+    private List<String> getIdsFromInvoicePayments(List<InvoicePayment> invoicePayments) {
+        List<String> ids = new ArrayList<String>();
+
+        for (InvoicePayment payment : invoicePayments) {
+            ids.add(payment.getId().toString());
+        }
+
+        return ids;
     }
 
     @Override
@@ -212,8 +242,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
-        invoicePaymentSqlDao.notifyOfPaymentAttempt(invoicePayment);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
+        invoicePaymentSqlDao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
     @Override

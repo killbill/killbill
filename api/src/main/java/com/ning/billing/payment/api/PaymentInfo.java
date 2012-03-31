@@ -38,7 +38,7 @@ public class PaymentInfo implements BusEvent {
     private final String paymentMethodId;
     private final String paymentMethod;
     private final String cardType;
-    private final String cardCoutry;
+    private final String cardCountry;
     private final DateTime effectiveDate;
     private final DateTime createdDate;
     private final DateTime updatedDate;
@@ -70,7 +70,7 @@ public class PaymentInfo implements BusEvent {
         this.paymentMethodId = paymentMethodId;
         this.paymentMethod = paymentMethod;
         this.cardType = cardType;
-        this.cardCoutry = cardCountry;
+        this.cardCountry = cardCountry;
         this.effectiveDate = effectiveDate;
         this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
         this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
@@ -88,7 +88,7 @@ public class PaymentInfo implements BusEvent {
              src.paymentMethodId,
              src.paymentMethod,
              src.cardType,
-             src.cardCoutry,
+             src.cardCountry,
              src.effectiveDate,
              src.createdDate,
              src.updatedDate);
@@ -131,7 +131,7 @@ public class PaymentInfo implements BusEvent {
     }
 
     public String getCardCountry() {
-        return cardCoutry;
+        return cardCountry;
     }
 
     public String getReferenceId() {
@@ -191,7 +191,7 @@ public class PaymentInfo implements BusEvent {
             this.paymentMethodId = src.paymentMethodId;
             this.paymentMethod = src.paymentMethod;
             this.cardType = src.cardType;
-            this.cardCountry = src.cardCoutry;
+            this.cardCountry = src.cardCountry;
             this.createdDate = src.createdDate;
             this.updatedDate = src.updatedDate;
         }
@@ -303,7 +303,7 @@ public class PaymentInfo implements BusEvent {
                                 paymentMethodId,
                                 paymentMethod,
                                 cardType,
-                                cardCoutry,
+                cardCountry,
                                 effectiveDate,
                                 createdDate,
                                 updatedDate);
@@ -319,7 +319,7 @@ public class PaymentInfo implements BusEvent {
         if (amount != null ? !(amount.compareTo(that.amount) == 0) : that.amount != null) return false;
         if (bankIdentificationNumber != null ? !bankIdentificationNumber.equals(that.bankIdentificationNumber) : that.bankIdentificationNumber != null)
             return false;
-        if (cardCoutry != null ? !cardCoutry.equals(that.cardCoutry) : that.cardCoutry != null) return false;
+        if (cardCountry != null ? !cardCountry.equals(that.cardCountry) : that.cardCountry != null) return false;
         if (cardType != null ? !cardType.equals(that.cardType) : that.cardType != null) return false;
         if (createdDate != null ? !(getUnixTimestamp(createdDate) == getUnixTimestamp(that.createdDate)) : that.createdDate != null) return false;
         if (effectiveDate != null ? !(getUnixTimestamp(effectiveDate) == getUnixTimestamp(that.effectiveDate)) : that.effectiveDate != null)
@@ -342,7 +342,7 @@ public class PaymentInfo implements BusEvent {
 
     @Override
     public String toString() {
-        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethod=" + paymentMethod + ", cardType=" + cardType + ", cardCountry=" + cardCoutry + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
+        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethod=" + paymentMethod + ", cardType=" + cardType + ", cardCountry=" + cardCountry + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
     }
 
     private static long getUnixTimestamp(final DateTime dateTime) {

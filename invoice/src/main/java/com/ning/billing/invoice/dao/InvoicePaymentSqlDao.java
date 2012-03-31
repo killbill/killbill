@@ -24,14 +24,14 @@ import java.lang.annotation.Target;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.entity.MapperBase;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -57,32 +57,41 @@ public interface InvoicePaymentSqlDao {
     public List<InvoicePayment> get();
 
     @SqlUpdate
-    public void create(@InvoicePaymentBinder  InvoicePayment invoicePayment);
+    public void create(@InvoicePaymentBinder final InvoicePayment invoicePayment,
+                       @CallContextBinder final CallContext context);
 
     @SqlBatch(transactional=false)
-    void batchCreateFromTransaction(@InvoicePaymentBinder List<InvoicePayment> items);
+    void batchCreateFromTransaction(@InvoicePaymentBinder final List<InvoicePayment> items,
+                                    @CallContextBinder final CallContext context);
 
     @SqlQuery
-    public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") String invoiceId);
+    public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId);
 
     @SqlQuery
-    InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") UUID paymentAttemptId);
+    InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") final UUID paymentAttemptId);
 
     @SqlUpdate
-    void notifyOfPaymentAttempt(@InvoicePaymentBinder InvoicePayment invoicePayment);
+    void notifyOfPaymentAttempt(@InvoicePaymentBinder final InvoicePayment invoicePayment,
+                                @CallContextBinder final CallContext context);
 
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
         @Override
         public InvoicePayment map(int index, ResultSet result, StatementContext context) throws SQLException {
+            final UUID id = UUID.fromString(result.getString("id"));
             final UUID paymentAttemptId = UUID.fromString(result.getString("payment_attempt_id"));
             final UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
             final DateTime paymentAttemptDate = getDate(result, "payment_attempt_date");
             final BigDecimal amount = result.getBigDecimal("amount");
             final String currencyString = result.getString("currency");
             final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
+            final String createdBy = result.getString("created_by");
             final DateTime createdDate = getDate(result, "created_date");
 
             return new InvoicePayment() {
+                @Override
+                public UUID getId() {
+                    return id;
+                }
                 @Override
                 public UUID getPaymentAttemptId() {
                     return paymentAttemptId;
@@ -104,6 +113,10 @@ public interface InvoicePaymentSqlDao {
                     return currency;
                 }
                 @Override
+                public String getCreatedBy() {
+                    return createdBy;
+                }
+                @Override
                 public DateTime getCreatedDate() {
                     return createdDate ;
                 }
@@ -121,14 +134,13 @@ public interface InvoicePaymentSqlDao {
                 return new Binder<InvoicePaymentBinder, InvoicePayment>() {
                     @Override
                     public void bind(SQLStatement q, InvoicePaymentBinder bind, InvoicePayment payment) {
+                        q.bind("id", payment.getId().toString());
                         q.bind("invoiceId", payment.getInvoiceId().toString());
                         q.bind("paymentAttemptId", payment.getPaymentAttemptId().toString());
                         q.bind("paymentAttemptDate", payment.getPaymentAttemptDate().toDate());
                         q.bind("amount", payment.getAmount());
                         Currency currency = payment.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());
-                        DateTime createdDate = payment.getCreatedDate();
-                        q.bind("createdDate", (createdDate == null) ? new DateTime().toDate() : createdDate.toDate());
                     }
                 };
             }

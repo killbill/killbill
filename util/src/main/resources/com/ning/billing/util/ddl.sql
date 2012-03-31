@@ -5,9 +5,9 @@ CREATE TABLE custom_fields (
   object_type varchar(30) NOT NULL,
   field_name varchar(30) NOT NULL,
   field_value varchar(255),
-  created_by varchar(30) NOT NULL,
+  created_by varchar(50) NOT NULL,
   created_date datetime NOT NULL,
-  updated_by varchar(30) DEFAULT NULL,
+  updated_by varchar(50) DEFAULT NULL,
   updated_date datetime DEFAULT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
@@ -22,7 +22,7 @@ CREATE TABLE custom_field_history (
   object_type varchar(30) NOT NULL,
   field_name varchar(30),
   field_value varchar(255),
-  updated_by varchar(30) NOT NULL,
+  updated_by varchar(50) NOT NULL,
   date datetime NOT NULL,
   change_type char(6) NOT NULL
 ) ENGINE=innodb;
@@ -34,7 +34,7 @@ CREATE TABLE tag_definitions (
   id char(36) NOT NULL,
   name varchar(20) NOT NULL,
   description varchar(200) NOT NULL,
-  created_by varchar(30) NOT NULL,
+  created_by varchar(50) NOT NULL,
   created_date datetime NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
@@ -47,7 +47,7 @@ CREATE TABLE tag_definition_history (
   created_by varchar(50),
   description varchar(200),
   change_type char(6) NOT NULL,
-  updated_by varchar(30) NOT NULL,
+  updated_by varchar(50) NOT NULL,
   date datetime NOT NULL
 ) ENGINE=innodb;
 CREATE INDEX tag_definition_history_id ON tag_definition_history(id);
@@ -59,7 +59,7 @@ CREATE TABLE tags (
   tag_definition_name varchar(20) NOT NULL,
   object_id char(36) NOT NULL,
   object_type varchar(30) NOT NULL,
-  created_by varchar(30) NOT NULL,
+  created_by varchar(50) NOT NULL,
   created_date datetime NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE = innodb;
@@ -73,7 +73,7 @@ CREATE TABLE tag_history (
   object_id char(36) NOT NULL,
   object_type varchar(30) NOT NULL,
   change_type char(6) NOT NULL,
-  updated_by varchar(30) NOT NULL,
+  updated_by varchar(50) NOT NULL,
   date datetime NOT NULL
 ) ENGINE = innodb;
 CREATE INDEX tag_history_by_object ON tags(object_id);

@@ -53,8 +53,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
-        dao.notifyOfPaymentAttempt(invoicePayment);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
+        dao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
     @Override

@@ -33,7 +33,7 @@ public interface InvoiceUserApi {
 
     public Invoice getInvoice(UUID invoiceId);
 
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context);
 
     public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate);
     

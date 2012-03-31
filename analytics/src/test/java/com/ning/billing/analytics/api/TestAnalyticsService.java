@@ -264,8 +264,8 @@ public class TestAnalyticsService {
         paymentInfoNotification = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
         final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
                 ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getPaymentId(), 1);
-        paymentDao.createPaymentAttempt(paymentAttempt);
-        paymentDao.savePaymentInfo(paymentInfoNotification);
+        paymentDao.createPaymentAttempt(paymentAttempt, context);
+        paymentDao.savePaymentInfo(paymentInfoNotification, context);
         Assert.assertEquals(paymentDao.getPaymentInfo(Arrays.asList(invoice.getId().toString())).size(), 1);
     }
 

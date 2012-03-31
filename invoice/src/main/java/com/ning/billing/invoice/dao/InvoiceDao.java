@@ -44,7 +44,7 @@ public interface InvoiceDao extends TaggableDao {
 
     InvoicePayment getInvoicePayment(final UUID paymentAttemptId);
 
-    void notifyOfPaymentAttempt(final InvoicePayment invoicePayment);
+    void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context);
 
     BigDecimal getAccountBalance(final UUID accountId);
 
@@ -52,5 +52,5 @@ public interface InvoiceDao extends TaggableDao {
 
     void test();
 
-	List<Invoice> getAllInvoicesByAccount(UUID accountId);
+	List<Invoice> getAllInvoicesByAccount(final UUID accountId);
 }

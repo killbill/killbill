@@ -19,14 +19,23 @@ package com.ning.billing.util.audit.dao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+
+import java.util.List;
 
 @ExternalizedSqlViaStringTemplate3
 public interface AuditSqlDao {
     @SqlUpdate
     public void insertAuditFromTransaction(@Bind("tableName") final String tableName,
                                            @Bind("recordId") final String recordId,
+                                           @Bind("changeType") String changeType,
+                                           @CallContextBinder CallContext context);
+
+    @SqlBatch(transactional = false)
+    public void insertAuditFromTransaction(@Bind("tableName") final String tableName,
+                                           @Bind("recordId") final List<String> recordIds,
                                            @Bind("changeType") String changeType,
                                            @CallContextBinder CallContext context);
 }

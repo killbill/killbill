@@ -102,7 +102,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal paymentAmount = new BigDecimal("11.00");
         UUID paymentAttemptId = UUID.randomUUID();
 
-        invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttemptId, invoiceId, clock.getUTCNow().plusDays(12), paymentAmount, Currency.USD));
+        invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttemptId, invoiceId, clock.getUTCNow().plusDays(12), paymentAmount, Currency.USD), context);
 
         Invoice retrievedInvoice = invoiceDao.getById(invoiceId);
         assertNotNull(retrievedInvoice);
@@ -129,7 +129,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal paymentAmount = new BigDecimal("14.0");
 
         invoiceDao.create(invoice, context);
-        invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttemptId, invoice.getId(), paymentAttemptDate, paymentAmount, Currency.USD));
+        invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttemptId, invoice.getId(), paymentAttemptDate, paymentAmount, Currency.USD), context);
 
         invoice = invoiceDao.getById(invoice.getId());
         assertEquals(invoice.getAmountPaid().compareTo(paymentAmount), 0);
@@ -146,7 +146,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
 
         invoiceDao.create(invoice, context);
-        invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(invoice.getId(), paymentAttemptDate));
+        invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(UUID.randomUUID(), invoice.getId(), paymentAttemptDate), context);
 
         invoice = invoiceDao.getById(invoice.getId());
         assertEquals(invoice.getLastPaymentAttempt().compareTo(paymentAttemptDate), 0);
@@ -279,8 +279,8 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         recurringInvoiceItemDao.create(item2, context);
 
         BigDecimal payment1 = new BigDecimal("48.0");
-        InvoicePayment payment = new DefaultInvoicePayment(invoice1.getId(), new DateTime(), payment1, Currency.USD);
-        invoicePaymentDao.create(payment);
+        InvoicePayment payment = new DefaultInvoicePayment(UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD);
+        invoicePaymentDao.create(payment, context);
 
         BigDecimal balance = invoiceDao.getAccountBalance(accountId);
         assertEquals(balance.compareTo(rate1.add(rate2).subtract(payment1)), 0);
@@ -319,8 +319,8 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoiceDao.create(invoice1, context);
 
         BigDecimal payment1 = new BigDecimal("48.0");
-        InvoicePayment payment = new DefaultInvoicePayment(invoice1.getId(), new DateTime(), payment1, Currency.USD);
-        invoicePaymentDao.create(payment);
+        InvoicePayment payment = new DefaultInvoicePayment(UUID.randomUUID(), invoice1.getId(), new DateTime(), payment1, Currency.USD);
+        invoicePaymentDao.create(payment, context);
 
         BigDecimal balance = invoiceDao.getAccountBalance(accountId);
         assertEquals(balance.compareTo(BigDecimal.ZERO.subtract(payment1)), 0);

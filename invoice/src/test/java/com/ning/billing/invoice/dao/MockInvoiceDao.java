@@ -153,7 +153,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
         synchronized (monitor) {
             Invoice invoice = invoices.get(invoicePayment.getInvoiceId());
             if (invoice != null) {
