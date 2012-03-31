@@ -14,16 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.util.clock;
+package com.ning.billing.server.config;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import org.skife.config.Config;
+import org.skife.config.Default;
 
-public interface Clock {
+public interface KillbillServerConfig {
 
-    public DateTime getNow(DateTimeZone tz);
-
-    public DateTime getUTCNow();
-
-    //public DateTime addDuration(DateTime input, IDuration duration);
 }

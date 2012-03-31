@@ -36,6 +36,13 @@ public class DefaultClock implements Clock {
         return getNow(DateTimeZone.UTC);
     }
 
+    public static DateTime toUTCDateTime(DateTime input) {
+        if (input == null) {
+            return null;
+        }
+        DateTime result = input.toDateTime(DateTimeZone.UTC);
+        return truncateMs(result);
+    }
 
     public static DateTime truncateMs(DateTime input) {
         return input.minus(input.getMillisOfSecond());

@@ -14,16 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.util.clock;
+package com.ning.billing.jaxrs.resources;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+public class CreditResource {
 
-public interface Clock {
-
-    public DateTime getNow(DateTimeZone tz);
-
-    public DateTime getUTCNow();
-
-    //public DateTime addDuration(DateTime input, IDuration duration);
 }

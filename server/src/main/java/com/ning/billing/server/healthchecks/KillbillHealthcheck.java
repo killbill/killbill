@@ -13,17 +13,32 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.server.healthchecks;
 
-package com.ning.billing.util.clock;
+import org.weakref.jmx.Managed;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import com.yammer.metrics.core.HealthCheck;
 
-public interface Clock {
+public class KillbillHealthcheck extends HealthCheck {
 
-    public DateTime getNow(DateTimeZone tz);
+    @Override
+    public String name() {
+        return "KillbillHealthCheck";
+    }
 
-    public DateTime getUTCNow();
+    @Override
+    public Result check() {
+        try {
+            // STEPH obviously needs more than that
+            return Result.healthy();
+        } catch (Exception e) {
+            return Result.unhealthy(e);
+        }
+    }
 
-    //public DateTime addDuration(DateTime input, IDuration duration);
+
+    @Managed
+    public boolean isHealthy() {
+        return check().isHealthy();
+    }
 }

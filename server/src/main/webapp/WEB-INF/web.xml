@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://java.sun.com/xml/ns/javaee"
+        xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+        version="2.5">
+    <display-name>irs</display-name>
+    <filter>
+        <!-- Guice emulates Servlet API with DI -->
+        <filter-name>guiceFilter</filter-name>
+        <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>guiceFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <listener>
+        <!-- Jersey insists on using java.util.logging (JUL) -->
+        <listener-class>com.ning.jetty.core.listeners.SetupJULBridge</listener-class>
+    </listener>
+    <!-- This param tells the IrsGuiceListener listener which factory to use for the root guice module -->
+    <context-param>
+        <param-name>guiceModuleFactoryClass</param-name>
+        <param-value>com.ning.billing.server.listeners.KillbillGuiceModuleFactory</param-value>
+    </context-param>
+    <listener>
+        <!-- Context listener: called at startup time and creates the injector -->
+        <listener-class>com.ning.billing.server.listeners.KillbillGuiceListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>com.ning.billing.server.listeners.KillbillLifecycleListener</listener-class>
+    </listener>
+    <!-- ServletHandler#handle requires a backend servlet, it won't be used though (handled by Guice) -->
+    <servlet>
+        <servlet-name>log-invalid-resources</servlet-name>
+        <servlet-class>com.ning.jetty.core.servlets.LogInvalidResourcesServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>log-invalid-resources</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+</web-app>

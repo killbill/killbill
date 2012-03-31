@@ -1,0 +1,33 @@
+#! /usr/bin/env bash
+
+HERE=`cd \`dirname $0\`; pwd`
+TOP=$HERE/..
+SERVER=$TOP/server
+
+PROPERTIES="$SERVER/src/main/resources/killbill-server.properties"
+
+#DEBUG_OPTS_ECLIPSE=
+DEBUG_OPTS_ECLIPSE=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=12345 "
+OPTS_ECLIPSE=" -Xmx2048m  -XX:+UseConcMarkSweepGC -XX:MaxPermSize=128m  "
+
+LOG="$SERVER/src/main/resources/log4j.xml"
+
+PORT=8080
+
+OPTS=
+for PROP in `cat  $PROPERTIES | grep =`; do
+    K=`echo $PROP | awk '  BEGIN {FS="="} { print $1 }'`
+    V=`echo $PROP | awk 'BEGIN {FS="="} { print $2 }'`
+    OPTS="$OPTS -D$K=$V"
+done
+
+
+START_CMD="mvn $OPTS -Dlog4j.configuration=file://$LOG -Dning.jmx.http.port=$PORT -Dxn.host.external.port=$PORT -DjettyPort=$PORT -Dxn.server.port=$PORT jetty:run"
+
+echo "Starting IRS:"
+echo "$START_CMD"
+
+export MAVEN_OPTS=" -Duser.timezone=UTC $OPTS_ECLIPSE $DEBUG_OPTS_ECLIPSE"
+
+cd $SERVER
+$START_CMD

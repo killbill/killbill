@@ -14,16 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.util.clock;
+package com.ning.billing.jaxrs.json;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
-public interface Clock {
-
-    public DateTime getNow(DateTimeZone tz);
-
-    public DateTime getUTCNow();
-
-    //public DateTime addDuration(DateTime input, IDuration duration);
+public class BundleTimelineViews {
+    static class Base {};
+    static class Timeline extends Base {};
+    static class ReadTimeline extends Timeline {};
+    static class WriteTimeline extends Timeline {};
 }

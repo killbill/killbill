@@ -13,17 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.server.listeners;
 
-package com.ning.billing.util.clock;
+import com.google.inject.Module;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-
-public interface Clock {
-
-    public DateTime getNow(DateTimeZone tz);
-
-    public DateTime getUTCNow();
-
-    //public DateTime addDuration(DateTime input, IDuration duration);
+public interface GuiceModuleFactory {
+    Module createModule();
 }
