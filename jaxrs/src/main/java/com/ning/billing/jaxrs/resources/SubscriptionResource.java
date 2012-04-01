@@ -39,7 +39,7 @@ import com.ning.billing.jaxrs.json.SubscriptionJson;
 public class SubscriptionResource {
 
     @GET
-    @Path("/{subscriptionId:\\w+}")
+    @Path("/{subscriptionId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     @Produces(APPLICATION_JSON)
     public Response getSubscription(@PathParam("subscriptionId") String subscriptionId) {
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -56,7 +56,7 @@ public class SubscriptionResource {
     @PUT
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
-    @Path("/{subscriptionId:\\w+}")
+    @Path("/{subscriptionId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     public Response changeSubscriptionPlan(SubscriptionJson subscription,
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("requestedDate") String requestedDate) {
@@ -64,14 +64,14 @@ public class SubscriptionResource {
     }
 
     @PUT
-    @Path("/{subscriptionId:\\w+}/uncancel")
+    @Path("/{subscriptionId:\\w+-\\w+-\\w+-\\w+-\\w+}/uncancel")
     @Produces(APPLICATION_JSON)
     public Response uncancelSubscriptionPlan(@PathParam("subscriptionId") String subscriptionId) {
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     }
 
     @DELETE
-    @Path("/{subscriptionId:\\w+}")
+    @Path("/{subscriptionId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     @Produces(APPLICATION_JSON)
     public Response cancelSubscriptionPlan(@PathParam("subscriptionId") String subscriptionId,
             @QueryParam("requestedDate") String requestedDate) {

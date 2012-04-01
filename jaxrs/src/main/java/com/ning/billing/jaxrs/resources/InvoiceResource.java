@@ -44,14 +44,14 @@ public class InvoiceResource {
     }
 
     @GET
-    @Path("/{invoiceId:\\w+}")
+    @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     @Produces(APPLICATION_JSON)
     public Response getInvoice(@PathParam("invoiceId") String accountId) {
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     }
 
     @POST
-    @Path("/{accountId:\\w+}")
+    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createFutureInvoice(InvoiceJson invoice,

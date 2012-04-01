@@ -36,14 +36,14 @@ public class PaymentResource {
 
 
     @GET
-    @Path("/{invoiceId:\\w+}")
+    @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     @Produces(APPLICATION_JSON)
     public Response getPayments(@PathParam("invoiceId") String invoiceId) {
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     }
 
     @GET
-    @Path("/account/{accountId:\\w+}")
+    @Path("/account/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     @Produces(APPLICATION_JSON)
     public Response getAllPayments(@PathParam("accountId") String accountId) {
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -52,7 +52,7 @@ public class PaymentResource {
     @POST
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
-    @Path("/{invoiceId:\\w+}")
+    @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     public Response createInstantPayment(PaymentJson payment,
             @PathParam("invoiceId") String invoiceId,
             @QueryParam("last4CC") String last4CC,

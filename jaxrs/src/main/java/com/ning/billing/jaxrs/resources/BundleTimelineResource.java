@@ -32,7 +32,7 @@ import javax.ws.rs.core.Response.Status;
 public class BundleTimelineResource {
 
     @GET
-    @Path("/{bundleId:\\w+}")
+    @Path("/{bundleId:\\\\w+-\\\\w+-\\\\w+-\\\\w+-\\\\w+}")
     @Produces(APPLICATION_JSON)
     public Response getBundleTimeline(@PathParam("bundleId") String bundleId) {
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -41,7 +41,7 @@ public class BundleTimelineResource {
     @POST
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
-    @Path("/{bundleId:\\w+}/repair")
+    @Path("/{bundleId:\\w+-\\w+-\\w+-\\w+-\\w+}/repair")
      public Response repairBundleTineline(BundleTimelineResource bundle,
              @PathParam("bundleId") String bundleId) {
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();

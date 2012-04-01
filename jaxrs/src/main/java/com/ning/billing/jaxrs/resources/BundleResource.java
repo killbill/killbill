@@ -34,7 +34,7 @@ import com.ning.billing.jaxrs.json.BundleJson;
 public class BundleResource {
 
     @GET
-    @Path("/{bundleId:\\w+}")
+    @Path("/{bundleId:\\\\w+-\\\\w+-\\\\w+-\\\\w+-\\\\w+}")
     @Produces(APPLICATION_JSON)
     public Response getBundle(@PathParam("bundleId") String bundleId) {
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();

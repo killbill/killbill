@@ -60,7 +60,7 @@ public class AccountResource {
     }
 
     @GET
-    @Path("/{accountId:\\w+}")
+    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     @Produces(APPLICATION_JSON)
     public Response getAccount(@PathParam("accountId") String accountId) {
         Account account = accountApi.getAccountById(UUID.fromString(accountId));
@@ -109,7 +109,7 @@ public class AccountResource {
     @PUT
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @Path("/{accountId:\\w+}")
+    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     public Response updateAccount(AccountJson json, @PathParam("accountId") String accountId) {
         try {
             AccountData data = json.toAccountData();
@@ -123,7 +123,7 @@ public class AccountResource {
 
     // Not supported
     @DELETE
-    @Path("/{accountId:\\w+}")
+    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     @Produces(APPLICATION_JSON)
     public Response cancelAccount(@PathParam("accountId") String accountId) {
         /*
