@@ -149,7 +149,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     	return result;
 
     }
-    
+
    	private int calculateBcdFromSubscription(Subscription subscription, Plan plan, Account account,
                                              final CallContext context) throws AccountApiException {
 		int result = account.getBillCycleDay();
@@ -163,7 +163,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         } catch (CatalogApiException e) {
             log.error("Unexpected catalog error encountered when updating BCD",e);
         }
-        
+
         MutableAccountData modifiedData = account.toMutableAccountData();
         modifiedData.setBillCycleDay(result);
 
@@ -208,6 +208,6 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             }
         }
     }
-    
- 
+
+
 }
