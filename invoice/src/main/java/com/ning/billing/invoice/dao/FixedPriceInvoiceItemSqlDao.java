@@ -16,10 +16,17 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
-import com.ning.billing.util.entity.EntityDao;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -34,16 +41,10 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
+import com.ning.billing.util.entity.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(FixedPriceInvoiceItemSqlDao.FixedPriceInvoiceItemMapper.class)
@@ -77,6 +78,7 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                     public void bind(SQLStatement q, FixedPriceInvoiceItemBinder bind, FixedPriceInvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
+                        q.bind("bundleId", item.getBundleId().toString());
                         q.bind("subscriptionId", item.getSubscriptionId().toString());
                         q.bind("planName", item.getPlanName());
                         q.bind("phaseName", item.getPhaseName());

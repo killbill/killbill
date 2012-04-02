@@ -47,7 +47,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
-        try {
+       
             module = new InvoiceModuleWithEmbeddedDb();
             final String accountDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
             final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
@@ -71,10 +71,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
             ((DefaultBusService) busService).startBus();
 
             assertTrue(true);
-        }
-        catch (Throwable t) {
-            fail(t.toString());
-        }
+       
     }
 
     @BeforeMethod(alwaysRun = true)

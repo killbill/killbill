@@ -25,4 +25,6 @@ public interface OverdueState<T extends Overdueable> {
 
     public boolean applyCancel();
 
+    public boolean isClearState();
+
 }

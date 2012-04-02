@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.entity.EntityPersistenceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -44,6 +43,7 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.entity.EntityPersistenceException;
 
 public abstract class TestPaymentApi {
     @Inject
@@ -70,9 +70,11 @@ public abstract class TestPaymentApi {
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
 
         invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
                                                        subscriptionId,
+                                                       bundleId,
                                                        "test plan", "test phase",
                                                        now,
                                                        now.plusMonths(1),

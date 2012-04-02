@@ -27,6 +27,7 @@ public abstract class InvoiceItemBase implements InvoiceItem {
     protected final UUID id;
     protected final UUID invoiceId;
     protected final UUID subscriptionId;
+    protected final UUID bundleId;
     protected final String planName;
     protected final String phaseName;
     protected final DateTime startDate;
@@ -35,19 +36,20 @@ public abstract class InvoiceItemBase implements InvoiceItem {
     protected final Currency currency;
     protected final DateTime createdDate;
 
-    public InvoiceItemBase(UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
+    public InvoiceItemBase(UUID invoiceId, UUID subscriptionId, UUID bundleId, String planName, String phaseName,
                            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
                            DateTime createdDate) {
-        this(UUID.randomUUID(), invoiceId, subscriptionId, planName, phaseName,
+        this(UUID.randomUUID(), invoiceId, subscriptionId, bundleId, planName, phaseName,
                 startDate, endDate, amount, currency, createdDate);
     }
 
-    public InvoiceItemBase(UUID id, UUID invoiceId, UUID subscriptionId, String planName, String phaseName,
+    public InvoiceItemBase(UUID id, UUID invoiceId, UUID subscriptionId, UUID bundleId, String planName, String phaseName,
                            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
                            DateTime createdDate) {
         this.id = id;
         this.invoiceId = invoiceId;
         this.subscriptionId = subscriptionId;
+        this.bundleId = bundleId;
         this.planName = planName;
         this.phaseName = phaseName;
         this.startDate = startDate;
@@ -69,6 +71,11 @@ public abstract class InvoiceItemBase implements InvoiceItem {
     @Override
     public UUID getInvoiceId() {
         return invoiceId;
+    }
+
+    @Override
+    public UUID getBundleId() {
+        return bundleId;
     }
 
     @Override

@@ -19,22 +19,66 @@ package com.ning.billing.overdue.applicator;
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
+import com.google.inject.Inject;
 import com.ning.billing.catalog.api.overdue.OverdueState;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
-public class OverdueStateApplicatorBundle implements OverdueStateApplicator<SubscriptionBundle>{
+public class OverdueStateApplicatorBundle implements OverdueStateApplicator<SubscriptionBundle>{    
+    private EntitlementUserApi entitlementApi;
+
+    @Inject
+    public OverdueStateApplicatorBundle(EntitlementUserApi entitlementApi){
+        this.entitlementApi = entitlementApi;   
+    }
 
     @Override
     public void apply(SubscriptionBundle overdueable,
             OverdueState<SubscriptionBundle> previousOverdueState,
             OverdueState<SubscriptionBundle> nextOverdueState, DateTime timeOfNextCheck) {
-        //  Create immediate notification with this data
-        //  Make changes to apply the state
-        //  Record new state in DAO
-        // Create notification for future check
+        
+        if(previousOverdueState.getName().equals(nextOverdueState.getName())) {
+            return; // nothing to do
+        }
+        
+        cancelBundle(overdueable, previousOverdueState, nextOverdueState);
+        storeNewState(overdueable, nextOverdueState);
+  
+        if(timeOfNextCheck != null && !nextOverdueState.isClearState()) {
+            createFutureNotification(overdueable, timeOfNextCheck);
+        }
+
+        if(nextOverdueState.isClearState()) {
+            clear(overdueable);
+        }
         
         //If new state is clear state reset next events and override table
         throw new NotImplementedException();
     }
+
+    private void cancelBundle(SubscriptionBundle overdueable,
+            OverdueState<SubscriptionBundle> previousOverdueState,
+            OverdueState<SubscriptionBundle> nextOverdueState) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    private void storeNewState(SubscriptionBundle overdueable,
+            OverdueState<SubscriptionBundle> nextOverdueState) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    private void createFutureNotification(SubscriptionBundle overdueable,
+            DateTime timeOfNextCheck) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    private void clear(SubscriptionBundle overdueable) {
+        // TODO Clear any future events plus overrides
+        
+    }
+
 
 }

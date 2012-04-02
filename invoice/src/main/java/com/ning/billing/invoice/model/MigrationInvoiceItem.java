@@ -26,10 +26,11 @@ import com.ning.billing.catalog.api.MigrationPlan;
 import com.ning.billing.util.clock.Clock;
 
 public class MigrationInvoiceItem extends FixedPriceInvoiceItem {
-	private final static UUID MIGRATION_SUBSCRIPTION_ID = UUID.fromString("ed25f954-3aa2-4422-943b-c3037ad7257c"); //new UUID(0L,0L);
+    private final static UUID MIGRATION_SUBSCRIPTION_ID = UUID.fromString("ed25f954-3aa2-4422-943b-c3037ad7257c"); 
+    private final static UUID MIGRATION_BUNDLE_ID = UUID.fromString("ed25f954-3aa2-4422-943b-c3037ad7257d"); // Going away anyway
 
 	public MigrationInvoiceItem(UUID invoiceId, DateTime startDate, BigDecimal amount, Currency currency, Clock clock) {
-		super(invoiceId, MIGRATION_SUBSCRIPTION_ID, MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME, startDate, startDate,
+		super(invoiceId, MIGRATION_SUBSCRIPTION_ID, MIGRATION_BUNDLE_ID, MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME, startDate, startDate,
 				amount, currency, clock.getUTCNow());
 	}
 

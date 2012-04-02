@@ -46,6 +46,7 @@
         <module>entitlement</module>
         <module>invoice</module>
         <module>payment</module>
+        <module>overdue</module>
         <module>util</module>
     </modules>
     <dependencyManagement>
@@ -374,6 +375,7 @@
                                 <exclude>**/.project</exclude>
                                 <exclude>.git/**</exclude>
                                 <exclude>.gitignore</exclude>
+                                <exclude>**/.classpath</exclude>
                                 <exclude>ignore/**</exclude>
                                 <exclude>API.txt</exclude>
                                 <exclude>RELEASE.sh</exclude>
@@ -395,6 +397,8 @@
                                 <exclude>**/*.dont-let-git-remove-this-directory</exclude>
                                 <exclude>**/test-output/**</exclude>
                                 <exclude>**/bin/**</exclude>
+                                <exclude>**/target/**</exclude>
+                                <exclude>**/.settings/**</exclude>
                                 <exclude>.travis.yml</exclude>
                             </excludes>
                         </configuration>

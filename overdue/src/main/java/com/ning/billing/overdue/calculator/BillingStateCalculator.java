@@ -17,31 +17,63 @@
 package com.ning.billing.overdue.calculator;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.google.inject.Inject;
 import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.util.clock.Clock;
 
 public abstract class BillingStateCalculator<T extends Overdueable> {
 
+    private final InvoiceUserApi invoiceApi;
+    private final Clock clock;
+
+    @Inject 
+    public BillingStateCalculator(InvoiceUserApi invoiceApi, Clock clock) {
+        this.invoiceApi = invoiceApi;
+        this.clock = clock;
+    }
+    
     public abstract BillingState<T> calculateBillingState(T overdueable);
     
     protected DateTime earliest(SortedSet<Invoice> unpaidInvoices) {
-        // TODO Auto-generated method stub
-        return null;
+        return unpaidInvoices.first().getInvoiceDate();
     }
 
     protected BigDecimal sumBalance(SortedSet<Invoice> unpaidInvoices) {
-        // TODO Auto-generated method stub
-        return null;
+        BigDecimal sum = BigDecimal.ZERO;
+        Iterator<Invoice> it = unpaidInvoices.iterator();
+        while(it.hasNext()) {
+            sum = sum.add(it.next().getBalance());
+        }
+        return sum;
     }
 
     protected SortedSet<Invoice> unpaidInvoicesFor(UUID id) {
-        // TODO Auto-generated method stub
-        return null;
+        Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(id, clock.getUTCNow());
+        SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new Comparator<Invoice>() {
+            @Override
+            public int compare(Invoice i1, Invoice i2) {
+                DateTime d1 = i1.getInvoiceDate();
+                DateTime d2 = i2.getInvoiceDate();
+                if(d1.compareTo(d2) == 0) {
+                    return i1.hashCode() - i2.hashCode(); // consistent (arbitrary) resolution for tied dates
+                }
+                return d1.compareTo(d2);
+            }
+            
+        });
+        sortedInvoices.addAll(invoices);
+        return sortedInvoices;
     }
 }

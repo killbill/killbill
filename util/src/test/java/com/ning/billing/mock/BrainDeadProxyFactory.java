@@ -68,7 +68,7 @@ public class BrainDeadProxyFactory {
                     		throw ((Throwable) result);
                     	}
                         return result;
-                    } else {
+                    }  else {
                         log.error(String.format("No result for Method: '%s' on Class '%s'",method.getName(), method.getDeclaringClass().getName()));
                         throw new UnsupportedOperationException();
                     }

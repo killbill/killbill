@@ -35,31 +35,32 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.Tag;
 
 public class BillingStateCalculatorBundle  extends BillingStateCalculator<SubscriptionBundle>{
 
     private EntitlementOverdueApi entitlementApi;
-    private InvoiceUserApi invoiceApi;
 
     @Inject 
-    public BillingStateCalculatorBundle(EntitlementOverdueApi entitlementApi, InvoiceUserApi invoiceApi) {
+    public BillingStateCalculatorBundle(EntitlementOverdueApi entitlementApi, InvoiceUserApi invoiceApi, Clock clock) {
+        super(invoiceApi, clock);
         this.entitlementApi = entitlementApi;
-        this.invoiceApi = invoiceApi;
     }
     
     @Override
     public BillingState<SubscriptionBundle> calculateBillingState(SubscriptionBundle bundle) {
         
         SortedSet<Invoice> unpaidInvoices = unpaidInvoicesFor(bundle.getId());
+ 
         Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId());
         
         UUID id = bundle.getId();
         int numberOfUnpaidInvoices = unpaidInvoices.size(); 
         BigDecimal unpaidInvoiceBalance = sumBalance(unpaidInvoices);
         DateTime dateOfEarliestUnpaidInvoice = earliest(unpaidInvoices);
-        PaymentResponse responseForLastFailedPayment = null; //TODO
-        Tag[] tags = new Tag[]{}; //TODO
+        PaymentResponse responseForLastFailedPayment = PaymentResponse.INSUFFICIENT_FUNDS; //TODO MDW
+        Tag[] tags = new Tag[]{}; //TODO MDW
         Product basePlanProduct = basePlan.getCurrentPlan().getProduct();
         BillingPeriod basePlanBillingPeriod = basePlan.getCurrentPlan().getBillingPeriod();
         PriceList basePlanPriceList = basePlan.getCurrentPriceList();

@@ -21,7 +21,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlIDREF;
 
 import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
@@ -29,6 +28,8 @@ import com.ning.billing.catalog.api.overdue.Overdueable;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultOverdueState<T extends Overdueable> implements OverdueState<T> {
 
+    // TODO - need to implement Clear states
+    
     @XmlElement(required=false, name="condition")
 	private DefaultCondition<T> condition;
 
@@ -98,5 +99,10 @@ public class DefaultOverdueState<T extends Overdueable> implements OverdueState<
 		this.condition = condition;
 		return this;
 	}
+
+    @Override
+    public boolean isClearState() {
+        return false;
+    }
 
 }

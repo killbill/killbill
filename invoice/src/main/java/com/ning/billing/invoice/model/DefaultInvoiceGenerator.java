@@ -210,7 +210,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     if (rate != null) {
                         BigDecimal amount = itemDatum.getNumberOfCycles().multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
 
-                        RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
+                        RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId, 
+                                thisEvent.getSubscription().getId(),
+                                thisEvent.getSubscription().getBundleId(), 
                                 thisEvent.getPlan().getName(),
                                 thisEvent.getPlanPhase().getName(),
                                 itemDatum.getStartDate(), itemDatum.getEndDate(),
@@ -245,6 +247,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 DateTime endDate = duration.addToDateTime(thisEvent.getEffectiveDate());
 
                 return new FixedPriceInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
+                                                thisEvent.getSubscription().getBundleId(),
                                                  thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
                                                  thisEvent.getEffectiveDate(), endDate, fixedPrice, currency,
                                                  clock.getUTCNow());
