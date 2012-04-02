@@ -17,16 +17,18 @@
 package com.ning.billing.invoice.dao;
 
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.tag.Taggable;
+import com.ning.billing.util.tag.dao.TaggableDao;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-public interface InvoiceDao {
-    void create(Invoice invoice);
+public interface InvoiceDao extends TaggableDao {
+    void create(Invoice invoice, CallContext context);
 
     Invoice getById(final UUID id);
 
@@ -42,7 +44,7 @@ public interface InvoiceDao {
 
     InvoicePayment getInvoicePayment(final UUID paymentAttemptId);
 
-    void notifyOfPaymentAttempt(final InvoicePayment invoicePayment);
+    void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context);
 
     BigDecimal getAccountBalance(final UUID accountId);
 
@@ -50,5 +52,5 @@ public interface InvoiceDao {
 
     void test();
 
-	List<Invoice> getAllInvoicesByAccount(UUID accountId);
+	List<Invoice> getAllInvoicesByAccount(final UUID accountId);
 }

@@ -14,23 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag;
+package com.ning.billing.util.glue;
 
+import com.google.inject.AbstractModule;
+import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 
-import org.skife.jdbi.v2.IDBI;
-
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.clock.MockClockModule;
-import com.ning.billing.util.glue.TagStoreModule;
-
-public class TagStoreModuleMock extends TagStoreModule {
-
+public class FieldStoreModule extends AbstractModule {
     @Override
     protected void configure() {
-        MysqlTestingHelper helper = new MysqlTestingHelper();
-        bind(IDBI.class).toInstance(helper.getDBI());
-        bind(MysqlTestingHelper.class).toInstance(helper);
-        install(new MockClockModule());
-        super.configure();
+        bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
     }
 }

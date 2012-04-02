@@ -24,8 +24,9 @@ import com.ning.billing.entitlement.events.phase.PhaseEventBuilder;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
 import com.ning.billing.entitlement.events.user.*;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.entity.BinderBase;
+import com.ning.billing.util.entity.MapperBase;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -40,7 +41,6 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTempla
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -72,12 +72,7 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
     @Mapper(EventSqlMapper.class)
     public List<EntitlementEvent> getEventsForSubscription(@Bind("subscription_id") String subscriptionId);
 
-    public static class EventSqlDaoBinder implements Binder<Bind, EntitlementEvent> {
-
-        private Date getDate(DateTime dateTime) {
-            return dateTime == null ? null : dateTime.toDate();
-        }
-
+    public static class EventSqlDaoBinder extends BinderBase implements Binder<Bind, EntitlementEvent> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, EntitlementEvent evt) {
             stmt.bind("event_id", evt.getId().toString());
@@ -96,13 +91,7 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
         }
     }
 
-    public static class EventSqlMapper implements ResultSetMapper<EntitlementEvent> {
-
-        private DateTime getDate(ResultSet r, String fieldName) throws SQLException {
-            final Timestamp resultStamp = r.getTimestamp(fieldName);
-            return r.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
-        }
-
+    public static class EventSqlMapper extends MapperBase implements ResultSetMapper<EntitlementEvent> {
         @Override
         public EntitlementEvent map(int index, ResultSet r, StatementContext ctx)
         throws SQLException {

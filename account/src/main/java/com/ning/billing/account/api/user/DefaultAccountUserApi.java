@@ -28,29 +28,32 @@ import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.Tag;
+import org.joda.time.DateTime;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
+    private final CallContextFactory factory;
     private final AccountDao dao;
-	private Clock clock;
 
     @Inject
-    public DefaultAccountUserApi(final AccountDao dao, final Clock clock) {
+    public DefaultAccountUserApi(final CallContextFactory factory, final AccountDao dao) {
+        this.factory = factory;
         this.dao = dao;
-        this.clock = clock;
     }
 
     @Override
-    public Account createAccount(final AccountData data, final List<CustomField> fields, final List<Tag> tags) throws AccountApiException {
-        Account account = new DefaultAccount(data, clock.getUTCNow());
-        account.addFields(fields);
+    public Account createAccount(final AccountData data, final List<CustomField> fields,
+                                 final List<Tag> tags, final CallContext context) throws AccountApiException {
+        Account account = new DefaultAccount(data);
+        account.setFields(fields);
         account.addTags(tags);
 
         try {
-            dao.create(account);
+            dao.create(account, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }
@@ -79,21 +82,21 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
-    public void updateAccount(final Account account) throws AccountApiException {
+    public void updateAccount(final Account account, final CallContext context) throws AccountApiException {
         try {
-            dao.update(account);
+            dao.update(account, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
         }
     }
     
     @Override
-    public void updateAccount(final UUID accountId, final AccountData accountData)
+    public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
             throws AccountApiException {
         Account account = new DefaultAccount(accountId, accountData);
 
         try {
-            dao.update(account);
+            dao.update(account, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
         }
@@ -101,30 +104,33 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
-    public void updateAccount(final String externalKey, final AccountData accountData) throws AccountApiException {
+    public void updateAccount(final String externalKey, final AccountData accountData, final CallContext context) throws AccountApiException {
     	UUID accountId = getIdFromKey(externalKey);
     	if(accountId == null) {
     		throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
     	}
-    	updateAccount(accountId, accountData);
+
+    	updateAccount(accountId, accountData, context);
      }
 
 	@Override
-	public void deleteAccountByKey(final String externalKey) throws AccountApiException {
-		dao.deleteByKey(externalKey);
+	public void deleteAccountByKey(final String externalKey, final CallContext context) throws AccountApiException {
+		dao.deleteByKey(externalKey, context);
 	}
 
 	@Override
-	public Account migrateAccount(MigrationAccountData data,
-			List<CustomField> fields, List<Tag> tags)
-			throws AccountApiException {
-		
-		Account account = new DefaultAccount(data, data.getCreatedDate(), data.getUpdatedDate());
-        account.addFields(fields);
+	public Account migrateAccount(final MigrationAccountData data, final List<CustomField> fields,
+                                  final List<Tag> tags, final CallContext context)
+            throws AccountApiException {
+        DateTime createdDate = data.getCreatedDate() == null ? context.getCreatedDate() : data.getCreatedDate();
+        DateTime updatedDate = data.getUpdatedDate() == null ? context.getUpdatedDate() : data.getUpdatedDate();
+        CallContext migrationContext = factory.toMigrationCallContext(context, createdDate, updatedDate);
+		Account account = new DefaultAccount(data);
+        account.setFields(fields);
         account.addTags(tags);
 
         try {
-            dao.create(account);
+            dao.create(account, migrationContext);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }

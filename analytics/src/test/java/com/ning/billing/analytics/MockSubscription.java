@@ -24,8 +24,11 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -65,6 +68,16 @@ public class MockSubscription implements Subscription
     public UUID getId()
     {
         return ID;
+    }
+
+    @Override
+    public String getCreatedBy() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -157,12 +170,22 @@ public class MockSubscription implements Subscription
     }
 
     @Override
+    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public List<CustomField> getFieldList() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void addFields(List<CustomField> fields) {
+    public void setFields(List<CustomField> fields) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveFields(List<CustomField> fields, CallContext context) {
         throw new UnsupportedOperationException();
     }
 
@@ -172,7 +195,52 @@ public class MockSubscription implements Subscription
     }
 
     @Override
+    public void clearPersistedFields(CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public String getObjectName() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<Tag> getTagList() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasTag(String tagName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addTag(TagDefinition definition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addTags(List<Tag> tags) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clearTags() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void removeTag(TagDefinition definition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean generateInvoice() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean processPayment() {
         throw new UnsupportedOperationException();
     }
 }

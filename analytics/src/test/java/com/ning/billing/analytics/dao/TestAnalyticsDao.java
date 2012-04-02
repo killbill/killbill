@@ -53,7 +53,7 @@ import java.util.UUID;
 public class TestAnalyticsDao
 {
     private static final UUID EVENT_ID = UUID.randomUUID();
-    private static final String EVENT_KEY = "12345";
+    private static final String EVENT_KEY = "23456";
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
 
     private final MysqlTestingHelper helper = new MysqlTestingHelper();

@@ -423,6 +423,11 @@
                                 <exclude>**/test-output/**</exclude>
                                 <exclude>**/bin/**</exclude>
                                 <exclude>.travis.yml</exclude>
+                                <!--  until we merge from server branch we disable rat for those -->
+                                <exclude>jaxrs/**</exclude>
+                                <exclude>server/**</exclude>
+                                <exclude>bin/**</exclude>
+
                             </excludes>
                         </configuration>
                     </execution>

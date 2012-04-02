@@ -23,7 +23,7 @@ import org.testng.annotations.Test;
 
 @Test(groups = { "fast" })
 public class TestPaymentDaoWithMock extends TestPaymentDao {
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups = { "fast" })
     public void setUp() throws IOException {
         paymentDao = new MockPaymentDao();
     }

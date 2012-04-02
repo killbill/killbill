@@ -26,7 +26,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -44,6 +48,7 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.entity.EntityPersistenceException;
 
 public abstract class TestPaymentApi {
     @Inject
@@ -52,6 +57,13 @@ public abstract class TestPaymentApi {
     protected PaymentApi paymentApi;
     @Inject
     protected TestHelper testHelper;
+
+    protected CallContext context;
+
+    @Inject
+    public TestPaymentApi(Clock clock) {
+        context = new DefaultCallContext("Payment Tests", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
+    }
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws EventBusException {
@@ -71,17 +83,16 @@ public abstract class TestPaymentApi {
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();
 
-        invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+        invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(), account.getId(),
                                                        subscriptionId,
                                                        "test plan", "test phase",
                                                        now,
                                                        now.plusMonths(1),
                                                        amount,
                                                        new BigDecimal("1.0"),
-                                                       Currency.USD,
-                                                       now));
+                                                       Currency.USD));
 
-        List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()));
+        List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
 
         assertEquals(results.size(), 1);
         assertTrue(results.get(0).isRight());
@@ -119,14 +130,14 @@ public abstract class TestPaymentApi {
         assertEquals(paymentInfo.getPaymentMethodId(), paymentInfoFromGet.getPaymentMethodId());
         assertEquals(paymentInfo.getEffectiveDate(), paymentInfoFromGet.getEffectiveDate());
 
-        PaymentAttempt paymentAttemptFromGet = paymentApi.getPaymentAttemptForInvoiceId(invoice.getId().toString());
-        assertEquals(paymentAttempt, paymentAttemptFromGet);
+        List<PaymentAttempt> paymentAttemptsFromGet = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId().toString());
+        assertEquals(paymentAttempt, paymentAttemptsFromGet.get(0));
 
     }
 
     private PaymentProviderAccount setupAccountWithPaypalPaymentMethod() throws AccountApiException, EntityPersistenceException {
         final Account account = testHelper.createTestPayPalAccount();
-        paymentApi.createPaymentProviderAccount(account);
+        paymentApi.createPaymentProviderAccount(account, context);
 
         String accountKey = account.getExternalKey();
 
@@ -135,7 +146,7 @@ public abstract class TestPaymentApi {
                                                                            .setEmail(account.getEmail())
                                                                            .setDefaultMethod(true)
                                                                            .build();
-        Either<PaymentError, String> paymentMethodIdOrError = paymentApi.addPaymentMethod(accountKey, paymentMethod);
+        Either<PaymentError, String> paymentMethodIdOrError = paymentApi.addPaymentMethod(accountKey, paymentMethod, context);
 
         assertTrue(paymentMethodIdOrError.isRight());
         assertNotNull(paymentMethodIdOrError.getRight());
@@ -162,7 +173,7 @@ public abstract class TestPaymentApi {
     @Test(enabled=true)
     public void testUpdatePaymentProviderAccountContact() throws AccountApiException, EntityPersistenceException {
         final Account account = testHelper.createTestPayPalAccount();
-        paymentApi.createPaymentProviderAccount(account);
+        paymentApi.createPaymentProviderAccount(account, context);
 
         String newName = "Tester " + RandomStringUtils.randomAlphanumeric(10);
         String newNumber = "888-888-" + RandomStringUtils.randomNumeric(4);
@@ -177,7 +188,7 @@ public abstract class TestPaymentApi {
                                                                   .billingCycleDay(account.getBillCycleDay())
                                                                   .build();
 
-        Either<PaymentError, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(accountToUpdate.getExternalKey());
+        Either<PaymentError, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(accountToUpdate.getExternalKey(), context);
         assertTrue(voidOrError.isRight());
     }
 
@@ -185,7 +196,7 @@ public abstract class TestPaymentApi {
     public void testCannotDeleteDefaultPaymentMethod() throws AccountApiException, EntityPersistenceException {
         PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
 
-        Either<PaymentError, Void> errorOrVoid = paymentApi.deletePaymentMethod(account.getAccountKey(), account.getDefaultPaymentMethodId());
+        Either<PaymentError, Void> errorOrVoid = paymentApi.deletePaymentMethod(account.getAccountKey(), account.getDefaultPaymentMethodId(), context);
 
         assertTrue(errorOrVoid.isLeft());
     }
@@ -193,19 +204,19 @@ public abstract class TestPaymentApi {
     @Test(enabled=true)
     public void testDeleteNonDefaultPaymentMethod() throws AccountApiException, EntityPersistenceException {
         final Account account = testHelper.createTestPayPalAccount();
-        paymentApi.createPaymentProviderAccount(account);
+        paymentApi.createPaymentProviderAccount(account, context);
 
         String accountKey = account.getExternalKey();
 
         PaypalPaymentMethodInfo paymentMethod1 = new PaypalPaymentMethodInfo.Builder().setDefaultMethod(false).setBaid("12345").setEmail(account.getEmail()).build();
-        Either<PaymentError, String> paymentMethodIdOrError1 = paymentApi.addPaymentMethod(accountKey, paymentMethod1);
+        Either<PaymentError, String> paymentMethodIdOrError1 = paymentApi.addPaymentMethod(accountKey, paymentMethod1, context);
 
         assertTrue(paymentMethodIdOrError1.isRight());
         assertNotNull(paymentMethodIdOrError1.getRight());
 
         PaypalPaymentMethodInfo paymentMethod2 = new PaypalPaymentMethodInfo.Builder().setDefaultMethod(true).setBaid("12345").setEmail(account.getEmail()).build();
 
-        Either<PaymentError, String> paymentMethodIdOrError2 = paymentApi.addPaymentMethod(accountKey, paymentMethod2);
+        Either<PaymentError, String> paymentMethodIdOrError2 = paymentApi.addPaymentMethod(accountKey, paymentMethod2, context);
 
         assertTrue(paymentMethodIdOrError2.isRight());
         assertNotNull(paymentMethodIdOrError2.getRight());
@@ -214,8 +225,8 @@ public abstract class TestPaymentApi {
 
         assertTrue(paymentMethodsOrError.isRight());
 
-        Either<PaymentError, Void> errorOrVoid1 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError1.getRight());
-        Either<PaymentError, Void> errorOrVoid2 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError2.getRight());
+        Either<PaymentError, Void> errorOrVoid1 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError1.getRight(), context);
+        Either<PaymentError, Void> errorOrVoid2 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError2.getRight(), context);
 
         assertTrue(errorOrVoid1.isRight());
         assertTrue(errorOrVoid2.isLeft());

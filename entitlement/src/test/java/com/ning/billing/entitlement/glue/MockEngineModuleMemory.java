@@ -29,10 +29,10 @@ public class MockEngineModuleMemory extends MockEngineModule {
         bind(EntitlementDao.class).to(MockEntitlementDaoMemory.class).asEagerSingleton();
     }
 
-
     private void installNotificationQueue() {
         bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
     }
+
     @Override
     protected void configure() {
         super.configure();

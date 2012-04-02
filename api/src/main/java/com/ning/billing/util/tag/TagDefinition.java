@@ -16,12 +16,10 @@
 
 package com.ning.billing.util.tag;
 
-import com.ning.billing.util.entity.UpdatableEntity;
+import com.ning.billing.util.entity.Entity;
 
-public interface TagDefinition extends UpdatableEntity {
+public interface TagDefinition extends Entity {
     String getName();
-
-    String getCreatedBy();
 
     String getDescription();
 }

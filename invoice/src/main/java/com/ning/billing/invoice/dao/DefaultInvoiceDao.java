@@ -17,16 +17,26 @@
 package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.dao.AuditSqlDao;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,20 +58,23 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final EntitlementBillingApi entitlementBillingApi;
+    private final TagDao tagDao;
 
     private final Bus eventBus;
 
-	private NextBillingDatePoster nextBillingDatePoster;
+	private final NextBillingDatePoster nextBillingDatePoster;
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus,
                              final EntitlementBillingApi entitlementBillingApi,
-                             NextBillingDatePoster nextBillingDatePoster) {
+                             final NextBillingDatePoster nextBillingDatePoster,
+                             final TagDao tagDao) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.eventBus = eventBus;
         this.entitlementBillingApi = entitlementBillingApi;
         this.nextBillingDatePoster = nextBillingDatePoster;
+        this.tagDao = tagDao;
     }
 
     @Override
@@ -71,8 +84,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                 List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId.toString());
 
-                getInvoiceItemsWithinTransaction(invoices, invoiceDao);
-                getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
+                populateChildren(invoices, invoiceDao);
 
                 return invoices;
             }
@@ -86,8 +98,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     		public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
     			List<Invoice> invoices = invoiceDao.getAllInvoicesByAccount(accountId.toString());
 
-    			getInvoiceItemsWithinTransaction(invoices, invoiceDao);
-    			getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
+                populateChildren(invoices, invoiceDao);
 
     			return invoices;
     		}
@@ -101,8 +112,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                 List<Invoice> invoices = invoiceDao.getInvoicesByAccountAfterDate(accountId.toString(), fromDate.toDate());
 
-                getInvoiceItemsWithinTransaction(invoices, invoiceDao);
-                getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
+                populateChildren(invoices, invoiceDao);
 
                 return invoices;
             }
@@ -116,8 +126,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
              public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                  List<Invoice> invoices = invoiceDao.get();
 
-                 getInvoiceItemsWithinTransaction(invoices, invoiceDao);
-                 getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
+                 populateChildren(invoices, invoiceDao);
 
                  return invoices;
              }
@@ -132,8 +141,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                  Invoice invoice = invoiceDao.getById(invoiceId.toString());
 
                  if (invoice != null) {
-                     getInvoiceItemsWithinTransaction(invoice, invoiceDao);
-                     getInvoicePaymentsWithinTransaction(invoice, invoiceDao);
+                     populateChildren(invoice, invoiceDao);
                  }
 
                  return invoice;
@@ -142,7 +150,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(final Invoice invoice) {
+    public void create(final Invoice invoice, final CallContext context) {
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
@@ -151,24 +159,31 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 Invoice currentInvoice = invoiceDao.getById(invoice.getId().toString());
 
                 if (currentInvoice == null) {
-                    invoiceDao.create(invoice);
+                    invoiceDao.create(invoice, context);
 
                     List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                     RecurringInvoiceItemSqlDao recurringInvoiceItemDao = invoiceDao.become(RecurringInvoiceItemSqlDao.class);
-                    recurringInvoiceItemDao.batchCreateFromTransaction(recurringInvoiceItems);
+                    recurringInvoiceItemDao.batchCreateFromTransaction(recurringInvoiceItems, context);
 
                     notifyOfFutureBillingEvents(invoiceSqlDao, recurringInvoiceItems);
 
                     List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = invoiceDao.become(FixedPriceInvoiceItemSqlDao.class);
-                    fixedPriceInvoiceItemDao.batchCreateFromTransaction(fixedPriceInvoiceItems);
+                    fixedPriceInvoiceItemDao.batchCreateFromTransaction(fixedPriceInvoiceItems, context);
 
                     setChargedThroughDates(invoiceSqlDao, fixedPriceInvoiceItems, recurringInvoiceItems);
 
                     // STEPH Why do we need that? Are the payments not always null at this point?
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
                     InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
-                    invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments);
+                    invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments, context);
+
+                    AuditSqlDao auditSqlDao = invoiceDao.become(AuditSqlDao.class);
+                    auditSqlDao.insertAuditFromTransaction("invoices", invoice.getId().toString(), ChangeType.INSERT.toString(), context);
+                    auditSqlDao.insertAuditFromTransaction("recurring_invoice_items", getIdsFromInvoiceItems(recurringInvoiceItems), ChangeType.INSERT.toString(), context);
+                    auditSqlDao.insertAuditFromTransaction("fixed_invoice_items", getIdsFromInvoiceItems(fixedPriceInvoiceItems), ChangeType.INSERT.toString(), context);
+                    auditSqlDao.insertAuditFromTransaction("invoice_payments", getIdsFromInvoicePayments(invoicePayments), ChangeType.INSERT.toString(), context);
+
                 }
 
                 return null;
@@ -187,6 +202,26 @@ public class DefaultInvoiceDao implements InvoiceDao {
         }
     }
 
+    private List<String> getIdsFromInvoiceItems(List<InvoiceItem> invoiceItems) {
+        List<String> ids = new ArrayList<String>();
+
+        for (InvoiceItem item : invoiceItems) {
+            ids.add(item.getId().toString());
+        }
+
+        return ids;
+    }
+
+    private List<String> getIdsFromInvoicePayments(List<InvoicePayment> invoicePayments) {
+        List<String> ids = new ArrayList<String>();
+
+        for (InvoicePayment payment : invoicePayments) {
+            ids.add(payment.getId().toString());
+        }
+
+        return ids;
+    }
+
     @Override
     public List<Invoice> getInvoicesBySubscription(final UUID subscriptionId) {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
@@ -194,8 +229,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                 List<Invoice> invoices = invoiceDao.getInvoicesBySubscription(subscriptionId.toString());
 
-                getInvoiceItemsWithinTransaction(invoices, invoiceDao);
-                getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
+                populateChildren(invoices, invoiceDao);
 
                 return invoices;
             }
@@ -208,8 +242,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
-        invoicePaymentSqlDao.notifyOfPaymentAttempt(invoicePayment);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
+        invoicePaymentSqlDao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
     @Override
@@ -219,8 +253,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                 List<Invoice> invoices = invoiceSqlDao.getUnpaidInvoicesByAccountId(accountId.toString(), upToDate.toDate());
 
-                getInvoiceItemsWithinTransaction(invoices, invoiceDao);
-                getInvoicePaymentsWithinTransaction(invoices, invoiceDao);
+                populateChildren(invoices, invoiceDao);
 
                 return invoices;
             }
@@ -238,8 +271,32 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
+    public void addControlTag(ControlTagType controlTagType, UUID invoiceId, CallContext context) {
+        tagDao.addTag(controlTagType.toString(), invoiceId, Invoice.ObjectType, context);
+    }
+
+    @Override
+    public void removeControlTag(ControlTagType controlTagType, UUID invoiceId, CallContext context) {
+        tagDao.removeTag(controlTagType.toString(), invoiceId, Invoice.ObjectType, context);
+    }
+
+    @Override
     public void test() {
         invoiceSqlDao.test();
+    }
+
+    private void populateChildren(final Invoice invoice, InvoiceSqlDao invoiceSqlDao) {
+        getInvoiceItemsWithinTransaction(invoice, invoiceSqlDao);
+        getInvoicePaymentsWithinTransaction(invoice, invoiceSqlDao);
+        getTagsWithinTransaction(invoice, invoiceSqlDao);
+        getFieldsWithinTransaction(invoice, invoiceSqlDao);
+    }
+
+    private void populateChildren(List<Invoice> invoices, InvoiceSqlDao invoiceSqlDao) {
+        getInvoiceItemsWithinTransaction(invoices, invoiceSqlDao);
+        getInvoicePaymentsWithinTransaction(invoices, invoiceSqlDao);
+        getTagsWithinTransaction(invoices, invoiceSqlDao);
+        getFieldsWithinTransaction(invoices, invoiceSqlDao);
     }
 
     private void getInvoiceItemsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao) {
@@ -264,11 +321,35 @@ public class DefaultInvoiceDao implements InvoiceDao {
         }
     }
 
-    private void getInvoicePaymentsWithinTransaction(final Invoice invoice, final InvoiceSqlDao invoiceDao) {
-        InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
+    private void getInvoicePaymentsWithinTransaction(final Invoice invoice, final InvoiceSqlDao invoiceSqlDao) {
+        InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceSqlDao.become(InvoicePaymentSqlDao.class);
         String invoiceId = invoice.getId().toString();
         List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId);
         invoice.addPayments(invoicePayments);
+    }
+
+    private void getTagsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceSqlDao) {
+        for (final Invoice invoice : invoices) {
+            getTagsWithinTransaction(invoice, invoiceSqlDao);
+        }
+    }
+
+    private void getTagsWithinTransaction(final Invoice invoice, final Transmogrifier dao) {
+        List<Tag> tags = tagDao.loadTagsFromTransaction(dao, invoice.getId(), Invoice.ObjectType);
+        invoice.addTags(tags);
+    }
+
+    private void getFieldsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceSqlDao) {
+        for (final Invoice invoice : invoices) {
+            getFieldsWithinTransaction(invoice, invoiceSqlDao);
+        }
+    }
+
+    private void getFieldsWithinTransaction(final Invoice invoice, final InvoiceSqlDao invoiceSqlDao) {
+        CustomFieldSqlDao customFieldSqlDao = invoiceSqlDao.become(CustomFieldSqlDao.class);
+        String invoiceId = invoice.getId().toString();
+        List<CustomField> customFields = customFieldSqlDao.load(invoiceId, Invoice.ObjectType);
+        invoice.setFields(customFields);
     }
 
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
@@ -311,5 +392,4 @@ public class DefaultInvoiceDao implements InvoiceDao {
             }
         }
     }
-
 }

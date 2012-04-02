@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -441,17 +442,16 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
     private void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime effectiveDate, final NotificationKey notificationKey) {
         try {
-            NotificationQueue subscritionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
+            NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
                 Engine.NOTIFICATION_QUEUE_NAME);
-            subscritionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
+            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public void saveCustomFields(SubscriptionData subscription) {
+    public void saveCustomFields(SubscriptionData subscription, CallContext context) {
         throw new NotImplementedException();
     }
-
 }

@@ -19,7 +19,7 @@ package com.ning.billing.account.dao;
 import java.util.UUID;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.util.entity.EntityDao;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.UpdatableEntityDao;
 
 public interface AccountDao extends UpdatableEntityDao<Account> {
@@ -33,5 +33,5 @@ public interface AccountDao extends UpdatableEntityDao<Account> {
      */
     public UUID getIdFromKey(String externalKey) throws AccountApiException;
 
-	public void deleteByKey(String externalKey) throws AccountApiException;
+	public void deleteByKey(String externalKey, CallContext context) throws AccountApiException;
 }

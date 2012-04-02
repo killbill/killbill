@@ -20,7 +20,12 @@ import java.sql.DataTruncation;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.dao.AuditSqlDao;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -33,19 +38,22 @@ import com.ning.billing.account.api.AccountCreationNotification;
 import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.dao.FieldStoreDao;
+import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.dao.TagStoreSqlDao;
 
-public class DefaultAccountDao implements AccountDao {
+public class AuditedAccountDao implements AccountDao {
     private final AccountSqlDao accountSqlDao;
+    private final TagDao tagDao;
+    private final CustomFieldDao customFieldDao;
     private final Bus eventBus;
 
     @Inject
-    public DefaultAccountDao(IDBI dbi, Bus eventBus) {
+    public AuditedAccountDao(IDBI dbi, Bus eventBus, TagDao tagDao, CustomFieldDao customFieldDao) {
         this.eventBus = eventBus;
         this.accountSqlDao = dbi.onDemand(AccountSqlDao.class);
+        this.tagDao = tagDao;
+        this.customFieldDao = customFieldDao;
     }
 
     @Override
@@ -103,7 +111,7 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     @Override
-    public void create(final Account account) throws EntityPersistenceException {
+    public void create(final Account account, final CallContext context) throws EntityPersistenceException {
         final String key = account.getExternalKey();
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
@@ -113,10 +121,19 @@ public class DefaultAccountDao implements AccountDao {
                     if (currentAccount != null) {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
                     }
-                    transactionalDao.create(account);
+                    transactionalDao.create(account, context);
+                    UUID historyId = UUID.randomUUID();
 
-                    saveTagsFromWithinTransaction(account, transactionalDao, true);
-                    saveCustomFieldsFromWithinTransaction(account, transactionalDao, true);
+                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
+                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(),
+                            ChangeType.INSERT.toString(), context);
+
+                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
+                    auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
+                                                         ChangeType.INSERT.toString(), context);
+
+                    saveTagsFromWithinTransaction(account, transactionalDao, context);
+                    saveCustomFieldsFromWithinTransaction(account, transactionalDao, context);
                     AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
                     eventBus.post(creationEvent);
                     return null;
@@ -134,7 +151,7 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     @Override
-    public void update(final Account account) throws EntityPersistenceException {
+    public void update(final Account account, final CallContext context) throws EntityPersistenceException {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
@@ -150,10 +167,18 @@ public class DefaultAccountDao implements AccountDao {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY, currentKey);
                     }
 
-                    accountSqlDao.update(account);
+                    accountSqlDao.update(account, context);
 
-                    saveTagsFromWithinTransaction(account, accountSqlDao, false);
-                    saveCustomFieldsFromWithinTransaction(account, accountSqlDao, false);
+                    UUID historyId = UUID.randomUUID();
+                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
+                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.UPDATE.toString(), context);
+
+                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
+                    auditDao.insertAuditFromTransaction("account_history" ,historyId.toString(),
+                                                        ChangeType.INSERT.toString(), context);
+
+                    saveTagsFromWithinTransaction(account, accountSqlDao, context);
+                    saveCustomFieldsFromWithinTransaction(account, accountSqlDao, context);
 
                     AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
@@ -172,12 +197,22 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     @Override
-	public void deleteByKey(final String externalKey) throws AccountApiException {
+	public void deleteByKey(final String externalKey, final CallContext context) throws AccountApiException {
     	try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
+                    Account account = accountSqlDao.getAccountByKey(externalKey);
                     accountSqlDao.deleteByKey(externalKey);
+
+                    // TODO: ensure tags and fields aren't orphaned
+                    UUID historyId = UUID.randomUUID();
+                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
+                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.UPDATE.toString(), context);
+
+                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
+                    auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
+                            ChangeType.INSERT.toString(), context);
 
                     return null;
                 }
@@ -197,18 +232,17 @@ public class DefaultAccountDao implements AccountDao {
     }
 
     private void setCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
-        FieldStoreDao fieldStoreDao = transactionalDao.become(FieldStoreDao.class);
-        List<CustomField> fields = fieldStoreDao.load(account.getId().toString(), account.getObjectName());
+        CustomFieldSqlDao customFieldSqlDao = transactionalDao.become(CustomFieldSqlDao.class);
+        List<CustomField> fields = customFieldSqlDao.load(account.getId().toString(), account.getObjectName());
 
         account.clearFields();
         if (fields != null) {
-            account.addFields(fields);
+            account.setFields(fields);
         }
     }
 
     private void setTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
-        TagStoreSqlDao tagStoreDao = transactionalDao.become(TagStoreSqlDao.class);
-        List<Tag> tags = tagStoreDao.load(account.getId().toString(), account.getObjectName());
+        List<Tag> tags = tagDao.loadTagsFromTransaction(transactionalDao, account.getId(), Account.ObjectType);
         account.clearTags();
 
         if (tags != null) {
@@ -216,33 +250,13 @@ public class DefaultAccountDao implements AccountDao {
         }
     }
 
-    private void saveTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao, final boolean isCreation) {
-        String accountId = account.getId().toString();
-        String objectType = account.getObjectName();
-
-        TagStoreSqlDao tagStoreDao = transactionalDao.become(TagStoreSqlDao.class);
-        if (!isCreation) {
-            tagStoreDao.clear(accountId, objectType);
-        }
-
-        List<Tag> tagList = account.getTagList();
-        if (tagList != null) {
-            tagStoreDao.batchSaveFromTransaction(accountId, objectType, tagList);
-        }
+    private void saveTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
+                                               final CallContext context) {
+        tagDao.saveTagsFromTransaction(transactionalDao, account.getId(), account.getObjectName(), account.getTagList(), context);
     }
 
-    private void saveCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao, final boolean isCreation) {
-        String accountId = account.getId().toString();
-        String objectType = account.getObjectName();
-
-        FieldStoreDao fieldStoreDao = transactionalDao.become(FieldStoreDao.class);
-        if (!isCreation) {
-            fieldStoreDao.clear(accountId, objectType);
-        }
-
-        List<CustomField> fieldList = account.getFieldList();
-        if (fieldList != null) {
-            fieldStoreDao.batchSaveFromTransaction(accountId, objectType, fieldList);
-        }
+    private void saveCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
+                                                       final CallContext context) {
+        customFieldDao.saveFields(transactionalDao, account.getId(), account.getObjectName(), account.getFieldList(), context);
     }
 }

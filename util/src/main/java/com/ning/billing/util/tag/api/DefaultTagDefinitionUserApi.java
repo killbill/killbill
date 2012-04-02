@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.tag.ControlTagType;
@@ -45,18 +46,19 @@ public class DefaultTagDefinitionUserApi implements TagUserApi {
     }
 
     @Override
-    public TagDefinition create(final String name, final String description, final String createdBy) throws TagDefinitionApiException {
-        return dao.create(name, description, createdBy);
+    public TagDefinition create(final String name, final String description, final CallContext context) throws TagDefinitionApiException {
+        return dao.create(name, description, context);
     }
 
     @Override
-    public void deleteAllTagsForDefinition(final String definitionName) throws TagDefinitionApiException {
-        dao.deleteAllTagsForDefinition(definitionName);
+    public void deleteAllTagsForDefinition(final String definitionName, final CallContext context)
+            throws TagDefinitionApiException {
+        dao.deleteAllTagsForDefinition(definitionName, context);
     }
 
     @Override
-    public void deleteTagDefinition(final String definitionName) throws TagDefinitionApiException {
-        dao.deleteAllTagsForDefinition(definitionName);
+    public void deleteTagDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
+        dao.deleteAllTagsForDefinition(definitionName, context);
     }
 
 	@Override
@@ -66,8 +68,7 @@ public class DefaultTagDefinitionUserApi implements TagUserApi {
 	}
 
     @Override
-    public Tag createControlTag(String controlTagName, String addedBy,
-            DateTime addedDate) throws TagDefinitionApiException {
+    public Tag createControlTag(String controlTagName) throws TagDefinitionApiException {
         ControlTagType type = null;
         for(ControlTagType t : ControlTagType.values()) {
             if(t.toString().equals(controlTagName)) {
@@ -78,14 +79,13 @@ public class DefaultTagDefinitionUserApi implements TagUserApi {
         if(type == null) {
             throw new TagDefinitionApiException(ErrorCode.CONTROL_TAG_DOES_NOT_EXIST, controlTagName);
         }
-        return new DefaultControlTag(addedBy, addedDate, type);
+        return new DefaultControlTag(type);
     }
 
     @Override
-    public Tag createDescriptiveTag(String tagDefinitionName, String addedBy,
-            DateTime addedDate) throws TagDefinitionApiException {
+    public Tag createDescriptiveTag(String tagDefinitionName) throws TagDefinitionApiException {
         TagDefinition tagDefinition = getTagDefinition(tagDefinitionName);
         
-        return new DescriptiveTag(tagDefinition, addedBy, addedDate);
+        return new DescriptiveTag(tagDefinition);
     }
 }

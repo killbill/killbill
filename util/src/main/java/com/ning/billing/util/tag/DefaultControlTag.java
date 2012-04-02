@@ -22,15 +22,16 @@ import org.joda.time.DateTime;
 public class DefaultControlTag extends DescriptiveTag implements ControlTag {
     private final ControlTagType controlTagType;
 
-    public DefaultControlTag(final String addedBy,
-                             final DateTime addedDate, final ControlTagType controlTagType) {
-        this(UUID.randomUUID(), addedBy, addedDate, controlTagType);
+    // use to create new objects
+    public DefaultControlTag(final ControlTagType controlTagType) {
+        super(controlTagType.toString());
+        this.controlTagType = controlTagType;
     }
 
-    public DefaultControlTag(final UUID id, final String addedBy,
-                             final DateTime addedDate, final ControlTagType controlTagType) {
-
-        super(id, controlTagType.toString(), addedBy, addedDate);
+    // use to hydrate objects when loaded from the persistence layer
+    public DefaultControlTag(final UUID id, final String createdBy,
+                             final DateTime createdDate, final ControlTagType controlTagType) {
+        super(id, createdBy, createdDate, controlTagType.toString());
         this.controlTagType = controlTagType;
     }
 

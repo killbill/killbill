@@ -20,8 +20,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
@@ -34,20 +32,18 @@ import static org.testng.Assert.assertNotNull;
 
 @Test(groups = {"invoicing", "invoicing-invoiceDao"})
 public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
-    private final Clock clock = new DefaultClock();
-
     @Test(groups = "slow")
     public void testInvoiceItemCreation() {
+        UUID accountId = UUID.randomUUID();
         UUID invoiceId = UUID.randomUUID();
         UUID subscriptionId = UUID.randomUUID();
         DateTime startDate = new DateTime(2011, 10, 1, 0, 0, 0, 0);
         DateTime endDate = new DateTime(2011, 11, 1, 0, 0, 0, 0);
         BigDecimal rate = new BigDecimal("20.00");
 
-        final DateTime expectedCreatedDate = clock.getUTCNow();
-        RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, subscriptionId, "test plan", "test phase", startDate, endDate,
-                rate, rate, Currency.USD, expectedCreatedDate);
-        recurringInvoiceItemDao.create(item);
+        RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, subscriptionId, "test plan", "test phase", startDate, endDate,
+                rate, rate, Currency.USD);
+        recurringInvoiceItemDao.create(item, context);
 
         RecurringInvoiceItem thisItem = (RecurringInvoiceItem) recurringInvoiceItemDao.getById(item.getId().toString());
         assertNotNull(thisItem);
@@ -59,20 +55,23 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         assertEquals(thisItem.getAmount().compareTo(item.getRate()), 0);
         assertEquals(thisItem.getRate().compareTo(item.getRate()), 0);
         assertEquals(thisItem.getCurrency(), item.getCurrency());
-        assertEquals(thisItem.getCreatedDate().compareTo(item.getCreatedDate()), 0);
+        // created date is no longer set before persistence layer call
+        // assertEquals(thisItem.getCreatedDate().compareTo(item.getCreatedDate()), 0);
     }
 
     @Test(groups = "slow")
     public void testGetInvoiceItemsBySubscriptionId() {
+        UUID accountId = UUID.randomUUID();
         UUID subscriptionId = UUID.randomUUID();
         DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
         BigDecimal rate = new BigDecimal("20.00");
 
         for (int i = 0; i < 3; i++) {
             UUID invoiceId = UUID.randomUUID();
-            RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, subscriptionId, "test plan", "test phase", startDate.plusMonths(i), startDate.plusMonths(i + 1),
-                    rate, rate, Currency.USD, clock.getUTCNow());
-            recurringInvoiceItemDao.create(item);
+            RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, subscriptionId,
+                    "test plan", "test phase", startDate.plusMonths(i), startDate.plusMonths(i + 1),
+                    rate, rate, Currency.USD);
+            recurringInvoiceItemDao.create(item, context);
         }
 
         List<InvoiceItem> items = recurringInvoiceItemDao.getInvoiceItemsBySubscription(subscriptionId.toString());
@@ -81,6 +80,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
 
     @Test(groups = "slow")
     public void testGetInvoiceItemsByInvoiceId() {
+        UUID accountId = UUID.randomUUID();
         UUID invoiceId = UUID.randomUUID();
         DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
         BigDecimal rate = new BigDecimal("20.00");
@@ -88,9 +88,10 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         for (int i = 0; i < 5; i++) {
             UUID subscriptionId = UUID.randomUUID();
             BigDecimal amount = rate.multiply(new BigDecimal(i + 1));
-            RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, subscriptionId, "test plan", "test phase", startDate, startDate.plusMonths(1),
-                    amount, amount, Currency.USD, clock.getUTCNow());
-            recurringInvoiceItemDao.create(item);
+            RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, subscriptionId,
+                    "test plan", "test phase", startDate, startDate.plusMonths(1),
+                    amount, amount, Currency.USD);
+            recurringInvoiceItemDao.create(item, context);
         }
 
         List<InvoiceItem> items = recurringInvoiceItemDao.getInvoiceItemsByInvoice(invoiceId.toString());
@@ -101,18 +102,19 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
     public void testGetInvoiceItemsByAccountId() {
         UUID accountId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 5, 23, 0, 0, 0, 0);
-        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, Currency.USD, clock);
+        DefaultInvoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, Currency.USD);
 
-        invoiceDao.create(invoice);
+        invoiceDao.create(invoice, context);
 
         UUID invoiceId = invoice.getId();
         DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
         BigDecimal rate = new BigDecimal("20.00");
 
         UUID subscriptionId = UUID.randomUUID();
-        RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, subscriptionId, "test plan", "test phase", startDate, startDate.plusMonths(1),
-                rate, rate, Currency.USD, clock.getUTCNow());
-        recurringInvoiceItemDao.create(item);
+        RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, subscriptionId,
+                "test plan", "test phase", startDate, startDate.plusMonths(1),
+                rate, rate, Currency.USD);
+        recurringInvoiceItemDao.create(item, context);
 
         List<InvoiceItem> items = recurringInvoiceItemDao.getInvoiceItemsByAccount(accountId.toString());
         assertEquals(items.size(), 1);

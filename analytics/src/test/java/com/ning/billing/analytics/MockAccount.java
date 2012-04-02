@@ -19,7 +19,7 @@ package com.ning.billing.analytics;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.lang.NotImplementedException;
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -140,88 +140,113 @@ public class MockAccount implements Account
     }
 
     @Override
-    public String getFieldValue(String fieldName) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void setFieldValue(String fieldName, String fieldValue) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public List<CustomField> getFieldList() {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void addFields(List<CustomField> fields) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void clearFields() {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public String getObjectName() {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public List<Tag> getTagList() {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public boolean hasTag(String tagName) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void addTag(TagDefinition definition, String addedBy, DateTime dateAdded) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void addTags(List<Tag> tags) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void clearTags() {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void removeTag(TagDefinition definition) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public boolean generateInvoice() {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public boolean processPayment() {
-        throw new NotImplementedException();
+    public String getCreatedBy() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public DateTime getCreatedDate() {
-        return new DateTime(DateTimeZone.UTC);
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getFieldValue(String fieldName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setFieldValue(String fieldName, String fieldValue) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<CustomField> getFieldList() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setFields(List<CustomField> fields) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveFields(List<CustomField> fields, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clearFields() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clearPersistedFields(CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getObjectName() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<Tag> getTagList() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasTag(String tagName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addTag(TagDefinition definition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addTags(List<Tag> tags) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clearTags() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void removeTag(TagDefinition definition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean generateInvoice() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean processPayment() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getUpdatedBy() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public DateTime getUpdatedDate() {
-        return new DateTime(DateTimeZone.UTC);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public MutableAccountData toMutableAccountData() {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
 }

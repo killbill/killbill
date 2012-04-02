@@ -18,6 +18,7 @@ package com.ning.billing.util.api;
 
 import java.util.List;
 
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.tag.Tag;
@@ -26,7 +27,7 @@ import com.ning.billing.util.tag.TagDefinition;
 public interface TagUserApi {
     /***
      *
-     * @return
+     * @return the list of all available tag definitions
      */
     public List<TagDefinition> getTagDefinitions();
 
@@ -34,25 +35,27 @@ public interface TagUserApi {
      *
      * @param name Identifies the definition.
      * @param description Describes the use of the definition.
-     * @param createdBy The name of person who created the definition.
-     * @return
+     * @param context The call context, for auditing purposes
+     * @return the newly created tag definition
      * @throws TagDefinitionApiException
      */
-    public TagDefinition create(String name, String description, String createdBy) throws TagDefinitionApiException;
+    public TagDefinition create(String name, String description, CallContext context) throws TagDefinitionApiException;
 
     /***
      *
      * @param definitionName Identifies the definition.
+     * @param context The call context, for auditing purposes
      * @throws TagDefinitionApiException
      */
-    public void deleteAllTagsForDefinition(String definitionName) throws TagDefinitionApiException;
+    public void deleteAllTagsForDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
 
     /***
      *
      * @param definitionName Identifies the definition.
+     * @param context The call context, for auditing purposes
      * @throws TagDefinitionApiException
      */
-    public void deleteTagDefinition(String definitionName) throws TagDefinitionApiException;
+    public void deleteTagDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
 
     
 	/**
@@ -64,20 +67,16 @@ public interface TagUserApi {
 	public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
 	
 	/**
-	 * @param addedBy
-	 * @param addedDate
-	 * @param controlTagType
-	 * @throws TagApiException 
+	 * @param controlTagName
+	 * @throws TagDefinitionApiException
 	 */
-	public Tag createControlTag(String controlTagName, String addedBy, DateTime addedDate) throws TagDefinitionApiException;
+	public Tag createControlTag(String controlTagName) throws TagDefinitionApiException;
 	
 	
 	/**
 	 * @param tagDefinitionName
-	 * @param addedBy
-	 * @param addedDate
 	 * @return
 	 */
-	public Tag createDescriptiveTag(String tagDefinitionName, String addedBy, DateTime addedDate) throws TagDefinitionApiException;
+	public Tag createDescriptiveTag(String tagDefinitionName) throws TagDefinitionApiException;
 	
 }

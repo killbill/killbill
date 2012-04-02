@@ -26,6 +26,8 @@ import java.util.UUID;
 public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
     UUID getInvoiceId();
 
+    UUID getAccountId();
+
     UUID getSubscriptionId();
 
     String getPlanName();

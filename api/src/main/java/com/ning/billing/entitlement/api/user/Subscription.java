@@ -21,15 +21,14 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.util.customfield.CustomizableEntity;
 
+import com.ning.billing.util.entity.ExtendedEntity;
 import org.joda.time.DateTime;
 
-import java.util.List;
 import java.util.UUID;
 
 
-public interface Subscription extends CustomizableEntity {
+public interface Subscription extends ExtendedEntity {
 
     public void cancel(DateTime requestedDate, boolean eot)
     throws EntitlementUserApiException;

@@ -16,7 +16,6 @@
 
 package com.ning.billing.analytics;
 
-
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
@@ -27,15 +26,14 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.util.clock.ClockMock;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
-
 
 public class TestAnalyticsListener
 {
@@ -56,7 +54,7 @@ public class TestAnalyticsListener
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
     {
-        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, new MockIEntitlementUserApi(bundleUUID, KEY), new MockIAccountUserApi(ACCOUNT_KEY, CURRENCY, new ClockMock()));
+        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, new MockIEntitlementUserApi(bundleUUID, KEY), new MockIAccountUserApi(ACCOUNT_KEY, CURRENCY));
         listener = new AnalyticsListener(recorder, null);
     }
 
@@ -118,8 +116,8 @@ public class TestAnalyticsListener
         final BusinessSubscriptionEvent eventType,
         final DateTime requestedTransitionTime,
         final DateTime effectiveTransitionTime,
-        final BusinessSubscription previousSubscription,
-        final Subscription.SubscriptionState nextState
+        @Nullable final BusinessSubscription previousSubscription,
+        @Nullable final Subscription.SubscriptionState nextState
     )
     {
         return new BusinessSubscriptionTransition(

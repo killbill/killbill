@@ -3,6 +3,7 @@ group FixedPriceInvoiceItemSqlDao;
 fields(prefix) ::= <<
   <prefix>id,
   <prefix>invoice_id,
+  <prefix>account_id,
   <prefix>subscription_id,
   <prefix>plan_name,
   <prefix>phase_name,
@@ -10,6 +11,7 @@ fields(prefix) ::= <<
   <prefix>end_date,
   <prefix>amount,
   <prefix>currency,
+  <prefix>created_by,
   <prefix>created_date
 >>
 
@@ -40,14 +42,14 @@ getInvoiceItemsBySubscription() ::= <<
 
 create() ::= <<
   INSERT INTO fixed_invoice_items(<fields()>)
-  VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName,
-         :startDate, :endDate, :amount, :currency, :createdDate);
+  VALUES(:id, :invoiceId, :accountId, :subscriptionId, :planName, :phaseName,
+         :startDate, :endDate, :amount, :currency, :userName, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO fixed_invoice_items(<fields()>)
-  VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName,
-         :startDate, :endDate, :amount, :currency, :createdDate);
+  VALUES(:id, :invoiceId, :accountId, :subscriptionId, :planName, :phaseName,
+         :startDate, :endDate, :amount, :currency, :userName, :createdDate);
 >>
 
 test() ::= <<

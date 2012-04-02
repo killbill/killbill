@@ -19,6 +19,11 @@ package com.ning.billing.payment;
 import java.util.Arrays;
 import java.util.List;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,14 +45,17 @@ public class RequestProcessor {
     private final AccountUserApi accountUserApi;
     private final PaymentApi paymentApi;
     private final Bus eventBus;
+    private final Clock clock;
 
     private static final Logger log = LoggerFactory.getLogger(RequestProcessor.class);
 
     @Inject
-    public RequestProcessor(AccountUserApi accountUserApi,
+    public RequestProcessor(Clock clock,
+                            AccountUserApi accountUserApi,
                             PaymentApi paymentApi,
                             PaymentProviderPluginRegistry pluginRegistry,
                             Bus eventBus) {
+        this.clock = clock;
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
         this.eventBus = eventBus;
@@ -63,7 +71,8 @@ public class RequestProcessor {
                 log.info("could not process invoice payment: could not find a valid account for event {}", event);
             }
             else {
-                List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()));
+                CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
+                List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()), context);
                 if (!results.isEmpty()) {
                     Either<PaymentError, PaymentInfo> result = results.get(0);
                     eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());

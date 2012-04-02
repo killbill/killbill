@@ -16,13 +16,12 @@
 
 package com.ning.billing.account.api;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.joda.time.DateTime;
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
@@ -40,7 +39,6 @@ public class MockAccountUserApi implements AccountUserApi {
                                  Currency currency,
                                  int billCycleDay,
                                  String paymentProviderName,
-                                 BigDecimal balance,
                                  final DateTimeZone timeZone, 
                                  final String locale,
                                  final String address1, 
@@ -55,14 +53,15 @@ public class MockAccountUserApi implements AccountUserApi {
 		Account result = new DefaultAccount(id, externalKey, email, name,
 				firstNameLength, currency, billCycleDay, paymentProviderName,
 				timeZone, locale, address1, address2, companyName, city,
-				stateOrProvince, country, postalCode, phone, null, null);
+				stateOrProvince, country, postalCode, phone, null, null, null, null);
 		accounts.add(result);
 		return result;
 	}
 
     @Override
-    public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException {
-        Account result = new DefaultAccount(data, new DateTime());
+    public Account createAccount(final AccountData data, final List<CustomField> fields,
+                                 final List<Tag> tags, final CallContext context) throws AccountApiException {
+        Account result = new DefaultAccount(data);
         accounts.add(result);
         return result;
     }
@@ -103,38 +102,38 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public void updateAccount(Account account) {
+    public void updateAccount(final Account account, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 
 	@Override
-	public void deleteAccountByKey(String externalKey)
+	public void deleteAccountByKey(final String externalKey, final CallContext context)
 			throws AccountApiException {
 		for (Account account : accounts) {
             if (externalKey.equals(account.getExternalKey())) {
-                accounts.remove(account.getId());
+                accounts.remove(account);
             }
         }	
 		
 	}
 
 	@Override
-	public Account migrateAccount(MigrationAccountData data,
-			List<CustomField> fields, List<Tag> tags)
+	public Account migrateAccount(final MigrationAccountData data,
+			final List<CustomField> fields, final List<Tag> tags, final CallContext context)
 			throws AccountApiException {
-		Account result = new DefaultAccount(data, data.getCreatedDate(), data.getUpdatedDate());
+		Account result = new DefaultAccount(data);
         accounts.add(result);
         return result;
 	}
 
 	@Override
-	public void updateAccount(String key, AccountData accountData)
+	public void updateAccount(final String key, final AccountData accountData, final CallContext context)
 			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}
 
     @Override
-    public void updateAccount(UUID accountId, AccountData accountData)
+    public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
             throws AccountApiException {
         throw new UnsupportedOperationException();
     }
