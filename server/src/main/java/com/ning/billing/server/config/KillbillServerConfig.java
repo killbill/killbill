@@ -16,9 +16,6 @@
 
 package com.ning.billing.server.config;
 
-import org.skife.config.Config;
-import org.skife.config.Default;
-
-public interface KillbillServerConfig {
-
+public interface KillbillServerConfig
+{
 }

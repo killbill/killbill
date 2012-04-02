@@ -13,59 +13,112 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.server.listeners;
 
+import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.server.config.KillbillServerConfig;
+import com.ning.billing.server.healthchecks.KillbillHealthcheck;
+import com.ning.billing.server.modules.KillbillServerModule;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.BusService;
+import com.ning.jetty.base.modules.ServerModuleBuilder;
+import com.ning.jetty.core.listeners.SetupServer;
 
-import javax.servlet.ServletContextEvent;
-
-import org.apache.commons.lang.StringUtils;
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Injector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Injector;
-import com.ning.jetty.core.listeners.SetupServer;
+import javax.servlet.ServletContextEvent;
 
-public class KillbillGuiceListener extends SetupServer {
-
-
-    private static Injector injectorInstance;
-
+public class KillbillGuiceListener extends SetupServer
+{
     public static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
 
+    private DefaultLifecycle killbillLifecycle;
+    private BusService killbillBusService;
+
+    private KillbillEventHandler killbilleventHandler;
 
     @Override
-    public void contextInitialized(final ServletContextEvent event) {
+    public void contextInitialized(ServletContextEvent event)
+    {
+        final ServerModuleBuilder builder = new ServerModuleBuilder()
+                .addConfig(KillbillServerConfig.class)
+                .addHealthCheck(KillbillHealthcheck.class)
+                .addJMXExport(KillbillHealthcheck.class)
+                .addModule(new KillbillServerModule())
+                .addJerseyResource("com.ning.billing.jaxrs.resources");
 
-        logger.info("GuiceListener : contextInitialized");
-
-        final String moduleFactoryClassName = event.getServletContext().getInitParameter("guiceModuleFactoryClass");
-
-        if (StringUtils.isEmpty(moduleFactoryClassName)) {
-            throw new IllegalStateException("Missing parameter 'guiceModuleFactoryClass' for IrsGuiceListener!");
-        }
-        try {
-            final Class<?> moduleFactoryClass = Class.forName(moduleFactoryClassName);
-            if (!GuiceModuleFactory.class.isAssignableFrom(moduleFactoryClass)) {
-                throw new IllegalStateException(String.format("%s exists but is not a guice module factory!", moduleFactoryClassName));
-            }
-
-            GuiceModuleFactory factory = GuiceModuleFactory.class.cast(moduleFactoryClass.newInstance());
-            logger.info("Instantiated " + moduleFactoryClassName + " as the factory for the main guice module.");
-
-            guiceModule = factory.createModule();
-        }
-        catch (Exception ex) {
-            throw new IllegalStateException(ex);
-        }
+        guiceModule = builder.build();
 
         super.contextInitialized(event);
 
-        injectorInstance = this.injector(event);
+        logger.info("KillbillLifecycleListener : contextInitialized");
+        final Injector injector = injector(event);
+        killbillLifecycle = injector.getInstance(DefaultLifecycle.class);
+        killbillBusService = injector.getInstance(BusService.class);
 
+        killbilleventHandler = new KillbillEventHandler();
+
+        //
+        // Fire all Startup levels up to service start
+        //
+        killbillLifecycle.fireStartupSequencePriorEventRegistration();
+        //
+        // Perform Bus registration
+        //
+        try {
+            killbillBusService.getBus().register(killbilleventHandler);
+        }
+        catch (Bus.EventBusException e) {
+            logger.error("Failed to register for event notifications, this is bad exiting!", e);
+            System.exit(1);
+        }
+        // Let's start!
+        killbillLifecycle.fireStartupSequencePostEventRegistration();
     }
 
-    public static Injector getInjectorInstance() {
-        return injectorInstance;
+    @Override
+    public void contextDestroyed(ServletContextEvent sce)
+    {
+        super.contextDestroyed(sce);
+
+        logger.info("IrsKillbillListener : contextDestroyed");
+        // Stop services
+        // Guice error, no need to fill the screen with useless stack traces
+        if (killbillLifecycle == null) {
+            return;
+        }
+
+        killbillLifecycle.fireShutdownSequencePriorEventUnRegistration();
+
+        try {
+            killbillBusService.getBus().unregister(killbilleventHandler);
+        }
+        catch (Bus.EventBusException e) {
+            logger.warn("Failed to unregister for event notifications", e);
+        }
+
+        // Complete shutdown sequence
+        killbillLifecycle.fireShutdownSequencePostEventUnRegistration();
+    }
+
+
+    //
+    // At this point we have one generic handler in IRS that could dispatch notifications to the various pieces
+    // interested but we could the various pieces register their own handler directly
+    //
+    public static class KillbillEventHandler
+    {
+        /*
+         * IRS event handler for killbill entitlement events
+         */
+        @Subscribe
+        public void handleEntitlementevents(SubscriptionTransition event)
+        {
+            logger.info("Killbill entitlement event {}", event.toString());
+        }
     }
 }
