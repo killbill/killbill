@@ -129,13 +129,13 @@ public class TestCondition {
 		
 		DateTime now = new DateTime();
 		
-		BillingState<Overdueable> state0 = new BillingState<Overdueable>(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag(null, "Tag", "Martin", now)});
-		BillingState<Overdueable> state1 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
+		BillingState<Overdueable> state0 = new BillingState<Overdueable>(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag("Tag")});
+		BillingState<Overdueable> state1 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
 		BillingState<Overdueable> state2 = new BillingState<Overdueable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), 
 				PaymentResponse.DO_NOT_HONOR, 
-				new Tag[]{new DefaultControlTag("Martin", now, ControlTagType.OVERDUE_ENFORCEMENT_OFF), 
-						  new DefaultControlTag("Martin", now, ControlTagType.AUTO_INVOICING_OFF),
-						  new DescriptiveTag(null, "Tag", "Martin", now)});
+				new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF), 
+						  new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF),
+						  new DescriptiveTag("Tag")});
 		
 		Assert.assertTrue(!c.evaluate(state0, now));
 		Assert.assertTrue(c.evaluate(state1, now));

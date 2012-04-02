@@ -37,16 +37,11 @@ import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 
-
-
 public class EntitlementModule extends AbstractModule {
-
-
     protected void installConfig() {
         final EntitlementConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EntitlementConfig.class);
         bind(EntitlementConfig.class).toInstance(config);
     }
-
 
     protected void installEntitlementDao() {
         bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();

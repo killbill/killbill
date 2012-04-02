@@ -36,4 +36,8 @@ public interface InvoiceConfig {
     @Config("killbill.notifications.off")
     @Default("false")
     public boolean isEventProcessingOff();
+
+    @Config("killbill.invoice.maxNumberOfMonthsInFuture")
+    @Default("36")
+    public int getNumberOfMonthsInFuture();
 }

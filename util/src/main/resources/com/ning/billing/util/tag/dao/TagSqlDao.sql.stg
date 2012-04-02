@@ -1,0 +1,54 @@
+group TagDao;
+
+fields(prefix) ::= <<
+    <prefix>id,
+    <prefix>tag_definition_name,
+    <prefix>object_id,
+    <prefix>object_type,
+    <prefix>created_by,
+    <prefix>created_date
+>>
+
+batchInsertFromTransaction() ::= <<
+  INSERT INTO tags(<fields()>)
+  VALUES (:id, :tagDefinitionName, :objectId, :objectType, :userName, :createdDate);
+>>
+
+batchDeleteFromTransaction() ::= <<
+    DELETE FROM tags
+    WHERE tag_definition_name = :tagDefinitionName
+        AND object_id = :objectId AND object_type = :objectType;
+>>
+
+addTagFromTransaction() ::= <<
+    INSERT INTO tags(<fields()>)
+    VALUES (:id, :tagDefinitionName, :objectId, :objectType, :userName, :createdDate);
+>>
+
+removeTagFromTransaction() ::= <<
+    DELETE FROM tags
+    WHERE tag_definition_name = :tagDefinitionName
+    AND object_id = :objectId AND object_type = :objectType;
+>>
+
+findTag() ::= <<
+    SELECT <fields()>   FROM tags
+    WHERE tag_definition_name = :tagDefinitionName
+    AND object_id = :objectId AND object_type = :objectType;
+>>
+
+load() ::= <<
+    SELECT t.id, t.object_id, t.object_type, t.created_by, t.created_date,
+           td.id AS tag_definition_id,
+           t.tag_definition_name AS tag_definition_name,
+           td.description AS tag_description,
+           td.created_by
+    FROM tags t
+    LEFT JOIN tag_definitions td ON t.tag_definition_name = td.name
+    WHERE t.object_id = :objectId AND t.object_type = :objectType;
+>>
+
+test() ::= <<
+  SELECT 1 FROM tags;
+>>
+;

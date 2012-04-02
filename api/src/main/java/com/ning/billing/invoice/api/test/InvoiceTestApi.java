@@ -17,7 +17,8 @@
 package com.ning.billing.invoice.api.test;
 
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceTestApi {
-    public void create(Invoice invoice);
+    public void create(Invoice invoice, CallContext context);
 }

@@ -24,6 +24,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -59,7 +61,7 @@ import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.dao.FieldStoreDao;
+import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -77,10 +79,12 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final SubscriptionFactory factory;
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
+    private final CustomFieldDao customFieldDao;
 
     @Inject
     public EntitlementSqlDao(final IDBI dbi, final Clock clock, final SubscriptionFactory factory,
-            final AddonUtils addonUtils, final NotificationQueueService notificationQueueService) {
+                             final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
+                             final CustomFieldDao customFieldDao) {
         this.clock = clock;
         this.factory = factory;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
@@ -88,6 +92,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         this.bundlesDao = dbi.onDemand(BundleSqlDao.class);
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
+        this.customFieldDao = customFieldDao;
     }
 
     @Override
@@ -117,7 +122,6 @@ public class EntitlementSqlDao implements EntitlementDao {
         });
     }
 
-
     @Override
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
         Subscription subscription = subscriptionsDao.getSubscriptionFromId(subscriptionId.toString());
@@ -145,7 +149,6 @@ public class EntitlementSqlDao implements EntitlementDao {
     public Subscription getBaseSubscription(final UUID bundleId) {
         return getBaseSubscription(bundleId, true);
     }
-
 
     @Override
     public Subscription getSubscriptionFromId(final UUID subscriptionId) {
@@ -405,18 +408,10 @@ public class EntitlementSqlDao implements EntitlementDao {
         }
     }
 
-    private void updateCustomFieldsFromTransaction(SubscriptionSqlDao transactionalDao, final SubscriptionData subscription) {
-
-        String subscriptionId = subscription.getId().toString();
-        String objectType = subscription.getObjectName();
-
-        FieldStoreDao fieldStoreDao = transactionalDao.become(FieldStoreDao.class);
-        fieldStoreDao.clear(subscriptionId, objectType);
-
-        List<CustomField> fieldList = subscription.getFieldList();
-        if (fieldList != null) {
-            fieldStoreDao.batchSaveFromTransaction(subscriptionId, objectType, fieldList);
-        }
+    private void updateCustomFieldsFromTransaction(final SubscriptionSqlDao transactionalDao,
+                                                   final SubscriptionData subscription,
+                                                   final CallContext context) {
+        customFieldDao.saveFields(transactionalDao, subscription.getId(), subscription.getObjectName(), subscription.getFieldList(), context);
     }
 
     private Subscription buildSubscription(Subscription input) {
@@ -441,10 +436,7 @@ public class EntitlementSqlDao implements EntitlementDao {
          throw new EntitlementError(String.format("Unexpected code path in buildSubscription"));
     }
 
-
-
     private List<Subscription> buildBundleSubscriptions(List<Subscription> input) {
-
         // Make sure BasePlan -- if exists-- is first
         Collections.sort(input, new Comparator<Subscription>() {
             @Override
@@ -604,23 +596,23 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public void saveCustomFields(final SubscriptionData subscription) {
+    public void saveCustomFields(final SubscriptionData subscription, final CallContext context) {
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
             @Override
             public Void inTransaction(SubscriptionSqlDao transactionalDao,
                     TransactionStatus status) throws Exception {
-                updateCustomFieldsFromTransaction(transactionalDao, subscription);
+                updateCustomFieldsFromTransaction(transactionalDao, subscription, context);
                 return null;
             }
         });
     }
 
     private void loadCustomFields(final SubscriptionData subscription) {
-        FieldStoreDao fieldStoreDao = subscriptionsDao.become(FieldStoreDao.class);
-        List<CustomField> fields = fieldStoreDao.load(subscription.getId().toString(), subscription.getObjectName());
-        subscription.clearFieldsInternal(false);
+        CustomFieldSqlDao customFieldSqlDao = subscriptionsDao.become(CustomFieldSqlDao.class);
+        List<CustomField> fields = customFieldSqlDao.load(subscription.getId().toString(), subscription.getObjectName());
+        subscription.clearFields();
         if (fields != null) {
-            subscription.addFieldsInternal(fields, false);
+            subscription.setFields(fields);
         }
     }
 }

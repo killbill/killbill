@@ -33,6 +33,10 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
@@ -52,7 +56,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
-
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
@@ -96,6 +99,7 @@ public class TestIntegration {
 
     @Inject
     private ClockMock clock;
+    private CallContext context;
 
     @Inject
     private Lifecycle lifecycle;
@@ -125,8 +129,6 @@ public class TestIntegration {
 
     private void setupMySQL() throws IOException
     {
-
-
         final String accountDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
         final String entitlementDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
         final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
@@ -146,6 +148,8 @@ public class TestIntegration {
     public void setup() throws Exception{
 
         setupMySQL();
+
+        context = new DefaultCallContextFactory(clock).createCallContext("Integration Test", CallOrigin.TEST, UserType.TEST);
 
         /**
          * Initialize lifecyle for subset of services
@@ -304,7 +308,7 @@ public class TestIntegration {
         int billingDay = 2;
 
         log.info("Beginning test with BCD of " + billingDay);
-        Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
+        Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null, context);
         UUID accountId = account.getId();
         assertNotNull(account);
 
@@ -370,7 +374,7 @@ public class TestIntegration {
                                       boolean proRationExpected) throws Exception {
 
         log.info("Beginning test with BCD of " + billingDay);
-        Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null);
+        Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null, context);
         UUID accountId = account.getId();
         assertNotNull(account);
 
@@ -562,7 +566,7 @@ public class TestIntegration {
 
     @Test(groups = "slow")
     public void testHappyPath() throws AccountApiException, EntitlementUserApiException {
-        Account account = accountUserApi.createAccount(getAccountData(3), null, null);
+        Account account = accountUserApi.createAccount(getAccountData(3), null, null, context);
         assertNotNull(account);
 
         SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever");
@@ -599,7 +603,7 @@ public class TestIntegration {
     public void testForMultipleRecurringPhases() throws AccountApiException, EntitlementUserApiException, InterruptedException {
         clock.setDeltaFromReality(new DateTime().getMillis() - clock.getUTCNow().getMillis());
 
-        Account account = accountUserApi.createAccount(getAccountData(15), null, null);
+        Account account = accountUserApi.createAccount(getAccountData(15), null, null, context);
         UUID accountId = account.getId();
 
         String productName = "Blowdart";
@@ -638,7 +642,7 @@ public class TestIntegration {
     protected AccountData getAccountData(final int billingDay) {
 
         final String someRandomKey = RandomStringUtils.randomAlphanumeric(10);
-        AccountData accountData = new AccountData() {
+        return new AccountData() {
             @Override
             public String getName() {
                 return "firstName lastName";
@@ -717,6 +721,5 @@ public class TestIntegration {
                 return null;
             }
         };
-        return accountData;
     }
 }

@@ -23,8 +23,16 @@ import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
+import com.ning.billing.invoice.notification.MockNextBillingDateNotifier;
+import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
+import com.ning.billing.invoice.notification.NextBillingDateNotifier;
+import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
+import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.account.api.AccountUserApi;
@@ -72,6 +80,12 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
     }
 
     @Override
+    protected void installNotifier() {
+        bind(NextBillingDateNotifier.class).to(MockNextBillingDateNotifier.class).asEagerSingleton();
+        bind(NextBillingDatePoster.class).to(MockNextBillingDatePoster.class).asEagerSingleton();
+    }
+
+    @Override
     public void configure() {
         loadSystemPropertiesFromClasspath("/resource.properties");
 
@@ -79,9 +93,13 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         bind(IDBI.class).toInstance(dbi);
 
         bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
+        bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
+                install(new FieldStoreModule());
+        install(new TagStoreModule());
+
         installNotificationQueue();
 //      install(new AccountModule());
-      bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
+        bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
         install(new CatalogModule());
         install(new EntitlementModule());
         install(new GlobalLockerModule());
@@ -89,7 +107,6 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         super.configure();
 
         bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
-
         install(new BusModule());
     }
 

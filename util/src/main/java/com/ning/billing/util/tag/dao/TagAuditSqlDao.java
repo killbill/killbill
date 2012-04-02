@@ -16,23 +16,34 @@
 
 package com.ning.billing.util.tag.dao;
 
-
-import java.util.List;
-
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.tag.Tag;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
-import com.ning.billing.util.entity.EntityCollectionDao;
-import com.ning.billing.util.tag.Tag;
+
+import java.util.List;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagMapper.class)
-public interface TagStoreSqlDao extends EntityCollectionDao<Tag>, Transactional<TagStoreSqlDao> {
-    @Override
+public interface TagAuditSqlDao extends Transactional<TagAuditSqlDao> {
     @SqlBatch(transactional=false)
-    public void batchSaveFromTransaction(@Bind("objectId") final String objectId,
-                     @Bind("objectType") final String objectType,
-                     @TagBinder final List<Tag> entities);
+    public void batchInsertFromTransaction(@TagBinder final List<Tag> tag,
+                                           @CallContextBinder final CallContext context);
+
+    @SqlBatch(transactional=false)
+    public void batchDeleteFromTransaction(@TagBinder final List<Tag> tag,
+                                           @CallContextBinder final CallContext context);
+
+    @SqlUpdate
+    public void addTagFromTransaction(@Bind("id") final String tagId,
+                                      @CallContextBinder final CallContext context);
+
+    @SqlUpdate
+    public void removeTagFromTransaction(@Bind("id") final String tagId,
+                                         @CallContextBinder final CallContext context);
 }

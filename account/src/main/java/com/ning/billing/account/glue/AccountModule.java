@@ -24,7 +24,7 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccountService;
 import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.DefaultAccountDao;
+import com.ning.billing.account.dao.AuditedAccountDao;
 
 public class AccountModule extends AbstractModule {
 
@@ -34,7 +34,7 @@ public class AccountModule extends AbstractModule {
     }
 
     protected void installAccountDao() {
-        bind(AccountDao.class).to(DefaultAccountDao.class).asEagerSingleton();
+        bind(AccountDao.class).to(AuditedAccountDao.class).asEagerSingleton();
     }
 
     protected void installAccountUserApi() {

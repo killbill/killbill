@@ -16,7 +16,6 @@
 
 package com.ning.billing.invoice.tests;
 
-
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import org.joda.time.DateTime;
 
@@ -32,7 +31,7 @@ public abstract class InvoicingTestBase {
     protected static final BigDecimal ONE_AND_A_HALF = new BigDecimal("1.5").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal TWO = new BigDecimal("2.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal THREE = new BigDecimal("3.0").setScale(NUMBER_OF_DECIMALS);
-    protected static final BigDecimal FOUR = new BigDecimal("4.0").setScale(NUMBER_OF_DECIMALS);
+    //protected static final BigDecimal FOUR = new BigDecimal("4.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal FIVE = new BigDecimal("5.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal SIX = new BigDecimal("6.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal SEVEN = new BigDecimal("7.0").setScale(NUMBER_OF_DECIMALS);

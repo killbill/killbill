@@ -18,6 +18,11 @@ package com.ning.billing.payment;
 
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -39,15 +44,18 @@ public class RetryService implements KillbillService {
     public static final String SERVICE_NAME = "retry-service";
     public static final String QUEUE_NAME = "retry-events";
 
+    private final Clock clock;
     private final NotificationQueueService notificationQueueService;
     private final PaymentConfig config;
     private final PaymentApi paymentApi;
     private NotificationQueue retryQueue;
 
     @Inject
-    public RetryService(NotificationQueueService notificationQueueService,
+    public RetryService(Clock clock,
+                        NotificationQueueService notificationQueueService,
                         PaymentConfig config,
                         PaymentApi paymentApi) {
+        this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.paymentApi = paymentApi;
         this.config = config;
@@ -63,7 +71,8 @@ public class RetryService implements KillbillService {
         retryQueue = notificationQueueService.createNotificationQueue(SERVICE_NAME, QUEUE_NAME, new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
-                retry(notificationKey);
+                CallContext context = new DefaultCallContext("RetryService", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
+                retry(notificationKey, context);
             }
         },
         config);
@@ -93,7 +102,7 @@ public class RetryService implements KillbillService {
         retryQueue.recordFutureNotification(timeOfRetry, key);
     }
 
-    private void retry(String paymentAttemptId) {
+    private void retry(String paymentAttemptId, CallContext context) {
         PaymentInfo paymentInfo = paymentApi.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
 
         if (paymentInfo != null && PaymentStatus.Processed.equals(PaymentStatus.valueOf(paymentInfo.getStatus()))) {
@@ -102,7 +111,7 @@ public class RetryService implements KillbillService {
         }
         else {
             System.out.println("Creating payment for payment attempt " + paymentAttemptId);
-            paymentApi.createPaymentForPaymentAttempt(UUID.fromString(paymentAttemptId));
+            paymentApi.createPaymentForPaymentAttempt(UUID.fromString(paymentAttemptId), context);
         }
     }
 }

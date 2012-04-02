@@ -178,9 +178,9 @@ public class TestNotificationQueue {
             }
         });
 
-        Assert.assertTrue(expectedNotifications.get(notificationKey.toString()));
         queue.stopQueue();
-    }
+	    Assert.assertTrue(expectedNotifications.get(notificationKey.toString()));
+	}
 
     @Test(groups="slow")
     public void testManyNotifications() throws InterruptedException {
@@ -252,18 +252,18 @@ public class TestNotificationQueue {
                     }
                 });
 
-                if (completed.size() == MAX_NOTIFICATIONS) {
-                    success = true;
-                    break;
-                }
-                //log.debug(String.format("BEFORE WAIT : Got %d notifications at time %s (real time %s)", completed.size(), clock.getUTCNow(), new DateTime()));
-                expectedNotifications.wait(1000);
-            }
-        } while (nbTry-- > 0);
-        assertEquals(success, true);
-        queue.stopQueue();
+				if (completed.size() == MAX_NOTIFICATIONS) {
+					success = true;
+					break;
+				}
+				//log.debug(String.format("BEFORE WAIT : Got %d notifications at time %s (real time %s)", completed.size(), clock.getUTCNow(), new DateTime()));
+				expectedNotifications.wait(1000);
+			}
+		} while (nbTry-- > 0);
 
-    }
+        queue.stopQueue();
+		assertEquals(success, true);
+	}
 
     /**
      * Test that we can post a notification in the future from a transaction and get the notification
@@ -380,10 +380,10 @@ public class TestNotificationQueue {
             // expected behavior
         }
 
-        Assert.assertTrue(expectedNotificationsFred.get(notificationKeyFred.toString()));
-        Assert.assertFalse(expectedNotificationsFred.get(notificationKeyBarney.toString()));
         queueFred.stopQueue();
-    }
+		Assert.assertTrue(expectedNotificationsFred.get(notificationKeyFred.toString()));
+		Assert.assertFalse(expectedNotificationsFred.get(notificationKeyBarney.toString()));
+	}
 
     NotificationConfig getNotificationConfig(final boolean off,
             final long sleepTime, final int maxReadyEvents, final long claimTimeMs) {

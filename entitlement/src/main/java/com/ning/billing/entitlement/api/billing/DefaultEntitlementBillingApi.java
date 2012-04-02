@@ -27,7 +27,6 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MutableAccountData;
@@ -39,25 +38,33 @@ import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBui
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
-
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
-
-    private final AccountUserApi accountApi;
+    private static final String API_USER_NAME = "Entitlement Billing Api";
+    private final CallContextFactory factory;
     private final EntitlementDao entitlementDao;
+    private final AccountUserApi accountApi;
     private final BillCycleDayCalculator bcdCalculator;
 
-    @Inject
-    public DefaultEntitlementBillingApi(final EntitlementDao dao, final BillCycleDayCalculator bcdCalculator, final AccountUserApi accountApi) {
-        this.accountApi = accountApi;    
+
+    public DefaultEntitlementBillingApi(final CallContextFactory factory, final EntitlementDao dao, final AccountUserApi accountApi, final BillCycleDayCalculator bcdCalculator) {
+        super();
+        this.factory = factory;
         this.entitlementDao = dao;
+        this.accountApi = accountApi;
         this.bcdCalculator = bcdCalculator;
     }
 
     @Override
     public SortedSet<BillingEvent> getBillingEventsForAccountAndUpdateAccountBCD(
             final UUID accountId) {
+        Account account = accountApi.getAccountById(accountId);
+        CallContext context = factory.createCallContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
 
         List<SubscriptionBundle> bundles = entitlementDao.getSubscriptionBundleForAccount(accountId);
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
@@ -67,13 +74,12 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         	for (final Subscription subscription: subscriptions) {
         		for (final SubscriptionTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
         			try {
-        			    Account account = accountApi.getAccountById(accountId);
         			    int bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
         			    
         			    if(account.getBillCycleDay() == 0) {
         			        MutableAccountData modifiedData = account.toMutableAccountData();
         			        modifiedData.setBillCycleDay(bcd);
-                            accountApi.updateAccount(account.getExternalKey(), modifiedData);
+                            accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
         			    }
         			    
 
@@ -96,6 +102,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
         return entitlementDao.getAccountIdFromSubscriptionId(subscriptionId);
     }
+
 
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {

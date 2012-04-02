@@ -21,6 +21,9 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import com.google.inject.Inject;
+import com.ning.billing.util.clock.Clock;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
@@ -37,8 +40,6 @@ public @interface TagBinder {
                 public void bind(SQLStatement q, TagBinder bind, Tag tag) {
                     q.bind("id", tag.getId().toString());
                     q.bind("tagDefinitionName", tag.getTagDefinitionName());
-                    q.bind("addedDate", tag.getAddedDate().toDate());
-                    q.bind("addedBy", tag.getAddedBy());
                 }
             };
         }

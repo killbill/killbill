@@ -16,18 +16,13 @@
 
 package com.ning.billing.account.api;
 
-import org.joda.time.DateTime;
-
 import com.ning.billing.catalog.api.overdue.Overdueable;
-import com.ning.billing.util.customfield.CustomizableEntity;
+import com.ning.billing.util.customfield.Customizable;
 import com.ning.billing.util.entity.UpdatableEntity;
 import com.ning.billing.util.tag.Taggable;
 
-public interface Account extends AccountData, CustomizableEntity, UpdatableEntity, Taggable, Overdueable {
-    public DateTime getCreatedDate();
-
-    public DateTime getUpdatedDate();
-
-    public MutableAccountData toMutableAccountData();
-
+public interface Account extends AccountData, Customizable, UpdatableEntity, Taggable, Overdueable{ 
+    public static String ObjectType = "account";
+    
+    public MutableAccountData toMutableAccountData();    
 }

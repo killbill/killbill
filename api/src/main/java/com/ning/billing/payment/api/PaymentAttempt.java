@@ -59,8 +59,8 @@ public class PaymentAttempt {
         this.paymentAttemptDate = paymentAttemptDate == null ? new DateTime(DateTimeZone.UTC) : paymentAttemptDate;
         this.paymentId = paymentId;
         this.retryCount = retryCount == null ? 0 : retryCount;
-        this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
-        this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
+        this.createdDate = createdDate;
+        this.updatedDate = updatedDate;
     }
 
     public PaymentAttempt(UUID paymentAttemptId,

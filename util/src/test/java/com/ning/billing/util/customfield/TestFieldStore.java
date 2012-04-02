@@ -17,19 +17,29 @@
 package com.ning.billing.util.customfield;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.UUID;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.glue.FieldStoreModule;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.customfield.dao.FieldStoreDao;
+import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
@@ -38,7 +48,9 @@ import static org.testng.Assert.fail;
 public class TestFieldStore {
     Logger log = LoggerFactory.getLogger(TestFieldStore.class);
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
+    private CallContext context;
     private IDBI dbi;
+    private CustomFieldDao customFieldDao;
 
     @BeforeClass(groups = {"util", "slow"})
     protected void setup() throws IOException {
@@ -50,6 +62,13 @@ public class TestFieldStore {
             helper.initDb(utilDdl);
 
             dbi = helper.getDBI();
+            customFieldDao = new AuditedCustomFieldDao();
+
+            FieldStoreModule module = new FieldStoreModule();
+            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module, new MockClockModule());
+            Clock clock = injector.getInstance(Clock.class);
+            context = new DefaultCallContextFactory(clock).createCallContext("Fezzik", CallOrigin.TEST, UserType.TEST);
+
         }
         catch (Throwable t) {
             log.error("Setup failed", t);
@@ -74,38 +93,22 @@ public class TestFieldStore {
         String fieldValue = "Kitty Hawk";
         fieldStore1.setValue(fieldName, fieldValue);
 
-        FieldStoreDao fieldStoreDao = dbi.onDemand(FieldStoreDao.class);
-        fieldStoreDao.inTransaction(new Transaction<Void, FieldStoreDao>() {
-            @Override
-            public Void inTransaction(FieldStoreDao transactional,
-                    TransactionStatus status) throws Exception {
-                transactional.batchSaveFromTransaction(id.toString(), objectType, fieldStore1.getEntityList());
-                return null;
-            }
-        });
-
+        CustomFieldSqlDao customFieldSqlDao = dbi.onDemand(CustomFieldSqlDao.class);
+        customFieldDao.saveFields(customFieldSqlDao, id, objectType, fieldStore1.getEntityList(), context);
 
         final FieldStore fieldStore2 = DefaultFieldStore.create(id, objectType);
-        fieldStore2.add(fieldStoreDao.load(id.toString(), objectType));
+        fieldStore2.add(customFieldSqlDao.load(id.toString(), objectType));
 
         assertEquals(fieldStore2.getValue(fieldName), fieldValue);
 
         fieldValue = "Cape Canaveral";
         fieldStore2.setValue(fieldName, fieldValue);
         assertEquals(fieldStore2.getValue(fieldName), fieldValue);
-        fieldStoreDao.inTransaction(new Transaction<Void, FieldStoreDao>() {
-            @Override
-            public Void inTransaction(FieldStoreDao transactional,
-                    TransactionStatus status) throws Exception {
-                transactional.batchSaveFromTransaction(id.toString(), objectType, fieldStore2.getEntityList());
-                return null;
-            }
-        });
-
+        customFieldDao.saveFields(customFieldSqlDao, id, objectType, fieldStore2.getEntityList(), context);
 
         final FieldStore fieldStore3 = DefaultFieldStore.create(id, objectType);
         assertEquals(fieldStore3.getValue(fieldName), null);
-        fieldStore3.add(fieldStoreDao.load(id.toString(), objectType));
+        fieldStore3.add(customFieldSqlDao.load(id.toString(), objectType));
 
         assertEquals(fieldStore3.getValue(fieldName), fieldValue);
     }

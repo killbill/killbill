@@ -20,6 +20,8 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.util.entity.BinderBase;
+import com.ning.billing.util.entity.MapperBase;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
@@ -63,13 +65,8 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
 
     @SqlUpdate
     public void updateSubscription(@Bind("id") String id, @Bind("active_version") long activeVersion, @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd);
-
-    public static class ISubscriptionDaoBinder implements Binder<Bind, SubscriptionData> {
-
-        private Date getDate(DateTime dateTime) {
-            return dateTime == null ? null : dateTime.toDate();
-        }
-
+   
+    public static class ISubscriptionDaoBinder extends BinderBase implements Binder<Bind, SubscriptionData> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, SubscriptionData sub) {
             stmt.bind("id", sub.getId().toString());
@@ -83,13 +80,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
         }
     }
 
-    public static class ISubscriptionDaoSqlMapper implements ResultSetMapper<SubscriptionData> {
-
-        private DateTime getDate(ResultSet r, String fieldName) throws SQLException {
-            final Timestamp resultStamp = r.getTimestamp(fieldName);
-            return r.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
-        }
-
+    public static class ISubscriptionDaoSqlMapper extends MapperBase implements ResultSetMapper<SubscriptionData> {
         @Override
         public SubscriptionData map(int arg0, ResultSet r, StatementContext ctx)
                 throws SQLException {

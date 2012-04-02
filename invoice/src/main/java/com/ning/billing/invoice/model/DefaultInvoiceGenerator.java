@@ -16,38 +16,42 @@
 
 package com.ning.billing.invoice.model;
 
-import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.entitlement.api.billing.BillingEvent;
-import com.ning.billing.entitlement.api.billing.BillingModeType;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.util.clock.Clock;
-import org.joda.time.DateTime;
-import org.joda.time.Months;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+
 import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+import org.joda.time.Months;
+
+import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.entitlement.api.billing.BillingModeType;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.clock.Clock;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
-    public static final String NUMBER_OF_MONTHS = "killbill.invoice.maxNumberOfMonthsInFuture";
 
     private final Clock clock;
+    private final InvoiceConfig config;
 
     @Inject
-    public DefaultInvoiceGenerator(Clock clock) {
+    public DefaultInvoiceGenerator(Clock clock, InvoiceConfig config) {
         this.clock = clock;
+        this.config = config;
     }
 
    /*
@@ -77,9 +81,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         targetDate = adjustTargetDate(existingInvoices, targetDate);
 
-        DefaultInvoice invoice = new DefaultInvoice(accountId, targetDate, targetCurrency, clock);
+        DefaultInvoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, targetCurrency);
         UUID invoiceId = invoice.getId();
-        List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, events, targetDate, targetCurrency);
+        List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, accountId, events, targetDate, targetCurrency);
 
         removeCancellingInvoiceItems(existingItems);
         removeDuplicatedInvoiceItems(proposedItems, existingItems);
@@ -100,8 +104,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     }
 
     private void validateTargetDate(DateTime targetDate) throws InvoiceApiException {
-        String maximumNumberOfMonthsValue = System.getProperty(NUMBER_OF_MONTHS);
-        int maximumNumberOfMonths= (maximumNumberOfMonthsValue == null) ? 36 : Integer.parseInt(maximumNumberOfMonthsValue);
+        int maximumNumberOfMonths = config.getNumberOfMonthsInFuture();
 
         if (Months.monthsBetween(clock.getUTCNow(), targetDate).getMonths() > maximumNumberOfMonths) {
             throw new InvoiceApiException(ErrorCode.INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE, targetDate.toString());
@@ -164,7 +167,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-    private List<InvoiceItem> generateInvoiceItems(final UUID invoiceId, final BillingEventSet events,
+    private List<InvoiceItem> generateInvoiceItems(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
                                                    final DateTime targetDate, final Currency currency) throws InvoiceApiException {
         List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
@@ -175,16 +178,16 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 nextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
             }
 
-            items.addAll(processEvents(invoiceId, thisEvent, nextEvent, targetDate, currency));
+            items.addAll(processEvents(invoiceId, accountId, thisEvent, nextEvent, targetDate, currency));
         }
 
         return items;
     }
 
-    private List<InvoiceItem> processEvents(final UUID invoiceId, final BillingEvent thisEvent, final BillingEvent nextEvent,
+    private List<InvoiceItem> processEvents(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, final BillingEvent nextEvent,
                                             final DateTime targetDate, final Currency currency) throws InvoiceApiException {
         List<InvoiceItem> items = new ArrayList<InvoiceItem>();
-        InvoiceItem fixedPriceInvoiceItem = generateFixedPriceItem(invoiceId, thisEvent, targetDate, currency);
+        InvoiceItem fixedPriceInvoiceItem = generateFixedPriceItem(invoiceId, accountId, thisEvent, targetDate, currency);
         if (fixedPriceInvoiceItem != null) {
             items.add(fixedPriceInvoiceItem);
         }
@@ -211,12 +214,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                         BigDecimal amount = itemDatum.getNumberOfCycles().multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
 
                         RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId, 
-                                thisEvent.getSubscription().getId(),
+                                accountId,
                                 thisEvent.getSubscription().getBundleId(), 
+                                thisEvent.getSubscription().getId(),
                                 thisEvent.getPlan().getName(),
                                 thisEvent.getPlanPhase().getName(),
                                 itemDatum.getStartDate(), itemDatum.getEndDate(),
-                                amount, rate, currency, clock.getUTCNow());
+                                amount, rate, currency);
                         items.add(recurringItem);
                     }
                 }
@@ -235,7 +239,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-    private InvoiceItem generateFixedPriceItem(final UUID invoiceId, final BillingEvent thisEvent,
+    private InvoiceItem generateFixedPriceItem(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent,
                                                final DateTime targetDate, final Currency currency) throws InvoiceApiException {
         if (thisEvent.getEffectiveDate().isAfter(targetDate)) {
             return null;
@@ -246,11 +250,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 Duration duration = thisEvent.getPlanPhase().getDuration();
                 DateTime endDate = duration.addToDateTime(thisEvent.getEffectiveDate());
 
-                return new FixedPriceInvoiceItem(invoiceId, thisEvent.getSubscription().getId(),
-                                                thisEvent.getSubscription().getBundleId(),
+                return new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getSubscription().getBundleId(),
+                                                 thisEvent.getSubscription().getId(),
                                                  thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
-                                                 thisEvent.getEffectiveDate(), endDate, fixedPrice, currency,
-                                                 clock.getUTCNow());
+                                                 thisEvent.getEffectiveDate(), endDate, fixedPrice, currency);
             } else {
                 return null;
             }

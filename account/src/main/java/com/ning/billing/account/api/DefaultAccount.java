@@ -19,27 +19,24 @@ package com.ning.billing.account.api;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.entity.ExtendedEntityBase;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.customfield.CustomizableEntityBase;
-import com.ning.billing.util.tag.DefaultTagStore;
-import com.ning.billing.util.tag.DescriptiveTag;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
- 
-public class DefaultAccount extends CustomizableEntityBase implements Account {
-	//public final static String OBJECT_TYPE = "Account";
 
-	private final String externalKey;
+import javax.annotation.Nullable;
+
+public class DefaultAccount extends ExtendedEntityBase implements Account {
+    private final String externalKey;
 	private final String email;
 	private final String name;
 	private final int firstNameLength;
 	private final Currency currency;
 	private final int billCycleDay;
 	private final String paymentProviderName;
-	private final DefaultTagStore tags;
 	private final DateTimeZone timeZone;
 	private final String locale;
 	private final String address1;
@@ -50,57 +47,40 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 	private final String country;
 	private final String postalCode;
 	private final String phone;
-	private final DateTime createdDate;
-	private final DateTime updatedDate;
+    private final String updatedBy;
+    private final DateTime updatedDate;
 
-	/**
-	 * This call is used to create a new account
-	 * @param data
-	 * @param createdDate
-	 */
-	public DefaultAccount(final AccountData data, DateTime createdDate) {
-		this(UUID.randomUUID(), data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
-				data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
-				data.getTimeZone(), data.getLocale(),
-				data.getAddress1(), data.getAddress2(), data.getCompanyName(),
-				data.getCity(), data.getStateOrProvince(), data.getCountry(),
-				data.getPostalCode(), data.getPhone(), createdDate, createdDate);
+	//intended for creation and migration
+	public DefaultAccount(final String createdBy, final DateTime createdDate,
+                          final String updatedBy, final DateTime updatedDate,
+                          final AccountData data) {
+		this(UUID.randomUUID(), createdBy, createdDate, updatedBy, updatedDate, data);
 	}
 
-	//intended for creation
-	public DefaultAccount(final AccountData data) {
-		this(UUID.randomUUID(), data, null, null);
-	}
-	
-	// Intended for migration
-	public DefaultAccount(final AccountData data, DateTime createdDate, DateTime updatedDate) {
-		this(UUID.randomUUID(), data, createdDate, updatedDate);
+    public DefaultAccount(final AccountData data) {
+		this(UUID.randomUUID(), null, null, null, null, data);
 	}
 
-	//intended for update
-	public DefaultAccount(final UUID id, final AccountData data, DateTime createdDate, DateTime updatedDate) {
-		this(id, data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
-				data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
-				data.getTimeZone(), data.getLocale(),
-				data.getAddress1(), data.getAddress2(), data.getCompanyName(),
-				data.getCity(), data.getStateOrProvince(), data.getCountry(),
-				data.getPostalCode(), data.getPhone(), createdDate, updatedDate);
+    public DefaultAccount(final UUID id, final AccountData data) {
+		this(id, null, null, null, null, data);
 	}
 
-	
 	/**
 	 * This call is used to update an existing account
 	 *  
-	 * @param id
-	 * @param data
+	 * @param id UUID id of the existing account to update
+	 * @param data AccountData new data for the existing account
 	 */
-	public DefaultAccount(final UUID id, final AccountData data) {
+	public DefaultAccount(final UUID id, @Nullable final String createdBy, @Nullable final DateTime createdDate,
+                          @Nullable final String updatedBy, @Nullable final DateTime updatedDate,
+                          final AccountData data) {
 		this(id, data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
 				data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
 				data.getTimeZone(), data.getLocale(),
 				data.getAddress1(), data.getAddress2(), data.getCompanyName(),
 				data.getCity(), data.getStateOrProvince(), data.getCountry(),
-				data.getPostalCode(), data.getPhone(), null, null);
+				data.getPostalCode(), data.getPhone(), createdBy, createdDate,
+                updatedBy, updatedDate);
 	}
 
 	/**
@@ -126,14 +106,17 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 	 * @param createdDate
 	 * @param updatedDate
 	 */
-	public DefaultAccount(final UUID id, final String externalKey, final String email, final String name, final int firstNameLength,
-			final Currency currency, final int billCycleDay, final String paymentProviderName,
-			final DateTimeZone timeZone, final String locale,
-			final String address1, final String address2, final String companyName,
-			final String city,
-			final String stateOrProvince, final String country, final String postalCode, final String phone, DateTime createdDate, DateTime updatedDate) {
+	public DefaultAccount(final UUID id, final String externalKey, final String email,
+                          final String name, final int firstNameLength,
+                          final Currency currency, final int billCycleDay, final String paymentProviderName,
+                          final DateTimeZone timeZone, final String locale,
+                          final String address1, final String address2, final String companyName,
+                          final String city, final String stateOrProvince, final String country,
+                          final String postalCode, final String phone,
+                          final String createdBy, final DateTime createdDate,
+                          final String updatedBy, final DateTime updatedDate) {
 
-		super(id);
+		super(id, createdBy, createdDate);
 		this.externalKey = externalKey;
 		this.email = email;
 		this.name = name;
@@ -151,14 +134,28 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 		this.postalCode = postalCode;
 		this.country = country;
 		this.phone = phone;
-		this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate; // This is a fallback, we are only expecting these to be set to null 
-		this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate; // in the case that the account is being updated. In which case the values are ignored anyway
-		this.tags = new DefaultTagStore(id, getObjectName());
+        this.updatedBy = updatedBy;
+        this.updatedDate = updatedDate;
 	}
 
-	@Override
+    @Override
+    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveFields(List<CustomField> fields, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clearPersistedFields(CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
 	public String getObjectName() {
-		return "Account";
+		return ObjectType;
 	}
 
 	@Override
@@ -174,20 +171,6 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 	@Override
 	public String getEmail() {
 		return email;
-	}
-
-	public DefaultTagStore getTags() {
-		return tags;
-	}
-
-	@Override
-	public DateTime getCreatedDate() {
-		return createdDate;
-	}
-
-	@Override
-	public DateTime getUpdatedDate() {
-		return updatedDate;
 	}
 
 	@Override
@@ -255,79 +238,47 @@ public class DefaultAccount extends CustomizableEntityBase implements Account {
 		return country;
 	}
 
-	@Override
+    @Override
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
+    @Override
 	public String getPhone() {
 		return phone;
 	}
 
-	@Override
-	public List<Tag> getTagList() {
-		return tags.getEntityList();
-	}
-
-	@Override
-	public boolean hasTag(String tagName) {
-		return tags.containsTag(tagName);
-	}
-
-	@Override
-	public void addTag(TagDefinition definition, String addedBy, DateTime dateAdded) {
-		Tag tag = new DescriptiveTag(definition, addedBy, dateAdded);
-		tags.add(tag) ;
-	}
-
-	@Override
-	public void addTags(List<Tag> tags) {
-		if (tags != null) {
-			this.tags.add(tags);
-		}
-	}
-
-	@Override
-	public void clearTags() {
-		this.tags.clear();
-	}
-
-	@Override
-	public void removeTag(TagDefinition definition) {
-		tags.remove(definition.getName());
-	}
-
-	@Override
-	public boolean generateInvoice() {
-		return tags.generateInvoice();
-	}
-
-	@Override
-	public boolean processPayment() {
-		return tags.processPayment();
-	}
-	
-	@Override
+    @Override
 	public MutableAccountData toMutableAccountData() {
 	    return new DefaultMutableAccountData(this);
 	}
-
+    
 	@Override
 	public String toString() {
-		return "DefaultAccount [externalKey=" + externalKey + ", email=" + email + 
-				", name=" + name + ", " +
-				"firstNameLength=" + firstNameLength + 
-				", phone=" + phone + ", " +
-				"currency=" + currency + 
-				", billCycleDay=" + billCycleDay + 
-				", paymentProviderName=" + paymentProviderName + 
+		return "DefaultAccount [externalKey=" + externalKey +
+                ", email=" + email +
+				", name=" + name +
+				", firstNameLength=" + firstNameLength +
+				", phone=" + phone +
+				", currency=" + currency +
+				", billCycleDay=" + billCycleDay +
+				", paymentProviderName=" + paymentProviderName +
 				", timezone=" + timeZone +
 				", locale=" +  locale +
-				", address1" + address1 +
-				", address2" + address2 +
-				", companyName" + companyName +
-				", city" + city +
-				", stateOrProvince" + stateOrProvince +
-				", postalCode" + postalCode +
-				", country" +
-				", tags=" + tags + 
-				", createdDate=" + createdDate + 
-				", updatedDate=" + updatedDate + "]";
+				", address1=" + address1 +
+				", address2=" + address2 +
+				", companyName=" + companyName +
+				", city=" + city +
+				", stateOrProvince=" + stateOrProvince +
+				", postalCode=" + postalCode +
+				", country=" + country +
+				", tags=" + tags +
+                ", fields=" + fields +
+                "]";
 	}
 }

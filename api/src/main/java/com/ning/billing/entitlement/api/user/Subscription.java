@@ -26,10 +26,10 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.util.customfield.CustomizableEntity;
+import com.ning.billing.util.entity.ExtendedEntity;
 
 
-public interface Subscription extends CustomizableEntity {
+public interface Subscription extends ExtendedEntity {
 
     public void cancel(DateTime requestedDate, boolean eot)
     throws EntitlementUserApiException;

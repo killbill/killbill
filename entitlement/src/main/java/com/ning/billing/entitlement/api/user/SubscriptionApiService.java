@@ -29,13 +29,13 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
 import com.ning.billing.entitlement.events.user.*;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class SubscriptionApiService {
 
@@ -51,8 +51,6 @@ public class SubscriptionApiService {
         this.planAligner = planAligner;
         this.dao = dao;
     }
-
-
 
     public SubscriptionData createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
             String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate)
@@ -281,8 +279,8 @@ public class SubscriptionApiService {
         }
     }
 
-    public void commitCustomFields(SubscriptionData subscription) {
-        dao.saveCustomFields(subscription);
+    public void commitCustomFields(SubscriptionData subscription, CallContext context) {
+        dao.saveCustomFields(subscription, context);
     }
 
     private void validateRequestedDate(SubscriptionData subscription, DateTime now, DateTime requestedDate)

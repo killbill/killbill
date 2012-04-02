@@ -23,19 +23,19 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.entity.ExtendedEntityBase;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.util.clock.Clock;
 
-
-public class DefaultInvoice implements Invoice {
+public class DefaultInvoice extends ExtendedEntityBase implements Invoice {
     private final InvoiceItemList invoiceItems = new InvoiceItemList();
     private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
-    private final UUID id;
     private final UUID accountId;
     private final Integer invoiceNumber;
     private final DateTime invoiceDate;
@@ -43,28 +43,21 @@ public class DefaultInvoice implements Invoice {
     private final Currency currency;
     private final boolean migrationInvoice;
 
-    public DefaultInvoice(UUID accountId, DateTime targetDate, Currency currency, Clock clock) {
-        this(UUID.randomUUID(), accountId, null, clock.getUTCNow(), targetDate, currency);
+    // used to create a new invoice
+    public DefaultInvoice(UUID accountId, DateTime invoiceDate, DateTime targetDate, Currency currency) {
+        this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, null, null);
     }
 
-    public DefaultInvoice(UUID accountId, DateTime targetDate, Currency currency, Clock clock, boolean migrationInvoice) {
-        this(UUID.randomUUID(), accountId, null, clock.getUTCNow(), targetDate, currency, migrationInvoice);
-    }
-
-    public DefaultInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber, DateTime invoiceDate, DateTime targetDate,
-                          Currency currency) {
-    	this(invoiceId, accountId, invoiceNumber, invoiceDate, targetDate, currency, false);
-    }
-    
-    public DefaultInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber,DateTime invoiceDate, DateTime targetDate,
-                Currency currency, boolean migrationInvoice) {
-        this.id = invoiceId;
+    // used to hydrate invoice from persistence layer
+    public DefaultInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber, DateTime invoiceDate,
+                          DateTime targetDate, Currency currency, boolean isMigrationInvoice, @Nullable String createdBy, @Nullable DateTime createdDate) {
+        super(invoiceId, createdBy, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
         this.invoiceDate = invoiceDate;
         this.targetDate = targetDate;
         this.currency = currency;
-        this.migrationInvoice = migrationInvoice;
+        this.migrationInvoice = isMigrationInvoice;
     }
 
     @Override
@@ -215,5 +208,24 @@ public class DefaultInvoice implements Invoice {
         return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getAmountPaid() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
     }
 
+    @Override
+    public String getObjectName() {
+        return Invoice.ObjectType;
+    }
+
+    @Override
+    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveFields(List<CustomField> fields, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clearPersistedFields(CallContext context) {
+        throw new UnsupportedOperationException();
+    }
 }
 

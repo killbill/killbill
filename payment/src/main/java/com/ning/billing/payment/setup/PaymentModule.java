@@ -26,7 +26,7 @@ import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
-import com.ning.billing.payment.dao.DefaultPaymentDao;
+import com.ning.billing.payment.dao.AuditedPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 
@@ -42,7 +42,7 @@ public class PaymentModule extends AbstractModule {
     }
 
     protected void installPaymentDao() {
-        bind(PaymentDao.class).to(DefaultPaymentDao.class).asEagerSingleton();
+        bind(PaymentDao.class).to(AuditedPaymentDao.class).asEagerSingleton();
     }
 
     protected void installPaymentProviderPlugins(PaymentConfig config) {

@@ -1,0 +1,31 @@
+group TagAuditSqlDao;
+
+fields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments
+>>
+
+batchInsertFromTransaction() ::= <<
+    INSERT INTO audit_log(<fields()>)
+    VALUES('tag', :id, 'INSERT', :createdDate, :userName, NULL, NULL);
+>>
+
+batchDeleteFromTransaction() ::= <<
+    INSERT INTO audit_log(<fields()>)
+    VALUES('tag', :id, 'DELETE', :updatedDate, :userName, NULL, NULL);
+>>
+
+addTagFromTransaction() ::= <<
+    INSERT INTO audit_log(<fields()>)
+    VALUES('tag', :id, 'INSERT', :createdDate, :userName, NULL, NULL);
+>>
+
+removeTagFromTransaction() ::= <<
+    INSERT INTO audit_log(<fields()>)
+    VALUES('tag', :id, 'DELETE', :updatedDate, :userName, NULL, NULL);
+>>
