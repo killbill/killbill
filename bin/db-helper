@@ -19,7 +19,7 @@
 #                                                                                 #
 ###################################################################################
 
-set -x 
+#set -x 
 
 HERE=`cd \`dirname $0\`; pwd`
 TOP=$HERE/..
@@ -31,6 +31,9 @@ DATABASE="killbill"
 USER="root"
 PWD="root"
 TEST_ALSO=
+
+DDL_FILE=
+CLEAN_FILE=
 
 function usage() {
     echo -n "./db_helper "
@@ -75,6 +78,20 @@ function find_src_ddl() {
     echo "$ddl_src"
 }
 
+
+function create_clean_file() {
+    local ddl_file=$1
+    local tables=`cat $ddl_file | grep -i "create table" | awk ' { print $3 } '` 
+
+    local tmp="/tmp/clean-$DATABASE.$$" 
+    echo "use $DATABASE;" >> $tmp
+    echo "" >> $tmp
+    for t in $tables; do
+        echo "truncate $t;" >> $tmp
+    done
+    echo $tmp
+}
+
 function create_ddl_file() {
     local ddls=`find_src_ddl`
     local test_ddls=
@@ -83,7 +100,7 @@ function create_ddl_file() {
         ddls="$ddls $test_ddls"
     fi
 
-    local tmp="/tmp/ddl.$$"
+    local tmp="/tmp/ddl-$DATABASE.$$"
     touch $tmp
     echo "use $DATABASE;" >> $tmp
     echo "" >> $tmp
@@ -93,6 +110,11 @@ function create_ddl_file() {
     done
     echo $tmp
 }
+
+function cleanup() {
+    rm -f "/tmp/*.$$"
+}
+
 
 while getopts ":a:d:u:pt" options; do
   case $options in
@@ -114,13 +136,22 @@ if [ -z $ACTION ]; then
 fi
 
 
-if [ $ACTION=="create" ]; then
+if [ $ACTION == "dump" ]; then
+    DDL_FILE=`create_ddl_file`
+    cat $DDL_FILE
+fi
+
+if [ $ACTION == "create" ]; then
     DDL_FILE=`create_ddl_file`
     echo "Applying new schema $tmp to database $DATABASE"    
     mysql -u $USER --password=$PWD < $DDL_FILE
 fi
 
-if [ $ACTION=="clean" ]; then
-    echo "Not implemented yet"
-    exit 1
+if [ $ACTION == "clean" ]; then
+    DDL_FILE=`create_ddl_file` 
+    CLEAN_FILE=`create_clean_file $DDL_FILE`   
+    echo "Cleaning db tables on database $DATABASE"
+    mysql -u $USER --password=$PWD < $DDL_FILE
 fi
+
+cleanup
