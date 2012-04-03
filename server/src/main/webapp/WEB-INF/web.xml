@@ -19,17 +19,9 @@
         <!-- Jersey insists on using java.util.logging (JUL) -->
         <listener-class>com.ning.jetty.core.listeners.SetupJULBridge</listener-class>
     </listener>
-    <!-- This param tells the IrsGuiceListener listener which factory to use for the root guice module -->
-    <context-param>
-        <param-name>guiceModuleFactoryClass</param-name>
-        <param-value>com.ning.billing.server.listeners.KillbillGuiceModuleFactory</param-value>
-    </context-param>
     <listener>
         <!-- Context listener: called at startup time and creates the injector -->
         <listener-class>com.ning.billing.server.listeners.KillbillGuiceListener</listener-class>
-    </listener>
-    <listener>
-        <listener-class>com.ning.billing.server.listeners.KillbillLifecycleListener</listener-class>
     </listener>
     <!-- ServletHandler#handle requires a backend servlet, it won't be used though (handled by Guice) -->
     <servlet>

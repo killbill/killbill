@@ -16,15 +16,6 @@
 
 package com.ning.billing.server.modules;
 
-import java.lang.management.ManagementFactory;
-
-import javax.management.MBeanServer;
-
-import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.IDBI;
-
-import com.google.inject.AbstractModule;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.beatrix.glue.BeatrixModule;
@@ -38,37 +29,34 @@ import com.ning.billing.jaxrs.resources.InvoiceResource;
 import com.ning.billing.jaxrs.resources.PaymentResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.payment.setup.PaymentModule;
-import com.ning.billing.server.config.KillbillServerConfig;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.jetty.utils.providers.DBIProvider;
+import com.ning.jetty.jdbi.guice.providers.DBIProvider;
 
-public class KillbillServerModule extends AbstractModule {
+import com.google.inject.AbstractModule;
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
 
+public class KillbillServerModule extends AbstractModule
+{
     @Override
-    protected void configure() {
-        configureConfig();
+    protected void configure()
+    {
         configureDao();
         configureResources();
         installKillbillModules();
-        // STEPH Do we need that?
-        installMBeanExporter();
     }
 
-    protected void configureDao() {
+    protected void configureDao()
+    {
         bind(IDBI.class).to(DBI.class).asEagerSingleton();
         bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
     }
 
-
-    protected void configureConfig() {
-        KillbillServerConfig config = new ConfigurationObjectFactory(System.getProperties()).build(KillbillServerConfig.class);
-        bind(KillbillServerConfig.class).toInstance(config);
-    }
-
-    protected void configureResources() {
+    protected void configureResources()
+    {
         bind(AccountResource.class).asEagerSingleton();
         bind(BundleResource.class).asEagerSingleton();
         bind(SubscriptionResource.class).asEagerSingleton();
@@ -77,7 +65,8 @@ public class KillbillServerModule extends AbstractModule {
         bind(PaymentResource.class).asEagerSingleton();
     }
 
-    protected void installKillbillModules() {
+    protected void installKillbillModules()
+    {
         install(new BusModule());
         install(new NotificationQueueModule());
         install(new AccountModule());
@@ -89,10 +78,5 @@ public class KillbillServerModule extends AbstractModule {
         install(new CatalogModule());
         install(new BeatrixModule());
         install(new ClockModule());
-    }
-
-    protected void installMBeanExporter() {
-        MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-        bind(MBeanServer.class).toInstance(mbeanServer);
     }
 }
