@@ -44,6 +44,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.util.Context;
 
 
 @Singleton
@@ -53,10 +54,12 @@ public class AccountResource {
     private static final Logger log = LoggerFactory.getLogger(AccountResource.class);
 
     private final AccountUserApi accountApi;
+    private final Context context;
 
     @Inject
-    public AccountResource(AccountUserApi accountApi) {
+    public AccountResource(final AccountUserApi accountApi, final Context context) {
         this.accountApi = accountApi;
+        this.context = context;
     }
 
     @GET
@@ -92,7 +95,7 @@ public class AccountResource {
 
         try {
             AccountData data = json.toAccountData();
-            final Account account = accountApi.createAccount(data, null, null);
+            final Account account = accountApi.createAccount(data, null, null, context.getContext());
             URI uri = UriBuilder.fromPath(account.getId().toString()).build();
             Response.ResponseBuilder ri = Response.created(uri);
             return ri.entity(new Object() {
@@ -113,7 +116,7 @@ public class AccountResource {
     public Response updateAccount(AccountJson json, @PathParam("accountId") String accountId) {
         try {
             AccountData data = json.toAccountData();
-            accountApi.updateAccount(accountId, data);
+            accountApi.updateAccount(accountId, data, context.getContext());
             return Response.status(Status.NO_CONTENT).build();
         } catch (AccountApiException e) {
             log.info(String.format("Failed to update account %s with %s", accountId, json), e);

@@ -30,6 +30,7 @@ import com.ning.billing.jaxrs.resources.PaymentResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
@@ -69,6 +70,7 @@ public class KillbillServerModule extends AbstractModule
     {
         install(new BusModule());
         install(new NotificationQueueModule());
+        install(new CallContextModule());
         install(new AccountModule());
         install(new InvoiceModule());
         install(new EntitlementModule());
