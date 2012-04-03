@@ -29,7 +29,7 @@
         <logback.version>1.0.1</logback.version>
         <metrics.version>2.1.1</metrics.version>
         <slf4j.version>1.6.4</slf4j.version>
-        <skeleton.version>0.1.0-SNAPSHOT</skeleton.version>
+        <skeleton.version>0.1.0</skeleton.version>
     </properties>
 
     <dependencies>
