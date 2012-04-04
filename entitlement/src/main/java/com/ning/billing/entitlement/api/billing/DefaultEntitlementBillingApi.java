@@ -104,7 +104,6 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         return entitlementDao.getAccountIdFromSubscriptionId(subscriptionId);
     }
 
-
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
         SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionId);
@@ -133,6 +132,6 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             }
         }
     }
-    
- 
+
+
 }
