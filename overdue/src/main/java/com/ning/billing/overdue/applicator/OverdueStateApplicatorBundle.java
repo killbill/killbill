@@ -33,7 +33,7 @@ public class OverdueStateApplicatorBundle implements OverdueStateApplicator<Subs
     }
 
     @Override
-    public void apply(SubscriptionBundle overdueable,
+    public void apply(SubscriptionBundle bundle,
             OverdueState<SubscriptionBundle> previousOverdueState,
             OverdueState<SubscriptionBundle> nextOverdueState, DateTime timeOfNextCheck) {
         
@@ -41,41 +41,41 @@ public class OverdueStateApplicatorBundle implements OverdueStateApplicator<Subs
             return; // nothing to do
         }
         
-        cancelBundle(overdueable, previousOverdueState, nextOverdueState);
-        storeNewState(overdueable, nextOverdueState);
+        cancelBundle(bundle, previousOverdueState, nextOverdueState);
+        storeNewState(bundle, nextOverdueState);
   
         if(timeOfNextCheck != null && !nextOverdueState.isClearState()) {
-            createFutureNotification(overdueable, timeOfNextCheck);
+            createFutureNotification(bundle, timeOfNextCheck);
         }
 
         if(nextOverdueState.isClearState()) {
-            clear(overdueable);
+            clear(bundle);
         }
         
         //If new state is clear state reset next events and override table
         throw new NotImplementedException();
     }
 
-    private void cancelBundle(SubscriptionBundle overdueable,
+    private void cancelBundle(SubscriptionBundle bundle,
             OverdueState<SubscriptionBundle> previousOverdueState,
             OverdueState<SubscriptionBundle> nextOverdueState) {
         // TODO Auto-generated method stub
         
     }
 
-    private void storeNewState(SubscriptionBundle overdueable,
+    private void storeNewState(SubscriptionBundle bundle,
             OverdueState<SubscriptionBundle> nextOverdueState) {
         // TODO Auto-generated method stub
         
     }
 
-    private void createFutureNotification(SubscriptionBundle overdueable,
+    private void createFutureNotification(SubscriptionBundle bundle,
             DateTime timeOfNextCheck) {
         // TODO Auto-generated method stub
         
     }
 
-    private void clear(SubscriptionBundle overdueable) {
+    private void clear(SubscriptionBundle bundle) {
         // TODO Clear any future events plus overrides
         
     }

@@ -19,6 +19,7 @@ package com.ning.billing.overdue.calculator;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -29,6 +30,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
@@ -44,9 +46,9 @@ public class TestBillingStateCalculator {
     public BillingStateCalculator<SubscriptionBundle> createBSCalc() {
         now = new DateTime();
         Collection<Invoice> invoices = new ArrayList<Invoice>();
-        invoices.add(createInvoice(now, BigDecimal.ZERO));
-        invoices.add(createInvoice(now.plusDays(1), BigDecimal.TEN));
-        invoices.add(createInvoice(now.plusDays(2), new BigDecimal("100.0")));
+        invoices.add(createInvoice(now, BigDecimal.ZERO, null));
+        invoices.add(createInvoice(now.plusDays(1), BigDecimal.TEN, null));
+        invoices.add(createInvoice(now.plusDays(2), new BigDecimal("100.0"), null));
      
         ((ZombieControl)invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
             
@@ -58,11 +60,12 @@ public class TestBillingStateCalculator {
             }};
     }
     
-    public Invoice createInvoice(DateTime date, BigDecimal balance) {
+    public Invoice createInvoice(DateTime date, BigDecimal balance, List<InvoiceItem> invoiceItems) {
         Invoice invoice = BrainDeadProxyFactory.createBrainDeadProxyFor(Invoice.class);
         ((ZombieControl)invoice).addResult("getBalance", balance);
         ((ZombieControl)invoice).addResult("getInvoiceDate", date);
         ((ZombieControl)invoice).addResult("hashCode", hash++);
+        ((ZombieControl)invoice).addResult("getInvoiceItems", invoiceItems);
         
         return invoice;
     }
@@ -70,7 +73,7 @@ public class TestBillingStateCalculator {
     @Test(groups={"fast"}, enabled=true)
     public void testUnpaidInvoices() {
         BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
-        SortedSet<Invoice> invoices = calc.unpaidInvoicesFor(new UUID(0L,0L));
+        SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L,0L));
         
         Assert.assertEquals(invoices.size(), 3);
         Assert.assertEquals(BigDecimal.ZERO.compareTo(invoices.first().getBalance()), 0);
@@ -81,7 +84,7 @@ public class TestBillingStateCalculator {
     public void testSum() {
         
         BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
-        SortedSet<Invoice> invoices = calc.unpaidInvoicesFor(new UUID(0L,0L));
+        SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L,0L));
         Assert.assertEquals(new BigDecimal("110.0").compareTo(calc.sumBalance(invoices)), 0);
     }
 
@@ -89,7 +92,7 @@ public class TestBillingStateCalculator {
     public void testEarliest() {
         
         BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
-        SortedSet<Invoice> invoices = calc.unpaidInvoicesFor(new UUID(0L,0L));
+        SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L,0L));
         Assert.assertEquals(calc.earliest(invoices), now);
     }
 

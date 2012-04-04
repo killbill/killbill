@@ -37,6 +37,18 @@ public abstract class BillingStateCalculator<T extends Overdueable> {
 
     private final InvoiceUserApi invoiceApi;
     private final Clock clock;
+    
+    protected class InvoiceDateComparator implements Comparator<Invoice> {
+        @Override
+        public int compare(Invoice i1, Invoice i2) {
+            DateTime d1 = i1.getInvoiceDate();
+            DateTime d2 = i2.getInvoiceDate();
+            if(d1.compareTo(d2) == 0) {
+                return i1.hashCode() - i2.hashCode(); // consistent (arbitrary) resolution for tied dates
+            }
+            return d1.compareTo(d2);
+        }
+    }
 
     @Inject 
     public BillingStateCalculator(InvoiceUserApi invoiceApi, Clock clock) {
@@ -59,20 +71,9 @@ public abstract class BillingStateCalculator<T extends Overdueable> {
         return sum;
     }
 
-    protected SortedSet<Invoice> unpaidInvoicesFor(UUID id) {
-        Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(id, clock.getUTCNow());
-        SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new Comparator<Invoice>() {
-            @Override
-            public int compare(Invoice i1, Invoice i2) {
-                DateTime d1 = i1.getInvoiceDate();
-                DateTime d2 = i2.getInvoiceDate();
-                if(d1.compareTo(d2) == 0) {
-                    return i1.hashCode() - i2.hashCode(); // consistent (arbitrary) resolution for tied dates
-                }
-                return d1.compareTo(d2);
-            }
-            
-        });
+    protected SortedSet<Invoice> unpaidInvoicesForAccount(UUID accountId) {
+        Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getUTCNow());
+        SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new InvoiceDateComparator());
         sortedInvoices.addAll(invoices);
         return sortedInvoices;
     }

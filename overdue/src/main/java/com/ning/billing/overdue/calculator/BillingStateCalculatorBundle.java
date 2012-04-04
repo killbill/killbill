@@ -18,6 +18,7 @@ package com.ning.billing.overdue.calculator;
 
 import java.math.BigDecimal;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -27,13 +28,13 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.BillingStateBundle;
 import com.ning.billing.catalog.api.overdue.PaymentResponse;
 import com.ning.billing.entitlement.api.overdue.EntitlementOverdueApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.Tag;
@@ -49,9 +50,9 @@ public class BillingStateCalculatorBundle  extends BillingStateCalculator<Subscr
     }
     
     @Override
-    public BillingState<SubscriptionBundle> calculateBillingState(SubscriptionBundle bundle) {
+    public BillingStateBundle calculateBillingState(SubscriptionBundle bundle) {
         
-        SortedSet<Invoice> unpaidInvoices = unpaidInvoicesFor(bundle.getId());
+        SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId());
  
         Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId());
         
@@ -80,4 +81,27 @@ public class BillingStateCalculatorBundle  extends BillingStateCalculator<Subscr
             basePlanPhaseType);
         
     }
+
+    public SortedSet<Invoice> unpaidInvoicesForBundle(UUID bundleId, UUID accountId) {
+        SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForAccount(accountId);
+        SortedSet<Invoice> result = new TreeSet<Invoice>(new InvoiceDateComparator());
+        result.addAll(unpaidInvoices);
+        for(Invoice invoice : unpaidInvoices) {
+            if(!invoiceHasAnItemFromBundle(invoice, bundleId)) {
+                result.remove(invoice);
+            }
+        }
+        return result;
+    }
+
+    private boolean invoiceHasAnItemFromBundle(Invoice invoice, UUID bundleId) {
+        for(InvoiceItem item : invoice.getInvoiceItems()) {
+            if(item.getBundleId().equals(bundleId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    
 }
