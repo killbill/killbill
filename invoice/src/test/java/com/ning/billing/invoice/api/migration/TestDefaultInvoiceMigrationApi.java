@@ -171,7 +171,8 @@ public class TestDefaultInvoiceMigrationApi {
 		((ZombieControl)account).addResult("getId", accountId);
 
 		Subscription subscription =  BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-		((ZombieControl)subscription).addResult("getId", subscriptionId);
+        ((ZombieControl)subscription).addResult("getId", subscriptionId);
+        ((ZombieControl)subscription).addResult("getBundleId", new UUID(0L,0L));
 		SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
 		Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
 		PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();

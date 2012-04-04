@@ -27,6 +27,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MutableAccountData;
@@ -51,7 +52,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     private final AccountUserApi accountApi;
     private final BillCycleDayCalculator bcdCalculator;
 
-
+    @Inject
     public DefaultEntitlementBillingApi(final CallContextFactory factory, final EntitlementDao dao, final AccountUserApi accountApi, final BillCycleDayCalculator bcdCalculator) {
         super();
         this.factory = factory;

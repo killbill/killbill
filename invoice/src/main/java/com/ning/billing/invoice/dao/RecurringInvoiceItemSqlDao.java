@@ -80,8 +80,8 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("accountId", item.getAccountId().toString());
-                        q.bind("bundleId", item.getBundleId().toString());
-                        q.bind("subscriptionId", item.getSubscriptionId().toString());
+                        q.bind("bundleId", item.getBundleId() == null ? null : item.getBundleId().toString());
+                        q.bind("subscriptionId", item.getSubscriptionId() == null ? null : item.getSubscriptionId().toString());
                         q.bind("planName", item.getPlanName());
                         q.bind("phaseName", item.getPhaseName());
                         q.bind("startDate", item.getStartDate().toDate());
@@ -102,8 +102,8 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             UUID id = UUID.fromString(result.getString("id"));
             UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
             UUID accountId = UUID.fromString(result.getString("account_id"));
-            UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
-            UUID bundleId = UUID.fromString(result.getString("bundle_id"));
+            UUID subscriptionId = result.getString("subscription_id") == null ? null : UUID.fromString(result.getString("subscription_id"));
+            UUID bundleId = result.getString("bundle_id") == null ? null : UUID.fromString(result.getString("bundle_id"));
             String planName = result.getString("plan_name");
             String phaseName = result.getString("phase_name");
             DateTime startDate = new DateTime(result.getTimestamp("start_date"));

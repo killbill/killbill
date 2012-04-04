@@ -16,12 +16,13 @@
 
 package com.ning.billing.invoice.model;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceItem;
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
 import java.util.UUID;
+
+import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceItem;
 
 public class FixedPriceInvoiceItem extends InvoiceItemBase {
 
@@ -30,7 +31,7 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
         super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
     }
 
-    public FixedPriceInvoiceItem(UUID id, UUID invoiceId, UUID bundleId, UUID accountId, UUID subscriptionId, String planName, String phaseName,
+    public FixedPriceInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
                                  DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
                                  String createdBy, DateTime createdDate) {
         super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdBy, createdDate);
@@ -50,6 +51,7 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     public int hashCode() {
         int result = accountId.hashCode();
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (planName != null ? planName.hashCode() : 0);
         result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
@@ -67,12 +69,17 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
 
         FixedPriceInvoiceItem that = (FixedPriceInvoiceItem) item;
         int compareAccounts = getAccountId().compareTo(that.getAccountId());
-        if (compareAccounts == 0) {
-            int compareSubscriptions = getSubscriptionId().compareTo(that.getSubscriptionId());
-            if (compareSubscriptions == 0) {
-                return getStartDate().compareTo(that.getStartDate());
+        if (compareAccounts == 0 && bundleId != null) {
+            int compareBundles = getBundleId().compareTo(that.getBundleId());
+            if (compareBundles == 0 && subscriptionId != null) {
+                int compareSubscriptions = getSubscriptionId().compareTo(that.getSubscriptionId());
+                if (compareSubscriptions == 0) {
+                    return getStartDate().compareTo(that.getStartDate());
+                } else {
+                    return compareSubscriptions;
+                }
             } else {
-                return compareSubscriptions;
+                return compareBundles;
             }
         } else {
             return compareAccounts;
@@ -85,7 +92,8 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
         sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
         sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
         sb.append("accountId = ").append(accountId.toString()).append(", ");
-        sb.append("subscriptionId = ").append(subscriptionId.toString()).append(", ");
+        sb.append("subscriptionId = ").append(subscriptionId == null ? null : subscriptionId.toString()).append(", ");
+        sb.append("bundleId = ").append(bundleId == null ? null : bundleId.toString()).append(", ");
         sb.append("planName = ").append(planName).append(", ");
         sb.append("phaseName = ").append(phaseName).append(", ");
         sb.append("startDate = ").append(startDate.toString()).append(", ");
@@ -110,6 +118,8 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
         FixedPriceInvoiceItem that = (FixedPriceInvoiceItem) o;
         if (accountId.compareTo(that.accountId) != 0) return false;
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null)
+            return false;
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null)
             return false;
         if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) return false;
         if (currency != that.currency) return false;
