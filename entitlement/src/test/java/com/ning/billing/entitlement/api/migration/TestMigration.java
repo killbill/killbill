@@ -29,7 +29,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 
-import com.google.common.collect.Lists;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
@@ -292,7 +291,7 @@ public abstract class TestMigration extends TestApiBase {
                                 }
                                 @Override
                                 public ProductCategory getCategory() {
-                                    return curCases.get(0).getPlanPhaseSpecifer().getProductCategory();
+                                    return curCases.get(0).getPlanPhaseSpecifier().getProductCategory();
                                 }
                                 @Override
                                 public DateTime getChargedThroughDate() {
@@ -428,7 +427,7 @@ public abstract class TestMigration extends TestApiBase {
         }
 
         @Override
-        public PlanPhaseSpecifier getPlanPhaseSpecifer() {
+        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
             return pps;
         }
 

@@ -75,8 +75,6 @@ public interface EntitlementDao {
 
     public void migrate(UUID accountId, AccountMigrationData data);
 
-    public void undoMigration(UUID accountId);
-
     // Custom Fields
     public void saveCustomFields(SubscriptionData subscription, CallContext context);
 }

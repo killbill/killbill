@@ -18,7 +18,6 @@ package com.ning.billing.account.dao;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -373,22 +372,4 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                                     null, null, null, null);
         accountDao.update(updatedAccount, context);
     }
-
-    @Test
-    public void testDelete() throws AccountApiException, EntityPersistenceException {
-
-        Account a = createTestAccountBuilder().build();
-        accountDao.create(a, context);
-        String key = a.getExternalKey();
-
-        Account r = accountDao.getAccountByKey(key);
-        assertNotNull(r);
-        assertEquals(r.getExternalKey(), a.getExternalKey());
-        
-        accountDao.deleteByKey(key, context);
-        
-        Account s = accountDao.getAccountByKey(key);
-        assertNull(s);
-    }
-
 }

@@ -45,9 +45,6 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
     @SqlUpdate
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle);
 
-    @SqlUpdate
-    public void removeBundle(@Bind("id") String id);
-
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
     public SubscriptionBundle getBundleFromId(@Bind("id") String id);

@@ -385,8 +385,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     public void migrate(final UUID accountId, final AccountMigrationData accountData) {
         synchronized(events) {
 
-            undoMigration(accountId);
-
             for (final BundleMigrationData curBundle : accountData.getData()) {
                 SubscriptionBundleData bundleData = curBundle.getData();
                 for (final SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
@@ -406,26 +404,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
                 bundles.add(bundleData);
             }
         }
-    }
-
-    @Override
-    public void undoMigration(final UUID accountId) {
-        synchronized(events) {
-
-            List<SubscriptionBundle> allBundles = getSubscriptionBundleForAccount(accountId);
-            for (final SubscriptionBundle bundle : allBundles) {
-                List<Subscription> allSubscriptions = getSubscriptions(bundle.getId());
-                for (final Subscription subscription : allSubscriptions) {
-                    List<EntitlementEvent> allEvents = getEventsForSubscription(subscription.getId());
-                    for (final EntitlementEvent event : allEvents) {
-                        events.remove(event);
-                    }
-                    subscriptions.remove(subscription);
-                }
-                bundles.remove(bundle);
-            }
-        }
-
     }
 
     @Override

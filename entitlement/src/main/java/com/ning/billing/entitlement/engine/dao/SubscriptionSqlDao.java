@@ -47,13 +47,8 @@ import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, CloseMe, Transmogrifier {
-
-
 	@SqlUpdate
     public void insertSubscription(@Bind(binder = ISubscriptionDaoBinder.class) SubscriptionData sub);
-
-    @SqlUpdate
-    public void removeSubscription(@Bind("id") String id);
 
     @SqlQuery
     @Mapper(ISubscriptionDaoSqlMapper.class)

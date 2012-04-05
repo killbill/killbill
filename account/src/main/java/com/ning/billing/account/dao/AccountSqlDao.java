@@ -58,9 +58,6 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
     @SqlUpdate
     public void update(@AccountBinder Account account, @CallContextBinder final CallContext context);
 
-    @SqlUpdate
-    public void deleteByKey(@Bind("externalKey") final String key);
-
     public static class AccountMapper extends MapperBase implements ResultSetMapper<Account> {
         @Override
         public Account map(int index, ResultSet result, StatementContext context) throws SQLException {

@@ -51,6 +51,4 @@ public interface AccountUserApi {
     public List<Account> getAccounts();
 
     public UUID getIdFromKey(String externalKey) throws AccountApiException;
-
-	public void deleteAccountByKey(String externalKey, CallContext context) throws AccountApiException;
 }

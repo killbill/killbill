@@ -97,13 +97,4 @@ public class MockAccountDao implements AccountDao {
             }
         }
     }
-
-	@Override
-	public void deleteByKey(String externalKey, CallContext context) throws AccountApiException {
-		for (Account account : accounts.values()) {
-            if (externalKey.equals(account.getExternalKey())) {
-                accounts.remove(account.getId().toString());
-            }
-        }		
-	}
 }

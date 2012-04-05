@@ -56,9 +56,6 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
     public void insertEvent(@Bind(binder = EventSqlDaoBinder.class) EntitlementEvent evt);
 
     @SqlUpdate
-    public void removeEvents(@Bind("subscription_id") String subscriptionId);
-
-    @SqlUpdate
     public void unactiveEvent(@Bind("event_id")String eventId, @Bind("now") Date now);
 
     @SqlUpdate

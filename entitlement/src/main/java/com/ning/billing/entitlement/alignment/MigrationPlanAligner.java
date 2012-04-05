@@ -48,11 +48,11 @@ public class MigrationPlanAligner {
 
         try {
             TimedMigration [] events = null;
-            Plan plan0 = catalogService.getFullCatalog().findPlan(input[0].getPlanPhaseSpecifer().getProductName(),
-                    input[0].getPlanPhaseSpecifer().getBillingPeriod(), input[0].getPlanPhaseSpecifer().getPriceListName(), now);
+            Plan plan0 = catalogService.getFullCatalog().findPlan(input[0].getPlanPhaseSpecifier().getProductName(),
+                    input[0].getPlanPhaseSpecifier().getBillingPeriod(), input[0].getPlanPhaseSpecifier().getPriceListName(), now);
 
-            Plan plan1 = (input.length > 1) ? catalogService.getFullCatalog().findPlan(input[1].getPlanPhaseSpecifer().getProductName(),
-                    input[1].getPlanPhaseSpecifer().getBillingPeriod(), input[1].getPlanPhaseSpecifer().getPriceListName(), now) :
+            Plan plan1 = (input.length > 1) ? catalogService.getFullCatalog().findPlan(input[1].getPlanPhaseSpecifier().getProductName(),
+                    input[1].getPlanPhaseSpecifier().getBillingPeriod(), input[1].getPlanPhaseSpecifier().getPriceListName(), now) :
                         null;
 
             DateTime migrationStartDate = now;
@@ -60,21 +60,21 @@ public class MigrationPlanAligner {
             if (isRegularMigratedSubscription(input)) {
 
                 events = getEventsOnRegularMigration(plan0,
-                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifer().getPhaseType()),
-                        input[0].getPlanPhaseSpecifer().getPriceListName(),
+                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifier().getPhaseType()),
+                        input[0].getPlanPhaseSpecifier().getPriceListName(),
                         now);
 
             } else if (isRegularFutureCancelledMigratedSubscription(input)) {
 
                 events = getEventsOnFuturePlanCancelMigration(plan0,
-                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifer().getPhaseType()),
-                        input[0].getPlanPhaseSpecifer().getPriceListName(),
+                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifier().getPhaseType()),
+                        input[0].getPlanPhaseSpecifier().getPriceListName(),
                         now,
                         input[0].getCancelledDate());
 
             } else if (isPhaseChangeMigratedSubscription(input)) {
 
-                PhaseType curPhaseType = input[0].getPlanPhaseSpecifer().getPhaseType();
+                PhaseType curPhaseType = input[0].getPlanPhaseSpecifier().getPhaseType();
                 Duration curPhaseDuration = null;
                 for (PlanPhase cur : plan0.getAllPhases()) {
                     if (cur.getPhaseType() == curPhaseType) {
@@ -89,18 +89,18 @@ public class MigrationPlanAligner {
 
                 migrationStartDate = DefaultClock.removeDuration(input[1].getEffectiveDate(), curPhaseDuration);
                 events = getEventsOnFuturePhaseChangeMigration(plan0,
-                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifer().getPhaseType()),
-                        input[0].getPlanPhaseSpecifer().getPriceListName(),
+                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifier().getPhaseType()),
+                        input[0].getPlanPhaseSpecifier().getPriceListName(),
                         migrationStartDate,
                         input[1].getEffectiveDate());
 
             } else if (isPlanChangeMigratedSubscription(input)) {
 
                 events = getEventsOnFuturePlanChangeMigration(plan0,
-                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifer().getPhaseType()),
+                        getPlanPhase(plan0, input[0].getPlanPhaseSpecifier().getPhaseType()),
                         plan1,
-                        getPlanPhase(plan1, input[1].getPlanPhaseSpecifer().getPhaseType()),
-                        input[0].getPlanPhaseSpecifer().getPriceListName(),
+                        getPlanPhase(plan1, input[1].getPlanPhaseSpecifier().getPhaseType()),
+                        input[0].getPlanPhaseSpecifier().getPriceListName(),
                         now,
                         input[1].getEffectiveDate());
 
@@ -181,15 +181,15 @@ public class MigrationPlanAligner {
         if (input.length != 2) {
             return false;
         }
-        return (isSamePlan(input[0].getPlanPhaseSpecifer(), input[1].getPlanPhaseSpecifer()) &&
-                !isSamePhase(input[0].getPlanPhaseSpecifer(), input[1].getPlanPhaseSpecifer()));
+        return (isSamePlan(input[0].getPlanPhaseSpecifier(), input[1].getPlanPhaseSpecifier()) &&
+                !isSamePhase(input[0].getPlanPhaseSpecifier(), input[1].getPlanPhaseSpecifier()));
     }
 
     private boolean isPlanChangeMigratedSubscription(EntitlementSubscriptionMigrationCase [] input) {
         if (input.length != 2) {
             return false;
         }
-        return ! isSamePlan(input[0].getPlanPhaseSpecifer(), input[1].getPlanPhaseSpecifer());
+        return ! isSamePlan(input[0].getPlanPhaseSpecifier(), input[1].getPlanPhaseSpecifier());
     }
 
     private boolean isSamePlan(PlanPhaseSpecifier plan0, PlanPhaseSpecifier plan1) {

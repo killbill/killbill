@@ -77,11 +77,6 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
         dao.migrate(toBeMigrated.getAccountKey(), accountMigrationData);
     }
 
-    @Override
-    public void undoMigration(UUID accountId) {
-        dao.undoMigration(accountId);
-    }
-
     private AccountMigrationData createAccountMigrationData(EntitlementAccountMigration toBeMigrated)
     throws EntitlementMigrationApiException  {
 
