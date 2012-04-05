@@ -15,21 +15,27 @@
  */
 package com.ning.billing.server.listeners;
 
+import java.util.Set;
+
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.server.config.KillbillServerConfig;
 import com.ning.billing.server.healthchecks.KillbillHealthcheck;
 import com.ning.billing.server.modules.KillbillServerModule;
+import com.ning.billing.server.util.ServerUtil;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusService;
 import com.ning.jetty.base.modules.ServerModuleBuilder;
 import com.ning.jetty.core.listeners.SetupServer;
+import com.ning.jetty.jdbi.config.DaoConfig;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Injector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.RuntimeErrorException;
 import javax.servlet.ServletContextEvent;
 
 public class KillbillGuiceListener extends SetupServer
@@ -44,12 +50,27 @@ public class KillbillGuiceListener extends SetupServer
     @Override
     public void contextInitialized(ServletContextEvent event)
     {
+    	
+
         final ServerModuleBuilder builder = new ServerModuleBuilder()
                 .addConfig(KillbillServerConfig.class)
                 .addHealthCheck(KillbillHealthcheck.class)
                 .addJMXExport(KillbillHealthcheck.class)
                 .addModule(new KillbillServerModule())
                 .addJerseyResource("com.ning.billing.jaxrs.resources");
+/*
+        //
+        // Dynamically add all killbill configs
+        //
+        try {
+        	Set<Class<?>> configs = ServerUtil.getKillbillConfig("com.ning.billing.config", "killbill-api", "com.ning.billing.config.KillbillConfig"); 
+        	for (Class<?> cur : configs) {
+        		builder.addConfig(cur);
+        	}
+        } catch(ClassNotFoundException e) {
+        	throw new RuntimeException(e);
+        }
+        */
 
         guiceModule = builder.build();
 

@@ -63,7 +63,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         @Override
         public long getNotificationSleepTimeMs() {throw new UnsupportedOperationException();}
         @Override
-        public boolean isEventProcessingOff() {throw new UnsupportedOperationException();}
+        public boolean isNotificationProcessingOff() {throw new UnsupportedOperationException();}
         @Override
         public int getNumberOfMonthsInFuture() {return 36;}
     };

@@ -26,6 +26,7 @@ import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
@@ -33,7 +34,7 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.payment.setup.PaymentConfig;
+
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;

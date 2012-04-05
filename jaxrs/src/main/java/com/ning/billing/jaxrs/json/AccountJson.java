@@ -44,7 +44,7 @@ public class AccountJson {
     private final String country;
     private final String phone;
 
-
+/*
     public AccountJson(Account account) {
         this.acountId = account.getId().toString();
         this.name = account.getName();
@@ -63,6 +63,8 @@ public class AccountJson {
         this.phone = account.getPhone();
     }
 
+*/
+    
     public AccountData toAccountData() {
         return new AccountData() {
             @Override

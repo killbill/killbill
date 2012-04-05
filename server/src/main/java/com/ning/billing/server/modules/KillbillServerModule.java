@@ -32,6 +32,7 @@ import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.ClockModule;
+import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.jetty.jdbi.guice.providers.DBIProvider;
@@ -68,7 +69,10 @@ public class KillbillServerModule extends AbstractModule
 
     protected void installKillbillModules()
     {
-        install(new BusModule());
+        install(new FieldStoreModule());
+        install(new TagStoreModule());
+        install(new CatalogModule());
+    	install(new BusModule());
         install(new NotificationQueueModule());
         install(new CallContextModule());
         install(new AccountModule());
@@ -76,8 +80,6 @@ public class KillbillServerModule extends AbstractModule
         install(new EntitlementModule());
         install(new AnalyticsModule());
         install(new PaymentModule());
-        install(new TagStoreModule());
-        install(new CatalogModule());
         install(new BeatrixModule());
         install(new ClockModule());
     }

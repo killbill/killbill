@@ -79,14 +79,14 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         }
 
         @Override
-        public boolean isEventProcessingOff() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public int getNumberOfMonthsInFuture() {
             return 36;
         }
+
+		@Override
+		public boolean isNotificationProcessingOff() {
+            throw new UnsupportedOperationException();			
+		}
     };
 
     private final InvoiceGenerator generator;

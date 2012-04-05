@@ -70,7 +70,7 @@ public class AccountResource {
         if (account == null) {
             return Response.status(Status.NOT_FOUND).build();
         }
-        AccountJson json = new AccountJson(account);
+        AccountJson json = null; /* new AccountJson(account); */
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -84,7 +84,7 @@ public class AccountResource {
         if (account == null) {
             return Response.status(Status.NOT_FOUND).build();
         }
-        AccountJson json = new AccountJson(account);
+        AccountJson json = null; /*  new AccountJson(account); */
         return Response.status(Status.OK).entity(json).build();
     }
 

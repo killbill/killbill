@@ -25,6 +25,7 @@ import java.util.TreeSet;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationLifecycle.NotificationLifecycleState;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;

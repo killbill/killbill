@@ -14,8 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.account.glue;
+package com.ning.billing.config;
 
-public interface AccountConfig {
 
+public interface NotificationConfig {
+
+    public long getDaoClaimTimeMs();
+
+    public int getDaoMaxReadyEvents();
+
+    public long getNotificationSleepTimeMs();
+
+    public boolean isNotificationProcessingOff();
 }

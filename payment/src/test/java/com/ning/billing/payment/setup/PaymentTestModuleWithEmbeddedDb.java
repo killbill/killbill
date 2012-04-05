@@ -20,6 +20,7 @@ import org.apache.commons.collections.MapUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Provider;
+import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;

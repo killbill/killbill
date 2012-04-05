@@ -19,19 +19,17 @@ package com.ning.billing.invoice.notification;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.notificationq.NotificationConfig;
-import com.ning.billing.util.notificationq.NotificationKey;
+
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
@@ -85,7 +83,7 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
             new NotificationConfig() {
                 @Override
                 public boolean isNotificationProcessingOff() {
-                    return config.isEventProcessingOff();
+                    return config.isNotificationProcessingOff();
                 }
                 @Override
                 public long getNotificationSleepTimeMs() {
