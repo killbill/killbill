@@ -22,11 +22,17 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlID;
 
+import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationError;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultOverdueState<T extends Overdueable> implements OverdueState<T> {
+public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig<StandaloneCatalog>  implements OverdueState<T> {
+
+    private static final int MAX_NAME_LENGTH = 50;
 
     // TODO - need to implement Clear states
     
@@ -74,6 +80,8 @@ public class DefaultOverdueState<T extends Overdueable> implements OverdueState<
     public boolean applyCancel() {
 		return applyCancel;
 	}
+	
+	
 
 
     protected DefaultCondition<T> getCondition() {
@@ -103,6 +111,15 @@ public class DefaultOverdueState<T extends Overdueable> implements OverdueState<
     @Override
     public boolean isClearState() {
         return false;
+    }
+
+    @Override
+    public ValidationErrors validate(StandaloneCatalog root,
+            ValidationErrors errors) {
+        if(name.length() > MAX_NAME_LENGTH) {
+            errors.add(new ValidationError(String.format("Name of state '%s' exceeds the maximum length of %d",name,MAX_NAME_LENGTH),root.getCatalogURI(), DefaultOverdueState.class, name));
+        }
+        return errors;
     }
 
 }

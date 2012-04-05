@@ -19,11 +19,13 @@ package com.ning.billing.catalog.overdue;
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.util.config.ValidatingConfig;
 
-public abstract class DefaultOverdueStateSet<T extends Overdueable> implements OverdueStateSet<T> {
+public abstract class DefaultOverdueStateSet<T extends Overdueable> extends ValidatingConfig<StandaloneCatalog> implements OverdueStateSet<T> {
     private DefaultOverdueState<T> clearState;
     
     protected abstract DefaultOverdueState<T>[] getStates();

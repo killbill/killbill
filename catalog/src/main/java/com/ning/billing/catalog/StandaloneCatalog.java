@@ -247,6 +247,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		validate(catalog,errors, plans);
 		priceLists.validate(catalog,errors);
 		planRules.validate(catalog, errors);
+		overdueRules.validate(catalog,errors);
 		return errors;
 	}
 
