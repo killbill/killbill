@@ -18,8 +18,10 @@ package com.ning.billing.util.tag.dao;
 
 import java.util.List;
 
+import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.ChangeTypeBinder;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -47,6 +49,14 @@ public interface TagSqlDao extends EntityCollectionDao<Tag>, Transactional<TagSq
                                            @Bind("objectType") final String objectType,
                                            @TagBinder final List<Tag> entities,
                                            @CallContextBinder final CallContext context);
+
+    @SqlBatch(transactional = false)
+    public void batchInsertHistoryFromTransaction(@Bind("objectId") final String objectId,
+                                                  @Bind("objectType") final String objectType,
+                                                  @Bind("historyRecordId") final List<String> historyRecordIdList,
+                                                  @TagBinder final List<Tag> tags,
+                                                  @ChangeTypeBinder final ChangeType changeType,
+                                                  @CallContextBinder final CallContext context);
 
     @SqlUpdate
     public void addTagFromTransaction(@Bind("id") final String tagId,

@@ -30,7 +30,7 @@ import java.util.UUID;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;

@@ -14,6 +14,11 @@ batchInsertFromTransaction() ::= <<
   VALUES (:id, :tagDefinitionName, :objectId, :objectType, :userName, :createdDate);
 >>
 
+batchInsertHistoryFromTransaction() ::= <<
+    INSERT INTO tag_history (history_record_id, id, tag_definition_name, object_id, object_type, change_type, updated_by, date)
+    VALUES (:historyRecordId, :id, :tagDefinitionName, :objectId, :objectType, :changeType, :userName, :updatedDate);
+>>
+
 batchDeleteFromTransaction() ::= <<
     DELETE FROM tags
     WHERE tag_definition_name = :tagDefinitionName

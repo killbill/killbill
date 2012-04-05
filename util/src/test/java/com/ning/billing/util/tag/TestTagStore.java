@@ -388,7 +388,7 @@ public class TestTagStore {
         assertEquals(savedTag.getId(), tag.getId());
 
         Handle handle = dbi.open();
-        String query = String.format("select * from audit_log where table_name = 'Tag' and record_id='%s'",
+        String query = String.format("select * from audit_log a inner join tag_history th on a.record_id = th.history_record_id where a.table_name = 'tag_history' and th.id='%s' and a.change_type='INSERT'",
                                      tag.getId().toString());
         List<Map<String, Object>> result = handle.select(query);
         assertNotNull(result);
@@ -417,7 +417,7 @@ public class TestTagStore {
         assertEquals(savedTags.size(), 0);
 
         Handle handle = dbi.open();
-        String query = String.format("select * from audit_log where table_name = 'tag' and record_id='%s' and change_type='DELETE'",
+        String query = String.format("select * from audit_log a inner join tag_history th on a.record_id = th.history_record_id where a.table_name = 'tag_history' and th.id='%s' and a.change_type='DELETE'",
                                      tag.getId().toString());
         List<Map<String, Object>> result = handle.select(query);
         assertNotNull(result);

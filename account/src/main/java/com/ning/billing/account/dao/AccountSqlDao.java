@@ -22,7 +22,7 @@ import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.UpdatableEntityDao;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

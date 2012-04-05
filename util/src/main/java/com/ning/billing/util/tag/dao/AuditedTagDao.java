@@ -19,6 +19,8 @@ package com.ning.billing.util.tag.dao;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.tag.Tag;
 import org.skife.jdbi.v2.IDBI;
@@ -26,48 +28,23 @@ import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 public class AuditedTagDao implements TagDao {
     private final TagSqlDao tagSqlDao;
-    private final TagAuditSqlDao tagAuditSqlDao;
 
     @Inject
     public AuditedTagDao(final IDBI dbi) {
         this.tagSqlDao = dbi.onDemand(TagSqlDao.class);
-        this.tagAuditSqlDao = dbi.onDemand(TagAuditSqlDao.class);
     }
 
     @Override
     public void saveTags(final UUID objectId, final String objectType,
                          final List<Tag> tags, final CallContext context) {
-        // get list of existing tags
-        List<Tag> existingTags = tagSqlDao.load(objectId.toString(), objectType);
-
-        // sort into tags to update (tagsToUpdate), tags to add (tags), and tags to delete (existingTags)
-        Iterator<Tag> tagIterator = tags.iterator();
-        while (tagIterator.hasNext()) {
-            Tag tag = tagIterator.next();
-
-            Iterator<Tag> existingTagIterator = existingTags.iterator();
-            while (existingTagIterator.hasNext()) {
-                Tag existingTag = existingTagIterator.next();
-                if (tag.getTagDefinitionName().equals(existingTag.getTagDefinitionName())) {
-                    // if the tags match, remove from both lists
-                    // in the case of tag, this just means the tag remains associated
-                    tagIterator.remove();
-                    existingTagIterator.remove();
-                }
-            }
-        }
-
-        tagSqlDao.batchInsertFromTransaction(objectId.toString(), objectType, tags, context);
-        tagSqlDao.batchDeleteFromTransaction(objectId.toString(), objectType, existingTags, context);
-
-        tagAuditSqlDao.batchInsertFromTransaction(tags, context);
-        tagAuditSqlDao.batchDeleteFromTransaction(existingTags, context);
+        saveTagsFromTransaction(tagSqlDao, objectId, objectType, tags, context);
     }
 
     @Override
@@ -98,9 +75,22 @@ public class AuditedTagDao implements TagDao {
         tagSqlDao.batchInsertFromTransaction(objectId.toString(), objectType, tags, context);
         tagSqlDao.batchDeleteFromTransaction(objectId.toString(), objectType, existingTags, context);
 
-        TagAuditSqlDao auditDao = dao.become(TagAuditSqlDao.class);
-        auditDao.batchInsertFromTransaction(tags, context);
-        auditDao.batchDeleteFromTransaction(existingTags, context);
+        List<String> historyIdsForInsert = getIdList(tags.size());
+        tagSqlDao.batchInsertHistoryFromTransaction(objectId.toString(), objectType, historyIdsForInsert, tags, ChangeType.INSERT, context);
+        List<String> historyIdsForDelete = getIdList(existingTags.size());
+        tagSqlDao.batchInsertHistoryFromTransaction(objectId.toString(), objectType, historyIdsForDelete, existingTags, ChangeType.DELETE, context);
+
+        AuditSqlDao auditSqlDao = tagSqlDao.become(AuditSqlDao.class);
+        auditSqlDao.insertAuditFromTransaction("tag_history", historyIdsForInsert, ChangeType.INSERT, context);
+        auditSqlDao.insertAuditFromTransaction("tag_history", historyIdsForDelete, ChangeType.DELETE, context);
+    }
+
+    private List<String> getIdList(int size) {
+        List<String> results = new ArrayList<String>();
+        for (int i = 0; i < size; i++) {
+            results.add(UUID.randomUUID().toString());
+        }
+        return results;
     }
 
     @Override

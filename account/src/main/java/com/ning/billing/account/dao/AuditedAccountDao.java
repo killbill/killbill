@@ -130,7 +130,7 @@ public class AuditedAccountDao implements AccountDao {
 
                     AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
                     auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
-                                                         ChangeType.INSERT.toString(), context);
+                                                         ChangeType.INSERT, context);
 
                     saveTagsFromWithinTransaction(account, transactionalDao, context);
                     saveCustomFieldsFromWithinTransaction(account, transactionalDao, context);
@@ -175,7 +175,7 @@ public class AuditedAccountDao implements AccountDao {
 
                     AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
                     auditDao.insertAuditFromTransaction("account_history" ,historyId.toString(),
-                                                        ChangeType.INSERT.toString(), context);
+                                                        ChangeType.INSERT, context);
 
                     saveTagsFromWithinTransaction(account, accountSqlDao, context);
                     saveCustomFieldsFromWithinTransaction(account, accountSqlDao, context);
