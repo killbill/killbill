@@ -110,7 +110,7 @@ public class TestDefaultInvoiceMigrationApi {
 
     private final Clock clock = new ClockMock();
 
-	@BeforeClass(alwaysRun = true)
+	@BeforeClass(groups={"slow"})
 	public void setup() throws Exception
 	{
 		log.info("Starting set up");
@@ -133,7 +133,7 @@ public class TestDefaultInvoiceMigrationApi {
 		regularInvoiceId = generateRegularInvoice();
 	}
 
-	@AfterClass(alwaysRun = true)
+	@AfterClass(groups={"slow"})
 	public void tearDown() {
 		try {
 			((DefaultBusService) busService).stopBus();

@@ -18,9 +18,13 @@ package com.ning.billing.catalog.api.overdue;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.CatalogApiException;
+
 public interface OverdueStateSet<T extends Overdueable> {
 
     public abstract OverdueState<T> findClearState();
+
+    public abstract OverdueState<T> findState(String stateName) throws CatalogApiException;
 
     public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now);
 

@@ -18,7 +18,10 @@ package com.ning.billing.catalog.overdue;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.config.ValidationErrors;
 
@@ -43,6 +46,14 @@ public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBund
             state.validate(root, errors);
         }
         return errors;
+    }
+
+    @Override
+    public OverdueState<SubscriptionBundle> findState(String stateName) throws CatalogApiException {
+        for(DefaultOverdueState<SubscriptionBundle> state: bundleOverdueStates) {
+            if(state.getName().equals(stateName) ) { return state; }
+        }
+        throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_OVEDUE_STATE, stateName);
     }
     
 

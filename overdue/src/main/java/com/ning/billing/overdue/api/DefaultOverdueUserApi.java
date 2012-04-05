@@ -19,28 +19,44 @@ package com.ning.billing.overdue.api;
 import org.apache.commons.lang.NotImplementedException;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.OverdueError;
 import com.ning.billing.catalog.api.overdue.OverdueState;
+import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;
-import com.ning.billing.overdue.dao.OverdueDao;
+import com.ning.billing.util.overdue.dao.OverdueAccessDao;
 
 public class DefaultOverdueUserApi implements OverdueUserApi{
 
-    private OverdueDao dao;
     private OverdueService service;
+    private CatalogService catalogService;
+    private OverdueAccessDao accessDao;
 
     @Inject
-    public DefaultOverdueUserApi(OverdueDao dao, OverdueService service) {
-        this.dao = dao;
+    public DefaultOverdueUserApi(OverdueService service, CatalogService catalogService, OverdueAccessDao accessDao) {
         this.service = service;
+        this.catalogService = catalogService;
+        this.accessDao = accessDao;
     }
     
+    @SuppressWarnings("unchecked")
     @Override
-    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable) {
-        return dao.getOverdueStateFor(overdueable);
+    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueError {
+        try {
+            String stateName = accessDao.getOverdueStateNameFor(overdueable);
+            StaticCatalog catalog = catalogService.getCurrentCatalog();
+            OverdueStateSet<SubscriptionBundle> states = catalog.currentBundleOverdueStateSet();
+            return (OverdueState<T>) states.findState(stateName);
+        } catch (CatalogApiException e) {
+            throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED,overdueable.getId(), overdueable.getClass().getSimpleName());
+        }
     }
 
     @Override

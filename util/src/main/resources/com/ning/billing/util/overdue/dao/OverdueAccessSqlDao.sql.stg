@@ -1,0 +1,13 @@
+group OverdueAccessSqlDao;
+
+getOverdueStateNameFor() ::= <<
+    select
+        id
+      , state
+      , created_date   
+    from overdue_states
+    where id = :id
+    order by created_date desc
+    limit 1
+    ;
+>>

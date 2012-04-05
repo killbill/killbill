@@ -14,14 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.dao;
+package com.ning.billing.util.overdue.dao;
 
-import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
-import com.ning.billing.util.clock.Clock;
 
-public interface OverdueDao {
 
-    <T extends Overdueable> void  setOverdueStateForBundle(T overdueable, OverdueState<T> newOverdueState, Clock clock);
+public interface OverdueAccessDao {
 
+    public String getOverdueStateNameFor(Overdueable overdueable);
 }

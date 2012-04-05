@@ -107,6 +107,10 @@ public enum ErrorCode {
      * Billing Alignment
      */
     CAT_INVALID_BILLING_ALIGNMENT(2060, "Invalid billing alignment '%s'"),
+    /*
+     * Overdue
+     */
+    CAT_NO_SUCH_OVEDUE_STATE(2070, "No such overdue state '%s'"),
 
    /*
     *

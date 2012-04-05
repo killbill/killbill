@@ -14,14 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.dao;
+package com.ning.billing.util.overdue;
 
-import com.ning.billing.catalog.api.overdue.OverdueState;
+import com.google.inject.Inject;
 import com.ning.billing.catalog.api.overdue.Overdueable;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.overdue.dao.OverdueAccessDao;
 
-public interface OverdueDao {
+public class DefaultOverdueAcessApi implements OverdueAccessApi {
+    private OverdueAccessDao dao;
 
-    <T extends Overdueable> void  setOverdueStateForBundle(T overdueable, OverdueState<T> newOverdueState, Clock clock);
+    @Inject
+    public DefaultOverdueAcessApi(OverdueAccessDao dao) {
+        this.dao = dao;
+    }
+    
+    @Override
+    public String getOverdueStateNameFor(Overdueable overdueable) {
+        return dao.getOverdueStateNameFor(overdueable);
+    }
 
 }

@@ -14,25 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.dao;
+package com.ning.billing.util.overdue;
 
-import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
 
-public class DefaultOverdueDao implements OverdueDao {
+public interface OverdueAccessApi {
+    public static final String CLEAR_STATE_NAME = "__KILLBILL__CLEAR__OVERDUE_STATE__";
 
-    @Override
-    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(
-            T overdueable) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    public String getOverdueStateNameFor(Overdueable overdueable);
 
-    @Override
-    public <T extends Overdueable> void setOverdueStateForBundle(T overdueable,
-            OverdueState<T> newOverdueState) {
-        // TODO Auto-generated method stub
-        
-    }
 
 }

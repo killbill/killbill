@@ -18,10 +18,6 @@ package com.ning.billing.catalog.api;
 
 import java.util.Date;
 
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.overdue.BillingStateBundle;
-import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
