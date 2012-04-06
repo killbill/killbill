@@ -242,8 +242,19 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
-        invoicePaymentSqlDao.notifyOfPaymentAttempt(invoicePayment, context);
+    public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
+        invoicePaymentSqlDao.inTransaction(new Transaction<Void, InvoicePaymentSqlDao>() {
+            @Override
+            public Void inTransaction(InvoicePaymentSqlDao transactional, TransactionStatus status) throws Exception {
+                transactional.notifyOfPaymentAttempt(invoicePayment, context);
+
+                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
+                String invoicePaymentId = invoicePayment.getId().toString();
+                auditSqlDao.insertAuditFromTransaction("invoice_payments", invoicePaymentId, ChangeType.INSERT, context);
+
+                return null;
+            }
+        });
     }
 
     @Override
