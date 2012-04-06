@@ -196,7 +196,7 @@ public class TestAnalyticsService {
     }
 
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {
-        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), KEY);
+        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), KEY, context);
 
         // Verify we correctly initialized the account subsystem
         Assert.assertNotNull(bundle);

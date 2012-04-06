@@ -36,7 +36,7 @@ public interface EntitlementDao {
 
     public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId);
 
-    public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle);
+    public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle, CallContext context);
 
     public Subscription getSubscriptionFromId(UUID subscriptionId);
 
@@ -51,10 +51,10 @@ public interface EntitlementDao {
     public List<Subscription> getSubscriptionsForKey(String bundleKey);
 
     // Update
-    public void updateSubscription(SubscriptionData subscription);
+    public void updateSubscription(SubscriptionData subscription, CallContext context);
 
     // Event apis
-    public void createNextPhaseEvent(UUID subscriptionId, EntitlementEvent nextPhase);
+    public void createNextPhaseEvent(UUID subscriptionId, EntitlementEvent nextPhase, CallContext context);
 
     public EntitlementEvent getEventById(UUID eventId);
 
@@ -63,17 +63,17 @@ public interface EntitlementDao {
     public List<EntitlementEvent> getPendingEventsForSubscription(UUID subscriptionId);
 
     // Subscription creation, cancellation, changePlan apis
-    public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents);
+    public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents, CallContext context);
 
-    public void recreateSubscription(UUID subscriptionId, List<EntitlementEvent> recreateEvents);
+    public void recreateSubscription(UUID subscriptionId, List<EntitlementEvent> recreateEvents , CallContext context);
 
-    public void cancelSubscription(UUID subscriptionId, EntitlementEvent cancelEvent);
+    public void cancelSubscription(UUID subscriptionId, EntitlementEvent cancelEvent, CallContext context);
 
-    public void uncancelSubscription(UUID subscriptionId, List<EntitlementEvent> uncancelEvents);
+    public void uncancelSubscription(UUID subscriptionId, List<EntitlementEvent> uncancelEvents, CallContext context);
 
-    public void changePlan(UUID subscriptionId, List<EntitlementEvent> changeEvents);
+    public void changePlan(UUID subscriptionId, List<EntitlementEvent> changeEvents, CallContext context);
 
-    public void migrate(UUID accountId, AccountMigrationData data);
+    public void migrate(UUID accountId, AccountMigrationData data, CallContext context);
 
     // Custom Fields
     public void saveCustomFields(SubscriptionData subscription, CallContext context);

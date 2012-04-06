@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.api.migration;
 
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -61,6 +62,6 @@ public interface EntitlementMigrationApi {
      * @throws EntitlementMigrationApiException an entitlement api exception
      *
      */
-    public void migrate(EntitlementAccountMigration toBeMigrated)
+    public void migrate(EntitlementAccountMigration toBeMigrated, CallContext context)
         throws EntitlementMigrationApiException;
 }

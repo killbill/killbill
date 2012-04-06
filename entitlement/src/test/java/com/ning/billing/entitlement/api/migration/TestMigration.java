@@ -44,10 +44,10 @@ import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.Entitl
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import org.testng.annotations.Test;
 
+@Test(groups = {"slow"})
 public abstract class TestMigration extends TestApiBase {
-
-
     public void testSingleBasePlan() {
 
         try {
@@ -57,7 +57,7 @@ public abstract class TestMigration extends TestApiBase {
             DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated);
+            migrationApi.migrate(toBeMigrated, context);
             assertTrue(testListener.isCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
@@ -79,7 +79,6 @@ public abstract class TestMigration extends TestApiBase {
         }
     }
 
-
     public void testPlanWithAddOn() {
         try {
             DateTime beforeMigration = clock.getUTCNow();
@@ -90,7 +89,7 @@ public abstract class TestMigration extends TestApiBase {
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated);
+            migrationApi.migrate(toBeMigrated, context);
             assertTrue(testListener.isCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
@@ -125,7 +124,6 @@ public abstract class TestMigration extends TestApiBase {
         }
     }
 
-
     public void testSingleBasePlanFutureCancelled() {
 
         try {
@@ -136,7 +134,7 @@ public abstract class TestMigration extends TestApiBase {
             DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated);
+            migrationApi.migrate(toBeMigrated, context);
             assertTrue(testListener.isCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
@@ -176,13 +174,11 @@ public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlanWithPendingPhase() {
 
         try {
-            DateTime beforeMigration = clock.getUTCNow();
             final DateTime trialDate = clock.getUTCNow().minusDays(10);
             EntitlementAccountMigration toBeMigrated = createAccountFuturePendingPhase(trialDate);
-            DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated);
+            migrationApi.migrate(toBeMigrated, context);
             assertTrue(testListener.isCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
@@ -220,7 +216,6 @@ public abstract class TestMigration extends TestApiBase {
         }
     }
 
-
     public void testSingleBasePlanWithPendingChange() {
 
         try {
@@ -229,7 +224,7 @@ public abstract class TestMigration extends TestApiBase {
             DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated);
+            migrationApi.migrate(toBeMigrated, context);
             assertTrue(testListener.isCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());

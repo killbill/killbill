@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
 import com.google.common.collect.Lists;
@@ -52,8 +53,6 @@ import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
-
-
     private final EntitlementDao dao;
     private final MigrationPlanAligner migrationAligner;
     private final SubscriptionFactory factory;
@@ -71,10 +70,10 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
     }
 
     @Override
-    public void migrate(EntitlementAccountMigration toBeMigrated)
+    public void migrate(EntitlementAccountMigration toBeMigrated, CallContext context)
     throws EntitlementMigrationApiException {
         AccountMigrationData accountMigrationData = createAccountMigrationData(toBeMigrated);
-        dao.migrate(toBeMigrated.getAccountKey(), accountMigrationData);
+        dao.migrate(toBeMigrated.getAccountKey(), accountMigrationData, context);
     }
 
     private AccountMigrationData createAccountMigrationData(EntitlementAccountMigration toBeMigrated)

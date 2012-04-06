@@ -23,6 +23,8 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
@@ -65,6 +67,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     private final EntitlementDao entitlementDao;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
+    private static final String SUBSCRIPTION_TABLE_NAME = "subscriptions";
 
     @Inject
     public DefaultEntitlementBillingApi(final CallContextFactory factory, final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
@@ -181,18 +184,19 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
 
     @Override
-    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
+    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd, CallContext context) {
         SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionId);
 
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
             .setChargedThroughDate(ctd)
             .setPaidThroughDate(subscription.getPaidThroughDate());
 
-        entitlementDao.updateSubscription(new SubscriptionData(builder));
+        entitlementDao.updateSubscription(new SubscriptionData(builder), context);
     }
 
     @Override
-    public void setChargedThroughDateFromTransaction(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime ctd) {
+    public void setChargedThroughDateFromTransaction(final Transmogrifier transactionalDao, final UUID subscriptionId,
+                                                     final DateTime ctd, final CallContext context) {
         SubscriptionSqlDao subscriptionSqlDao = transactionalDao.become(SubscriptionSqlDao.class);
         SubscriptionData subscription = (SubscriptionData) subscriptionSqlDao.getSubscriptionFromId(subscriptionId.toString());
 
@@ -204,7 +208,9 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             DateTime chargedThroughDate = subscription.getChargedThroughDate();
             if (chargedThroughDate == null || chargedThroughDate.isBefore(ctd)) {
                 subscriptionSqlDao.updateSubscription(subscriptionId.toString(), subscription.getActiveVersion(),
-                                                      ctd.toDate(), paidThroughDate);
+                                                      ctd.toDate(), paidThroughDate, context);
+                AuditSqlDao auditSqlDao = transactionalDao.become(AuditSqlDao.class);
+                auditSqlDao.insertAuditFromTransaction(SUBSCRIPTION_TABLE_NAME, subscriptionId.toString(), ChangeType.UPDATE, context);
             }
         }
     }

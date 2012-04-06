@@ -60,7 +60,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
 
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), requestedDate);
+                    getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -91,7 +91,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow());
+                    getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), context);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -130,7 +130,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                     getProductSpecifier(productName, planSetName, term, null),
-                    clock.getUTCNow());
+                    clock.getUTCNow(), context);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -179,8 +179,6 @@ public abstract class TestUserApiCreate extends TestApiBase {
         log.info("Starting testSimpleSubscriptionThroughPhases");
         try {
 
-            DateTime curTime = clock.getUTCNow();
-
             String productName = "Pistol";
             BillingPeriod term = BillingPeriod.ANNUAL;
             String planSetName = "gunclubDiscount";
@@ -189,7 +187,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
             // CREATE SUBSCRIPTION
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow());
+                    getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
             assertNotNull(subscription);
 
             PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -197,12 +195,9 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
             assertTrue(testListener.isCompleted(5000));
 
-
-
             // MOVE TO DISCOUNT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
-            curTime = clock.getUTCNow();
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
@@ -214,7 +209,6 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertTrue(testListener.isCompleted(2000));
 
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
-            curTime = clock.getUTCNow();
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -237,7 +231,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow());
+                    getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
             assertNotNull(subscription);
 
         } catch (EntitlementUserApiException e) {

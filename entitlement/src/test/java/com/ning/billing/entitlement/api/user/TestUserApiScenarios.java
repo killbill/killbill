@@ -53,7 +53,7 @@ public class TestUserApiScenarios extends TestApiBase {
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
+            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
             testListener.isCompleted(3000);
 
             // MOVE TO NEXT PHASE
@@ -65,21 +65,21 @@ public class TestUserApiScenarios extends TestApiBase {
             Duration ctd = getDurationMonth(1);
             DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CANCEL EOT
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), false);
+            subscription.cancel(clock.getUTCNow(), false, context);
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
             // UNCANCEL
-            subscription.uncancel();
+            subscription.uncancel(context);
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow());
+            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(2000));
 
             clock.addDeltaFromReality(ctd);
@@ -90,10 +90,4 @@ public class TestUserApiScenarios extends TestApiBase {
             Assert.fail(e.getMessage());
         }
     }
-
-    @Test(enabled=false)
-    private void testChangeEOTCancelUncancelChangeIMM() {
-
-    }
-
 }
