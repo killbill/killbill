@@ -76,17 +76,21 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final SubscriptionSqlDao subscriptionsDao;
     private final BundleSqlDao bundlesDao;
     private final EventSqlDao eventsDao;
-    private final SubscriptionFactory factory;
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
     private final CustomFieldDao customFieldDao;
-
+    
+    //
+    // We are not injecting SubscriptionFactory since that creates circular dependencies--
+    // Guice would still work, but this is playing with fire.
+    //
+    // Instead that factory passed through API top to bottom for the call where is it needed-- where we returned fully rehydrated Subscriptions
+    //
     @Inject
-    public EntitlementSqlDao(final IDBI dbi, final Clock clock, final SubscriptionFactory factory,
+    public EntitlementSqlDao(final IDBI dbi, final Clock clock,
                              final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
                              final CustomFieldDao customFieldDao) {
         this.clock = clock;
-        this.factory = factory;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
         this.eventsDao = dbi.onDemand(EventSqlDao.class);
         this.bundlesDao = dbi.onDemand(BundleSqlDao.class);
@@ -146,27 +150,27 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public Subscription getBaseSubscription(final UUID bundleId) {
-        return getBaseSubscription(bundleId, true);
+    public Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId) {
+        return getBaseSubscription(factory, bundleId, true);
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final UUID subscriptionId) {
-        return buildSubscription(subscriptionsDao.getSubscriptionFromId(subscriptionId.toString()));
+    public Subscription getSubscriptionFromId(final SubscriptionFactory factory, final UUID subscriptionId) {
+        return buildSubscription(factory, subscriptionsDao.getSubscriptionFromId(subscriptionId.toString()));
     }
 
     @Override
-    public List<Subscription> getSubscriptions(UUID bundleId) {
-        return buildBundleSubscriptions(subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString()));
+    public List<Subscription> getSubscriptions(final SubscriptionFactory factory, final UUID bundleId) {
+        return buildBundleSubscriptions(factory, subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString()));
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(String bundleKey) {
+    public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey) {
         SubscriptionBundle bundle =  bundlesDao.getBundleFromKey(bundleKey);
         if (bundle == null) {
             return Collections.emptyList();
         }
-        return getSubscriptions(bundle.getId());
+        return getSubscriptions(factory, bundle.getId());
     }
 
     @Override
@@ -414,20 +418,20 @@ public class EntitlementSqlDao implements EntitlementDao {
         customFieldDao.saveFields(transactionalDao, subscription.getId(), subscription.getObjectName(), subscription.getFieldList(), context);
     }
 
-    private Subscription buildSubscription(Subscription input) {
+    private Subscription buildSubscription(final SubscriptionFactory factory, final Subscription input) {
         if (input == null) {
             return null;
         }
         List<Subscription> bundleInput = new ArrayList<Subscription>();
         Subscription baseSubscription = null;
         if (input.getCategory() == ProductCategory.ADD_ON) {
-            baseSubscription = getBaseSubscription(input.getBundleId(), false);
+            baseSubscription = getBaseSubscription(factory, input.getBundleId(), false);
             bundleInput.add(baseSubscription);
             bundleInput.add(input);
         } else {
             bundleInput.add(input);
         }
-        List<Subscription> reloadedSubscriptions = buildBundleSubscriptions(bundleInput);
+        List<Subscription> reloadedSubscriptions = buildBundleSubscriptions(factory, bundleInput);
         for (Subscription cur : reloadedSubscriptions) {
             if (cur.getId().equals(input.getId())) {
                 return cur;
@@ -436,7 +440,7 @@ public class EntitlementSqlDao implements EntitlementDao {
          throw new EntitlementError(String.format("Unexpected code path in buildSubscription"));
     }
 
-    private List<Subscription> buildBundleSubscriptions(List<Subscription> input) {
+    private List<Subscription> buildBundleSubscriptions(final SubscriptionFactory factory, final List<Subscription> input) {
         // Make sure BasePlan -- if exists-- is first
         Collections.sort(input, new Comparator<Subscription>() {
             @Override
@@ -546,11 +550,11 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
 
-    public Subscription getBaseSubscription(final UUID bundleId, boolean rebuildSubscription) {
+    private Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId, boolean rebuildSubscription) {
         List<Subscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
         for (Subscription cur : subscriptions) {
             if (((SubscriptionData)cur).getCategory() == ProductCategory.BASE) {
-                return  rebuildSubscription ? buildSubscription(cur) : cur;
+                return  rebuildSubscription ? buildSubscription(factory, cur) : cur;
             }
         }
         return null;

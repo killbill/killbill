@@ -127,7 +127,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final UUID subscriptionId) {
+    public Subscription getSubscriptionFromId(final SubscriptionFactory factory, final UUID subscriptionId) {
         for (final Subscription cur : subscriptions) {
             if (cur.getId().equals(subscriptionId)) {
                 return buildSubscription((SubscriptionData) cur);
@@ -142,11 +142,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(final String bundleKey) {
+    public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey) {
 
         for (final SubscriptionBundle cur : bundles) {
             if (cur.getKey().equals(bundleKey)) {
-                return getSubscriptions(cur.getId());
+                return getSubscriptions(factory, cur.getId());
             }
         }
         return Collections.emptyList();
@@ -189,7 +189,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public List<Subscription> getSubscriptions(final UUID bundleId) {
+    public List<Subscription> getSubscriptions(final SubscriptionFactory factory, final UUID bundleId) {
 
         List<Subscription> results = new ArrayList<Subscription>();
         for (final Subscription cur : subscriptions) {
@@ -230,7 +230,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
 
     @Override
-    public Subscription getBaseSubscription(final UUID bundleId) {
+    public Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId) {
         for (final Subscription cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId) &&
                     cur.getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) {
@@ -309,7 +309,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
     private void cancelNextPhaseEvent(final UUID subscriptionId) {
 
-        Subscription curSubscription = getSubscriptionFromId(subscriptionId);
+        Subscription curSubscription = getSubscriptionFromId(null, subscriptionId);
         if (curSubscription.getCurrentPhase() == null ||
                 curSubscription.getCurrentPhase().getDuration().getUnit() == TimeUnit.UNLIMITED) {
             return;
@@ -414,7 +414,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
             List<SubscriptionBundle> allBundles = getSubscriptionBundleForAccount(accountId);
             for (final SubscriptionBundle bundle : allBundles) {
-                List<Subscription> allSubscriptions = getSubscriptions(bundle.getId());
+                List<Subscription> allSubscriptions = getSubscriptions(null, bundle.getId());
                 for (final Subscription subscription : allSubscriptions) {
                     List<EntitlementEvent> allEvents = getEventsForSubscription(subscription.getId());
                     for (final EntitlementEvent event : allEvents) {
