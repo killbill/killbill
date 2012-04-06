@@ -26,58 +26,59 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 
 public interface EntitlementDao {
     // Bundle apis
-    public List<SubscriptionBundle> getSubscriptionBundleForAccount(UUID accountId);
+    public List<SubscriptionBundle> getSubscriptionBundleForAccount(final UUID accountId);
 
-    public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey);
+    public SubscriptionBundle getSubscriptionBundleFromKey(final String bundleKey);
 
-    public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId);
+    public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId);
 
-    public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle);
+    public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle);
 
-    public Subscription getSubscriptionFromId(UUID subscriptionId);
+    public Subscription getSubscriptionFromId(final SubscriptionFactory factory, final UUID subscriptionId);
 
     // Account retrieval
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId);
 
     // Subscription retrieval
-    public Subscription getBaseSubscription(UUID bundleId);
+    public Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId);
 
-    public List<Subscription> getSubscriptions(UUID bundleId);
+    public List<Subscription> getSubscriptions(final SubscriptionFactory factory, final UUID bundleId);
 
-    public List<Subscription> getSubscriptionsForKey(String bundleKey);
+    public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey);
 
     // Update
-    public void updateSubscription(SubscriptionData subscription);
+    public void updateSubscription(final SubscriptionData subscription);
 
     // Event apis
-    public void createNextPhaseEvent(UUID subscriptionId, EntitlementEvent nextPhase);
+    public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase);
 
-    public EntitlementEvent getEventById(UUID eventId);
+    public EntitlementEvent getEventById(final UUID eventId);
 
-    public List<EntitlementEvent> getEventsForSubscription(UUID subscriptionId);
+    public List<EntitlementEvent> getEventsForSubscription(final UUID subscriptionId);
 
-    public List<EntitlementEvent> getPendingEventsForSubscription(UUID subscriptionId);
+    public List<EntitlementEvent> getPendingEventsForSubscription(final UUID subscriptionId);
 
     // Subscription creation, cancellation, changePlan apis
-    public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents);
+    public void createSubscription(final SubscriptionData subscription, final List<EntitlementEvent> initialEvents);
 
-    public void recreateSubscription(UUID subscriptionId, List<EntitlementEvent> recreateEvents);
+    public void recreateSubscription(final UUID subscriptionId, final List<EntitlementEvent> recreateEvents);
 
-    public void cancelSubscription(UUID subscriptionId, EntitlementEvent cancelEvent);
+    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent);
 
-    public void uncancelSubscription(UUID subscriptionId, List<EntitlementEvent> uncancelEvents);
+    public void uncancelSubscription(final UUID subscriptionId, final List<EntitlementEvent> uncancelEvents);
 
-    public void changePlan(UUID subscriptionId, List<EntitlementEvent> changeEvents);
+    public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents);
 
-    public void migrate(UUID accountId, AccountMigrationData data);
+    public void migrate(final UUID accountId, final AccountMigrationData data);
 
-    public void undoMigration(UUID accountId);
+    public void undoMigration(final UUID accountId);
 
     // Custom Fields
-    public void saveCustomFields(SubscriptionData subscription, CallContext context);
+    public void saveCustomFields(final SubscriptionData subscription, final CallContext context);
 }
 

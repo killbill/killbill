@@ -51,6 +51,7 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
@@ -65,11 +66,14 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     private final EntitlementDao entitlementDao;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
+    private final SubscriptionFactory subscriptionFactory;
+    
 
     @Inject
-    public DefaultEntitlementBillingApi(final CallContextFactory factory, final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
+    public DefaultEntitlementBillingApi(final CallContextFactory factory, final SubscriptionFactory subscriptionFactory, final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
         super();
         this.factory = factory;
+        this.subscriptionFactory = subscriptionFactory;
         this.entitlementDao = dao;
         this.accountApi = accountApi;
         this.catalogService = catalogService;
@@ -83,7 +87,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         List<SubscriptionBundle> bundles = entitlementDao.getSubscriptionBundleForAccount(accountId);
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         for (final SubscriptionBundle bundle: bundles) {
-        	List<Subscription> subscriptions = entitlementDao.getSubscriptions(bundle.getId());
+        	List<Subscription> subscriptions = entitlementDao.getSubscriptions(subscriptionFactory, bundle.getId());
 
         	for (final Subscription subscription: subscriptions) {
         		for (final SubscriptionTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
@@ -182,7 +186,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
-        SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionId);
+        SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId);
 
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
             .setChargedThroughDate(ctd)
