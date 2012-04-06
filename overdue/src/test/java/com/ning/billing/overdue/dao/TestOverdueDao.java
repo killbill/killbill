@@ -78,12 +78,12 @@ public class TestOverdueDao {
         OverdueState<SubscriptionBundle> state = BrainDeadProxyFactory.createBrainDeadProxyFor(OverdueState.class);
         ((ZombieControl)state).addResult("getName", overdueStateName);
         
-        dao.setOverdueStateForBundle(bundle, state, clock);
+        dao.setOverdueState(bundle, state, clock);
         clock.setDeltaFromReality(1000 * 3600 * 24);
         
         String overdueStateName2 = "NoReallyThisCantGoOn";
         ((ZombieControl)state).addResult("getName", overdueStateName2);
-        dao.setOverdueStateForBundle(bundle, state, clock);
+        dao.setOverdueState(bundle, state, clock);
         
         Assert.assertEquals(accessDao.getOverdueStateNameFor(bundle), overdueStateName2);
         

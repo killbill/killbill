@@ -17,22 +17,16 @@
 package com.ning.billing.overdue.service;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.overdue.OverdueError;
-import com.ning.billing.catalog.api.overdue.OverdueState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;
-import com.ning.billing.overdue.wrapper.OverdueWrapper;
-import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 
 public class DefaultOverdueService implements OverdueService {
     public static final String OVERDUE_SERVICE_NAME = "overdue-service";
-    
-    private final OverdueWrapperFactory factory;
+    private OverdueUserApi userApi;
 
     @Inject
-    public DefaultOverdueService(OverdueWrapperFactory factory) {
-        this.factory = factory;
+    public DefaultOverdueService(OverdueUserApi userApi){
+        this.userApi = userApi;
     }
     
     @Override
@@ -42,13 +36,8 @@ public class DefaultOverdueService implements OverdueService {
 
     @Override
     public OverdueUserApi getUserApi() {
-        return null;
+        return userApi;
     }
 
-    @Override
-    public <T extends Overdueable> OverdueState<T> refresh(T overdueable) throws OverdueError {
-        OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(overdueable);
-        return wrapper.refresh();
-    } 
- 
+   
 }

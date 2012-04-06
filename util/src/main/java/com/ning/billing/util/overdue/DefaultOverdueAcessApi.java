@@ -17,7 +17,14 @@
 package com.ning.billing.util.overdue;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.StaticCatalog;
+import com.ning.billing.catalog.api.overdue.OverdueError;
+import com.ning.billing.catalog.api.overdue.OverdueState;
+import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.overdue.dao.OverdueAccessDao;
 
 public class DefaultOverdueAcessApi implements OverdueAccessApi {
@@ -31,6 +38,18 @@ public class DefaultOverdueAcessApi implements OverdueAccessApi {
     @Override
     public String getOverdueStateNameFor(Overdueable overdueable) {
         return dao.getOverdueStateNameFor(overdueable);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable, StaticCatalog catalog) throws OverdueError {
+        try {
+            String stateName = getOverdueStateNameFor(overdueable);
+            OverdueStateSet<SubscriptionBundle> states = catalog.currentBundleOverdueStateSet();
+            return (OverdueState<T>) states.findState(stateName);
+        } catch (CatalogApiException e) {
+            throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED,overdueable.getId(), overdueable.getClass().getSimpleName());
+        }
     }
 
 }

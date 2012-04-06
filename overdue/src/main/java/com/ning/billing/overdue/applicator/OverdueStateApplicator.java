@@ -16,12 +16,64 @@
 
 package com.ning.billing.overdue.applicator;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
+import com.google.inject.Inject;
 import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.overdue.dao.OverdueDao;
+import com.ning.billing.util.clock.Clock;
 
-public interface OverdueStateApplicator<T extends Overdueable>{
+public class OverdueStateApplicator<T extends Overdueable>{
 
-    public void apply(T overdueable, OverdueState<T> previousOverdueState, OverdueState<T> nextOverdueState, DateTime timeOfNextCheck);
+    private final OverdueDao overdueDao;
+    private final Clock clock;
+
+
+
+    @Inject
+    public OverdueStateApplicator(OverdueDao overdueDao, Clock clock) {
+        this.overdueDao = overdueDao;
+        this.clock = clock;
+    }
+
+    public void apply(T overdueable, OverdueState<T> previousOverdueState, OverdueState<T> nextOverdueState, DateTime timeOfNextCheck) {
+        if(previousOverdueState.getName().equals(nextOverdueState.getName())) {
+            return; // nothing to do
+        }
+        
+        storeNewState(overdueable, nextOverdueState);
+  
+        if(timeOfNextCheck != null && !nextOverdueState.isClearState()) {
+            createFutureNotification(overdueable, timeOfNextCheck);
+        }
+
+        if(nextOverdueState.isClearState()) {
+            clear(overdueable);
+        }
+        
+        //If new state is clear state reset next events and override table
+        throw new NotImplementedException();
+    }
+
+ 
+    protected void storeNewState(T overdueable, OverdueState<T> nextOverdueState) {
+       overdueDao.setOverdueState(overdueable, nextOverdueState, clock);
+    }
+    
+    protected void createFutureNotification(T overdueable,
+            DateTime timeOfNextCheck) {
+        // TODO Auto-generated method stub
+        
+    }
+
+
+    
+    protected void clear(T overdueable) {
+        // Clear future notification checks
+        // Clear any overrides
+        
+    }
+
 }

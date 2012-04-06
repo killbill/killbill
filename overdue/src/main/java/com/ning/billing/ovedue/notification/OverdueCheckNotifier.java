@@ -14,16 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.overdue;
+package com.ning.billing.ovedue.notification;
 
-import com.ning.billing.catalog.api.overdue.BillingState;
-import com.ning.billing.catalog.api.overdue.OverdueError;
-import com.ning.billing.catalog.api.overdue.OverdueState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
 
-public interface OverdueUserApi {
+public interface OverdueCheckNotifier {
 
-    public <T extends Overdueable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError;
+    public void initialize();
 
-    public <T extends Overdueable> void setOverrideBillingStateForAccount(T overdueable, BillingState<T> state) throws OverdueError;
+    public void start();
+
+    public void stop();
+
 }

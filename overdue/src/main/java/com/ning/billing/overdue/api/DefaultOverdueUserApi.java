@@ -31,38 +31,26 @@ import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;
+import com.ning.billing.overdue.wrapper.OverdueWrapper;
+import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.overdue.dao.OverdueAccessDao;
 
 public class DefaultOverdueUserApi implements OverdueUserApi{
 
-    private OverdueService service;
-    private CatalogService catalogService;
-    private OverdueAccessDao accessDao;
-
+    
+    private final OverdueWrapperFactory factory;
+   
     @Inject
-    public DefaultOverdueUserApi(OverdueService service, CatalogService catalogService, OverdueAccessDao accessDao) {
-        this.service = service;
-        this.catalogService = catalogService;
-        this.accessDao = accessDao;
+    public DefaultOverdueUserApi(OverdueWrapperFactory factory) {
+        this.factory = factory;
     }
     
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueError {
-        try {
-            String stateName = accessDao.getOverdueStateNameFor(overdueable);
-            StaticCatalog catalog = catalogService.getCurrentCatalog();
-            OverdueStateSet<SubscriptionBundle> states = catalog.currentBundleOverdueStateSet();
-            return (OverdueState<T>) states.findState(stateName);
-        } catch (CatalogApiException e) {
-            throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED,overdueable.getId(), overdueable.getClass().getSimpleName());
-        }
-    }
-
     @Override
     public <T extends Overdueable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError {
-        return service.refresh(overdueable);     
+        OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(overdueable);
+        return wrapper.refresh();
     } 
+ 
 
     @Override
     public <T extends Overdueable> void setOverrideBillingStateForAccount(

@@ -16,6 +16,7 @@ getReadyNotifications(now, max) ::= <<
       effective_dt \<= :now
       and queue_name = :queue_name
       and processing_state != 'PROCESSED'
+      and processing_state != 'REMOVED'
       and (processing_owner IS NULL OR processing_available_dt \<= :now)
     order by
       effective_dt asc
@@ -35,6 +36,7 @@ claimNotification(owner, next_available, id, now) ::= <<
     where
       id = :id
       and processing_state != 'PROCESSED'
+      and processing_state != 'REMOVED'
       and (processing_owner IS NULL OR processing_available_dt \<= :now)
     ;
 >>
@@ -47,6 +49,16 @@ clearNotification(id, owner) ::= <<
       id = :id
     ;
 >>
+
+removeNotificationsByKey(notification_key) ::= <<
+    update notifications
+    set
+      processing_state = 'REMOVED'
+    where
+      notification_key = :notification_key
+    ;
+>>
+
 
 insertNotification() ::= <<
     insert into notifications (

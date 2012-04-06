@@ -23,28 +23,28 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.overdue.OverdueError;
 import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.overdue.OverdueUserApi;
-import com.ning.billing.overdue.applicator.OverdueStateApplicatorBundle;
+import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class OverdueWrapperFactory {
 
     private final CatalogService catalogService;
     private final BillingStateCalculatorBundle billingStateCalcuatorBundle;
-    private final OverdueStateApplicatorBundle overdueStateApplicatorBundle;
-    private final OverdueUserApi api;
+    private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
+    private final OverdueAccessApi api;
     private final Clock clock;
 
     @Inject
-    public OverdueWrapperFactory(OverdueUserApi api, CatalogService catalogService, Clock clock, BillingStateCalculatorBundle billingStateCalcuatorBundle, OverdueStateApplicatorBundle overdueStateApplicatorBundle) {
+    public OverdueWrapperFactory(OverdueAccessApi api, CatalogService catalogService, Clock clock, 
+            BillingStateCalculatorBundle billingStateCalcuatorBundle, OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle) {
         this.billingStateCalcuatorBundle = billingStateCalcuatorBundle;
         this.overdueStateApplicatorBundle = overdueStateApplicatorBundle;
         this.catalogService = catalogService;
         this.api = api;
         this.clock = clock;
     }
-
 
     @SuppressWarnings("unchecked")
     public <T extends Overdueable> OverdueWrapper<T> createOverdueWrapperFor(T overdueable) throws OverdueError {

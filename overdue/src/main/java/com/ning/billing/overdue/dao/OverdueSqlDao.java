@@ -32,7 +32,7 @@ public interface OverdueSqlDao extends OverdueDao {
 
     @Override
     @SqlUpdate
-    public abstract <T extends Overdueable> void setOverdueStateForBundle(
+    public abstract <T extends Overdueable> void setOverdueState(
             @Bind(binder = OverdueableBinder.class) T overdueable, 
             @Bind(binder = OverdueStateBinder.class) OverdueState<T> overdueState,
             @Bind(binder = CurrentTimeBinder.class) Clock clock) ;

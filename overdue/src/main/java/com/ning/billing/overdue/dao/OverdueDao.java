@@ -22,6 +22,6 @@ import com.ning.billing.util.clock.Clock;
 
 public interface OverdueDao {
 
-    <T extends Overdueable> void  setOverdueStateForBundle(T overdueable, OverdueState<T> newOverdueState, Clock clock);
+    <T extends Overdueable> void  setOverdueState(T overdueable, OverdueState<T> newOverdueState, Clock clock);
 
 }

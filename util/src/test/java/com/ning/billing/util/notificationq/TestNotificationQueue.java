@@ -108,6 +108,7 @@ public class TestNotificationQueue {
         });
         // Reset time to real value
         ((ClockMock) clock).resetDeltaFromReality();
+        eventsReceived=0;
     }
 
 
@@ -406,6 +407,82 @@ public class TestNotificationQueue {
             }
         };
     }
+    
+    
+    @Test(groups="slow")
+    public void testRemoveNotifications() throws InterruptedException {
+        
+        final UUID key = UUID.randomUUID();
+        final NotificationKey notificationKey = new NotificationKey() {
+            @Override
+            public String toString() {
+                return key.toString();
+            }
+        };        
+        final UUID key2 = UUID.randomUUID();
+        final NotificationKey notificationKey2 = new NotificationKey() {
+            @Override
+            public String toString() {
+                return key2.toString();
+            }
+        };        
+
+        final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
+                new NotificationQueueHandler() {
+            @Override
+            public void handleReadyNotification(String key, DateTime eventDateTime) {
+                    if(key.equals(notificationKey) || key.equals(notificationKey2)) { //ignore stray events from other tests
+                        log.info("Received notification with key: " + notificationKey);
+                        eventsReceived++;
+                    }
+            }
+        },
+        getNotificationConfig(false, 100, 10, 10000));
+
+
+        queue.startQueue();
+
+        final DateTime start = clock.getUTCNow().plusHours(1);
+        final int nextReadyTimeIncrementMs = 1000;
+ 
+        // add 3 events
+
+        dao.inTransaction(new Transaction<Void, DummySqlTest>() {
+            @Override
+            public Void inTransaction(DummySqlTest transactional,
+                    TransactionStatus status) throws Exception {
+
+                queue.recordFutureNotificationFromTransaction(transactional,
+                        start.plus(nextReadyTimeIncrementMs), notificationKey);
+                queue.recordFutureNotificationFromTransaction(transactional,
+                        start.plus(2 *nextReadyTimeIncrementMs), notificationKey);
+                queue.recordFutureNotificationFromTransaction(transactional,
+                        start.plus(3 * nextReadyTimeIncrementMs), notificationKey2);
+                return null;
+            }
+        });
+    
+    
+      queue.removeNotificationsByKey(key); // should remove 2 of the 3
+
+    // Move time in the future after the notification effectiveDate
+        ((ClockMock) clock).setDeltaFromReality(4000000 + nextReadyTimeIncrementMs * 3 );
+        
+        try {
+            await().atMost(10, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return eventsReceived >= 2;
+                }
+            });
+            Assert.fail("There should only have been only one event left in the queue we got: " + eventsReceived);
+        } catch (Exception e) {
+            // expected behavior
+        }
+        log.info("Received " + eventsReceived + " events");
+        queue.stopQueue();
+    }
+
 
 
     public static class TestNotificationQueueModule extends AbstractModule {

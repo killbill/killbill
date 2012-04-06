@@ -16,9 +16,6 @@
 
 package com.ning.billing.overdue;
 
-import com.ning.billing.catalog.api.overdue.OverdueError;
-import com.ning.billing.catalog.api.overdue.OverdueState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.lifecycle.KillbillService;
 
 public interface OverdueService extends KillbillService {
@@ -26,5 +23,4 @@ public interface OverdueService extends KillbillService {
 
     public OverdueUserApi getUserApi();
     
-    public <T extends Overdueable> OverdueState<T> refresh(T overdueable) throws OverdueError;
 }

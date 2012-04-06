@@ -16,12 +16,18 @@
 
 package com.ning.billing.util.overdue;
 
+import com.ning.billing.catalog.api.StaticCatalog;
+import com.ning.billing.catalog.api.overdue.OverdueError;
+import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
 
 public interface OverdueAccessApi {
     public static final String CLEAR_STATE_NAME = "__KILLBILL__CLEAR__OVERDUE_STATE__";
 
     public String getOverdueStateNameFor(Overdueable overdueable);
+
+    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable, StaticCatalog catalog)
+            throws OverdueError;
 
 
 }

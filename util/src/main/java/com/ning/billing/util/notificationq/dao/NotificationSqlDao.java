@@ -60,6 +60,9 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     public void clearNotification(@Bind("id") long id, @Bind("owner") String owner);
 
     @SqlUpdate
+    public void removeNotificationsByKey(@Bind("notification_key") String key);
+    
+    @SqlUpdate
     public void insertNotification(@Bind(binder = NotificationSqlDaoBinder.class) Notification evt);
 
     @SqlUpdate
