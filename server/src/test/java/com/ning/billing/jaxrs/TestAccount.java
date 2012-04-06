@@ -164,7 +164,7 @@ public class TestAccount {
 		return accountJson;
 	}
 
-	@Test(groups="slow")
+	@Test(groups="slow", enabled=false)
 	public void testFoo() throws Exception {
 		
 		ObjectMapper mapper = new ObjectMapper();
@@ -185,7 +185,7 @@ public class TestAccount {
 	}
 	
 	
-	@Test(groups="slow")
+	@Test(groups="slow", enabled=false)
 	public void testAccountOk() throws Exception {
 
 		final String accountPathPrefix = "/1.0/account";
