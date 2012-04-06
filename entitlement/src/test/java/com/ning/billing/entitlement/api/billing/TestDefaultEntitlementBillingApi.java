@@ -139,7 +139,7 @@ public class TestDefaultEntitlementBillingApi {
         ((ZombieControl) accountApi).addResult("getAccountById", account);
 
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, catalogService);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
@@ -161,7 +161,7 @@ public class TestDefaultEntitlementBillingApi {
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
 		       
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, catalogService);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
@@ -186,7 +186,7 @@ public class TestDefaultEntitlementBillingApi {
 		((ZombieControl)accountApi).addResult("getAccountById", account);
 
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, catalogService);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
@@ -208,7 +208,7 @@ public class TestDefaultEntitlementBillingApi {
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
 
-        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao,accountApi,catalogService);
+        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
@@ -232,7 +232,7 @@ public class TestDefaultEntitlementBillingApi {
 		((ZombieControl)accountApi).addResult("getAccountById", account);
 
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, catalogService);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, bundles.get(0).getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}

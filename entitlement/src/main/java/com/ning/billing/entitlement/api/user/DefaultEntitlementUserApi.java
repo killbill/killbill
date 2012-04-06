@@ -45,16 +45,18 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     private final CatalogService catalogService;
     private final SubscriptionApiService apiService;
     private final AddonUtils addonUtils;
+    private final SubscriptionFactory subscriptionFactory;
 
     @Inject
     public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, CatalogService catalogService,
-            SubscriptionApiService apiService, AddonUtils addonUtils) {
+            SubscriptionApiService apiService, final SubscriptionFactory subscriptionFactory, AddonUtils addonUtils) {
         super();
         this.clock = clock;
         this.apiService = apiService;
         this.dao = dao;
         this.catalogService = catalogService;
         this.addonUtils = addonUtils;
+        this.subscriptionFactory = subscriptionFactory;
     }
 
     @Override
@@ -64,7 +66,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public Subscription getSubscriptionFromId(UUID id) {
-        return dao.getSubscriptionFromId(id);
+        return dao.getSubscriptionFromId(subscriptionFactory, id);
     }
 
     @Override
@@ -79,12 +81,12 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public List<Subscription> getSubscriptionsForKey(String bundleKey) {
-        return dao.getSubscriptionsForKey(bundleKey);
+        return dao.getSubscriptionsForKey(subscriptionFactory, bundleKey);
     }
 
     @Override
     public List<Subscription> getSubscriptionsForBundle(UUID bundleId) {
-        return dao.getSubscriptions(bundleId);
+        return dao.getSubscriptions(subscriptionFactory, bundleId);
     }
 
     @Override
@@ -121,7 +123,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             }
 
             DateTime bundleStartDate = null;
-            SubscriptionData baseSubscription = (SubscriptionData) dao.getBaseSubscription(bundleId);
+            SubscriptionData baseSubscription = (SubscriptionData) dao.getBaseSubscription(subscriptionFactory, bundleId);
             switch(plan.getProduct().getCategory()) {
             case BASE:
                 if (baseSubscription != null) {

@@ -139,16 +139,15 @@ public class TestAnalyticsService {
     private InvoiceCreationNotification invoiceCreationNotification;
     private PaymentInfo paymentInfoNotification;
 
-    @BeforeMethod
+    @BeforeMethod(groups = "slow")
     public void cleanup() throws Exception
     {
         helper.cleanupTable("bst");
         helper.cleanupTable("bac");
-
     }
 
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(groups = "slow")
     public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
         // Killbill generic setup
         setupBusAndMySQL();
@@ -269,7 +268,7 @@ public class TestAnalyticsService {
         Assert.assertEquals(paymentDao.getPaymentInfo(Arrays.asList(invoice.getId().toString())).size(), 1);
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups = "slow")
     public void stopMysql() {
         helper.stopMysql();
     }

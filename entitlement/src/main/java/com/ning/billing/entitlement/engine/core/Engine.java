@@ -47,6 +47,7 @@ import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
@@ -89,6 +90,7 @@ public class Engine implements EventListener, EntitlementService {
     private final EntitlementConfig config;
     private final NotificationQueueService notificationQueueService;
     private final CallContextFactory factory;
+    private final SubscriptionFactory subscriptionFactory;
     private NotificationQueue subscriptionEventQueue;
 
     @Inject
@@ -97,6 +99,7 @@ public class Engine implements EventListener, EntitlementService {
             DefaultEntitlementBillingApi billingApi,
             DefaultEntitlementMigrationApi migrationApi, AddonUtils addonUtils, Bus eventBus,
             NotificationQueueService notificationQueueService,
+            SubscriptionFactory subscriptionFactory,
             CallContextFactory factory) {
         super();
         this.clock = clock;
@@ -109,6 +112,7 @@ public class Engine implements EventListener, EntitlementService {
         this.config = config;
         this.eventBus = eventBus;
         this.notificationQueueService = notificationQueueService;
+        this.subscriptionFactory = subscriptionFactory;
         this.factory = factory;
     }
 
@@ -192,7 +196,7 @@ public class Engine implements EventListener, EntitlementService {
         if (!event.isActive()) {
             return;
         }
-        SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(event.getSubscriptionId());
+        SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionFactory, event.getSubscriptionId());
         if (subscription == null) {
             log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
             return;
@@ -236,7 +240,7 @@ public class Engine implements EventListener, EntitlementService {
         Product baseProduct = (baseSubscription.getState() == SubscriptionState.CANCELLED ) ?
                 null : baseSubscription.getCurrentPlan().getProduct();
 
-        List<Subscription> subscriptions = dao.getSubscriptions(baseSubscription.getBundleId());
+        List<Subscription> subscriptions = dao.getSubscriptions(subscriptionFactory, baseSubscription.getBundleId());
 
         Iterator<Subscription> it = subscriptions.iterator();
         while (it.hasNext()) {

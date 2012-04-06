@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
@@ -64,17 +65,17 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     private final TreeSet<EntitlementEvent> events;
     private final Clock clock;
     private final EntitlementConfig config;
-    private final SubscriptionFactory factory;
     private final NotificationQueueService notificationQueueService;
+    private final CatalogService catalogService;
 
     @Inject
     public MockEntitlementDaoMemory(final Clock clock, final EntitlementConfig config,
-                                    final SubscriptionFactory factory,
-                                    final NotificationQueueService notificationQueueService) {
+                                    final NotificationQueueService notificationQueueService,
+                                    final CatalogService catalogService) {
         super();
         this.clock = clock;
         this.config = config;
-        this.factory = factory;
+        this.catalogService = catalogService;
         this.notificationQueueService = notificationQueueService;
         this.bundles = new ArrayList<SubscriptionBundle>();
         this.subscriptions = new ArrayList<Subscription>();
@@ -126,10 +127,10 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final UUID subscriptionId) {
+    public Subscription getSubscriptionFromId(final SubscriptionFactory factory, final UUID subscriptionId) {
         for (final Subscription cur : subscriptions) {
             if (cur.getId().equals(subscriptionId)) {
-                return buildSubscription((SubscriptionData) cur);
+                return buildSubscription(factory, (SubscriptionData) cur);
             }
         }
         return null;
@@ -141,11 +142,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(final String bundleKey) {
+    public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey) {
 
         for (final SubscriptionBundle cur : bundles) {
             if (cur.getKey().equals(bundleKey)) {
-                return getSubscriptions(cur.getId());
+                return getSubscriptions(factory, cur.getId());
             }
         }
         return Collections.emptyList();
@@ -167,7 +168,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
                 });
             }
         }
-        Subscription updatedSubscription = buildSubscription(subscription);
+        Subscription updatedSubscription = buildSubscription(null, subscription);
         subscriptions.add(updatedSubscription);
     }
 
@@ -189,12 +190,12 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public List<Subscription> getSubscriptions(final UUID bundleId) {
+    public List<Subscription> getSubscriptions(final SubscriptionFactory factory, final UUID bundleId) {
 
         List<Subscription> results = new ArrayList<Subscription>();
         for (final Subscription cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId)) {
-                results.add(buildSubscription((SubscriptionData) cur));
+                results.add(buildSubscription(factory, (SubscriptionData) cur));
             }
         }
         return results;
@@ -230,11 +231,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
 
     @Override
-    public Subscription getBaseSubscription(final UUID bundleId) {
+    public Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId) {
         for (final Subscription cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId) &&
                     cur.getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) {
-                return buildSubscription((SubscriptionData) cur);
+                return buildSubscription(factory, (SubscriptionData) cur);
             }
         }
         return null;
@@ -249,8 +250,16 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
 
 
-    private Subscription buildSubscription(final SubscriptionData in) {
-        return factory.createSubscription(new SubscriptionBuilder(in), getEventsForSubscription(in.getId()));
+    private Subscription buildSubscription(final SubscriptionFactory factory, final SubscriptionData in) {
+    	if (factory != null) {
+    		return factory.createSubscription(new SubscriptionBuilder(in), getEventsForSubscription(in.getId()));
+    	} else {
+    		SubscriptionData subscription = new SubscriptionData(new SubscriptionBuilder(in), null, clock);
+            if (events.size() > 0) {
+                subscription.rebuildTransitions(getEventsForSubscription(in.getId()), catalogService.getFullCatalog());
+            }
+            return subscription;
+    	}
     }
 
     @Override
@@ -310,9 +319,10 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         }
     }
 
+    
     private void cancelNextPhaseEvent(final UUID subscriptionId) {
 
-        Subscription curSubscription = getSubscriptionFromId(subscriptionId);
+        Subscription curSubscription = getSubscriptionFromId(null, subscriptionId);
         if (curSubscription.getCurrentPhase() == null ||
                 curSubscription.getCurrentPhase().getDuration().getUnit() == TimeUnit.UNLIMITED) {
             return;
