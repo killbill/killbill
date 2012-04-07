@@ -26,8 +26,5 @@ public interface OverdueAccessApi {
 
     public String getOverdueStateNameFor(Overdueable overdueable);
 
-    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable, StaticCatalog catalog)
-            throws OverdueError;
-
 
 }

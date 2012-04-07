@@ -24,8 +24,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -38,8 +36,11 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
@@ -59,13 +60,16 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.util.overdue.OverdueAccessApi;
 
 
 public class EntitlementSqlDao implements EntitlementDao {
@@ -80,11 +84,15 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
     private final CustomFieldDao customFieldDao;
+    private final OverdueAccessApi overdueApi;
+    private final CatalogService catalogService;
 
     @Inject
     public EntitlementSqlDao(final IDBI dbi, final Clock clock, final SubscriptionFactory factory,
                              final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                             final CustomFieldDao customFieldDao) {
+                             final CustomFieldDao customFieldDao,
+                             final OverdueAccessApi overdueApi,
+                             final CatalogService catalogService) {
         this.clock = clock;
         this.factory = factory;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
@@ -93,6 +101,8 @@ public class EntitlementSqlDao implements EntitlementDao {
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
         this.customFieldDao = customFieldDao;
+        this.overdueApi = overdueApi;
+        this.catalogService = catalogService;
     }
 
     @Override
@@ -103,12 +113,12 @@ public class EntitlementSqlDao implements EntitlementDao {
     @Override
     public List<SubscriptionBundle> getSubscriptionBundleForAccount(
             final UUID accountId) {
-        return bundlesDao.getBundleFromAccount(accountId.toString());
+        return applyOverdueState(bundlesDao.getBundleFromAccount(accountId.toString()));
     }
 
     @Override
     public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
-        return bundlesDao.getBundleFromId(bundleId.toString());
+        return applyOverdueState(bundlesDao.getBundleFromId(bundleId.toString()));
     }
 
     @Override
@@ -615,4 +625,23 @@ public class EntitlementSqlDao implements EntitlementDao {
             subscription.setFields(fields);
         }
     }
+ 
+    private List<SubscriptionBundle> applyOverdueState(final List<SubscriptionBundle> bundles)  { 
+        List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>();
+        for(SubscriptionBundle bundle : bundles) {
+            result.add(applyOverdueState(bundle));
+        }
+        return result;
+    }
+
+    private SubscriptionBundle applyOverdueState(final SubscriptionBundle bundle)  {
+        try {
+            String name = overdueApi.getOverdueStateNameFor(bundle);
+            OverdueState<SubscriptionBundle> state = catalogService.getCurrentCatalog().currentBundleOverdueStateSet().findState(name);
+            return new SubscriptionBundleData(bundle.getId(),bundle.getKey(),bundle.getAccountId(), bundle.getStartDate(), state);
+        } catch (CatalogApiException e) {
+           throw new EntitlementError(e);
+        }
+    }
+    
 }

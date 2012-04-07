@@ -16,6 +16,7 @@
 
 package com.ning.billing.overdue.wrapper;
 
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.OverdueError;
 import com.ning.billing.catalog.api.overdue.OverdueState;
@@ -47,13 +48,15 @@ public class OverdueWrapper<T extends Overdueable> {
         this.overdueStateApplicator = overdueStateApplicator;
     }
 
-    public OverdueState<T> refresh() throws OverdueError {
+    public OverdueState<T> refresh() throws OverdueError, CatalogApiException {
+        OverdueState<T> nextOverdueState;
         BillingState<T> billingState = billingStateCalcuator.calculateBillingState(overdueable);
         String previousOverdueStateName = api.getOverdueStateNameFor(overdueable);
-        OverdueState<T> nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
+        nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
         if(!previousOverdueStateName.equals(nextOverdueState.getName())) {
             overdueStateApplicator.apply(overdueable, nextOverdueState, nextOverdueState, overdueStateSet.dateOfNextCheck(billingState, clock.getUTCNow())); 
         }
+
         return nextOverdueState;
     }
 }

@@ -35,20 +35,6 @@ public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBund
     }
 
     @Override
-    protected DefaultOverdueState<SubscriptionBundle> getClearState() {
-        return null;
-    }
-
-    @Override
-    public ValidationErrors validate(StandaloneCatalog root,
-            ValidationErrors errors) {
-        for(DefaultOverdueState<SubscriptionBundle> state: bundleOverdueStates) {
-            state.validate(root, errors);
-        }
-        return errors;
-    }
-
-    @Override
     public OverdueState<SubscriptionBundle> findState(String stateName) throws CatalogApiException {
         for(DefaultOverdueState<SubscriptionBundle> state: bundleOverdueStates) {
             if(state.getName().equals(stateName) ) { return state; }

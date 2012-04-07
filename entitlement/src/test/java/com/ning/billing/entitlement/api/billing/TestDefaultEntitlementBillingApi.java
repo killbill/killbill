@@ -98,7 +98,7 @@ public class TestDefaultEntitlementBillingApi {
 	@BeforeMethod(alwaysRun=true)
 	public void setupEveryTime() {
 		bundles = new ArrayList<SubscriptionBundle>();
-		final SubscriptionBundle bundle = new SubscriptionBundleData( zeroId,"TestKey", oneId,  clock.getUTCNow().minusDays(4));
+		final SubscriptionBundle bundle = new SubscriptionBundleData( zeroId,"TestKey", oneId,  clock.getUTCNow().minusDays(4), null);
 		bundles.add(bundle);
 
 

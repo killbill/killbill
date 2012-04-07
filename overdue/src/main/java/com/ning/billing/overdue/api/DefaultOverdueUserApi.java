@@ -29,24 +29,40 @@ import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
-import com.ning.billing.util.overdue.dao.OverdueAccessDao;
+import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class DefaultOverdueUserApi implements OverdueUserApi{
 
     
     private final OverdueWrapperFactory factory;
+    private final OverdueAccessApi accessApi;
+    private final CatalogService catalogService;
    
     @Inject
-    public DefaultOverdueUserApi(OverdueWrapperFactory factory) {
+    public DefaultOverdueUserApi(OverdueWrapperFactory factory, OverdueAccessApi accessApi,  CatalogService catalogService) {
         this.factory = factory;
+        this.accessApi = accessApi;
+        this.catalogService = catalogService;
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueError {
+        try {
+            String stateName = accessApi.getOverdueStateNameFor(overdueable);
+            StaticCatalog catalog = catalogService.getCurrentCatalog();
+            OverdueStateSet<SubscriptionBundle> states = catalog.currentBundleOverdueStateSet();
+            return (OverdueState<T>) states.findState(stateName);
+        } catch (CatalogApiException e) {
+            throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED,overdueable.getId(), overdueable.getClass().getSimpleName());
+        }
     }
     
     @Override
-    public <T extends Overdueable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError {
+    public <T extends Overdueable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError, CatalogApiException {
         OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(overdueable);
         return wrapper.refresh();
     } 

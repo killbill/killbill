@@ -40,16 +40,4 @@ public class DefaultOverdueAcessApi implements OverdueAccessApi {
         return dao.getOverdueStateNameFor(overdueable);
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable, StaticCatalog catalog) throws OverdueError {
-        try {
-            String stateName = getOverdueStateNameFor(overdueable);
-            OverdueStateSet<SubscriptionBundle> states = catalog.currentBundleOverdueStateSet();
-            return (OverdueState<T>) states.findState(stateName);
-        } catch (CatalogApiException e) {
-            throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED,overdueable.getId(), overdueable.getClass().getSimpleName());
-        }
-    }
-
 }

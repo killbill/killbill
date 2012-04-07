@@ -431,7 +431,7 @@ public class TestNotificationQueue {
                 new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(String key, DateTime eventDateTime) {
-                    if(key.equals(notificationKey) || key.equals(notificationKey2)) { //ignore stray events from other tests
+                    if(key.equals(notificationKey) || key.equals(notificationKey2)) { //ig nore stray events from other tests
                         log.info("Received notification with key: " + notificationKey);
                         eventsReceived++;
                     }

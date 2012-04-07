@@ -16,6 +16,7 @@
 
 package com.ning.billing.overdue;
 
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.OverdueError;
 import com.ning.billing.catalog.api.overdue.OverdueState;
@@ -23,7 +24,9 @@ import com.ning.billing.catalog.api.overdue.Overdueable;
 
 public interface OverdueUserApi {
 
-    public <T extends Overdueable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError;
+    public <T extends Overdueable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError, CatalogApiException;
 
     public <T extends Overdueable> void setOverrideBillingStateForAccount(T overdueable, BillingState<T> state) throws OverdueError;
+
+    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueError;
 }

@@ -19,10 +19,11 @@ package com.ning.billing.entitlement.api.user;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.catalog.api.Catalog;
 import org.joda.time.DateTime;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
@@ -30,6 +31,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
@@ -88,9 +90,15 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleName)
-    throws EntitlementUserApiException {
-        SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId);
-        return dao.createSubscriptionBundle(bundle);
+            throws EntitlementUserApiException {
+        OverdueState<SubscriptionBundle> clearState;
+        try {
+            clearState = catalogService.getCurrentCatalog().currentBundleOverdueStateSet().findClearState();
+            SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId);
+            return dao.createSubscriptionBundle(bundle);
+        } catch (CatalogApiException e) {
+            throw new EntitlementUserApiException(e);
+        }
     }
 
     @Override
@@ -153,11 +161,11 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             }
 
             SubscriptionData subscription = apiService.createPlan(new SubscriptionBuilder()
-                .setId(UUID.randomUUID())
-                .setBundleId(bundleId)
-                .setCategory(plan.getProduct().getCategory())
-                .setBundleStartDate(bundleStartDate)
-                .setStartDate(effectiveDate),
+            .setId(UUID.randomUUID())
+            .setBundleId(bundleId)
+            .setCategory(plan.getProduct().getCategory())
+            .setBundleStartDate(bundleStartDate)
+            .setStartDate(effectiveDate),
             plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now);
 
             return subscription;
@@ -168,7 +176,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
 
     private void checkAddonCreationRights(SubscriptionData baseSubscription, Plan targetAddOnPlan)
-        throws EntitlementUserApiException, CatalogApiException {
+            throws EntitlementUserApiException, CatalogApiException {
 
         if (baseSubscription.getState() != SubscriptionState.ACTIVE) {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
@@ -186,20 +194,20 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         }
     }
 
-	@Override
-	public DateTime getNextBillingDate(UUID accountId) {
-		List<SubscriptionBundle> bundles = getBundlesForAccount(accountId);
-		DateTime result = null;
-		for(SubscriptionBundle bundle : bundles) {
-			List<Subscription> subscriptions = getSubscriptionsForBundle(bundle.getId());
-			for(Subscription subscription : subscriptions) {
-				DateTime chargedThruDate = subscription.getChargedThroughDate();
-				if(result == null ||
-						(chargedThruDate != null && chargedThruDate.isBefore(result))) {
-					result = subscription.getChargedThroughDate();
-				}
-			}
-		}
-		return result;
-	}
+    @Override
+    public DateTime getNextBillingDate(UUID accountId) {
+        List<SubscriptionBundle> bundles = getBundlesForAccount(accountId);
+        DateTime result = null;
+        for(SubscriptionBundle bundle : bundles) {
+            List<Subscription> subscriptions = getSubscriptionsForBundle(bundle.getId());
+            for(Subscription subscription : subscriptions) {
+                DateTime chargedThruDate = subscription.getChargedThroughDate();
+                if(result == null ||
+                        (chargedThruDate != null && chargedThruDate.isBefore(result))) {
+                    result = subscription.getChargedThroughDate();
+                }
+            }
+        }
+        return result;
+    }
 }

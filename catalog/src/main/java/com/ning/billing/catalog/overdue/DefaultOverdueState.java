@@ -33,8 +33,6 @@ import com.ning.billing.util.config.ValidationErrors;
 public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig<StandaloneCatalog>  implements OverdueState<T> {
 
     private static final int MAX_NAME_LENGTH = 50;
-
-    // TODO - need to implement Clear states
     
     @XmlElement(required=false, name="condition")
 	private DefaultCondition<T> condition;
@@ -46,9 +44,15 @@ public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig
 	@XmlElement(required=false, name="externalMessage")
 	private String externalMessage = "";
 
-	@XmlElement(required=false, name="applyCancel")
-	private boolean applyCancel = false;
-	
+    @XmlElement(required=false, name="overrideEntitlementAndChangesBlocked")
+    private Boolean overrideEntitlement = false;
+    
+    @XmlElement(required=false, name="changesBlocked")
+    private Boolean changesBlocked = false;
+    
+    @XmlElement(required=false, name="daysBetweenPaymentRetries")
+    private Integer daysBetweenPaymentRetries = 8;
+    
 	//Other actions could include
 	// - send email
 	// - trigger payment retry?
@@ -73,12 +77,17 @@ public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig
 		return externalMessage;
 	}
 	
+    @Override
+    public boolean changesBlocked() {
+        return changesBlocked && overrideEntitlement;
+    }
+
 	/* (non-Javadoc)
      * @see com.ning.billing.catalog.overdue.OverdueState#applyCancel()
      */
 	@Override
-    public boolean applyCancel() {
-		return applyCancel;
+    public boolean entitlementDisabledAndChangesBlocked() {
+		return overrideEntitlement;
 	}
 	
 	
@@ -99,7 +108,7 @@ public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig
 	}
 
 	protected DefaultOverdueState<T> setCancel(boolean cancel) {
-		this.applyCancel = cancel;
+		this.overrideEntitlement = cancel;
 		return this;
 	}
 
@@ -121,5 +130,11 @@ public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig
         }
         return errors;
     }
+
+    @Override
+    public int getDaysBetweenPaymentRetries() {
+         return daysBetweenPaymentRetries;
+    }
+
 
 }

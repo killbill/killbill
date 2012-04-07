@@ -22,9 +22,12 @@ public interface OverdueState<T extends Overdueable> {
     public String getName();
 
     public String getExternalMessage();
+    
+    public int getDaysBetweenPaymentRetries();
 
-    public boolean applyCancel();
+    public boolean entitlementDisabledAndChangesBlocked();
 
+    public boolean changesBlocked();
+    
     public boolean isClearState();
-
 }

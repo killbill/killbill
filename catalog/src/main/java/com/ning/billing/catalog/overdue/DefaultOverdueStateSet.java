@@ -19,25 +19,36 @@ package com.ning.billing.catalog.overdue;
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationErrors;
 
 public abstract class DefaultOverdueStateSet<T extends Overdueable> extends ValidatingConfig<StandaloneCatalog> implements OverdueStateSet<T> {
     private DefaultOverdueState<T> clearState;
     
     protected abstract DefaultOverdueState<T>[] getStates();
     
-    protected abstract DefaultOverdueState<T> getClearState();
+    private DefaultOverdueState<T> getClearState() throws CatalogApiException {
+        for(DefaultOverdueState<T> overdueState : getStates()) {
+            if(overdueState.isClearState()) {   
+                return overdueState;
+            }
+        }
+        throw new CatalogApiException(ErrorCode.CAT_MISSING_CLEAR_STATE);
+    }
     
     
     /* (non-Javadoc)
      * @see com.ning.billing.catalog.overdue.OverdueBillingState#findClearState()
      */
     @Override
-    public DefaultOverdueState<T> findClearState() {
+    public DefaultOverdueState<T> findClearState() throws CatalogApiException {
         if (clearState != null) {
             clearState = getClearState();
         }
@@ -48,7 +59,7 @@ public abstract class DefaultOverdueStateSet<T extends Overdueable> extends Vali
      * @see com.ning.billing.catalog.overdue.OverdueBillingState#calculateOverdueState(com.ning.billing.catalog.api.overdue.BillingState, org.joda.time.DateTime)
      */
     @Override
-    public DefaultOverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) {         
+    public DefaultOverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) throws CatalogApiException {         
             for(DefaultOverdueState<T> overdueState : getStates()) {
                 if(overdueState.getCondition().evaluate(billingState, now)) {   
                     return overdueState;
@@ -62,5 +73,23 @@ public abstract class DefaultOverdueStateSet<T extends Overdueable> extends Vali
         throw new NotImplementedException();
     }
         
+
+    @Override
+    public ValidationErrors validate(StandaloneCatalog root,
+            ValidationErrors errors) {
+        for(DefaultOverdueState<T> state: getStates()) {
+            state.validate(root, errors);
+        }
+        try {
+            getClearState();
+        } catch (CatalogApiException e) {
+            if(e.getCode() == ErrorCode.CAT_MISSING_CLEAR_STATE.getCode()) {
+                errors.add("Overdue state set is missing a clear state.", 
+                        root.getCatalogURI(), this.getClass(), "");
+                }
+        }
+        
+        return errors;
+    }
       
 }

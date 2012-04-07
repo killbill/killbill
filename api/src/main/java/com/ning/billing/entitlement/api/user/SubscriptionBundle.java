@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
 
 public interface SubscriptionBundle extends Overdueable {
@@ -31,4 +32,6 @@ public interface SubscriptionBundle extends Overdueable {
     public DateTime getStartDate();
 
     public String getKey();
+
+    public OverdueState<SubscriptionBundle> getOverdueState();
 }

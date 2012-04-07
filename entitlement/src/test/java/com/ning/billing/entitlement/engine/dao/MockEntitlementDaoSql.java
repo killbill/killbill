@@ -26,10 +26,12 @@ import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 import com.google.inject.Inject;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEntitlementDao {
 
@@ -37,8 +39,9 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
 
     @Inject
     public MockEntitlementDaoSql(IDBI dbi, Clock clock, SubscriptionFactory factory, AddonUtils addonUtils, NotificationQueueService notificationQueueService,
-                                 CustomFieldDao customFieldDao) {
-        super(dbi, clock, factory, addonUtils, notificationQueueService, customFieldDao);
+                                 CustomFieldDao customFieldDao, final OverdueAccessApi overdueApi,
+                                 final CatalogService catalogService) {
+        super(dbi, clock, factory, addonUtils, notificationQueueService, customFieldDao, overdueApi, catalogService);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
     }
 
