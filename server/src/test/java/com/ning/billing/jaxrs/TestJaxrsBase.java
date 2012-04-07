@@ -1,0 +1,291 @@
+/* 
+ * Copyright 2010-2011 Ning, Inc.
+ *
+ * Ning licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+package com.ning.billing.jaxrs;
+
+import static org.testng.Assert.assertNotNull;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.EventListener;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.skife.config.ConfigurationObjectFactory;
+import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.ning.billing.dbi.DBIProvider;
+import com.ning.billing.dbi.DbiConfig;
+import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.server.listeners.KillbillGuiceListener;
+import com.ning.billing.server.modules.KillbillServerModule;
+import com.ning.http.client.AsyncCompletionHandler;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
+import com.ning.http.client.ListenableFuture;
+import com.ning.http.client.Response;
+import com.ning.jetty.core.CoreConfig;
+import com.ning.jetty.core.server.HttpServer;
+
+public class TestJaxrsBase {
+	
+	protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 5;
+	
+	protected static final Map<String, String> DEFAULT_EMPTY_QUERY = new HashMap<String, String>();
+	
+	private static final Logger log = LoggerFactory.getLogger(TestJaxrsBase.class);
+
+	public static final String HEADER_CONTENT_TYPE = "Content-type";
+	public static final String CONTENT_TYPE = "application/json";
+
+	private MysqlTestingHelper helper;
+	private HttpServer server;
+
+	protected CoreConfig config;
+	protected AsyncHttpClient httpClient;	
+	protected ObjectMapper mapper;
+
+
+	public static void loadSystemPropertiesFromClasspath(final String resource) {
+		final URL url = TestJaxrsBase.class.getResource(resource);
+		assertNotNull(url);
+		try {
+			System.getProperties().load( url.openStream() );
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public static class TestKillbillGuiceListener extends KillbillGuiceListener {
+		public TestKillbillGuiceListener() {
+			super();
+		}
+		@Override
+		protected Module getModule() {
+	    	return new TestKillbillServerModule();
+	    }
+		public Injector getTheInjector() {
+			return theInjector;
+		}
+	}
+
+	public static class TestKillbillServerModule extends KillbillServerModule {
+		
+		@Override
+		protected void configureDao() {
+			final MysqlTestingHelper helper = new MysqlTestingHelper();
+			bind(MysqlTestingHelper.class).toInstance(helper);
+			if (helper.isUsingLocalInstance()) {
+				bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
+				final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
+				bind(DbiConfig.class).toInstance(config);
+			} else {
+				final IDBI dbi = helper.getDBI();
+				bind(IDBI.class).toInstance(dbi);
+			}
+	    }
+	}
+
+
+	
+	@BeforeClass(groups="slow")
+	public void setup() throws Exception {
+
+		loadSystemPropertiesFromClasspath("/killbill.properties");
+
+		final EventListener eventListener = new TestKillbillGuiceListener();
+		httpClient = new AsyncHttpClient();
+		server = new HttpServer();
+		config = getConfig();
+		mapper = new ObjectMapper();
+		final Iterable<EventListener> eventListeners = new Iterable<EventListener>() {
+			@Override
+			public Iterator<EventListener> iterator() {
+				ArrayList<EventListener> array = new ArrayList<EventListener>();
+				array.add(eventListener);
+				return array.iterator();
+			}
+		};
+		server.configure(config, eventListeners, new HashMap<FilterHolder, String>());
+		server.start();
+		
+		Injector injector = ((TestKillbillGuiceListener) eventListener).getTheInjector();
+		
+		helper = injector.getInstance(MysqlTestingHelper.class);
+		helper.cleanupAllTables();
+	}
+	
+	@AfterClass(groups="slow")
+	public void tearDown() {
+		if (helper != null) {
+			try {
+				helper.startMysql();
+			} catch (IOException ignore) {
+			}
+		}
+	}
+
+	protected Response doPost(final String uri, final String body, final Map<String, String> queryParams, final int timeoutSec) {
+		BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("POST", getUrlFromUri(uri), queryParams);
+		if (body != null) {
+			builder.setBody(body);
+		}
+		return executeAndWait(builder, timeoutSec);
+	}
+
+	protected Response doPut(final String uri, final String body, final Map<String, String> queryParams, final int timeoutSec) {
+		final String url = String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
+		BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("PUT", url, queryParams);
+		if (body != null) {
+			builder.setBody(body);
+		}
+		return executeAndWait(builder, timeoutSec);
+	}
+	
+	protected Response doDelete(final String uri, final Map<String, String> queryParams, final int timeoutSec) {
+		final String url = String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
+		BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("DELETE", url, queryParams);
+		return executeAndWait(builder, timeoutSec);
+	}
+
+	protected Response doGet(final String uri, final Map<String, String> queryParams, final int timeoutSec) {
+		final String url = String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
+		return doGetWithUrl(url, queryParams, timeoutSec);
+	}
+	
+	protected Response doGetWithUrl(final String url, final Map<String, String> queryParams, final int timeoutSec) {
+		BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("GET", url, queryParams);
+		return executeAndWait(builder, timeoutSec);
+	}
+	
+	private Response executeAndWait(final BoundRequestBuilder builder, final int timeoutSec) {
+		Response response = null;
+		try {
+			ListenableFuture<Response> futureStatus = 
+			builder.execute(new AsyncCompletionHandler<Response>() {
+				@Override
+				public Response onCompleted(Response response) throws Exception {
+					return response;
+				}
+			});
+			response = futureStatus.get(timeoutSec, TimeUnit.SECONDS);
+		} catch (Exception e) {
+			Assert.fail(e.getMessage());			
+		}
+		Assert.assertNotNull(response);
+		return response;
+	}
+	
+	private String getUrlFromUri(final String uri) {
+		return String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
+	}
+	
+	private BoundRequestBuilder getBuilderWithHeaderAndQuery(final String verb, final String url, final Map<String, String> queryParams) {
+		BoundRequestBuilder builder = null;
+		if (verb.equals("GET")) {
+			builder = httpClient.prepareGet(url);
+		} else if (verb.equals("POST")) {
+			builder = httpClient.preparePost(url);
+		} else if (verb.equals("PUT")) {
+			builder = httpClient.preparePut(url);			
+		} else if (verb.equals("DELETE")) {
+			builder = httpClient.prepareDelete(url);			
+		}
+		builder.addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE);
+		for (Entry<String, String> q : queryParams.entrySet()) {
+			builder.addQueryParameter(q.getKey(), q.getValue());
+		}
+		return builder;
+	}
+	
+	public AccountJson getAccountJson(final String name, final String externalKey, final String email) {
+		String accountId = UUID.randomUUID().toString();
+		int length = 4;
+		int billCycleDay = 12;
+		String currency = "USD";
+		String paymentProvider = "paypal";
+		String timeZone = "UTC";
+		String address1 = "12 rue des ecoles";
+		String address2 = "Poitier";
+		String company = "Renault";
+		String state = "Poitou";
+		String country = "France";
+		String phone = "81 53 26 56";
+
+		AccountJson accountJson = new AccountJson(accountId, name, length, externalKey, email, billCycleDay, currency, paymentProvider, timeZone, address1, address2, company, state, country, phone);
+		return accountJson;
+	}
+
+	
+	private CoreConfig getConfig() {
+		return new CoreConfig() {
+			@Override
+			public boolean isSSLEnabled() {
+				return false;
+			}
+			@Override
+			public boolean isJettyStatsOn() {
+				return false;
+			}
+			@Override
+			public int getServerSslPort() {
+				return 0;
+			}
+			@Override
+			public int getServerPort() {
+				return 8080;
+			}
+			@Override
+			public String getServerHost() {
+				return "127.0.0.1";
+			}
+			@Override
+			public String getSSLkeystorePassword() {
+				return null;
+			}
+			@Override
+			public String getSSLkeystoreLocation() {
+				return null;
+			}
+			@Override
+			public int getMinThreads() {
+				return 2;
+			}
+			@Override
+			public int getMaxThreads() {
+				return 100;
+			}
+			@Override
+			public String getLogPath() {
+				return "/var/tmp/.logs";
+			}
+		};
+	}
+}

@@ -15,205 +15,94 @@
  */
 package com.ning.billing.jaxrs;
 
-import static org.testng.Assert.assertNotNull;
 
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.EventListener;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Map;
 
-import java.util.UUID;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectWriter;
-import org.eclipse.jetty.servlet.FilterHolder;
+import javax.ws.rs.core.Response.Status;
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeClass;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 
-
-
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson;
-import com.ning.billing.server.listeners.KillbillGuiceListener;
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
+import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.http.client.Response;
-import com.ning.jetty.core.CoreConfig;
-import com.ning.jetty.core.server.HttpServer;
 
-public class TestAccount {
+
+public class TestAccount extends TestJaxrsBase {
 
 	private static final Logger log = LoggerFactory.getLogger(TestAccount.class);
 
-	public static final String HEADER_CONTENT_TYPE = "Content-type";
-	public static final String CONTENT_TYPE = "application/json";
 
-	private ObjectMapper mapper;
-
-	private HttpServer server;
-	private AsyncHttpClient httpClient;
-	private CoreConfig config;
-
-	CoreConfig getConfig() {
-		return new CoreConfig() {
-
-			@Override
-			public boolean isSSLEnabled() {
-				return false;
-			}
-			@Override
-			public boolean isJettyStatsOn() {
-				return false;
-			}
-			@Override
-			public int getServerSslPort() {
-				return 0;
-			}
-			@Override
-			public int getServerPort() {
-				return 8080;
-			}
-			@Override
-			public String getServerHost() {
-				return "127.0.0.1";
-			}
-			@Override
-			public String getSSLkeystorePassword() {
-				return null;
-			}
-			@Override
-			public String getSSLkeystoreLocation() {
-				return null;
-			}
-			@Override
-			public int getMinThreads() {
-				return 2;
-			}
-			@Override
-			public int getMaxThreads() {
-				return 100;
-			}
-			@Override
-			public String getLogPath() {
-				return "/var/tmp/.logs";
-			}
-		};
-	}
-
-	  public static void loadSystemPropertiesFromClasspath(final String resource) {
-	        final URL url = TestAccount.class.getResource(resource);
-	        assertNotNull(url);
-
-	        try {
-	            System.getProperties().load( url.openStream() );
-	        } catch (IOException e) {
-	            throw new RuntimeException(e);
-	        }
-	    }
-
-
-	@BeforeClass(groups="slow")
-	public void setup() throws Exception {
-
-		loadSystemPropertiesFromClasspath("/killbill.properties");
-
-		httpClient = new AsyncHttpClient();
-		server = new HttpServer();
-		config = getConfig();
-		mapper = new ObjectMapper();
-		final Iterable<EventListener> eventListeners = new Iterable<EventListener>() {
-			@Override
-			public Iterator<EventListener> iterator() {
-				ArrayList<EventListener> array = new ArrayList<EventListener>();
-				array.add(new KillbillGuiceListener());
-				return array.iterator();
-			}
-		};
-		server.configure(config, eventListeners, new HashMap<FilterHolder, String>());
-		server.start();
-	}
-
-
-	AccountJson getAccountJson() {
-		String accountId = UUID.randomUUID().toString();
-		String name = "yoyo bozo2";
-		int length = 4;
-		String externalKey = "xdfsdretuq";
-		String email = "yoyo@gmail.com";
-		int billCycleDay = 12;
-		String currency = "USD";
-		String paymentProvider = "paypal";
-		String timeZone = "UTC";
-		String address1 = "12 rue des ecoles";
-		String address2 = "Poitier";
-		String company = "Renault";
-		String state = "Poitou";
-		String country = "France";
-		String phone = "81 53 26 56";
-
-		AccountJson accountJson = new AccountJson(accountId, name, length, externalKey, email, billCycleDay, currency, paymentProvider, timeZone, address1, address2, company, state, country, phone);
-		return accountJson;
-	}
-
-	@Test(groups="slow", enabled=false)
-	public void testFoo() throws Exception {
-		
-		ObjectMapper mapper = new ObjectMapper();
-		
-		AccountJson accountData = getAccountJson();
-
-		  ObjectWriter objWriter = mapper.writer();
-
-          Writer writer = new StringWriter();
-          objWriter.writeValue(writer, accountData);
-          String baseJson = writer.toString();
-
-          log.info(baseJson);
-
-          AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
-
-          log.info(objFromJson.toString());
-	}
-	
-	
-	@Test(groups="slow", enabled=false)
+	@Test(groups="slow", enabled=true)
 	public void testAccountOk() throws Exception {
+		
+		AccountJson input = getAccountJson("xoxo", "shdgfhwe", "xoxo@yahoo.com");
+		String baseJson = mapper.writeValueAsString(input);
+		Response response = doPost(BaseJaxrsResource.ACCOUNTS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-		final String accountPathPrefix = "/1.0/account";
+		String location = response.getHeader("Location");
+		Assert.assertNotNull(location);
 
-		AccountJson accountData = getAccountJson();
-		ObjectWriter objWriter = mapper.writer();
+		// Retrieves by Id based on Location returned
+		response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
-        Writer writer = new StringWriter();
-        objWriter.writeValue(writer, accountData);
-        String baseJson = writer.toString();
-        
-        try {
-        	Thread.sleep(100000);
-        } catch (Exception e) {}
-        
-		httpClient.preparePost(String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), accountPathPrefix))
-		.addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE)
-		.setBody(baseJson)
-		.execute(new AsyncCompletionHandler<Integer>() {
+		baseJson = response.getResponseBody();
+		AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
+		Assert.assertTrue(objFromJson.equalsNoId(input));
 
-			@Override
-			public Integer onCompleted(Response response)
-			throws Exception {
+		// Retrieves by external key
+		Map<String, String> queryParams = new HashMap<String, String>();
+		queryParams.put(BaseJaxrsResource.QUERY_EXTERNAL_KEY, "shdgfhwe");
+		response = doGet(BaseJaxrsResource.ACCOUNTS_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+		baseJson = response.getResponseBody();
+		objFromJson = mapper.readValue(baseJson, AccountJson.class);
+		Assert.assertTrue(objFromJson.equalsNoId(input));
+		
+		// Update Account
+		AccountJson newInput = new AccountJson(objFromJson.getAcountId(),
+				"zozo", 4, objFromJson.getExternalKey(), "rr@google.com", 18, "EUR", "none", "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
+		baseJson = mapper.writeValueAsString(newInput);
+		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAcountId();
+		response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+		baseJson = response.getResponseBody();
+		objFromJson = mapper.readValue(baseJson, AccountJson.class);
+		Assert.assertTrue(objFromJson.equals(newInput));
+	}
 
-				int statusCode = response.getStatusCode();
-				URI uri = response.getUri();
-				return statusCode;
-			}
-		});
+
+	@Test(groups="slow", enabled=true)
+	public void testUpdateNonExistentAccount() throws Exception {
+		AccountJson input = getAccountJson("xoxo", "shdgfhwe", "xoxo@yahoo.com");
+		String baseJson = mapper.writeValueAsString(input);
+		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + input.getAcountId();
+		Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
+		String body = response.getResponseBody();
+		Assert.assertEquals(body, "");
+	}
+	
+	
+	@Test(groups="slow", enabled=true)
+	public void testAccountNonExistent() throws Exception {
+		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747";
+		Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
+	}
+	
+	@Test(groups="slow", enabled=true)
+	public void testAccountBadAccountId() throws Exception {
+		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/yo";
+		Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
 	}
 }

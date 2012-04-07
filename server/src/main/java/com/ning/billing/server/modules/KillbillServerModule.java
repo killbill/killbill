@@ -44,21 +44,18 @@ import org.skife.jdbi.v2.IDBI;
 public class KillbillServerModule extends AbstractModule
 {
     @Override
-    protected void configure()
-    {
+    protected void configure() {
         configureDao();
         configureResources();
         installKillbillModules();
     }
 
-    protected void configureDao()
-    {
+    protected void configureDao() {
         bind(IDBI.class).to(DBI.class).asEagerSingleton();
         bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
     }
 
-    protected void configureResources()
-    {
+    protected void configureResources() {
         bind(AccountResource.class).asEagerSingleton();
         bind(BundleResource.class).asEagerSingleton();
         bind(SubscriptionResource.class).asEagerSingleton();
@@ -67,8 +64,7 @@ public class KillbillServerModule extends AbstractModule
         bind(PaymentResource.class).asEagerSingleton();
     }
 
-    protected void installKillbillModules()
-    {
+    protected void installKillbillModules() {
         install(new FieldStoreModule());
         install(new TagStoreModule());
         install(new CatalogModule());

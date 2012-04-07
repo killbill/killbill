@@ -244,6 +244,22 @@
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
+         <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-util</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-mxj</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-mxj-db-files</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <resources>

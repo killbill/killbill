@@ -98,7 +98,7 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
         try {
             dao.update(account, context);
         } catch (EntityPersistenceException e) {
-            throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
+            throw new AccountApiException(e, e.getCode(), e.getMessage());
         }
   
     }
@@ -106,10 +106,9 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     @Override
     public void updateAccount(final String externalKey, final AccountData accountData, final CallContext context) throws AccountApiException {
     	UUID accountId = getIdFromKey(externalKey);
-    	if(accountId == null) {
+    	if (accountId == null) {
     		throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
     	}
-
     	updateAccount(accountId, accountData, context);
      }
 

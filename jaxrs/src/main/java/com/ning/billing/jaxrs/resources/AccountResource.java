@@ -19,6 +19,7 @@ package com.ning.billing.jaxrs.resources;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
@@ -34,66 +35,88 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.util.Context;
 
 
 @Singleton
-@Path("/1.0/account")
-public class AccountResource {
+@Path(BaseJaxrsResource.ACCOUNTS_PATH)
+public class AccountResource implements BaseJaxrsResource {
 
     private static final Logger log = LoggerFactory.getLogger(AccountResource.class);
 
     private final AccountUserApi accountApi;
+    final EntitlementUserApi entitlementApi;
     private final Context context;
 
     @Inject
-    public AccountResource(final AccountUserApi accountApi, final Context context) {
+    public AccountResource(final AccountUserApi accountApi, final EntitlementUserApi entitlementApi, final Context context) {
         this.accountApi = accountApi;
+        this.entitlementApi = entitlementApi;
         this.context = context;
     }
 
     @GET
-    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}")
+    @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getAccount(@PathParam("accountId") String accountId) {
         Account account = accountApi.getAccountById(UUID.fromString(accountId));
         if (account == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.NO_CONTENT).build();
         }
-        AccountJson json = null; /* new AccountJson(account); */
+        AccountJson json = new AccountJson(account);
         return Response.status(Status.OK).entity(json).build();
     }
 
     @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
     @Produces(APPLICATION_JSON)
-    public Response getAccountByKey(@QueryParam("externalKey") String externalKey) {
+    public Response getAccountBundles(@PathParam("accountId") String accountId) {
+    	UUID uuid = UUID.fromString(accountId);
+    	List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid);
+    	// STEPH should we fetch account first to make sure id exists or what's the deal here
+    	// 
+    	String json = null;
+        return Response.status(Status.OK).entity(json).build();
+    }
+
+    
+    @GET
+    @Produces(APPLICATION_JSON)
+    public Response getAccountByKey(@QueryParam(QUERY_EXTERNAL_KEY) String externalKey) {
         Account account = null;
         if (externalKey != null) {
             account = accountApi.getAccountByKey(externalKey);
         }
         if (account == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.NO_CONTENT).build();
         }
-        AccountJson json = null; /*  new AccountJson(account); */
+        AccountJson json = new AccountJson(account);
         return Response.status(Status.OK).entity(json).build();
     }
 
+    
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createAccount(AccountJson json) {
 
         try {
+        	
             AccountData data = json.toAccountData();
             final Account account = accountApi.createAccount(data, null, null, context.getContext());
             URI uri = UriBuilder.fromPath(account.getId().toString()).build();
@@ -112,21 +135,26 @@ public class AccountResource {
     @PUT
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}")
+    @Path("/{accountId:" + UUID_PATTERN + "}")
     public Response updateAccount(AccountJson json, @PathParam("accountId") String accountId) {
         try {
             AccountData data = json.toAccountData();
-            accountApi.updateAccount(accountId, data, context.getContext());
-            return Response.status(Status.NO_CONTENT).build();
+            UUID uuid = UUID.fromString(accountId);
+            accountApi.updateAccount(uuid, data, context.getContext());
+            return getAccount(accountId);
         } catch (AccountApiException e) {
-            log.info(String.format("Failed to update account %s with %s", accountId, json), e);
-            return Response.status(Status.BAD_REQUEST).build();
+        	if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+        		return Response.status(Status.NO_CONTENT).build();        		
+        	} else {
+        		log.info(String.format("Failed to update account %s with %s", accountId, json), e);
+        		return Response.status(Status.BAD_REQUEST).build();
+        	}
         }
     }
 
     // Not supported
     @DELETE
-    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}")
+    @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response cancelAccount(@PathParam("accountId") String accountId) {
         /*
