@@ -18,6 +18,7 @@ package com.ning.billing.catalog.api;
 
 import java.util.Date;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
@@ -79,6 +80,7 @@ public interface StaticCatalog {
 
     public abstract boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException;
 
-    public abstract OverdueStateSet<SubscriptionBundle> currentBundleOverdueStateSet() throws CatalogApiException;
+    public abstract OverdueStateSet<SubscriptionBundle> currentBundleOverdueStateSet()  throws CatalogApiException;
+    public abstract OverdueStateSet<Account>            currentAccountOverdueStateSet() throws CatalogApiException;
 
 }

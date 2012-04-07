@@ -34,13 +34,4 @@ public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBund
         return bundleOverdueStates;
     }
 
-    @Override
-    public OverdueState<SubscriptionBundle> findState(String stateName) throws CatalogApiException {
-        for(DefaultOverdueState<SubscriptionBundle> state: bundleOverdueStates) {
-            if(state.getName().equals(stateName) ) { return state; }
-        }
-        throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_OVEDUE_STATE, stateName);
-    }
-    
-
 }

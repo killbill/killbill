@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -325,6 +326,12 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     public OverdueStateSet<SubscriptionBundle> currentBundleOverdueStateSet()
             throws CatalogApiException {
          return overdueRules.getBundleStateSet();
+    }
+
+    @Override
+    public OverdueStateSet<Account> currentAccountOverdueStateSet()
+            throws CatalogApiException {
+         return overdueRules.getAccountStateSet();
     }
 
 

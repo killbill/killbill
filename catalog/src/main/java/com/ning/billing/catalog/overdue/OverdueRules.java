@@ -20,7 +20,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.StandaloneCatalog;
+import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
@@ -30,6 +32,9 @@ public class OverdueRules  extends ValidatingConfig<StandaloneCatalog> {
 
     @XmlElement(required=false, name="bundleOverdueStates")
     private OverdueStatesBundle bundleOverdueStates;
+    
+    @XmlElement(required=false, name="accountOverdueStates")
+    private OverdueStatesAccount accountOverdueStates;
 
 
     public DefaultOverdueStateSet<SubscriptionBundle> getBundleStateSet() {
@@ -41,5 +46,10 @@ public class OverdueRules  extends ValidatingConfig<StandaloneCatalog> {
     public ValidationErrors validate(StandaloneCatalog root,
             ValidationErrors errors) {
         return bundleOverdueStates.validate(root, errors);
+    }
+
+
+    public DefaultOverdueStateSet<Account> getAccountStateSet() {
+        return accountOverdueStates;
     }
 }

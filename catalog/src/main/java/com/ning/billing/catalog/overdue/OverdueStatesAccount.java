@@ -14,16 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.api.overdue;
+package com.ning.billing.catalog.overdue;
 
-import java.util.UUID;
+import javax.xml.bind.annotation.XmlElement;
 
-public interface Overdueable {
+import com.ning.billing.account.api.Account;
 
-    public enum Type {
-        ACCOUNT,
-        SUBSCRIPTION_BUNDLE
+public class OverdueStatesAccount extends DefaultOverdueStateSet<Account> {
+    
+    @XmlElement(required=false, name="accountOverdueStates")
+    private DefaultOverdueState<Account>[] accountOverdueStates;
+
+    @Override
+    protected DefaultOverdueState<Account>[] getStates() {
+        return accountOverdueStates;
     }
 
-    public UUID getId();
+
 }

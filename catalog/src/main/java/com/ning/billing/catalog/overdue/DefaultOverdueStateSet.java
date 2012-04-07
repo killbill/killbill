@@ -23,6 +23,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.overdue.BillingState;
+import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -41,6 +42,14 @@ public abstract class DefaultOverdueStateSet<T extends Overdueable> extends Vali
             }
         }
         throw new CatalogApiException(ErrorCode.CAT_MISSING_CLEAR_STATE);
+    }
+    
+    @Override
+    public OverdueState<T> findState(String stateName) throws CatalogApiException {
+        for(DefaultOverdueState<T> state: getStates()) {
+            if(state.getName().equals(stateName) ) { return state; }
+        }
+        throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_OVEDUE_STATE, stateName);
     }
     
     

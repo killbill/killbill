@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -451,6 +452,12 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
     public OverdueStateSet<SubscriptionBundle> currentBundleOverdueStateSet()
             throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).currentBundleOverdueStateSet();
+    }
+
+    @Override
+    public OverdueStateSet<Account> currentAccountOverdueStateSet()
+            throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).currentAccountOverdueStateSet();
     }
 
 
