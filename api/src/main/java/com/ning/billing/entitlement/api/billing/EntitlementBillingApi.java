@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api.billing;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -36,8 +37,9 @@ public interface EntitlementBillingApi {
 
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId);
 
-    public void setChargedThroughDate(UUID subscriptionId, DateTime ctd);
+    public void setChargedThroughDate(UUID subscriptionId, DateTime ctd, CallContext context);
 
-    public void setChargedThroughDateFromTransaction(Transmogrifier transactionalDao, UUID subscriptionId, DateTime ctd);
+    public void setChargedThroughDateFromTransaction(Transmogrifier transactionalDao, UUID subscriptionId,
+                                                     DateTime ctd, CallContext context);
 
 }

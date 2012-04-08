@@ -32,6 +32,4 @@ public interface AccountDao extends UpdatableEntityDao<Account> {
      * @throws AccountApiException when externalKey is null
      */
     public UUID getIdFromKey(String externalKey) throws AccountApiException;
-
-	public void deleteByKey(String externalKey, CallContext context) throws AccountApiException;
 }

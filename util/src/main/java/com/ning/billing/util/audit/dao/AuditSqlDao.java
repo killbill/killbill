@@ -16,8 +16,10 @@
 
 package com.ning.billing.util.audit.dao;
 
+import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.ChangeTypeBinder;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -30,12 +32,12 @@ public interface AuditSqlDao {
     @SqlUpdate
     public void insertAuditFromTransaction(@Bind("tableName") final String tableName,
                                            @Bind("recordId") final String recordId,
-                                           @Bind("changeType") String changeType,
+                                           @ChangeTypeBinder final ChangeType changeType,
                                            @CallContextBinder CallContext context);
 
     @SqlBatch(transactional = false)
     public void insertAuditFromTransaction(@Bind("tableName") final String tableName,
                                            @Bind("recordId") final List<String> recordIds,
-                                           @Bind("changeType") String changeType,
+                                           @ChangeTypeBinder final ChangeType changeType,
                                            @CallContextBinder CallContext context);
 }

@@ -24,8 +24,8 @@ import com.ning.billing.entitlement.events.phase.PhaseEventBuilder;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
 import com.ning.billing.entitlement.events.user.*;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.entity.BinderBase;
-import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -54,9 +54,6 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
 
     @SqlUpdate
     public void insertEvent(@Bind(binder = EventSqlDaoBinder.class) EntitlementEvent evt);
-
-    @SqlUpdate
-    public void removeEvents(@Bind("subscription_id") String subscriptionId);
 
     @SqlUpdate
     public void unactiveEvent(@Bind("event_id")String eventId, @Bind("now") Date now);

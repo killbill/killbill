@@ -37,12 +37,12 @@ public interface EntitlementDao {
 
     public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId);
 
-    public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle);
+    public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle, CallContext context);
 
     public Subscription getSubscriptionFromId(final SubscriptionFactory factory, final UUID subscriptionId);
 
     // Account retrieval
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId);
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId);
 
     // Subscription retrieval
     public Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId);
@@ -52,10 +52,10 @@ public interface EntitlementDao {
     public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey);
 
     // Update
-    public void updateSubscription(final SubscriptionData subscription);
+    public void updateSubscription(final SubscriptionData subscription, final CallContext context);
 
     // Event apis
-    public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase);
+    public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase, final CallContext context);
 
     public EntitlementEvent getEventById(final UUID eventId);
 
@@ -64,19 +64,17 @@ public interface EntitlementDao {
     public List<EntitlementEvent> getPendingEventsForSubscription(final UUID subscriptionId);
 
     // Subscription creation, cancellation, changePlan apis
-    public void createSubscription(final SubscriptionData subscription, final List<EntitlementEvent> initialEvents);
+    public void createSubscription(final SubscriptionData subscription, final List<EntitlementEvent> initialEvents, final CallContext context);
 
-    public void recreateSubscription(final UUID subscriptionId, final List<EntitlementEvent> recreateEvents);
+    public void recreateSubscription(final UUID subscriptionId, final List<EntitlementEvent> recreateEvents, final CallContext context);
 
-    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent);
+    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent, final CallContext context);
 
-    public void uncancelSubscription(final UUID subscriptionId, final List<EntitlementEvent> uncancelEvents);
+    public void uncancelSubscription(final UUID subscriptionId, final List<EntitlementEvent> uncancelEvents, final CallContext context);
 
-    public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents);
+    public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents, final CallContext context);
 
-    public void migrate(final UUID accountId, final AccountMigrationData data);
-
-    public void undoMigration(final UUID accountId);
+    public void migrate(final UUID accountId, final AccountMigrationData data, final CallContext context);
 
     // Custom Fields
     public void saveCustomFields(final SubscriptionData subscription, final CallContext context);

@@ -14,13 +14,6 @@ insertBundle() ::= <<
     );
 >>
 
-removeBundle(id) ::= <<
-    delete from bundles
-    where
-      id = :id
-    ;
->>
-
 getBundleFromId(id) ::= <<
     select
       id

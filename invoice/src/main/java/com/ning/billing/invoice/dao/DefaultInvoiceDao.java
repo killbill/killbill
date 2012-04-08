@@ -171,7 +171,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = invoiceDao.become(FixedPriceInvoiceItemSqlDao.class);
                     fixedPriceInvoiceItemDao.batchCreateFromTransaction(fixedPriceInvoiceItems, context);
 
-                    setChargedThroughDates(invoiceSqlDao, fixedPriceInvoiceItems, recurringInvoiceItems);
+                    setChargedThroughDates(invoiceSqlDao, fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
                     // STEPH Why do we need that? Are the payments not always null at this point?
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
@@ -179,10 +179,10 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments, context);
 
                     AuditSqlDao auditSqlDao = invoiceDao.become(AuditSqlDao.class);
-                    auditSqlDao.insertAuditFromTransaction("invoices", invoice.getId().toString(), ChangeType.INSERT.toString(), context);
-                    auditSqlDao.insertAuditFromTransaction("recurring_invoice_items", getIdsFromInvoiceItems(recurringInvoiceItems), ChangeType.INSERT.toString(), context);
-                    auditSqlDao.insertAuditFromTransaction("fixed_invoice_items", getIdsFromInvoiceItems(fixedPriceInvoiceItems), ChangeType.INSERT.toString(), context);
-                    auditSqlDao.insertAuditFromTransaction("invoice_payments", getIdsFromInvoicePayments(invoicePayments), ChangeType.INSERT.toString(), context);
+                    auditSqlDao.insertAuditFromTransaction("invoices", invoice.getId().toString(), ChangeType.INSERT, context);
+                    auditSqlDao.insertAuditFromTransaction("recurring_invoice_items", getIdsFromInvoiceItems(recurringInvoiceItems), ChangeType.INSERT, context);
+                    auditSqlDao.insertAuditFromTransaction("fixed_invoice_items", getIdsFromInvoiceItems(fixedPriceInvoiceItems), ChangeType.INSERT, context);
+                    auditSqlDao.insertAuditFromTransaction("invoice_payments", getIdsFromInvoicePayments(invoicePayments), ChangeType.INSERT, context);
 
                 }
 
@@ -242,8 +242,19 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
-        invoicePaymentSqlDao.notifyOfPaymentAttempt(invoicePayment, context);
+    public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
+        invoicePaymentSqlDao.inTransaction(new Transaction<Void, InvoicePaymentSqlDao>() {
+            @Override
+            public Void inTransaction(InvoicePaymentSqlDao transactional, TransactionStatus status) throws Exception {
+                transactional.notifyOfPaymentAttempt(invoicePayment, context);
+
+                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
+                String invoicePaymentId = invoicePayment.getId().toString();
+                auditSqlDao.insertAuditFromTransaction("invoice_payments", invoicePaymentId, ChangeType.INSERT, context);
+
+                return null;
+            }
+        });
     }
 
     @Override
@@ -366,7 +377,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
     
     private void setChargedThroughDates(final InvoiceSqlDao dao, final Collection<InvoiceItem> fixedPriceItems,
-                                        final Collection<InvoiceItem> recurringItems) {
+                                        final Collection<InvoiceItem> recurringItems, CallContext context) {
         Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
         addInvoiceItemsToChargeThroughDates(chargeThroughDates, fixedPriceItems);
         addInvoiceItemsToChargeThroughDates(chargeThroughDates, recurringItems);
@@ -374,7 +385,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         for (UUID subscriptionId : chargeThroughDates.keySet()) {
             DateTime chargeThroughDate = chargeThroughDates.get(subscriptionId);
             log.info("Setting CTD for subscription {} to {}", subscriptionId.toString(), chargeThroughDate.toString());
-            entitlementBillingApi.setChargedThroughDateFromTransaction(dao, subscriptionId, chargeThroughDate);
+            entitlementBillingApi.setChargedThroughDateFromTransaction(dao, subscriptionId, chargeThroughDate, context);
         }
     }
 

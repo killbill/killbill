@@ -46,12 +46,6 @@ update() ::= <<
     WHERE id = :id;
 >>
 
-deleteByKey() ::= <<
-    DELETE FROM accounts
-    WHERE external_key = :externalKey;
->>
-
-
 getAccountByKey() ::= <<
     select <accountFields()>
     from accounts

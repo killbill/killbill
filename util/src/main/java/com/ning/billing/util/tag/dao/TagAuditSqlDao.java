@@ -31,14 +31,6 @@ import java.util.List;
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagMapper.class)
 public interface TagAuditSqlDao extends Transactional<TagAuditSqlDao> {
-    @SqlBatch(transactional=false)
-    public void batchInsertFromTransaction(@TagBinder final List<Tag> tag,
-                                           @CallContextBinder final CallContext context);
-
-    @SqlBatch(transactional=false)
-    public void batchDeleteFromTransaction(@TagBinder final List<Tag> tag,
-                                           @CallContextBinder final CallContext context);
-
     @SqlUpdate
     public void addTagFromTransaction(@Bind("id") final String tagId,
                                       @CallContextBinder final CallContext context);

@@ -18,8 +18,8 @@ package com.ning.billing.entitlement.engine.dao;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
-import com.ning.billing.util.entity.BinderBase;
-import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -44,9 +44,6 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
 
     @SqlUpdate
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle);
-
-    @SqlUpdate
-    public void removeBundle(@Bind("id") String id);
 
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)

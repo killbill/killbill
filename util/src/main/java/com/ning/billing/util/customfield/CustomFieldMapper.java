@@ -16,7 +16,7 @@
 
 package com.ning.billing.util.customfield;
 
-import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;

@@ -69,7 +69,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.CREATE);
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                getProductSpecifier(productName, planSetName, term, null), requestedDate);
+                getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
         assertNotNull(subscription);
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(subscription.getBundleId(), bundle.getId());
@@ -86,9 +86,9 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
             if (fromUserAPi) {
                 subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                        getProductSpecifier(productName, planSetName, term, null), requestedDate);
+                        getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             } else {
-                subscription.recreate(getProductSpecifier(productName, planSetName, term, null), requestedDate);
+                subscription.recreate(getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             }
             Assert.fail("Expected Create API to fail since BP already exists");
         } catch (EntitlementUserApiException e) {
@@ -97,12 +97,12 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
         // NOW CANCEL ADN THIS SHOULD WORK
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        subscription.cancel(null, false);
+        subscription.cancel(null, false, context);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.RE_CREATE);
 
-        // Avoid ordering issue for events at excat same date; this is actually a real good test, we
+        // Avoid ordering issue for events at exact same date; this is actually a real good test, we
         // we test it at Beatrix level. At this level that would work for sql tests but not for in memory.
         try {
             Thread.sleep(1000);
@@ -112,9 +112,9 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
         if (fromUserAPi) {
             subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), requestedDate);
+                    getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
         } else {
-            subscription.recreate(getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow());
+            subscription.recreate(getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
         }
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(subscription.getBundleId(), bundle.getId());

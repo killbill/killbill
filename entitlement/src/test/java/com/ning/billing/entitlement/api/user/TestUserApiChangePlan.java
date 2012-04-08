@@ -88,7 +88,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), context);
             assertTrue(testListener.isCompleted(2000));
 
             // CHECK CHANGE PLAN
@@ -129,12 +129,12 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             // SET CTD
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
 
             // RE READ SUBSCRIPTION + CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
-            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
@@ -186,7 +186,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             clock.setDeltaFromReality(moveALittleInTime, 0);
 
             // CHANGE PLAN IMM
-            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), context);
             checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.TRIAL);
 
             assertTrue(testListener.isCompleted(2000));
@@ -245,7 +245,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             // SET CTD
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
 
             // RE READ SUBSCRIPTION + CHECK CURRENT PHASE
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
@@ -257,7 +257,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             currentTime = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow());
+            subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), context);
 
             checkChangePlan(subscription, fromProd, ProductCategory.BASE, fromTerm, PhaseType.EVERGREEN);
 
@@ -317,17 +317,17 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             DateTime startDiscountPhase = DefaultClock.addDuration(subscription.getStartDate(), durationList);
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow());
+            subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(2000));
 
             // CHANGE
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
+            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(2000));
 
             Plan currentPlan = subscription.getCurrentPlan();
@@ -363,18 +363,18 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             DateTime startDiscountPhase = DefaultClock.addDuration(subscription.getStartDate(), durationList);
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow());
+            subscription.changePlan("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
             // CHANGE EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
+            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
@@ -442,7 +442,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             // CHANGE IMMEDIATE TO A 3 PHASES PLAN
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
+            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
             assertTrue(testListener.isCompleted(3000));
             testListener.reset();
 
