@@ -18,6 +18,8 @@ package com.ning.billing.entitlement.engine.dao;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
@@ -43,7 +45,8 @@ import java.util.UUID;
 public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Transmogrifier {
 
     @SqlUpdate
-    public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle);
+    public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle,
+                             @CallContextBinder final CallContext context);
 
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)

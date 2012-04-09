@@ -125,7 +125,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         return bundlesDao.inTransaction(new Transaction<SubscriptionBundle, BundleSqlDao>() {
             @Override
             public SubscriptionBundle inTransaction(BundleSqlDao bundlesDao, TransactionStatus status) {
-                bundlesDao.insertBundle(bundle);
+                bundlesDao.insertBundle(bundle, context);
 
                 AuditSqlDao auditSqlDao = bundlesDao.become(AuditSqlDao.class);
                 String bundleId = bundle.getId().toString();
@@ -210,7 +210,7 @@ public class EntitlementSqlDao implements EntitlementDao {
             public Void inTransaction(EventSqlDao dao,
                     TransactionStatus status) throws Exception {
                 cancelNextPhaseEventFromTransaction(subscriptionId, dao, context);
-                dao.insertEvent(nextPhase);
+                dao.insertEvent(nextPhase, context);
                 AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, nextPhase.getId().toString(), ChangeType.INSERT, context);
 
@@ -259,7 +259,7 @@ public class EntitlementSqlDao implements EntitlementDao {
                 List<String> eventIds = new ArrayList<String>();
 
                 for (final EntitlementEvent cur : initialEvents) {
-                    eventsDaoFromSameTransaction.insertEvent(cur);
+                    eventsDaoFromSameTransaction.insertEvent(cur, context);
                     eventIds.add(cur.getId().toString()); // collect ids for batch audit log insert
                     recordFutureNotificationFromTransaction(dao,
                             cur.getEffectiveDate(),
@@ -289,7 +289,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                 List<String> eventIds = new ArrayList<String>();
                 for (final EntitlementEvent cur : recreateEvents) {
-                    dao.insertEvent(cur);
+                    dao.insertEvent(cur, context);
                     eventIds.add(cur.getId().toString()); // gather event ids for batch audit insert
                     recordFutureNotificationFromTransaction(dao,
                             cur.getEffectiveDate(),
@@ -318,7 +318,7 @@ public class EntitlementSqlDao implements EntitlementDao {
                 cancelNextCancelEventFromTransaction(subscriptionId, dao, context);
                 cancelNextChangeEventFromTransaction(subscriptionId, dao, context);
                 cancelNextPhaseEventFromTransaction(subscriptionId, dao, context);
-                dao.insertEvent(cancelEvent);
+                dao.insertEvent(cancelEvent, context);
                 AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
                 String cancelEventId = cancelEvent.getId().toString();
                 auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, cancelEventId, ChangeType.INSERT, context);
@@ -359,12 +359,12 @@ public class EntitlementSqlDao implements EntitlementDao {
                 }
 
                 if (existingCancelId != null) {
-                    dao.unactiveEvent(existingCancelId.toString(), now);
+                    dao.unactiveEvent(existingCancelId.toString(), context);
                     String deactivatedEventId = existingCancelId.toString();
 
                     List<String> eventIds = new ArrayList<String>();
                     for (final EntitlementEvent cur : uncancelEvents) {
-                        dao.insertEvent(cur);
+                        dao.insertEvent(cur, context);
                         eventIds.add(cur.getId().toString()); // gather event ids for batch insert into audit log
                         recordFutureNotificationFromTransaction(dao,
                                 cur.getEffectiveDate(),
@@ -395,7 +395,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                 List<String> eventIds = new ArrayList<String>();
                 for (final EntitlementEvent cur : changeEvents) {
-                    dao.insertEvent(cur);
+                    dao.insertEvent(cur, context);
                     eventIds.add(cur.getId().toString()); // gather event ids for batch audit log insert
 
                     recordFutureNotificationFromTransaction(dao,
@@ -447,7 +447,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         }
 
         if (futureEventId != null) {
-            dao.unactiveEvent(futureEventId.toString(), now);
+            dao.unactiveEvent(futureEventId.toString(), context);
 
             AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
             auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, futureEventId.toString(), ChangeType.UPDATE, context);
@@ -574,7 +574,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                         SubscriptionData subData = curSubscription.getData();
                         for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
-                            transEventDao.insertEvent(curEvent);
+                            transEventDao.insertEvent(curEvent, context);
                             eventIds.add(curEvent.getId().toString()); // gather event ids for batch audit
 
                             recordFutureNotificationFromTransaction(transEventDao,
@@ -589,7 +589,7 @@ public class EntitlementSqlDao implements EntitlementDao {
                         transSubDao.insertSubscription(subData, context);
                         subscriptionIds.add(subData.getId().toString()); // gather subscription ids for batch audit
                     }
-                    transBundleDao.insertBundle(bundleData);
+                    transBundleDao.insertBundle(bundleData, context);
                     bundleIds.add(bundleData.getId().toString()); // gather bundle ids for batch audit
                 }
 

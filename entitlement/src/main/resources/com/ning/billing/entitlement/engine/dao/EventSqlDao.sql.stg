@@ -1,21 +1,25 @@
 group EventSqlDao;
 
-getEventById(event_id) ::= <<
-  select
-      id
-      , event_id
-      , event_type
-      , user_type
-      , created_dt
-      , updated_dt
-      , requested_dt
-      , effective_dt
-      , subscription_id
-      , plan_name
-      , phase_name
-      , plist_name
-      , current_version
-      , is_active  
+fields(prefix) ::= <<
+    <prefix>event_id,
+    <prefix>event_type,
+    <prefix>user_type,
+    <prefix>requested_dt,
+    <prefix>effective_dt,
+    <prefix>subscription_id,
+    <prefix>plan_name,
+    <prefix>phase_name,
+    <prefix>plist_name,
+    <prefix>current_version,
+    <prefix>is_active,
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date
+>>
+
+getEventById() ::= <<
+  select id, <fields()>
   from entitlement_events
   where
       event_id = :event_id
@@ -23,26 +27,11 @@ getEventById(event_id) ::= <<
 >>
 
 insertEvent() ::= <<
-    insert into entitlement_events (
-      event_id
-      , event_type
-      , user_type
-      , created_dt
-      , updated_dt
-      , requested_dt
-      , effective_dt
-      , subscription_id
-      , plan_name
-      , phase_name
-      , plist_name
-      , current_version
-      , is_active
-    ) values (
+    insert into entitlement_events (<fields()>)
+    values (
       :event_id
       , :event_type
       , :user_type
-      , :created_dt
-      , :updated_dt
       , :requested_dt
       , :effective_dt
       , :subscription_id
@@ -51,45 +40,37 @@ insertEvent() ::= <<
       , :plist_name
       , :current_version
       , :is_active
+      , :userName
+      , :createdDate
+      , :userName
+      , :updatedDate
     );   
 >>
 
-unactiveEvent(event_id, now) ::= <<
+unactiveEvent() ::= <<
     update entitlement_events
     set
       is_active = 0
-      , updated_dt = :now
+      , updated_by = :userName
+      , updated_date = :updatedDate
     where
       event_id = :event_id
     ;
 >>
 
-reactiveEvent(event_id, now) ::= <<
+reactiveEvent() ::= <<
     update entitlement_events
     set
       is_active = 1
-      , updated_dt = :now
+      , updated_by = :userName
+      , updated_date = :updatedDate
     where
       event_id = :event_id
     ;
 >>
 
-getFutureActiveEventForSubscription(subscription_id, now) ::= <<
-    select 
-      id
-      , event_id
-      , event_type
-      , user_type
-      , created_dt
-      , updated_dt
-      , requested_dt
-      , effective_dt
-      , subscription_id
-      , plan_name
-      , phase_name
-      , plist_name
-      , current_version
-      , is_active
+getFutureActiveEventForSubscription() ::= <<
+    select id, <fields()>
     from entitlement_events
     where
       subscription_id = :subscription_id
@@ -97,34 +78,20 @@ getFutureActiveEventForSubscription(subscription_id, now) ::= <<
       and effective_dt > :now
     order by
       effective_dt asc
-      , created_dt asc
+      , created_date asc
       , requested_dt asc
       , id asc
     ;
 >> 
 
 getEventsForSubscription(subscription_id) ::= <<
-    select
-       id
-      , event_id
-      , event_type
-      , user_type
-      , created_dt
-      , updated_dt
-      , requested_dt
-      , effective_dt
-      , subscription_id
-      , plan_name
-      , phase_name
-      , plist_name
-      , current_version
-      , is_active
+    select id, <fields()>
     from entitlement_events
     where
       subscription_id = :subscription_id
     order by
       effective_dt asc
-      , created_dt asc
+      , created_date asc
       , requested_dt asc
       , id asc
     ;      
