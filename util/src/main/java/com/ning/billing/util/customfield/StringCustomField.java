@@ -17,18 +17,22 @@
 package com.ning.billing.util.customfield;
 
 import java.util.UUID;
-import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.UpdatableEntityBase;
+import org.joda.time.DateTime;
 
-public class StringCustomField extends EntityBase<CustomField> implements CustomField {
+public class StringCustomField extends UpdatableEntityBase implements CustomField {
     private String name;
     private String value;
 
     public StringCustomField(String name, String value) {
-        this(UUID.randomUUID(), name, value);
+        super();
+        this.name = name;
+        this.value = value;
     }
 
-    public StringCustomField(UUID id, String name, String value) {
-        super(id);
+    public StringCustomField(UUID id, String createdBy, DateTime createdDate,
+                             String updatedBy, DateTime updatedDate, String name, String value) {
+        super(id, createdBy, createdDate, updatedBy, updatedDate);
         this.name = name;
         this.value = value;
     }

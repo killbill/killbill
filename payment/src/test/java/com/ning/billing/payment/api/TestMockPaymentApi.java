@@ -16,6 +16,8 @@
 
 package com.ning.billing.payment.api;
 
+import com.google.inject.Inject;
+import com.ning.billing.util.clock.Clock;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -26,5 +28,8 @@ import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 @Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
 @Test(groups = "fast")
 public class TestMockPaymentApi extends TestPaymentApi {
-
+    @Inject
+    public TestMockPaymentApi(Clock clock) {
+        super(clock);
+    }
 }

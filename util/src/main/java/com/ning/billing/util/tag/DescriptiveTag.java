@@ -17,41 +17,39 @@
 package com.ning.billing.util.tag;
 
 import java.util.UUID;
-import org.joda.time.DateTime;
+
+import com.google.inject.Inject;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.entity.UpdatableEntityBase;
+import org.joda.time.DateTime;
 
 public class DescriptiveTag extends EntityBase implements Tag {
     private final String tagDefinitionName;
-    private final String addedBy;
-    private final DateTime addedDate;
 
-    public DescriptiveTag(UUID id, String tagDefinitionName, String addedBy, DateTime addedDate) {
-        super(id);
+    @Inject
+    private Clock clock;
+
+    // use to hydrate objects from the persistence layer
+    public DescriptiveTag(UUID id, String createdBy, DateTime createdDate, String tagDefinitionName) {
+        super(id, createdBy, createdDate);
         this.tagDefinitionName = tagDefinitionName;
-        this.addedBy = addedBy;
-        this.addedDate = addedDate;
     }
 
-    public DescriptiveTag(UUID id, TagDefinition tagDefinition, String addedBy, DateTime addedDate) {
-        this(id, tagDefinition.getName(), addedBy, addedDate);
+    // use to create new objects
+    public DescriptiveTag(TagDefinition tagDefinition) {
+        super();
+        this.tagDefinitionName = tagDefinition.getName();
     }
 
-    public DescriptiveTag(TagDefinition tagDefinition, String addedBy, DateTime addedDate) {
-        this(UUID.randomUUID(), tagDefinition.getName(), addedBy, addedDate);
+    // use to create new objects
+    public DescriptiveTag(String tagDefinitionName) {
+        super();
+        this.tagDefinitionName = tagDefinitionName;
     }
 
     @Override
     public String getTagDefinitionName() {
         return tagDefinitionName;
-    }
-
-    @Override
-    public String getAddedBy() {
-        return addedBy;
-    }
-
-    @Override
-    public DateTime getAddedDate() {
-        return addedDate;
     }
 }

@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -40,8 +41,8 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
      }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
-        dao.notifyOfPaymentAttempt(invoicePayment);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
+        dao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
 	@Override
@@ -66,15 +67,15 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
-        InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate, amount, currency, null);
-        dao.notifyOfPaymentAttempt(invoicePayment);
+    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context) {
+        InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate, amount, currency);
+        dao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
     @Override
-    public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+    public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context) {
         InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
-        dao.notifyOfPaymentAttempt(invoicePayment);
+        dao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
 

@@ -14,21 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.util.customfield;
+package com.ning.billing.util.tag;
 
-import java.util.List;
-import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.glue.TagStoreModule;
+import com.ning.billing.util.tag.dao.MockTagDao;
+import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
+import com.ning.billing.util.tag.dao.TagDao;
+import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
-public interface CustomizableEntity extends Entity {
-    public String getFieldValue(String fieldName);
-
-    public void setFieldValue(String fieldName, String fieldValue);
-
-    public List<CustomField> getFieldList();
-
-    public void addFields(List<CustomField> fields);
-
-    public void clearFields();
-
-    public String getObjectName();
+public class MockTagStoreModuleMemory extends TagStoreModule {
+    @Override
+    protected void installDaos() {
+        bind(TagDefinitionDao.class).to(MockTagDefinitionDao.class).asEagerSingleton();
+        bind(TagDao.class).to(MockTagDao.class).asEagerSingleton();
+    }
 }

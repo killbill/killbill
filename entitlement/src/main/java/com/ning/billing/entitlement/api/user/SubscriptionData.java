@@ -31,26 +31,27 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.TimeLimit;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Visibility;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.CustomizableEntityBase;
 
+import com.ning.billing.util.entity.ExtendedEntityBase;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-public class SubscriptionData extends CustomizableEntityBase implements Subscription {
+public class SubscriptionData extends ExtendedEntityBase implements Subscription {
 
     private final static Logger log = LoggerFactory.getLogger(SubscriptionData.class);
 
@@ -83,8 +84,9 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         this(builder, null, null);
     }
 
-    public SubscriptionData(SubscriptionBuilder builder, SubscriptionApiService apiService, Clock clock) {
-        super(builder.getId());
+    public SubscriptionData(SubscriptionBuilder builder, @Nullable SubscriptionApiService apiService,
+                            @Nullable Clock clock) {
+        super(builder.getId(), null, null);
         this.apiService = apiService;
         this.clock = clock;
         this.bundleId = builder.getBundleId();
@@ -101,56 +103,33 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         return "Subscription";
     }
 
-
     @Override
-    public void setFieldValue(String fieldName, String fieldValue) {
-        setFieldValueInternal(fieldName, fieldValue, true);
-    }
-
-    public void setFieldValueInternal(String fieldName, String fieldValue, boolean commit) {
+    public void saveFieldValue(String fieldName, @Nullable String fieldValue, CallContext context) {
         super.setFieldValue(fieldName, fieldValue);
-        if (commit) {
-            apiService.commitCustomFields(this);
-        }
-    }
-
-
-    @Override
-    public void addFields(List<CustomField> fields) {
-        addFieldsInternal(fields, true);
-    }
-
-    public void addFieldsInternal(List<CustomField> fields, boolean commit) {
-        super.addFields(fields);
-        if (commit) {
-            apiService.commitCustomFields(this);
-        }
+        apiService.commitCustomFields(this, context);
     }
 
     @Override
-    public void clearFields() {
-        clearFieldsInternal(true);
+    public void saveFields(List<CustomField> fields, CallContext context) {
+        super.setFields(fields);
+        apiService.commitCustomFields(this, context);
     }
 
-    public void clearFieldsInternal(boolean commit) {
+    @Override
+    public void clearPersistedFields(CallContext context) {
         super.clearFields();
-        if (commit) {
-            apiService.commitCustomFields(this);
-        }
+        apiService.commitCustomFields(this, context);
     }
-
 
     @Override
     public UUID getBundleId() {
         return bundleId;
     }
 
-
     @Override
     public DateTime getStartDate() {
         return startDate;
     }
-
 
     @Override
     public SubscriptionState getState() {
@@ -185,25 +164,25 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
 
 
     @Override
-    public void cancel(DateTime requestedDate, boolean eot) throws EntitlementUserApiException  {
-        apiService.cancel(this, requestedDate, eot);
+    public void cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException  {
+        apiService.cancel(this, requestedDate, eot, context);
     }
 
     @Override
-    public void uncancel() throws EntitlementUserApiException {
-        apiService.uncancel(this);
+    public void uncancel(CallContext context) throws EntitlementUserApiException {
+        apiService.uncancel(this, context);
     }
 
     @Override
     public void changePlan(String productName, BillingPeriod term,
-            String priceList, DateTime requestedDate) throws EntitlementUserApiException {
-        apiService.changePlan(this, productName, term, priceList, requestedDate);
+            String priceList, DateTime requestedDate, CallContext context) throws EntitlementUserApiException {
+        apiService.changePlan(this, productName, term, priceList, requestedDate, context);
     }
 
     @Override
-    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate)
+    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
             throws EntitlementUserApiException {
-        apiService.recreatePlan(this, spec, requestedDate);
+        apiService.recreatePlan(this, spec, requestedDate, context);
     }
 
     public List<SubscriptionTransition> getBillingTransitions() {
@@ -310,7 +289,6 @@ public class SubscriptionData extends CustomizableEntityBase implements Subscrip
         }
         return false;
     }
-
 
     public DateTime getPlanChangeEffectiveDate(ActionPolicy policy, DateTime requestedDate) {
 

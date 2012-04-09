@@ -20,6 +20,8 @@ import static org.testng.Assert.assertNotNull;
 
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -51,6 +53,8 @@ public class TestNotifyInvoicePaymentApi {
     @Inject
     private TestHelper testHelper;
 
+    private CallContext context = new TestCallContext("Payment Api Tests");
+
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws EventBusException {
         eventBus.start();
@@ -74,7 +78,8 @@ public class TestNotifyInvoicePaymentApi {
                                      invoice.getBalance(),
                                      invoice.getCurrency(),
                                      paymentAttempt.getPaymentAttemptId(),
-                                     paymentAttempt.getPaymentAttemptDate());
+                                     paymentAttempt.getPaymentAttemptDate(),
+                                     context);
 
         InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getPaymentAttemptId());
 
@@ -89,7 +94,8 @@ public class TestNotifyInvoicePaymentApi {
         PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
         invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
                                                  paymentAttempt.getPaymentAttemptId(),
-                                                 paymentAttempt.getPaymentAttemptDate());
+                                                 paymentAttempt.getPaymentAttemptDate(),
+                                                 context);
 
         InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getPaymentAttemptId());
 

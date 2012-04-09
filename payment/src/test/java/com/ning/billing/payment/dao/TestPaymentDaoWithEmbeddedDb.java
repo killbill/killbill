@@ -18,7 +18,6 @@ package com.ning.billing.payment.dao;
 
 import java.io.IOException;
 
-import com.ning.billing.util.clock.DefaultClock;
 import org.apache.commons.io.IOUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -31,7 +30,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 public class TestPaymentDaoWithEmbeddedDb extends TestPaymentDao {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(groups = { "slow", "database" })
     public void startMysql() throws IOException {
         final String paymentddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
 
@@ -39,13 +38,13 @@ public class TestPaymentDaoWithEmbeddedDb extends TestPaymentDao {
         helper.initDb(paymentddl);
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups = { "slow", "database" })
     public void stopMysql() {
         helper.stopMysql();
     }
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups = { "slow", "database" })
     public void setUp() throws IOException {
-        paymentDao = new DefaultPaymentDao(helper.getDBI(), new DefaultClock());
+        paymentDao = new AuditedPaymentDao(helper.getDBI());
     }
 }

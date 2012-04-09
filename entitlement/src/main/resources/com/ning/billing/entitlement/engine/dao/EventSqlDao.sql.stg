@@ -54,13 +54,6 @@ insertEvent() ::= <<
     );   
 >>
 
-removeEvents(subscription_id) ::= <<
-    delete from entitlement_events
-      where
-    subscription_id = :subscription_id
-    ;
->>
-
 unactiveEvent(event_id, now) ::= <<
     update entitlement_events
     set

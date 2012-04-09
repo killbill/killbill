@@ -20,10 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
-import com.ning.billing.account.api.AccountData;
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 
@@ -31,11 +30,11 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
-public class MockIEntitlementUserApi implements EntitlementUserApi
+public class MockEntitlementUserApi implements EntitlementUserApi
 {
     private final Map<UUID, String> subscriptionBundles = new HashMap<UUID, String>();
 
-    public MockIEntitlementUserApi(final UUID bundleUUID, final String key)
+    public MockEntitlementUserApi(final UUID bundleUUID, final String key)
     {
         subscriptionBundles.put(bundleUUID, key);
     }
@@ -95,7 +94,7 @@ public class MockIEntitlementUserApi implements EntitlementUserApi
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey) throws EntitlementUserApiException
+    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey, CallContext context) throws EntitlementUserApiException
     {
         throw new UnsupportedOperationException();
     }
@@ -107,7 +106,7 @@ public class MockIEntitlementUserApi implements EntitlementUserApi
 
 	@Override
 	public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec,
-			DateTime requestedDate) throws EntitlementUserApiException {
+			DateTime requestedDate, CallContext context) throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
 	}
 

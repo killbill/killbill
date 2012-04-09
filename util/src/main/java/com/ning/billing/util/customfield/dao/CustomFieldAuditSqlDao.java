@@ -14,25 +14,24 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag.dao;
+package com.ning.billing.util.customfield.dao;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.customfield.CustomFieldHistory;
+import com.ning.billing.util.customfield.CustomFieldHistoryBinder;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import java.util.List;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
-import com.ning.billing.util.entity.EntityCollectionDao;
-import com.ning.billing.util.tag.Tag;
-
 @ExternalizedSqlViaStringTemplate3
-@RegisterMapper(TagMapper.class)
-public interface TagStoreSqlDao extends EntityCollectionDao<Tag>, Transactional<TagStoreSqlDao> {
-    @Override
+public interface CustomFieldAuditSqlDao extends Transactional<CustomFieldAuditSqlDao> {
     @SqlBatch(transactional=false)
-    public void batchSaveFromTransaction(@Bind("objectId") final String objectId,
-                     @Bind("objectType") final String objectType,
-                     @TagBinder final List<Tag> entities);
+    public void batchInsertAuditLogFromTransaction(@Bind("objectId") final String objectId,
+                                                   @Bind("objectType") final String objectType,
+                                                   @CustomFieldHistoryBinder final List<CustomFieldHistory> entities,
+                                                   @CallContextBinder final CallContext context);
 }

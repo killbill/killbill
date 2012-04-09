@@ -24,8 +24,10 @@ import java.lang.annotation.Target;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
+
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.entity.EntityDao;
-import com.ning.billing.util.entity.UpdatableEntityDao;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTime;
@@ -43,20 +45,16 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
-public interface TagDefinitionSqlDao extends UpdatableEntityDao<TagDefinition> {
+public interface TagDefinitionSqlDao extends EntityDao<TagDefinition> {
     @Override
     @SqlUpdate
-    public void create(@TagDefinitionBinder final TagDefinition entity);
-
-    @Override
-    @SqlUpdate
-    public void update(@TagDefinitionBinder final TagDefinition entity);
+    public void create(@TagDefinitionBinder final TagDefinition entity, @CallContextBinder final CallContext context);
 
     @SqlUpdate
-    public void deleteAllTagsForDefinition(@Bind("name") final String definitionName);
+    public void deleteAllTagsForDefinition(@Bind("name") final String definitionName, @CallContextBinder final CallContext context);
 
     @SqlUpdate
-    public void deleteTagDefinition(@Bind("name") final String definitionName);
+    public void deleteTagDefinition(@Bind("name") final String definitionName, @CallContextBinder final CallContext context);
 
     @SqlQuery
     public int tagDefinitionUsageCount(@Bind("name") final String definitionName);
@@ -71,7 +69,8 @@ public interface TagDefinitionSqlDao extends UpdatableEntityDao<TagDefinition> {
             String name = result.getString("name");
             String description = result.getString("description");
             String createdBy = result.getString("created_by");
-            return new DefaultTagDefinition(id, name, description, createdBy);
+            DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
+            return new DefaultTagDefinition(id, createdBy, createdDate, name, description);
         }
     }
 
@@ -85,7 +84,6 @@ public interface TagDefinitionSqlDao extends UpdatableEntityDao<TagDefinition> {
                     public void bind(final SQLStatement q, final TagDefinitionBinder bind, final TagDefinition tagDefinition) {
                         q.bind("id", tagDefinition.getId().toString());
                         q.bind("name", tagDefinition.getName());
-                        q.bind("createdBy", tagDefinition.getCreatedBy());
                         q.bind("description", tagDefinition.getDescription());
                     }
                 };

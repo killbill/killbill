@@ -18,8 +18,9 @@ package com.ning.billing.entitlement.engine.dao;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -35,8 +36,6 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,9 +44,6 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
 
     @SqlUpdate
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle);
-
-    @SqlUpdate
-    public void removeBundle(@Bind("id") String id);
 
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
@@ -61,12 +57,7 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
     @Mapper(ISubscriptionBundleSqlMapper.class)
     public List<SubscriptionBundle> getBundleFromAccount(@Bind("account_id") String accountId);
 
-    public static class SubscriptionBundleBinder implements Binder<Bind, SubscriptionBundleData> {
-
-        private Date getDate(DateTime dateTime) {
-            return dateTime == null ? null : dateTime.toDate();
-        }
-
+    public static class SubscriptionBundleBinder extends BinderBase implements Binder<Bind, SubscriptionBundleData> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, SubscriptionBundleData bundle) {
             stmt.bind("id", bundle.getId().toString());
@@ -76,13 +67,7 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
         }
     }
 
-    public static class ISubscriptionBundleSqlMapper implements ResultSetMapper<SubscriptionBundle> {
-
-        private DateTime getDate(ResultSet r, String fieldName) throws SQLException {
-            final Timestamp resultStamp = r.getTimestamp(fieldName);
-            return r.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
-        }
-
+    public static class ISubscriptionBundleSqlMapper extends MapperBase implements ResultSetMapper<SubscriptionBundle> {
         @Override
         public SubscriptionBundle map(int arg, ResultSet r,
                 StatementContext ctx) throws SQLException {

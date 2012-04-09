@@ -17,11 +17,11 @@
 package com.ning.billing.entitlement.engine.core;
 
 import com.ning.billing.entitlement.events.EntitlementEvent;
-
+import com.ning.billing.util.callcontext.CallContext;
 
 
 public interface EventListener {
 
-    public void processEventReady(EntitlementEvent event);
+    public void processEventReady(EntitlementEvent event, CallContext context);
 
 }

@@ -54,7 +54,7 @@ public abstract class EntityCollectionBase<T extends Entity> implements EntityCo
 
     @Override
     public void remove(T entity) {
-        entities.remove(entity);
+        entities.remove(getEntityKey(entity));
     }
 
     @Override

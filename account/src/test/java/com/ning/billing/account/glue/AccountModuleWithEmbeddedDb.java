@@ -18,7 +18,11 @@ package com.ning.billing.account.glue;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.util.customfield.CustomFieldMapper;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.CallContextModule;
+import com.ning.billing.util.glue.FieldStoreModule;
+import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.jdbi.v2.IDBI;
 
 import java.io.IOException;
@@ -41,8 +45,11 @@ public class AccountModuleWithEmbeddedDb extends AccountModule {
     @Override
     protected void configure() {
         bind(IDBI.class).toInstance(helper.getDBI());
-        super.configure();
         install(new BusModule());
         install(new MockClockModule());
+        install(new CallContextModule());
+        install(new TagStoreModule());
+        install(new FieldStoreModule());
+        super.configure();
     }
 }

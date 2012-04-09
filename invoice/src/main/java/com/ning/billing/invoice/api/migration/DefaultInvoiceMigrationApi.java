@@ -19,6 +19,10 @@ package com.ning.billing.invoice.api.migration;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -27,7 +31,6 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
-import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.MigrationInvoiceItem;
 import com.ning.billing.util.clock.Clock;
 
@@ -44,10 +47,11 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
 
 	@Override
 	public UUID createMigrationInvoice(UUID accountId, DateTime targetDate, BigDecimal balance, Currency currency) {
-		Invoice migrationInvoice = new DefaultInvoice(accountId, targetDate, currency, clock, true);
-		InvoiceItem migrationInvoiceItem = new MigrationInvoiceItem(migrationInvoice.getId(), targetDate, balance, currency, clock);
+        CallContext context = new DefaultCallContextFactory(clock).createMigrationCallContext("Migration", CallOrigin.INTERNAL, UserType.MIGRATION, clock.getUTCNow(), clock.getUTCNow());
+		Invoice migrationInvoice = new MigrationInvoice(accountId, clock.getUTCNow(), targetDate, currency);
+		InvoiceItem migrationInvoiceItem = new MigrationInvoiceItem(migrationInvoice.getId(), accountId, targetDate, balance, currency );
 		migrationInvoice.addInvoiceItem(migrationInvoiceItem);
-		dao.create(migrationInvoice);
+		dao.create(migrationInvoice, context);
 		return migrationInvoice.getId();
 	}
 }

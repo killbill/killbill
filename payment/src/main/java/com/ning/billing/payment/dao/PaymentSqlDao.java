@@ -19,20 +19,21 @@ package com.ning.billing.payment.dao;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -45,60 +46,65 @@ import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
 
 @ExternalizedSqlViaStringTemplate3()
+@RegisterMapper({PaymentSqlDao.PaymentAttemptMapper.class, PaymentSqlDao.PaymentInfoMapper.class})
 public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Transmogrifier {
     @SqlUpdate
-    void insertPaymentAttempt(@Bind(binder = PaymentAttemptBinder.class) PaymentAttempt paymentAttempt);
+    void insertPaymentAttempt(@Bind(binder = PaymentAttemptBinder.class) PaymentAttempt paymentAttempt,
+                              @CallContextBinder CallContext context);
+
+    @SqlUpdate
+    void insertPaymentAttemptHistory(@Bind("historyRecordId") final String historyRecordId,
+                                     @Bind(binder = PaymentAttemptBinder.class) final PaymentAttempt paymentAttempt,
+                                     @CallContextBinder final CallContext context);
 
     @SqlQuery
-    @Mapper(PaymentAttemptMapper.class)
     PaymentAttempt getPaymentAttemptForPaymentId(@Bind("payment_id") String paymentId);
 
     @SqlQuery
-    @Mapper(PaymentAttemptMapper.class)
     PaymentAttempt getPaymentAttemptById(@Bind("payment_attempt_id") String paymentAttemptId);
 
     @SqlQuery
-    @Mapper(PaymentAttemptMapper.class)
     List<PaymentAttempt> getPaymentAttemptsForInvoiceId(@Bind("invoice_id") String invoiceId);
 
     @SqlQuery
-    @Mapper(PaymentAttemptMapper.class)
     List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(@BindIn("invoiceIds") List<String> invoiceIds);
 
     @SqlQuery
-    @Mapper(PaymentInfoMapper.class)
     PaymentInfo getPaymentInfoForPaymentAttemptId(@Bind("payment_attempt_id") String paymentAttemptId);
 
     @SqlUpdate
     void updatePaymentAttemptWithPaymentId(@Bind("payment_attempt_id") String paymentAttemptId,
                                            @Bind("payment_id") String paymentId,
-                                           @Bind("updated_dt") Date updatedDate);
+                                           @CallContextBinder CallContext context);
 
     @SqlUpdate
     void updatePaymentAttemptWithRetryInfo(@Bind("payment_attempt_id") String paymentAttemptId,
                                            @Bind("retry_count") int retryCount,
-                                           @Bind("updated_dt") Date updatedDate);
+                                           @CallContextBinder CallContext context);
 
     @SqlUpdate
     void updatePaymentInfo(@Bind("payment_method") String paymentMethod,
                            @Bind("payment_id") String paymentId,
                            @Bind("card_type") String cardType,
                            @Bind("card_country") String cardCountry,
-                           @Bind("updated_dt") Date updatedDate);
+                           @CallContextBinder CallContext context);
 
     @SqlQuery
-    @Mapper(PaymentInfoMapper.class)
-    List<PaymentInfo> getPaymentInfos(@BindIn("invoiceIds") List<String> invoiceIds);
+    List<PaymentInfo> getPaymentInfos(@BindIn("invoiceIds") final List<String> invoiceIds);
 
     @SqlUpdate
-    void insertPaymentInfo(@Bind(binder = PaymentInfoBinder.class) PaymentInfo paymentInfo);
+    void insertPaymentInfo(@Bind(binder = PaymentInfoBinder.class) final PaymentInfo paymentInfo,
+                           @CallContextBinder final CallContext context);
 
-    public static final class PaymentAttemptBinder implements Binder<Bind, PaymentAttempt> {
+    @SqlUpdate
+    void insertPaymentInfoHistory(@Bind("historyRecordId") final String historyRecordId,
+                                  @Bind(binder = PaymentInfoBinder.class) final PaymentInfo paymentInfo,
+                                  @CallContextBinder final CallContext context);
 
-        private Date getDate(DateTime dateTime) {
-            return dateTime == null ? null : dateTime.toDate();
-        }
+    @SqlQuery
+    PaymentInfo getPaymentInfo(@Bind("paymentId") final String paymentId);
 
+    public static final class PaymentAttemptBinder extends BinderBase implements Binder<Bind, PaymentAttempt> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentAttempt paymentAttempt) {
             stmt.bind("payment_attempt_id", paymentAttempt.getPaymentAttemptId().toString());
@@ -115,13 +121,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         }
     }
 
-    public static class PaymentAttemptMapper implements ResultSetMapper<PaymentAttempt> {
-
-        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
-            final Timestamp resultStamp = rs.getTimestamp(fieldName);
-            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
-        }
-
+    public static class PaymentAttemptMapper extends MapperBase implements ResultSetMapper<PaymentAttempt> {
         @Override
         public PaymentAttempt map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
 
@@ -151,12 +151,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         }
     }
 
-    public static final class PaymentInfoBinder implements Binder<Bind, PaymentInfo> {
-
-        private Date getDate(DateTime dateTime) {
-            return dateTime == null ? null : dateTime.toDate();
-        }
-
+    public static final class PaymentInfoBinder extends BinderBase implements Binder<Bind, PaymentInfo> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentInfo paymentInfo) {
             stmt.bind("payment_id", paymentInfo.getPaymentId().toString());
@@ -177,13 +172,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         }
     }
 
-    public static class PaymentInfoMapper implements ResultSetMapper<PaymentInfo> {
-
-        private DateTime getDate(ResultSet rs, String fieldName) throws SQLException {
-            final Timestamp resultStamp = rs.getTimestamp(fieldName);
-            return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
-        }
-
+    public static class PaymentInfoMapper extends MapperBase implements ResultSetMapper<PaymentInfo> {
         @Override
         public PaymentInfo map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
 

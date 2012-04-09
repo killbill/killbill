@@ -16,6 +16,10 @@
 
 package com.ning.billing.invoice;
 
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.glue.FieldStoreModule;
+import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -36,15 +40,15 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 
 
 public class MockModule extends AbstractModule {
-
-
     public static final String PLUGIN_NAME = "yoyo";
 
     @Override
     protected void configure() {
-
         bind(Clock.class).to(ClockMock.class).asEagerSingleton();
         bind(ClockMock.class).asEagerSingleton();
+        bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
+        install(new TagStoreModule());
+        install(new FieldStoreModule());
 
         final MysqlTestingHelper helper = new MysqlTestingHelper();
         bind(MysqlTestingHelper.class).toInstance(helper);

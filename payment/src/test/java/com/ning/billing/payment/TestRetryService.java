@@ -25,6 +25,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.UserType;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.testng.annotations.AfterMethod;
@@ -83,6 +87,7 @@ public class TestRetryService {
 
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
     private MockNotificationQueue mockNotificationQueue;
+    private CallContext context;
 
     @BeforeClass(alwaysRun = true)
     public void initialize() throws Exception {
@@ -96,6 +101,7 @@ public class TestRetryService {
 
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin)registry.getPlugin(null);
         mockNotificationQueue = (MockNotificationQueue)notificationQueueService.getNotificationQueue(RetryService.SERVICE_NAME, RetryService.QUEUE_NAME);
+        context = new DefaultCallContext("RetryServiceTests", CallOrigin.INTERNAL, UserType.TEST, clock);
     }
 
     @AfterMethod(alwaysRun = true)
@@ -114,18 +120,18 @@ public class TestRetryService {
         final DateTime startDate = clock.getUTCNow();
         final DateTime endDate = startDate.plusMonths(1);
         invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+                                                       account.getId(),
                                                        subscriptionId,
                                                        "test plan", "test phase",
                                                        startDate,
                                                        endDate,
                                                        amount,
                                                        new BigDecimal("1.0"),
-                                                       Currency.USD,
-                                                       clock.getUTCNow()));
+                                                       Currency.USD));
 
         mockPaymentProviderPlugin.makeNextInvoiceFail();
 
-        List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()));
+        List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
 
         assertEquals(results.size(), 1);
         assertTrue(results.get(0).isLeft());
@@ -155,14 +161,14 @@ public class TestRetryService {
         final DateTime now = clock.getUTCNow();
 
         invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+                                                       account.getId(),
                                                        subscriptionId,
                                                        "test plan", "test phase",
                                                        now,
                                                        now.plusMonths(1),
                                                        amount,
                                                        new BigDecimal("1.0"),
-                                                       Currency.USD,
-                                                       now));
+                                                       Currency.USD));
 
         int numberOfDays = paymentConfig.getPaymentRetryDays().get(0);
         DateTime nextRetryDate = now.plusDays(numberOfDays);
@@ -171,7 +177,7 @@ public class TestRetryService {
                                                                                       .setPaymentAttemptDate(now)
                                                                                       .build();
 
-        PaymentAttempt attempt = paymentDao.createPaymentAttempt(paymentAttempt);
+        paymentDao.createPaymentAttempt(paymentAttempt, context);
         retryService.scheduleRetry(paymentAttempt, nextRetryDate);
         ((ClockMock)clock).setDeltaFromReality(Days.days(numberOfDays).toStandardSeconds().getSeconds() * 1000);
         Thread.sleep(2000);
@@ -179,10 +185,10 @@ public class TestRetryService {
         List<Notification> pendingNotifications = mockNotificationQueue.getPendingEvents();
         assertEquals(pendingNotifications.size(), 0);
 
-        List<PaymentInfo> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
-        assertEquals(paymentInfos.size(), 1);
+        List<PaymentInfo> paymentInfoList = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        assertEquals(paymentInfoList.size(), 1);
 
-        PaymentInfo paymentInfo = paymentInfos.get(0);
+        PaymentInfo paymentInfo = paymentInfoList.get(0);
         assertEquals(paymentInfo.getStatus(), PaymentStatus.Processed.toString());
 
         List<PaymentAttempt> updatedAttempts = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId().toString());

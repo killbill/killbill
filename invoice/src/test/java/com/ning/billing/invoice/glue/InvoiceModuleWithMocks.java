@@ -20,6 +20,10 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
+import com.ning.billing.util.glue.CallContextModule;
+import com.ning.billing.util.glue.FieldStoreModule;
+import com.ning.billing.util.glue.TagStoreModule;
+import org.skife.jdbi.v2.Call;
 
 
 public class InvoiceModuleWithMocks extends InvoiceModule {
@@ -49,8 +53,17 @@ public class InvoiceModuleWithMocks extends InvoiceModule {
     protected void installInvoiceService() {
 
     }
-    
+
+    @Override
     protected void installInvoiceMigrationApi() {
 
+    }
+
+    @Override
+    public void configure() {
+        super.configure();
+
+        install(new FieldStoreModule());
+        //install(new TagStoreModule());
     }
 }

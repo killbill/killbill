@@ -23,6 +23,7 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoSql;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
 import org.skife.config.ConfigurationObjectFactory;
@@ -53,6 +54,7 @@ public class MockEngineModuleSql extends MockEngineModule {
     protected void configure() {
         installDBI();
         install(new NotificationQueueModule());
+        install(new FieldStoreModule());
         super.configure();
     }
 }

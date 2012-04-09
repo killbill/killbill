@@ -23,15 +23,12 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.MigrationPlan;
-import com.ning.billing.util.clock.Clock;
 
 public class MigrationInvoiceItem extends FixedPriceInvoiceItem {
 	private final static UUID MIGRATION_SUBSCRIPTION_ID = UUID.fromString("ed25f954-3aa2-4422-943b-c3037ad7257c"); //new UUID(0L,0L);
 
-	public MigrationInvoiceItem(UUID invoiceId, DateTime startDate, BigDecimal amount, Currency currency, Clock clock) {
-		super(invoiceId, MIGRATION_SUBSCRIPTION_ID, MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME, startDate, startDate,
-				amount, currency, clock.getUTCNow());
+	public MigrationInvoiceItem(UUID invoiceId, UUID accountId, DateTime startDate, BigDecimal amount, Currency currency) {
+		super(invoiceId, accountId, MIGRATION_SUBSCRIPTION_ID, MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME,
+              startDate, startDate, amount, currency);
 	}
-
-	
 }

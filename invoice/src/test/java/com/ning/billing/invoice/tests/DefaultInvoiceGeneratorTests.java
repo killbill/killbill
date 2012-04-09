@@ -16,7 +16,6 @@
 
 package com.ning.billing.invoice.tests;
 
-import com.google.inject.Inject;
 import com.ning.billing.catalog.DefaultPrice;
 import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
@@ -27,6 +26,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
@@ -62,11 +62,38 @@ import static org.testng.Assert.assertNull;
 @Test(groups = {"fast", "invoicing", "invoiceGenerator"})
 public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     private final Clock clock = new DefaultClock();
+    private final InvoiceConfig invoiceConfig = new InvoiceConfig() {
+        @Override
+        public long getDaoClaimTimeMs() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getDaoMaxReadyEvents() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public long getNotificationSleepTimeMs() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isEventProcessingOff() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getNumberOfMonthsInFuture() {
+            return 36;
+        }
+    };
+
     private final InvoiceGenerator generator;
 
     public DefaultInvoiceGeneratorTests() {
         super();
-        this.generator = new DefaultInvoiceGenerator(clock);
+        this.generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
     }
 
     @Test
@@ -267,7 +294,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         // plan 3: change of term from monthly (BCD = 20) to annual (BCD = 31; immediate)
         // plan 4: change of plan, effective EOT, BCD = 7 (covers change of plan)
         // plan 5: addon to plan 2, with bill cycle alignment to plan; immediate cancellation
-
+        UUID accountId = UUID.randomUUID();
         UUID subscriptionId1 = UUID.randomUUID();
         UUID subscriptionId2 = UUID.randomUUID();
         UUID subscriptionId3 = UUID.randomUUID();
@@ -317,108 +344,108 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         // on 1/5/2011, create subscription 1 (trial)
         events.add(createBillingEvent(subscriptionId1, plan1StartDate, plan1, plan1Phase1, 5));
         expectedAmount = EIGHT;
-        testInvoiceGeneration(events, invoices, plan1StartDate, 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan1StartDate, 1, expectedAmount);
 
         // on 2/5/2011, invoice subscription 1 (trial)
         expectedAmount = EIGHT;
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 2, 5) , 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 2, 5) , 1, expectedAmount);
 
         // on 3/5/2011, invoice subscription 1 (trial)
         expectedAmount = EIGHT;
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 3, 5), 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 3, 5), 1, expectedAmount);
 
         // on 3/10/2011, create subscription 2 (trial)
         events.add(createBillingEvent(subscriptionId2, plan2StartDate, plan2, plan2Phase1, 10));
         expectedAmount = TWENTY;
-        testInvoiceGeneration(events, invoices, plan2StartDate, 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan2StartDate, 1, expectedAmount);
 
         // on 4/5/2011, invoice subscription 1 (discount)
         events.add(createBillingEvent(subscriptionId1, plan1PhaseChangeDate, plan1, plan1Phase2, 5));
         expectedAmount = TWELVE;
-        testInvoiceGeneration(events, invoices, plan1PhaseChangeDate, 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan1PhaseChangeDate, 1, expectedAmount);
 
         // on 4/10/2011, invoice subscription 2 (trial)
         expectedAmount = TWENTY;
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 4, 10), 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 4, 10), 1, expectedAmount);
 
         // on 4/29/2011, cancel subscription 1
         events.add(createBillingEvent(subscriptionId1, plan1CancelDate, plan1, plan1Phase3, 5));
         expectedAmount = TWELVE.multiply(SIX.divide(THIRTY, NUMBER_OF_DECIMALS, ROUNDING_METHOD)).negate().setScale(NUMBER_OF_DECIMALS);
-        testInvoiceGeneration(events, invoices, plan1CancelDate, 2, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan1CancelDate, 2, expectedAmount);
 
         // on 5/10/2011, invoice subscription 2 (trial)
         expectedAmount = TWENTY;
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 5, 10), 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 5, 10), 1, expectedAmount);
 
         // on 5/20/2011, create subscription 3 (monthly)
         events.add(createBillingEvent(subscriptionId3, plan3StartDate, plan3, plan3Phase1, 20));
         expectedAmount = TEN;
-        testInvoiceGeneration(events, invoices, plan3StartDate, 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan3StartDate, 1, expectedAmount);
 
         // on 6/7/2011, create subscription 4
         events.add(createBillingEvent(subscriptionId4, plan4StartDate, plan4a, plan4aPhase1, 7));
         expectedAmount = FIFTEEN;
-        testInvoiceGeneration(events, invoices, plan4StartDate, 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan4StartDate, 1, expectedAmount);
 
         // on 6/10/2011, invoice subscription 2 (discount)
         events.add(createBillingEvent(subscriptionId2, plan2PhaseChangeToDiscountDate, plan2, plan2Phase2, 10));
         expectedAmount = THIRTY;
-        testInvoiceGeneration(events, invoices, plan2PhaseChangeToDiscountDate, 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan2PhaseChangeToDiscountDate, 1, expectedAmount);
 
         // on 6/20/2011, invoice subscription 3 (monthly)
         expectedAmount = TEN;
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 6, 20), 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 6, 20), 1, expectedAmount);
 
         // on 6/21/2011, create add-on (subscription 5)
         events.add(createBillingEvent(subscriptionId5, plan5StartDate, plan5, plan5Phase1, 10));
         expectedAmount = TWENTY.multiply(NINETEEN).divide(THIRTY, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-        testInvoiceGeneration(events, invoices, plan5StartDate, 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan5StartDate, 1, expectedAmount);
 
         // on 7/7/2011, invoice subscription 4 (plan 1)
         expectedAmount = FIFTEEN;
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 7, 7), 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 7, 7), 1, expectedAmount);
 
         // on 7/10/2011, invoice subscription 2 (discount), invoice subscription 5
         expectedAmount = THIRTY.add(TWENTY);
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 7, 10), 2, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 7, 10), 2, expectedAmount);
 
         // on 7/20/2011, invoice subscription 3 (monthly)
         expectedAmount = TEN;
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 7, 20), 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 7, 20), 1, expectedAmount);
 
         // on 7/31/2011, convert subscription 3 to annual
         events.add(createBillingEvent(subscriptionId3, plan3UpgradeToAnnualDate, plan3, plan3Phase2, 31));
         expectedAmount = ONE_HUNDRED.subtract(TEN);
         expectedAmount = expectedAmount.add(TEN.multiply(ELEVEN.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD)));
         expectedAmount = expectedAmount.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-        testInvoiceGeneration(events, invoices, plan3UpgradeToAnnualDate, 3, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan3UpgradeToAnnualDate, 3, expectedAmount);
 
         // on 8/7/2011, invoice subscription 4 (plan 2)
         events.add(createBillingEvent(subscriptionId4, plan4ChangeOfPlanDate, plan4b, plan4bPhase1, 7));
         expectedAmount = TWENTY_FOUR;
-        testInvoiceGeneration(events, invoices, plan4ChangeOfPlanDate, 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan4ChangeOfPlanDate, 1, expectedAmount);
 
         // on 8/10/2011, invoice plan 2 (discount), invoice subscription 5
         expectedAmount = THIRTY.add(TWENTY);
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 8, 10), 2, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 8, 10), 2, expectedAmount);
 
         // on 9/7/2011, invoice subscription 4 (plan 2)
         expectedAmount = TWENTY_FOUR;
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 9, 7), 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 9, 7), 1, expectedAmount);
 
         // on 9/10/2011, invoice plan 2 (evergreen), invoice subscription 5
         events.add(createBillingEvent(subscriptionId2, plan2PhaseChangeToEvergreenDate, plan2, plan2Phase3, 10));
         expectedAmount = FORTY.add(TWENTY);
-        testInvoiceGeneration(events, invoices, plan2PhaseChangeToEvergreenDate, 2, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan2PhaseChangeToEvergreenDate, 2, expectedAmount);
 
         // on 10/7/2011, invoice subscription 4 (plan 2), cancel subscription 5
         events.add(createBillingEvent(subscriptionId5, plan5CancelDate, plan5, plan5Phase2, 10));
         expectedAmount = TWENTY_FOUR.add(TWENTY.multiply(THREE.divide(THIRTY)).negate().setScale(NUMBER_OF_DECIMALS));
-        testInvoiceGeneration(events, invoices, plan5CancelDate, 3, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, plan5CancelDate, 3, expectedAmount);
 
         // on 10/10/2011, invoice plan 2 (evergreen)
         expectedAmount = FORTY ;
-        testInvoiceGeneration(events, invoices, buildDateTime(2011, 10, 10), 1, expectedAmount);
+        testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 10, 10), 1, expectedAmount);
     }
 
     @Test
@@ -671,11 +698,10 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
                                        billCycleDay, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionTransitionType.CREATE);
     }
 
-    private void testInvoiceGeneration(final BillingEventSet events, final List<Invoice> existingInvoices,
+    private void testInvoiceGeneration(final UUID accountId, final BillingEventSet events, final List<Invoice> existingInvoices,
                                        final DateTime targetDate, final int expectedNumberOfItems,
                                        final BigDecimal expectedAmount) throws InvoiceApiException {
         Currency currency = Currency.USD;
-        UUID accountId = UUID.randomUUID();
         Invoice invoice = generator.generateInvoice(accountId, events, existingInvoices, targetDate, currency);
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), expectedNumberOfItems);

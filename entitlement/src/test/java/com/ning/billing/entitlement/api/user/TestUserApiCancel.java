@@ -64,7 +64,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL in trial period to get IMM policy
-            subscription.cancel(clock.getUTCNow(), false);
+            subscription.cancel(clock.getUTCNow(), false, context);
             currentPhase = subscription.getCurrentPhase();
             testListener.isCompleted(1000);
 
@@ -105,13 +105,13 @@ public abstract class TestUserApiCancel extends TestApiBase {
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
-            subscription.cancel(clock.getUTCNow(), false);
+            subscription.cancel(clock.getUTCNow(), false, context);
             assertFalse(testListener.isCompleted(2000));
 
             // MOVE TO EOT + RECHECK
@@ -158,7 +158,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
-            subscription.cancel(clock.getUTCNow(), false);
+            subscription.cancel(clock.getUTCNow(), false, context);
             assertTrue(testListener.isCompleted(2000));
 
             PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -202,16 +202,16 @@ public abstract class TestUserApiCancel extends TestApiBase {
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
-            subscription.cancel(clock.getUTCNow(), false);
+            subscription.cancel(clock.getUTCNow(), false, context);
             assertFalse(testListener.isCompleted(2000));
 
-            subscription.uncancel();
+            subscription.uncancel(context);
 
             // MOVE TO EOT + RECHECK
             clock.addDeltaFromReality(ctd);
