@@ -26,7 +26,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
@@ -46,6 +45,7 @@ import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentError;
@@ -54,6 +54,7 @@ import com.ning.billing.payment.setup.PaymentTestModuleWithEmbeddedDb;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.util.notificationq.NotificationQueueService;
 
 public class TestPaymentInvoiceIntegration {
     // create payment for received invoice and save it -- positive and negative
@@ -69,6 +70,8 @@ public class TestPaymentInvoiceIntegration {
     private PaymentApi paymentApi;
     @Inject
     private TestHelper testHelper;
+    @Inject
+    private NotificationQueueService notificationQueueService;
 
     private MockPaymentInfoReceiver paymentInfoReceiver;
 
@@ -90,7 +93,7 @@ public class TestPaymentInvoiceIntegration {
 
     @AfterClass(alwaysRun = true)
     public void stopMysql() {
-        helper.stopMysql();
+        if (helper != null) helper.stopMysql();
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -116,9 +119,11 @@ public class TestPaymentInvoiceIntegration {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws EventBusException {
-        eventBus.unregister(invoiceProcessor);
-        eventBus.unregister(paymentInfoReceiver);
-        eventBus.stop();
+        if (eventBus != null) {
+            eventBus.unregister(invoiceProcessor);
+            eventBus.unregister(paymentInfoReceiver);
+            eventBus.stop();
+        }
     }
 
     @Test

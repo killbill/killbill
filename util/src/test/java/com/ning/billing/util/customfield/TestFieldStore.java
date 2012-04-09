@@ -17,6 +17,7 @@
 package com.ning.billing.util.customfield;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
@@ -33,13 +34,13 @@ import com.ning.billing.util.customfield.dao.FieldStoreDao;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-@Test(groups={"util"})
+@Test(groups = {"util", "slow"})
 public class TestFieldStore {
     Logger log = LoggerFactory.getLogger(TestFieldStore.class);
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private IDBI dbi;
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(groups = {"util", "slow"})
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
@@ -56,7 +57,7 @@ public class TestFieldStore {
         }
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups = {"util", "slow"})
     public void stopMysql()
     {
         helper.stopMysql();

@@ -149,7 +149,7 @@ public class InAdvanceBillingMode implements BillingMode {
         BigDecimal daysInPeriod = new BigDecimal(daysBetween);
         BigDecimal days = new BigDecimal(Days.daysBetween(startDate, nextBillingCycleDate).getDays());
 
-        return days.divide(daysInPeriod, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        return days.divide(daysInPeriod, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 
     private int calculateNumberOfWholeBillingPeriods(final DateTime startDate, final DateTime endDate, final BillingPeriod billingPeriod) {
@@ -232,6 +232,6 @@ public class InAdvanceBillingMode implements BillingMode {
 
         BigDecimal days = new BigDecimal(Days.daysBetween(previousBillThroughDate, endDate).getDays());
 
-        return days.divide(daysInPeriod, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        return days.divide(daysInPeriod, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 }

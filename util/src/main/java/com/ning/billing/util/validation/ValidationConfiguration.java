@@ -14,32 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.util.validation;
 
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.ning.billing.util.bus.BusEvent;
-
-public class PaymentInfoRequest implements BusEvent {
-    private final UUID accountId;
-    private final String paymentId;
-
-    public PaymentInfoRequest(UUID accountId, String paymentId) {
-        this.accountId = accountId;
-        this.paymentId = paymentId;
+public class ValidationConfiguration extends HashMap<String, ColumnInfo> {
+    public void addMapping(String propertyName, ColumnInfo columnInfo) {
+        super.put(propertyName, columnInfo);
     }
 
-    public UUID getAccountId() {
-        return accountId;
+    public boolean hasMapping(String propertyName) {
+        return super.get(propertyName) != null;
     }
-
-    public String getPaymentId() {
-        return paymentId;
-    }
-
-    @Override
-    public String toString() {
-        return "PaymentInfoRequest [accountId=" + accountId + ", paymentId=" + paymentId + "]";
-    }
-
 }

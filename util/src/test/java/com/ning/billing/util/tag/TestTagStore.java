@@ -45,7 +45,7 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-@Test(groups={"util"})
+@Test(groups={"util", "slow"})
 public class TestTagStore {
     private final static String ACCOUNT_TYPE = "ACCOUNT";
     private final Clock clock = new DefaultClock();

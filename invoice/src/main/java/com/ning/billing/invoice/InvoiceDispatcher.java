@@ -39,7 +39,6 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.InvoiceGenerator;
-import com.ning.billing.invoice.model.InvoiceItemList;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.LockFailedException;
@@ -55,19 +54,22 @@ public class InvoiceDispatcher {
     private final InvoiceDao invoiceDao;
     private final GlobalLocker locker;
 
-    private final static boolean VERBOSE_OUTPUT = false;
+    private final boolean VERBOSE_OUTPUT;
+
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
-                           final EntitlementBillingApi entitlementBillingApi,
-                           final InvoiceDao invoiceDao,
-                           final GlobalLocker locker) {
+                             final EntitlementBillingApi entitlementBillingApi,
+                             final InvoiceDao invoiceDao,
+                             final GlobalLocker locker) {
         this.generator = generator;
         this.entitlementBillingApi = entitlementBillingApi;
         this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
         this.locker = locker;
-    }
 
+        String verboseOutputValue = System.getProperty("VERBOSE_OUTPUT");
+        VERBOSE_OUTPUT = (verboseOutputValue == null) ? false : Boolean.parseBoolean(verboseOutputValue);
+    }
 
     public void processSubscription(final SubscriptionTransition transition) throws InvoiceApiException {
         UUID subscriptionId = transition.getSubscriptionId();
@@ -90,30 +92,35 @@ public class InvoiceDispatcher {
             return;
         }
 
-        GlobalLock lock = null;
+        processAccount(accountId, targetDate, false);
+    }
+    
+    public Invoice processAccount(UUID accountId, DateTime targetDate, boolean dryrun) throws InvoiceApiException {
+		GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerService.INVOICE, accountId.toString(), NB_LOCK_TRY);
 
-            processAccountWithLock(accountId, targetDate);
+            return processAccountWithLock(accountId, targetDate, dryrun);
 
         } catch (LockFailedException e) {
             // Not good!
-            log.error(String.format("Failed to process invoice for account %s, subscription %s, targetDate %s",
-                    accountId.toString(), subscriptionId.toString(), targetDate), e);
+            log.error(String.format("Failed to process invoice for account %s, targetDate %s",
+                    accountId.toString(), targetDate), e);
         } finally {
             if (lock != null) {
                 lock.release();
             }
         }
+        return null;
     }
 
-    private void processAccountWithLock(final UUID accountId, final DateTime targetDate) throws InvoiceApiException {
+    private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDate, boolean dryrun) throws InvoiceApiException {
 
         Account account = accountUserApi.getAccountById(accountId);
         if (account == null) {
             log.error("Failed handling entitlement change.",
                     new InvoiceApiException(ErrorCode.INVOICE_ACCOUNT_ID_INVALID, accountId.toString()));
-            return;
+            return null;
         }
 
         SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccount(accountId);
@@ -121,13 +128,12 @@ public class InvoiceDispatcher {
 
         Currency targetCurrency = account.getCurrency();
 
-        List<InvoiceItem> items = invoiceDao.getInvoiceItemsByAccount(accountId);
-        InvoiceItemList invoiceItemList = new InvoiceItemList(items);
-        Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoiceItemList, targetDate, targetCurrency);
+        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
+        Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency);
 
         if (invoice == null) {
             log.info("Generated null invoice.");
-            outputDebugData(events, invoiceItemList);
+            outputDebugData(events, invoices);
         } else {
             log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
 
@@ -137,15 +143,17 @@ public class InvoiceDispatcher {
                     log.info(item.toString());
                 }
             }
-            outputDebugData(events, invoiceItemList);
+            outputDebugData(events, invoices);
 
-            if (invoice.getNumberOfItems() > 0) {
+            if (invoice.getNumberOfItems() > 0 && !dryrun) {
                 invoiceDao.create(invoice);
             }
         }
+        
+        return invoice;
     }
 
-    private void outputDebugData(Collection<BillingEvent> events, Collection<InvoiceItem> invoiceItemList) {
+    private void outputDebugData(Collection<BillingEvent> events, Collection<Invoice> invoices) {
         if (VERBOSE_OUTPUT) {
             log.info("Events");
             for (BillingEvent event : events) {
@@ -153,8 +161,10 @@ public class InvoiceDispatcher {
             }
 
             log.info("Existing items");
-            for (InvoiceItem item : invoiceItemList) {
-                log.info(item.toString());
+            for (Invoice invoice : invoices) {
+                for (InvoiceItem item : invoice.getInvoiceItems()) {
+                    log.info(item.toString());
+                }
             }
         }
     }

@@ -16,11 +16,37 @@
 
 package com.ning.billing.payment.setup;
 
-import org.skife.config.Config;
-import org.skife.config.DefaultNull;
+import java.util.List;
 
-public interface PaymentConfig {
+import org.skife.config.Config;
+import org.skife.config.Default;
+
+import com.ning.billing.util.notificationq.NotificationConfig;
+
+public interface PaymentConfig extends NotificationConfig {
     @Config("killbill.payment.provider.default")
-    @DefaultNull
+    @Default("noop")
     public String getDefaultPaymentProvider();
+
+    @Config("killbill.payment.retry.days")
+    @Default("8,8,8")
+    public List<Integer> getPaymentRetryDays();
+
+    @Config("killbill.payment.dao.claim.time")
+    @Default("60000")
+    public long getDaoClaimTimeMs();
+
+    @Config("killbill.payment.dao.ready.max")
+    @Default("10")
+    public int getDaoMaxReadyEvents();
+
+    @Config("killbill.payment.engine.notifications.sleep")
+    @Default("500")
+    public long getNotificationSleepTimeMs();
+
+    @Config("killbill.payment.engine.events.off")
+    // turn off payment retries by default
+    @Default("true")
+    public boolean isNotificationProcessingOff();
+
 }

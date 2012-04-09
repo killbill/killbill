@@ -25,6 +25,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 import com.ning.billing.util.entity.EntityDao;
+import com.ning.billing.util.entity.UpdatableEntityDao;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTime;
@@ -42,7 +43,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
-public interface TagDefinitionSqlDao extends EntityDao<TagDefinition> {
+public interface TagDefinitionSqlDao extends UpdatableEntityDao<TagDefinition> {
     @Override
     @SqlUpdate
     public void create(@TagDefinitionBinder final TagDefinition entity);
@@ -70,8 +71,7 @@ public interface TagDefinitionSqlDao extends EntityDao<TagDefinition> {
             String name = result.getString("name");
             String description = result.getString("description");
             String createdBy = result.getString("created_by");
-            DateTime creationDate = new DateTime(result.getTimestamp("creation_date"));
-            return new DefaultTagDefinition(id, name, description, createdBy, creationDate);
+            return new DefaultTagDefinition(id, name, description, createdBy);
         }
     }
 
@@ -86,7 +86,6 @@ public interface TagDefinitionSqlDao extends EntityDao<TagDefinition> {
                         q.bind("id", tagDefinition.getId().toString());
                         q.bind("name", tagDefinition.getName());
                         q.bind("createdBy", tagDefinition.getCreatedBy());
-                        q.bind("creationDate", tagDefinition.getCreationDate().toDate());
                         q.bind("description", tagDefinition.getDescription());
                     }
                 };

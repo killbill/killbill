@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.glue;
 
 import java.io.IOException;
+import java.net.URL;
 
 import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
@@ -34,6 +35,8 @@ import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
+import static org.testng.Assert.assertNotNull;
+
 public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private IDBI dbi;
@@ -50,6 +53,10 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         helper.stopMysql();
     }
 
+    public IDBI getDbi() {
+        return dbi;
+    }
+
     public RecurringInvoiceItemSqlDao getInvoiceItemSqlDao() {
         return dbi.onDemand(RecurringInvoiceItemSqlDao.class);
     }
@@ -64,6 +71,8 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
 
     @Override
     public void configure() {
+        loadSystemPropertiesFromClasspath("/resource.properties");
+
         dbi = helper.getDBI();
         bind(IDBI.class).toInstance(dbi);
 
@@ -79,5 +88,15 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
 
         install(new BusModule());
+    }
+
+    private static void loadSystemPropertiesFromClasspath(final String resource) {
+        final URL url = InvoiceModuleWithEmbeddedDb.class.getResource(resource);
+        assertNotNull(url);
+        try {
+            System.getProperties().load( url.openStream() );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

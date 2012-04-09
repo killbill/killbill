@@ -23,6 +23,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 
+@Test(groups = "slow")
 public class TestMigrationSql extends TestMigration {
 
     @Override
@@ -31,25 +32,31 @@ public class TestMigrationSql extends TestMigration {
     }
 
     @Override
-    @Test(enabled=true, groups="sql")
+    @Test(enabled=true, groups="slow")
     public void testSingleBasePlan() {
         super.testSingleBasePlan();
     }
 
     @Override
-    @Test(enabled=true, groups="sql")
+    @Test(enabled=true, groups="slow")
+    public void testPlanWithAddOn() {
+        super.testPlanWithAddOn();
+    }
+
+    @Override
+    @Test(enabled=true, groups="slow")
     public void testSingleBasePlanFutureCancelled() {
         super.testSingleBasePlanFutureCancelled();
     }
 
     @Override
-    @Test(enabled=true, groups="sql")
+    @Test(enabled=true, groups="slow")
     public void testSingleBasePlanWithPendingPhase() {
         super.testSingleBasePlanWithPendingPhase();
     }
 
     @Override
-    @Test(enabled=true, groups="sql")
+    @Test(enabled=true, groups="slow")
     public void testSingleBasePlanWithPendingChange() {
         super.testSingleBasePlanWithPendingChange();
     }

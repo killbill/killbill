@@ -16,10 +16,25 @@ w * Copyright 2010-2011 Ning, Inc.
 
 package com.ning.billing.entitlement.api.billing;
 
+import java.util.Date;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.UUID;
+
+import com.ning.billing.catalog.api.Currency;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -32,34 +47,23 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
-import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.UUID;
 
 
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
 
-    private final EntitlementDao dao;
+    private final EntitlementDao entitlementDao;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
 
     @Inject
     public DefaultEntitlementBillingApi(final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
         super();
-        this.dao = dao;
+        this.entitlementDao = dao;
         this.accountApi = accountApi;
         this.catalogService = catalogService;
     }
@@ -67,24 +71,25 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     @Override
     public SortedSet<BillingEvent> getBillingEventsForAccount(
             final UUID accountId) {
+        Account account = accountApi.getAccountById(accountId);
+        Currency currency = account.getCurrency();
 
-        List<SubscriptionBundle> bundles = dao.getSubscriptionBundleForAccount(accountId);
-        List<Subscription> subscriptions = new ArrayList<Subscription>();
-        for (final SubscriptionBundle bundle: bundles) {
-            subscriptions.addAll(dao.getSubscriptions(bundle.getId()));
-        }
-
+        List<SubscriptionBundle> bundles = entitlementDao.getSubscriptionBundleForAccount(accountId);
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
-        for (final Subscription subscription: subscriptions) {
-        	for (final SubscriptionTransition transition : subscription.getAllTransitions()) {
-        		try {
-                    BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBCD(transition, accountId));
-        			result.add(event);
-        		} catch (CatalogApiException e) {
-        			log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
-        					transition.getId().toString(), e);
-                } catch (Exception e) {
-                    log.warn("Failed while getting BillingEvent", e);
+        for (final SubscriptionBundle bundle: bundles) {
+        	List<Subscription> subscriptions = entitlementDao.getSubscriptions(bundle.getId());
+
+        	for (final Subscription subscription: subscriptions) {
+        		for (final SubscriptionTransition transition : subscription.getAllTransitions()) {
+        			try {
+        				BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBcd(bundle, subscription, transition, accountId), currency);
+        				result.add(event);
+        			} catch (CatalogApiException e) {
+        				log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
+        						transition.getId().toString(), e);
+        			} catch (Exception e) {
+        				log.warn("Failed while getting BillingEvent", e);
+        			}
         		}
         	}
         }
@@ -93,10 +98,10 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
     @Override
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
-        return dao.getAccountIdFromSubscriptionId(subscriptionId);
+        return entitlementDao.getAccountIdFromSubscriptionId(subscriptionId);
     }
 
-    private int calculateBCD(final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException {
+    private int calculateBcd(SubscriptionBundle bundle, Subscription subscription, final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException, AccountApiException {
     	Catalog catalog = catalogService.getFullCatalog();
     	Plan plan =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
     	        transition.getNextPlan() : transition.getPreviousPlan();
@@ -111,41 +116,89 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     					transition.getNextPriceList(),
     					phase.getPhaseType()),
     					transition.getRequestedTransitionTime());
-    	int result = 0;
+    	int result = -1;
 
-        Account account = accountApi.getAccountById(accountId);
-
-    	switch (alignment) {
+		Account account = accountApi.getAccountById(accountId);
+		switch (alignment) {
     		case ACCOUNT :
     			result = account.getBillCycleDay();
+    			
+    			if(result == 0) {
+    				result = calculateBcdFromSubscription(subscription, plan, account);
+    			}
     		break;
     		case BUNDLE :
-    			SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(transition.getBundleId());
-    			//TODO result = bundle.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
-    			result = bundle.getStartDate().getDayOfMonth();
+    			result = bundle.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
     		break;
     		case SUBSCRIPTION :
-    			Subscription subscription = dao.getSubscriptionFromId(transition.getSubscriptionId());
-    			//TODO result = subscription.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
-    			result = subscription.getStartDate().getDayOfMonth();
+    			result = subscription.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
     		break;
     	}
-    	if(result == 0) {
+    	if(result == -1) {
     		throw new CatalogApiException(ErrorCode.CAT_INVALID_BILLING_ALIGNMENT, alignment.toString());
     	}
     	return result;
 
     }
+    
+   	private int calculateBcdFromSubscription(Subscription subscription, Plan plan, Account account) throws AccountApiException {
+		int result = account.getBillCycleDay();
+        if(result != 0) {
+            return result;
+        }
+        result = new DateTime(account.getTimeZone()).getDayOfMonth();
 
+        try {
+        	result = billCycleDay(subscription.getStartDate(),account.getTimeZone(), plan);
+        } catch (CatalogApiException e) {
+            log.error("Unexpected catalog error encountered when updating BCD",e);
+        }
+        
+
+        Account modifiedAccount = new DefaultAccount(
+                account.getId(),
+                account.getExternalKey(),
+                account.getEmail(),
+                account.getName(),
+                account.getFirstNameLength(),
+                account.getCurrency(),
+                result,
+                account.getPaymentProviderName(),
+                account.getTimeZone(),
+                account.getLocale(),
+                account.getAddress1(),
+                account.getAddress2(),
+                account.getCompanyName(),
+                account.getCity(),
+                account.getStateOrProvince(),
+                account.getCountry(),
+                account.getPostalCode(),
+                account.getPhone(),
+                account.getCreatedDate(),
+                null // Updated date will be set internally
+        );
+        accountApi.updateAccount(modifiedAccount);
+        return result;
+    }
+
+    private int billCycleDay(DateTime requestedDate, DateTimeZone timeZone, 
+    		Plan plan) throws CatalogApiException {
+
+        DateTime date = plan.dateOfFirstRecurringNonZeroCharge(requestedDate);
+        return date.toDateTime(timeZone).getDayOfMonth();
+
+    }
+    
+    
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
-        SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionId);
+        SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionId);
 
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
             .setChargedThroughDate(ctd)
             .setPaidThroughDate(subscription.getPaidThroughDate());
 
-        dao.updateSubscription(new SubscriptionData(builder));
+        entitlementDao.updateSubscription(new SubscriptionData(builder));
     }
 
     @Override

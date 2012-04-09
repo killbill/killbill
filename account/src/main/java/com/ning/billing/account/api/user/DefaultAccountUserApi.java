@@ -29,6 +29,7 @@ import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.Tag;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
@@ -47,7 +48,12 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
         account.addFields(fields);
         account.addTags(tags);
 
-        dao.create(account);
+        try {
+            dao.create(account);
+        } catch (EntityPersistenceException e) {
+            throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
+        }
+
         return account;
     }
 
@@ -73,7 +79,11 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 
     @Override
     public void updateAccount(final Account account) throws AccountApiException {
-        dao.update(account);
+        try {
+            dao.update(account);
+        } catch (EntityPersistenceException e) {
+            throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
+        }
     }
 
     @Override
@@ -82,8 +92,14 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     	if(accountId == null) {
     		throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
     	}
-    	Account account = new DefaultAccount(accountId, accountData);
-        dao.update(account);
+
+        Account account = new DefaultAccount(accountId, accountData);
+
+        try {
+            dao.update(account);
+        } catch (EntityPersistenceException e) {
+            throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
+        }
     }
 
 	@Override
@@ -100,7 +116,12 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
         account.addFields(fields);
         account.addTags(tags);
 
-        dao.create(account);
+        try {
+            dao.create(account);
+        } catch (EntityPersistenceException e) {
+            throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
+        }
+
         return account;
 	}
 }

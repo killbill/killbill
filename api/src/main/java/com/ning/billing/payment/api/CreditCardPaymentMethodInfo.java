@@ -16,8 +16,90 @@
 
 package com.ning.billing.payment.api;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 
 public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
+    private final String cardHolderName;
+    private final String cardType;
+    private final String expirationDate;
+    private final String maskNumber;
+    private final String cardAddress1;
+    private final String cardAddress2;
+    private final String cardCity;
+    private final String cardState;
+    private final String cardPostalCode;
+    private final String cardCountry;
+
+    @JsonCreator
+    public CreditCardPaymentMethodInfo(@JsonProperty("id") String id,
+                                       @JsonProperty("accountId") String accountId,
+                                       @JsonProperty("defaultMethod") Boolean defaultMethod,
+                                       @JsonProperty("cardHolderName") String cardHolderName,
+                                       @JsonProperty("cardType") String cardType,
+                                       @JsonProperty("expirationDate") String expirationDate,
+                                       @JsonProperty("maskNumber") String maskNumber,
+                                       @JsonProperty("cardAddress1") String cardAddress1,
+                                       @JsonProperty("cardAddress2") String cardAddress2,
+                                       @JsonProperty("cardCity") String cardCity,
+                                       @JsonProperty("cardState") String cardState,
+                                       @JsonProperty("cardPostalCode") String cardPostalCode,
+                                       @JsonProperty("cardCountry") String cardCountry) {
+
+      super(id, accountId, defaultMethod, "CreditCard");
+      this.cardHolderName = cardHolderName;
+      this.cardType = cardType;
+      this.expirationDate = expirationDate;
+      this.maskNumber = maskNumber;
+      this.cardAddress1 = cardAddress1;
+      this.cardAddress2 = cardAddress2;
+      this.cardCity = cardCity;
+      this.cardState = cardState;
+      this.cardPostalCode = cardPostalCode;
+      this.cardCountry = cardCountry;
+    }
+
+    public String getCardHolderName() {
+      return cardHolderName;
+    }
+
+    public String getCardType() {
+      return cardType;
+    }
+
+    public String getCardAddress1() {
+        return cardAddress1;
+    }
+
+    public String getCardAddress2() {
+        return cardAddress2;
+    }
+
+    public String getCardCity() {
+        return cardCity;
+    }
+
+    public String getCardState() {
+        return cardState;
+    }
+
+    public String getCardPostalCode() {
+        return cardPostalCode;
+    }
+
+    public String getCardCountry() {
+        return cardCountry;
+    }
+
+    public String getExpirationDate() {
+      return expirationDate;
+    }
+
+    public String getMaskNumber() {
+      return maskNumber;
+    }
+
     public static final class Builder extends BuilderBase<CreditCardPaymentMethodInfo, Builder> {
         private String cardHolderName;
         private String cardType;
@@ -115,81 +197,9 @@ public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
         }
     }
 
-    private final String cardHolderName;
-    private final String cardType;
-    private final String expirationDate;
-    private final String maskNumber;
-    private final String cardAddress1;
-    private final String cardAddress2;
-    private final String cardCity;
-    private final String cardState;
-    private final String cardPostalCode;
-    private final String cardCountry;
-
-    public CreditCardPaymentMethodInfo(String id,
-                                   String accountId,
-                                   Boolean defaultMethod,
-                                   String cardHolderName,
-                                   String cardType,
-                                   String expirationDate,
-                                   String maskNumber,
-                                   String cardAddress1,
-                                   String cardAddress2,
-                                   String cardCity,
-                                   String cardState,
-                                   String cardPostalCode,
-                                   String cardCountry) {
-
-      super(id, accountId, defaultMethod, "CreditCard");
-      this.cardHolderName = cardHolderName;
-      this.cardType = cardType;
-      this.expirationDate = expirationDate;
-      this.maskNumber = maskNumber;
-      this.cardAddress1 = cardAddress1;
-      this.cardAddress2 = cardAddress2;
-      this.cardCity = cardCity;
-      this.cardState = cardState;
-      this.cardPostalCode = cardPostalCode;
-      this.cardCountry = cardCountry;
+    @Override
+    public String toString() {
+        return "CreditCardPaymentMethodInfo [cardHolderName=" + cardHolderName + ", cardType=" + cardType + ", expirationDate=" + expirationDate + ", maskNumber=" + maskNumber + ", cardAddress1=" + cardAddress1 + ", cardAddress2=" + cardAddress2 + ", cardCity=" + cardCity + ", cardState=" + cardState + ", cardPostalCode=" + cardPostalCode + ", cardCountry=" + cardCountry + "]";
     }
 
-    public String getCardHolderName() {
-      return cardHolderName;
-    }
-
-    public String getCardType() {
-      return cardType;
-    }
-
-    public String getCardAddress1() {
-        return cardAddress1;
-    }
-
-    public String getCardAddress2() {
-        return cardAddress2;
-    }
-
-    public String getCardCity() {
-        return cardCity;
-    }
-
-    public String getCardState() {
-        return cardState;
-    }
-
-    public String getCardPostalCode() {
-        return cardPostalCode;
-    }
-
-    public String getCardCountry() {
-        return cardCountry;
-    }
-
-    public String getExpirationDate() {
-      return expirationDate;
-    }
-
-    public String getMaskNumber() {
-      return maskNumber;
-    }
 }

@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityPersistenceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -64,7 +65,7 @@ public abstract class TestPaymentApi {
     }
 
     @Test(enabled=true)
-    public void testCreateCreditCardPayment() throws AccountApiException {
+    public void testCreateCreditCardPayment() throws AccountApiException, EntityPersistenceException {
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
@@ -78,7 +79,8 @@ public abstract class TestPaymentApi {
                                                        now.plusMonths(1),
                                                        amount,
                                                        new BigDecimal("1.0"),
-                                                       Currency.USD));
+                                                       Currency.USD,
+                                                       now));
 
         List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()));
 
@@ -99,11 +101,23 @@ public abstract class TestPaymentApi {
         assertTrue(paymentAttempt.getAmount().compareTo(amount) == 0);
         assertEquals(paymentAttempt.getCurrency(), Currency.USD);
         assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getPaymentId());
-        assertEquals(paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0), now.withMillisOfSecond(0).withSecondOfMinute(0));
+        DateTime nowTruncated = now.withMillisOfSecond(0).withSecondOfMinute(0);
+        DateTime paymentAttemptDateTruncated = paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0);
+        assertEquals(paymentAttemptDateTruncated.compareTo(nowTruncated), 0);
+
+        List<PaymentInfo> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        assertNotNull(paymentInfos);
+        assertTrue(paymentInfos.size() > 0);
+
+        PaymentInfo paymentInfoFromGet = paymentInfos.get(0);
+        assertEquals(paymentInfo, paymentInfoFromGet);
+
+        PaymentAttempt paymentAttemptFromGet = paymentApi.getPaymentAttemptForInvoiceId(invoice.getId().toString());
+        assertEquals(paymentAttempt, paymentAttemptFromGet);
 
     }
 
-    private PaymentProviderAccount setupAccountWithPaymentMethod() throws AccountApiException {
+    private PaymentProviderAccount setupAccountWithPaypalPaymentMethod() throws AccountApiException, EntityPersistenceException {
         final Account account = testHelper.createTestPayPalAccount();
         paymentApi.createPaymentProviderAccount(account);
 
@@ -132,13 +146,14 @@ public abstract class TestPaymentApi {
     }
 
     @Test(enabled=true)
-    public void testCreatePaymentMethod() throws AccountApiException {
-        PaymentProviderAccount account = setupAccountWithPaymentMethod();
+    public void testCreatePaypalPaymentMethod() throws AccountApiException, EntityPersistenceException {
+        PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
         assertNotNull(account);
+        Either<PaymentError, List<PaymentMethodInfo>> paymentMethodsOrError = paymentApi.getPaymentMethods(account.getAccountKey());
     }
 
     @Test(enabled=true)
-    public void testUpdatePaymentProviderAccountContact() throws AccountApiException {
+    public void testUpdatePaymentProviderAccountContact() throws AccountApiException, EntityPersistenceException {
         final Account account = testHelper.createTestPayPalAccount();
         paymentApi.createPaymentProviderAccount(account);
 
@@ -160,8 +175,8 @@ public abstract class TestPaymentApi {
     }
 
     @Test(enabled=true)
-    public void testCannotDeleteDefaultPaymentMethod() throws AccountApiException {
-        PaymentProviderAccount account = setupAccountWithPaymentMethod();
+    public void testCannotDeleteDefaultPaymentMethod() throws AccountApiException, EntityPersistenceException {
+        PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
 
         Either<PaymentError, Void> errorOrVoid = paymentApi.deletePaymentMethod(account.getAccountKey(), account.getDefaultPaymentMethodId());
 
@@ -169,7 +184,7 @@ public abstract class TestPaymentApi {
     }
 
     @Test(enabled=true)
-    public void testDeleteNonDefaultPaymentMethod() throws AccountApiException {
+    public void testDeleteNonDefaultPaymentMethod() throws AccountApiException, EntityPersistenceException {
         final Account account = testHelper.createTestPayPalAccount();
         paymentApi.createPaymentProviderAccount(account);
 
@@ -198,4 +213,5 @@ public abstract class TestPaymentApi {
         assertTrue(errorOrVoid1.isRight());
         assertTrue(errorOrVoid2.isLeft());
     }
+
 }

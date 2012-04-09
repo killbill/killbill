@@ -19,13 +19,13 @@ package com.ning.billing.payment;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityPersistenceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.catalog.api.Currency;
@@ -46,14 +46,14 @@ public class TestHelper {
     }
 
     // These helper methods can be overridden in a plugin implementation
-    public Account createTestCreditCardAccount() throws AccountApiException {
+    public Account createTestCreditCardAccount() throws EntityPersistenceException {
         final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
         final String externalKey = RandomStringUtils.randomAlphanumeric(10);
         final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
                                                                      .firstNameLength(name.length())
                                                                      .externalKey(externalKey)
                                                                      .phone("123-456-7890")
-                                                                     .email("ccuser@example.com")
+                                                                     .email("ccuser" + RandomStringUtils.randomAlphanumeric(8) + "@example.com")
                                                                      .currency(Currency.USD)
                                                                      .billingCycleDay(1)
                                                                      .build();
@@ -61,7 +61,7 @@ public class TestHelper {
         return account;
     }
 
-    public Account createTestPayPalAccount() throws AccountApiException {
+    public Account createTestPayPalAccount() throws EntityPersistenceException {
         final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
         final String externalKey = RandomStringUtils.randomAlphanumeric(10);
         final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
@@ -80,7 +80,7 @@ public class TestHelper {
                                      DateTime targetDate,
                                      Currency currency,
                                      InvoiceItem... items) {
-        Invoice invoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), new DateTime(), targetDate, currency);
+        Invoice invoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), 1, new DateTime(), targetDate, currency);
 
         for (InvoiceItem item : items) {
             if (item instanceof RecurringInvoiceItem) {
@@ -93,7 +93,8 @@ public class TestHelper {
                                                                recurringInvoiceItem.getEndDate(),
                                                                recurringInvoiceItem.getAmount(),
                                                                recurringInvoiceItem.getRate(),
-                                                               recurringInvoiceItem.getCurrency()));
+                                                               recurringInvoiceItem.getCurrency(),
+                                                               recurringInvoiceItem.getCreatedDate()));
             }
         }
         invoiceDao.create(invoice);
@@ -104,7 +105,8 @@ public class TestHelper {
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final UUID subscriptionId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal("10.00");
-        final InvoiceItem item = new RecurringInvoiceItem(null, subscriptionId, "test plan", "test phase", now, now.plusMonths(1), amount, new BigDecimal("1.0"), Currency.USD);
+        final InvoiceItem item = new RecurringInvoiceItem(null, subscriptionId, "test plan", "test phase", now, now.plusMonths(1),
+                amount, new BigDecimal("1.0"), Currency.USD, now);
 
         return createTestInvoice(account, now, Currency.USD, item);
     }

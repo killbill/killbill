@@ -49,7 +49,7 @@ public class TestVersionedCatalog {
 	private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
 	private VersionedCatalog vc;
 	
-	@BeforeClass(groups={"setup"})
+	@BeforeClass(groups={"fast"})
 	public void setUp() throws ServiceException {
 		vc = loader.load(Resources.getResource("versionedCatalog").toString());
 	}

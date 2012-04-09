@@ -68,7 +68,6 @@ public class MockModule extends AbstractModule {
         bind(ClockMock.class).asEagerSingleton();
         bind(Lifecycle.class).to(SubsetDefaultLifecycle.class).asEagerSingleton();
 
-
         final MysqlTestingHelper helper = new MysqlTestingHelper();
         bind(MysqlTestingHelper.class).toInstance(helper);
         if (helper.isUsingLocalInstance()) {
@@ -98,7 +97,7 @@ public class MockModule extends AbstractModule {
     }
 
     private static void loadSystemPropertiesFromClasspath(final String resource) {
-        final URL url = TestBasic.class.getResource(resource);
+        final URL url = TestIntegration.class.getResource(resource);
         assertNotNull(url);
         try {
             System.getProperties().load( url.openStream() );

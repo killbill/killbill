@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.5-SNAPSHOT</version>
+        <version>0.1.8-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-payment</artifactId>
@@ -62,7 +62,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.0.1</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>commons-collections</groupId>
@@ -86,11 +86,6 @@
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-util</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-util</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -107,14 +102,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-             <groupId>com.mysql</groupId>
-             <artifactId>management</artifactId>
-             <scope>test</scope>
-         </dependency>
-         <dependency>
-             <groupId>com.mysql</groupId>
-             <artifactId>management-dbfiles</artifactId>
-             <scope>test</scope>
-         </dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-mxj</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-mxj-db-files</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

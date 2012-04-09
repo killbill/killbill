@@ -16,6 +16,24 @@
 
 package com.ning.billing.analytics.api;
 
+import static org.testng.Assert.fail;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
+import org.apache.commons.io.IOUtils;
+import org.joda.time.DateTime;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
+
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountCreationNotification;
@@ -47,35 +65,35 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
+import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
+import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.tag.DescriptiveTag;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.tag.DefaultTagDefinition;
+import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
-import org.apache.commons.io.IOUtils;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
-
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import static org.testng.Assert.fail;
 
 @Guice(modules = AnalyticsTestModule.class)
-public class TestAnalyticsService
-{
+public class TestAnalyticsService {
+    private static final UUID ID = UUID.randomUUID();
     private static final String KEY = "12345";
     private static final String ACCOUNT_KEY = "pierre-12345";
-    private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something", "pierre", new DateTime(DateTimeZone.UTC));
-    private static final DefaultTagDefinition TAG_TWO = new DefaultTagDefinition("awesome", "something", "pierre", new DateTime(DateTimeZone.UTC));
+    private static final Currency ACCOUNT_CURRENCY = Currency.EUR;
+    private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something", "pierre");
+    private static final DefaultTagDefinition TAG_TWO = new DefaultTagDefinition("awesome", "something", "pierre");
+    private static final BigDecimal INVOICE_AMOUNT = BigDecimal.valueOf(1243.11);
+    private static final String PAYMENT_METHOD = "Paypal";
+    private static final String CARD_COUNTRY = "France";
+
+    private final Clock clock = new DefaultClock();
 
     @Inject
     private AccountUserApi accountApi;
@@ -85,6 +103,12 @@ public class TestAnalyticsService
 
     @Inject
     private TagDefinitionSqlDao tagDao;
+
+    @Inject
+    private InvoiceDao invoiceDao;
+
+    @Inject
+    private PaymentDao paymentDao;
 
     @Inject
     private DefaultAnalyticsService service;
@@ -105,50 +129,54 @@ public class TestAnalyticsService
     private BusinessSubscriptionTransition expectedTransition;
 
     private AccountCreationNotification accountCreationNotification;
+    private InvoiceCreationNotification invoiceCreationNotification;
+    private PaymentInfo paymentInfoNotification;
 
     @BeforeClass(alwaysRun = true)
-    public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException
-    {
+    public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
         // Killbill generic setup
         setupBusAndMySQL();
 
         tagDao.create(TAG_ONE);
         tagDao.create(TAG_TWO);
 
-        final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, Currency.USD);
+        final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, ACCOUNT_CURRENCY);
         try {
-            List<Tag> tags = new ArrayList<Tag>();
-            tags.add(new DescriptiveTag(TAG_ONE, "pierre", new DateTime(DateTimeZone.UTC)));
-            tags.add(new DescriptiveTag(TAG_TWO, "pierre", new DateTime(DateTimeZone.UTC)));
+            final List<Tag> tags = new ArrayList<Tag>();
+            tags.add(new DescriptiveTag(TAG_ONE, "pierre", clock.getUTCNow()));
+            tags.add(new DescriptiveTag(TAG_TWO, "pierre", clock.getUTCNow()));
 
             final Account storedAccount = accountApi.createAccount(account, null, tags);
 
             // Create events for the bus and expected results
             createSubscriptionTransitionEvent(storedAccount);
             createAccountCreationEvent(storedAccount);
+            createInvoiceAndPaymentCreationEvents(storedAccount);
         } catch (Throwable t) {
             fail("Initializing accounts failed.", t);
         }
     }
 
-    private void setupBusAndMySQL() throws IOException
-    {
+    private void setupBusAndMySQL() throws IOException {
         bus.start();
 
         final String analyticsDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
         final String accountDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
         final String entitlementDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+        final String invoiceDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+        final String paymentDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
         final String utilDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
         helper.startMysql();
         helper.initDb(analyticsDdl);
         helper.initDb(accountDdl);
         helper.initDb(entitlementDdl);
+        helper.initDb(invoiceDdl);
+        helper.initDb(paymentDdl);
         helper.initDb(utilDdl);
     }
 
-    private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException
-    {
+    private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {
         final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), KEY);
 
         // Verify we correctly initialized the account subsystem
@@ -160,61 +188,86 @@ public class TestAnalyticsService
         final Plan plan = new MockPlan("platinum-monthly", product);
         final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
         final UUID subscriptionId = UUID.randomUUID();
-        final DateTime effectiveTransitionTime = new DateTime(DateTimeZone.UTC);
-        final DateTime requestedTransitionTime = new DateTime(DateTimeZone.UTC);
+        final DateTime effectiveTransitionTime = clock.getUTCNow();
+        final DateTime requestedTransitionTime = clock.getUTCNow();
         final String priceList = "something";
 
         transition = new SubscriptionTransitionData(
-            UUID.randomUUID(),
-            subscriptionId,
-            bundle.getId(),
-            EntitlementEvent.EventType.API_USER,
-            ApiEventType.CREATE,
-            requestedTransitionTime,
-            effectiveTransitionTime,
-            null,
-            null,
-            null,
-            null,
-            Subscription.SubscriptionState.ACTIVE,
-            plan,
-            phase,
-            priceList
+                ID,
+                subscriptionId,
+                bundle.getId(),
+                EntitlementEvent.EventType.API_USER,
+                ApiEventType.CREATE,
+                requestedTransitionTime,
+                effectiveTransitionTime,
+                null,
+                null,
+                null,
+                null,
+                Subscription.SubscriptionState.ACTIVE,
+                plan,
+                phase,
+                priceList,
+                1L,
+                true
         );
         expectedTransition = new BusinessSubscriptionTransition(
-            KEY,
-            ACCOUNT_KEY,
-            requestedTransitionTime,
-            BusinessSubscriptionEvent.subscriptionCreated(plan),
-            null,
-            new BusinessSubscription(priceList, plan, phase, Currency.USD, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
+                ID,
+                KEY,
+                ACCOUNT_KEY,
+                requestedTransitionTime,
+                BusinessSubscriptionEvent.subscriptionCreated(plan),
+                null,
+                new BusinessSubscription(priceList, plan, phase, ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
         );
     }
 
-    private void createAccountCreationEvent(final Account account)
-    {
+    private void createAccountCreationEvent(final Account account) {
         accountCreationNotification = new DefaultAccountCreationEvent(account);
     }
 
+    private void createInvoiceAndPaymentCreationEvents(final Account account) {
+        final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCNow(), ACCOUNT_CURRENCY, clock);
+        final FixedPriceInvoiceItem invoiceItem = new FixedPriceInvoiceItem(
+                UUID.randomUUID(), invoice.getId(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
+                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow()
+        );
+        invoice.addInvoiceItem(invoiceItem);
+
+        invoiceDao.create(invoice);
+        Assert.assertEquals(invoiceDao.getInvoicesByAccount(account.getId()).size(), 1);
+        Assert.assertEquals(invoiceDao.getInvoicesByAccount(account.getId()).get(0).getInvoiceItems().size(), 1);
+
+        // It doesn't really matter what the events contain - the listener will go back to the db
+        invoiceCreationNotification = new DefaultInvoiceCreationNotification(invoice.getId(), account.getId(),
+                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow());
+
+        paymentInfoNotification = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
+        final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
+                ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getPaymentId(), 1);
+        paymentDao.createPaymentAttempt(paymentAttempt);
+        paymentDao.savePaymentInfo(paymentInfoNotification);
+        Assert.assertEquals(paymentDao.getPaymentInfo(Arrays.asList(invoice.getId().toString())).size(), 1);
+    }
+
     @AfterClass(alwaysRun = true)
-    public void stopMysql()
-    {
+    public void stopMysql() {
         helper.stopMysql();
     }
 
     @Test(groups = "slow")
-    public void testRegisterForNotifications() throws Exception
-    {
+    public void testRegisterForNotifications() throws Exception {
         // Make sure the service has been instantiated
         Assert.assertEquals(service.getName(), "analytics-service");
 
         // Test the bus and make sure we can register our service
         try {
             service.registerForNotifications();
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             Assert.fail("Unable to start the bus or service! " + t);
         }
+
+        Assert.assertNull(accountDao.getAccount(ACCOUNT_KEY));
 
         // Send events and wait for the async part...
         bus.post(transition);
@@ -229,11 +282,24 @@ public class TestAnalyticsService
         Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTags().indexOf(TAG_ONE.getName()) != -1);
         Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTags().indexOf(TAG_TWO.getName()) != -1);
 
+        // Test invoice integration - the account creation notification has triggered a BAC update
+        Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
+
+        // Post the same invoice event again - the invoice balance shouldn't change
+        bus.post(invoiceCreationNotification);
+        Thread.sleep(1000);
+        Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
+
+        // Test payment integration - the fields have already been populated, just make sure the code is exercised
+        bus.post(paymentInfoNotification);
+        Thread.sleep(1000);
+        Assert.assertEquals(accountDao.getAccount(ACCOUNT_KEY).getPaymentMethod(), PAYMENT_METHOD);
+        Assert.assertEquals(accountDao.getAccount(ACCOUNT_KEY).getBillingAddressCountry(), CARD_COUNTRY);
+
         // Test the shutdown sequence
         try {
             bus.stop();
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             Assert.fail("Unable to stop the bus!");
         }
     }

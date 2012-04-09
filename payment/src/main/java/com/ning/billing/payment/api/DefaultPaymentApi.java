@@ -23,6 +23,8 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,15 +34,19 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
+import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.payment.setup.PaymentConfig;
 
 public class DefaultPaymentApi implements PaymentApi {
     private final PaymentProviderPluginRegistry pluginRegistry;
     private final AccountUserApi accountUserApi;
     private final InvoicePaymentApi invoicePaymentApi;
+    private final RetryService retryService;
     private final PaymentDao paymentDao;
+    private final PaymentConfig config;
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentApi.class);
 
@@ -48,11 +54,15 @@ public class DefaultPaymentApi implements PaymentApi {
     public DefaultPaymentApi(PaymentProviderPluginRegistry pluginRegistry,
                              AccountUserApi accountUserApi,
                              InvoicePaymentApi invoicePaymentApi,
-                             PaymentDao paymentDao) {
+                             RetryService retryService,
+                             PaymentDao paymentDao,
+                             PaymentConfig config) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
         this.invoicePaymentApi = invoicePaymentApi;
+        this.retryService = retryService;
         this.paymentDao = paymentDao;
+        this.config = config;
     }
 
     @Override
@@ -127,6 +137,40 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
+    public Either<PaymentError, PaymentInfo> createPaymentForPaymentAttempt(UUID paymentAttemptId) {
+        PaymentAttempt paymentAttempt = paymentDao.getPaymentAttemptById(paymentAttemptId);
+
+        if (paymentAttempt != null) {
+            Invoice invoice = invoicePaymentApi.getInvoice(paymentAttempt.getInvoiceId());
+            Account account = accountUserApi.getAccountById(paymentAttempt.getAccountId());
+
+            if (invoice != null && account != null) {
+                if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
+                    // TODO: send a notification that invoice was ignored?
+                    log.info("Received invoice for payment with outstanding amount of 0 {} ", invoice);
+                    return Either.left(new PaymentError("invoice_balance_0",
+                                                        "Invoice balance was 0 or less",
+                                                        paymentAttempt.getAccountId(),
+                                                        paymentAttempt.getInvoiceId()));
+                }
+                else {
+                    PaymentAttempt newPaymentAttempt = new PaymentAttempt.Builder(paymentAttempt)
+                                                                         .setRetryCount(paymentAttempt.getRetryCount() + 1)
+                                                                         .setPaymentAttemptId(UUID.randomUUID())
+                                                                         .build();
+
+                    paymentDao.createPaymentAttempt(newPaymentAttempt);
+                    return processPayment(getPaymentProviderPlugin(account), account, invoice, newPaymentAttempt);
+                }
+            }
+        }
+        return Either.left(new PaymentError("retry_payment_error",
+                                            "Could not load payment attempt, invoice or account for id " + paymentAttemptId,
+                                            paymentAttempt.getAccountId(),
+                                            paymentAttempt.getInvoiceId()));
+    }
+
+    @Override
     public List<Either<PaymentError, PaymentInfo>> createPayment(Account account, List<String> invoiceIds) {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
 
@@ -135,57 +179,102 @@ public class DefaultPaymentApi implements PaymentApi {
         for (String invoiceId : invoiceIds) {
             Invoice invoice = invoicePaymentApi.getInvoice(UUID.fromString(invoiceId));
 
-            if (invoice.getBalance().compareTo(BigDecimal.ZERO) == 0 ) {
-            // TODO: send a notification that invoice was ignored?
-                log.info("Received invoice for payment with outstanding amount of 0 {} ", invoice);
-            }
-            else if (invoiceId.equals(paymentDao.getPaymentAttemptForInvoiceId(invoiceId))) {
-                //TODO: do equals on invoice instead and only reject when invoice is exactly the same?
-                log.info("Duplicate invoice payment event, already received invoice {} ", invoice);
+            if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
+                // TODO: send a notification that invoice was ignored?
+                log.info("Received invoice for payment with balance of 0 {} ", invoice);
+                Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("invoice_balance_0",
+                                                                                        "Invoice balance was 0 or less",
+                                                                                        account.getId(),
+                                                                                        UUID.fromString(invoiceId)));
+                processedPaymentsOrErrors.add(result);
             }
             else {
                 PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice);
-                Either<PaymentError, PaymentInfo> paymentOrError = plugin.processInvoice(account, invoice);
-                processedPaymentsOrErrors.add(paymentOrError);
 
-                PaymentInfo paymentInfo = null;
-
-                if (paymentOrError.isRight()) {
-                    paymentInfo = paymentOrError.getRight();
-                    paymentDao.savePaymentInfo(paymentInfo);
-
-                    Either<PaymentError, PaymentMethodInfo> paymentMethodInfoOrError = plugin.getPaymentMethodInfo(paymentInfo.getPaymentMethodId());
-
-                    if (paymentMethodInfoOrError.isRight()) {
-                        PaymentMethodInfo paymentMethodInfo = paymentMethodInfoOrError.getRight();
-
-                        if (paymentMethodInfo instanceof CreditCardPaymentMethodInfo) {
-                            CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethodInfo;
-                            paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getPaymentId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry());
-                        }
-                        else if (paymentMethodInfo instanceof PaypalPaymentMethodInfo) {
-                            PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
-                            paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getPaymentId(), null, null);
-                        }
-                    }
-
-
-                    if (paymentInfo.getPaymentId() != null) {
-                        paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), paymentInfo.getPaymentId());
-                    }
-                }
-
-                invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getPaymentAttemptId(),
-                                                                                   invoice.getId(),
-                                                                                   paymentAttempt.getPaymentAttemptDate(),
-                                                                                   paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
-//                                                                                 paymentInfo.getRefundAmount(), TODO
-                                                                                   paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency()));
-
+                processedPaymentsOrErrors.add(processPayment(plugin, account, invoice, paymentAttempt));
             }
         }
 
         return processedPaymentsOrErrors;
+    }
+
+    private Either<PaymentError, PaymentInfo> processPayment(PaymentProviderPlugin plugin, Account account, Invoice invoice, PaymentAttempt paymentAttempt) {
+        Either<PaymentError, PaymentInfo> paymentOrError = plugin.processInvoice(account, invoice);
+        PaymentInfo paymentInfo = null;
+
+        if (paymentOrError.isLeft()) {
+            String error = StringUtils.substring(paymentOrError.getLeft().getMessage() + paymentOrError.getLeft().getType(), 0, 100);
+            log.info("Could not process a payment for " + paymentAttempt + " error was " + error);
+
+            scheduleRetry(paymentAttempt, error);
+        }
+        else {
+            paymentInfo = paymentOrError.getRight();
+            paymentDao.savePaymentInfo(paymentInfo);
+
+            final String paymentMethodId = paymentInfo.getPaymentMethodId();
+            log.debug("Fetching payment method info for payment method id " + ((paymentMethodId == null) ? "null" : paymentMethodId));
+            Either<PaymentError, PaymentMethodInfo> paymentMethodInfoOrError = plugin.getPaymentMethodInfo(paymentMethodId);
+
+            if (paymentMethodInfoOrError.isRight()) {
+                PaymentMethodInfo paymentMethodInfo = paymentMethodInfoOrError.getRight();
+
+                if (paymentMethodInfo instanceof CreditCardPaymentMethodInfo) {
+                    CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethodInfo;
+                    paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getPaymentId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry());
+                }
+                else if (paymentMethodInfo instanceof PaypalPaymentMethodInfo) {
+                    PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
+                    paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getPaymentId(), null, null);
+                }
+            } else {
+                log.info(paymentMethodInfoOrError.getLeft().getMessage());
+            }
+
+            if (paymentInfo.getPaymentId() != null) {
+                paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), paymentInfo.getPaymentId());
+            }
+        }
+
+        invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getPaymentAttemptId(),
+                                                                           invoice.getId(),
+                                                                           paymentAttempt.getPaymentAttemptDate(),
+                                                                           paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
+//                                                                         paymentInfo.getRefundAmount(), TODO
+                                                                           paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency()));
+
+        return paymentOrError;
+    }
+
+    private void scheduleRetry(PaymentAttempt paymentAttempt, String error) {
+        final List<Integer> retryDays = config.getPaymentRetryDays();
+
+        int retryCount = 0;
+
+        if (paymentAttempt.getRetryCount() != null) {
+            retryCount = paymentAttempt.getRetryCount();
+        }
+
+        if (retryCount < retryDays.size()) {
+            int retryInDays = 0;
+            DateTime nextRetryDate = paymentAttempt.getPaymentAttemptDate();
+
+            try {
+                retryInDays = retryDays.get(retryCount);
+                nextRetryDate = nextRetryDate.plusDays(retryInDays);
+            }
+            catch (NumberFormatException ex) {
+                log.error("Could not get retry day for retry count {}", retryCount);
+            }
+
+            retryService.scheduleRetry(paymentAttempt, nextRetryDate);
+        }
+        else if (retryCount == retryDays.size()) {
+            log.info("Last payment retry failed for {} ", paymentAttempt);
+        }
+        else {
+            log.error("Cannot update payment retry information because retry count is invalid {} ", retryCount);
+        }
     }
 
     @Override
@@ -210,6 +299,21 @@ public class DefaultPaymentApi implements PaymentApi {
     public List<Either<PaymentError, PaymentInfo>> createRefund(Account account, List<String> invoiceIds) {
         //TODO
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<PaymentInfo> getPaymentInfo(List<String> invoiceIds) {
+        return paymentDao.getPaymentInfo(invoiceIds);
+    }
+
+    @Override
+    public PaymentAttempt getPaymentAttemptForInvoiceId(String invoiceId) {
+        return paymentDao.getPaymentAttemptForInvoiceId(invoiceId);
+    }
+
+    @Override
+    public PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptId) {
+        return paymentDao.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
     }
 
 }

@@ -36,7 +36,6 @@ public class PaymentAttempt {
     private final DateTime invoiceDate;
     private final DateTime paymentAttemptDate;
     private final Integer retryCount;
-    private final DateTime nextRetryDate;
     private final DateTime createdDate;
     private final DateTime updatedDate;
 
@@ -49,7 +48,6 @@ public class PaymentAttempt {
                           DateTime paymentAttemptDate,
                           String paymentId,
                           Integer retryCount,
-                          DateTime nextRetryDate,
                           DateTime createdDate,
                           DateTime updatedDate) {
         this.paymentAttemptId = paymentAttemptId;
@@ -60,8 +58,7 @@ public class PaymentAttempt {
         this.invoiceDate = invoiceDate;
         this.paymentAttemptDate = paymentAttemptDate == null ? new DateTime(DateTimeZone.UTC) : paymentAttemptDate;
         this.paymentId = paymentId;
-        this.retryCount = retryCount;
-        this.nextRetryDate = nextRetryDate;
+        this.retryCount = retryCount == null ? 0 : retryCount;
         this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
         this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
     }
@@ -74,8 +71,7 @@ public class PaymentAttempt {
                           DateTime invoiceDate,
                           DateTime paymentAttemptDate,
                           String paymentId,
-                          Integer retryCount,
-                          DateTime nextRetryDate) {
+                          Integer retryCount) {
         this(paymentAttemptId,
              invoiceId,
              accountId,
@@ -85,21 +81,20 @@ public class PaymentAttempt {
              paymentAttemptDate,
              paymentId,
              retryCount,
-             nextRetryDate,
              null,
              null);
     }
 
     public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, BigDecimal amount, Currency currency, DateTime invoiceDate, DateTime paymentAttemptDate) {
-        this(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, null, null, null);
+        this(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, null, null);
     }
 
     public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, DateTime invoiceDate, DateTime paymentAttemptDate) {
-        this(paymentAttemptId, invoiceId, accountId, null, null, invoiceDate, paymentAttemptDate, null, null, null);
+        this(paymentAttemptId, invoiceId, accountId, null, null, invoiceDate, paymentAttemptDate, null, null);
     }
 
     public PaymentAttempt(UUID paymentAttemptId, Invoice invoice) {
-        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null, null);
+        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null);
     }
 
     public DateTime getInvoiceDate() {
@@ -146,13 +141,9 @@ public class PaymentAttempt {
         return retryCount;
     }
 
-    public DateTime getNextRetryDate() {
-        return nextRetryDate;
-    }
-
     @Override
     public String toString() {
-        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", invoiceId=" + invoiceId + ", accountId=" + accountId + ", amount=" + amount + ", currency=" + currency + ", paymentId=" + paymentId + ", invoiceDate=" + invoiceDate + ", paymentAttemptDate=" + paymentAttemptDate + ", retryCount=" + retryCount + ", nextRetryDate=" + nextRetryDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
+        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", invoiceId=" + invoiceId + ", accountId=" + accountId + ", amount=" + amount + ", currency=" + currency + ", paymentId=" + paymentId + ", invoiceDate=" + invoiceDate + ", paymentAttemptDate=" + paymentAttemptDate + ", retryCount=" + retryCount + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
     }
 
     public Builder cloner() {
@@ -169,7 +160,6 @@ public class PaymentAttempt {
         private DateTime paymentAttemptDate;
         private String paymentId;
         private Integer retryCount;
-        private DateTime nextRetryDate;
         private DateTime createdDate;
         private DateTime updatedDate;
 
@@ -186,7 +176,6 @@ public class PaymentAttempt {
             this.paymentAttemptDate = src.paymentAttemptDate;
             this.paymentId = src.paymentId;
             this.retryCount = src.retryCount;
-            this.nextRetryDate = src.nextRetryDate;
             this.createdDate = src.createdDate;
             this.updatedDate = src.updatedDate;
         }
@@ -246,11 +235,6 @@ public class PaymentAttempt {
             return this;
         }
 
-        public Builder setNextRetryDate(DateTime nextRetryDate) {
-            this.nextRetryDate = nextRetryDate;
-            return this;
-        }
-
         public PaymentAttempt build() {
             return new PaymentAttempt(paymentAttemptId,
                                       invoiceId,
@@ -261,10 +245,10 @@ public class PaymentAttempt {
                                       paymentAttemptDate,
                                       paymentId,
                                       retryCount,
-                                      nextRetryDate,
                                       createdDate,
                                       updatedDate);
         }
+
     }
 
     @Override
@@ -278,32 +262,35 @@ public class PaymentAttempt {
                                 paymentAttemptDate,
                                 paymentId,
                                 retryCount,
-                                nextRetryDate,
                                 createdDate,
                                 updatedDate);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (getClass() == obj.getClass()) {
-            PaymentAttempt other = (PaymentAttempt)obj;
-            if (obj == other) {
-                return true;
-            }
-            else {
-                return Objects.equal(paymentAttemptId, other.paymentAttemptId) &&
-                       Objects.equal(invoiceId, other.invoiceId) &&
-                       Objects.equal(accountId, other.accountId) &&
-                       Objects.equal(amount, other.amount) &&
-                       Objects.equal(currency, other.currency) &&
-                       Objects.equal(invoiceDate, other.invoiceDate) &&
-                       Objects.equal(paymentAttemptDate, other.paymentAttemptDate) &&
-                       Objects.equal(retryCount, other.retryCount) &&
-                       Objects.equal(nextRetryDate, other.nextRetryDate) &&
-                       Objects.equal(paymentId, other.paymentId);
-            }
-        }
-        return false;
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final PaymentAttempt that = (PaymentAttempt) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) return false;
+        if (amount != null ? !(amount.compareTo(that.amount) == 0) : that.amount != null) return false;
+        if (createdDate != null ? !(getUnixTimestamp(createdDate) == getUnixTimestamp(that.createdDate)) : that.createdDate != null) return false;
+        if (currency != that.currency) return false;
+        if (invoiceDate != null ? !(getUnixTimestamp(invoiceDate) == getUnixTimestamp(that.invoiceDate)) : that.invoiceDate != null) return false;
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) return false;
+        if (paymentAttemptDate != null ? !(getUnixTimestamp(paymentAttemptDate) == getUnixTimestamp(that.paymentAttemptDate)) : that.paymentAttemptDate != null)
+            return false;
+        if (paymentAttemptId != null ? !paymentAttemptId.equals(that.paymentAttemptId) : that.paymentAttemptId != null)
+            return false;
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) return false;
+        if (retryCount != null ? !retryCount.equals(that.retryCount) : that.retryCount != null) return false;
+        if (updatedDate != null ? !(getUnixTimestamp(updatedDate) == getUnixTimestamp(that.updatedDate)) : that.updatedDate != null) return false;
+
+        return true;
     }
 
+    private static long getUnixTimestamp(final DateTime dateTime) {
+        return dateTime.getMillis() / 1000;
+    }
 }

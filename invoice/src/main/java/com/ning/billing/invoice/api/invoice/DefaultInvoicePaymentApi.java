@@ -17,6 +17,12 @@
 
 package com.ning.billing.invoice.api.invoice;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
@@ -24,11 +30,6 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
-import org.joda.time.DateTime;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
 
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     private final InvoiceDao dao;
@@ -36,17 +37,12 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     @Inject
     public DefaultInvoicePaymentApi(final InvoiceDao dao) {
         this.dao = dao;
-    }
+     }
 
     @Override
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
         dao.notifyOfPaymentAttempt(invoicePayment);
     }
-
-//    @Override
-//    public void paymentFailed(UUID invoiceId, UUID paymentId, DateTime paymentAttemptDate) {
-//        dao.notifyFailedPayment(invoiceId.toString(), paymentId.toString(), paymentAttemptDate.toDate());
-//    }
 
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId) {
@@ -71,7 +67,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amount, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
-        InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate, amount, currency, null, null);
+        InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate, amount, currency, null);
         dao.notifyOfPaymentAttempt(invoicePayment);
     }
 
@@ -80,4 +76,5 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
         dao.notifyOfPaymentAttempt(invoicePayment);
     }
+    
 }

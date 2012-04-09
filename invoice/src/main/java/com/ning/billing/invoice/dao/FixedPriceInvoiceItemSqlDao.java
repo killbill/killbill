@@ -61,10 +61,6 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
     @SqlUpdate
     void create(@FixedPriceInvoiceItemBinder final InvoiceItem invoiceItem);
 
-    @Override
-    @SqlUpdate
-    void update(@FixedPriceInvoiceItemBinder final InvoiceItem invoiceItem);
-
     @SqlBatch
     void create(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items);
 
@@ -88,6 +84,7 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                         q.bind("endDate", item.getEndDate().toDate());
                         q.bind("amount", item.getAmount());
                         q.bind("currency", item.getCurrency().toString());
+                        q.bind("createdDate", item.getCreatedDate().toDate());
                     }
                 };
             }
@@ -106,9 +103,10 @@ public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             DateTime endDate = new DateTime(result.getTimestamp("end_date"));
             BigDecimal amount = result.getBigDecimal("amount");
             Currency currency = Currency.valueOf(result.getString("currency"));
+            DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
             return new FixedPriceInvoiceItem(id, invoiceId, subscriptionId, planName, phaseName,
-                                            startDate, endDate, amount, currency);
+                                            startDate, endDate, amount, currency, createdDate);
         }
     }
 }

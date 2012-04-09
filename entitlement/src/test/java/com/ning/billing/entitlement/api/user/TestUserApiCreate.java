@@ -40,7 +40,8 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.util.clock.DefaultClock;
 
 public abstract class TestUserApiCreate extends TestApiBase {
-	Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
+
+    private static Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
 
     public void testCreateWithRequestedDate() {
         log.info("Starting testCreateWithRequestedDate");
@@ -74,6 +75,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             Assert.fail(e.getMessage());
         }
     }
+
 
     protected void testCreateWithInitialPhase() {
         log.info("Starting testCreateWithInitialPhase");

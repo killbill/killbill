@@ -38,6 +38,7 @@ import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
 
+@Test(groups = "slow")
 @Guice(modules=TestMysqlGlobalLocker.TestMysqlGlobalLockerModule.class)
 public class TestMysqlGlobalLocker {
 
@@ -47,13 +48,13 @@ public class TestMysqlGlobalLocker {
     @Inject
     private MysqlTestingHelper helper;
 
-    @BeforeClass(alwaysRun=true)
+    @BeforeClass(groups = "slow")
     public void setup() throws IOException  {
         helper.startMysql();
         createSimpleTable(dbi);
     }
 
-    @AfterClass(alwaysRun=true)
+    @AfterClass(groups = "slow")
     public void tearDown() {
         helper.stopMysql();
     }

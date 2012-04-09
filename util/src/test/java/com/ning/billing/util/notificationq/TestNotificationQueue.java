@@ -55,6 +55,7 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
+@Test(groups = "slow")
 @Guice(modules = TestNotificationQueue.TestNotificationQueueModule.class)
 public class TestNotificationQueue {
 	Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
@@ -81,13 +82,13 @@ public class TestNotificationQueue {
 		helper.initDb(testDdl);
 	}
 
-	@BeforeSuite(alwaysRun = true)
+	@BeforeSuite(groups = "slow")
 	public void setup() throws Exception {
 		startMysql();
 		dao = dbi.onDemand(DummySqlTest.class);
 	}
 
-	@BeforeTest
+	@BeforeTest(groups = "slow")
 	public void beforeTest() {
 		dbi.withHandle(new HandleCallback<Void>() {
 
@@ -110,7 +111,7 @@ public class TestNotificationQueue {
 	 * callback with the correct key when the time is ready
 	 * @throws Exception
 	 */
-	@Test(groups={"fast"}, enabled = true)
+	@Test(groups={"slow"}, enabled = true)
 	public void testSimpleNotification() throws Exception {
 
 		final Map<String, Boolean> expectedNotifications = new TreeMap<String, Boolean>();
@@ -174,7 +175,7 @@ public class TestNotificationQueue {
 	Assert.assertTrue(expectedNotifications.get(notificationKey.toString()));
 	}
 
-	@Test
+	@Test(groups = "slow")
 	public void testManyNotifications() throws InterruptedException {
 		final Map<String, Boolean> expectedNotifications = new TreeMap<String, Boolean>();
 
@@ -261,7 +262,7 @@ public class TestNotificationQueue {
 	 * callback with the correct key when the time is ready
 	 * @throws Exception
 	 */
-	@Test(groups={"fast"}, enabled = true)
+	@Test(groups={"slow"}, enabled = true)
 	public void testMultipleHandlerNotification() throws Exception {
 
 		final Map<String, Boolean> expectedNotificationsFred = new TreeMap<String, Boolean>();

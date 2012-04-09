@@ -14,14 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.events.user;
+package com.ning.billing.util.entity;
 
-
-
-public class ApiEventPause extends ApiEventBase {
-
-
-    public ApiEventPause(ApiEventBuilder builder) {
-        super(builder.setEventType(ApiEventType.PAUSE));
-    }
+public interface UpdatableEntity extends Entity {
 }

@@ -24,6 +24,7 @@ import static org.testng.Assert.fail;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityPersistenceException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.annotations.Test;
@@ -42,7 +43,7 @@ import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
 @Test(groups = {"account-dao"})
 public class TestSimpleAccountDao extends AccountDaoTestBase {
-    private DefaultAccount createTestAccount() {
+    private AccountBuilder createTestAccountBuilder() {
         String thisKey = "test" + UUID.randomUUID().toString();
         String lastName = UUID.randomUUID().toString();
         String thisEmail = "me@me.com" + " " + UUID.randomUUID();
@@ -65,13 +66,12 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                    .locale(locale)
                                    .timeZone(timeZone)
                                    .createdDate(createdDate)
-                                   .updatedDate(updatedDate)
-                                   .build();
+                                   .updatedDate(updatedDate);
     }
 
-    public void testBasic() throws AccountApiException {
-
-        Account a = createTestAccount();
+    @Test
+    public void testBasic() throws EntityPersistenceException {
+        Account a = createTestAccountBuilder().build();
         accountDao.create(a);
         String key = a.getExternalKey();
 
@@ -88,9 +88,26 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertTrue(all.size() >= 1);
     }
 
+    // simple test to ensure long phone numbers can be stored
     @Test
-    public void testGetById() throws AccountApiException {
-        Account account = createTestAccount();
+    public void testLongPhoneNumber() throws EntityPersistenceException {
+        Account account = createTestAccountBuilder().phone("123456789012345678901234").build();
+        accountDao.create(account);
+
+        Account saved = accountDao.getAccountByKey(account.getExternalKey());
+        assertNotNull(saved);
+    }
+
+    // simple test to ensure excessively long phone numbers cannot be stored
+    @Test(expectedExceptions = {EntityPersistenceException.class})
+    public void testOverlyLongPhoneNumber() throws EntityPersistenceException {
+        Account account = createTestAccountBuilder().phone("12345678901234567890123456").build();
+        accountDao.create(account);
+    }
+
+    @Test
+    public void testGetById() throws EntityPersistenceException {
+        Account account = createTestAccountBuilder().build();
         UUID id = account.getId();
         String key = account.getExternalKey();
         String name = account.getName();
@@ -108,8 +125,8 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testCustomFields() throws AccountApiException {
-        Account account = createTestAccount();
+    public void testCustomFields() throws EntityPersistenceException {
+        Account account = createTestAccountBuilder().build();
         String fieldName = "testField1";
         String fieldValue = "testField1_value";
         account.setFieldValue(fieldName, fieldValue);
@@ -123,9 +140,9 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testTags() throws AccountApiException {
-        Account account = createTestAccount();
-        TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", "Test System", new DateTime());
+    public void testTags() throws EntityPersistenceException {
+        Account account = createTestAccountBuilder().build();
+        TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", "Test System");
         TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
         tagDescriptionDao.create(definition);
 
@@ -145,8 +162,8 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testGetIdFromKey() throws AccountApiException {
-        Account account = createTestAccount();
+    public void testGetIdFromKey() throws EntityPersistenceException {
+        Account account = createTestAccountBuilder().build();
         accountDao.create(account);
 
         try {
@@ -159,12 +176,13 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
 
     @Test(expectedExceptions = AccountApiException.class)
     public void testGetIdFromKeyForNullKey() throws AccountApiException {
-        accountDao.getIdFromKey(null);
+        String key = null;
+        accountDao.getIdFromKey(key);
     }
 
     @Test
     public void testUpdate() throws Exception {
-        final Account account = createTestAccount();
+        final Account account = createTestAccountBuilder().build();
         accountDao.create(account);
 
         AccountData accountData = new AccountData() {
@@ -346,7 +364,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getPhone(), null);
     }
 
-    @Test(expectedExceptions = AccountApiException.class)
+    @Test(expectedExceptions = EntityPersistenceException.class)
     public void testExternalKeyCannotBeUpdated() throws Exception {
         UUID accountId = UUID.randomUUID();
         String originalExternalKey = "extKey1337";
@@ -361,11 +379,11 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                                     null, null, null, null, null, null, null, null, null, null,null, null);
         accountDao.update(updatedAccount);
     }
-    
-    @Test(groups={"slow"},enabled=true)
-    public void testDelete() throws AccountApiException {
 
-        Account a = createTestAccount();
+    @Test
+    public void testDelete() throws AccountApiException, EntityPersistenceException {
+
+        Account a = createTestAccountBuilder().build();
         accountDao.create(a);
         String key = a.getExternalKey();
 

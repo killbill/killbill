@@ -11,7 +11,8 @@ fields(prefix) ::= <<
   <prefix>amount,
   <prefix>rate,
   <prefix>currency,
-  <prefix>reversed_item_id
+  <prefix>reversed_item_id,
+  <prefix>created_date
 >>
 
 getById() ::= <<
@@ -42,21 +43,13 @@ getInvoiceItemsBySubscription() ::= <<
 create() ::= <<
   INSERT INTO recurring_invoice_items(<fields()>)
   VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
-         :amount, :rate, :currency, :reversedItemId);
+         :amount, :rate, :currency, :reversedItemId, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO recurring_invoice_items(<fields()>)
   VALUES(:id, :invoiceId, :subscriptionId, :planName, :phaseName, :startDate, :endDate,
-         :amount, :rate, :currency, :reversedItemId);
->>
-
-update() ::= <<
-  UPDATE recurring_invoice_items
-  SET invoice_id = :invoiceId, subscription_id = :subscriptionId, plan_name = :planName, phase_name = :phaseName,
-      start_date = :startDate, end_date = :endDate, amount = :amount, rate = :rate, currency = :currency,
-      reversed_item_id = :reversedItemId
-  WHERE id = :id;
+         :amount, :rate, :currency, :reversedItemId, :createdDate);
 >>
 
 test() ::= <<

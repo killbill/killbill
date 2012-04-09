@@ -21,6 +21,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
@@ -61,10 +62,11 @@ public class PlanAligner  {
      * @throws CatalogApiException
      * @throws EntitlementUserApiException
      */
-    public TimedPhase [] getCurrentAndNextTimedPhaseOnCreate(SubscriptionData subscription,
-            Plan plan, PhaseType initialPhase, String priceList, DateTime requestedDate, DateTime effectiveDate)
+    public TimedPhase [] getCurrentAndNextTimedPhaseOnCreate(final SubscriptionData subscription,
+            final Plan plan, final PhaseType initialPhase, final String priceList, final DateTime requestedDate, final DateTime effectiveDate)
         throws CatalogApiException, EntitlementUserApiException {
-        List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription, plan, initialPhase, priceList, requestedDate, effectiveDate);
+        List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getStartDate(),
+                subscription.getBundleStartDate(), plan, initialPhase, priceList, requestedDate);
         TimedPhase [] result = new TimedPhase[2];
         result[0] = getTimedPhase(timedPhases, effectiveDate, WhichPhase.CURRENT);
         result[1] = getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
@@ -83,8 +85,8 @@ public class PlanAligner  {
      * @throws CatalogApiException
      * @throws EntitlementUserApiException
      */
-    public TimedPhase getCurrentTimedPhaseOnChange(SubscriptionData subscription,
-            Plan plan, String priceList, DateTime requestedDate, DateTime effectiveDate)
+    public TimedPhase getCurrentTimedPhaseOnChange(final SubscriptionData subscription,
+            final Plan plan, final String priceList, final DateTime requestedDate, final DateTime effectiveDate)
         throws CatalogApiException, EntitlementUserApiException {
         return getTimedPhaseOnChange(subscription, plan, priceList, requestedDate, effectiveDate, WhichPhase.CURRENT);
     }
@@ -100,34 +102,65 @@ public class PlanAligner  {
      * @throws CatalogApiException
      * @throws EntitlementUserApiException
      */
-    public TimedPhase getNextTimedPhaseOnChange(SubscriptionData subscription,
-            Plan plan, String priceList, DateTime requestedDate, DateTime effectiveDate)
+    public TimedPhase getNextTimedPhaseOnChange(final SubscriptionData subscription,
+            final Plan plan, final String priceList, final DateTime requestedDate, final DateTime effectiveDate)
         throws CatalogApiException, EntitlementUserApiException {
         return getTimedPhaseOnChange(subscription, plan, priceList, requestedDate, effectiveDate, WhichPhase.NEXT);
     }
 
+
     /**
-     * Returns next future phase for that Plan based on effectiveDate
-     *
-     * @param plan
-     * @param initialPhase the initial phase that subscription started on that Plan
-     * @param effectiveDate the date used to consider what is future
-     * @param initialStartPhase the date for when we started on that Plan/initialPhase
-     * @return
-     * @throws EntitlementError
+     * Returns next Phase for that Subscription at a point in time
+     * <p>
+     * @param subscription the subscription for which we need to compute the next Phase event
+     * @param effectiveDate the date at which we look to compute that event. effective needs to be after last Plan change or initial Plan
+     * @return The PhaseEvent at the correct point in time
      */
-    public TimedPhase getNextTimedPhase(Plan plan, PhaseType initialPhase, DateTime effectiveDate, DateTime initialStartPhase)
-        throws EntitlementError {
+    public TimedPhase getNextTimedPhase(final SubscriptionData subscription, final DateTime requestedDate, final DateTime effectiveDate) {
         try {
-            List<TimedPhase> timedPhases = getPhaseAlignments(plan, initialPhase, initialStartPhase);
-            return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
-        } catch (EntitlementUserApiException e) {
-            throw new EntitlementError(String.format("Could not compute next phase change for plan %s with initialPhase %s", plan.getName(), initialPhase));
+
+            SubscriptionTransition lastPlanTransition = subscription.getInitialTransitionForCurrentPlan();
+            if (effectiveDate.isBefore(lastPlanTransition.getEffectiveTransitionTime())) {
+                throw new EntitlementError(String.format("Cannot specify an effectiveDate prior to last Plan Change, subscription = %s, effectiveDate = %s",
+                        subscription.getId(), effectiveDate));
+            }
+
+            switch(lastPlanTransition.getTransitionType()) {
+            // If we never had any Plan change, borrow the logics for createPlan alignment
+            case MIGRATE_ENTITLEMENT:
+            case CREATE:
+                List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getStartDate(),
+                        subscription.getBundleStartDate(),
+                        lastPlanTransition.getNextPlan(),
+                        lastPlanTransition.getNextPhase().getPhaseType(),
+                        lastPlanTransition.getNextPriceList(),
+                        requestedDate);
+                return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
+            // If we went through Plan changes, borrow the logics for changePlan alignement
+            case CHANGE:
+                return getTimedPhaseOnChange(subscription.getStartDate(),
+                        subscription.getBundleStartDate(),
+                        lastPlanTransition.getPreviousPhase(),
+                        lastPlanTransition.getPreviousPlan(),
+                        lastPlanTransition.getPreviousPriceList(),
+                        lastPlanTransition.getNextPlan(),
+                        lastPlanTransition.getNextPriceList(),
+                        requestedDate,
+                        effectiveDate,
+                        WhichPhase.NEXT);
+            default:
+                throw new EntitlementError(String.format("Unexpectd initial transition %s for current plan %s on subscription %s",
+                        lastPlanTransition.getTransitionType(), subscription.getCurrentPlan(), subscription.getId()));
+            }
+        } catch (Exception /* EntitlementUserApiException, CatalogApiException */ e) {
+            throw new EntitlementError(String.format("Could not compute next phase change for subscription %s", subscription.getId()), e);
         }
     }
 
-    private List<TimedPhase> getTimedPhaseOnCreate(SubscriptionData subscription,
-            Plan plan, PhaseType initialPhase, String priceList, DateTime requestedDate, DateTime effectiveDate)
+
+    private List<TimedPhase> getTimedPhaseOnCreate(DateTime subscriptionStartDate,
+            DateTime bundleStartDate,
+            Plan plan, PhaseType initialPhase, String priceList, DateTime requestedDate)
         throws CatalogApiException, EntitlementUserApiException  {
 
         Catalog catalog = catalogService.getFullCatalog();
@@ -138,15 +171,13 @@ public class PlanAligner  {
                 priceList);
 
         DateTime planStartDate = null;
-        PlanAlignmentCreate alignement = null;
-        alignement = catalog.planCreateAlignment(planSpecifier, requestedDate); 
-
+        PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, requestedDate);
         switch(alignement) {
         case START_OF_SUBSCRIPTION:
-            planStartDate = subscription.getStartDate();
+            planStartDate = subscriptionStartDate;
             break;
         case START_OF_BUNDLE:
-            planStartDate = subscription.getBundleStartDate();
+            planStartDate = bundleStartDate;
             break;
         default:
             throw new EntitlementError(String.format("Unknwon PlanAlignmentCreate %s", alignement));
@@ -155,45 +186,65 @@ public class PlanAligner  {
     }
 
     private TimedPhase getTimedPhaseOnChange(SubscriptionData subscription,
-            Plan plan, String priceList, DateTime requestedDate, DateTime effectiveDate, WhichPhase which)
+            Plan nextPlan, String nextPriceList, DateTime requestedDate, DateTime effectiveDate, WhichPhase which)
+        throws CatalogApiException, EntitlementUserApiException {
+        return getTimedPhaseOnChange(subscription.getStartDate(),
+                subscription.getBundleStartDate(),
+                subscription.getCurrentPhase(),
+                subscription.getCurrentPlan(),
+                subscription.getCurrentPriceList(),
+                nextPlan,
+                nextPriceList,
+                requestedDate,
+                effectiveDate,
+                which);
+    }
+
+
+    private TimedPhase getTimedPhaseOnChange(DateTime subscriptionStartDate,
+            DateTime bundleStartDate,
+            PlanPhase currentPhase,
+            Plan currentPlan,
+            String currentPriceList,
+            Plan nextPlan, String priceList, DateTime requestedDate, DateTime effectiveDate, WhichPhase which)
         throws CatalogApiException, EntitlementUserApiException {
 
         Catalog catalog = catalogService.getFullCatalog();
-
-        PlanPhase currentPhase = subscription.getCurrentPhase();
-        Plan currentPlan = subscription.getCurrentPlan();
-        String currentPriceList = subscription.getCurrentPriceList();
+        ProductCategory currentCategory = currentPlan.getProduct().getCategory();
+        // STEPH tiered ADDON not implemented yet
+        if (currentCategory != ProductCategory.BASE) {
+            throw new EntitlementError(String.format("Only implemented changePlan for BasePlan"));
+        }
 
         PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                currentPlan.getProduct().getCategory(),
+                currentCategory,
                 currentPlan.getBillingPeriod(),
                 currentPriceList,
                 currentPhase.getPhaseType());
 
-        PlanSpecifier toPlanSpecifier = new PlanSpecifier(plan.getProduct().getName(),
-                plan.getProduct().getCategory(),
-                plan.getBillingPeriod(),
+        PlanSpecifier toPlanSpecifier = new PlanSpecifier(nextPlan.getProduct().getName(),
+                nextPlan.getProduct().getCategory(),
+                nextPlan.getBillingPeriod(),
                 priceList);
 
         DateTime planStartDate = null;
-
-        PlanAlignmentChange alignment = null;
-        alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier, requestedDate);
+        PlanAlignmentChange alignment = catalog.planChangeAlignment(fromPlanPhaseSpecifier, toPlanSpecifier, requestedDate);
         switch(alignment) {
         case START_OF_SUBSCRIPTION:
-            planStartDate = subscription.getStartDate();
+            planStartDate = subscriptionStartDate;
             break;
         case START_OF_BUNDLE:
-            planStartDate = subscription.getBundleStartDate();
+            planStartDate = bundleStartDate;
             break;
         case CHANGE_OF_PLAN:
-            throw new EntitlementError(String.format("Not implemented yet %s", alignment));
+            planStartDate = requestedDate;
+            break;
         case CHANGE_OF_PRICELIST:
             throw new EntitlementError(String.format("Not implemented yet %s", alignment));
         default:
             throw new EntitlementError(String.format("Unknwon PlanAlignmentChange %s", alignment));
         }
-        List<TimedPhase> timedPhases = getPhaseAlignments(plan, null, planStartDate);
+        List<TimedPhase> timedPhases = getPhaseAlignments(nextPlan, null, planStartDate);
         return getTimedPhase(timedPhases, effectiveDate, which);
     }
 
@@ -208,6 +259,7 @@ public class PlanAligner  {
         DateTime curPhaseStart = (initialPhase == null) ? initialPhaseStartDate : null;
         DateTime nextPhaseStart = null;
         for (PlanPhase cur : plan.getAllPhases()) {
+            // For create we can specify the phase so skip any phase until we reach initialPhase
             if (curPhaseStart == null) {
                 if (initialPhase != cur.getPhaseType()) {
                     continue;
@@ -217,6 +269,7 @@ public class PlanAligner  {
 
             result.add(new TimedPhase(cur, curPhaseStart));
 
+            // STEPH check for duration null instead TimeUnit UNLIMITED
             if (cur.getPhaseType() != PhaseType.EVERGREEN) {
                 Duration curPhaseDuration = cur.getDuration();
                 nextPhaseStart = DefaultClock.addDuration(curPhaseStart, curPhaseDuration);
@@ -233,6 +286,7 @@ public class PlanAligner  {
         return result;
     }
 
+    // STEPH check for non evergreen Plans and what happens
     private TimedPhase getTimedPhase(List<TimedPhase> timedPhases, DateTime effectiveDate, WhichPhase which) {
         TimedPhase cur = null;
         TimedPhase next = null;
@@ -249,7 +303,7 @@ public class PlanAligner  {
         case NEXT:
             return next;
         default:
-            throw new EntitlementError(String.format("Unepected %s TimedPhase", which));
+            throw new EntitlementError(String.format("Unexpected %s TimedPhase", which));
         }
     }
 }

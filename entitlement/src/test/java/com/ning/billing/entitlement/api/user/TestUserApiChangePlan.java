@@ -428,4 +428,54 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
+
+    protected void testCorrectPhaseAlignmentOnChange() {
+        try {
+
+            SubscriptionData subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            PlanPhase trialPhase = subscription.getCurrentPhase();
+            assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
+
+            // MOVE 2 DAYS AHEAD
+            clock.setDeltaFromReality(getDurationDay(1), DAY_IN_MS);
+
+            // CHANGE IMMEDIATE TO A 3 PHASES PLAN
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
+            assertTrue(testListener.isCompleted(3000));
+            testListener.reset();
+
+            // CHECK EVERYTHING LOOKS CORRECT
+            Plan currentPlan = subscription.getCurrentPlan();
+            assertNotNull(currentPlan);
+            assertEquals(currentPlan.getProduct().getName(), "Assault-Rifle");
+            assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
+            assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.ANNUAL);
+
+            trialPhase = subscription.getCurrentPhase();
+            assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
+
+            // MOVE AFTER TRIAL PERIOD -> DISCOUNT
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            clock.addDeltaFromReality(trialPhase.getDuration());
+            assertTrue(testListener.isCompleted(3000));
+
+            trialPhase = subscription.getCurrentPhase();
+            assertEquals(trialPhase.getPhaseType(), PhaseType.DISCOUNT);
+
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
+
+            DateTime expectedNextPhaseDate =  subscription.getStartDate().plusDays(30).plusMonths(6);
+            SubscriptionTransition nextPhase = subscription.getPendingTransition();
+            DateTime nextPhaseEffectiveDate = nextPhase.getEffectiveTransitionTime();
+
+            assertEquals(nextPhaseEffectiveDate, expectedNextPhaseDate);
+
+
+        } catch (EntitlementUserApiException e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
 }

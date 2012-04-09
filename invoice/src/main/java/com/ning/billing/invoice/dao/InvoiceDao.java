@@ -36,8 +36,6 @@ public interface InvoiceDao {
 
     List<Invoice> getInvoicesByAccount(final UUID accountId, final DateTime fromDate);
 
-    List<InvoiceItem> getInvoiceItemsByAccount(final UUID accountId);
-
     List<Invoice> getInvoicesBySubscription(final UUID subscriptionId);
 
     List<UUID> getInvoicesForPayment(final DateTime targetDate,

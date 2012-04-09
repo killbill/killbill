@@ -17,15 +17,20 @@
 package com.ning.billing.entitlement.api.billing;
 
 
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import com.google.inject.Guice;
@@ -42,7 +47,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.api.TestApiBase;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -55,109 +59,87 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.glue.ClockModule;
-
-import static org.testng.Assert.assertTrue;
 
 public class TestDefaultEntitlementBillingApi {
 	private static final UUID zeroId = new UUID(0L,0L);
 	private static final UUID oneId = new UUID(1L,0L);
 	private static final UUID twoId = new UUID(2L,0L);
-	
+
 	private CatalogService catalogService;
 	private ArrayList<SubscriptionBundle> bundles;
 	private ArrayList<Subscription> subscriptions;
 	private ArrayList<SubscriptionTransition> transitions;
-	private BrainDeadMockEntitlementDao dao;
+	private EntitlementDao dao;
 
 	private Clock clock;
 	private SubscriptionData subscription;
 	private DateTime subscriptionStartDate;
 
-	@BeforeClass(groups={"setup"})
+	@BeforeSuite(alwaysRun=true)
 	public void setup() throws ServiceException {
 		TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new CatalogModule(), new ClockModule());
 
-        
+
         catalogService = g.getInstance(CatalogService.class);
         clock = g.getInstance(Clock.class);
-        
+
         ((DefaultCatalogService)catalogService).loadCatalog();
 	}
-	
+
 	@BeforeMethod(alwaysRun=true)
 	public void setupEveryTime() {
 		bundles = new ArrayList<SubscriptionBundle>();
-		final SubscriptionBundle bundle = new SubscriptionBundleData( zeroId,"TestKey", oneId,  new DateTime().minusDays(4));
+		final SubscriptionBundle bundle = new SubscriptionBundleData( zeroId,"TestKey", oneId,  clock.getUTCNow().minusDays(4));
 		bundles.add(bundle);
-		
-		
+
+
 		transitions = new ArrayList<SubscriptionTransition>();
 		subscriptions = new ArrayList<Subscription>();
-		
+
 		SubscriptionBuilder builder = new SubscriptionBuilder();
-		subscriptionStartDate = new DateTime().minusDays(3);
+		subscriptionStartDate = clock.getUTCNow().minusDays(3);
 		builder.setStartDate(subscriptionStartDate).setId(oneId);
 		subscription = new SubscriptionData(builder) {
-		    public List<SubscriptionTransition> getAllTransitions() {
+		    @Override
+            public List<SubscriptionTransition> getAllTransitions() {
 		    	return transitions;
 		    }
 		};
 
 		subscriptions.add(subscription);
-		
-		dao = new BrainDeadMockEntitlementDao() {
-			public List<SubscriptionBundle> getSubscriptionBundleForAccount(
-					UUID accountId) {
-				return bundles;
-				
-			}
 
-			public List<Subscription> getSubscriptions(UUID bundleId) {
-				return subscriptions;
-			}
-
-			public Subscription getSubscriptionFromId(UUID subscriptionId) {
-				return subscription;
-
-			}
-
-            @Override
-            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-			public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
-				return bundle;
-			}
-		};
+        dao = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class);
+        ((ZombieControl) dao).addResult("getSubscriptionBundleForAccount", bundles);
+        ((ZombieControl) dao).addResult("getSubscriptions", subscriptions);
+        ((ZombieControl) dao).addResult("getSubscriptionFromId", subscription);
+        ((ZombieControl) dao).addResult("getSubscriptionBundleFromId", bundle);
 
         assertTrue(true);
 	}
-	
+
     @Test(enabled=true, groups="fast")
 	public void testBillingEventsEmpty() {
-		EntitlementDao dao = new BrainDeadMockEntitlementDao() {
-			public List<SubscriptionBundle> getSubscriptionBundleForAccount(
-					UUID accountId) {
-				return new ArrayList<SubscriptionBundle>();
-			}
 
-            @Override
-            public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
-                throw new UnsupportedOperationException();
-            }
+        dao = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class);
+        ((ZombieControl) dao).addResult("getSubscriptionBundleForAccount", new ArrayList<SubscriptionBundle>());
 
-        };
-		AccountUserApi accountApi = new BrainDeadAccountUserApi() ;
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+        UUID accountId = UUID.randomUUID();
+        Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        ((ZombieControl) account).addResult("getId", accountId).addResult("getCurrency", Currency.USD);
+
+		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+        ((ZombieControl) accountApi).addResult("getAccountById", account);
+
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao, accountApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
-	
+
     @Test(enabled=true, groups="fast")
 	public void testBillingEventsNoBillingPeriod() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
@@ -166,17 +148,24 @@ public class TestDefaultEntitlementBillingApi {
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0]; // The trial has no billing period
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList);
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
-		
+
 		AccountUserApi accountApi = new BrainDeadAccountUserApi(){
 
 			@Override
 			public Account getAccountById(UUID accountId) {
-				return new BrainDeadAccount(){@Override
-				public int getBillCycleDay() {
-					return 32;
-				}};
+				return new BrainDeadAccount(){
+                    @Override
+                    public int getBillCycleDay() {
+                        return 32;
+                    }
+
+                    @Override
+                    public Currency getCurrency() {
+                        return Currency.USD;
+                    }
+                };
 			}} ;
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
@@ -184,30 +173,29 @@ public class TestDefaultEntitlementBillingApi {
 	}
 
     @Test(enabled=true, groups="fast")
-	public void testBillingEventsAnual() throws CatalogApiException {
+	public void testBillingEventsAnnual() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-annual", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList);
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
-		
-		AccountUserApi accountApi = new BrainDeadAccountUserApi(){
 
-			@Override
-			public Account getAccountById(UUID accountId) {
-				return new BrainDeadAccount(){@Override
-				public int getBillCycleDay() {
-					return 1;
-				}};
-			}} ;
+		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC)
+                                .addResult("getCurrency", Currency.USD);
+
+
+		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+		((ZombieControl)accountApi).addResult("getAccountById", account);
+
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
-	
+
     @Test(enabled=true, groups="fast")
 	public void testBillingEventsMonthly() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
@@ -216,23 +204,30 @@ public class TestDefaultEntitlementBillingApi {
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList);
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
-		
+
 		AccountUserApi accountApi = new BrainDeadAccountUserApi(){
 
 			@Override
 			public Account getAccountById(UUID accountId) {
-				return new BrainDeadAccount(){@Override
-				public int getBillCycleDay() {
-					return 32;
-				}};
+				return new BrainDeadAccount(){
+                    @Override
+				    public int getBillCycleDay() {
+					    return 32;
+				    }
+
+                    @Override
+                    public Currency getCurrency() {
+                        return Currency.USD;
+                    }
+                };
 			}} ;
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
-	
+
     @Test(enabled=true, groups="fast")
 	public void testBillingEventsAddOn() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
@@ -241,18 +236,16 @@ public class TestDefaultEntitlementBillingApi {
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0];
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList);
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
 		transitions.add(t);
-		
-		AccountUserApi accountApi = new BrainDeadAccountUserApi(){
 
-			@Override
-			public Account getAccountById(UUID accountId) {
-				return new BrainDeadAccount(){@Override
-				public int getBillCycleDay() {
-					return 1;
-				}};
-			}} ;
+		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC);
+        ((ZombieControl)account).addResult("getCurrency", Currency.USD);
+
+		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+		((ZombieControl)accountApi).addResult("getAccountById", account);
+
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, bundles.get(0).getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
@@ -263,13 +256,19 @@ public class TestDefaultEntitlementBillingApi {
 			int BCD, UUID id, DateTime time, PlanPhase nextPhase, String desc) throws CatalogApiException {
 		Assert.assertEquals(events.size(), 1);
 		BillingEvent event = events.first();
-		if(nextPhase.getFixedPrice() != null) {
-			Assert.assertEquals(nextPhase.getFixedPrice().getPrice(Currency.USD), event.getFixedPrice().getPrice(Currency.USD));
+
+        if(nextPhase.getFixedPrice() != null) {
+			Assert.assertEquals(nextPhase.getFixedPrice().getPrice(Currency.USD), event.getFixedPrice());
+        } else {
+            assertNull(event.getFixedPrice());
 		}
+
 		if(nextPhase.getRecurringPrice() != null) {
-			Assert.assertEquals(nextPhase.getRecurringPrice().getPrice(Currency.USD), event.getRecurringPrice().getPrice(Currency.USD));
+			Assert.assertEquals(nextPhase.getRecurringPrice().getPrice(Currency.USD), event.getRecurringPrice());
+        } else {
+            assertNull(event.getRecurringPrice());
 		}
-		
+
 		Assert.assertEquals(BCD, event.getBillCycleDay());
 		Assert.assertEquals(id, event.getSubscription().getId());
 		Assert.assertEquals(time, event.getEffectiveDate());
@@ -278,9 +277,7 @@ public class TestDefaultEntitlementBillingApi {
 		Assert.assertEquals(nextPhase.getBillingPeriod(), event.getBillingPeriod());
 		Assert.assertEquals(BillingModeType.IN_ADVANCE, event.getBillingMode());
 		Assert.assertEquals(desc, event.getDescription());
-		Assert.assertEquals(nextPhase.getFixedPrice(), event.getFixedPrice());
-		Assert.assertEquals(nextPhase.getRecurringPrice(), event.getRecurringPrice());
 	}
-	
-	
+
+
 }

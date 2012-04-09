@@ -22,6 +22,7 @@ import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
 import com.ning.billing.payment.RequestProcessor;
+import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
@@ -47,6 +48,10 @@ public class PaymentModule extends AbstractModule {
     protected void installPaymentProviderPlugins(PaymentConfig config) {
     }
 
+    protected void installRetryEngine() {
+        bind(RetryService.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(props);
@@ -59,5 +64,6 @@ public class PaymentModule extends AbstractModule {
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();
         installPaymentProviderPlugins(paymentConfig);
         installPaymentDao();
+        installRetryEngine();
     }
 }

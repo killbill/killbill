@@ -22,15 +22,16 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeNotification;
 import com.ning.billing.account.api.AccountCreationNotification;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.payment.api.PaymentError;
+import com.ning.billing.payment.api.PaymentInfo;
 
-public class AnalyticsListener
-{
+public class AnalyticsListener {
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
     private final BusinessAccountRecorder bacRecorder;
 
     @Inject
-    public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder, final BusinessAccountRecorder bacRecorder)
-    {
+    public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder, final BusinessAccountRecorder bacRecorder) {
         this.bstRecorder = bstRecorder;
         this.bacRecorder = bacRecorder;
     }
@@ -40,21 +41,15 @@ public class AnalyticsListener
         switch (event.getTransitionType()) {
             case MIGRATE_ENTITLEMENT:
                 // TODO do nothing for now
-            break;
+                break;
             case CREATE:
                 bstRecorder.subscriptionCreated(event);
-            break;
+                break;
             case CANCEL:
                 bstRecorder.subscriptionCancelled(event);
                 break;
             case CHANGE:
                 bstRecorder.subscriptionChanged(event);
-                break;
-            case PAUSE:
-                bstRecorder.subscriptionPaused(event);
-                break;
-            case RESUME:
-                bstRecorder.subscriptionResumed(event);
                 break;
             case UNCANCEL:
                 break;
@@ -67,18 +62,31 @@ public class AnalyticsListener
     }
 
     @Subscribe
-    public void handleAccountCreation(final AccountCreationNotification event)
-    {
+    public void handleAccountCreation(final AccountCreationNotification event) {
         bacRecorder.accountCreated(event.getData());
     }
 
     @Subscribe
-    public void handleAccountChange(final AccountChangeNotification event)
-    {
+    public void handleAccountChange(final AccountChangeNotification event) {
         if (!event.hasChanges()) {
             return;
         }
 
         bacRecorder.accountUpdated(event.getAccountId(), event.getChangedFields());
+    }
+
+    @Subscribe
+    public void handleInvoice(final InvoiceCreationNotification event) {
+        bacRecorder.accountUpdated(event.getAccountId());
+    }
+
+    @Subscribe
+    public void handlePaymentInfo(final PaymentInfo paymentInfo) {
+        bacRecorder.accountUpdated(paymentInfo);
+    }
+
+    @Subscribe
+    public void handlePaymentError(final PaymentError paymentError) {
+        // TODO - we can't tie the error back to an account yet
     }
 }

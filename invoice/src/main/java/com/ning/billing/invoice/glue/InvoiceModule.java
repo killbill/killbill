@@ -35,7 +35,6 @@ import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.DefaultNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 
 
@@ -52,10 +51,6 @@ public class InvoiceModule extends AbstractModule {
         bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
     }
 
-    protected void installClock() {
-    	install(new ClockModule());
-    }
-
     protected void installConfig() {
         final InvoiceConfig config = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
         bind(InvoiceConfig.class).toInstance(config);
@@ -70,8 +65,12 @@ public class InvoiceModule extends AbstractModule {
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
     }
 
-    protected void installInvoiceListener() {
+    protected void installGlobalLocker() {
         install(new GlobalLockerModule());
+    }
+
+    protected void installInvoiceListener() {
+
         bind(InvoiceListener.class).asEagerSingleton();
     }
 
@@ -79,11 +78,13 @@ public class InvoiceModule extends AbstractModule {
     protected void configure() {
         installInvoiceService();
         installNotifier();
+
         installInvoiceListener();
         bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
         installConfig();
         installInvoiceDao();
         installInvoiceUserApi();
         installInvoicePaymentApi();
+        installGlobalLocker();
     }
 }

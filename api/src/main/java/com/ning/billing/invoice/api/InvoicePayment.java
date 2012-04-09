@@ -34,6 +34,4 @@ public interface InvoicePayment {
     Currency getCurrency();
 
     DateTime getCreatedDate();
-
-    DateTime getUpdatedDate();
 }

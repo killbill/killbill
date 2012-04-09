@@ -12,6 +12,7 @@ CREATE TABLE recurring_invoice_items (
   rate numeric(10,4) NULL,
   currency char(3) NOT NULL,
   reversed_item_id char(36),
+  created_date datetime NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE INDEX recurring_invoice_items_subscription_id ON recurring_invoice_items(subscription_id ASC);
@@ -28,26 +29,26 @@ CREATE TABLE fixed_invoice_items (
   end_date datetime NOT NULL,
   amount numeric(10,4) NULL,
   currency char(3) NOT NULL,
+  created_date datetime NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE INDEX fixed_invoice_items_subscription_id ON fixed_invoice_items(subscription_id ASC);
 CREATE INDEX fixed_invoice_items_invoice_id ON fixed_invoice_items(invoice_id ASC);
 
 DROP TABLE IF EXISTS invoice_locking;
-CREATE TABLE invoice_locking (
-  account_id char(36) NOT NULL,
-  PRIMARY KEY(account_id)
-) ENGINE = innodb;
 
 DROP TABLE IF EXISTS invoices;
 CREATE TABLE invoices (
+  invoice_number int NOT NULL AUTO_INCREMENT,
   id char(36) NOT NULL,
   account_id char(36) NOT NULL,
   invoice_date datetime NOT NULL,
   target_date datetime NOT NULL,
   currency char(3) NOT NULL,
-  PRIMARY KEY(id)
+  PRIMARY KEY(invoice_number)
 ) ENGINE=innodb;
+CREATE INDEX invoices_invoice_number ON invoices(invoice_number ASC);
+CREATE INDEX invoices_id ON invoices(id ASC);
 CREATE INDEX invoices_account_id ON invoices(account_id ASC);
 
 DROP TABLE IF EXISTS invoice_payments;
@@ -58,7 +59,6 @@ CREATE TABLE invoice_payments (
   amount numeric(10,4),
   currency char(3),
   created_date datetime NOT NULL,
-  updated_date datetime NOT NULL,
   PRIMARY KEY(invoice_id, payment_attempt_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX invoice_payments_unique ON invoice_payments(invoice_id, payment_attempt_id);
