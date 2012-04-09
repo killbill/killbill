@@ -180,13 +180,8 @@ public class DefaultPaymentApi implements PaymentApi {
             Invoice invoice = invoicePaymentApi.getInvoice(UUID.fromString(invoiceId));
 
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
-                // TODO: send a notification that invoice was ignored?
-                log.info("Received invoice for payment with balance of 0 {} ", invoice);
-                Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("invoice_balance_0",
-                                                                                        "Invoice balance was 0 or less",
-                                                                                        account.getId(),
-                                                                                        UUID.fromString(invoiceId)));
-                processedPaymentsOrErrors.add(result);
+                log.debug("Received invoice for payment with balance of 0 {} ", invoice);
+
             }
             else if (invoice.isMigrationInvoice()) {
             	log.info("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
@@ -305,8 +300,8 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public List<Either<PaymentError, PaymentInfo>> createRefund(Account account, List<String> invoiceIds) {
-        //TODO
-        throw new UnsupportedOperationException();
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+        return plugin.processRefund(account);
     }
 
     @Override

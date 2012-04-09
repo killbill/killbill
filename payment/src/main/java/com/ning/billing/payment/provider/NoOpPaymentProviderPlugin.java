@@ -108,4 +108,10 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
         return Either.right(null);
     }
 
+    @Override
+    public List<Either<PaymentError, PaymentInfo>> processRefund(Account account) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

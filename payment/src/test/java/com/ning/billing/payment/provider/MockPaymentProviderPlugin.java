@@ -24,13 +24,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.google.inject.Inject;
-import com.ning.billing.util.clock.Clock;
 import org.apache.commons.lang.RandomStringUtils;
-import org.joda.time.DateTime;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.CreditCardPaymentMethodInfo;
@@ -40,6 +38,7 @@ import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
 import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
+import com.ning.billing.util.clock.Clock;
 
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     private final AtomicBoolean makeNextInvoiceFail = new AtomicBoolean(false);
@@ -266,8 +265,14 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, Void> updatePaymentProviderAccountWithNewContact(Account account) {
-        // nothing to do here
-        return Either.right(null);
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<Either<PaymentError, PaymentInfo>> processRefund(Account account) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
