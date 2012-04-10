@@ -37,7 +37,7 @@ CLEAN_FILE=
 
 function usage() {
     echo -n "./db_helper "
-    echo -n " -a <create|clean>"
+    echo -n " -a <create|clean|dump>"
     echo -n " -d database_name (default = killbill)"    
     echo -n " -u user_name (default = root)"
     echo -n " -p password (default = root)"

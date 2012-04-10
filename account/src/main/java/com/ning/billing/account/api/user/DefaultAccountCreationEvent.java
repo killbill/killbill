@@ -19,6 +19,7 @@ package com.ning.billing.account.api.user;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountCreationNotification;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 import java.util.UUID;
 
@@ -40,4 +41,10 @@ public class DefaultAccountCreationEvent implements AccountCreationNotification 
     public AccountData getData() {
         return data;
     }
+    
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.ACCOUNT_CREATE;
+	}
+
 }

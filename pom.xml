@@ -64,6 +64,13 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-beatrix</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-analytics</artifactId>
                 <version>${project.version}</version>
             </dependency>

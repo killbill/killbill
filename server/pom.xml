@@ -250,6 +250,12 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+         <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-beatrix</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-mxj</artifactId>

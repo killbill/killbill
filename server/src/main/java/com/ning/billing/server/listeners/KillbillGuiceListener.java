@@ -22,6 +22,7 @@ import com.ning.billing.server.config.KillbillServerConfig;
 import com.ning.billing.server.healthchecks.KillbillHealthcheck;
 import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.bus.BusService;
 import com.ning.jetty.base.modules.ServerModuleBuilder;
 import com.ning.jetty.core.listeners.SetupServer;
@@ -127,7 +128,7 @@ public class KillbillGuiceListener extends SetupServer
          * IRS event handler for killbill entitlement events
          */
         @Subscribe
-        public void handleEntitlementevents(SubscriptionTransition event)
+        public void handleEntitlementevents(BusEvent event)
         {
             logger.info("Killbill entitlement event {}", event.toString());
         }

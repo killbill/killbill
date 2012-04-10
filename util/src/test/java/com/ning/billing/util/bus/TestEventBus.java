@@ -50,6 +50,11 @@ public class TestEventBus {
             this.name = name;
             this.value = value;
         }
+
+		@Override
+		public BusEventType getBusEventType() {
+			return null;
+		}
     }
 
     public static final class MyOtherEvent implements BusEvent {
@@ -60,6 +65,11 @@ public class TestEventBus {
             this.name = name;
             this.value = value;
         }
+
+		@Override
+		public BusEventType getBusEventType() {
+			return null;
+		}
     }
 
     public static class MyEventHandler {

@@ -64,6 +64,10 @@ public class KillbillServerModule extends AbstractModule
         bind(PaymentResource.class).asEagerSingleton();
     }
 
+    protected void installClock() {
+        install(new ClockModule());    	
+    }
+    
     protected void installKillbillModules() {
         install(new FieldStoreModule());
         install(new TagStoreModule());
@@ -77,6 +81,6 @@ public class KillbillServerModule extends AbstractModule
         install(new AnalyticsModule());
         install(new PaymentModule());
         install(new BeatrixModule());
-        install(new ClockModule());
+        installClock();
     }
 }

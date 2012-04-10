@@ -49,6 +49,11 @@ public class TestSyncWaitOnEventBus {
         public String getMsg() {
             return msg;
         }
+
+		@Override
+		public BusEventType getBusEventType() {
+			return null;
+		}
     }
 
     private static final class TestResponse implements EventBusResponse<UUID> {
@@ -68,6 +73,11 @@ public class TestSyncWaitOnEventBus {
         public String getMsg() {
             return msg;
         }
+
+		@Override
+		public BusEventType getBusEventType() {
+			return null;
+		}
     }
 
     private Bus eventBus;

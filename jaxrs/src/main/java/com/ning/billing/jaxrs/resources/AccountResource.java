@@ -19,6 +19,7 @@ package com.ning.billing.jaxrs.resources;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,11 +36,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Response.Status;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.ning.billing.ErrorCode;
@@ -50,7 +51,9 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.json.BundleJson;
 import com.ning.billing.jaxrs.util.Context;
+import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 
 
 @Singleton
@@ -60,12 +63,14 @@ public class AccountResource implements BaseJaxrsResource {
     private static final Logger log = LoggerFactory.getLogger(AccountResource.class);
 
     private final AccountUserApi accountApi;
-    final EntitlementUserApi entitlementApi;
+    private final EntitlementUserApi entitlementApi;
     private final Context context;
+    private final JaxrsUriBuilder uriBuilder;
 
     @Inject
-    public AccountResource(final AccountUserApi accountApi, final EntitlementUserApi entitlementApi, final Context context) {
-        this.accountApi = accountApi;
+    public AccountResource(final JaxrsUriBuilder uriBuilder, final AccountUserApi accountApi, final EntitlementUserApi entitlementApi, final Context context) {
+        this.uriBuilder = uriBuilder;
+    	this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
         this.context = context;
     }
@@ -76,7 +81,7 @@ public class AccountResource implements BaseJaxrsResource {
     public Response getAccount(@PathParam("accountId") String accountId) {
         Account account = accountApi.getAccountById(UUID.fromString(accountId));
         if (account == null) {
-            return Response.status(Status.NO_CONTENT).build();
+        	return Response.status(Status.NO_CONTENT).build();
         }
         AccountJson json = new AccountJson(account);
         return Response.status(Status.OK).entity(json).build();
@@ -86,12 +91,20 @@ public class AccountResource implements BaseJaxrsResource {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
     @Produces(APPLICATION_JSON)
     public Response getAccountBundles(@PathParam("accountId") String accountId) {
+
     	UUID uuid = UUID.fromString(accountId);
+    	Account account = accountApi.getAccountById(uuid);
+    	if (account == null) {
+    		return Response.status(Status.NO_CONTENT).build();    		
+    	}
     	List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid);
-    	// STEPH should we fetch account first to make sure id exists or what's the deal here
-    	// 
-    	String json = null;
-        return Response.status(Status.OK).entity(json).build();
+    	Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
+			@Override
+			public BundleJson apply(SubscriptionBundle input) {
+				return new BundleJson(input);
+			}
+		});
+        return Response.status(Status.OK).entity(result).build();
     }
 
     
@@ -120,12 +133,7 @@ public class AccountResource implements BaseJaxrsResource {
             AccountData data = json.toAccountData();
             final Account account = accountApi.createAccount(data, null, null, context.getContext());
             URI uri = UriBuilder.fromPath(account.getId().toString()).build();
-            Response.ResponseBuilder ri = Response.created(uri);
-            return ri.entity(new Object() {
-                public URI getUri() {
-                    return UriBuilder.fromResource(AccountResource.class).path(AccountResource.class, "getAccount").build(account.getId());
-                }
-            }).build();
+            return uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
         } catch (AccountApiException e) {
             log.info(String.format("Failed to create account %s", json), e);
             return Response.status(Status.BAD_REQUEST).build();

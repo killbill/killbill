@@ -22,6 +22,8 @@ import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.bus.BusEvent.BusEventType;
+
 import org.joda.time.DateTime;
 
 import java.util.UUID;
@@ -186,4 +188,8 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
             + ", nextPhase=" + ((nextPhase != null) ? nextPhase.getName() : null) + "]";
     }
 
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.SUBSCRIPTION_TRANSITION;
+	}
 }

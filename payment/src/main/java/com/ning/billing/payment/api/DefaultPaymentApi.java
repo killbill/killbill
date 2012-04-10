@@ -214,7 +214,7 @@ public class DefaultPaymentApi implements PaymentApi {
         PaymentInfo paymentInfo = null;
 
         if (paymentOrError.isLeft()) {
-            String error = StringUtils.substring(paymentOrError.getLeft().getMessage() + paymentOrError.getLeft().getType(), 0, 100);
+            String error = StringUtils.substring(paymentOrError.getLeft().getMessage() + paymentOrError.getLeft().getBusEventType(), 0, 100);
             log.info("Could not process a payment for " + paymentAttempt + " error was " + error);
 
             scheduleRetry(paymentAttempt, error);

@@ -102,4 +102,9 @@ public class DefaultAccountChangeNotification implements AccountChangeNotificati
             inputList.add(new DefaultChangedField(key, oldData, newData));
         }
     }
+
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.ACCOUNT_CHANGE;
+	}
 }

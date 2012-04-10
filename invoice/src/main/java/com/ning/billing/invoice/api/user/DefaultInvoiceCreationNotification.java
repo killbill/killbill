@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 public class DefaultInvoiceCreationNotification implements InvoiceCreationNotification {
     private final UUID invoiceId;
@@ -68,5 +69,11 @@ public class DefaultInvoiceCreationNotification implements InvoiceCreationNotifi
     public String toString() {
         return "DefaultInvoiceCreationNotification [invoiceId=" + invoiceId + ", accountId=" + accountId + ", amountOwed=" + amountOwed + ", currency=" + currency + ", invoiceCreationDate=" + invoiceCreationDate + "]";
     }
+    
+    
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.INVOICE_CREATION;
+	}
 
 }

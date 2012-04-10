@@ -19,12 +19,14 @@ package com.ning.billing.payment.api;
 import java.math.BigDecimal;
 
 import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Objects;
 import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 public class PaymentInfo implements BusEvent {
     private final String paymentId;
@@ -348,4 +350,11 @@ public class PaymentInfo implements BusEvent {
     private static long getUnixTimestamp(final DateTime dateTime) {
         return dateTime.getMillis() / 1000;
     }
+    
+    @JsonIgnore
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.PAYMENT_INFO;
+	}
+
 }

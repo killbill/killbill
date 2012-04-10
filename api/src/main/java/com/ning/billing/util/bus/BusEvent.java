@@ -17,5 +17,16 @@
 package com.ning.billing.util.bus;
 
 public interface BusEvent {
+	
+	public enum BusEventType {
+		ACCOUNT_CREATE,
+		ACCOUNT_CHANGE,
+		SUBSCRIPTION_TRANSITION,
+		INVOICE_CREATION,
+		PAYMENT_INFO,
+		PAYMENT_ERROR
+	}
+
+	public BusEventType getBusEventType();
 
 }

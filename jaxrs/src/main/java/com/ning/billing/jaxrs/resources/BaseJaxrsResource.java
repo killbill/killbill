@@ -29,11 +29,16 @@ public interface BaseJaxrsResource {
 	 * Query parameters
 	 */
 	public static final String QUERY_EXTERNAL_KEY = "external_key";
+	public static final String QUERY_REQUESTED_DT = "requested_date";	
 	
 	
 	public static final String ACCOUNTS = "accounts";	
 	public static final String ACCOUNTS_PATH = API_PREFIX + API_VERSION + "/" + ACCOUNTS;
 	
 	public static final String BUNDLES = "bundles";		
+	public static final String BUNDLES_PATH = API_PREFIX + API_VERSION + "/" + BUNDLES;
+
+	public static final String SUBSCRIPTIONS = "subscriptions";		
+	public static final String SUBSCRIPTIONS_PATH = API_PREFIX + API_VERSION + "/" + SUBSCRIPTIONS;
 
 }

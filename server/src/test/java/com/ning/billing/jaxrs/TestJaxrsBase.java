@@ -28,6 +28,8 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.core.Response.Status;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.skife.config.ConfigurationObjectFactory;
@@ -36,16 +38,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.ning.billing.beatrix.integration.TestBusHandler;
+import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.json.BundleJson;
+import com.ning.billing.jaxrs.json.SubscriptionJson;
+import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
 import com.ning.billing.server.modules.KillbillServerModule;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
@@ -71,7 +81,8 @@ public class TestJaxrsBase {
 	protected CoreConfig config;
 	protected AsyncHttpClient httpClient;	
 	protected ObjectMapper mapper;
-
+	protected ClockMock clock;
+	protected TestBusHandler busHandler;
 
 	public static void loadSystemPropertiesFromClasspath(final String resource) {
 		final URL url = TestJaxrsBase.class.getResource(resource);
@@ -99,6 +110,11 @@ public class TestJaxrsBase {
 	public static class TestKillbillServerModule extends KillbillServerModule {
 		
 		@Override
+	    protected void installClock() {
+			bind(Clock.class).to(ClockMock.class).asEagerSingleton();
+	    }
+		
+		@Override
 		protected void configureDao() {
 			final MysqlTestingHelper helper = new MysqlTestingHelper();
 			bind(MysqlTestingHelper.class).toInstance(helper);
@@ -113,9 +129,13 @@ public class TestJaxrsBase {
 	    }
 	}
 
-
+	@BeforeMethod(groups="slow")
+	public void cleanupTables() {
+		helper.cleanupAllTables();
+		busHandler.reset();
+	}
 	
-	@BeforeClass(groups="slow")
+	@BeforeSuite(groups="slow")
 	public void setup() throws Exception {
 
 		loadSystemPropertiesFromClasspath("/killbill.properties");
@@ -137,9 +157,10 @@ public class TestJaxrsBase {
 		server.start();
 		
 		Injector injector = ((TestKillbillGuiceListener) eventListener).getTheInjector();
-		
 		helper = injector.getInstance(MysqlTestingHelper.class);
-		helper.cleanupAllTables();
+		clock = (ClockMock) injector.getInstance(Clock.class);
+		
+		busHandler = new TestBusHandler();
 	}
 	
 	@AfterClass(groups="slow")
@@ -152,6 +173,72 @@ public class TestJaxrsBase {
 		}
 	}
 
+	
+	protected AccountJson createAccount(String name, String key, String email) throws Exception {
+		AccountJson input = getAccountJson(name, key, email);
+		String baseJson = mapper.writeValueAsString(input);
+		Response response = doPost(BaseJaxrsResource.ACCOUNTS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+		String location = response.getHeader("Location");
+		Assert.assertNotNull(location);
+
+		// Retrieves by Id based on Location returned
+		response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+		
+		baseJson = response.getResponseBody();
+		AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
+		Assert.assertNotNull(objFromJson);
+		return objFromJson;
+	}
+	
+	
+	
+	protected BundleJson createBundle(String accountId, String key) throws Exception {
+		BundleJson input = new BundleJson(null, accountId, key, null);
+		String baseJson = mapper.writeValueAsString(input);
+		Response response = doPost(BaseJaxrsResource.BUNDLES_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+		String location = response.getHeader("Location");
+		Assert.assertNotNull(location);
+
+		// Retrieves by Id based on Location returned
+		response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+		baseJson = response.getResponseBody();
+		BundleJson objFromJson = mapper.readValue(baseJson, BundleJson.class);
+		Assert.assertTrue(objFromJson.equalsNoId(input));
+		return objFromJson;
+	}
+	
+	protected SubscriptionJson createSubscription(final String bundleId, final String productName, final String productCategory, final String billingPeriod) throws Exception {
+		
+		SubscriptionJson input = new SubscriptionJson(null, bundleId, productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null, null, null);
+		String baseJson = mapper.writeValueAsString(input);
+		Response response = doPost(BaseJaxrsResource.SUBSCRIPTIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+		String location = response.getHeader("Location");
+		Assert.assertNotNull(location);
+
+		// Retrieves by Id based on Location returned
+		response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+		baseJson = response.getResponseBody();
+		SubscriptionJson objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
+		Assert.assertTrue(objFromJson.equalsNoId(input));
+		return objFromJson;
+	}
+
+
+	
+	//
+	// HTTP CLIENT HELPERS
+	//
 	protected Response doPost(final String uri, final String body, final Map<String, String> queryParams, final int timeoutSec) {
 		BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("POST", getUrlFromUri(uri), queryParams);
 		if (body != null) {

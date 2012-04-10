@@ -190,8 +190,7 @@ public class TestAnalyticsService {
         helper.initDb(paymentDdl);
         helper.initDb(utilDdl);
 
-        helper.cleanupTable("tag_definitions");
-        helper.cleanupTable("accounts");
+    	helper.cleanupAllTables();
     }
 
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {
@@ -289,6 +288,7 @@ public class TestAnalyticsService {
 
         // Send events and wait for the async part...
         bus.post(transition);
+
         bus.post(accountCreationNotification);
         Thread.sleep(1000);
 

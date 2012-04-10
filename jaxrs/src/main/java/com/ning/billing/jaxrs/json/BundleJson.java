@@ -22,6 +22,8 @@ import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonView;
 
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+
 public class BundleJson {
 
     @JsonView(BundleTimelineViews.Base.class)
@@ -63,4 +65,75 @@ public class BundleJson {
     public List<SubscriptionJson> getSubscriptions() {
         return subscriptions;
     }
+    
+    public BundleJson(SubscriptionBundle bundle) {
+        this.bundleId = bundle.getId().toString();
+        this.accountId = bundle.getAccountId().toString();
+        this.externalKey = bundle.getKey();
+        this.subscriptions = null;
+    }
+    
+    public BundleJson() {
+        this.bundleId = null;
+        this.accountId = null;
+        this.externalKey = null;
+        this.subscriptions = null;
+    }
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((accountId == null) ? 0 : accountId.hashCode());
+		result = prime * result
+				+ ((bundleId == null) ? 0 : bundleId.hashCode());
+		result = prime * result
+				+ ((externalKey == null) ? 0 : externalKey.hashCode());
+		result = prime * result
+				+ ((subscriptions == null) ? 0 : subscriptions.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (equalsNoId(obj) == false) {
+			return false;
+		}
+		BundleJson other = (BundleJson) obj;
+		if (bundleId == null) {
+			if (other.bundleId != null)
+				return false;
+		} else if (!bundleId.equals(other.bundleId))
+			return false;
+		return true;
+	}
+
+	public boolean equalsNoId(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BundleJson other = (BundleJson) obj;
+		if (accountId == null) {
+			if (other.accountId != null)
+				return false;
+		} else if (!accountId.equals(other.accountId))
+			return false;
+		if (externalKey == null) {
+			if (other.externalKey != null)
+				return false;
+		} else if (!externalKey.equals(other.externalKey))
+			return false;
+		if (subscriptions == null) {
+			if (other.subscriptions != null)
+				return false;
+		} else if (!subscriptions.equals(other.subscriptions))
+			return false;
+		return true;
+	}
+    
+    
 }

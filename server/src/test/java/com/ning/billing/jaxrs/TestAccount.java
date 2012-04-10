@@ -42,30 +42,16 @@ public class TestAccount extends TestJaxrsBase {
 	@Test(groups="slow", enabled=true)
 	public void testAccountOk() throws Exception {
 		
-		AccountJson input = getAccountJson("xoxo", "shdgfhwe", "xoxo@yahoo.com");
-		String baseJson = mapper.writeValueAsString(input);
-		Response response = doPost(BaseJaxrsResource.ACCOUNTS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-		Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
-
-		String location = response.getHeader("Location");
-		Assert.assertNotNull(location);
-
-		// Retrieves by Id based on Location returned
-		response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-
-		baseJson = response.getResponseBody();
-		AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
-		Assert.assertTrue(objFromJson.equalsNoId(input));
-
+		AccountJson input = createAccount("xoxo", "shdgfhwe", "xoxo@yahoo.com");
+		
 		// Retrieves by external key
 		Map<String, String> queryParams = new HashMap<String, String>();
 		queryParams.put(BaseJaxrsResource.QUERY_EXTERNAL_KEY, "shdgfhwe");
-		response = doGet(BaseJaxrsResource.ACCOUNTS_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+		Response response = doGet(BaseJaxrsResource.ACCOUNTS_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-		baseJson = response.getResponseBody();
-		objFromJson = mapper.readValue(baseJson, AccountJson.class);
-		Assert.assertTrue(objFromJson.equalsNoId(input));
+		String baseJson = response.getResponseBody();
+		AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
+		Assert.assertTrue(objFromJson.equals(input));
 		
 		// Update Account
 		AccountJson newInput = new AccountJson(objFromJson.getAcountId(),
@@ -82,7 +68,7 @@ public class TestAccount extends TestJaxrsBase {
 
 	@Test(groups="slow", enabled=true)
 	public void testUpdateNonExistentAccount() throws Exception {
-		AccountJson input = getAccountJson("xoxo", "shdgfhwe", "xoxo@yahoo.com");
+		AccountJson input = getAccountJson("xoxo", "shghaahwe", "xoxo@yahoo.com");
 		String baseJson = mapper.writeValueAsString(input);
 		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + input.getAcountId();
 		Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);

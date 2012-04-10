@@ -17,10 +17,12 @@
 package com.ning.billing.payment.api;
 import java.util.UUID;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.codehaus.jackson.annotate.JsonTypeInfo.Id;
 
 import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 @JsonTypeInfo(use = Id.NAME, property = "error")
 public class PaymentError implements BusEvent {
@@ -117,5 +119,12 @@ public class PaymentError implements BusEvent {
     public String toString() {
         return "PaymentError [type=" + type + ", message=" + message + ", accountId=" + accountId + ", invoiceId=" + invoiceId + "]";
     }
+    
+    @JsonIgnore
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.PAYMENT_ERROR;
+	}
+
 
 }

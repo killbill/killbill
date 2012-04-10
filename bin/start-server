@@ -93,6 +93,7 @@ while getopts ":pswdh" options; do
 done
 
 if [ ! -z $START ]; then
-    echo "coucouc"
     start
+else
+    usage
 fi
