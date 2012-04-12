@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 
 public class InvoicingConfiguration {
     private final static int roundingMethod = BigDecimal.ROUND_HALF_UP;
-    private final static int numberOfDecimals = 4;
+    private final static int numberOfDecimals = 2;
 
     public static int getRoundingMode() {
         return roundingMethod;
