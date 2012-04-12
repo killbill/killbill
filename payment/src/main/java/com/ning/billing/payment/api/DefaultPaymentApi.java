@@ -23,7 +23,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.ning.billing.util.callcontext.CallContext;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -40,6 +39,7 @@ import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.setup.PaymentConfig;
+import com.ning.billing.util.callcontext.CallContext;
 
 public class DefaultPaymentApi implements PaymentApi {
     private final PaymentProviderPluginRegistry pluginRegistry;
@@ -303,7 +303,9 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public List<Either<PaymentError, PaymentInfo>> createRefund(Account account, List<String> invoiceIds) {
+    public List<Either<PaymentError, PaymentInfo>> createRefund(Account account,
+                                                                List<String> invoiceIds,
+                                                                CallContext context) {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
         return plugin.processRefund(account);
     }
