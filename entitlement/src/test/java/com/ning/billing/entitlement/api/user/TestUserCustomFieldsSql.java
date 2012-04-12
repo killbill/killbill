@@ -21,6 +21,11 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -37,13 +42,13 @@ import com.ning.billing.util.customfield.CustomField;
 
 
 public class TestUserCustomFieldsSql extends TestApiBase {
+    private static final String USER_NAME = "Entitlement Test";
+    private final CallContext context = new DefaultCallContextFactory(new DefaultClock()).createCallContext(USER_NAME, CallOrigin.TEST, UserType.TEST);
 
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
-
-
 
     @Test(enabled=false, groups={"slow"})
     public void stress() {
@@ -74,17 +79,17 @@ public class TestUserCustomFieldsSql extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             testListener.pushExpectedEvent(NextEvent.CREATE);
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), requestedDate);
+                    getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             assertNotNull(subscription);
 
             assertEquals(subscription.getFieldValue("nonExistent"), null);
 
-            subscription.setFieldValue("field1", "value1");
+            subscription.saveFieldValue("field1", "value1", context);
             assertEquals(subscription.getFieldValue("field1"), "value1");
             List<CustomField> allFields = subscription.getFieldList();
             assertEquals(allFields.size(), 1);
 
-            subscription.setFieldValue("field1", "valueNew1");
+            subscription.saveFieldValue("field1", "valueNew1", context);
             assertEquals(subscription.getFieldValue("field1"), "valueNew1");
             allFields = subscription.getFieldList();
             assertEquals(allFields.size(), 1);
@@ -94,7 +99,7 @@ public class TestUserCustomFieldsSql extends TestApiBase {
             allFields = subscription.getFieldList();
             assertEquals(allFields.size(), 1);
 
-            subscription.setFieldValue("field1", "valueSuperNew1");
+            subscription.saveFieldValue("field1", "valueSuperNew1", context);
             assertEquals(subscription.getFieldValue("field1"), "valueSuperNew1");
             allFields = subscription.getFieldList();
             assertEquals(allFields.size(), 1);
@@ -104,14 +109,11 @@ public class TestUserCustomFieldsSql extends TestApiBase {
             allFields = subscription.getFieldList();
             assertEquals(allFields.size(), 1);
 
-            /*
-             * BROKEN
-            subscription.setFieldValue("field1", null);
+            subscription.saveFieldValue("field1", null, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
             assertEquals(subscription.getFieldValue("field1"), null);
             allFields = subscription.getFieldList();
             assertEquals(allFields.size(), 1);
-             */
         } catch (EntitlementUserApiException e) {
             log.error("Unexpected exception",e);
             Assert.fail(e.getMessage());
@@ -133,11 +135,11 @@ public class TestUserCustomFieldsSql extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             testListener.pushExpectedEvent(NextEvent.CREATE);
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), requestedDate);
+                    getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             assertNotNull(subscription);
 
 
-            subscription.setFieldValue("field1", "value1");
+            subscription.saveFieldValue("field1", "value1", context);
             assertEquals(subscription.getFieldValue("field1"), "value1");
             List<CustomField> allFields = subscription.getFieldList();
             assertEquals(allFields.size(), 1);
@@ -148,8 +150,8 @@ public class TestUserCustomFieldsSql extends TestApiBase {
 
             subscription.clearFields();
 
-            subscription.setFieldValue("field2", "value2");
-            subscription.setFieldValue("field3", "value3");
+            subscription.saveFieldValue("field2", "value2", context);
+            subscription.saveFieldValue("field3", "value3", context);
             assertEquals(subscription.getFieldValue("field2"), "value2");
             assertEquals(subscription.getFieldValue("field3"), "value3");
             allFields = subscription.getFieldList();

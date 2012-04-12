@@ -76,7 +76,6 @@ public class InvoiceModule extends AbstractModule {
     }
 
     protected void installInvoiceListener() {
-
         bind(InvoiceListener.class).asEagerSingleton();
     }
 

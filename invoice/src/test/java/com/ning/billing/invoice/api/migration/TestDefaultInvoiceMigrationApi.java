@@ -23,6 +23,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.clock.Clock;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -103,7 +108,7 @@ public class TestDefaultInvoiceMigrationApi {
 	private static final BigDecimal MIGRATION_INVOICE_AMOUNT =  new BigDecimal("100.00");
 	private static final Currency MIGRATION_INVOICE_CURRENCY =  Currency.USD;
 
-
+    private final Clock clock = new ClockMock();
 
 	@BeforeClass(alwaysRun = true)
 	public void setup() throws Exception
@@ -111,8 +116,8 @@ public class TestDefaultInvoiceMigrationApi {
 		log.info("Starting set up");
 		accountId = UUID.randomUUID();
 		subscriptionId = UUID.randomUUID();
-		date_migrated = new ClockMock().getUTCNow().minusYears(1);
-		date_regular = new ClockMock().getUTCNow();
+		date_migrated = clock.getUTCNow().minusYears(1);
+		date_regular = clock.getUTCNow();
 
 		final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
 		final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
@@ -182,13 +187,14 @@ public class TestDefaultInvoiceMigrationApi {
 
 		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);
 
-		Invoice invoice = dispatcher.processAccount(accountId, date_regular, true);
+        CallContext context = new DefaultCallContextFactory(clock).createCallContext("Migration test", CallOrigin.TEST, UserType.TEST);
+		Invoice invoice = dispatcher.processAccount(accountId, date_regular, true, context);
 		Assert.assertNotNull(invoice);
 
 		List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
 		Assert.assertEquals(invoices.size(),0);
 
-		invoice = dispatcher.processAccount(accountId, date_regular, false);
+		invoice = dispatcher.processAccount(accountId, date_regular, false, context);
 		Assert.assertNotNull(invoice);
 
 		invoices = invoiceDao.getInvoicesByAccount(accountId);

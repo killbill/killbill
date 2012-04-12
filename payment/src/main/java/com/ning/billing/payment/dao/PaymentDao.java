@@ -22,22 +22,23 @@ import java.util.UUID;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.util.callcontext.CallContext;
 
 public interface PaymentDao {
 
-    PaymentAttempt createPaymentAttempt(Invoice invoice);
-    PaymentAttempt createPaymentAttempt(PaymentAttempt paymentAttempt);
+    PaymentAttempt createPaymentAttempt(Invoice invoice, CallContext context);
+    PaymentAttempt createPaymentAttempt(PaymentAttempt paymentAttempt, CallContext context);
 
-    void savePaymentInfo(PaymentInfo right);
+    void savePaymentInfo(PaymentInfo right, CallContext context);
 
     PaymentAttempt getPaymentAttemptForPaymentId(String paymentId);
     List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<String> invoiceIds);
 
-    void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String paymentId);
+    void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String paymentId, CallContext context);
 
     List<PaymentAttempt> getPaymentAttemptsForInvoiceId(String invoiceId);
 
-    void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry);
+    void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry, CallContext context);
 
     List<PaymentInfo> getPaymentInfo(List<String> invoiceIds);
 

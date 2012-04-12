@@ -19,17 +19,18 @@ package com.ning.billing.account.api;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
-
-import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 
+import javax.annotation.Nullable;
+
 public interface AccountUserApi {
+    public Account createAccount(AccountData data, @Nullable List<CustomField> fields,
+                                 @Nullable List<Tag> tags, CallContext context) throws AccountApiException;
 
-    public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException;
-
-    public Account migrateAccount(MigrationAccountData data, List<CustomField> fields, List<Tag> tags) throws AccountApiException;
+    public Account migrateAccount(MigrationAccountData data, @Nullable List<CustomField> fields,
+                                  @Nullable List<Tag> tags, CallContext context) throws AccountApiException;
 
     /***
      *
@@ -37,12 +38,12 @@ public interface AccountUserApi {
      * @param account
      * @throws AccountApiException
      */
-    public void updateAccount(Account account) throws AccountApiException;
+    public void updateAccount(Account account, CallContext context) throws AccountApiException;
 
-    public void updateAccount(String key, AccountData accountData) throws AccountApiException;
-    
-    public void updateAccount(UUID accountId, AccountData accountData) throws AccountApiException;
-    
+    public void updateAccount(String key, AccountData accountData, CallContext context) throws AccountApiException;
+
+    public void updateAccount(UUID accountId, AccountData accountData, CallContext context) throws AccountApiException;
+
     public Account getAccountByKey(String key);
 
     public Account getAccountById(UUID accountId);
@@ -50,6 +51,4 @@ public interface AccountUserApi {
     public List<Account> getAccounts();
 
     public UUID getIdFromKey(String externalKey) throws AccountApiException;
-
-	public void deleteAccountByKey(String externalKey) throws AccountApiException;
 }

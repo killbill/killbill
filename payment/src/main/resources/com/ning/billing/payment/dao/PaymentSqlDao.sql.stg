@@ -10,7 +10,9 @@ paymentAttemptFields(prefix) ::= <<
     <prefix>payment_attempt_dt,
     <prefix>invoice_dt,
     <prefix>retry_count,
+    <prefix>created_by,
     <prefix>created_dt,
+    <prefix>updated_by,
     <prefix>updated_dt
 >>
 
@@ -28,13 +30,22 @@ paymentInfoFields(prefix) ::= <<
     <prefix>card_type,
     <prefix>card_country,
     <prefix>effective_dt,
+    <prefix>created_by,
     <prefix>created_dt,
+    <prefix>updated_by,
     <prefix>updated_dt
 >>
 
 insertPaymentAttempt() ::= <<
     INSERT INTO payment_attempts (<paymentAttemptFields()>)
-    VALUES (:payment_attempt_id, :invoice_id, :account_id, :amount, :currency, :payment_id, :payment_attempt_dt, :invoice_dt, :retry_count, :created_dt, :updated_dt);
+    VALUES (:payment_attempt_id, :invoice_id, :account_id, :amount, :currency, :payment_id,
+            :payment_attempt_dt, :invoice_dt, :retry_count, :userName, :createdDate, :userName, :createdDate);
+>>
+
+insertPaymentAttemptHistory() ::= <<
+    INSERT INTO payment_attempt_history (history_record_id, <paymentAttemptFields()>)
+    VALUES (:historyRecordId, :payment_attempt_id, :invoice_id, :account_id, :amount, :currency, :payment_id,
+            :payment_attempt_dt, :invoice_dt, :retry_count, :userName, :createdDate, :userName, :createdDate);
 >>
 
 getPaymentAttemptForPaymentId() ::= <<
@@ -64,13 +75,23 @@ getPaymentAttemptsForInvoiceId() ::= <<
 updatePaymentAttemptWithPaymentId() ::= <<
     UPDATE payment_attempts
        SET payment_id = :payment_id,
-           updated_dt = :updated_dt
+           updated_by = :userName,
+           updated_dt = :updatedDate
      WHERE payment_attempt_id = :payment_attempt_id
 >>
 
 insertPaymentInfo() ::= <<
     INSERT INTO payments (<paymentInfoFields()>)
-    VALUES (:payment_id, :amount, :refund_amount, :bank_identification_number, :payment_number, :payment_type, :status, :reference_id, :payment_method_id, :payment_method, :card_type, :card_country, :effective_dt, :created_dt, :updated_dt);
+    VALUES (:payment_id, :amount, :refund_amount, :bank_identification_number, :payment_number,
+    :payment_type, :status, :reference_id, :payment_method_id, :payment_method, :card_type,
+    :card_country, :effective_dt, :userName, :createdDate, :userName, :createdDate);
+>>
+
+insertPaymentInfoHistory() ::= <<
+    INSERT INTO payment_history (history_record_id, <paymentInfoFields()>)
+    VALUES (:historyRecordId, :payment_id, :amount, :refund_amount, :bank_identification_number, :payment_number,
+    :payment_type, :status, :reference_id, :payment_method_id, :payment_method, :card_type,
+    :card_country, :effective_dt, :userName, :createdDate, :userName, :createdDate);
 >>
 
 updatePaymentInfo() ::= <<
@@ -78,7 +99,8 @@ updatePaymentInfo() ::= <<
        SET payment_method = :payment_method,
            card_type = :card_type,
            card_country = :card_country,
-           updated_dt = :updated_dt
+           updated_by = :userName,
+           updated_dt = :updatedDate
      WHERE payment_id = :payment_id
 >>
 
@@ -94,4 +116,10 @@ getPaymentInfoForPaymentAttemptId() ::= <<
       FROM payments p, payment_attempts pa
      WHERE pa.payment_attempt_id = :payment_attempt_id
        AND pa.payment_id = p.payment_id
+>>
+
+getPaymentInfo() ::= <<
+    SELECT <paymentInfoFields()>
+    FROM payments
+    WHERE payment_id = :paymentId
 >>

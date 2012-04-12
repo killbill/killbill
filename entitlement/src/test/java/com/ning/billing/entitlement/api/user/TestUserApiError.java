@@ -32,6 +32,7 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
@@ -49,7 +50,7 @@ public class TestUserApiError extends TestApiBase {
 
     @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionBadCatalog() {
-        // WRONG PRODUTCS
+        // WRONG PRODUCTS
         tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NULL_PRODUCT_NAME);
         tCreateSubscriptionInternal(bundle.getId(), "Whatever", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
 
@@ -89,7 +90,7 @@ public class TestUserApiError extends TestApiBase {
         try {
             SubscriptionData subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
             try {
-                subscription.recreate(getProductSpecifier("Pistol", PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, null), clock.getUTCNow());
+                subscription.recreate(getProductSpecifier("Pistol", PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, null), clock.getUTCNow(), context);
                 Assert.assertFalse(true);
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_RECREATE_BAD_STATE.getCode());
@@ -104,7 +105,7 @@ public class TestUserApiError extends TestApiBase {
     public void testCreateSubscriptionAddOnNotAvailable() {
         try {
             UUID accountId = UUID.randomUUID();
-            SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle");
+            SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", context);
             createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE);
         } catch (Exception e) {
@@ -117,7 +118,7 @@ public class TestUserApiError extends TestApiBase {
     public void testCreateSubscriptionAddOnIncluded() {
         try {
             UUID accountId = UUID.randomUUID();
-            SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle");
+            SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", context);
             createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED);
         } catch (Exception e) {
@@ -127,12 +128,12 @@ public class TestUserApiError extends TestApiBase {
     }
 
 
-    private void tCreateSubscriptionInternal(UUID bundleId, String productName,
-            BillingPeriod term, String planSet, ErrorCode expected)  {
+    private void tCreateSubscriptionInternal(@Nullable UUID bundleId, @Nullable String productName,
+            @Nullable BillingPeriod term, String planSet, ErrorCode expected)  {
         try {
             entitlementApi.createSubscription(bundleId,
                     getProductSpecifier(productName, planSet, term, null),
-                    clock.getUTCNow());
+                    clock.getUTCNow(), context);
             Assert.fail("Exception expected, error code: " + expected);
         } catch (EntitlementUserApiException e) {
             assertEquals(e.getCode(), expected.getCode());
@@ -151,9 +152,9 @@ public class TestUserApiError extends TestApiBase {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), false);
+            subscription.cancel(clock.getUTCNow(), false, context);
             try {
-                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
+                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_NON_ACTIVE.getCode());
                 try {
@@ -186,13 +187,13 @@ public class TestUserApiError extends TestApiBase {
             DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
 
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId());
 
-            subscription.cancel(clock.getUTCNow(), false);
+            subscription.cancel(clock.getUTCNow(), false, context);
             try {
-                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow());
+                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_FUTURE_CANCELLED.getCode());
                 try {
@@ -218,7 +219,7 @@ public class TestUserApiError extends TestApiBase {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             try {
-                subscription.uncancel();
+                subscription.uncancel(context);
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_UNCANCEL_BAD_STATE.getCode());
                 try {

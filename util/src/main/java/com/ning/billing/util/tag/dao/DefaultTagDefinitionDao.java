@@ -18,24 +18,22 @@ package com.ning.billing.util.tag.dao;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.tag.ControlTagType;
 import org.skife.jdbi.v2.IDBI;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
-import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
 public class DefaultTagDefinitionDao implements TagDefinitionDao {
     private final TagDefinitionSqlDao dao;
-    private final Clock clock;
 
     @Inject
-    public DefaultTagDefinitionDao(IDBI dbi, Clock clock) {
+    public DefaultTagDefinitionDao(IDBI dbi) {
         this.dao = dbi.onDemand(TagDefinitionSqlDao.class);
-        this.clock = clock;
     }
 
     @Override
@@ -46,7 +44,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
 
         // add control tag definitions
         for (ControlTagType controlTag : ControlTagType.values()) {
-            definitionList.add(new DefaultTagDefinition(controlTag.toString(), controlTag.getDescription(), null));
+            definitionList.add(new DefaultTagDefinition(controlTag.toString(), controlTag.getDescription()));
         }
 
         return definitionList;
@@ -58,7 +56,8 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
     }
 
     @Override
-    public TagDefinition create(final String definitionName, final String description, final String createdBy) throws TagDefinitionApiException {
+    public TagDefinition create(final String definitionName, final String description,
+                                final CallContext context) throws TagDefinitionApiException {
         if (isControlTagName(definitionName)) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_CONFLICTS_WITH_CONTROL_TAG, definitionName);
         }
@@ -69,8 +68,8 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_ALREADY_EXISTS, definitionName);
         }
 
-        TagDefinition definition = new DefaultTagDefinition(definitionName, description, createdBy);
-        dao.create(definition);
+        TagDefinition definition = new DefaultTagDefinition(definitionName, description);
+        dao.create(definition, context);
         return definition;
     }
 
@@ -85,17 +84,17 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
     }
 
     @Override
-    public void deleteAllTagsForDefinition(final String definitionName) throws TagDefinitionApiException {
+    public void deleteAllTagsForDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
         TagDefinition existingDefinition = dao.getByName(definitionName);
         if (existingDefinition == null) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, definitionName);
         }
 
-        dao.deleteAllTagsForDefinition(definitionName);
+        dao.deleteAllTagsForDefinition(definitionName, context);
     }
 
     @Override
-    public void deleteTagDefinition(final String definitionName) throws TagDefinitionApiException {
+    public void deleteTagDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
         if (dao.tagDefinitionUsageCount(definitionName) > 0) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_IN_USE, definitionName);
         }
@@ -106,6 +105,6 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, definitionName);
         }
 
-        dao.deleteTagDefinition(definitionName);
+        dao.deleteTagDefinition(definitionName, context);
     }
 }

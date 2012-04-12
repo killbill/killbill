@@ -21,8 +21,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.TestCallContext;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.clock.DefaultClock;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -32,8 +38,8 @@ import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
 
 public abstract class TestPaymentDao {
-
     protected PaymentDao paymentDao;
+    protected CallContext context = new TestCallContext("PaymentTests");
 
     @Test
     public void testCreatePayment() {
@@ -45,16 +51,14 @@ public abstract class TestPaymentDao {
                 .setPaymentMethodId("12345")
                 .setReferenceId("12345")
                 .setType("Electronic")
-                .setCreatedDate(new DateTime(DateTimeZone.UTC))
-                .setUpdatedDate(new DateTime(DateTimeZone.UTC))
-                .setEffectiveDate(new DateTime(DateTimeZone.UTC))
+                .setEffectiveDate(new DefaultClock().getUTCNow())
                 .build();
 
-        paymentDao.savePaymentInfo(paymentInfo);
+        paymentDao.savePaymentInfo(paymentInfo, context);
     }
 
     @Test
-    public void testUpdatePaymenInfo() {
+    public void testUpdatePaymentInfo() {
         PaymentInfo paymentInfo = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
                 .setAmount(BigDecimal.TEN)
                 .setStatus("Processed")
@@ -63,14 +67,14 @@ public abstract class TestPaymentDao {
                 .setPaymentMethodId("12345")
                 .setReferenceId("12345")
                 .setType("Electronic")
-                .setCreatedDate(new DateTime(DateTimeZone.UTC))
-                .setUpdatedDate(new DateTime(DateTimeZone.UTC))
-                .setEffectiveDate(new DateTime(DateTimeZone.UTC))
+                .setCreatedDate(new DefaultClock().getUTCNow())
+                .setUpdatedDate(new DefaultClock().getUTCNow())
+                .setEffectiveDate(new DefaultClock().getUTCNow())
                 .build();
 
-        paymentDao.savePaymentInfo(paymentInfo);
-
-        paymentDao.updatePaymentInfo("CreditCard", paymentInfo.getPaymentId(), "Visa", "US");
+        CallContext context = new TestCallContext("PaymentTests");
+        paymentDao.savePaymentInfo(paymentInfo, context);
+        paymentDao.updatePaymentInfo("CreditCard", paymentInfo.getPaymentId(), "Visa", "US", context);
     }
 
     @Test
@@ -81,12 +85,10 @@ public abstract class TestPaymentDao {
                 .setAccountId(UUID.randomUUID())
                 .setAmount(BigDecimal.TEN)
                 .setCurrency(Currency.USD)
-                .setInvoiceDate(new DateTime(DateTimeZone.UTC))
-                .setCreatedDate(new DateTime(DateTimeZone.UTC))
-                .setUpdatedDate(new DateTime(DateTimeZone.UTC))
+                .setInvoiceDate(context.getCreatedDate())
                 .build();
 
-        paymentDao.createPaymentAttempt(paymentAttempt);
+        paymentDao.createPaymentAttempt(paymentAttempt, context);
     }
 
     @Test
@@ -98,11 +100,11 @@ public abstract class TestPaymentDao {
         final BigDecimal invoiceAmount = BigDecimal.TEN;
 
         // Move the clock backwards to test the updated_date field (see below)
-        final DateTime now = new DateTime(DateTimeZone.UTC).minusDays(1);
+        ClockMock clock = new ClockMock();
+        CallContext thisContext = new DefaultCallContext("Payment Tests", CallOrigin.TEST, UserType.TEST, clock);
 
-        PaymentAttempt originalPaymenAttempt = new PaymentAttempt(paymentAttemptId, invoiceId, accountId, invoiceAmount, Currency.USD, now, now, paymentId, 0);
-
-        PaymentAttempt attempt = paymentDao.createPaymentAttempt(originalPaymenAttempt);
+        PaymentAttempt originalPaymentAttempt = new PaymentAttempt(paymentAttemptId, invoiceId, accountId, invoiceAmount, Currency.USD, clock.getUTCNow(), clock.getUTCNow(), paymentId, 0);
+        PaymentAttempt attempt = paymentDao.createPaymentAttempt(originalPaymentAttempt, thisContext);
 
         List<PaymentAttempt> attemptsFromGet = paymentDao.getPaymentAttemptsForInvoiceId(invoiceId.toString());
 
@@ -124,18 +126,19 @@ public abstract class TestPaymentDao {
                 .setPaymentMethodId("12345")
                 .setReferenceId("12345")
                 .setType("Electronic")
-                .setCreatedDate(now)
-                .setUpdatedDate(now)
-                .setEffectiveDate(now)
+                .setCreatedDate(clock.getUTCNow())
+                .setUpdatedDate(clock.getUTCNow())
+                .setEffectiveDate(clock.getUTCNow())
                 .build();
 
-        paymentDao.savePaymentInfo(originalPaymentInfo);
+        paymentDao.savePaymentInfo(originalPaymentInfo, thisContext);
         PaymentInfo paymentInfo = paymentDao.getPaymentInfo(Arrays.asList(invoiceId.toString())).get(0);
         Assert.assertEquals(paymentInfo, originalPaymentInfo);
 
-        paymentDao.updatePaymentInfo(originalPaymentInfo.getPaymentMethod(), originalPaymentInfo.getPaymentId(), originalPaymentInfo.getCardType(), originalPaymentInfo.getCardCountry());
+        clock.setDeltaFromReality(60 * 60 * 1000); // move clock forward one hour
+        paymentDao.updatePaymentInfo(originalPaymentInfo.getPaymentMethod(), originalPaymentInfo.getPaymentId(), originalPaymentInfo.getCardType(), originalPaymentInfo.getCardCountry(), thisContext);
         paymentInfo = paymentDao.getPaymentInfo(Arrays.asList(invoiceId.toString())).get(0);
-        Assert.assertEquals(paymentInfo.getCreatedDate().getMillis() / 1000, originalPaymentInfo.getCreatedDate().getMillis() / 1000);
+        Assert.assertEquals(paymentInfo.getCreatedDate().compareTo(attempt.getCreatedDate()), 0);
         Assert.assertTrue(paymentInfo.getUpdatedDate().isAfter(originalPaymentInfo.getUpdatedDate()));
     }
 }

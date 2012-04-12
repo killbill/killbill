@@ -18,13 +18,13 @@ package com.ning.billing.util.notificationq.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -63,12 +63,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     @SqlUpdate
     public void insertClaimedHistory(@Bind("sequence_id") int sequenceId, @Bind("owner") String owner, @Bind("claimed_dt") Date clainedDate, @Bind("notification_id") String notificationId);
 
-    public static class NotificationSqlDaoBinder implements Binder<Bind, Notification> {
-
-        private Date getDate(DateTime dateTime) {
-            return dateTime == null ? null : dateTime.toDate();
-        }
-
+    public static class NotificationSqlDaoBinder extends BinderBase implements Binder<Bind, Notification> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, Notification evt) {
             stmt.bind("notification_id", evt.getUUID().toString());
@@ -83,13 +78,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     }
 
 
-    public static class NotificationSqlMapper implements ResultSetMapper<Notification> {
-
-        private DateTime getDate(ResultSet r, String fieldName) throws SQLException {
-            final Timestamp resultStamp = r.getTimestamp(fieldName);
-            return r.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
-        }
-
+    public static class NotificationSqlMapper extends MapperBase implements ResultSetMapper<Notification> {
         @Override
         public Notification map(int index, ResultSet r, StatementContext ctx)
         throws SQLException {

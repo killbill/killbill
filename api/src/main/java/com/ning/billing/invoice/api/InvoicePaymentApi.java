@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
@@ -38,10 +39,10 @@ public interface InvoicePaymentApi {
 
     public InvoicePayment getInvoicePayment(UUID paymentAttemptId);
 
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context);
 
-    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate);
+    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context);
 
-    public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate);
+    public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context);
 
 }

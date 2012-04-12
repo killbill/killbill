@@ -26,6 +26,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -88,13 +93,14 @@ public class TestAnalyticsService {
     private static final String KEY = "12345";
     private static final String ACCOUNT_KEY = "pierre-12345";
     private static final Currency ACCOUNT_CURRENCY = Currency.EUR;
-    private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something", "pierre");
-    private static final DefaultTagDefinition TAG_TWO = new DefaultTagDefinition("awesome", "something", "pierre");
+    private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something");
+    private static final DefaultTagDefinition TAG_TWO = new DefaultTagDefinition("awesome", "something");
     private static final BigDecimal INVOICE_AMOUNT = BigDecimal.valueOf(1243.11);
     private static final String PAYMENT_METHOD = "Paypal";
     private static final String CARD_COUNTRY = "France";
 
     private final Clock clock = new DefaultClock();
+    private final CallContext context = new DefaultCallContextFactory(clock).createCallContext("Analytics Test", CallOrigin.TEST, UserType.TEST);
 
     @Inject
     private AccountUserApi accountApi;
@@ -133,31 +139,29 @@ public class TestAnalyticsService {
     private InvoiceCreationNotification invoiceCreationNotification;
     private PaymentInfo paymentInfoNotification;
 
-    @BeforeMethod
+    @BeforeMethod(groups = "slow")
     public void cleanup() throws Exception
     {
         helper.cleanupTable("bst");
         helper.cleanupTable("bac");
-
     }
 
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(groups = "slow")
     public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
         // Killbill generic setup
         setupBusAndMySQL();
 
-
-        tagDao.create(TAG_ONE);
-        tagDao.create(TAG_TWO);
+        tagDao.create(TAG_ONE, context);
+        tagDao.create(TAG_TWO, context);
 
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, ACCOUNT_CURRENCY);
         try {
             final List<Tag> tags = new ArrayList<Tag>();
-            tags.add(new DescriptiveTag(TAG_ONE, "pierre", clock.getUTCNow()));
-            tags.add(new DescriptiveTag(TAG_TWO, "pierre", clock.getUTCNow()));
+            tags.add(new DescriptiveTag(TAG_ONE));
+            tags.add(new DescriptiveTag(TAG_TWO));
 
-            final Account storedAccount = accountApi.createAccount(account, null, tags);
+            final Account storedAccount = accountApi.createAccount(account, null, tags, context);
 
             // Create events for the bus and expected results
             createSubscriptionTransitionEvent(storedAccount);
@@ -191,7 +195,7 @@ public class TestAnalyticsService {
     }
 
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {
-        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), KEY);
+        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), KEY, context);
 
         // Verify we correctly initialized the account subsystem
         Assert.assertNotNull(bundle);
@@ -241,16 +245,16 @@ public class TestAnalyticsService {
     }
 
     private void createInvoiceAndPaymentCreationEvents(final Account account) {
-        final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCNow(), ACCOUNT_CURRENCY, clock);
+        final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCNow(), clock.getUTCNow(), ACCOUNT_CURRENCY);
         final FixedPriceInvoiceItem invoiceItem = new FixedPriceInvoiceItem(
-                UUID.randomUUID(), invoice.getId(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
-                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow()
-        );
+                UUID.randomUUID(), invoice.getId(), account.getId(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
+                INVOICE_AMOUNT, ACCOUNT_CURRENCY, context.getUserName(), clock.getUTCNow());
         invoice.addInvoiceItem(invoiceItem);
 
-        invoiceDao.create(invoice);
-        Assert.assertEquals(invoiceDao.getInvoicesByAccount(account.getId()).size(), 1);
-        Assert.assertEquals(invoiceDao.getInvoicesByAccount(account.getId()).get(0).getInvoiceItems().size(), 1);
+        invoiceDao.create(invoice, context);
+        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
+        Assert.assertEquals(invoices.size(), 1);
+        Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
 
         // It doesn't really matter what the events contain - the listener will go back to the db
         invoiceCreationNotification = new DefaultInvoiceCreationNotification(invoice.getId(), account.getId(),
@@ -259,12 +263,12 @@ public class TestAnalyticsService {
         paymentInfoNotification = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
         final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
                 ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getPaymentId(), 1);
-        paymentDao.createPaymentAttempt(paymentAttempt);
-        paymentDao.savePaymentInfo(paymentInfoNotification);
+        paymentDao.createPaymentAttempt(paymentAttempt, context);
+        paymentDao.savePaymentInfo(paymentInfoNotification, context);
         Assert.assertEquals(paymentDao.getPaymentInfo(Arrays.asList(invoice.getId().toString())).size(), 1);
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups = "slow")
     public void stopMysql() {
         helper.stopMysql();
     }

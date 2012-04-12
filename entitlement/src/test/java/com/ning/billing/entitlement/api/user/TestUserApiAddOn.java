@@ -41,7 +41,6 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -52,7 +51,6 @@ public class TestUserApiAddOn extends TestApiBase {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-
     @Test(enabled=true, groups={"slow"})
     public void testCreateCancelAddon() {
 
@@ -61,7 +59,7 @@ public class TestUserApiAddOn extends TestApiBase {
             BillingPeriod baseTerm = BillingPeriod.MONTHLY;
             String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+            createSubscription(baseProduct, baseTerm, basePriceList);
 
             String aoProduct = "Telescopic-Scope";
             BillingPeriod aoTerm = BillingPeriod.MONTHLY;
@@ -71,7 +69,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
 
             DateTime now = clock.getUTCNow();
-            aoSubscription.cancel(now, false);
+            aoSubscription.cancel(now, false, context);
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
@@ -114,11 +112,11 @@ public class TestUserApiAddOn extends TestApiBase {
             DateTime now = clock.getUTCNow();
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
-            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
             // FUTURE CANCELLATION
-            baseSubscription.cancel(now, false);
+            baseSubscription.cancel(now, false, context);
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
@@ -131,7 +129,6 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             clock.addDeltaFromReality(ctd);
-            now = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS CANCELLED
@@ -174,7 +171,7 @@ public class TestUserApiAddOn extends TestApiBase {
             DateTime now = clock.getUTCNow();
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
-            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
             // CHANGE IMMEDIATELY WITH TO BP WITH NON INCLUDED ADDON
@@ -185,7 +182,7 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now);
+            baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, context);
             assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
@@ -227,7 +224,7 @@ public class TestUserApiAddOn extends TestApiBase {
             DateTime now = clock.getUTCNow();
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
-            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
             // CHANGE IMMEDIATELY WITH TO BP WITH NON AVAILABLE ADDON
@@ -235,7 +232,7 @@ public class TestUserApiAddOn extends TestApiBase {
             BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
             String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now);
+            baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, context);
 
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE

@@ -25,10 +25,12 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.glue.CallContextModule;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
@@ -77,16 +79,17 @@ public class TestDefaultEntitlementBillingApi {
 
 	private Clock clock;
 	private SubscriptionData subscription;
+    private CallContextFactory factory;
 	private DateTime subscriptionStartDate;
 
 	@BeforeSuite(alwaysRun=true)
 	public void setup() throws ServiceException {
 		TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new CatalogModule(), new ClockModule());
-
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new CatalogModule(), new ClockModule(), new CallContextModule());
 
         catalogService = g.getInstance(CatalogService.class);
         clock = g.getInstance(Clock.class);
+        factory = g.getInstance(CallContextFactory.class);
 
         ((DefaultCatalogService)catalogService).loadCatalog();
 	}
@@ -135,7 +138,8 @@ public class TestDefaultEntitlementBillingApi {
 		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         ((ZombieControl) accountApi).addResult("getAccountById", account);
 
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao, accountApi, catalogService);
+        CallContextFactory factory = new DefaultCallContextFactory(clock);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
@@ -157,7 +161,7 @@ public class TestDefaultEntitlementBillingApi {
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
 		       
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
@@ -181,7 +185,8 @@ public class TestDefaultEntitlementBillingApi {
 		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
 		((ZombieControl)accountApi).addResult("getAccountById", account);
 
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+        CallContextFactory factory = new DefaultCallContextFactory(clock);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
@@ -203,7 +208,7 @@ public class TestDefaultEntitlementBillingApi {
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
 
-        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao,accountApi,catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
@@ -226,7 +231,8 @@ public class TestDefaultEntitlementBillingApi {
 		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
 		((ZombieControl)accountApi).addResult("getAccountById", account);
 
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(dao,accountApi,catalogService);
+        CallContextFactory factory = new DefaultCallContextFactory(clock);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
 		checkFirstEvent(events, nextPlan, bundles.get(0).getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}

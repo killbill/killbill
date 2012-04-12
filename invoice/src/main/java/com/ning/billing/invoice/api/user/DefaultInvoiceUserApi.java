@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -51,8 +53,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
-        dao.notifyOfPaymentAttempt(invoicePayment);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
+        dao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
     @Override
@@ -72,8 +74,19 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
 	@Override
-	public Invoice triggerInvoiceGeneration(UUID accountId,
-			DateTime targetDate, boolean dryrun) throws InvoiceApiException {
-		return dispatcher.processAccount(accountId, targetDate, dryrun);
+	public Invoice triggerInvoiceGeneration(final UUID accountId,
+			final DateTime targetDate, final boolean dryRun,
+            final CallContext context) throws InvoiceApiException {
+		return dispatcher.processAccount(accountId, targetDate, dryRun, context);
 	}
+
+    @Override
+    public void tagInvoiceAsWrittenOff(final UUID invoiceId, final CallContext context) {
+        dao.addControlTag(ControlTagType.WRITTEN_OFF, invoiceId, context);
+    }
+
+    @Override
+    public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) {
+        dao.removeControlTag(ControlTagType.WRITTEN_OFF, invoiceId, context);
+    }
 }

@@ -22,32 +22,33 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.util.callcontext.CallContext;
 
 public interface PaymentApi {
 
-    Either<PaymentError, Void> updatePaymentGateway(String accountKey);
+    Either<PaymentError, Void> updatePaymentGateway(String accountKey, CallContext context);
 
     Either<PaymentError, PaymentMethodInfo> getPaymentMethod(@Nullable String accountKey, String paymentMethodId);
 
     Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountKey);
 
-    Either<PaymentError, String> addPaymentMethod(@Nullable String accountKey, PaymentMethodInfo paymentMethod);
+    Either<PaymentError, String> addPaymentMethod(@Nullable String accountKey, PaymentMethodInfo paymentMethod, CallContext context);
 
-    Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo);
+    Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo, CallContext context);
 
-    Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId);
+    Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId, CallContext context);
 
-    List<Either<PaymentError, PaymentInfo>> createPayment(String accountKey, List<String> invoiceIds);
-    List<Either<PaymentError, PaymentInfo>> createPayment(Account account, List<String> invoiceIds);
-    Either<PaymentError, PaymentInfo> createPaymentForPaymentAttempt(UUID paymentAttemptId);
+    List<Either<PaymentError, PaymentInfo>> createPayment(String accountKey, List<String> invoiceIds, CallContext context);
+    List<Either<PaymentError, PaymentInfo>> createPayment(Account account, List<String> invoiceIds, CallContext context);
+    Either<PaymentError, PaymentInfo> createPaymentForPaymentAttempt(UUID paymentAttemptId, CallContext context);
 
-    List<Either<PaymentError, PaymentInfo>> createRefund(Account account, List<String> invoiceIds); //TODO
+    List<Either<PaymentError, PaymentInfo>> createRefund(Account account, List<String> invoiceIds, CallContext context); //TODO
 
     Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
 
-    Either<PaymentError, String> createPaymentProviderAccount(Account account);
+    Either<PaymentError, String> createPaymentProviderAccount(Account account, CallContext context);
 
-    Either<PaymentError, Void> updatePaymentProviderAccountContact(String accountKey);
+    Either<PaymentError, Void> updatePaymentProviderAccountContact(String accountKey, CallContext context);
 
     PaymentAttempt getPaymentAttemptForPaymentId(String id);
 

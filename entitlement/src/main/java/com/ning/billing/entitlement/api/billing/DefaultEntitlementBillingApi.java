@@ -22,6 +22,13 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.dao.AuditSqlDao;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.CallContextFactory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -46,38 +53,43 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
 
-
 public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 	private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementBillingApi.class);
+    private static final String API_USER_NAME = "Entitlement Billing Api";
 
+    private final CallContextFactory factory;
     private final EntitlementDao entitlementDao;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
+    private final SubscriptionFactory subscriptionFactory;
+    private static final String SUBSCRIPTION_TABLE_NAME = "subscriptions";
 
     @Inject
-    public DefaultEntitlementBillingApi(final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
+    public DefaultEntitlementBillingApi(final CallContextFactory factory, final SubscriptionFactory subscriptionFactory, final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
         super();
+        this.factory = factory;
+        this.subscriptionFactory = subscriptionFactory;
         this.entitlementDao = dao;
         this.accountApi = accountApi;
         this.catalogService = catalogService;
     }
 
     @Override
-    public SortedSet<BillingEvent> getBillingEventsForAccount(
-            final UUID accountId) {
+    public SortedSet<BillingEvent> getBillingEventsForAccount(final UUID accountId) {
         Account account = accountApi.getAccountById(accountId);
         Currency currency = account.getCurrency();
 
         List<SubscriptionBundle> bundles = entitlementDao.getSubscriptionBundleForAccount(accountId);
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         for (final SubscriptionBundle bundle: bundles) {
-        	List<Subscription> subscriptions = entitlementDao.getSubscriptions(bundle.getId());
+        	List<Subscription> subscriptions = entitlementDao.getSubscriptions(subscriptionFactory, bundle.getId());
 
         	for (final Subscription subscription: subscriptions) {
         		for (final SubscriptionTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
@@ -101,7 +113,8 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         return entitlementDao.getAccountIdFromSubscriptionId(subscriptionId);
     }
 
-    private int calculateBcd(SubscriptionBundle bundle, Subscription subscription, final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException, AccountApiException {
+    private int calculateBcd(final SubscriptionBundle bundle, final Subscription subscription,
+                             final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException, AccountApiException {
     	Catalog catalog = catalogService.getFullCatalog();
     	Plan plan =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
     	        transition.getNextPlan() : transition.getPreviousPlan();
@@ -124,7 +137,9 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     			result = account.getBillCycleDay();
 
     			if(result == 0) {
-    				result = calculateBcdFromSubscription(subscription, plan, account);
+                    // in this case, we're making an internal call from the entitlement API to set the BCD for the account
+                    CallContext context = factory.createCallContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
+    				result = calculateBcdFromSubscription(subscription, plan, account, context);
     			}
     		break;
     		case BUNDLE :
@@ -141,7 +156,8 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
     }
 
-   	private int calculateBcdFromSubscription(Subscription subscription, Plan plan, Account account) throws AccountApiException {
+   	private int calculateBcdFromSubscription(Subscription subscription, Plan plan, Account account,
+                                             final CallContext context) throws AccountApiException {
 		int result = account.getBillCycleDay();
         if(result != 0) {
             return result;
@@ -153,11 +169,11 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         } catch (CatalogApiException e) {
             log.error("Unexpected catalog error encountered when updating BCD",e);
         }
-        
+
         MutableAccountData modifiedData = account.toMutableAccountData();
         modifiedData.setBillCycleDay(result);
 
-        accountApi.updateAccount(account.getExternalKey(), modifiedData);
+        accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
         return result;
     }
 
@@ -171,18 +187,19 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
 
     @Override
-    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
-        SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionId);
+    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd, CallContext context) {
+        SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId);
 
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
             .setChargedThroughDate(ctd)
             .setPaidThroughDate(subscription.getPaidThroughDate());
 
-        entitlementDao.updateSubscription(new SubscriptionData(builder));
+        entitlementDao.updateSubscription(new SubscriptionData(builder), context);
     }
 
     @Override
-    public void setChargedThroughDateFromTransaction(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime ctd) {
+    public void setChargedThroughDateFromTransaction(final Transmogrifier transactionalDao, final UUID subscriptionId,
+                                                     final DateTime ctd, final CallContext context) {
         SubscriptionSqlDao subscriptionSqlDao = transactionalDao.become(SubscriptionSqlDao.class);
         SubscriptionData subscription = (SubscriptionData) subscriptionSqlDao.getSubscriptionFromId(subscriptionId.toString());
 
@@ -194,10 +211,12 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             DateTime chargedThroughDate = subscription.getChargedThroughDate();
             if (chargedThroughDate == null || chargedThroughDate.isBefore(ctd)) {
                 subscriptionSqlDao.updateSubscription(subscriptionId.toString(), subscription.getActiveVersion(),
-                                                      ctd.toDate(), paidThroughDate);
+                                                      ctd.toDate(), paidThroughDate, context);
+                AuditSqlDao auditSqlDao = transactionalDao.become(AuditSqlDao.class);
+                auditSqlDao.insertAuditFromTransaction(SUBSCRIPTION_TABLE_NAME, subscriptionId.toString(), ChangeType.UPDATE, context);
             }
         }
     }
-    
- 
+
+
 }

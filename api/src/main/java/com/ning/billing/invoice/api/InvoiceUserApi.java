@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.api;
 
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -32,9 +33,13 @@ public interface InvoiceUserApi {
 
     public Invoice getInvoice(UUID invoiceId);
 
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment);
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context);
 
     public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate);
     
-    public Invoice triggerInvoiceGeneration(UUID accountId, DateTime targetDate, boolean dryrun) throws InvoiceApiException;
+    public Invoice triggerInvoiceGeneration(UUID accountId, DateTime targetDate, boolean dryRun, CallContext context) throws InvoiceApiException;
+
+    public void tagInvoiceAsWrittenOff(UUID invoiceId, CallContext context);
+
+    public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context);
 }

@@ -20,6 +20,11 @@ import static org.testng.Assert.fail;
 
 import java.io.IOException;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.clock.Clock;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -41,6 +46,8 @@ public abstract class AccountDaoTestBase {
     protected AccountDao accountDao;
     protected IDBI dbi;
 
+    protected CallContext context;
+
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
@@ -58,6 +65,10 @@ public abstract class AccountDaoTestBase {
 
             accountDao = injector.getInstance(AccountDao.class);
             accountDao.test();
+
+            Clock clock = injector.getInstance(Clock.class);
+            context = new DefaultCallContextFactory(clock).createCallContext("Vizzini", CallOrigin.TEST, UserType.TEST);
+
 
             BusService busService = injector.getInstance(BusService.class);
             ((DefaultBusService) busService).startBus();
@@ -79,20 +90,11 @@ public abstract class AccountDaoTestBase {
             @Override
             public Void inTransaction(Handle h, TransactionStatus status) throws Exception {
                 h.execute("truncate table accounts");
-                h.execute("truncate table entitlement_events");
-                h.execute("truncate table subscriptions");
-                h.execute("truncate table bundles");
                 h.execute("truncate table notifications");
                 h.execute("truncate table claimed_notifications");
-                h.execute("truncate table invoices");
-                h.execute("truncate table fixed_invoice_items");
-                h.execute("truncate table recurring_invoice_items");
                 h.execute("truncate table tag_definitions");
                 h.execute("truncate table tags");
                 h.execute("truncate table custom_fields");
-                h.execute("truncate table invoice_payments");
-                h.execute("truncate table payment_attempts");
-                h.execute("truncate table payments");
                 return null;
             }
         });

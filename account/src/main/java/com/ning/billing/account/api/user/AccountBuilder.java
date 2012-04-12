@@ -43,7 +43,9 @@ public class AccountBuilder {
     private String country;
     private String postalCode;
     private String phone;
+    private String createdBy;
     private DateTime createdDate;
+    private String updatedBy;
     private DateTime updatedDate;
 
     public AccountBuilder() {
@@ -139,12 +141,22 @@ public class AccountBuilder {
         return this;
     }
 
-    public AccountBuilder createdDate(DateTime createdDate) {
+    public AccountBuilder createdBy(final String createdBy) {
+        this.createdBy = createdBy;
+        return this;
+    }
+
+    public AccountBuilder createdDate(final DateTime createdDate) {
         this.createdDate = createdDate;
         return this;
     }
 
-    public AccountBuilder updatedDate(DateTime updatedDate) {
+    public AccountBuilder updatedBy(final String updatedBy) {
+        this.updatedBy = updatedBy;
+        return this;
+    }
+
+    public AccountBuilder updatedDate(final DateTime updatedDate) {
         this.updatedDate = updatedDate;
         return this;
     }
@@ -154,7 +166,6 @@ public class AccountBuilder {
                                   currency, billingCycleDay, paymentProviderName,
                                   timeZone, locale,
                                   address1, address2, companyName, city, stateOrProvince, country,
-                                  postalCode, phone,
-                                  createdDate, updatedDate);
+                                  postalCode, phone, createdBy, createdDate, updatedBy, updatedDate);
     }
 }

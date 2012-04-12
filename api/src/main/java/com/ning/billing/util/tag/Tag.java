@@ -16,14 +16,8 @@
 
 package com.ning.billing.util.tag;
 
-import java.util.UUID;
-import org.joda.time.DateTime;
 import com.ning.billing.util.entity.Entity;
 
 public interface Tag extends Entity {
     String getTagDefinitionName();
-
-    String getAddedBy();
-
-    DateTime getAddedDate();
 }

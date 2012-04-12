@@ -26,6 +26,8 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TestCallContext;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -75,9 +77,10 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.BusService;
 
+import javax.annotation.Nullable;
+
 
 public abstract class TestApiBase {
-
     protected static final Logger log = LoggerFactory.getLogger(TestApiBase.class);
 
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
@@ -100,6 +103,7 @@ public abstract class TestApiBase {
     protected SubscriptionBundle bundle;
 
     private MysqlTestingHelper helper;
+    protected CallContext context = new TestCallContext("Api Test");
 
     public static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestApiBase.class.getResource(resource);
@@ -186,14 +190,17 @@ public abstract class TestApiBase {
 
         log.warn("RESET TEST FRAMEWORK\n\n");
 
-        testListener.reset();
+        if (testListener != null) {
+            testListener.reset();
+        }
 
         clock.resetDeltaFromReality();
         ((MockEntitlementDao) dao).reset();
+
         try {
             busService.getBus().register(testListener);
             UUID accountId = UUID.randomUUID();
-            bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle");
+            bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle", context);
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -217,12 +224,12 @@ public abstract class TestApiBase {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet);
     }
 
-
     protected SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet) throws EntitlementUserApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
+
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundleId,
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
-                clock.getUTCNow());
+                clock.getUTCNow(), context);
         assertNotNull(subscription);
         assertTrue(testListener.isCompleted(5000));
         return subscription;
@@ -408,7 +415,9 @@ public abstract class TestApiBase {
         return accountData;
     }
 
-    protected PlanPhaseSpecifier getProductSpecifier(final String productName, final String priceList, final BillingPeriod term, final PhaseType phaseType) {
+    protected PlanPhaseSpecifier getProductSpecifier(final String productName, final String priceList,
+                                                     final BillingPeriod term,
+                                                     @Nullable final PhaseType phaseType) {
         return new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, priceList, phaseType);
     }
 

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
@@ -37,7 +38,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment) {
+    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
         for (InvoicePayment existingInvoicePayment : invoicePayments) {
             if (existingInvoicePayment.getInvoiceId().equals(invoicePayment.getInvoiceId()) && existingInvoicePayment.getPaymentAttemptId().equals(invoicePayment.getPaymentAttemptId())) {
                 invoicePayments.remove(existingInvoicePayment);
@@ -89,15 +90,15 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context) {
         InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate, amountOutstanding, currency);
-        notifyOfPaymentAttempt(invoicePayment);
+        notifyOfPaymentAttempt(invoicePayment, context);
     }
 
     @Override
-    public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate) {
+    public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context) {
         InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
-        notifyOfPaymentAttempt(invoicePayment);
+        notifyOfPaymentAttempt(invoicePayment, context);
     }
 
 }

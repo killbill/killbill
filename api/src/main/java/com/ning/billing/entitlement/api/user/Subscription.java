@@ -21,26 +21,26 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.util.customfield.CustomizableEntity;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.entity.ExtendedEntity;
 import org.joda.time.DateTime;
 
-import java.util.List;
 import java.util.UUID;
 
 
-public interface Subscription extends CustomizableEntity {
+public interface Subscription extends ExtendedEntity {
 
-    public void cancel(DateTime requestedDate, boolean eot)
+    public void cancel(DateTime requestedDate, boolean eot, CallContext context)
     throws EntitlementUserApiException;
 
-    public void uncancel()
+    public void uncancel(CallContext context)
     throws EntitlementUserApiException;
 
-    public void changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate)
+    public void changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate, CallContext context)
         throws EntitlementUserApiException;
 
-    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate)
+    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
         throws EntitlementUserApiException;
 
     public enum SubscriptionState {
