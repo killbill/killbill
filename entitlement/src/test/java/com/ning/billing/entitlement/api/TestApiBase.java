@@ -189,10 +189,13 @@ public abstract class TestApiBase {
 
         log.warn("RESET TEST FRAMEWORK\n\n");
 
-        testListener.reset();
+        if (testListener != null) {
+            testListener.reset();
+        }
 
         clock.resetDeltaFromReality();
         ((MockEntitlementDao) dao).reset();
+
         try {
             busService.getBus().register(testListener);
             UUID accountId = UUID.randomUUID();

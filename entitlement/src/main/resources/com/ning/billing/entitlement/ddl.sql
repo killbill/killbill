@@ -5,8 +5,6 @@ CREATE TABLE entitlement_events (
     event_id char(36) NOT NULL,
     event_type varchar(9) NOT NULL,
     user_type varchar(25) DEFAULT NULL,
-    created_dt datetime NOT NULL,
-    updated_dt datetime NOT NULL,
     requested_dt datetime NOT NULL,
     effective_dt datetime NOT NULL,
     subscription_id char(36) NOT NULL,
@@ -16,11 +14,14 @@ CREATE TABLE entitlement_events (
     user_token char(36),
     current_version int(11) DEFAULT 1,
     is_active bool DEFAULT 1,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
     PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE INDEX idx_ent_1 ON entitlement_events(subscription_id,is_active,effective_dt);
-CREATE INDEX idx_ent_2 ON entitlement_events(subscription_id,effective_dt,created_dt,requested_dt,id);
-
+CREATE INDEX idx_ent_2 ON entitlement_events(subscription_id,effective_dt,created_date,requested_dt,id);
 
 DROP TABLE IF EXISTS subscriptions;
 CREATE TABLE subscriptions (
@@ -32,6 +33,10 @@ CREATE TABLE subscriptions (
     active_version int(11) DEFAULT 1,
     ctd_dt datetime DEFAULT NULL,
     ptd_dt datetime DEFAULT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
     PRIMARY KEY(id)
 ) ENGINE=innodb;
 

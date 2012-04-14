@@ -23,7 +23,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.ning.billing.util.callcontext.CallContext;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -40,6 +39,7 @@ import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.util.callcontext.CallContext;
 
 public class DefaultPaymentApi implements PaymentApi {
     private final PaymentProviderPluginRegistry pluginRegistry;
@@ -184,14 +184,7 @@ public class DefaultPaymentApi implements PaymentApi {
             Invoice invoice = invoicePaymentApi.getInvoice(UUID.fromString(invoiceId));
 
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
-                // TODO: send a notification that invoice was ignored?
-                log.info("Received invoice for payment with balance of 0 {} ", invoice);
-                Either<PaymentErrorEvent, PaymentInfoEvent> result = Either.left((PaymentErrorEvent) new DefaultPaymentError("invoice_balance_0",
-                                                                                        "Invoice balance was 0 or less",
-                                                                                        account.getId(),
-                                                                                        UUID.fromString(invoiceId),
-                                                                                        context.getUserToken()));
-                processedPaymentsOrErrors.add(result);
+                log.debug("Received invoice for payment with balance of 0 {} ", invoice);
             }
             else if (invoice.isMigrationInvoice()) {
             	log.info("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
@@ -312,9 +305,11 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public List<Either<PaymentErrorEvent, PaymentInfoEvent>> createRefund(Account account, List<String> invoiceIds, CallContext context) {
-        //TODO
-        throw new UnsupportedOperationException();
+    public List<Either<PaymentErrorEvent, PaymentInfoEvent>> createRefund(Account account,
+                                                                List<String> invoiceIds,
+                                                                CallContext context) {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+        return plugin.processRefund(account);
     }
 
     @Override

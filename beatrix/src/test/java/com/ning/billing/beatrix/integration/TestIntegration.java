@@ -19,6 +19,7 @@ package com.ning.billing.beatrix.integration;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -33,6 +34,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
@@ -82,8 +84,8 @@ import com.ning.billing.util.bus.BusService;
 @Test(groups = "slow")
 @Guice(modules = {MockModule.class})
 public class TestIntegration {
-    private static final int NUMBER_OF_DECIMALS = 4;
-    private static final int ROUNDING_METHOD = BigDecimal.ROUND_HALF_EVEN;
+    private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
+    private static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
 
     private static final BigDecimal ONE = new BigDecimal("1.0000").setScale(NUMBER_OF_DECIMALS);
     private static final BigDecimal TWENTY_NINE = new BigDecimal("29.0000").setScale(NUMBER_OF_DECIMALS);
@@ -244,7 +246,9 @@ public class TestIntegration {
             }
         }
 
-        assertTrue(wasFound);
+        if (!wasFound) {
+            fail();
+        }
 
         DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
