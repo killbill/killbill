@@ -16,9 +16,9 @@
 
 package com.ning.billing.util.overdue;
 
-import com.ning.billing.catalog.api.StaticCatalog;
-import com.ning.billing.catalog.api.overdue.OverdueError;
-import com.ning.billing.catalog.api.overdue.OverdueState;
+import java.util.SortedSet;
+import java.util.UUID;
+
 import com.ning.billing.catalog.api.overdue.Overdueable;
 
 public interface OverdueAccessApi {
@@ -26,5 +26,10 @@ public interface OverdueAccessApi {
 
     public String getOverdueStateNameFor(Overdueable overdueable);
 
+    public String getOverdueStateNameFor(UUID overdueableId, Overdueable.Type type);
+    
+    public SortedSet<OverdueEvent> getOverdueHistory(Overdueable overdueable);
+
+    public SortedSet<OverdueEvent> getOverdueHistory(UUID overdueableId, Overdueable.Type type);
 
 }

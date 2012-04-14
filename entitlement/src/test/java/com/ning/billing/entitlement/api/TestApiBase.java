@@ -72,6 +72,7 @@ import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.BusService;
 
@@ -184,7 +185,7 @@ public abstract class TestApiBase {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setupTest() {
+    public void setupTest() throws Exception {
 
         log.warn("RESET TEST FRAMEWORK\n\n");
 
@@ -192,13 +193,10 @@ public abstract class TestApiBase {
 
         clock.resetDeltaFromReality();
         ((MockEntitlementDao) dao).reset();
-        try {
-            busService.getBus().register(testListener);
-            UUID accountId = UUID.randomUUID();
-            bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle");
-        } catch (Exception e) {
-            Assert.fail(e.getMessage());
-        }
+
+        busService.getBus().register(testListener);
+        UUID accountId = UUID.randomUUID();
+        bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle");
         assertNotNull(bundle);
 
         ((Engine)entitlementService).start();

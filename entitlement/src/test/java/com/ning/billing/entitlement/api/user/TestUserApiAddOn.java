@@ -43,6 +43,7 @@ import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class TestUserApiAddOn extends TestApiBase {

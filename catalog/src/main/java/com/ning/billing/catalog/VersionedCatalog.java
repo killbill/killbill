@@ -454,12 +454,6 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         return versionForDate(clock.getUTCNow()).currentBundleOverdueStateSet();
     }
 
-    @Override
-    public OverdueStateSet<Account> currentAccountOverdueStateSet()
-            throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).currentAccountOverdueStateSet();
-    }
-
 
  
 }

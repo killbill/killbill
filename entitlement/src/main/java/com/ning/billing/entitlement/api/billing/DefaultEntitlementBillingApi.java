@@ -71,7 +71,6 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         for (final SubscriptionBundle bundle: bundles) {
         	List<Subscription> subscriptions = entitlementDao.getSubscriptions(bundle.getId());
-
         	for (final Subscription subscription: subscriptions) {
         		for (final SubscriptionTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
         			try {
@@ -82,10 +81,8 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         			        modifiedData.setBillCycleDay(bcd);
                             accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
         			    }
-        			    
 
-
-        				BillingEvent event = new DefaultBillingEvent(transition, subscription, bcd, account.getCurrency());
+        				BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd, account.getCurrency());
         				result.add(event);
         			} catch (CatalogApiException e) {
         				log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
@@ -96,6 +93,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         		}
         	}
         }
+              
         return result;
     }
 

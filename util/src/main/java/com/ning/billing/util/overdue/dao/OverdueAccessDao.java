@@ -16,10 +16,22 @@
 
 package com.ning.billing.util.overdue.dao;
 
+import java.util.SortedSet;
+import java.util.UUID;
+
 import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.catalog.api.overdue.Overdueable.Type;
+import com.ning.billing.util.overdue.OverdueEvent;
 
 
 public interface OverdueAccessDao {
 
-    public String getOverdueStateNameFor(Overdueable overdueable);
+    public String getOverdueStateFor(Overdueable overdueable);
+
+    public String getOverdueStateForIdAndType(UUID overdueableId, Type type);
+
+    public SortedSet<OverdueEvent> getOverdueHistoryFor(Overdueable overdueable);
+
+    public SortedSet<OverdueEvent> getOverdueHistoryForIdAndType(UUID overdueableId, Type type);
+
 }

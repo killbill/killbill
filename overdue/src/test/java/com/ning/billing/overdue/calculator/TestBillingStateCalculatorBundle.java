@@ -32,7 +32,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.overdue.BillingStateBundle;
 import com.ning.billing.catalog.api.overdue.PaymentResponse;
-import com.ning.billing.entitlement.api.overdue.EntitlementOverdueApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
@@ -72,7 +72,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
        
        Clock clock = new ClockMock();
        InvoiceUserApi invoiceApi = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class);
-       EntitlementOverdueApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementOverdueApi.class);
+       EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
        ((ZombieControl)invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
        
        
@@ -107,7 +107,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
        ((ZombieControl)bundle).addResult("getId", thisBundleId);
        ((ZombieControl)bundle).addResult("getAccountId", UUID.randomUUID());
        
-       EntitlementOverdueApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementOverdueApi.class);
+       EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
        ((ZombieControl)entitlementApi).addResult("getBaseSubscription",subscription);
        
@@ -130,9 +130,6 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
        Assert.assertEquals(state.getBasePlanPhaseType(), plan.getFinalPhase().getPhaseType());
        Assert.assertEquals(state.getBasePlanPriceList(), pricelist);
        Assert.assertEquals(state.getBasePlanProduct(), plan.getProduct());
-       
-       
-       
        
     }
     

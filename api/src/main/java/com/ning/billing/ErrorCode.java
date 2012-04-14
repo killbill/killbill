@@ -115,6 +115,7 @@ public enum ErrorCode {
      */
     CAT_NO_SUCH_OVEDUE_STATE(2070, "No such overdue state '%s'"),
     CAT_MISSING_CLEAR_STATE(2071, "Missing a clear state"),
+    CAT_NO_OVERDUEABLE_TYPE(2072, "No such overdueable type: "),
    /*
     *
     * Range 3000 : ACCOUNT
@@ -165,7 +166,7 @@ public enum ErrorCode {
      * 
      */
     OVERDUE_OVERDUEABLE_NOT_SUPPORTED(5001, "The Overdueable type '%s' is not supported"), 
-    OVERDUE_CAT_ERROR_ENCOUNTERED(5002,"Catalog error encountered when attempting to refresh the state of Overdueable: id='%s', type='%s'") 
+    OVERDUE_CAT_ERROR_ENCOUNTERED(5002,"Catalog error encountered on Overdueable: id='%s', type='%s'"),  
     
     
     ;

@@ -51,6 +51,7 @@ import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.dao.BusinessAccountDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
+import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
@@ -89,7 +90,7 @@ import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
-@Guice(modules = AnalyticsTestModule.class)
+@Guice(modules = {AnalyticsTestModule.class, MockCatalogModule.class})
 public class TestAnalyticsService {
     private static final UUID ID = UUID.randomUUID();
     private static final String KEY = "12345";

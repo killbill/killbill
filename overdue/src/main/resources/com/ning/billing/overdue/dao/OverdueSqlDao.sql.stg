@@ -1,13 +1,15 @@
 group OverdueSqlDao;
 
-setOverdueStateForBundle() ::= <<
+setOverdueState() ::= <<
     insert into overdue_states (
         id
       , state
+      , type
       , created_date
     ) values (
         :id
       , :state
-      , NOW() 
+      , :type
+      , :created_date 
     );
 >>

@@ -21,6 +21,7 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
+import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
@@ -51,7 +52,7 @@ public class TestUserCustomFieldsSql extends TestApiBase {
     }
 
     @Test(enabled=false, groups={"slow"})
-    public void stress() {
+    public void stress() throws Exception {
         cleanupTest();
         for (int i = 0; i < 20; i++) {
             setupTest();

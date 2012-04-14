@@ -20,6 +20,8 @@ import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.overdue.OverdueError;
 import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.overdue.dao.OverdueDao;
@@ -38,7 +40,7 @@ public class OverdueStateApplicator<T extends Overdueable>{
         this.clock = clock;
     }
 
-    public void apply(T overdueable, OverdueState<T> previousOverdueState, OverdueState<T> nextOverdueState, DateTime timeOfNextCheck) {
+    public void apply(T overdueable, OverdueState<T> previousOverdueState, OverdueState<T> nextOverdueState, DateTime timeOfNextCheck) throws OverdueError {
         if(previousOverdueState.getName().equals(nextOverdueState.getName())) {
             return; // nothing to do
         }
@@ -57,11 +59,15 @@ public class OverdueStateApplicator<T extends Overdueable>{
         throw new NotImplementedException();
     }
 
- 
-    protected void storeNewState(T overdueable, OverdueState<T> nextOverdueState) {
-       overdueDao.setOverdueState(overdueable, nextOverdueState, clock);
+
+    protected void storeNewState(T overdueable, OverdueState<T> nextOverdueState) throws OverdueError {
+        try {
+            overdueDao.setOverdueState(overdueable, nextOverdueState, Overdueable.Type.get(overdueable), clock);
+        } catch (Exception e) {
+            throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, overdueable.getId(), overdueable.getClass().getName());
+        }
     }
-    
+
     protected void createFutureNotification(T overdueable,
             DateTime timeOfNextCheck) {
         // TODO Auto-generated method stub

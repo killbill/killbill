@@ -31,7 +31,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.overdue.OverdueState;
+import com.ning.billing.entitlement.api.overdue.OverdueChecker;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
@@ -45,17 +45,19 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     private final EntitlementDao dao;
     private final CatalogService catalogService;
     private final SubscriptionApiService apiService;
+    private final OverdueChecker overdueChecker;
     private final AddonUtils addonUtils;
 
     @Inject
     public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, CatalogService catalogService,
-            SubscriptionApiService apiService, AddonUtils addonUtils) {
+            SubscriptionApiService apiService, AddonUtils addonUtils, OverdueChecker overdueChecker) {
         super();
         this.clock = clock;
         this.apiService = apiService;
         this.dao = dao;
         this.catalogService = catalogService;
         this.addonUtils = addonUtils;
+        this.overdueChecker = overdueChecker;
     }
 
     @Override
@@ -89,16 +91,15 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
+    public Subscription getBaseSubscription(UUID bundleId) {
+        return dao.getBaseSubscription(bundleId);
+    }
+    
+    @Override
     public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleName)
             throws EntitlementUserApiException {
-        OverdueState<SubscriptionBundle> clearState;
-        try {
-            clearState = catalogService.getCurrentCatalog().currentBundleOverdueStateSet().findClearState();
-            SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId);
-            return dao.createSubscriptionBundle(bundle);
-        } catch (CatalogApiException e) {
-            throw new EntitlementUserApiException(e);
-        }
+        SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId);
+        return dao.createSubscriptionBundle(bundle);
     }
 
     @Override

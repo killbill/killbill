@@ -23,11 +23,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.clock.Clock;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -56,23 +51,25 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
 @Test(groups = "slow")
-@Guice(modules = {MockModule.class})
+@Guice(modules = {MockModule.class, MockOverdueAccessModule.class})
 public class TestInvoiceDispatcher {
 	private Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
-
-	@Inject
-	private InvoiceUserApi invoiceUserApi;
 
 	@Inject
 	private InvoiceGenerator generator;
@@ -149,7 +146,7 @@ public class TestInvoiceDispatcher {
 		DateTime effectiveDate = new DateTime().minusDays(1);
 		Currency currency = Currency.USD;
 		BigDecimal fixedPrice = null;
-		events.add(new DefaultBillingEvent(subscription, effectiveDate,plan, planPhase,
+		events.add(new DefaultBillingEvent(account, subscription, effectiveDate,plan, planPhase,
 				fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
 				BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 

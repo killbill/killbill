@@ -27,6 +27,7 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
+import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 import org.testng.Assert;

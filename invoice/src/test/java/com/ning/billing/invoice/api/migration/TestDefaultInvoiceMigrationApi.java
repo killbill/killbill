@@ -179,7 +179,7 @@ public class TestDefaultInvoiceMigrationApi {
 		DateTime effectiveDate = new DateTime().minusDays(1);
 		Currency currency = Currency.USD;
 		BigDecimal fixedPrice = null;
-		events.add(new DefaultBillingEvent(subscription, effectiveDate,plan, planPhase,
+		events.add(new DefaultBillingEvent(account, subscription, effectiveDate,plan, planPhase,
 				fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
 				BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 

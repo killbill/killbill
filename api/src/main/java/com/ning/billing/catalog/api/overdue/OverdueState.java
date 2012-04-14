@@ -25,9 +25,9 @@ public interface OverdueState<T extends Overdueable> {
     
     public int getDaysBetweenPaymentRetries();
 
-    public boolean entitlementDisabledAndChangesBlocked();
+    public boolean disableEntitlementAndChangesBlocked();
 
-    public boolean changesBlocked();
+    public boolean blockChanges();
     
     public boolean isClearState();
 }

@@ -47,6 +47,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -80,7 +81,6 @@ public class TestDefaultEntitlementBillingApi {
 
 	private Clock clock;
 	private SubscriptionData subscription;
-    private CallContextFactory factory;
 	private DateTime subscriptionStartDate;
 
 	@BeforeSuite(alwaysRun=true)
@@ -90,7 +90,6 @@ public class TestDefaultEntitlementBillingApi {
 
         catalogService = g.getInstance(CatalogService.class);
         clock = g.getInstance(Clock.class);
-        factory = g.getInstance(CallContextFactory.class);
 
         ((DefaultCatalogService)catalogService).loadCatalog();
 	}
@@ -135,10 +134,12 @@ public class TestDefaultEntitlementBillingApi {
         Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
         ((ZombieControl) account).addResult("getId", accountId).addResult("getCurrency", Currency.USD);
 
-		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+        AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         ((ZombieControl) accountApi).addResult("getAccountById", account);
 
-        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService);
+        EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
 		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, bcdCalculator);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
@@ -163,7 +164,9 @@ public class TestDefaultEntitlementBillingApi {
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
 		       
-        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService);
+        EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
         DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, bcdCalculator);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
@@ -189,7 +192,10 @@ public class TestDefaultEntitlementBillingApi {
 
 		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
 		((ZombieControl)accountApi).addResult("getAccountById", account);
-        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService);
+
+		EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
         DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, bcdCalculator);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
@@ -214,7 +220,9 @@ public class TestDefaultEntitlementBillingApi {
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
 
-        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService);
+        EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
         DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, bcdCalculator);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
@@ -237,14 +245,18 @@ public class TestDefaultEntitlementBillingApi {
 		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC);
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
 
-		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-		((ZombieControl)accountApi).addResult("getAccountById", account);
-        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService);
+        AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+        ((ZombieControl)accountApi).addResult("getAccountById", account);
+
+        EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+        ((ZombieControl) entitlementApi).addResult("getBaseSubscription", subscription);
+
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
         DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, bcdCalculator);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
-		checkFirstEvent(events, nextPlan, bundles.get(0).getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
+		checkFirstEvent(events, nextPlan, subscription.getStartDate().plusDays(30).getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
 

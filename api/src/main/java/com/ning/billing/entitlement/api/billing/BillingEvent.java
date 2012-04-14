@@ -16,19 +16,24 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import com.ning.billing.catalog.api.Currency;
+import java.math.BigDecimal;
+
 import org.joda.time.DateTime;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.InternationalPrice;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 
-import java.math.BigDecimal;
-
 public interface BillingEvent extends Comparable<BillingEvent> {
+
+    /**
+     * @return the account that this billing event is associated with
+     */
+    public Account getAccount();
 
     /**
      *
@@ -109,4 +114,4 @@ public interface BillingEvent extends Comparable<BillingEvent> {
 	 */
 	public Long getTotalOrdering();
 
-}
+ }

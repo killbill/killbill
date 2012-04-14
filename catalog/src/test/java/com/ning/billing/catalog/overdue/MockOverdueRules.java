@@ -14,14 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.dao;
+package com.ning.billing.catalog.overdue;
 
-import com.ning.billing.catalog.api.overdue.OverdueState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 
-public interface OverdueDao {
 
-    <T extends Overdueable> void  setOverdueState(T overdueable, OverdueState<T> newOverdueState, Overdueable.Type type, Clock clock);
+public class MockOverdueRules extends OverdueRules {
 
+    @SuppressWarnings("unchecked")
+    public MockOverdueRules() {
+        OverdueStatesBundle bundleODS =  new OverdueStatesBundle();
+        bundleODS.setBundleOverdueStates(new DefaultOverdueState[] { new DefaultOverdueState<SubscriptionBundle>().setName(MockOverdueAccessModule.CLEAR_STATE) });
+        setOverdueStatesBundle(bundleODS);
+
+    }
 }

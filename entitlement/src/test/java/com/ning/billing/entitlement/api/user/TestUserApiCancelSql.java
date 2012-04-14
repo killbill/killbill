@@ -21,6 +21,8 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import com.ning.billing.mock.overdue.MockOverdueAccessModule;
+
 import org.testng.annotations.Test;
 
 public class TestUserApiCancelSql extends TestUserApiCancel {
@@ -34,7 +36,7 @@ public class TestUserApiCancelSql extends TestUserApiCancel {
     }
 
     @Test(enabled= false, groups={"stress"})
-    public void stressTest() throws EntitlementBillingApiException {
+    public void stressTest() throws Exception {
         for (int i = 0; i < MAX_STRESS_ITERATIONS; i++) {
             cleanupTest();
             setupTest();

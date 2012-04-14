@@ -16,6 +16,9 @@
 
 package com.ning.billing.catalog.overdue;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
@@ -26,10 +29,10 @@ import com.ning.billing.catalog.api.overdue.BillingState;
 import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.catalog.api.overdue.Overdueable;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
+@XmlAccessorType(XmlAccessType.NONE)
 public abstract class DefaultOverdueStateSet<T extends Overdueable> extends ValidatingConfig<StandaloneCatalog> implements OverdueStateSet<T> {
     private DefaultOverdueState<T> clearState;
     
@@ -100,5 +103,4 @@ public abstract class DefaultOverdueStateSet<T extends Overdueable> extends Vali
         
         return errors;
     }
-      
 }

@@ -27,7 +27,6 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -73,11 +72,11 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 	@XmlElement(name="rules", required=true)
 	private PlanRules planRules;
 
-    @XmlElement(name="overdueRules", required=false)
+    @XmlElement(name="overdueRules", required=true)
     private OverdueRules overdueRules;
 
 	@XmlElementWrapper(name="plans", required=true)
-	@XmlElement(name="plan", required=true)
+	@XmlElement(name="plan", required=true) 
 	private DefaultPlan[] plans;
 
     @XmlElement(name="priceLists", required=true)
@@ -306,10 +305,15 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		return this;
 	}
 
-	protected StandaloneCatalog setPriceLists(DefaultPriceListSet priceLists) {
-		this.priceLists = priceLists;
-		return this;
-	}
+    protected StandaloneCatalog setPriceLists(DefaultPriceListSet priceLists) {
+        this.priceLists = priceLists;
+        return this;
+    }
+
+    protected StandaloneCatalog setOverdueRules(OverdueRules overdueRules) {
+        this.overdueRules = overdueRules;
+        return this;
+    }
 
 	@Override
 	public boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException {
@@ -327,13 +331,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
             throws CatalogApiException {
          return overdueRules.getBundleStateSet();
     }
-
-    @Override
-    public OverdueStateSet<Account> currentAccountOverdueStateSet()
-            throws CatalogApiException {
-         return overdueRules.getAccountStateSet();
-    }
-
 
 
 }

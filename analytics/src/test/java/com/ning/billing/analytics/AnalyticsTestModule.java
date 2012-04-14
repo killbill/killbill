@@ -16,25 +16,24 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.invoice.glue.InvoiceModule;
-import com.ning.billing.payment.setup.PaymentModule;
-import com.ning.billing.util.glue.CallContextModule;
-import com.ning.billing.util.glue.FieldStoreModule;
-import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 import org.skife.jdbi.v2.IDBI;
+
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
-import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.entitlement.api.overdue.MockOverdueChecker;
+import com.ning.billing.entitlement.api.overdue.OverdueChecker;
 import com.ning.billing.entitlement.glue.EntitlementModule;
-
+import com.ning.billing.invoice.glue.InvoiceModule;
+import com.ning.billing.mock.overdue.MockOverdueAccessModule;
+import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.util.glue.BusModule;
-
+import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.ClockModule;
+import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
-
-import java.lang.reflect.Field;
+import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
 public class AnalyticsTestModule extends AnalyticsModule
 {
@@ -49,10 +48,17 @@ public class AnalyticsTestModule extends AnalyticsModule
         install(new FieldStoreModule());
         install(new TagStoreModule());
         install(new AccountModule());
-        install(new CatalogModule());
         install(new BusModule());
-        install(new EntitlementModule());
+        install(new EntitlementModule() {
+
+            @Override
+            protected void installOverdueChecker() {
+                bind(OverdueChecker.class).to(MockOverdueChecker.class).asEagerSingleton();
+            }
+            
+        });
         install(new InvoiceModule());
+        install(new MockOverdueAccessModule());
         install(new PaymentModule());
         install(new TagStoreModule());
         install(new NotificationQueueModule());

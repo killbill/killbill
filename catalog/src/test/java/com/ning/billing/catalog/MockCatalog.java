@@ -18,6 +18,8 @@ package com.ning.billing.catalog;
 
 import java.util.Date;
 
+import com.ning.billing.catalog.overdue.MockOverdueRules;
+import com.ning.billing.catalog.overdue.OverdueRules;
 import com.ning.billing.catalog.rules.CaseCancelPolicy;
 import com.ning.billing.catalog.rules.CaseChangePlanAlignment;
 import com.ning.billing.catalog.rules.CaseChangePlanPolicy;
@@ -33,9 +35,15 @@ public class MockCatalog extends StandaloneCatalog {
 		setPlans((DefaultPlan[])MockPlan.createAll());
 		populateRules();
 		populatePriceLists();
+		setOverdueRules();
 	}
 	
-	public void populateRules(){
+	public void setOverdueRules() {
+	    OverdueRules overdueRules = new MockOverdueRules();
+        setOverdueRules(overdueRules);  
+    }
+
+    public void populateRules(){
 		setPlanRules(new PlanRules());
 	}
 
@@ -47,6 +55,8 @@ public class MockCatalog extends StandaloneCatalog {
 			){
 		
 	}
+	
+	
 
 	public void populatePriceLists() {
 		DefaultPlan[] plans = getCurrentPlans();

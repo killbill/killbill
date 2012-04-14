@@ -16,15 +16,12 @@
 
 package com.ning.billing.util.overdue;
 
+import java.util.SortedSet;
+import java.util.UUID;
+
 import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.StaticCatalog;
-import com.ning.billing.catalog.api.overdue.OverdueError;
-import com.ning.billing.catalog.api.overdue.OverdueState;
-import com.ning.billing.catalog.api.overdue.OverdueStateSet;
 import com.ning.billing.catalog.api.overdue.Overdueable;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.catalog.api.overdue.Overdueable.Type;
 import com.ning.billing.util.overdue.dao.OverdueAccessDao;
 
 public class DefaultOverdueAcessApi implements OverdueAccessApi {
@@ -37,7 +34,23 @@ public class DefaultOverdueAcessApi implements OverdueAccessApi {
     
     @Override
     public String getOverdueStateNameFor(Overdueable overdueable) {
-        return dao.getOverdueStateNameFor(overdueable);
+        return dao.getOverdueStateFor(overdueable);
+    }
+
+    @Override
+    public String getOverdueStateNameFor(UUID overdueableId, Type type) {
+        return dao.getOverdueStateForIdAndType(overdueableId, type);
+    }
+
+    @Override
+    public SortedSet<OverdueEvent> getOverdueHistory(Overdueable overdueable) {
+        return dao.getOverdueHistoryFor(overdueable); 
+    }
+
+    @Override
+    public SortedSet<OverdueEvent> getOverdueHistory(UUID overdueableId,
+            Type type) {
+        return dao.getOverdueHistoryForIdAndType(overdueableId, type);
     }
 
 }

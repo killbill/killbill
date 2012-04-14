@@ -16,26 +16,46 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.joda.time.DateTime;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanChangeResult;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
+import com.ning.billing.entitlement.api.overdue.OverdueChecker;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
-import com.ning.billing.entitlement.events.user.*;
+import com.ning.billing.entitlement.events.user.ApiEvent;
+import com.ning.billing.entitlement.events.user.ApiEventBuilder;
+import com.ning.billing.entitlement.events.user.ApiEventCancel;
+import com.ning.billing.entitlement.events.user.ApiEventChange;
+import com.ning.billing.entitlement.events.user.ApiEventCreate;
+import com.ning.billing.entitlement.events.user.ApiEventReCreate;
+import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
-import org.joda.time.DateTime;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SubscriptionApiService {
 
@@ -43,26 +63,34 @@ public class SubscriptionApiService {
     private final EntitlementDao dao;
     private final CatalogService catalogService;
     private final PlanAligner planAligner;
+    private final OverdueChecker overdueChecker;
 
     @Inject
-    public SubscriptionApiService(Clock clock, EntitlementDao dao, CatalogService catalogService, PlanAligner planAligner) {
+    public SubscriptionApiService(Clock clock, EntitlementDao dao, CatalogService catalogService, PlanAligner planAligner, OverdueChecker overdueChecker) {
         this.clock = clock;
         this.catalogService = catalogService;
         this.planAligner = planAligner;
         this.dao = dao;
+        this.overdueChecker = overdueChecker;
     }
 
     public SubscriptionData createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
             String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate)
         throws EntitlementUserApiException {
-
+        
         SubscriptionData subscription = new SubscriptionData(builder, this, clock);
+
+        overdueChecker.checkBlocked(subscription);
+
+        
         createFromSubscription(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate, processedDate, false);
         return subscription;
     }
 
     public void recreatePlan(SubscriptionData subscription, PlanPhaseSpecifier spec, DateTime requestedDate)
         throws EntitlementUserApiException {
+        
+        overdueChecker.checkBlocked(subscription);
 
         SubscriptionState currentState = subscription.getState();
         if (currentState != SubscriptionState.CANCELLED) {
@@ -94,6 +122,8 @@ public class SubscriptionApiService {
     private void createFromSubscription(SubscriptionData subscription, Plan plan, PhaseType initialPhase,
             String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate, boolean reCreate)
         throws EntitlementUserApiException {
+
+        overdueChecker.checkBlocked(subscription);
 
         try {
             TimedPhase [] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate);
@@ -207,6 +237,8 @@ public class SubscriptionApiService {
     public void changePlan(SubscriptionData subscription, String productName, BillingPeriod term,
             String priceList, DateTime requestedDate)
         throws EntitlementUserApiException {
+        
+        overdueChecker.checkBlocked(subscription);
 
         try {
 
@@ -279,6 +311,7 @@ public class SubscriptionApiService {
         }
     }
 
+
     public void commitCustomFields(SubscriptionData subscription, CallContext context) {
         dao.saveCustomFields(subscription, context);
     }
@@ -296,4 +329,6 @@ public class SubscriptionApiService {
                     requestedDate.toString(), previousTransition.getEffectiveTransitionTime());
         }
     }
+    
+
 }

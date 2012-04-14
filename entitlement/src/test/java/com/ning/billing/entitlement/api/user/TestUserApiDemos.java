@@ -190,7 +190,7 @@ public class TestUserApiDemos extends TestApiBase {
     }
 
     @Test(enabled= true, groups={"stress"})
-    public void stressTest() throws EntitlementBillingApiException {
+    public void stressTest() throws Exception {
         for (int i = 0; i < 100; i++) {
             cleanupTest();
             setupTest();

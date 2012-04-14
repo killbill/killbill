@@ -67,6 +67,14 @@
             </createAlignmentCase>
         </createAlignment>
 	</rules>
+	
+    <overdueRules>
+       <bundleOverdueStates>
+           <state name="ClearBundle">
+               <isClearState>true</isClearState>
+           </state>
+       </bundleOverdueStates>
+    </overdueRules>
 
 
 	<plans>

@@ -19,11 +19,14 @@ package com.ning.billing.mock;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import bsh.This;
 
 public class BrainDeadProxyFactory {
     private static final Logger log = LoggerFactory.getLogger(BrainDeadProxyFactory.class);
@@ -39,9 +42,12 @@ public class BrainDeadProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T createBrainDeadProxyFor(final Class<T> clazz) {
+    public static <T> T createBrainDeadProxyFor(final Class<T> clazz, final Class<?> ... others) {
+        Class<?>[] clazzes = Arrays.copyOf(others, others.length + 2);
+        clazzes[others.length] = ZombieControl.class;
+        clazzes[others.length + 1] = clazz;
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(),
-                new Class[] { clazz , ZombieControl.class},
+                clazzes,
                 new InvocationHandler() {
             private final Map<String,Object> results = new HashMap<String,Object>();
 
@@ -68,7 +74,9 @@ public class BrainDeadProxyFactory {
                     		throw ((Throwable) result);
                     	}
                         return result;
-                    }  else {
+                    } else if (method.getName().equals("equals")){
+                       return proxy == args[0];
+                    } else {
                         log.error(String.format("No result for Method: '%s' on Class '%s'",method.getName(), method.getDeclaringClass().getName()));
                         throw new UnsupportedOperationException();
                     }

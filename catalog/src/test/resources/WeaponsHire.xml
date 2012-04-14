@@ -169,7 +169,15 @@ Use Cases to do:
 				<toPriceList>DEFAULT</toPriceList>
 			</priceListCase>
 		</priceList>
-	</rules>
+	</rules> 
+	
+	<overdueRules> 
+       <bundleOverdueStates>
+	       <state name="ClearBundles">
+               <isClearState>true</isClearState>
+           </state> 
+	   </bundleOverdueStates>
+	</overdueRules>
 
 	<plans>
 		<plan name="pistol-monthly">

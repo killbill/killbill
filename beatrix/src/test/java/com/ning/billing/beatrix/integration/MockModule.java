@@ -45,6 +45,7 @@ import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.lifecycle.KillbillService;
+import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.payment.setup.PaymentConfig;
@@ -93,6 +94,7 @@ public class MockModule extends AbstractModule {
         install(new EntitlementModule());
         install(new InvoiceModule());
         install(new PaymentMockModule());
+        install(new MockOverdueAccessModule());
     }
 
     private static final class PaymentMockModule extends PaymentModule {

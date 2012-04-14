@@ -20,21 +20,25 @@ import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.catalog.api.overdue.Overdueable.Type;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.BinderBase;
 
 @ExternalizedSqlViaStringTemplate3()
-public interface OverdueSqlDao extends OverdueDao {
+public interface OverdueSqlDao extends OverdueDao, CloseMe, Transmogrifier {
 
     @Override
     @SqlUpdate
     public abstract <T extends Overdueable> void setOverdueState(
             @Bind(binder = OverdueableBinder.class) T overdueable, 
             @Bind(binder = OverdueStateBinder.class) OverdueState<T> overdueState,
+            @Bind(binder = OverdueableTypeBinder.class) Overdueable.Type type,
             @Bind(binder = CurrentTimeBinder.class) Clock clock) ;
 
     public static class OverdueableBinder extends BinderBase implements Binder<Bind, Overdueable> {
@@ -43,6 +47,7 @@ public interface OverdueSqlDao extends OverdueDao {
             stmt.bind("id", overdueable.getId().toString());
         }
     }
+    
     public static class OverdueStateBinder<T extends Overdueable> extends BinderBase implements Binder<Bind, OverdueState<T>> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, OverdueState<T> overdueState) {
@@ -50,10 +55,19 @@ public interface OverdueSqlDao extends OverdueDao {
         }
     }
     
+    public class OverdueableTypeBinder extends BinderBase implements Binder<Bind, Overdueable.Type>{
+
+        @Override
+        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, Type type) {
+            stmt.bind("type", type.name());
+        }
+
+    }
+
     public static class CurrentTimeBinder extends BinderBase implements Binder<Bind, Clock> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, Clock clock) {
-            stmt.bind("created_date", clock.getUTCNow());
+            stmt.bind("created_date", clock.getUTCNow().toDate());
         }
         
     }

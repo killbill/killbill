@@ -17,10 +17,10 @@
 package com.ning.billing.overdue.dao;
 
 import java.io.IOException;
+import java.util.SortedSet;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -29,9 +29,9 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.TimeUnit;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.overdue.OverdueState;
+import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.mock.BrainDeadProxyFactory;
@@ -39,6 +39,7 @@ import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.overdue.glue.OverdueModule;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.OverdueAccessModule;
+import com.ning.billing.util.overdue.OverdueEvent;
 import com.ning.billing.util.overdue.dao.OverdueAccessDao;
 
 @Guice(modules = {MockModule.class, OverdueModule.class, OverdueAccessModule.class})
@@ -78,15 +79,48 @@ public class TestOverdueDao {
         OverdueState<SubscriptionBundle> state = BrainDeadProxyFactory.createBrainDeadProxyFor(OverdueState.class);
         ((ZombieControl)state).addResult("getName", overdueStateName);
         
-        dao.setOverdueState(bundle, state, clock);
+        dao.setOverdueState(bundle, state, Overdueable.Type.SUBSCRIPTION_BUNDLE, clock);
         clock.setDeltaFromReality(1000 * 3600 * 24);
         
         String overdueStateName2 = "NoReallyThisCantGoOn";
         ((ZombieControl)state).addResult("getName", overdueStateName2);
-        dao.setOverdueState(bundle, state, clock);
+        dao.setOverdueState(bundle, state, Overdueable.Type.SUBSCRIPTION_BUNDLE, clock);
         
-        Assert.assertEquals(accessDao.getOverdueStateNameFor(bundle), overdueStateName2);
+        Assert.assertEquals(accessDao.getOverdueStateFor(bundle), overdueStateName2);
+        Assert.assertEquals(accessDao.getOverdueStateForIdAndType(bundle.getId(), Overdueable.Type.SUBSCRIPTION_BUNDLE), overdueStateName2);
         
+    }
+    
+    @Test(groups={"slow"}, enabled=true)
+    public void testDaoHistory() throws CatalogApiException { 
+        ClockMock clock = new ClockMock();
+        SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
+        UUID bundleId = UUID.randomUUID();
+        ((ZombieControl)bundle).addResult("getId", bundleId);
+        
+        String overdueStateName = "WayPassedItMan";
+        @SuppressWarnings("unchecked")
+        OverdueState<SubscriptionBundle> state = BrainDeadProxyFactory.createBrainDeadProxyFor(OverdueState.class);
+        ((ZombieControl)state).addResult("getName", overdueStateName);
+        
+        dao.setOverdueState(bundle, state, Overdueable.Type.SUBSCRIPTION_BUNDLE, clock);
+        clock.setDeltaFromReality(1000 * 3600 * 24);
+        
+        String overdueStateName2 = "NoReallyThisCantGoOn";
+        ((ZombieControl)state).addResult("getName", overdueStateName2);
+        dao.setOverdueState(bundle, state, Overdueable.Type.SUBSCRIPTION_BUNDLE, clock);
+        
+        SortedSet<OverdueEvent> history1 = accessDao.getOverdueHistoryFor(bundle);
+        SortedSet<OverdueEvent> history2 = accessDao.getOverdueHistoryForIdAndType(bundle.getId(), Overdueable.Type.get(bundle));
+        
+        Assert.assertEquals(history1.size(), 2);
+        Assert.assertEquals(history1.first().getStateName(), overdueStateName);
+        Assert.assertEquals(history1.last().getStateName(), overdueStateName2);
+        
+        Assert.assertEquals(history2.size(), 2);
+        Assert.assertEquals(history2.first().getStateName(), overdueStateName);
+        Assert.assertEquals(history2.last().getStateName(), overdueStateName2);
+       
     }
     
 }

@@ -22,6 +22,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
+import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 
 @Test(groups = "fast")
 public class TestMigrationMemory extends TestMigration {

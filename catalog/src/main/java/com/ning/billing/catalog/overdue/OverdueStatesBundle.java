@@ -18,15 +18,11 @@ package com.ning.billing.catalog.overdue;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.StandaloneCatalog;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.util.config.ValidationErrors;
 
 public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBundle>{
-    @XmlElement(required=false, name="bundleOverdueStages")
+
+    @XmlElement(required=true, name="state")
     private DefaultOverdueState<SubscriptionBundle>[] bundleOverdueStates;
 
     @Override
@@ -34,4 +30,8 @@ public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBund
         return bundleOverdueStates;
     }
 
+    protected OverdueStatesBundle setBundleOverdueStates(DefaultOverdueState<SubscriptionBundle>[] bundleOverdueStates) {
+        this.bundleOverdueStates = bundleOverdueStates;
+        return this;
+    }
 }

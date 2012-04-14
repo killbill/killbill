@@ -16,30 +16,25 @@
 
 package com.ning.billing.entitlement.api.overdue;
 
-import java.util.List;
 import java.util.UUID;
 
-import com.google.inject.Inject;
-import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
-public class DefaultEntitlementOverdueApi implements EntitlementOverdueApi {
-    private EntitlementDao dao;
+public class MockOverdueChecker implements OverdueChecker {
 
-    @Inject
-    public DefaultEntitlementOverdueApi(EntitlementDao dao) {
-        this.dao = dao;
+    @Override
+    public void checkBlocked(Subscription subscription)
+            throws EntitlementUserApiException {
+        //Intentionally blank
+
     }
 
     @Override
-    public Subscription getBaseSubscription(UUID bundleId) {
-        List<Subscription> subscriptions = dao.getSubscriptions(bundleId);
-        for(Subscription subscription: subscriptions) {
-            if(subscription.getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) {
-                return subscription;
-            }
-        }
-        return null;
+    public void checkBlocked(SubscriptionBundle bundle)
+            throws EntitlementUserApiException {
+        //Intentionally blank
     }
+
 }

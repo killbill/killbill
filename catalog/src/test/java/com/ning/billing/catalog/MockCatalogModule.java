@@ -14,13 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.overdue;
+package com.ning.billing.catalog;
 
-import java.util.UUID;
+import com.google.inject.AbstractModule;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
-import com.ning.billing.entitlement.api.user.Subscription;
+public class MockCatalogModule extends AbstractModule {
 
-public interface EntitlementOverdueApi {
-
-    public Subscription getBaseSubscription(UUID bundleId);
+    @Override
+    protected void configure() {
+        CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
+        ((ZombieControl) catalogService).addResult("getCurrentCatalog", new MockCatalog());
+        bind(CatalogService.class).toInstance(catalogService);
+    }
 }

@@ -44,14 +44,17 @@ public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig
 	@XmlElement(required=false, name="externalMessage")
 	private String externalMessage = "";
 
-    @XmlElement(required=false, name="overrideEntitlementAndChangesBlocked")
-    private Boolean overrideEntitlement = false;
+    @XmlElement(required=false, name="disableEntitlementAndChangesBlocked")
+    private Boolean disableEntitlement = false;
     
-    @XmlElement(required=false, name="changesBlocked")
-    private Boolean changesBlocked = false;
+    @XmlElement(required=false, name="blockChanges")
+    private Boolean blockChanges = false;
     
     @XmlElement(required=false, name="daysBetweenPaymentRetries")
     private Integer daysBetweenPaymentRetries = 8;
+    
+    @XmlElement(required=false, name="isClearState")
+    private Boolean isClearState = false;
     
 	//Other actions could include
 	// - send email
@@ -78,21 +81,19 @@ public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig
 	}
 	
     @Override
-    public boolean changesBlocked() {
-        return changesBlocked && overrideEntitlement;
+    public boolean blockChanges() {
+        return blockChanges || disableEntitlement;
     }
 
 	/* (non-Javadoc)
      * @see com.ning.billing.catalog.overdue.OverdueState#applyCancel()
      */
 	@Override
-    public boolean entitlementDisabledAndChangesBlocked() {
-		return overrideEntitlement;
+    public boolean disableEntitlementAndChangesBlocked() {
+		return disableEntitlement;
 	}
 	
 	
-
-
     protected DefaultCondition<T> getCondition() {
 		return condition;
 	}
@@ -107,10 +108,15 @@ public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig
 		return this;
 	}
 
-	protected DefaultOverdueState<T> setCancel(boolean cancel) {
-		this.overrideEntitlement = cancel;
-		return this;
-	}
+    protected DefaultOverdueState<T> setDisableEntitlement(boolean cancel) {
+        this.disableEntitlement = cancel;
+        return this;
+    }
+
+    protected DefaultOverdueState<T> setBlockChanges(boolean cancel) {
+        this.blockChanges = cancel;
+        return this;
+    }
 
 	protected DefaultOverdueState<T> setCondition(DefaultCondition<T> condition) {
 		this.condition = condition;
@@ -119,7 +125,7 @@ public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig
 
     @Override
     public boolean isClearState() {
-        return false;
+        return isClearState;
     }
 
     @Override

@@ -17,7 +17,6 @@
 package com.ning.billing.entitlement.api.billing;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +32,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
@@ -42,11 +42,13 @@ public class BillCycleDayCalculator {
 	private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 	
 	private final CatalogService catalogService;
+	private final EntitlementUserApi entitlementApi;
 
 	@Inject
-	public BillCycleDayCalculator(final CatalogService catalogService) {
+	public BillCycleDayCalculator(final CatalogService catalogService, final EntitlementUserApi entitlementApi) {
 		super();
 		this.catalogService = catalogService;
+		this.entitlementApi = entitlementApi;
 	}
 
 	protected int calculateBcd(SubscriptionBundle bundle, Subscription subscription, final SubscriptionTransition transition, final Account account) throws CatalogApiException, AccountApiException {
@@ -69,16 +71,16 @@ public class BillCycleDayCalculator {
 						switch (alignment) {
 						case ACCOUNT :
 							result = account.getBillCycleDay();
-
 							if(result == 0) {
 								result = calculateBcdFromSubscription(subscription, plan, account);
 							}
 							break;
 						case BUNDLE :
-							result = bundle.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
+						    Subscription baseSub = entitlementApi.getBaseSubscription(bundle.getId());
+							result = calculateBcdFromSubscription(baseSub, plan, account);
 							break;
 						case SUBSCRIPTION :
-							result = subscription.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
+							result = calculateBcdFromSubscription(subscription, plan, account);
 							break;
 						}
 						if(result == -1) {
@@ -89,26 +91,8 @@ public class BillCycleDayCalculator {
 	}
 
 	private int calculateBcdFromSubscription(Subscription subscription, Plan plan, Account account) throws AccountApiException {
-		int result = account.getBillCycleDay();
-		if(result != 0) {
-			return result;
-		}
-		result = new DateTime(account.getTimeZone()).getDayOfMonth();
-
-		try {
-			result = billCycleDay(subscription.getStartDate(),account.getTimeZone(), plan);
-		} catch (CatalogApiException e) {
-			log.error("Unexpected catalog error encountered when updating BCD",e);
-		}
-		return result;
-	}
-
-	private int billCycleDay(DateTime requestedDate, DateTimeZone timeZone, 
-			Plan plan) throws CatalogApiException {
-
-		DateTime date = plan.dateOfFirstRecurringNonZeroCharge(requestedDate);
-		return date.toDateTime(timeZone).getDayOfMonth();
-
+		DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate());
+		return date.toDateTime(account.getTimeZone()).getDayOfMonth();
 	}
 
 }

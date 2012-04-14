@@ -14,21 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.catalog.overdue;
+package com.ning.billing.entitlement.api.overdue;
 
-import javax.xml.bind.annotation.XmlElement;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
-import com.ning.billing.account.api.Account;
+public interface OverdueChecker {
 
-public class OverdueStatesAccount extends DefaultOverdueStateSet<Account> {
-    
-    @XmlElement(required=false, name="accountOverdueStates")
-    private DefaultOverdueState<Account>[] accountOverdueStates;
+    public void checkBlocked(Subscription subscription)  throws EntitlementUserApiException;
 
-    @Override
-    protected DefaultOverdueState<Account>[] getStates() {
-        return accountOverdueStates;
-    }
-
-
+    public void checkBlocked(SubscriptionBundle bundle) throws EntitlementUserApiException;
 }

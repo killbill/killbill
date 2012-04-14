@@ -18,11 +18,31 @@ package com.ning.billing.catalog.api.overdue;
 
 import java.util.UUID;
 
+import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+
 public interface Overdueable {
 
     public enum Type {
-        ACCOUNT,
-        SUBSCRIPTION_BUNDLE
+        //Not currently supported
+        // ACCOUNT,
+        SUBSCRIPTION_BUNDLE;
+        
+        public static Type get(Overdueable o) throws CatalogApiException{
+            if (o instanceof SubscriptionBundle){
+                return SUBSCRIPTION_BUNDLE;
+            }
+            throw new CatalogApiException(ErrorCode.CAT_NO_OVERDUEABLE_TYPE , o.getClass().getName());
+        }
+        
+        public static Type get(String type) throws CatalogApiException {
+            if (type.equalsIgnoreCase(SUBSCRIPTION_BUNDLE.name())) {
+                return SUBSCRIPTION_BUNDLE;
+            }
+            throw new CatalogApiException(ErrorCode.CAT_NO_OVERDUEABLE_TYPE , type);
+        }
+
     }
 
     public UUID getId();

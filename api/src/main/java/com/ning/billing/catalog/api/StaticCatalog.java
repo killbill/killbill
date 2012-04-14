@@ -81,6 +81,5 @@ public interface StaticCatalog {
     public abstract boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException;
 
     public abstract OverdueStateSet<SubscriptionBundle> currentBundleOverdueStateSet()  throws CatalogApiException;
-    public abstract OverdueStateSet<Account>            currentAccountOverdueStateSet() throws CatalogApiException;
 
 }

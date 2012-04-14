@@ -21,6 +21,8 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
+import com.ning.billing.mock.overdue.MockOverdueAccessModule;
+
 import org.testng.annotations.Test;
 
 public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {

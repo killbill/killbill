@@ -171,6 +171,14 @@ Use Cases to do:
 		</priceList>
 	</rules>
 
+    <overdueRules> 
+      <bundleOverdueStates>
+           <state name="Clear">
+               <isClearState>true</isClearState>
+           </state> 
+       </bundleOverdueStates>
+    </overdueRules>
+
 	<plans>
 		<plan name="pistol-monthly">
 			<product>Pistol</product>

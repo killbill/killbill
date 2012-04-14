@@ -27,8 +27,8 @@ import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.overdue.DefaultEntitlementOverdueApi;
-import com.ning.billing.entitlement.api.overdue.EntitlementOverdueApi;
+import com.ning.billing.entitlement.api.overdue.DefaultOverdueChecker;
+import com.ning.billing.entitlement.api.overdue.OverdueChecker;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionApiService;
@@ -46,6 +46,10 @@ public class EntitlementModule extends AbstractModule {
     protected void installEntitlementDao() {
         bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
     }
+    
+    protected void installOverdueChecker() {
+        bind(OverdueChecker.class).to(DefaultOverdueChecker.class).asEagerSingleton();       
+    }
 
     protected void installEntitlementCore() {
         bind(SubscriptionApiService.class).asEagerSingleton();
@@ -57,7 +61,6 @@ public class EntitlementModule extends AbstractModule {
         bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
         bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
         bind(EntitlementMigrationApi.class).to(DefaultEntitlementMigrationApi.class).asEagerSingleton();
-        bind(EntitlementOverdueApi.class).to(DefaultEntitlementOverdueApi.class).asEagerSingleton();
     }
 
     @Override
@@ -65,5 +68,6 @@ public class EntitlementModule extends AbstractModule {
         installConfig();
         installEntitlementDao();
         installEntitlementCore();
+        installOverdueChecker();
     }
 }
