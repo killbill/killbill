@@ -14,21 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.account.api;
 
-import java.math.BigDecimal;
-import java.util.UUID;
-
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.bus.BusEvent;
 
-public interface InvoiceCreationNotification extends BusEvent {
-    public UUID getInvoiceId();
-    public UUID getAccountId();
-    public BigDecimal getAmountOwed();
-    public Currency getCurrency();
-    public DateTime getInvoiceCreationDate();
+import java.util.UUID;
 
+public interface AccountCreationEvent extends BusEvent {
+	
+    public UUID getId();
+    public AccountData getData();
 }

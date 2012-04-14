@@ -338,7 +338,7 @@ public class TestUserApiAddOn extends TestApiBase {
            assertEquals(aoSubscription.getBundleStartDate(), baseSubscription.getBundleStartDate());
 
            // CHECK next AO PHASE EVENT IS INDEED A MONTH AFTER BP STARTED => BUNDLE ALIGNMENT
-           SubscriptionTransition aoPendingTranstion = aoSubscription.getPendingTransition();
+           SubscriptionEventTransition aoPendingTranstion = aoSubscription.getPendingTransition();
 
            if (expAlignement == PlanAlignmentCreate.START_OF_BUNDLE) {
                assertEquals(aoPendingTranstion.getEffectiveTransitionTime(), baseSubscription.getStartDate().plusMonths(1));

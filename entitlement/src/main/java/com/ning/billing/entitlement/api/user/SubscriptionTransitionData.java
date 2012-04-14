@@ -28,7 +28,7 @@ import org.joda.time.DateTime;
 
 import java.util.UUID;
 
-public class SubscriptionTransitionData implements SubscriptionTransition {
+public class SubscriptionTransitionData implements SubscriptionEventTransition {
 
 
     private final long totalOrdering;

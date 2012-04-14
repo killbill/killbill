@@ -29,6 +29,7 @@ import org.apache.commons.collections.CollectionUtils;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.payment.api.DefaultPaymentInfo;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
 
@@ -97,7 +98,7 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry, CallContext context) {
-        PaymentInfo existingPayment = payments.get(paymentId);
+        DefaultPaymentInfo existingPayment = (DefaultPaymentInfo) payments.get(paymentId);
         if (existingPayment != null) {
             PaymentInfo payment = existingPayment.cloner()
                     .setPaymentMethod(paymentMethodType)

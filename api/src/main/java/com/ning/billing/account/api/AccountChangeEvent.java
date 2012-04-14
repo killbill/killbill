@@ -21,7 +21,7 @@ import com.ning.billing.util.bus.BusEvent;
 import java.util.List;
 import java.util.UUID;
 
-public interface AccountChangeNotification extends BusEvent {
+public interface AccountChangeEvent extends BusEvent {
     public UUID getAccountId();
 
     public List<ChangedField> getChangedFields();

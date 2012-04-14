@@ -20,11 +20,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import com.ning.billing.account.api.AccountChangeNotification;
-import com.ning.billing.account.api.AccountCreationNotification;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.invoice.api.EmptyInvoiceNotification;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.account.api.AccountChangeEvent;
+import com.ning.billing.account.api.AccountCreationEvent;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.invoice.api.EmptyInvoiceEvent;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.util.bus.BusEvent;
@@ -97,19 +97,19 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
         
         switch(curEvent.getBusEventType()) {
         case ACCOUNT_CREATE:
-            onAccountCreation((AccountCreationNotification) curEvent);
+            onAccountCreation((AccountCreationEvent) curEvent);
             break;
         case ACCOUNT_CHANGE:
-            onAccountChange((AccountChangeNotification) curEvent);
+            onAccountChange((AccountChangeEvent) curEvent);
             break;
         case SUBSCRIPTION_TRANSITION:
-            onSubscriptionTransition((SubscriptionTransition) curEvent);
+            onSubscriptionTransition((SubscriptionEventTransition) curEvent);
             break;
         case INVOICE_EMPTY:
-            onEmptyInvoice((EmptyInvoiceNotification) curEvent);
+            onEmptyInvoice((EmptyInvoiceEvent) curEvent);
             break;
         case INVOICE_CREATION:
-            onInvoiceCreation((InvoiceCreationNotification) curEvent);
+            onInvoiceCreation((InvoiceCreationEvent) curEvent);
             break;
         case PAYMENT_INFO:
             onPaymentInfo((PaymentInfo) curEvent);
@@ -127,23 +127,23 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
      * Default no-op implementation so as to not have to implement all callbacks
      */
     @Override
-    public void onAccountCreation(final AccountCreationNotification curEvent) {
+    public void onAccountCreation(final AccountCreationEvent curEvent) {
     }
 
     @Override
-    public void onAccountChange(final AccountChangeNotification curEvent) {
+    public void onAccountChange(final AccountChangeEvent curEvent) {
     }
 
     @Override
-    public void onSubscriptionTransition(final SubscriptionTransition curEvent) {
+    public void onSubscriptionTransition(final SubscriptionEventTransition curEvent) {
     }
 
     @Override
-    public void onEmptyInvoice(final EmptyInvoiceNotification curEvent) {
+    public void onEmptyInvoice(final EmptyInvoiceEvent curEvent) {
     }
     
     @Override
-    public void onInvoiceCreation(final InvoiceCreationNotification curEvent) {
+    public void onInvoiceCreation(final InvoiceCreationEvent curEvent) {
     }
 
     @Override

@@ -68,7 +68,7 @@ public interface Subscription extends ExtendedEntity {
 
     public ProductCategory getCategory();
 
-    public SubscriptionTransition getPendingTransition();
+    public SubscriptionEventTransition getPendingTransition();
 
-    public SubscriptionTransition getPreviousTransition();
+    public SubscriptionEventTransition getPreviousTransition();
 }

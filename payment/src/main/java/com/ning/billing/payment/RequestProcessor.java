@@ -31,7 +31,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentError;
@@ -62,7 +62,7 @@ public class RequestProcessor {
     }
 
     @Subscribe
-    public void receiveInvoice(InvoiceCreationNotification event) {
+    public void receiveInvoice(InvoiceCreationEvent event) {
         log.info("Received invoice creation notification for account {} and invoice {}", event.getAccountId(), event.getInvoiceId());
         try {
             final Account account = accountUserApi.getAccountById(event.getAccountId());

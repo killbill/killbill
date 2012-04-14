@@ -23,7 +23,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 
@@ -129,7 +129,7 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public SubscriptionTransition getPendingTransition() {
+    public SubscriptionEventTransition getPendingTransition() {
         throw new UnsupportedOperationException();
     }
 
@@ -144,7 +144,7 @@ public class MockSubscription implements Subscription
 	}
 
     @Override
-    public SubscriptionTransition getPreviousTransition() {
+    public SubscriptionEventTransition getPreviousTransition() {
         return null;
     }
 

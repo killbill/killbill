@@ -42,6 +42,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import org.skife.jdbi.v2.unstable.BindIn;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.DefaultPaymentInfo;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfo;
 
@@ -194,7 +195,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
 
             UUID userToken = null; //rs.getString("user_token") != null ? UUID.fromString(rs.getString("user_token")) : null;
             
-            return new PaymentInfo(paymentId,
+            return new DefaultPaymentInfo(paymentId,
                                    amount,
                                    refundAmount,
                                    bankIdentificationNumber,

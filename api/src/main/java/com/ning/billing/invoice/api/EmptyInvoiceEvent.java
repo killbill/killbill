@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,11 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
-package com.ning.billing.payment.util;
+package com.ning.billing.invoice.api;
 
 import com.ning.billing.util.bus.BusEvent;
 
-public interface EventBusRequest<T> extends BusEvent {
-    T getId();
+public interface EmptyInvoiceEvent extends BusEvent {
+
 }

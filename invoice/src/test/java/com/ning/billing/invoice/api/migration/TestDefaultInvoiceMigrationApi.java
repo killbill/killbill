@@ -53,7 +53,7 @@ import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.TestInvoiceDispatcher;
 import com.ning.billing.invoice.api.Invoice;

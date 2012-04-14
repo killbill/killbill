@@ -19,9 +19,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.invoice.api.EmptyInvoiceNotification;
+import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 
-public class DefaultEmptyInvoiceNotification implements EmptyInvoiceNotification {
+public class DefaultEmptyInvoiceNotification implements EmptyInvoiceEvent {
 
     private final UUID accountId;
     private final DateTime processingDate;

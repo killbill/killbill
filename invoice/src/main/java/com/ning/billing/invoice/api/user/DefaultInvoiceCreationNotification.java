@@ -22,10 +22,10 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
 
-public class DefaultInvoiceCreationNotification implements InvoiceCreationNotification {
+public class DefaultInvoiceCreationNotification implements InvoiceCreationEvent {
 	
     private final UUID invoiceId;
     private final UUID accountId;

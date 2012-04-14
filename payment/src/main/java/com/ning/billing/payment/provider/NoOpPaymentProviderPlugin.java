@@ -25,6 +25,8 @@ import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.payment.api.DefaultPaymentError;
+import com.ning.billing.payment.api.DefaultPaymentInfo;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
@@ -35,7 +37,7 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice) {
-        PaymentInfo payment = new PaymentInfo.Builder()
+        PaymentInfo payment = new DefaultPaymentInfo.Builder()
                                              .setPaymentId(UUID.randomUUID().toString())
                                              .setAmount(invoice.getBalance())
                                              .setStatus("Processed")
@@ -53,7 +55,7 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
     public Either<PaymentError, String> createPaymentProviderAccount(Account account) {
-        return Either.left(new PaymentError("unsupported",
+        return Either.left((PaymentError) new DefaultPaymentError("unsupported",
                                             "Account creation not supported in this plugin",
                                             account.getId(),
                                             null, null));

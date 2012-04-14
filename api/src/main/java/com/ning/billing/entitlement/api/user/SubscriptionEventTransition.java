@@ -24,7 +24,7 @@ import org.joda.time.DateTime;
 
 import java.util.UUID;
 
-public interface SubscriptionTransition extends BusEvent {
+public interface SubscriptionEventTransition extends BusEvent {
 
     public enum SubscriptionTransitionType {
         MIGRATE_ENTITLEMENT,

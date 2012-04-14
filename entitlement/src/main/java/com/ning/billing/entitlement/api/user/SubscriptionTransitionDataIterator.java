@@ -19,7 +19,7 @@ package com.ning.billing.entitlement.api.user;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
 

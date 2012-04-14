@@ -294,7 +294,7 @@ public class SubscriptionApiService {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_FUTURE_DATE, requestedDate.toString());
         }
 
-        SubscriptionTransition previousTransition = subscription.getPreviousTransition();
+        SubscriptionEventTransition previousTransition = subscription.getPreviousTransition();
         if (previousTransition.getEffectiveTransitionTime().isAfter(requestedDate)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE,
                     requestedDate.toString(), previousTransition.getEffectiveTransitionTime());

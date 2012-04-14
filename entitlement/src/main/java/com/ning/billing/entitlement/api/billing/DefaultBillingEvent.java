@@ -24,8 +24,8 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 
 import java.math.BigDecimal;
@@ -45,7 +45,7 @@ public class DefaultBillingEvent implements BillingEvent {
     final private SubscriptionTransitionType type;
     final private Long totalOrdering;
 
-    public DefaultBillingEvent(SubscriptionTransition transition, Subscription subscription, int billCycleDay, Currency currency) throws CatalogApiException {
+    public DefaultBillingEvent(SubscriptionEventTransition transition, Subscription subscription, int billCycleDay, Currency currency) throws CatalogApiException {
         this.billCycleDay = billCycleDay;
         this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();

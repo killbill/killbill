@@ -25,7 +25,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Kind;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Order;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.TimeLimit;
@@ -155,7 +155,7 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
 
     @Override
     public DateTime getEndDate() {
-        SubscriptionTransition latestTransition = getPreviousTransition();
+        SubscriptionEventTransition latestTransition = getPreviousTransition();
         if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
             return latestTransition.getEffectiveTransitionTime();
         }
@@ -185,12 +185,12 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
         return apiService.recreatePlan(this, spec, requestedDate, context);
     }
 
-    public List<SubscriptionTransition> getBillingTransitions() {
+    public List<SubscriptionEventTransition> getBillingTransitions() {
 
         if (transitions == null) {
             return Collections.emptyList();
         }
-        List<SubscriptionTransition> result = new ArrayList<SubscriptionTransition>();
+        List<SubscriptionEventTransition> result = new ArrayList<SubscriptionEventTransition>();
         SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions,
                 Order.ASC_FROM_PAST, Kind.BILLING, Visibility.ALL, TimeLimit.ALL);
         while (it.hasNext()) {
@@ -200,7 +200,7 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
     }
 
     @Override
-    public SubscriptionTransition getPendingTransition() {
+    public SubscriptionEventTransition getPendingTransition() {
 
         if (transitions == null) {
             return null;
@@ -211,7 +211,7 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
     }
 
     @Override
-    public SubscriptionTransition getPreviousTransition() {
+    public SubscriptionEventTransition getPreviousTransition() {
         if (transitions == null) {
             return null;
         }
@@ -220,11 +220,11 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
         return it.hasNext() ? it.next() : null;
     }
 
-    public SubscriptionTransition getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
+    public SubscriptionEventTransition getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
         if (transitions == null || event == null) {
             return null;
         }
-        for (SubscriptionTransition cur : transitions) {
+        for (SubscriptionEventTransition cur : transitions) {
             if (cur.getId().equals(event.getId())) {
                 return new SubscriptionTransitionData((SubscriptionTransitionData) cur, seqId);
             }

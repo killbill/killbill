@@ -49,9 +49,9 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.invoice.api.EmptyInvoiceNotification;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.invoice.api.EmptyInvoiceEvent;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -237,17 +237,17 @@ public class SubscriptionResource implements BaseJaxrsResource{
             super(userToken);
         }
         @Override
-        public void onSubscriptionTransition(SubscriptionTransition curEvent) {
+        public void onSubscriptionTransition(SubscriptionEventTransition curEvent) {
             log.info(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ", 
                     curEvent.getUserToken(), curEvent.getTransitionType(),  curEvent.getRemainingEventsForUserOperation())); 
         }
         @Override
-        public void onEmptyInvoice(final EmptyInvoiceNotification curEvent) {
+        public void onEmptyInvoice(final EmptyInvoiceEvent curEvent) {
             log.info(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken())); 
             notifyForCompletion();
         }
         @Override
-        public void onInvoiceCreation(InvoiceCreationNotification curEvent) {
+        public void onInvoiceCreation(InvoiceCreationEvent curEvent) {
             log.info(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken())); 
             if (curEvent.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
                 notifyForCompletion();

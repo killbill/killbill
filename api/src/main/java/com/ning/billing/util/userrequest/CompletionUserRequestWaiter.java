@@ -19,11 +19,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import com.ning.billing.account.api.AccountChangeNotification;
-import com.ning.billing.account.api.AccountCreationNotification;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.invoice.api.EmptyInvoiceNotification;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.account.api.AccountChangeEvent;
+import com.ning.billing.account.api.AccountCreationEvent;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.invoice.api.EmptyInvoiceEvent;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
 import com.ning.billing.util.bus.BusEvent;
@@ -32,15 +32,15 @@ public interface CompletionUserRequestWaiter {
 
     public List<BusEvent> waitForCompletion(final long timeoutMilliSec) throws InterruptedException, TimeoutException;
     
-    public void onAccountCreation(final AccountCreationNotification curEvent);
+    public void onAccountCreation(final AccountCreationEvent curEvent);
 
-    public void onAccountChange(final AccountChangeNotification curEvent);
+    public void onAccountChange(final AccountChangeEvent curEvent);
 
-    public void onSubscriptionTransition(final SubscriptionTransition curEvent);    
+    public void onSubscriptionTransition(final SubscriptionEventTransition curEvent);    
 
-    public void onInvoiceCreation(final InvoiceCreationNotification curEvent);    
+    public void onInvoiceCreation(final InvoiceCreationEvent curEvent);    
     
-    public void onEmptyInvoice(final EmptyInvoiceNotification curEvent);        
+    public void onEmptyInvoice(final EmptyInvoiceEvent curEvent);        
 
     public void onPaymentInfo(final PaymentInfo curEvent);    
 

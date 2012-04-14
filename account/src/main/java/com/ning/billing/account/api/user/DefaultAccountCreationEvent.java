@@ -17,13 +17,13 @@
 package com.ning.billing.account.api.user;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountCreationNotification;
+import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 import java.util.UUID;
 
-public class DefaultAccountCreationEvent implements AccountCreationNotification {
+public class DefaultAccountCreationEvent implements AccountCreationEvent {
 	
 	private final UUID userToken;	
     private final UUID id;

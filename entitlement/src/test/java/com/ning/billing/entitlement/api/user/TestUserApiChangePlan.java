@@ -467,7 +467,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             DateTime expectedNextPhaseDate =  subscription.getStartDate().plusDays(30).plusMonths(6);
-            SubscriptionTransition nextPhase = subscription.getPendingTransition();
+            SubscriptionEventTransition nextPhase = subscription.getPendingTransition();
             DateTime nextPhaseEffectiveDate = nextPhase.getEffectiveTransitionTime();
 
             assertEquals(nextPhaseEffectiveDate, expectedNextPhaseDate);

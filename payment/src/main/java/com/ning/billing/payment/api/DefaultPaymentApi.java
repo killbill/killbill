@@ -140,8 +140,8 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Either<PaymentError, PaymentInfo> createPaymentForPaymentAttempt(UUID paymentAttemptId, CallContext context) {
+        
         PaymentAttempt paymentAttempt = paymentDao.getPaymentAttemptById(paymentAttemptId);
-
         if (paymentAttempt != null) {
             Invoice invoice = invoicePaymentApi.getInvoice(paymentAttempt.getInvoiceId());
             Account account = accountUserApi.getAccountById(paymentAttempt.getAccountId());
@@ -150,11 +150,11 @@ public class DefaultPaymentApi implements PaymentApi {
                 if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
                     // TODO: send a notification that invoice was ignored?
                     log.info("Received invoice for payment with outstanding amount of 0 {} ", invoice);
-                    return Either.left(new PaymentError("invoice_balance_0",
-                                                        "Invoice balance was 0 or less",
-                                                        paymentAttempt.getAccountId(),
-                                                        paymentAttempt.getInvoiceId(),
-                                                        context.getUserToken()));
+                    return Either.left((PaymentError) new DefaultPaymentError("invoice_balance_0",
+                            "Invoice balance was 0 or less",
+                            paymentAttempt.getAccountId(),
+                            paymentAttempt.getInvoiceId(),
+                            context.getUserToken()));
                 }
                 else {
                     PaymentAttempt newPaymentAttempt = new PaymentAttempt.Builder(paymentAttempt)
@@ -167,11 +167,11 @@ public class DefaultPaymentApi implements PaymentApi {
                 }
             }
         }
-        return Either.left(new PaymentError("retry_payment_error",
-                                            "Could not load payment attempt, invoice or account for id " + paymentAttemptId,
-                                            paymentAttempt.getAccountId(),
-                                            paymentAttempt.getInvoiceId(),
-                                            context.getUserToken()));
+        return Either.left((PaymentError) new DefaultPaymentError("retry_payment_error",
+                "Could not load payment attempt, invoice or account for id " + paymentAttemptId,
+                paymentAttempt.getAccountId(),
+                paymentAttempt.getInvoiceId(),
+                context.getUserToken()));
     }
 
     @Override
@@ -186,7 +186,7 @@ public class DefaultPaymentApi implements PaymentApi {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
                 // TODO: send a notification that invoice was ignored?
                 log.info("Received invoice for payment with balance of 0 {} ", invoice);
-                Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("invoice_balance_0",
+                Either<PaymentError, PaymentInfo> result = Either.left((PaymentError) new DefaultPaymentError("invoice_balance_0",
                                                                                         "Invoice balance was 0 or less",
                                                                                         account.getId(),
                                                                                         UUID.fromString(invoiceId),
@@ -195,7 +195,7 @@ public class DefaultPaymentApi implements PaymentApi {
             }
             else if (invoice.isMigrationInvoice()) {
             	log.info("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
-            	Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("migration invoice",
+            	Either<PaymentError, PaymentInfo> result = Either.left((PaymentError) new DefaultPaymentError("migration invoice",
                         "Invoice balance was a migration invoice",
                         account.getId(),
                         UUID.fromString(invoiceId),

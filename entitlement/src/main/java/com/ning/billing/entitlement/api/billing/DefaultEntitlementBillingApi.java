@@ -55,8 +55,8 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
 
@@ -92,7 +92,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         	List<Subscription> subscriptions = entitlementDao.getSubscriptions(subscriptionFactory, bundle.getId());
 
         	for (final Subscription subscription: subscriptions) {
-        		for (final SubscriptionTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
+        		for (final SubscriptionEventTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
         			try {
         				BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBcd(bundle, subscription, transition, accountId), currency);
         				result.add(event);
@@ -114,7 +114,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     }
 
     private int calculateBcd(final SubscriptionBundle bundle, final Subscription subscription,
-                             final SubscriptionTransition transition, final UUID accountId) throws CatalogApiException, AccountApiException {
+                             final SubscriptionEventTransition transition, final UUID accountId) throws CatalogApiException, AccountApiException {
     	Catalog catalog = catalogService.getFullCatalog();
     	Plan plan =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
     	        transition.getNextPlan() : transition.getPreviousPlan();
