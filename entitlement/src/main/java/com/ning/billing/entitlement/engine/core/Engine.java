@@ -18,9 +18,13 @@ package com.ning.billing.entitlement.engine.core;
 
 
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 import com.ning.billing.util.callcontext.CallContext;
@@ -73,6 +77,7 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 
 public class Engine implements EventListener, EntitlementService {
 
+	
     public static final String NOTIFICATION_QUEUE_NAME = "subscription-events";
     public static final String ENTITLEMENT_SERVICE_NAME = "entitlement-service";
 
@@ -129,15 +134,21 @@ public class Engine implements EventListener, EntitlementService {
                     NOTIFICATION_QUEUE_NAME,
                     new NotificationQueueHandler() {
                 @Override
-                public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
-                    EntitlementEvent event = dao.getEventById(UUID.fromString(notificationKey));
+                public void handleReadyNotification(final String inputKey, final DateTime eventDateTime) {
+                	
+                	EntitlementNotificationKey key = new EntitlementNotificationKey(inputKey);
+                    final EntitlementEvent event = dao.getEventById(key.getEventId());
                     if (event == null) {
-                        log.warn("Failed to extract event for notification key {}", notificationKey);
-                    } else {
-                        final CallContext context = factory.createCallContext("SubscriptionEventQueue", CallOrigin.INTERNAL, UserType.SYSTEM);
-                        processEventReady(event, context);
+                        log.warn("Failed to extract event for notification key {}", inputKey);
+                        return;
                     }
+                    final UUID userToken =  (event.getType() == EventType.API_USER) ? ((ApiEvent) event).getUserToken() : null;
+                    final CallContext context = factory.createCallContext("SubscriptionEventQueue", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
+                    processEventReady(event, key.getSeqId(), context);
                 }
+                
+    
+
             },
             new NotificationConfig() {
                 @Override
@@ -192,7 +203,7 @@ public class Engine implements EventListener, EntitlementService {
 
 
     @Override
-    public void processEventReady(EntitlementEvent event, CallContext context) {
+    public void processEventReady(final EntitlementEvent event, final int seqId, final CallContext context) {
         if (!event.isActive()) {
             return;
         }
@@ -204,14 +215,16 @@ public class Engine implements EventListener, EntitlementService {
         //
         // Do any internal processing on that event before we send the event to the bus
         //
+        
+        int theRealSeqId = seqId;
         if (event.getType() == EventType.PHASE) {
             onPhaseEvent(subscription, context);
         } else if (event.getType() == EventType.API_USER &&
                 subscription.getCategory() == ProductCategory.BASE) {
-            onBasePlanEvent(subscription, (ApiEvent) event, context);
+        	theRealSeqId = onBasePlanEvent(subscription, (ApiEvent) event, context);
         }
         try {
-            eventBus.post(subscription.getTransitionFromEvent(event));
+            eventBus.post(subscription.getTransitionFromEvent(event, theRealSeqId));
         } catch (EventBusException e) {
             log.warn("Failed to post entitlement event " + event, e);
         }
@@ -233,7 +246,7 @@ public class Engine implements EventListener, EntitlementService {
         }
     }
 
-    private void onBasePlanEvent(SubscriptionData baseSubscription, ApiEvent event, CallContext context) {
+    private int onBasePlanEvent(SubscriptionData baseSubscription, ApiEvent event, CallContext context) {
 
         DateTime now = clock.getUTCNow();
 
@@ -242,6 +255,9 @@ public class Engine implements EventListener, EntitlementService {
 
         List<Subscription> subscriptions = dao.getSubscriptions(subscriptionFactory, baseSubscription.getBundleId());
 
+        
+        Map<UUID, EntitlementEvent> addOnCancellations = new HashMap<UUID, EntitlementEvent>();
+        
         Iterator<Subscription> it = subscriptions.iterator();
         while (it.hasNext()) {
             SubscriptionData cur = (SubscriptionData) it.next();
@@ -262,9 +278,18 @@ public class Engine implements EventListener, EntitlementService {
                 .setProcessedDate(now)
                 .setEffectiveDate(event.getEffectiveDate())
                 .setRequestedDate(now)
+                .setUserToken(context.getUserToken())
                 .setFromDisk(true));
-                dao.cancelSubscription(cur.getId(), cancelEvent, context);
+                
+                addOnCancellations.put(cur.getId(), cancelEvent);
             }
         }
+        final int addOnSize = addOnCancellations.size();
+        int cancelSeq = addOnSize - 1;
+        for (final UUID key : addOnCancellations.keySet()) {
+            dao.cancelSubscription(key, addOnCancellations.get(key), context, cancelSeq);
+            cancelSeq--;
+        }
+        return addOnSize;
     }
 }

@@ -16,10 +16,14 @@
 
 package com.ning.billing.util.callcontext;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 public interface CallContextFactory {
-    CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType);
+    CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType, UUID userToken);
+    
+    CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType);    
 
     CallContext createMigrationCallContext(String userName, CallOrigin callOrigin, UserType userType, DateTime createdDate, DateTime updatedDate);
 

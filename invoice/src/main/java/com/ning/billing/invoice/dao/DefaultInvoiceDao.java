@@ -194,7 +194,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
         InvoiceCreationNotification event;
         event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
                                                       invoice.getBalance(), invoice.getCurrency(),
-                                                      invoice.getInvoiceDate());
+                                                      invoice.getInvoiceDate(),
+                                                      context.getUserToken());
         try {
             eventBus.post(event);
         } catch (Bus.EventBusException e) {

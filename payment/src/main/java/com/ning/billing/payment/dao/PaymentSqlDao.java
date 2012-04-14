@@ -187,11 +187,13 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             String paymentMethodId = rs.getString("payment_method_id");
             String paymentMethod = rs.getString("payment_method");
             String cardType = rs.getString("card_type");
-            String cardCountry = rs.getString("card_country");
+            String cardCountry = rs.getString("card_country");            
             DateTime effectiveDate = getDate(rs, "effective_dt");
             DateTime createdDate = getDate(rs, "created_dt");
             DateTime updatedDate = getDate(rs, "updated_dt");
 
+            UUID userToken = null; //rs.getString("user_token") != null ? UUID.fromString(rs.getString("user_token")) : null;
+            
             return new PaymentInfo(paymentId,
                                    amount,
                                    refundAmount,
@@ -204,6 +206,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
                                    paymentMethod,
                                    cardType,
                                    cardCountry,
+                                   userToken,
                                    effectiveDate,
                                    createdDate,
                                    updatedDate);

@@ -282,7 +282,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
 
     @Override
     public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent,
-                                   final CallContext context) {
+                                   final CallContext context, final int seqId) {
         synchronized (cancelEvent) {
             cancelNextPhaseEvent(subscriptionId);
             insertEvent(cancelEvent);

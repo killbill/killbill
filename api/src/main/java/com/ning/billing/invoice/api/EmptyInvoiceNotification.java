@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,15 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.invoice.api;
 
-package com.ning.billing.entitlement.engine.core;
+import com.ning.billing.util.bus.BusEvent;
 
-import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.util.callcontext.CallContext;
-
-
-public interface EventListener {
-
-    public void processEventReady(final EntitlementEvent event, final int seqId, final CallContext context);
+public interface EmptyInvoiceNotification extends BusEvent {
 
 }

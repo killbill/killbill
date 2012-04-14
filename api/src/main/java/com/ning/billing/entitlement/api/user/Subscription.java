@@ -31,16 +31,16 @@ import java.util.UUID;
 
 public interface Subscription extends ExtendedEntity {
 
-    public void cancel(DateTime requestedDate, boolean eot, CallContext context)
+    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context)
     throws EntitlementUserApiException;
 
-    public void uncancel(CallContext context)
+    public boolean uncancel(CallContext context)
     throws EntitlementUserApiException;
 
-    public void changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate, CallContext context)
+    public boolean changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate, CallContext context)
         throws EntitlementUserApiException;
 
-    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
+    public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
         throws EntitlementUserApiException;
 
     public enum SubscriptionState {

@@ -226,6 +226,7 @@ public class TestAnalyticsService {
                 phase,
                 priceList,
                 1L,
+                null,
                 true
         );
         expectedTransition = new BusinessSubscriptionTransition(
@@ -240,7 +241,7 @@ public class TestAnalyticsService {
     }
 
     private void createAccountCreationEvent(final Account account) {
-        accountCreationNotification = new DefaultAccountCreationEvent(account);
+        accountCreationNotification = new DefaultAccountCreationEvent(account, null);
     }
 
     private void createInvoiceAndPaymentCreationEvents(final Account account) {
@@ -257,7 +258,7 @@ public class TestAnalyticsService {
 
         // It doesn't really matter what the events contain - the listener will go back to the db
         invoiceCreationNotification = new DefaultInvoiceCreationNotification(invoice.getId(), account.getId(),
-                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow());
+                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow(), null);
 
         paymentInfoNotification = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
         final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,

@@ -16,6 +16,8 @@
 
 package com.ning.billing.entitlement.events.user;
 
+import java.util.UUID;
+
 import com.ning.billing.entitlement.events.EventBaseBuilder;
 
 public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
@@ -24,6 +26,7 @@ public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
     private String eventPlan;
     private String eventPlanPhase;
     private String eventPriceList;
+    private UUID userToken;
     private boolean fromDisk;
 
 
@@ -50,11 +53,21 @@ public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
     public String getEventPriceList() {
         return eventPriceList;
     }
+    
+    public UUID getUserToken() {
+    	return userToken;
+    }
 
     public boolean isFromDisk() {
         return fromDisk;
     }
 
+    public ApiEventBuilder setUserToken(UUID userToken) {
+        this.userToken = userToken;
+        return this;
+    }
+
+    
     public ApiEventBuilder setFromDisk(boolean fromDisk) {
         this.fromDisk = fromDisk;
         return this;

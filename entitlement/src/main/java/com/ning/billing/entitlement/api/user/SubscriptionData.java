@@ -164,25 +164,25 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
 
 
     @Override
-    public void cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException  {
-        apiService.cancel(this, requestedDate, eot, context);
+    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException  {
+        return apiService.cancel(this, requestedDate, eot, context);
     }
 
     @Override
-    public void uncancel(CallContext context) throws EntitlementUserApiException {
-        apiService.uncancel(this, context);
+    public boolean uncancel(CallContext context) throws EntitlementUserApiException {
+        return apiService.uncancel(this, context);
     }
 
     @Override
-    public void changePlan(String productName, BillingPeriod term,
+    public boolean changePlan(String productName, BillingPeriod term,
             String priceList, DateTime requestedDate, CallContext context) throws EntitlementUserApiException {
-        apiService.changePlan(this, productName, term, priceList, requestedDate, context);
+        return apiService.changePlan(this, productName, term, priceList, requestedDate, context);
     }
 
     @Override
-    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
+    public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
             throws EntitlementUserApiException {
-        apiService.recreatePlan(this, spec, requestedDate, context);
+        return apiService.recreatePlan(this, spec, requestedDate, context);
     }
 
     public List<SubscriptionTransition> getBillingTransitions() {
@@ -220,13 +220,13 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
         return it.hasNext() ? it.next() : null;
     }
 
-    public SubscriptionTransition getTransitionFromEvent(EntitlementEvent event) {
+    public SubscriptionTransition getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
         if (transitions == null || event == null) {
             return null;
         }
         for (SubscriptionTransition cur : transitions) {
             if (cur.getId().equals(event.getId())) {
-                return cur;
+                return new SubscriptionTransitionData((SubscriptionTransitionData) cur, seqId);
             }
         }
         return null;
@@ -337,7 +337,8 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
         String nextPlanName = null;
         String nextPhaseName = null;
         String nextPriceList = null;
-
+        UUID nextUserToken = null;
+        
         SubscriptionState previousState = null;
         String previousPriceList = null;
 
@@ -366,6 +367,8 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
                 ApiEvent userEV = (ApiEvent) cur;
                 apiEventType = userEV.getEventType();
                 isFromDisk = userEV.isFromDisk();
+                nextUserToken = userEV.getUserToken();
+                
                 switch(apiEventType) {
                 case MIGRATE_BILLING:
                 case MIGRATE_ENTITLEMENT:
@@ -428,7 +431,9 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
                         nextPhase,
                         nextPriceList,
                         cur.getTotalOrdering(),
+                        nextUserToken,
                         isFromDisk);
+
             transitions.add(transition);
 
             previousState = nextState;

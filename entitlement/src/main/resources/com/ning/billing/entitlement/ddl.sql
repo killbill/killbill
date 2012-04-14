@@ -13,6 +13,7 @@ CREATE TABLE entitlement_events (
     plan_name varchar(64) DEFAULT NULL,
     phase_name varchar(128) DEFAULT NULL,
     plist_name varchar(64) DEFAULT NULL,
+    user_token char(36),
     current_version int(11) DEFAULT 1,
     is_active bool DEFAULT 1,
     PRIMARY KEY(id)

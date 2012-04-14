@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.bus;
 
+import java.util.UUID;
+
 import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +57,11 @@ public class TestEventBus {
 		public BusEventType getBusEventType() {
 			return null;
 		}
+
+		@Override
+		public UUID getUserToken() {
+			return null;
+		}
     }
 
     public static final class MyOtherEvent implements BusEvent {
@@ -68,6 +75,11 @@ public class TestEventBus {
 
 		@Override
 		public BusEventType getBusEventType() {
+			return null;
+		}
+
+		@Override
+		public UUID getUserToken() {
 			return null;
 		}
     }

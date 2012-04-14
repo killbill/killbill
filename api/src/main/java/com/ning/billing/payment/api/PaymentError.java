@@ -26,32 +26,45 @@ import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 @JsonTypeInfo(use = Id.NAME, property = "error")
 public class PaymentError implements BusEvent {
+	
     private final String type;
     private final String message;
     private final UUID accountId;
     private final UUID invoiceId;
+    private final UUID userToken;
 
-    public PaymentError(PaymentError src, UUID accountId, UUID invoiceId) {
+    public PaymentError(final PaymentError src, final UUID accountId, final UUID invoiceId) {
         this.type = src.type;
         this.message = src.message;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
+        this.userToken = src.userToken;
     }
 
-    public PaymentError(String type, String message, UUID accountId, UUID invoiceId) {
+    public PaymentError(String type, String message, UUID accountId, UUID invoiceId, UUID userToken) {
         this.type = type;
         this.message = message;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
+        this.userToken = userToken;        
     }
 
     public PaymentError(String type, String message) {
-        this.type = type;
-        this.message = message;
-        this.accountId = null;
-        this.invoiceId = null;
+    	this(type, message, null, null, null);
     }
 
+    @JsonIgnore
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.PAYMENT_ERROR;
+	}
+
+    @Override
+    public UUID getUserToken() {
+    	return userToken;
+    }
+
+    
     public String getType() {
         return type;
     }
@@ -119,12 +132,4 @@ public class PaymentError implements BusEvent {
     public String toString() {
         return "PaymentError [type=" + type + ", message=" + message + ", accountId=" + accountId + ", invoiceId=" + invoiceId + "]";
     }
-    
-    @JsonIgnore
-	@Override
-	public BusEventType getBusEventType() {
-		return BusEventType.PAYMENT_ERROR;
-	}
-
-
 }

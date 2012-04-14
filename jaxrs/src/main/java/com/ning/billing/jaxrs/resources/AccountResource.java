@@ -131,7 +131,7 @@ public class AccountResource implements BaseJaxrsResource {
         try {
         	
             AccountData data = json.toAccountData();
-            final Account account = accountApi.createAccount(data, null, null, context.getContext());
+            final Account account = accountApi.createAccount(data, null, null, context.createContext());
             URI uri = UriBuilder.fromPath(account.getId().toString()).build();
             return uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
         } catch (AccountApiException e) {
@@ -148,7 +148,7 @@ public class AccountResource implements BaseJaxrsResource {
         try {
             AccountData data = json.toAccountData();
             UUID uuid = UUID.fromString(accountId);
-            accountApi.updateAccount(uuid, data, context.getContext());
+            accountApi.updateAccount(uuid, data, context.createContext());
             return getAccount(accountId);
         } catch (AccountApiException e) {
         	if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {

@@ -45,7 +45,11 @@ public class InvoiceListener {
     @Subscribe
     public void handleSubscriptionTransition(final SubscriptionTransition transition) {
         try {
-            CallContext context = factory.createCallContext("Transition", CallOrigin.INTERNAL, UserType.SYSTEM);
+            if (transition.getRemainingEventsForUserOperation() > 0) {
+                // Skip invoice generation as there is more coming...
+                return;
+            }
+            CallContext context = factory.createCallContext("Transition", CallOrigin.INTERNAL, UserType.SYSTEM, transition.getUserToken());
         	dispatcher.processSubscription(transition, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());

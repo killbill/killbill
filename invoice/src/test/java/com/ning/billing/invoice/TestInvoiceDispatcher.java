@@ -157,7 +157,7 @@ public class TestInvoiceDispatcher {
 
 		DateTime target = new DateTime();
 
-		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);
+		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker, busService.getBus(), clock);
 
 		Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
 		Assert.assertNotNull(invoice);

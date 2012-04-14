@@ -15,6 +15,8 @@
  */
 package com.ning.billing.jaxrs.util;
 
+import java.util.UUID;
+
 import com.google.inject.Inject;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
@@ -36,7 +38,7 @@ public class Context {
     }
 
     // Simplistic until we decide how to populate that
-    public CallContext getContext() {
-        return contextFactory.createCallContext("Unknown", origin, userType);
+    public CallContext createContext() {
+        return contextFactory.createCallContext("Unknown", origin, userType, UUID.randomUUID());
     }
 }

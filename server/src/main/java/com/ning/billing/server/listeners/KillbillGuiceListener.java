@@ -17,17 +17,15 @@ package com.ning.billing.server.listeners;
 
 
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.server.config.KillbillServerConfig;
 import com.ning.billing.server.healthchecks.KillbillHealthcheck;
 import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.bus.BusService;
 import com.ning.jetty.base.modules.ServerModuleBuilder;
 import com.ning.jetty.core.listeners.SetupServer;
 
-import com.google.common.eventbus.Subscribe;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
@@ -71,8 +69,7 @@ public class KillbillGuiceListener extends SetupServer
         theInjector = injector(event);
         killbillLifecycle = theInjector.getInstance(DefaultLifecycle.class);
         killbillBusService = theInjector.getInstance(BusService.class);
-
-        killbilleventHandler = new KillbillEventHandler();
+        killbilleventHandler = theInjector.getInstance(KillbillEventHandler.class); 
 
         //
         // Fire all Startup levels up to service start
@@ -115,22 +112,5 @@ public class KillbillGuiceListener extends SetupServer
 
         // Complete shutdown sequence
         killbillLifecycle.fireShutdownSequencePostEventUnRegistration();
-    }
-
-
-    //
-    // At this point we have one generic handler in IRS that could dispatch notifications to the various pieces
-    // interested but we could the various pieces register their own handler directly
-    //
-    public static class KillbillEventHandler
-    {
-        /*
-         * IRS event handler for killbill entitlement events
-         */
-        @Subscribe
-        public void handleEntitlementevents(BusEvent event)
-        {
-            logger.info("Killbill entitlement event {}", event.toString());
-        }
     }
 }

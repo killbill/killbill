@@ -54,6 +54,11 @@ public class TestSyncWaitOnEventBus {
 		public BusEventType getBusEventType() {
 			return null;
 		}
+
+		@Override
+		public UUID getUserToken() {
+			return null;
+		}
     }
 
     private static final class TestResponse implements EventBusResponse<UUID> {
@@ -76,6 +81,10 @@ public class TestSyncWaitOnEventBus {
 
 		@Override
 		public BusEventType getBusEventType() {
+			return null;
+		}
+		@Override
+		public UUID getUserToken() {
 			return null;
 		}
     }

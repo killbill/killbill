@@ -134,7 +134,7 @@ public class AuditedAccountDao implements AccountDao {
 
                     saveTagsFromWithinTransaction(account, transactionalDao, context);
                     saveCustomFieldsFromWithinTransaction(account, transactionalDao, context);
-                    AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
+                    AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account, context.getUserToken());
                     eventBus.post(creationEvent);
                     return null;
                 }
@@ -180,7 +180,7 @@ public class AuditedAccountDao implements AccountDao {
                     saveTagsFromWithinTransaction(account, accountSqlDao, context);
                     saveCustomFieldsFromWithinTransaction(account, accountSqlDao, context);
 
-                    AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
+                    AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         eventBus.post(changeEvent);
                     }

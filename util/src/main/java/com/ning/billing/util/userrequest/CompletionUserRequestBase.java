@@ -23,6 +23,7 @@ import java.util.concurrent.TimeoutException;
 import com.ning.billing.account.api.AccountChangeNotification;
 import com.ning.billing.account.api.AccountCreationNotification;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.invoice.api.EmptyInvoiceNotification;
 import com.ning.billing.invoice.api.InvoiceCreationNotification;
 import com.ning.billing.payment.api.PaymentError;
 import com.ning.billing.payment.api.PaymentInfo;
@@ -104,6 +105,9 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
         case SUBSCRIPTION_TRANSITION:
             onSubscriptionTransition((SubscriptionTransition) curEvent);
             break;
+        case INVOICE_EMPTY:
+            onEmptyInvoice((EmptyInvoiceNotification) curEvent);
+            break;
         case INVOICE_CREATION:
             onInvoiceCreation((InvoiceCreationNotification) curEvent);
             break;
@@ -118,21 +122,35 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
         }
     }
 
+    /*
+     * 
+     * Default no-op implementation so as to not have to implement all callbacks
+     */
     @Override
-    public abstract void onAccountCreation(final AccountCreationNotification curEvent);
+    public void onAccountCreation(final AccountCreationNotification curEvent) {
+    }
 
     @Override
-    public abstract void onAccountChange(final AccountChangeNotification curEvent);
+    public void onAccountChange(final AccountChangeNotification curEvent) {
+    }
 
     @Override
-    public abstract void onSubscriptionTransition(final SubscriptionTransition curEvent);    
+    public void onSubscriptionTransition(final SubscriptionTransition curEvent) {
+    }
 
     @Override
-    public abstract void onInvoiceCreation(final InvoiceCreationNotification curEvent);    
+    public void onEmptyInvoice(final EmptyInvoiceNotification curEvent) {
+    }
+    
+    @Override
+    public void onInvoiceCreation(final InvoiceCreationNotification curEvent) {
+    }
 
     @Override
-    public abstract void onPaymentInfo(final PaymentInfo curEvent);    
+    public void onPaymentInfo(final PaymentInfo curEvent) {
+    }
 
     @Override
-    public abstract void onPaymentError(final PaymentError curEvent);    
+    public void onPaymentError(final PaymentError curEvent) {
+    }
 }

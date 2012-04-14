@@ -72,19 +72,36 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
     public static class EventSqlDaoBinder extends BinderBase implements Binder<Bind, EntitlementEvent> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, EntitlementEvent evt) {
+        	
+        	String planName = null;
+        	String phaseName = null;
+        	String priceListName = null;
+        	String userType = null;
+        	String userToken = null;
+        	if (evt.getType() == EventType.API_USER) {
+        		ApiEvent userEvent = (ApiEvent) evt;
+            	planName = userEvent.getEventPlan();
+            	phaseName = userEvent.getEventPlanPhase();
+            	priceListName = userEvent.getPriceList();
+            	userType = userEvent.getEventType().toString();
+            	userToken = (userEvent.getUserToken() != null) ? userEvent.getUserToken().toString() : null; 
+        	} else {
+        		phaseName = ((PhaseEvent) evt).getPhase();
+        	}
             stmt.bind("event_id", evt.getId().toString());
             stmt.bind("event_type", evt.getType().toString());
-            stmt.bind("user_type", (evt.getType() == EventType.API_USER) ? ((ApiEvent) evt).getEventType().toString() : null);
+            stmt.bind("user_type", userType);
             stmt.bind("created_dt", getDate(evt.getProcessedDate()));
             stmt.bind("updated_dt", getDate(evt.getProcessedDate()));
             stmt.bind("requested_dt", getDate(evt.getRequestedDate()));
             stmt.bind("effective_dt", getDate(evt.getEffectiveDate()));
             stmt.bind("subscription_id", evt.getSubscriptionId().toString());
-            stmt.bind("plan_name", (evt.getType() == EventType.API_USER) ? ((ApiEvent) evt).getEventPlan() : null);
-            stmt.bind("phase_name", (evt.getType() == EventType.API_USER) ? ((ApiEvent) evt).getEventPlanPhase() : ((PhaseEvent) evt).getPhase());
-            stmt.bind("plist_name", (evt.getType() == EventType.API_USER) ? ((ApiEvent) evt).getPriceList() : null);
+            stmt.bind("plan_name", planName);
+            stmt.bind("phase_name", phaseName);
+            stmt.bind("plist_name", priceListName);
             stmt.bind("current_version", evt.getActiveVersion());
             stmt.bind("is_active", evt.isActive());
+            stmt.bind("user_token", userToken);
         }
     }
 
@@ -106,7 +123,8 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
             String priceListName = r.getString("plist_name");
             long currentVersion = r.getLong("current_version");
             boolean isActive = r.getBoolean("is_active");
-
+            UUID userToken = r.getString("user_token") != null ? UUID.fromString(r.getString("user_token")) : null;
+            
             EventBaseBuilder<?> base = ((eventType == EventType.PHASE) ?
                     new PhaseEventBuilder() :
                         new ApiEventBuilder())
@@ -128,6 +146,7 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
                     .setEventPlanPhase(phaseName)
                     .setEventPriceList(priceListName)
                     .setEventType(userType)
+                    .setUserToken(userToken)
                     .setFromDisk(true);
 
                 if (userType == ApiEventType.CREATE) {

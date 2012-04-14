@@ -21,7 +21,12 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.clock.Clock;
+
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +42,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.user.DefaultEmptyInvoiceNotification;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.InvoiceGenerator;
@@ -54,6 +60,8 @@ public class InvoiceDispatcher {
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
     private final GlobalLocker locker;
+    private final Bus eventBus;
+    private final Clock clock;
 
     private final boolean VERBOSE_OUTPUT;
 
@@ -61,12 +69,16 @@ public class InvoiceDispatcher {
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
                              final EntitlementBillingApi entitlementBillingApi,
                              final InvoiceDao invoiceDao,
-                             final GlobalLocker locker) {
+                             final GlobalLocker locker,
+                             final Bus eventBus,
+                             final Clock clock) {
         this.generator = generator;
         this.entitlementBillingApi = entitlementBillingApi;
         this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
         this.locker = locker;
+        this.eventBus = eventBus;
+        this.clock = clock;
 
         String verboseOutputValue = System.getProperty("VERBOSE_OUTPUT");
         VERBOSE_OUTPUT = (verboseOutputValue != null) && Boolean.parseBoolean(verboseOutputValue);
@@ -118,6 +130,14 @@ public class InvoiceDispatcher {
         return null;
     }
 
+    private void postEmptyInvoiceEvent(final UUID accountId, final UUID userToken) {
+        try {
+            BusEvent event = new DefaultEmptyInvoiceNotification(accountId, clock.getUTCNow(), userToken);
+            eventBus.post(event);
+        } catch (EventBusException e){
+            log.error("Failed to post DefaultEmptyInvoiceNotification event for account {} ", accountId, e);
+        }
+    }
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDate,
                                            final boolean dryRun, final CallContext context) throws InvoiceApiException {
 
@@ -125,7 +145,7 @@ public class InvoiceDispatcher {
         if (account == null) {
             log.error("Failed handling entitlement change.",
                     new InvoiceApiException(ErrorCode.INVOICE_ACCOUNT_ID_INVALID, accountId.toString()));
-            return null;
+            return null;    
         }
 
         SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccount(accountId);
@@ -139,9 +159,11 @@ public class InvoiceDispatcher {
         if (invoice == null) {
             log.info("Generated null invoice.");
             outputDebugData(events, invoices);
+            if (!dryRun) {
+                postEmptyInvoiceEvent(accountId, context.getUserToken());
+            }
         } else {
             log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
-
             if (VERBOSE_OUTPUT) {
                 log.info("New items");
                 for (InvoiceItem item : invoice.getInvoiceItems()) {
@@ -149,12 +171,10 @@ public class InvoiceDispatcher {
                 }
             }
             outputDebugData(events, invoices);
-
-            if (invoice.getNumberOfItems() > 0 && !dryRun) {
+            if (!dryRun) {
                 invoiceDao.create(invoice, context);
             }
         }
-        
         return invoice;
     }
 

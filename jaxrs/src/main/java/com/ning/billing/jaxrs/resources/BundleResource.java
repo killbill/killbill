@@ -92,7 +92,7 @@ public class BundleResource implements BaseJaxrsResource {
 	public Response createBundle(final BundleJson json) {
 		try {
 			UUID accountId = UUID.fromString(json.getAccountId());
-			final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(accountId, json.getExternalKey(), context.getContext());
+			final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(accountId, json.getExternalKey(), context.createContext());
             return uriBuilder.buildResponse(BundleResource.class, "getBundle", bundle.getId());
 		} catch (EntitlementUserApiException e) {
 			log.info(String.format("Failed to create bundle %s", json), e);

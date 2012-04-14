@@ -28,6 +28,7 @@ import com.ning.billing.jaxrs.resources.BundleTimelineResource;
 import com.ning.billing.jaxrs.resources.InvoiceResource;
 import com.ning.billing.jaxrs.resources.PaymentResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
+import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
@@ -62,6 +63,7 @@ public class KillbillServerModule extends AbstractModule
         bind(BundleTimelineResource.class).asEagerSingleton();
         bind(InvoiceResource.class).asEagerSingleton();
         bind(PaymentResource.class).asEagerSingleton();
+        bind(KillbillEventHandler.class).asEagerSingleton();
     }
 
     protected void installClock() {

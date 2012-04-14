@@ -64,4 +64,6 @@ public interface SubscriptionTransition extends BusEvent {
     SubscriptionState getNextState();
 
     String getNextPriceList();
+    
+    Integer getRemainingEventsForUserOperation();
 }

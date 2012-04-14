@@ -26,13 +26,27 @@ import java.util.List;
 import java.util.UUID;
 
 public class DefaultAccountChangeNotification implements AccountChangeNotification {
+	
+	private final UUID userToken;
     private final List<ChangedField> changedFields;
     private final UUID id;
 
-    public DefaultAccountChangeNotification(UUID id, Account oldData, Account newData) {
+    public DefaultAccountChangeNotification(UUID id, UUID userToken, Account oldData, Account newData) {
         this.id = id;
+        this.userToken = userToken;
         this.changedFields = calculateChangedFields(oldData, newData);
     }
+
+    
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.ACCOUNT_CHANGE;
+	}
+
+	   @Override
+	    public UUID getUserToken() {
+	    	return userToken;
+	    }
 
     @Override
     public UUID getAccountId() {
@@ -102,9 +116,4 @@ public class DefaultAccountChangeNotification implements AccountChangeNotificati
             inputList.add(new DefaultChangedField(key, oldData, newData));
         }
     }
-
-	@Override
-	public BusEventType getBusEventType() {
-		return BusEventType.ACCOUNT_CHANGE;
-	}
 }

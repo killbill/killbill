@@ -25,6 +25,9 @@
     </appender>
 
 
+    <logger name="com.ning.billing.jaxrs">
+        <level value="debug"/>
+    </logger>
     <logger name="com.ning.billing.server">
         <level value="info"/>
     </logger>

@@ -29,8 +29,9 @@ public interface BaseJaxrsResource {
 	 * Query parameters
 	 */
 	public static final String QUERY_EXTERNAL_KEY = "external_key";
-	public static final String QUERY_REQUESTED_DT = "requested_date";	
-	
+	public static final String QUERY_REQUESTED_DT = "requested_date";
+	public static final String QUERY_CALL_COMPLETION = "call_completion";
+	public static final String QUERY_CALL_TIMEOUT = "call_timeout_sec";	
 	
 	public static final String ACCOUNTS = "accounts";	
 	public static final String ACCOUNTS_PATH = API_PREFIX + API_VERSION + "/" + ACCOUNTS;

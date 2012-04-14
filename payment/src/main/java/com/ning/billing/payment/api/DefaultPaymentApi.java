@@ -153,7 +153,8 @@ public class DefaultPaymentApi implements PaymentApi {
                     return Either.left(new PaymentError("invoice_balance_0",
                                                         "Invoice balance was 0 or less",
                                                         paymentAttempt.getAccountId(),
-                                                        paymentAttempt.getInvoiceId()));
+                                                        paymentAttempt.getInvoiceId(),
+                                                        context.getUserToken()));
                 }
                 else {
                     PaymentAttempt newPaymentAttempt = new PaymentAttempt.Builder(paymentAttempt)
@@ -169,7 +170,8 @@ public class DefaultPaymentApi implements PaymentApi {
         return Either.left(new PaymentError("retry_payment_error",
                                             "Could not load payment attempt, invoice or account for id " + paymentAttemptId,
                                             paymentAttempt.getAccountId(),
-                                            paymentAttempt.getInvoiceId()));
+                                            paymentAttempt.getInvoiceId(),
+                                            context.getUserToken()));
     }
 
     @Override
@@ -187,7 +189,8 @@ public class DefaultPaymentApi implements PaymentApi {
                 Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("invoice_balance_0",
                                                                                         "Invoice balance was 0 or less",
                                                                                         account.getId(),
-                                                                                        UUID.fromString(invoiceId)));
+                                                                                        UUID.fromString(invoiceId),
+                                                                                        context.getUserToken()));
                 processedPaymentsOrErrors.add(result);
             }
             else if (invoice.isMigrationInvoice()) {
@@ -195,7 +198,8 @@ public class DefaultPaymentApi implements PaymentApi {
             	Either<PaymentError, PaymentInfo> result = Either.left(new PaymentError("migration invoice",
                         "Invoice balance was a migration invoice",
                         account.getId(),
-                        UUID.fromString(invoiceId)));
+                        UUID.fromString(invoiceId),
+                        context.getUserToken()));
             			processedPaymentsOrErrors.add(result);
             }
             else {

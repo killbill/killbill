@@ -53,13 +53,13 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public void cancel(DateTime requestedDate, boolean eot, CallContext context)
+    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void changePlan(final String productName, final BillingPeriod term, final String planSet, DateTime requestedDate, CallContext context)
+    public boolean changePlan(final String productName, final BillingPeriod term, final String planSet, DateTime requestedDate, CallContext context)
     {
         throw new UnsupportedOperationException();
     }
@@ -112,7 +112,7 @@ public class MockSubscription implements Subscription
 
 
     @Override
-    public void uncancel(CallContext context) throws EntitlementUserApiException
+    public boolean uncancel(CallContext context) throws EntitlementUserApiException
     {
         throw new UnsupportedOperationException();
     }
@@ -154,7 +154,7 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
+    public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
             throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
     }

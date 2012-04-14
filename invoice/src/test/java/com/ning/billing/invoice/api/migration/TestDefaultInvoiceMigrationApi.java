@@ -185,7 +185,7 @@ public class TestDefaultInvoiceMigrationApi {
 		EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
 		((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccount", events);
 
-		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);
+		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker, busService.getBus(), clock);
 
         CallContext context = new DefaultCallContextFactory(clock).createCallContext("Migration test", CallOrigin.TEST, UserType.TEST);
 		Invoice invoice = dispatcher.processAccount(accountId, date_regular, true, context);

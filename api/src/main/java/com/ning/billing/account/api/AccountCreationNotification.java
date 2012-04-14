@@ -21,7 +21,7 @@ import com.ning.billing.util.bus.BusEvent;
 import java.util.UUID;
 
 public interface AccountCreationNotification extends BusEvent {
+	
     public UUID getId();
-
     public AccountData getData();
 }

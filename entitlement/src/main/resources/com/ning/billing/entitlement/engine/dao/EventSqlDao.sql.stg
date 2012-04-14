@@ -15,6 +15,7 @@ getEventById(event_id) ::= <<
       , phase_name
       , plist_name
       , current_version
+      , user_token
       , is_active  
   from entitlement_events
   where
@@ -36,6 +37,7 @@ insertEvent() ::= <<
       , phase_name
       , plist_name
       , current_version
+      , user_token
       , is_active
     ) values (
       :event_id
@@ -50,6 +52,7 @@ insertEvent() ::= <<
       , :phase_name
       , :plist_name
       , :current_version
+      , :user_token
       , :is_active
     );   
 >>
@@ -89,6 +92,7 @@ getFutureActiveEventForSubscription(subscription_id, now) ::= <<
       , phase_name
       , plist_name
       , current_version
+      , user_token
       , is_active
     from entitlement_events
     where
@@ -118,6 +122,7 @@ getEventsForSubscription(subscription_id) ::= <<
       , phase_name
       , plist_name
       , current_version
+      , user_token
       , is_active
     from entitlement_events
     where

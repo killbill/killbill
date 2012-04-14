@@ -17,6 +17,7 @@
 package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -29,6 +30,8 @@ import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 public class PaymentInfo implements BusEvent {
+	
+
     private final String paymentId;
     private final BigDecimal amount;
     private final BigDecimal refundAmount;
@@ -41,6 +44,7 @@ public class PaymentInfo implements BusEvent {
     private final String paymentMethod;
     private final String cardType;
     private final String cardCountry;
+	private final UUID userToken;
     private final DateTime effectiveDate;
     private final DateTime createdDate;
     private final DateTime updatedDate;
@@ -58,6 +62,7 @@ public class PaymentInfo implements BusEvent {
                        @JsonProperty("paymentMethod") String paymentMethod,
                        @JsonProperty("cardType") String cardType,
                        @JsonProperty("cardCountry") String cardCountry,
+                       @JsonProperty("userToken") UUID userToken,
                        @JsonProperty("effectiveDate") DateTime effectiveDate,
                        @JsonProperty("createdDate") DateTime createdDate,
                        @JsonProperty("updatedDate") DateTime updatedDate) {
@@ -73,6 +78,7 @@ public class PaymentInfo implements BusEvent {
         this.paymentMethod = paymentMethod;
         this.cardType = cardType;
         this.cardCountry = cardCountry;
+        this.userToken = userToken;
         this.effectiveDate = effectiveDate;
         this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
         this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
@@ -91,9 +97,21 @@ public class PaymentInfo implements BusEvent {
              src.paymentMethod,
              src.cardType,
              src.cardCountry,
+             src.userToken,
              src.effectiveDate,
              src.createdDate,
              src.updatedDate);
+    }
+    
+    @JsonIgnore
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.PAYMENT_INFO;
+	}
+
+    @Override
+    public UUID getUserToken() {
+    	return userToken;
     }
 
     public Builder cloner() {
@@ -173,6 +191,7 @@ public class PaymentInfo implements BusEvent {
         private String paymentMethod;
         private String cardType;
         private String cardCountry;
+        private UUID userToken;
         private DateTime effectiveDate;
         private DateTime createdDate;
         private DateTime updatedDate;
@@ -194,6 +213,7 @@ public class PaymentInfo implements BusEvent {
             this.paymentMethod = src.paymentMethod;
             this.cardType = src.cardType;
             this.cardCountry = src.cardCountry;
+            this.userToken = src.userToken;
             this.createdDate = src.createdDate;
             this.updatedDate = src.updatedDate;
         }
@@ -210,6 +230,11 @@ public class PaymentInfo implements BusEvent {
 
         public Builder setBankIdentificationNumber(String bankIdentificationNumber) {
             this.bankIdentificationNumber = bankIdentificationNumber;
+            return this;
+        }
+
+        public Builder setUserToken(UUID userToken) {
+            this.userToken = userToken;
             return this;
         }
 
@@ -286,6 +311,7 @@ public class PaymentInfo implements BusEvent {
                                    paymentMethod,
                                    cardType,
                                    cardCountry,
+                                   userToken,
                                    effectiveDate,
                                    createdDate,
                                    updatedDate);
@@ -305,7 +331,7 @@ public class PaymentInfo implements BusEvent {
                                 paymentMethodId,
                                 paymentMethod,
                                 cardType,
-                cardCountry,
+                                cardCountry,
                                 effectiveDate,
                                 createdDate,
                                 updatedDate);
@@ -350,11 +376,4 @@ public class PaymentInfo implements BusEvent {
     private static long getUnixTimestamp(final DateTime dateTime) {
         return dateTime.getMillis() / 1000;
     }
-    
-    @JsonIgnore
-	@Override
-	public BusEventType getBusEventType() {
-		return BusEventType.PAYMENT_INFO;
-	}
-
 }
