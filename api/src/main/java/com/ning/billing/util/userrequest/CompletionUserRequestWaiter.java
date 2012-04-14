@@ -24,8 +24,8 @@ import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.bus.BusEvent;
 
 public interface CompletionUserRequestWaiter {
@@ -42,7 +42,7 @@ public interface CompletionUserRequestWaiter {
     
     public void onEmptyInvoice(final EmptyInvoiceEvent curEvent);        
 
-    public void onPaymentInfo(final PaymentInfo curEvent);    
+    public void onPaymentInfo(final PaymentInfoEvent curEvent);    
 
-    public void onPaymentError(final PaymentError curEvent);    
+    public void onPaymentError(final PaymentErrorEvent curEvent);    
 }

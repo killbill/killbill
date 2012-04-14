@@ -21,29 +21,29 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.eventbus.Subscribe;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class MockPaymentInfoReceiver {
-    private final List<PaymentInfo> processedPayments = Collections.synchronizedList(new ArrayList<PaymentInfo>());
-    private final List<PaymentError> errors = Collections.synchronizedList(new ArrayList<PaymentError>());
+    private final List<PaymentInfoEvent> processedPayments = Collections.synchronizedList(new ArrayList<PaymentInfoEvent>());
+    private final List<PaymentErrorEvent> errors = Collections.synchronizedList(new ArrayList<PaymentErrorEvent>());
 
     @Subscribe
-    public void processedPayment(PaymentInfo paymentInfo) {
+    public void processedPayment(PaymentInfoEvent paymentInfo) {
         processedPayments.add(paymentInfo);
     }
 
     @Subscribe
-    public void processedPaymentError(PaymentError paymentError) {
+    public void processedPaymentError(PaymentErrorEvent paymentError) {
         errors.add(paymentError);
     }
 
-    public List<PaymentInfo> getProcessedPayments() {
-        return new ArrayList<PaymentInfo>(processedPayments);
+    public List<PaymentInfoEvent> getProcessedPayments() {
+        return new ArrayList<PaymentInfoEvent>(processedPayments);
     }
 
-    public List<PaymentError> getErrors() {
-        return new ArrayList<PaymentError>(errors);
+    public List<PaymentErrorEvent> getErrors() {
+        return new ArrayList<PaymentErrorEvent>(errors);
     }
 
     public void clear() {

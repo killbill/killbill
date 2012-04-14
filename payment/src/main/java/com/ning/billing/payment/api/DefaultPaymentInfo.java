@@ -29,7 +29,7 @@ import com.google.common.base.Objects;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
 
-public class DefaultPaymentInfo implements PaymentInfo {
+public class DefaultPaymentInfo implements PaymentInfoEvent {
 	
 
     private final String paymentId;
@@ -313,7 +313,7 @@ public class DefaultPaymentInfo implements PaymentInfo {
             return this;
         }
 
-        public PaymentInfo build() {
+        public PaymentInfoEvent build() {
             return new DefaultPaymentInfo(paymentId,
                                    amount,
                                    refundAmount,

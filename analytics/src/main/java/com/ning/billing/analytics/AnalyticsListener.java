@@ -23,8 +23,8 @@ import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class AnalyticsListener {
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
@@ -85,12 +85,12 @@ public class AnalyticsListener {
     }
 
     @Subscribe
-    public void handlePaymentInfo(final PaymentInfo paymentInfo) {
+    public void handlePaymentInfo(final PaymentInfoEvent paymentInfo) {
         bacRecorder.accountUpdated(paymentInfo);
     }
 
     @Subscribe
-    public void handlePaymentError(final PaymentError paymentError) {
+    public void handlePaymentError(final PaymentErrorEvent paymentError) {
         // TODO - we can't tie the error back to an account yet
     }
 }

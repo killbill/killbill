@@ -56,8 +56,8 @@ import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.userrequest.CompletionUserRequestBase;
@@ -254,12 +254,12 @@ public class SubscriptionResource implements BaseJaxrsResource{
             }
         }
         @Override
-        public void onPaymentInfo(PaymentInfo curEvent) {
+        public void onPaymentInfo(PaymentInfoEvent curEvent) {
             log.info(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));  
             notifyForCompletion();
         }
         @Override
-        public void onPaymentError(PaymentError curEvent) {
+        public void onPaymentError(PaymentErrorEvent curEvent) {
             log.info(String.format("Got event PaymentError token = %s ", curEvent.getUserToken())); 
             notifyForCompletion();
         }

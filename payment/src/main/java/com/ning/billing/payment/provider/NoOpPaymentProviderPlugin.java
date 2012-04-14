@@ -28,16 +28,16 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.DefaultPaymentError;
 import com.ning.billing.payment.api.DefaultPaymentInfo;
 import com.ning.billing.payment.api.Either;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
 
 public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
-    public Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice) {
-        PaymentInfo payment = new DefaultPaymentInfo.Builder()
+    public Either<PaymentErrorEvent, PaymentInfoEvent> processInvoice(Account account, Invoice invoice) {
+        PaymentInfoEvent payment = new DefaultPaymentInfo.Builder()
                                              .setPaymentId(UUID.randomUUID().toString())
                                              .setAmount(invoice.getBalance())
                                              .setStatus("Processed")
@@ -49,25 +49,25 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId) {
+    public Either<PaymentErrorEvent, PaymentInfoEvent> getPaymentInfo(String paymentId) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, String> createPaymentProviderAccount(Account account) {
-        return Either.left((PaymentError) new DefaultPaymentError("unsupported",
+    public Either<PaymentErrorEvent, String> createPaymentProviderAccount(Account account) {
+        return Either.left((PaymentErrorEvent) new DefaultPaymentError("unsupported",
                                             "Account creation not supported in this plugin",
                                             account.getId(),
                                             null, null));
     }
 
     @Override
-    public Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
+    public Either<PaymentErrorEvent, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
+    public Either<PaymentErrorEvent, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
         return Either.right(null);
     }
 
@@ -76,37 +76,37 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
+    public Either<PaymentErrorEvent, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
         return Either.right(paymentMethod);
     }
 
     @Override
-    public Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId) {
+    public Either<PaymentErrorEvent, Void> deletePaymentMethod(String accountKey, String paymentMethodId) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
+    public Either<PaymentErrorEvent, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(final String accountKey) {
+    public Either<PaymentErrorEvent, List<PaymentMethodInfo>> getPaymentMethods(final String accountKey) {
         return Either.right(Arrays.<PaymentMethodInfo>asList());
     }
 
     @Override
-    public Either<PaymentError, Void> updatePaymentGateway(String accountKey) {
+    public Either<PaymentErrorEvent, Void> updatePaymentGateway(String accountKey) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, Void> updatePaymentProviderAccountExistingContact(Account account) {
+    public Either<PaymentErrorEvent, Void> updatePaymentProviderAccountExistingContact(Account account) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, Void> updatePaymentProviderAccountWithNewContact(Account account) {
+    public Either<PaymentErrorEvent, Void> updatePaymentProviderAccountWithNewContact(Account account) {
         return Either.right(null);
     }
 

@@ -25,7 +25,7 @@ import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 @JsonTypeInfo(use = Id.NAME, property = "error")
-public class DefaultPaymentError implements PaymentError {
+public class DefaultPaymentError implements PaymentErrorEvent {
 	
     private final String type;
     private final String message;

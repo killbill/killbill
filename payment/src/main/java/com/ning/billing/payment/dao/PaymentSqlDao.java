@@ -44,7 +44,7 @@ import org.skife.jdbi.v2.unstable.BindIn;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.DefaultPaymentInfo;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper({PaymentSqlDao.PaymentAttemptMapper.class, PaymentSqlDao.PaymentInfoMapper.class})
@@ -71,7 +71,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
     List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(@BindIn("invoiceIds") List<String> invoiceIds);
 
     @SqlQuery
-    PaymentInfo getPaymentInfoForPaymentAttemptId(@Bind("payment_attempt_id") String paymentAttemptId);
+    PaymentInfoEvent getPaymentInfoForPaymentAttemptId(@Bind("payment_attempt_id") String paymentAttemptId);
 
     @SqlUpdate
     void updatePaymentAttemptWithPaymentId(@Bind("payment_attempt_id") String paymentAttemptId,
@@ -91,19 +91,19 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
                            @CallContextBinder CallContext context);
 
     @SqlQuery
-    List<PaymentInfo> getPaymentInfos(@BindIn("invoiceIds") final List<String> invoiceIds);
+    List<PaymentInfoEvent> getPaymentInfos(@BindIn("invoiceIds") final List<String> invoiceIds);
 
     @SqlUpdate
-    void insertPaymentInfo(@Bind(binder = PaymentInfoBinder.class) final PaymentInfo paymentInfo,
+    void insertPaymentInfo(@Bind(binder = PaymentInfoBinder.class) final PaymentInfoEvent paymentInfo,
                            @CallContextBinder final CallContext context);
 
     @SqlUpdate
     void insertPaymentInfoHistory(@Bind("historyRecordId") final String historyRecordId,
-                                  @Bind(binder = PaymentInfoBinder.class) final PaymentInfo paymentInfo,
+                                  @Bind(binder = PaymentInfoBinder.class) final PaymentInfoEvent paymentInfo,
                                   @CallContextBinder final CallContext context);
 
     @SqlQuery
-    PaymentInfo getPaymentInfo(@Bind("paymentId") final String paymentId);
+    PaymentInfoEvent getPaymentInfo(@Bind("paymentId") final String paymentId);
 
     public static final class PaymentAttemptBinder extends BinderBase implements Binder<Bind, PaymentAttempt> {
         @Override
@@ -152,9 +152,9 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         }
     }
 
-    public static final class PaymentInfoBinder extends BinderBase implements Binder<Bind, PaymentInfo> {
+    public static final class PaymentInfoBinder extends BinderBase implements Binder<Bind, PaymentInfoEvent> {
         @Override
-        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentInfo paymentInfo) {
+        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentInfoEvent paymentInfo) {
             stmt.bind("payment_id", paymentInfo.getPaymentId().toString());
             stmt.bind("amount", paymentInfo.getAmount());
             stmt.bind("refund_amount", paymentInfo.getRefundAmount());
@@ -173,9 +173,9 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         }
     }
 
-    public static class PaymentInfoMapper extends MapperBase implements ResultSetMapper<PaymentInfo> {
+    public static class PaymentInfoMapper extends MapperBase implements ResultSetMapper<PaymentInfoEvent> {
         @Override
-        public PaymentInfo map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
+        public PaymentInfoEvent map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
 
             String paymentId = rs.getString("payment_id");
             BigDecimal amount = rs.getBigDecimal("amount");

@@ -92,12 +92,12 @@ public abstract class TestPaymentApi {
                                                        new BigDecimal("1.0"),
                                                        Currency.USD));
 
-        List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
+        List<Either<PaymentErrorEvent, PaymentInfoEvent>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
 
         assertEquals(results.size(), 1);
         assertTrue(results.get(0).isRight());
 
-        PaymentInfo paymentInfo = results.get(0).getRight();
+        PaymentInfoEvent paymentInfo = results.get(0).getRight();
 
         assertNotNull(paymentInfo.getPaymentId());
         assertTrue(paymentInfo.getAmount().compareTo(amount) == 0);
@@ -115,11 +115,11 @@ public abstract class TestPaymentApi {
         DateTime paymentAttemptDateTruncated = paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0);
         assertEquals(paymentAttemptDateTruncated.compareTo(nowTruncated), 0);
 
-        List<PaymentInfo> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        List<PaymentInfoEvent> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
         assertNotNull(paymentInfos);
         assertTrue(paymentInfos.size() > 0);
 
-        PaymentInfo paymentInfoFromGet = paymentInfos.get(0);
+        PaymentInfoEvent paymentInfoFromGet = paymentInfos.get(0);
         assertEquals(paymentInfo.getAmount(), paymentInfoFromGet.getAmount());
         assertEquals(paymentInfo.getRefundAmount(), paymentInfoFromGet.getRefundAmount());
         assertEquals(paymentInfo.getPaymentId(), paymentInfoFromGet.getPaymentId());
@@ -146,17 +146,17 @@ public abstract class TestPaymentApi {
                                                                            .setEmail(account.getEmail())
                                                                            .setDefaultMethod(true)
                                                                            .build();
-        Either<PaymentError, String> paymentMethodIdOrError = paymentApi.addPaymentMethod(accountKey, paymentMethod, context);
+        Either<PaymentErrorEvent, String> paymentMethodIdOrError = paymentApi.addPaymentMethod(accountKey, paymentMethod, context);
 
         assertTrue(paymentMethodIdOrError.isRight());
         assertNotNull(paymentMethodIdOrError.getRight());
 
-        Either<PaymentError, PaymentMethodInfo> paymentMethodInfoOrError = paymentApi.getPaymentMethod(accountKey, paymentMethodIdOrError.getRight());
+        Either<PaymentErrorEvent, PaymentMethodInfo> paymentMethodInfoOrError = paymentApi.getPaymentMethod(accountKey, paymentMethodIdOrError.getRight());
 
         assertTrue(paymentMethodInfoOrError.isRight());
         assertNotNull(paymentMethodInfoOrError.getRight());
 
-        Either<PaymentError, PaymentProviderAccount> accountOrError = paymentApi.getPaymentProviderAccount(accountKey);
+        Either<PaymentErrorEvent, PaymentProviderAccount> accountOrError = paymentApi.getPaymentProviderAccount(accountKey);
 
         assertTrue(accountOrError.isRight());
 
@@ -167,7 +167,7 @@ public abstract class TestPaymentApi {
     public void testCreatePaypalPaymentMethod() throws AccountApiException, EntityPersistenceException {
         PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
         assertNotNull(account);
-        Either<PaymentError, List<PaymentMethodInfo>> paymentMethodsOrError = paymentApi.getPaymentMethods(account.getAccountKey());
+        Either<PaymentErrorEvent, List<PaymentMethodInfo>> paymentMethodsOrError = paymentApi.getPaymentMethods(account.getAccountKey());
     }
 
     @Test(enabled=true)
@@ -188,7 +188,7 @@ public abstract class TestPaymentApi {
                                                                   .billingCycleDay(account.getBillCycleDay())
                                                                   .build();
 
-        Either<PaymentError, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(accountToUpdate.getExternalKey(), context);
+        Either<PaymentErrorEvent, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(accountToUpdate.getExternalKey(), context);
         assertTrue(voidOrError.isRight());
     }
 
@@ -196,7 +196,7 @@ public abstract class TestPaymentApi {
     public void testCannotDeleteDefaultPaymentMethod() throws AccountApiException, EntityPersistenceException {
         PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
 
-        Either<PaymentError, Void> errorOrVoid = paymentApi.deletePaymentMethod(account.getAccountKey(), account.getDefaultPaymentMethodId(), context);
+        Either<PaymentErrorEvent, Void> errorOrVoid = paymentApi.deletePaymentMethod(account.getAccountKey(), account.getDefaultPaymentMethodId(), context);
 
         assertTrue(errorOrVoid.isLeft());
     }
@@ -209,24 +209,24 @@ public abstract class TestPaymentApi {
         String accountKey = account.getExternalKey();
 
         PaypalPaymentMethodInfo paymentMethod1 = new PaypalPaymentMethodInfo.Builder().setDefaultMethod(false).setBaid("12345").setEmail(account.getEmail()).build();
-        Either<PaymentError, String> paymentMethodIdOrError1 = paymentApi.addPaymentMethod(accountKey, paymentMethod1, context);
+        Either<PaymentErrorEvent, String> paymentMethodIdOrError1 = paymentApi.addPaymentMethod(accountKey, paymentMethod1, context);
 
         assertTrue(paymentMethodIdOrError1.isRight());
         assertNotNull(paymentMethodIdOrError1.getRight());
 
         PaypalPaymentMethodInfo paymentMethod2 = new PaypalPaymentMethodInfo.Builder().setDefaultMethod(true).setBaid("12345").setEmail(account.getEmail()).build();
 
-        Either<PaymentError, String> paymentMethodIdOrError2 = paymentApi.addPaymentMethod(accountKey, paymentMethod2, context);
+        Either<PaymentErrorEvent, String> paymentMethodIdOrError2 = paymentApi.addPaymentMethod(accountKey, paymentMethod2, context);
 
         assertTrue(paymentMethodIdOrError2.isRight());
         assertNotNull(paymentMethodIdOrError2.getRight());
 
-        Either<PaymentError, List<PaymentMethodInfo>> paymentMethodsOrError = paymentApi.getPaymentMethods(accountKey);
+        Either<PaymentErrorEvent, List<PaymentMethodInfo>> paymentMethodsOrError = paymentApi.getPaymentMethods(accountKey);
 
         assertTrue(paymentMethodsOrError.isRight());
 
-        Either<PaymentError, Void> errorOrVoid1 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError1.getRight(), context);
-        Either<PaymentError, Void> errorOrVoid2 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError2.getRight(), context);
+        Either<PaymentErrorEvent, Void> errorOrVoid1 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError1.getRight(), context);
+        Either<PaymentErrorEvent, Void> errorOrVoid2 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError2.getRight(), context);
 
         assertTrue(errorOrVoid1.isRight());
         assertTrue(errorOrVoid2.isLeft());

@@ -29,8 +29,8 @@ import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class TestBusHandler {
 
@@ -104,14 +104,14 @@ public class TestBusHandler {
     }
 
     @Subscribe
-    public void handlePaymentEvents(PaymentInfo event) {
+    public void handlePaymentEvents(PaymentInfoEvent event) {
         log.info(String.format("TestBusHandler Got PaymentInfo event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handlePaymentErrorEvents(PaymentError event) {
+    public void handlePaymentErrorEvents(PaymentErrorEvent event) {
         log.info(String.format("TestBusHandler Got PaymentError event %s", event.toString()));
         //Assert.fail("Unexpected payment failure");
     }

@@ -48,8 +48,8 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
@@ -131,7 +131,7 @@ public class TestRetryService {
 
         mockPaymentProviderPlugin.makeNextInvoiceFail();
 
-        List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
+        List<Either<PaymentErrorEvent, PaymentInfoEvent>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
 
         assertEquals(results.size(), 1);
         assertTrue(results.get(0).isLeft());
@@ -185,10 +185,10 @@ public class TestRetryService {
         List<Notification> pendingNotifications = mockNotificationQueue.getPendingEvents();
         assertEquals(pendingNotifications.size(), 0);
 
-        List<PaymentInfo> paymentInfoList = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        List<PaymentInfoEvent> paymentInfoList = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
         assertEquals(paymentInfoList.size(), 1);
 
-        PaymentInfo paymentInfo = paymentInfoList.get(0);
+        PaymentInfoEvent paymentInfo = paymentInfoList.get(0);
         assertEquals(paymentInfo.getStatus(), PaymentStatus.Processed.toString());
 
         List<PaymentAttempt> updatedAttempts = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId().toString());

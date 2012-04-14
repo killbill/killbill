@@ -26,7 +26,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.tag.Tag;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -77,7 +77,7 @@ public class BusinessAccountRecorder {
      *
      * @param paymentInfo payment object (from the payment plugin)
      */
-    public void accountUpdated(final PaymentInfo paymentInfo) {
+    public void accountUpdated(final PaymentInfoEvent paymentInfo) {
         final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
         if (paymentAttempt == null) {
             return;
@@ -162,9 +162,9 @@ public class BusinessAccountRecorder {
 
             // Retrieve payments information for these invoices
             DateTime lastPaymentDate = null;
-            final List<PaymentInfo> payments = paymentApi.getPaymentInfo(invoiceIds);
+            final List<PaymentInfoEvent> payments = paymentApi.getPaymentInfo(invoiceIds);
             if (payments != null) {
-                for (final PaymentInfo payment : payments) {
+                for (final PaymentInfoEvent payment : payments) {
                     // Use the last payment method/type/country as the default one for the account
                     if (lastPaymentDate == null || payment.getCreatedDate().isAfter(lastPaymentDate)) {
                         lastPaymentDate = payment.getCreatedDate();

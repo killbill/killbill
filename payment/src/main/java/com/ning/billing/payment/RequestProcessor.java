@@ -34,8 +34,8 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -72,9 +72,9 @@ public class RequestProcessor {
             }
             else {
                 CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
-                List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()), context);
+                List<Either<PaymentErrorEvent, PaymentInfoEvent>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()), context);
                 if (!results.isEmpty()) {
-                    Either<PaymentError, PaymentInfo> result = results.get(0);
+                    Either<PaymentErrorEvent, PaymentInfoEvent> result = results.get(0);
                     eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
                 }
             }

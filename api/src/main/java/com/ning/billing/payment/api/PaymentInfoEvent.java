@@ -20,7 +20,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.util.bus.BusEvent;
 
-public interface PaymentInfo extends BusEvent {
+public interface PaymentInfoEvent extends BusEvent {
 
     public String getPaymentId();
 

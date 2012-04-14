@@ -34,8 +34,8 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -80,8 +80,8 @@ public class TestPaymentProvider {
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                List<PaymentInfo> processedPayments = paymentInfoReceiver.getProcessedPayments();
-                List<PaymentError> errors = paymentInfoReceiver.getErrors();
+                List<PaymentInfoEvent> processedPayments = paymentInfoReceiver.getProcessedPayments();
+                List<PaymentErrorEvent> errors = paymentInfoReceiver.getErrors();
 
                 return processedPayments.size() == 1 || errors.size() == 1;
             }

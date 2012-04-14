@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import com.ning.billing.util.bus.BusEvent;
 
-public interface PaymentError extends BusEvent {
+public interface PaymentErrorEvent extends BusEvent {
 
     public String getType();
 

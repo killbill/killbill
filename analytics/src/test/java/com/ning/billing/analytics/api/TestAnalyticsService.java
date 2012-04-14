@@ -78,7 +78,7 @@ import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.payment.api.DefaultPaymentInfo;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.clock.Clock;
@@ -138,7 +138,7 @@ public class TestAnalyticsService {
 
     private AccountCreationEvent accountCreationNotification;
     private InvoiceCreationEvent invoiceCreationNotification;
-    private PaymentInfo paymentInfoNotification;
+    private PaymentInfoEvent paymentInfoNotification;
 
     @BeforeMethod(groups = "slow")
     public void cleanup() throws Exception
