@@ -92,9 +92,9 @@ public class MockModule extends AbstractModule {
         install(new AccountModule());
         install(new CatalogModule());
         install(new EntitlementModule());
+        install(new MockOverdueAccessModule());
         install(new InvoiceModule());
         install(new PaymentMockModule());
-        install(new MockOverdueAccessModule());
     }
 
     private static final class PaymentMockModule extends PaymentModule {

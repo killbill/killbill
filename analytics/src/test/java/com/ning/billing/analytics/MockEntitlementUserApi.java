@@ -29,12 +29,13 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.util.callcontext.CallContext;
 
-public class MockIEntitlementUserApi implements EntitlementUserApi
+public class MockEntitlementUserApi implements EntitlementUserApi
 {
     private final Map<UUID, String> subscriptionBundles = new HashMap<UUID, String>();
 
-    public MockIEntitlementUserApi(final UUID bundleUUID, final String key)
+    public MockEntitlementUserApi(final UUID bundleUUID, final String key)
     {
         subscriptionBundles.put(bundleUUID, key);
     }
@@ -99,7 +100,7 @@ public class MockIEntitlementUserApi implements EntitlementUserApi
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey) throws EntitlementUserApiException
+    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey, CallContext context) throws EntitlementUserApiException
     {
         throw new UnsupportedOperationException();
     }
@@ -111,7 +112,7 @@ public class MockIEntitlementUserApi implements EntitlementUserApi
 
 	@Override
 	public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec,
-			DateTime requestedDate) throws EntitlementUserApiException {
+			DateTime requestedDate, CallContext context) throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
 	}
 

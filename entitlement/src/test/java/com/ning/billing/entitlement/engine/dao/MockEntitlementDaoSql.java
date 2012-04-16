@@ -38,10 +38,10 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
     private final ResetSqlDao resetDao;
 
     @Inject
-    public MockEntitlementDaoSql(IDBI dbi, Clock clock, SubscriptionFactory factory, AddonUtils addonUtils, NotificationQueueService notificationQueueService,
+    public MockEntitlementDaoSql(IDBI dbi, Clock clock, AddonUtils addonUtils, NotificationQueueService notificationQueueService,
                                  CustomFieldDao customFieldDao, final OverdueAccessApi overdueApi,
                                  final CatalogService catalogService) {
-        super(dbi, clock, factory, addonUtils, notificationQueueService, customFieldDao, overdueApi, catalogService);
+        super(dbi, clock, addonUtils, notificationQueueService, customFieldDao, overdueApi, catalogService);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
     }
 

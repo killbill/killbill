@@ -37,6 +37,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBui
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -47,10 +48,11 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     private final SubscriptionApiService apiService;
     private final OverdueChecker overdueChecker;
     private final AddonUtils addonUtils;
+    private final SubscriptionFactory subscriptionFactory;
 
     @Inject
     public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, CatalogService catalogService,
-            SubscriptionApiService apiService, AddonUtils addonUtils, OverdueChecker overdueChecker) {
+            SubscriptionApiService apiService, final SubscriptionFactory subscriptionFactory, AddonUtils addonUtils, OverdueChecker overdueChecker) {
         super();
         this.clock = clock;
         this.apiService = apiService;
@@ -58,6 +60,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         this.catalogService = catalogService;
         this.addonUtils = addonUtils;
         this.overdueChecker = overdueChecker;
+        this.subscriptionFactory = subscriptionFactory;
     }
 
     @Override
@@ -67,7 +70,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public Subscription getSubscriptionFromId(UUID id) {
-        return dao.getSubscriptionFromId(id);
+        return dao.getSubscriptionFromId(subscriptionFactory, id);
     }
 
     @Override
@@ -82,28 +85,29 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public List<Subscription> getSubscriptionsForKey(String bundleKey) {
-        return dao.getSubscriptionsForKey(bundleKey);
+        return dao.getSubscriptionsForKey(subscriptionFactory, bundleKey);
     }
 
     @Override
     public List<Subscription> getSubscriptionsForBundle(UUID bundleId) {
-        return dao.getSubscriptions(bundleId);
+        return dao.getSubscriptions(subscriptionFactory, bundleId);
     }
 
     @Override
     public Subscription getBaseSubscription(UUID bundleId) {
-        return dao.getBaseSubscription(bundleId);
+        return dao.getBaseSubscription(subscriptionFactory, bundleId);
     }
     
-    @Override
-    public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleName)
-            throws EntitlementUserApiException {
+
+    public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleName, CallContext context)
+    throws EntitlementUserApiException {
         SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId);
-        return dao.createSubscriptionBundle(bundle);
+        return dao.createSubscriptionBundle(bundle, context);
     }
 
     @Override
-    public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate) throws EntitlementUserApiException {
+    public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate,
+                                           CallContext context) throws EntitlementUserApiException {
         try {
             String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             DateTime now = clock.getUTCNow();
@@ -128,7 +132,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             }
 
             DateTime bundleStartDate = null;
-            SubscriptionData baseSubscription = (SubscriptionData) dao.getBaseSubscription(bundleId);
+            SubscriptionData baseSubscription = (SubscriptionData) dao.getBaseSubscription(subscriptionFactory, bundleId);
             switch(plan.getProduct().getCategory()) {
             case BASE:
                 if (baseSubscription != null) {
@@ -136,7 +140,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                         throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_BP_EXISTS, bundleId);
                     } else {
                         // If we do create on an existing CANCELLED BP, this is equivalent to call recreate on that Subscription.
-                        baseSubscription.recreate(spec, requestedDate);
+                        baseSubscription.recreate(spec, requestedDate, context);
                         return baseSubscription;
                     }
                 }
@@ -162,12 +166,12 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             }
 
             SubscriptionData subscription = apiService.createPlan(new SubscriptionBuilder()
-            .setId(UUID.randomUUID())
-            .setBundleId(bundleId)
-            .setCategory(plan.getProduct().getCategory())
-            .setBundleStartDate(bundleStartDate)
-            .setStartDate(effectiveDate),
-            plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now);
+                 .setId(UUID.randomUUID())
+                .setBundleId(bundleId)
+                .setCategory(plan.getProduct().getCategory())
+                .setBundleStartDate(bundleStartDate)
+                .setStartDate(effectiveDate),
+            plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now, context);
 
             return subscription;
         } catch (CatalogApiException e) {

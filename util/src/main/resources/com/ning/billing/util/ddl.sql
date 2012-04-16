@@ -68,7 +68,8 @@ CREATE UNIQUE INDEX tags_unique ON tags(tag_definition_name, object_id);
 
 DROP TABLE IF EXISTS tag_history;
 CREATE TABLE tag_history (
-  id char(36) NULL,
+  history_record_id char(36) NOT NULL,
+  id char(36) NOT NULL,
   tag_definition_name varchar(20) NOT NULL,
   object_id char(36) NOT NULL,
   object_type varchar(30) NOT NULL,

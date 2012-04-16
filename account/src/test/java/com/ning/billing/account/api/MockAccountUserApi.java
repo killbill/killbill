@@ -107,17 +107,6 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
 	@Override
-	public void deleteAccountByKey(final String externalKey, final CallContext context)
-			throws AccountApiException {
-		for (Account account : accounts) {
-            if (externalKey.equals(account.getExternalKey())) {
-                accounts.remove(account);
-            }
-        }	
-		
-	}
-
-	@Override
 	public Account migrateAccount(final MigrationAccountData data,
 			final List<CustomField> fields, final List<Tag> tags, final CallContext context)
 			throws AccountApiException {

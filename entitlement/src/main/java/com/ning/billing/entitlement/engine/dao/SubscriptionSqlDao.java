@@ -20,10 +20,11 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.util.entity.BinderBase;
-import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -39,34 +40,30 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-
 @ExternalizedSqlViaStringTemplate3()
 public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, CloseMe, Transmogrifier {
-
-
 	@SqlUpdate
-    public void insertSubscription(@Bind(binder = ISubscriptionDaoBinder.class) SubscriptionData sub);
-
-    @SqlUpdate
-    public void removeSubscription(@Bind("id") String id);
+    public void insertSubscription(@Bind(binder = SubscriptionBinder.class) SubscriptionData sub,
+                                   @CallContextBinder final CallContext context);
 
     @SqlQuery
-    @Mapper(ISubscriptionDaoSqlMapper.class)
+    @Mapper(SubscriptionMapper.class)
     public Subscription getSubscriptionFromId(@Bind("id") String id);
 
     @SqlQuery
-    @Mapper(ISubscriptionDaoSqlMapper.class)
+    @Mapper(SubscriptionMapper.class)
     public List<Subscription> getSubscriptionsFromBundleId(@Bind("bundle_id") String bundleId);
 
     @SqlUpdate
-    public void updateSubscription(@Bind("id") String id, @Bind("active_version") long activeVersion, @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd);
+    public void updateSubscription(@Bind("id") String id, @Bind("active_version") long activeVersion,
+                                   @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd,
+                                   @CallContextBinder final CallContext context);
    
-    public static class ISubscriptionDaoBinder extends BinderBase implements Binder<Bind, SubscriptionData> {
+    public static class SubscriptionBinder extends BinderBase implements Binder<Bind, SubscriptionData> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, SubscriptionData sub) {
             stmt.bind("id", sub.getId().toString());
@@ -80,7 +77,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
         }
     }
 
-    public static class ISubscriptionDaoSqlMapper extends MapperBase implements ResultSetMapper<SubscriptionData> {
+    public static class SubscriptionMapper extends MapperBase implements ResultSetMapper<SubscriptionData> {
         @Override
         public SubscriptionData map(int arg0, ResultSet r, StatementContext ctx)
                 throws SQLException {
@@ -94,7 +91,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
             DateTime ptd = getDate(r, "ptd_dt");
             long activeVersion = r.getLong("active_version");
 
-            SubscriptionData subscription = new SubscriptionData(new SubscriptionBuilder()
+            return new SubscriptionData(new SubscriptionBuilder()
             .setId(id)
             .setBundleId(bundleId)
             .setCategory(category)
@@ -103,7 +100,6 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
             .setActiveVersion(activeVersion)
             .setChargedThroughDate(ctd)
             .setPaidThroughDate(ptd));
-            return subscription;
         }
     }
 }

@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.util.bus.Bus;
@@ -45,17 +45,18 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
 
     private final NotificationQueueService notificationQueueService;
 	private final InvoiceConfig config;
-    private final EntitlementDao entitlementDao;
+	private final EntitlementUserApi entitlementUserApi;
 
+	
     private NotificationQueue nextBillingQueue;
 	private final InvoiceListener listener;
 
     @Inject
 	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService,
-			InvoiceConfig config, EntitlementDao entitlementDao, InvoiceListener listener){
+			InvoiceConfig config, EntitlementUserApi entitlementUserApi, InvoiceListener listener){
 		this.notificationQueueService = notificationQueueService;
 		this.config = config;
-        this.entitlementDao = entitlementDao;
+        this.entitlementUserApi = entitlementUserApi;
         this.listener = listener;
 	}
 
@@ -69,7 +70,7 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
                 public void handleReadyNotification(String notificationKey, DateTime eventDate) {
                 	try {
                  		UUID key = UUID.fromString(notificationKey);
-                        Subscription subscription = entitlementDao.getSubscriptionFromId(key);
+                        Subscription subscription = entitlementUserApi.getSubscriptionFromId(key);
                         if (subscription == null) {
                             log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")" );
                         } else {

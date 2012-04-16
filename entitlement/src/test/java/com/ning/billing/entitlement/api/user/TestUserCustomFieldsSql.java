@@ -80,7 +80,7 @@ public class TestUserCustomFieldsSql extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             testListener.pushExpectedEvent(NextEvent.CREATE);
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), requestedDate);
+                    getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             assertNotNull(subscription);
 
             assertEquals(subscription.getFieldValue("nonExistent"), null);
@@ -136,7 +136,7 @@ public class TestUserCustomFieldsSql extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
             testListener.pushExpectedEvent(NextEvent.CREATE);
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), requestedDate);
+                    getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             assertNotNull(subscription);
 
 

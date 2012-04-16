@@ -137,8 +137,8 @@ public class TestNextBillingDateNotifier {
                 IDBI dbi = helper.getDBI();
                 bind(IDBI.class).toInstance(dbi);
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
-                bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
+                bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
                 bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
                 bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
@@ -167,12 +167,12 @@ public class TestNextBillingDateNotifier {
         InvoiceDispatcher dispatcher = g.getInstance(InvoiceDispatcher.class);
 
         Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        EntitlementDao entitlementDao = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class);
-        ((ZombieControl) entitlementDao).addResult("getSubscriptionFromId", subscription);
+        EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+        ((ZombieControl) entitlementUserApi).addResult("getSubscriptionFromId", subscription);
 
         CallContextFactory factory = new DefaultCallContextFactory(clock);
         listener = new InvoiceListenerMock(factory, dispatcher);
-        notifier = new DefaultNextBillingDateNotifier(notificationQueueService,g.getInstance(InvoiceConfig.class), entitlementDao, listener);
+        notifier = new DefaultNextBillingDateNotifier(notificationQueueService,g.getInstance(InvoiceConfig.class), entitlementUserApi, listener);
         startMysql();
 	}
 

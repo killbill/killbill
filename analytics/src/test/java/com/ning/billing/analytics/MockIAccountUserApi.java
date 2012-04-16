@@ -77,11 +77,6 @@ public class MockIAccountUserApi implements AccountUserApi
     }
 
 	@Override
-	public void deleteAccountByKey(String externalKey, final CallContext context) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Account migrateAccount(MigrationAccountData data,
 			List<CustomField> fields, List<Tag> tags, final CallContext context)
 			throws AccountApiException {

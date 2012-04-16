@@ -21,8 +21,6 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.overdue.MockOverdueChecker;
-import com.ning.billing.entitlement.api.overdue.OverdueChecker;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.mock.overdue.MockOverdueAccessModule;
@@ -49,16 +47,9 @@ public class AnalyticsTestModule extends AnalyticsModule
         install(new TagStoreModule());
         install(new AccountModule());
         install(new BusModule());
-        install(new EntitlementModule() {
-
-            @Override
-            protected void installOverdueChecker() {
-                bind(OverdueChecker.class).to(MockOverdueChecker.class).asEagerSingleton();
-            }
-            
-        });
-        install(new InvoiceModule());
+        install(new EntitlementModule());
         install(new MockOverdueAccessModule());
+        install(new InvoiceModule());
         install(new PaymentModule());
         install(new TagStoreModule());
         install(new NotificationQueueModule());

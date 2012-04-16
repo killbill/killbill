@@ -62,7 +62,7 @@ public class AuditedPaymentDao implements PaymentDao {
                 transactional.insertPaymentAttemptHistory(historyRecordId.toString(), paymentAttempt, context);
                 AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction("payment_attempt", historyRecordId.toString(),
-                                                       ChangeType.INSERT.toString(), context);
+                                                       ChangeType.INSERT, context);
                 return savedPaymentAttempt;
             }
         });
@@ -79,7 +79,7 @@ public class AuditedPaymentDao implements PaymentDao {
                 transactional.insertPaymentAttemptHistory(historyRecordId.toString(), paymentAttempt, context);
                 AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction("payment_attempt", historyRecordId.toString(),
-                                                       ChangeType.INSERT.toString(), context);
+                                                       ChangeType.INSERT, context);
 
                 return paymentAttempt;
             }
@@ -96,7 +96,7 @@ public class AuditedPaymentDao implements PaymentDao {
                 transactional.insertPaymentInfoHistory(historyRecordId.toString(), info, context);
                 AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction("payment", historyRecordId.toString(),
-                                                       ChangeType.INSERT.toString(), context);
+                                                       ChangeType.INSERT, context);
 
                 return null;
             }
@@ -114,7 +114,7 @@ public class AuditedPaymentDao implements PaymentDao {
                 transactional.insertPaymentAttemptHistory(historyRecordId.toString(), paymentAttempt, context);
                 AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction("payment_attempt", historyRecordId.toString(),
-                                                       ChangeType.UPDATE.toString(), context);
+                                                       ChangeType.UPDATE, context);
 
                 return null;
             }
@@ -128,12 +128,12 @@ public class AuditedPaymentDao implements PaymentDao {
             @Override
             public Void inTransaction(PaymentSqlDao transactional, TransactionStatus status) throws Exception {
                 transactional.updatePaymentInfo(type, paymentId, cardType, cardCountry, context);
-                PaymentInfo paymentInfo = transactional.getPaymentInfo(paymentId.toString());
+                PaymentInfo paymentInfo = transactional.getPaymentInfo(paymentId);
                 UUID historyRecordId = UUID.randomUUID();
                 transactional.insertPaymentInfoHistory(historyRecordId.toString(), paymentInfo, context);
                 AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction("payments", historyRecordId.toString(),
-                                                       ChangeType.UPDATE.toString(), context);
+                                                       ChangeType.UPDATE, context);
 
                 return null;
             }

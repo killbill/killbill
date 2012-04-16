@@ -21,6 +21,8 @@ import org.skife.jdbi.v2.IDBI;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.ning.billing.util.overdue.DefaultOverdueAcessApi;
+import com.ning.billing.util.overdue.OverdueAccessApi;
 import com.ning.billing.util.overdue.dao.OverdueAccessDao;
 import com.ning.billing.util.overdue.dao.OverdueAccessSqlDao;
 
@@ -29,6 +31,7 @@ public class OverdueAccessModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(OverdueAccessDao.class).toProvider(OverdueAccessDaoProvider.class);
+        bind(OverdueAccessApi.class).to(DefaultOverdueAcessApi.class);
     }
 
     public static class OverdueAccessDaoProvider implements Provider<OverdueAccessDao>{

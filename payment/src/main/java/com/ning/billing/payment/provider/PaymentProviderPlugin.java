@@ -42,5 +42,6 @@ public interface PaymentProviderPlugin {
 
     Either<PaymentError, Void> updatePaymentProviderAccountExistingContact(Account account);
     Either<PaymentError, Void> updatePaymentProviderAccountWithNewContact(Account account);
+    List<Either<PaymentError, PaymentInfo>> processRefund(Account account);
 
 }

@@ -22,7 +22,7 @@ import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.UpdatableEntityDao;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -57,9 +57,6 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
     @Override
     @SqlUpdate
     public void update(@AccountBinder Account account, @CallContextBinder final CallContext context);
-
-    @SqlUpdate
-    public void deleteByKey(@Bind("externalKey") final String key);
 
     public static class AccountMapper extends MapperBase implements ResultSetMapper<Account> {
         @Override

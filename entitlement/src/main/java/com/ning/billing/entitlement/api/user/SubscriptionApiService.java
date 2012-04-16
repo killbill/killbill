@@ -75,7 +75,8 @@ public class SubscriptionApiService {
     }
 
     public SubscriptionData createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
-            String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate)
+            String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
+            CallContext context)
         throws EntitlementUserApiException {
         
         SubscriptionData subscription = new SubscriptionData(builder, this, clock);
@@ -83,11 +84,11 @@ public class SubscriptionApiService {
         overdueChecker.checkBlocked(subscription);
 
         
-        createFromSubscription(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate, processedDate, false);
+        createFromSubscription(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate, processedDate, false, context);
         return subscription;
     }
 
-    public void recreatePlan(SubscriptionData subscription, PlanPhaseSpecifier spec, DateTime requestedDate)
+    public void recreatePlan(SubscriptionData subscription, PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
         throws EntitlementUserApiException {
         
         overdueChecker.checkBlocked(subscription);
@@ -112,15 +113,15 @@ public class SubscriptionApiService {
             DateTime effectiveDate = requestedDate;
             DateTime processedDate = now;
 
-            createFromSubscription(subscription, plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, processedDate, true);
+            createFromSubscription(subscription, plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, processedDate, true, context);
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }
     }
 
-
     private void createFromSubscription(SubscriptionData subscription, Plan plan, PhaseType initialPhase,
-            String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate, boolean reCreate)
+            String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
+            boolean reCreate, CallContext context)
         throws EntitlementUserApiException {
 
         overdueChecker.checkBlocked(subscription);
@@ -150,9 +151,9 @@ public class SubscriptionApiService {
                 events.add(nextPhaseEvent);
             }
             if (reCreate) {
-                dao.recreateSubscription(subscription.getId(), events);
+                dao.recreateSubscription(subscription.getId(), events, context);
             } else {
-                dao.createSubscription(subscription, events);
+                dao.createSubscription(subscription, events, context);
             }
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
@@ -160,10 +161,7 @@ public class SubscriptionApiService {
         }
     }
 
-
-
-
-    public void cancel(SubscriptionData subscription, DateTime requestedDate, boolean eot)
+    public void cancel(SubscriptionData subscription, DateTime requestedDate, boolean eot, CallContext context)
         throws EntitlementUserApiException {
 
         try {
@@ -195,7 +193,7 @@ public class SubscriptionApiService {
             .setRequestedDate(requestedDate)
             .setFromDisk(true));
 
-            dao.cancelSubscription(subscription.getId(), cancelEvent);
+            dao.cancelSubscription(subscription.getId(), cancelEvent, context);
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
@@ -203,7 +201,7 @@ public class SubscriptionApiService {
     }
 
 
-    public void uncancel(SubscriptionData subscription)
+    public void uncancel(SubscriptionData subscription, CallContext context)
         throws EntitlementUserApiException {
 
         if (!subscription.isSubscriptionFutureCancelled()) {
@@ -229,13 +227,12 @@ public class SubscriptionApiService {
         if (nextPhaseEvent != null) {
             uncancelEvents.add(nextPhaseEvent);
         }
-        dao.uncancelSubscription(subscription.getId(), uncancelEvents);
+        dao.uncancelSubscription(subscription.getId(), uncancelEvents, context);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
     }
 
-
     public void changePlan(SubscriptionData subscription, String productName, BillingPeriod term,
-            String priceList, DateTime requestedDate)
+            String priceList, DateTime requestedDate, CallContext context)
         throws EntitlementUserApiException {
         
         overdueChecker.checkBlocked(subscription);
@@ -304,7 +301,7 @@ public class SubscriptionApiService {
                         changeEvents.add(nextPhaseEvent);
                     }
                     changeEvents.add(changeEvent);
-                    dao.changePlan(subscription.getId(), changeEvents);
+                    dao.changePlan(subscription.getId(), changeEvents, context);
                     subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);

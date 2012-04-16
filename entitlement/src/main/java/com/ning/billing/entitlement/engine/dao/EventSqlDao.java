@@ -24,8 +24,10 @@ import com.ning.billing.entitlement.events.phase.PhaseEventBuilder;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
 import com.ning.billing.entitlement.events.user.*;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.entity.BinderBase;
-import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -53,16 +55,16 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
     public EntitlementEvent getEventById(@Bind("event_id") String eventId);
 
     @SqlUpdate
-    public void insertEvent(@Bind(binder = EventSqlDaoBinder.class) EntitlementEvent evt);
+    public void insertEvent(@Bind(binder = EventSqlDaoBinder.class) EntitlementEvent evt,
+                            @CallContextBinder final CallContext context);
 
     @SqlUpdate
-    public void removeEvents(@Bind("subscription_id") String subscriptionId);
+    public void unactiveEvent(@Bind("event_id")String eventId,
+                              @CallContextBinder final CallContext context);
 
     @SqlUpdate
-    public void unactiveEvent(@Bind("event_id")String eventId, @Bind("now") Date now);
-
-    @SqlUpdate
-    public void reactiveEvent(@Bind("event_id")String eventId, @Bind("now") Date now);
+    public void reactiveEvent(@Bind("event_id")String eventId,
+                              @CallContextBinder final CallContext context);
 
     @SqlQuery
     @Mapper(EventSqlMapper.class)
@@ -78,8 +80,6 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
             stmt.bind("event_id", evt.getId().toString());
             stmt.bind("event_type", evt.getType().toString());
             stmt.bind("user_type", (evt.getType() == EventType.API_USER) ? ((ApiEvent) evt).getEventType().toString() : null);
-            stmt.bind("created_dt", getDate(evt.getProcessedDate()));
-            stmt.bind("updated_dt", getDate(evt.getProcessedDate()));
             stmt.bind("requested_dt", getDate(evt.getRequestedDate()));
             stmt.bind("effective_dt", getDate(evt.getEffectiveDate()));
             stmt.bind("subscription_id", evt.getSubscriptionId().toString());
@@ -100,7 +100,7 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
             UUID id = UUID.fromString(r.getString("event_id"));
             EventType eventType = EventType.valueOf(r.getString("event_type"));
             ApiEventType userType = (eventType == EventType.API_USER) ? ApiEventType.valueOf(r.getString("user_type")) : null;
-            DateTime createdDate = getDate(r, "created_dt");
+            DateTime createdDate = getDate(r, "created_date");
             DateTime requestedDate = getDate(r, "requested_dt");
             DateTime effectiveDate = getDate(r, "effective_dt");
             UUID subscriptionId = UUID.fromString(r.getString("subscription_id"));

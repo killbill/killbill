@@ -37,8 +37,8 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.catalog.api.overdue.Overdueable.Type;
-import com.ning.billing.util.entity.BinderBase;
-import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.overdue.OverdueAccessApi;
 import com.ning.billing.util.overdue.OverdueEvent;
 

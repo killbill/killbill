@@ -114,11 +114,6 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
      }
 
 	@Override
-	public void deleteAccountByKey(final String externalKey, final CallContext context) throws AccountApiException {
-		dao.deleteByKey(externalKey, context);
-	}
-
-	@Override
 	public Account migrateAccount(final MigrationAccountData data, final List<CustomField> fields,
                                   final List<Tag> tags, final CallContext context)
             throws AccountApiException {

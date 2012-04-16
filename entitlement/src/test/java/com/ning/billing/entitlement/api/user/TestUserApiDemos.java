@@ -79,7 +79,7 @@ public class TestUserApiDemos extends TestApiBase {
 
             /* STEP 2. CHANGE PLAN WHILE IN TRIAL */
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
+            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
             assertTrue(testListener.isCompleted(3000));
 
             displayState(subscription.getId(), "STEP 2. CHANGED PLAN WHILE IN TRIAL");
@@ -98,11 +98,11 @@ public class TestUserApiDemos extends TestApiBase {
 
             Duration ctd = getDurationMonth(1);
             DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
+            subscription.changePlan("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
@@ -110,7 +110,7 @@ public class TestUserApiDemos extends TestApiBase {
 
             /* STEP 5. CHANGE AGAIN */
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow());
+            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(2000));
             testListener.reset();
 
@@ -153,7 +153,7 @@ public class TestUserApiDemos extends TestApiBase {
 
             /* STEP 8. CANCEL IMM (NO CTD) */
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), false);
+            subscription.cancel(clock.getUTCNow(), false, context);
 
             displayState(subscription.getId(), "STEP 8.  CANCELLATION");
 

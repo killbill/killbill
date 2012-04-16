@@ -35,21 +35,19 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
-import com.ning.billing.util.entity.BinderBase;
-import com.ning.billing.util.entity.MapperBase;
-import com.ning.billing.util.overdue.OverdueAccessApi;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Transmogrifier {
 
     @SqlUpdate
-    public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle);
-
-    @SqlUpdate
-    public void removeBundle(@Bind("id") String id);
+    public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle,
+                             @CallContextBinder final CallContext context);
 
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)

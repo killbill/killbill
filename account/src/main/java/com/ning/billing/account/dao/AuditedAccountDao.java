@@ -130,7 +130,7 @@ public class AuditedAccountDao implements AccountDao {
 
                     AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
                     auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
-                                                         ChangeType.INSERT.toString(), context);
+                                                         ChangeType.INSERT, context);
 
                     saveTagsFromWithinTransaction(account, transactionalDao, context);
                     saveCustomFieldsFromWithinTransaction(account, transactionalDao, context);
@@ -175,7 +175,7 @@ public class AuditedAccountDao implements AccountDao {
 
                     AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
                     auditDao.insertAuditFromTransaction("account_history" ,historyId.toString(),
-                                                        ChangeType.INSERT.toString(), context);
+                                                        ChangeType.INSERT, context);
 
                     saveTagsFromWithinTransaction(account, accountSqlDao, context);
                     saveCustomFieldsFromWithinTransaction(account, accountSqlDao, context);
@@ -195,36 +195,6 @@ public class AuditedAccountDao implements AccountDao {
             }
         }
     }
-
-    @Override
-	public void deleteByKey(final String externalKey, final CallContext context) throws AccountApiException {
-    	try {
-            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
-                @Override
-                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
-                    Account account = accountSqlDao.getAccountByKey(externalKey);
-                    accountSqlDao.deleteByKey(externalKey);
-
-                    // TODO: ensure tags and fields aren't orphaned
-                    UUID historyId = UUID.randomUUID();
-                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
-                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.UPDATE.toString(), context);
-
-                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
-                    auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
-                            ChangeType.INSERT.toString(), context);
-
-                    return null;
-                }
-            });
-        } catch (RuntimeException re) {
-            if (re.getCause() instanceof AccountApiException) {
-                throw (AccountApiException) re.getCause();
-            } else {
-                throw re;
-            }
-        }
-	}
 
     @Override
     public void test() {

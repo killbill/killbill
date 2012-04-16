@@ -72,7 +72,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 	@XmlElement(name="rules", required=true)
 	private PlanRules planRules;
 
-    @XmlElement(name="overdueRules", required=true)
+    @XmlElement(name="overdueRules", required=false)
     private OverdueRules overdueRules;
 
 	@XmlElementWrapper(name="plans", required=true)
@@ -247,7 +247,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		validate(catalog,errors, plans);
 		priceLists.validate(catalog,errors);
 		planRules.validate(catalog, errors);
-		overdueRules.validate(catalog,errors);
+		if(overdueRules != null) {overdueRules.validate(catalog,errors); }
 		return errors;
 	}
 

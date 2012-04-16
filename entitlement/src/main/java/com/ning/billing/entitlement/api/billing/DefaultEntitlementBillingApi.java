@@ -22,6 +22,15 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.dao.AuditSqlDao;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.CallContextFactory;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
@@ -35,6 +44,7 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
@@ -51,11 +61,15 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     private final EntitlementDao entitlementDao;
     private final AccountUserApi accountApi;
     private final BillCycleDayCalculator bcdCalculator;
+    private final SubscriptionFactory subscriptionFactory;
+  
+    private static final String SUBSCRIPTION_TABLE_NAME = "subscriptions";
 
     @Inject
-    public DefaultEntitlementBillingApi(final CallContextFactory factory, final EntitlementDao dao, final AccountUserApi accountApi, final BillCycleDayCalculator bcdCalculator) {
+    public DefaultEntitlementBillingApi(final CallContextFactory factory, final SubscriptionFactory subscriptionFactory, final EntitlementDao dao, final AccountUserApi accountApi, final BillCycleDayCalculator bcdCalculator) {
         super();
         this.factory = factory;
+        this.subscriptionFactory = subscriptionFactory;
         this.entitlementDao = dao;
         this.accountApi = accountApi;
         this.bcdCalculator = bcdCalculator;
@@ -70,7 +84,8 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         List<SubscriptionBundle> bundles = entitlementDao.getSubscriptionBundleForAccount(accountId);
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         for (final SubscriptionBundle bundle: bundles) {
-        	List<Subscription> subscriptions = entitlementDao.getSubscriptions(bundle.getId());
+        	List<Subscription> subscriptions = entitlementDao.getSubscriptions(subscriptionFactory, bundle.getId());
+
         	for (final Subscription subscription: subscriptions) {
         		for (final SubscriptionTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
         			try {
@@ -103,18 +118,19 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     }
 
     @Override
-    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd) {
-        SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionId);
+    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd, CallContext context) {
+        SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId);
 
         SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
             .setChargedThroughDate(ctd)
             .setPaidThroughDate(subscription.getPaidThroughDate());
 
-        entitlementDao.updateSubscription(new SubscriptionData(builder));
+        entitlementDao.updateSubscription(new SubscriptionData(builder), context);
     }
 
     @Override
-    public void setChargedThroughDateFromTransaction(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime ctd) {
+    public void setChargedThroughDateFromTransaction(final Transmogrifier transactionalDao, final UUID subscriptionId,
+                                                     final DateTime ctd, final CallContext context) {
         SubscriptionSqlDao subscriptionSqlDao = transactionalDao.become(SubscriptionSqlDao.class);
         SubscriptionData subscription = (SubscriptionData) subscriptionSqlDao.getSubscriptionFromId(subscriptionId.toString());
 
@@ -126,7 +142,9 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             DateTime chargedThroughDate = subscription.getChargedThroughDate();
             if (chargedThroughDate == null || chargedThroughDate.isBefore(ctd)) {
                 subscriptionSqlDao.updateSubscription(subscriptionId.toString(), subscription.getActiveVersion(),
-                                                      ctd.toDate(), paidThroughDate);
+                                                      ctd.toDate(), paidThroughDate, context);
+                AuditSqlDao auditSqlDao = transactionalDao.become(AuditSqlDao.class);
+                auditSqlDao.insertAuditFromTransaction(SUBSCRIPTION_TABLE_NAME, subscriptionId.toString(), ChangeType.UPDATE, context);
             }
         }
     }

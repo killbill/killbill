@@ -29,7 +29,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 
-import com.google.common.collect.Lists;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
@@ -45,10 +44,10 @@ import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.Entitl
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import org.testng.annotations.Test;
 
+@Test(groups = {"slow"})
 public abstract class TestMigration extends TestApiBase {
-
-
     public void testSingleBasePlan() {
 
         try {
@@ -58,7 +57,7 @@ public abstract class TestMigration extends TestApiBase {
             DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated);
+            migrationApi.migrate(toBeMigrated, context);
             assertTrue(testListener.isCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
@@ -80,7 +79,6 @@ public abstract class TestMigration extends TestApiBase {
         }
     }
 
-
     public void testPlanWithAddOn() {
         try {
             DateTime beforeMigration = clock.getUTCNow();
@@ -91,7 +89,7 @@ public abstract class TestMigration extends TestApiBase {
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated);
+            migrationApi.migrate(toBeMigrated, context);
             assertTrue(testListener.isCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
@@ -126,7 +124,6 @@ public abstract class TestMigration extends TestApiBase {
         }
     }
 
-
     public void testSingleBasePlanFutureCancelled() {
 
         try {
@@ -137,7 +134,7 @@ public abstract class TestMigration extends TestApiBase {
             DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated);
+            migrationApi.migrate(toBeMigrated, context);
             assertTrue(testListener.isCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
@@ -177,13 +174,11 @@ public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlanWithPendingPhase() {
 
         try {
-            DateTime beforeMigration = clock.getUTCNow();
             final DateTime trialDate = clock.getUTCNow().minusDays(10);
             EntitlementAccountMigration toBeMigrated = createAccountFuturePendingPhase(trialDate);
-            DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated);
+            migrationApi.migrate(toBeMigrated, context);
             assertTrue(testListener.isCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
@@ -221,7 +216,6 @@ public abstract class TestMigration extends TestApiBase {
         }
     }
 
-
     public void testSingleBasePlanWithPendingChange() {
 
         try {
@@ -230,7 +224,7 @@ public abstract class TestMigration extends TestApiBase {
             DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated);
+            migrationApi.migrate(toBeMigrated, context);
             assertTrue(testListener.isCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
@@ -292,7 +286,7 @@ public abstract class TestMigration extends TestApiBase {
                                 }
                                 @Override
                                 public ProductCategory getCategory() {
-                                    return curCases.get(0).getPlanPhaseSpecifer().getProductCategory();
+                                    return curCases.get(0).getPlanPhaseSpecifier().getProductCategory();
                                 }
                                 @Override
                                 public DateTime getChargedThroughDate() {
@@ -428,7 +422,7 @@ public abstract class TestMigration extends TestApiBase {
         }
 
         @Override
-        public PlanPhaseSpecifier getPlanPhaseSpecifer() {
+        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
             return pps;
         }
 

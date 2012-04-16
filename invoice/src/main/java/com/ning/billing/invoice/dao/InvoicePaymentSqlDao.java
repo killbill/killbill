@@ -30,7 +30,7 @@ import java.util.UUID;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.MapperBase;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -42,6 +42,8 @@ import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -49,7 +51,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(InvoicePaymentSqlDao.InvoicePaymentMapper.class)
-public interface InvoicePaymentSqlDao {
+public interface InvoicePaymentSqlDao extends Transactional<InvoicePaymentSqlDao>, Transmogrifier {
     @SqlQuery
     public InvoicePayment getByPaymentAttemptId(@Bind("paymentAttempt") final String paymentAttemptId);
 
@@ -73,6 +75,8 @@ public interface InvoicePaymentSqlDao {
     @SqlUpdate
     void notifyOfPaymentAttempt(@InvoicePaymentBinder final InvoicePayment invoicePayment,
                                 @CallContextBinder final CallContext context);
+
+
 
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
         @Override

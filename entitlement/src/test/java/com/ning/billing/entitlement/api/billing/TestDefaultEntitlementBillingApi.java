@@ -141,7 +141,7 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, bcdCalculator);
+		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, bcdCalculator);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
@@ -168,7 +168,7 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, bcdCalculator);
+        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, bcdCalculator);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
@@ -197,7 +197,7 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, bcdCalculator);
+        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, bcdCalculator);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
@@ -224,7 +224,7 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, bcdCalculator);
+        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, bcdCalculator);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
@@ -253,7 +253,7 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, dao, accountApi, bcdCalculator);
+        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, bcdCalculator);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().plusDays(30).getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());

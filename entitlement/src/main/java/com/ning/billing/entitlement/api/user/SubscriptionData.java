@@ -106,7 +106,7 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
     }
 
     @Override
-    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
+    public void saveFieldValue(String fieldName, @Nullable String fieldValue, CallContext context) {
         super.setFieldValue(fieldName, fieldValue);
         apiService.commitCustomFields(this, context);
     }
@@ -166,25 +166,25 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
 
 
     @Override
-    public void cancel(DateTime requestedDate, boolean eot) throws EntitlementUserApiException  {
-        apiService.cancel(this, requestedDate, eot);
+    public void cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException  {
+        apiService.cancel(this, requestedDate, eot, context);
     }
 
     @Override
-    public void uncancel() throws EntitlementUserApiException {
-        apiService.uncancel(this);
+    public void uncancel(CallContext context) throws EntitlementUserApiException {
+        apiService.uncancel(this, context);
     }
 
     @Override
     public void changePlan(String productName, BillingPeriod term,
-            String priceList, DateTime requestedDate) throws EntitlementUserApiException {
-        apiService.changePlan(this, productName, term, priceList, requestedDate);
+            String priceList, DateTime requestedDate, CallContext context) throws EntitlementUserApiException {
+        apiService.changePlan(this, productName, term, priceList, requestedDate, context);
     }
 
     @Override
-    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate)
+    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
             throws EntitlementUserApiException {
-        apiService.recreatePlan(this, spec, requestedDate);
+        apiService.recreatePlan(this, spec, requestedDate, context);
     }
 
     public List<SubscriptionTransition> getBillingTransitions() {

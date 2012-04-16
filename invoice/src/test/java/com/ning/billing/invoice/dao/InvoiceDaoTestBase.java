@@ -52,7 +52,6 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected Clock clock;
     protected CallContext context;
     protected InvoiceGenerator generator;
-    private BusService busService;
 
     private final InvoiceConfig invoiceConfig = new InvoiceConfig() {
         @Override
@@ -70,12 +69,10 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
             module = new InvoiceModuleWithEmbeddedDb();
-            final String accountDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
             final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             final String entitlementDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 
             module.startDb();
-            module.initDb(accountDdl);
             module.initDb(invoiceDdl);
             module.initDb(entitlementDdl);
 
@@ -127,9 +124,6 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
     @AfterClass(alwaysRun = true)
     protected void tearDown() {
-    	if (busService != null) {
-            ((DefaultBusService) busService).stopBus();
-        }
         module.stopDb();
         assertTrue(true);
     }

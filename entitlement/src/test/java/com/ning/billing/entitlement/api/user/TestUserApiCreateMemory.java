@@ -33,31 +33,31 @@ public class TestUserApiCreateMemory extends TestUserApiCreate {
     }
 
     @Override
-    @Test(enabled=false, groups={"fast"})
+    @Test(enabled=true, groups={"fast-disabled"})
     public void testCreateWithRequestedDate() {
         super.testCreateWithRequestedDate();
     }
 
     @Override
-    @Test(enabled=false, groups={"fast"})
+    @Test(enabled=true, groups={"fast-disabled"})
     public void testCreateWithInitialPhase() {
         super.testSimpleSubscriptionThroughPhases();
     }
 
     @Override
-    @Test(enabled=false, groups={"fast"})
+    @Test(enabled=true, groups={"fast-disabled"})
     public void testSimpleCreateSubscription() {
         super.testSimpleCreateSubscription();
     }
 
     @Override
-    @Test(enabled=false, groups={"fast"})
+    @Test(enabled=true, groups={"fast-disabled"})
     protected void testSimpleSubscriptionThroughPhases() {
         super.testSimpleSubscriptionThroughPhases();
     }
 
     @Override
-    @Test(enabled=false, groups={"fast"})
+    @Test(enabled=true, groups={"fast-disabled"})
     protected void testSubscriptionWithAddOn() {
         super.testSubscriptionWithAddOn();
     }

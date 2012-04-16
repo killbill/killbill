@@ -18,13 +18,9 @@ package com.ning.billing.util.tag.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.entity.MapperBase;
-import com.ning.billing.util.tag.ControlTag;
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
