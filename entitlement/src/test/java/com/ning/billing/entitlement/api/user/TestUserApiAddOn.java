@@ -359,6 +359,7 @@ public class TestUserApiAddOn extends TestApiBase {
            // Talk with Stephane about this fix. It seemed that the add on phase change was not appearing in the queue
            // hypothesis is that waiting a period that is exactly the duration of the phase might be an instant too short
            // depending how the comparison works
+           
            //someTimeLater = aoCurrentPhase.getDuration();
            someTimeLater = new Duration() {
                @Override
