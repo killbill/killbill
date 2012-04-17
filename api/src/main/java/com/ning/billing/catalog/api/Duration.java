@@ -17,6 +17,7 @@
 package com.ning.billing.catalog.api;
 
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 public interface Duration {
 
@@ -25,4 +26,6 @@ public interface Duration {
 	public abstract int getNumber();
 
     public DateTime addToDateTime(DateTime dateTime);
+
+    public Period toJodaPeriod();
 }
