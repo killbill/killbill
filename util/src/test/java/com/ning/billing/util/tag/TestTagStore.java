@@ -391,6 +391,8 @@ public class TestTagStore {
         String query = String.format("select * from audit_log a inner join tag_history th on a.record_id = th.history_record_id where a.table_name = 'tag_history' and th.id='%s' and a.change_type='INSERT'",
                                      tag.getId().toString());
         List<Map<String, Object>> result = handle.select(query);
+        handle.close();
+
         assertNotNull(result);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).get("change_type"), "INSERT");
@@ -420,6 +422,8 @@ public class TestTagStore {
         String query = String.format("select * from audit_log a inner join tag_history th on a.record_id = th.history_record_id where a.table_name = 'tag_history' and th.id='%s' and a.change_type='DELETE'",
                                      tag.getId().toString());
         List<Map<String, Object>> result = handle.select(query);
+        handle.close();
+
         assertNotNull(result);
         assertEquals(result.size(), 1);
         assertNotNull(result.get(0).get("change_date"));

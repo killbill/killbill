@@ -102,6 +102,16 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
+    public List<AccountEmail> getEmails(UUID accountId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void updateAccount(final Account account, final CallContext context) {
         throw new UnsupportedOperationException();
     }

@@ -51,6 +51,31 @@ CREATE TABLE account_history (
     phone varchar(25) DEFAULT NULL,
     change_type char(6) NOT NULL,
     updated_by varchar(50) NOT NULL,
-    date datetime
+    date datetime NOT NULL
 ) ENGINE=innodb;
 CREATE INDEX account_id ON account_history(id);
+
+DROP TABLE IF EXISTS account_emails;
+CREATE TABLE account_emails (
+    id char(36) NOT NULL,
+    account_id char(36) NOT NULL,
+    email varchar(50) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
+    PRIMARY KEY(id)
+) ENGINE=innodb;
+CREATE INDEX account_email_account_id ON account_mails(account_id);
+
+DROP TABLE IF EXISTS account_email_history;
+CREATE TABLE account_email_history (
+    history_record_id char(36) NOT NULL,
+    id char(36) NOT NULL,
+    account_id char(36) NOT NULL,
+    email varchar(50) NOT NULL,
+    change_type char(6) NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    date datetime NOT NULL,
+    PRIMARY KEY(history_record_id)
+) ENGINE=innodb;

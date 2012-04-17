@@ -16,6 +16,9 @@
 
 package com.ning.billing.account.api.user;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,9 +27,9 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.MigrationAccountData;
-import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
@@ -100,7 +103,6 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, e.getCode(), e.getMessage());
         }
-  
     }
 
     @Override
@@ -132,5 +134,13 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
         return account;
 	}
 
+    @Override
+    public List<AccountEmail> getEmails(final UUID accountId) {
+        return dao.getEmails(accountId);
+    }
 
+    @Override
+    public void saveEmails(final UUID accountId, final List<AccountEmail> newEmails, final CallContext context) {
+        dao.saveEmails(accountId, newEmails, context);
+    }
 }

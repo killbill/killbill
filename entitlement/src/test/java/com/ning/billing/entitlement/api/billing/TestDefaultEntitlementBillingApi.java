@@ -82,7 +82,7 @@ public class TestDefaultEntitlementBillingApi {
     private CallContextFactory factory;
 	private DateTime subscriptionStartDate;
 
-	@BeforeSuite(alwaysRun=true)
+	@BeforeSuite(groups={"fast", "slow"})
 	public void setup() throws ServiceException {
 		TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new CatalogModule(), new ClockModule(), new CallContextModule());
@@ -94,7 +94,7 @@ public class TestDefaultEntitlementBillingApi {
         ((DefaultCatalogService)catalogService).loadCatalog();
 	}
 
-	@BeforeMethod(alwaysRun=true)
+	@BeforeMethod(groups={"fast", "slow"})
 	public void setupEveryTime() {
 		bundles = new ArrayList<SubscriptionBundle>();
 		final SubscriptionBundle bundle = new SubscriptionBundleData( zeroId,"TestKey", oneId,  clock.getUTCNow().minusDays(4));

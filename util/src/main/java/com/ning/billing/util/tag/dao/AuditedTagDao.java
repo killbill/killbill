@@ -22,18 +22,18 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.dao.AuditedDaoBase;
 import com.ning.billing.util.tag.Tag;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-public class AuditedTagDao implements TagDao {
+public class AuditedTagDao extends AuditedDaoBase implements TagDao {
     private final TagSqlDao tagSqlDao;
 
     @Inject
@@ -83,14 +83,6 @@ public class AuditedTagDao implements TagDao {
         AuditSqlDao auditSqlDao = tagSqlDao.become(AuditSqlDao.class);
         auditSqlDao.insertAuditFromTransaction("tag_history", historyIdsForInsert, ChangeType.INSERT, context);
         auditSqlDao.insertAuditFromTransaction("tag_history", historyIdsForDelete, ChangeType.DELETE, context);
-    }
-
-    private List<String> getIdList(int size) {
-        List<String> results = new ArrayList<String>();
-        for (int i = 0; i < size; i++) {
-            results.add(UUID.randomUUID().toString());
-        }
-        return results;
     }
 
     @Override

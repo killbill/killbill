@@ -16,11 +16,15 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.List;
 import java.util.UUID;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.UpdatableEntityDao;
+
+import javax.annotation.Nullable;
 
 public interface AccountDao extends UpdatableEntityDao<Account> {
     public Account getAccountByKey(String key);
@@ -32,4 +36,8 @@ public interface AccountDao extends UpdatableEntityDao<Account> {
      * @throws AccountApiException when externalKey is null
      */
     public UUID getIdFromKey(String externalKey) throws AccountApiException;
+
+    public List<AccountEmail> getEmails(UUID accountId);
+
+    public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context);
 }
