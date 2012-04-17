@@ -23,8 +23,8 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.overdue.OverdueAccessApi;
 import com.ning.billing.overdue.config.api.OverdueState;
-import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class DefaultOverdueChecker implements OverdueChecker {
 

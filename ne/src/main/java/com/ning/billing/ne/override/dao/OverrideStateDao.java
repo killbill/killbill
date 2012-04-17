@@ -19,11 +19,11 @@ package com.ning.billing.ne.override.dao;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import com.ning.billing.overdue.OverdueEvent;
 import com.ning.billing.overdue.config.api.OverdueState;
 import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.overdue.config.api.Overdueable.Type;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.overdue.OverdueEvent;
 
 public interface OverrideStateDao {
 

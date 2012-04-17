@@ -14,14 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.util.overdue;
+package com.ning.billing.overdue;
 
 import java.util.SortedSet;
 import java.util.UUID;
 
 import com.ning.billing.overdue.config.api.OverdueState;
 import com.ning.billing.overdue.config.api.Overdueable;
-import com.ning.billing.util.clock.Clock;
 
 public interface OverdueAccessApi {
     public static final String CLEAR_STATE_NAME = "__KILLBILL__CLEAR__OVERDUE_STATE__";
@@ -34,6 +33,6 @@ public interface OverdueAccessApi {
 
     public SortedSet<OverdueEvent> getOverdueHistory(UUID overdueableId, Overdueable.Type type);
     
-    public <T extends Overdueable> void  setOverrideState(T overdueable, OverdueState<T> newOverdueState, Overdueable.Type type, Clock clock);
+    public <T extends Overdueable> void  setOverrideState(T overdueable, OverdueState<T> newOverdueState, Overdueable.Type type);
 
 }

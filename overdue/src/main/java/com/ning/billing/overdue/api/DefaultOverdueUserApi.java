@@ -22,9 +22,8 @@ import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.overdue.OverdueService;
+import com.ning.billing.overdue.OverdueAccessApi;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.config.api.BillingState;
@@ -35,13 +34,12 @@ import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
-import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class DefaultOverdueUserApi implements OverdueUserApi{
 
     
     private final OverdueWrapperFactory factory;
-    private final OverdueAccessApi accessApi;
+    private final OverdueAccessApi accessApi; 
     private final OverdueConfig overdueConfig;
    
     @Inject

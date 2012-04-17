@@ -20,7 +20,7 @@ import com.google.inject.AbstractModule;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.ne.override.dao.OverrideStateDao;
-import com.ning.billing.util.overdue.OverdueAccessApi;
+import com.ning.billing.overdue.OverdueAccessApi;
 
 public class MockOverdueAccessModule extends AbstractModule {
     public static final String CLEAR_STATE="Clear";

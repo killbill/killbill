@@ -36,10 +36,10 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.ne.glue.NEModule;
 import com.ning.billing.ne.override.dao.OverrideStateDao;
+import com.ning.billing.overdue.OverdueEvent;
 import com.ning.billing.overdue.config.api.OverdueState;
 import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.overdue.OverdueEvent;
 
 @Guice(modules = {MockModule.class,  NEModule.class})
 public class TestOverdueDao {

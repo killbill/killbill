@@ -36,14 +36,14 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTempla
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.overdue.OverdueAccessApi;
+import com.ning.billing.overdue.OverdueEvent;
 import com.ning.billing.overdue.config.api.OverdueState;
 import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.overdue.config.api.Overdueable.Type;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
-import com.ning.billing.util.overdue.OverdueAccessApi;
-import com.ning.billing.util.overdue.OverdueEvent;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface OverrideStateSqlDao extends OverrideStateDao, CloseMe, Transmogrifier {

@@ -23,8 +23,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.ning.billing.ne.override.dao.OverrideStateDao;
 import com.ning.billing.ne.override.dao.OverrideStateSqlDao;
+import com.ning.billing.overdue.OverdueAccessApi;
 import com.ning.billing.util.overdue.DefaultOverdueAcessApi;
-import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class NEModule extends AbstractModule {
 

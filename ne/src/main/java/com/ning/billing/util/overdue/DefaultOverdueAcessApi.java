@@ -21,6 +21,8 @@ import java.util.UUID;
 
 import com.google.inject.Inject;
 import com.ning.billing.ne.override.dao.OverrideStateDao;
+import com.ning.billing.overdue.OverdueAccessApi;
+import com.ning.billing.overdue.OverdueEvent;
 import com.ning.billing.overdue.config.api.OverdueState;
 import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.overdue.config.api.Overdueable.Type;
@@ -28,10 +30,12 @@ import com.ning.billing.util.clock.Clock;
 
 public class DefaultOverdueAcessApi implements OverdueAccessApi {
     private OverrideStateDao dao;
+    private Clock clock;
 
     @Inject
-    public DefaultOverdueAcessApi(OverrideStateDao dao) {
+    public DefaultOverdueAcessApi(OverrideStateDao dao, Clock clock) {
         this.dao = dao;
+        this.clock = clock;
     }
     
     @Override
@@ -56,8 +60,7 @@ public class DefaultOverdueAcessApi implements OverdueAccessApi {
     }
 
     @Override
-    public <T extends Overdueable> void setOverrideState(T overdueable, OverdueState<T> newOverdueState, Type type,
-            Clock clock) {
+    public <T extends Overdueable> void setOverrideState(T overdueable, OverdueState<T> newOverdueState, Type type) {
        dao.setOverdueState(overdueable, newOverdueState, type, clock);
         
     }

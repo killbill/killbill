@@ -38,9 +38,9 @@ import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
+import com.ning.billing.overdue.OverdueAccessApi;
+import com.ning.billing.overdue.OverdueEvent;
 import com.ning.billing.overdue.config.api.Overdueable;
-import com.ning.billing.util.overdue.OverdueAccessApi;
-import com.ning.billing.util.overdue.OverdueEvent;
 
 public class OverdueEventCalculator {
     private final OverdueAccessApi overdueApi;

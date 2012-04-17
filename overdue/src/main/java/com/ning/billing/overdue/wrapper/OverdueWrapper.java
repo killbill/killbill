@@ -17,6 +17,7 @@
 package com.ning.billing.overdue.wrapper;
 
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.overdue.OverdueAccessApi;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculator;
 import com.ning.billing.overdue.config.api.BillingState;
@@ -25,7 +26,6 @@ import com.ning.billing.overdue.config.api.OverdueState;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class OverdueWrapper<T extends Overdueable> {
     private final T overdueable;

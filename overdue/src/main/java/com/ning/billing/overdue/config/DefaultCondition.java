@@ -26,8 +26,6 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.DefaultDuration;
-import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.overdue.config.api.PaymentResponse;
@@ -37,7 +35,7 @@ import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultCondition<T extends Overdueable> extends ValidatingConfig<StandaloneCatalog> implements Condition<T> {
+public class DefaultCondition<T extends Overdueable> extends ValidatingConfig<OverdueConfig> implements Condition<T> {
 	@XmlElement(required=false, name="numberOfUnpaidInvoicesEqualsOrExceeds")
 	private Integer numberOfUnpaidInvoicesEqualsOrExceeds;
 
@@ -83,12 +81,12 @@ public class DefaultCondition<T extends Overdueable> extends ValidatingConfig<St
 	}
 
 	@Override
-	public ValidationErrors validate(StandaloneCatalog root,
+	public ValidationErrors validate(OverdueConfig root,
 			ValidationErrors errors) {
 		return errors;
 	}
 
 	@Override
-	public void initialize(StandaloneCatalog root, URI uri) {
+	public void initialize(OverdueConfig root, URI uri) {
 	}
 }

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.overdue;
+package com.ning.billing.overdue;
 
 import java.util.UUID;
 

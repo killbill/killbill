@@ -19,6 +19,7 @@ package com.ning.billing.overdue.wrapper;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.overdue.OverdueAccessApi;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -26,7 +27,6 @@ import com.ning.billing.overdue.config.api.OverdueError;
 import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class OverdueWrapperFactory {
 
