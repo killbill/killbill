@@ -18,6 +18,10 @@ package com.ning.billing.catalog.api;
 
 import java.util.Date;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.overdue.config.api.OverdueStateSet;
+
 
 public interface StaticCatalog {
     //
@@ -48,10 +52,15 @@ public interface StaticCatalog {
     //
     // Find a phase
     //
-    public abstract PlanPhase findCurrentPhase(String name) throws CatalogApiException;
+    public abstract  PlanPhase findCurrentPhase(String name) throws CatalogApiException;
     
     //
-    // Rules
+    // Find a pricelist
+    //
+    public abstract PriceList findCurrentPricelist(String name) throws CatalogApiException;
+    
+    //
+    //  
     //
 	public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
 			PlanSpecifier to) throws CatalogApiException;
@@ -71,6 +80,4 @@ public interface StaticCatalog {
 
     public abstract boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException;
 
-
-	
 }

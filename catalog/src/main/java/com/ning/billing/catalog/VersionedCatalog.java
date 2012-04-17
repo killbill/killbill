@@ -46,6 +46,7 @@ import com.ning.billing.catalog.api.PlanChangeResult;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.util.clock.Clock;
@@ -160,6 +161,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 		throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
 	}
 	
+	
+	
 	//
 	// Public methods not exposed in interface
 	//
@@ -270,6 +273,17 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 		return plan.findPhase(phaseName);
 	}
 	
+	
+	//
+    // Find a price list
+    //
+    @Override
+    public PriceList findPriceList(String name, DateTime requestedDate)
+            throws CatalogApiException {
+        return versionForDate(requestedDate).findCurrentPriceList(name);
+    }
+
+ 
     //
     // Rules
     //
@@ -381,6 +395,13 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 	public PlanPhase findCurrentPhase(String name) throws CatalogApiException {
 		return versionForDate(clock.getUTCNow()).findCurrentPhase(name);
 	}
+	
+
+    @Override
+    public PriceList findCurrentPricelist(String name)
+            throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).findCurrentPriceList(name);
+    }
 
 	@Override
 	public ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
@@ -424,8 +445,4 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 		return versionForDate(clock.getUTCNow()).canCreatePlan(specifier);
 	}
 
-	
-
-
- 
 }

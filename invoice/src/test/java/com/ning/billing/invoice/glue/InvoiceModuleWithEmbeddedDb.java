@@ -16,11 +16,19 @@
 
 package com.ning.billing.invoice.glue;
 
+import static org.testng.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.net.URL;
 
-import com.ning.billing.invoice.api.test.InvoiceTestApi;
+import org.skife.jdbi.v2.IDBI;
+
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
+import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
 import com.ning.billing.invoice.notification.MockNextBillingDateNotifier;
@@ -30,22 +38,14 @@ import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.glue.FieldStoreModule;
-import com.ning.billing.util.glue.GlobalLockerModule;
-import com.ning.billing.util.glue.TagStoreModule;
-import org.skife.jdbi.v2.IDBI;
-
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.FieldStoreModule;
+import com.ning.billing.util.glue.GlobalLockerModule;
+import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-
-import static org.testng.Assert.assertNotNull;
 
 public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();

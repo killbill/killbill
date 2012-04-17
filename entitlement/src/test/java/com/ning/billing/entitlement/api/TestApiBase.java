@@ -31,6 +31,7 @@ import com.ning.billing.util.callcontext.TestCallContext;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -74,6 +75,7 @@ import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.BusService;
 
@@ -185,7 +187,7 @@ public abstract class TestApiBase {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setupTest() {
+    public void setupTest() throws Exception {
 
         log.warn("RESET TEST FRAMEWORK\n\n");
 
@@ -261,7 +263,6 @@ public abstract class TestApiBase {
         }
     }
 
-
     protected void assertDateWithin(DateTime in, DateTime lower, DateTime upper) {
         assertTrue(in.isEqual(lower) || in.isAfter(lower));
         assertTrue(in.isEqual(upper) || in.isBefore(upper));
@@ -282,6 +283,10 @@ public abstract class TestApiBase {
             public DateTime addToDateTime(DateTime dateTime) {
                 return null;
             }
+            @Override
+            public Period toJodaPeriod() {
+                throw new UnsupportedOperationException();
+            }
         };
         return result;
     }
@@ -300,6 +305,10 @@ public abstract class TestApiBase {
             @Override
             public DateTime addToDateTime(DateTime dateTime) {
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
+            }
+            @Override
+            public Period toJodaPeriod() {
+                throw new UnsupportedOperationException();
             }
         };
         return result;
@@ -320,6 +329,10 @@ public abstract class TestApiBase {
             @Override
             public DateTime addToDateTime(DateTime dateTime) {
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
+            }
+            @Override
+            public Period toJodaPeriod() {
+                throw new UnsupportedOperationException();
             }
         };
         return result;

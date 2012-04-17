@@ -110,7 +110,7 @@ public class TestDefaultInvoiceMigrationApi {
 
     private final Clock clock = new ClockMock();
 
-	@BeforeClass(alwaysRun = true)
+	@BeforeClass(groups={"slow"})
 	public void setup() throws Exception
 	{
 		log.info("Starting set up");
@@ -133,7 +133,7 @@ public class TestDefaultInvoiceMigrationApi {
 		regularInvoiceId = generateRegularInvoice();
 	}
 
-	@AfterClass(alwaysRun = true)
+	@AfterClass(groups={"slow"})
 	public void tearDown() {
 		try {
 			((DefaultBusService) busService).stopBus();
@@ -171,20 +171,20 @@ public class TestDefaultInvoiceMigrationApi {
 		((ZombieControl)account).addResult("getId", accountId);
 
 		Subscription subscription =  BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-		((ZombieControl)subscription).addResult("getId", subscriptionId);
+        ((ZombieControl)subscription).addResult("getId", subscriptionId);
+        ((ZombieControl)subscription).addResult("getBundleId", new UUID(0L,0L));
 		SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
 		Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
 		PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();
 		DateTime effectiveDate = new DateTime().minusDays(1);
 		Currency currency = Currency.USD;
 		BigDecimal fixedPrice = null;
-		events.add(new DefaultBillingEvent(subscription, effectiveDate,plan, planPhase,
+		events.add(new DefaultBillingEvent(account, subscription, effectiveDate,plan, planPhase,
 				fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
 				BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
 		EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
-		((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccount", events);
-
+        ((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
 		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker, busService.getBus(), clock);
 
         CallContext context = new DefaultCallContextFactory(clock).createCallContext("Migration test", CallOrigin.TEST, UserType.TEST);

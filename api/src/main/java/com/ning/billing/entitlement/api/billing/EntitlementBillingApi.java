@@ -33,7 +33,7 @@ public interface EntitlementBillingApi {
      * @return an ordered list of billing event for the given accounts
      *
      */
-    public SortedSet<BillingEvent> getBillingEventsForAccount(UUID accountId);
+    public SortedSet<BillingEvent> getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId);
 
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId);
 

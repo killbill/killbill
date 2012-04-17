@@ -119,3 +119,5 @@ CREATE TABLE audit_log (
     user_token char(36),
     PRIMARY KEY(id)
 ) ENGINE=innodb;
+
+

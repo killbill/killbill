@@ -16,6 +16,10 @@
 
 package com.ning.billing.server.modules;
 
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
+
+import com.google.inject.AbstractModule;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.beatrix.glue.BeatrixModule;
@@ -37,10 +41,6 @@ import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.jetty.jdbi.guice.providers.DBIProvider;
-
-import com.google.inject.AbstractModule;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.IDBI;
 
 public class KillbillServerModule extends AbstractModule
 {

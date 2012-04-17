@@ -16,9 +16,11 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
-import java.util.UUID;
+import com.ning.billing.overdue.config.api.OverdueState;
 
 public class SubscriptionBundleData implements SubscriptionBundle {
 
@@ -26,17 +28,19 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     private final String key;
     private final UUID accountId;
     private final DateTime startDate;
+    private final OverdueState<SubscriptionBundle> overdueState;
 
     public SubscriptionBundleData(String name, UUID accountId) {
-        this(UUID.randomUUID(), name, accountId, null);
+        this(UUID.randomUUID(), name, accountId, null, null);
     }
 
-    public SubscriptionBundleData(UUID id, String key, UUID accountId, DateTime startDate) {
+    public SubscriptionBundleData(UUID id, String key, UUID accountId, DateTime startDate, OverdueState<SubscriptionBundle> overdueState) {
         super();
         this.id = id;
         this.key = key;
         this.accountId = accountId;
         this.startDate = startDate;
+        this.overdueState = overdueState;
     }
 
     @Override
@@ -59,5 +63,10 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     @Override
     public DateTime getStartDate() {
         return startDate;
+    }
+
+    @Override
+    public OverdueState<SubscriptionBundle> getOverdueState() {
+        return overdueState;
     }
 }

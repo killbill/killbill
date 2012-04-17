@@ -20,6 +20,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -85,6 +86,10 @@ public class TestSubscription extends TestJaxrsBase {
             @Override
             public DateTime addToDateTime(DateTime dateTime) {
                 return null;
+            }
+            @Override
+            public Period toJodaPeriod() {
+                throw new UnsupportedOperationException();
             }
         }, 1000);
 

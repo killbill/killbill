@@ -384,9 +384,11 @@ public class DefaultInvoiceDao implements InvoiceDao {
         addInvoiceItemsToChargeThroughDates(chargeThroughDates, recurringItems);
 
         for (UUID subscriptionId : chargeThroughDates.keySet()) {
-            DateTime chargeThroughDate = chargeThroughDates.get(subscriptionId);
-            log.info("Setting CTD for subscription {} to {}", subscriptionId.toString(), chargeThroughDate.toString());
-            entitlementBillingApi.setChargedThroughDateFromTransaction(dao, subscriptionId, chargeThroughDate, context);
+            if(subscriptionId != null) {
+                DateTime chargeThroughDate = chargeThroughDates.get(subscriptionId);
+                log.info("Setting CTD for subscription {} to {}", subscriptionId.toString(), chargeThroughDate.toString());
+                entitlementBillingApi.setChargedThroughDateFromTransaction(dao, subscriptionId, chargeThroughDate, context);
+            }
         }
     }
 

@@ -34,8 +34,8 @@ public class MockCatalog extends StandaloneCatalog {
 		populateRules();
 		populatePriceLists();
 	}
-	
-	public void populateRules(){
+
+    public void populateRules(){
 		setPlanRules(new PlanRules());
 	}
 
@@ -47,6 +47,8 @@ public class MockCatalog extends StandaloneCatalog {
 			){
 		
 	}
+	
+	
 
 	public void populatePriceLists() {
 		DefaultPlan[] plans = getCurrentPlans();

@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.notificationq;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
@@ -44,6 +46,13 @@ public interface NotificationQueue {
            final DateTime futureNotificationTime, final NotificationKey notificationKey);
 
    /**
+    * Remove all notifications associated with this key   
+    * 
+    * @param key
+    */
+   public void removeNotificationsByKey(UUID key);
+
+   /**
     * This is only valid when the queue has been configured with isNotificationProcessingOff is true
     * In which case, it will callback users for all the ready notifications.
     *
@@ -70,5 +79,7 @@ public interface NotificationQueue {
     * @return the name of that queue
     */
    public String getFullQName();
+
+   
 
 }

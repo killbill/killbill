@@ -133,7 +133,7 @@ public class TestDefaultBillingEvent {
 		Plan shotgun = new MockPlan();
 		PlanPhase shotgunMonthly = createMockMonthlyPlanPhase(null, BigDecimal.ZERO, PhaseType.TRIAL);
 
-		return new DefaultBillingEvent(sub , effectiveDate,
+		return new DefaultBillingEvent(null, sub , effectiveDate,
 				shotgun, shotgunMonthly,
 				BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
 				BillingModeType.IN_ADVANCE, "Test Event 1", totalOrdering, type);

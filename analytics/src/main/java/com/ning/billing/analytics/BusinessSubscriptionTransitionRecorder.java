@@ -115,7 +115,7 @@ public class BusinessSubscriptionTransitionRecorder
             prevSubscription = null;
         }
         else {
-            prevSubscription = new BusinessSubscription(transition.getPreviousPriceList(), transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId());
+            prevSubscription = new BusinessSubscription(transition.getPreviousPriceList() == null ? null : transition.getPreviousPriceList().getName(), transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId());
         }
         final BusinessSubscription nextSubscription;
 
@@ -124,7 +124,7 @@ public class BusinessSubscriptionTransitionRecorder
             nextSubscription = null;
         }
         else {
-            nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId());
+            nextSubscription = new BusinessSubscription(transition.getNextPriceList() == null ? null : transition.getNextPriceList().getName(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId());
         }
 
         record(transition.getId(), transitionKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);

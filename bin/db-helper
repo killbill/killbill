@@ -53,7 +53,6 @@ function get_modules() {
 }
 
 function find_test_ddl() {
-
     local modules=`get_modules`
     local ddl_test=
     
@@ -137,7 +136,7 @@ fi
 
 
 if [ $ACTION == "dump" ]; then
-    DDL_FILE=`create_ddl_file`
+     DDL_FILE=`create_ddl_file`
     cat $DDL_FILE
 fi
 

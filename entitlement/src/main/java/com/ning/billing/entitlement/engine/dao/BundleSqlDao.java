@@ -16,12 +16,11 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.dao.BinderBase;
-import com.ning.billing.util.dao.MapperBase;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -36,10 +35,12 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Transmogrifier {
@@ -71,6 +72,7 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
     }
 
     public static class ISubscriptionBundleSqlMapper extends MapperBase implements ResultSetMapper<SubscriptionBundle> {
+        
         @Override
         public SubscriptionBundle map(int arg, ResultSet r,
                 StatementContext ctx) throws SQLException {
@@ -79,7 +81,7 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
             String name = r.getString("name");
             UUID accountId = UUID.fromString(r.getString("account_id"));
             DateTime startDate = getDate(r, "start_dt");
-            SubscriptionBundleData bundle = new SubscriptionBundleData(id, name, accountId, startDate);
+            SubscriptionBundleData bundle = new SubscriptionBundleData(id, name, accountId, startDate, null);
             return bundle;
         }
 

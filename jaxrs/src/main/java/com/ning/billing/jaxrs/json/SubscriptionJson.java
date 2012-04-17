@@ -23,7 +23,6 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonView;
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -245,7 +244,7 @@ public class SubscriptionJson {
         this.productName = data.getCurrentPlan().getProduct().getName();
         this.productCategory = data.getCurrentPlan().getProduct().getCategory().toString();
         this.billingPeriod = data.getCurrentPlan().getBillingPeriod().toString();
-        this.priceList = data.getCurrentPriceList();
+        this.priceList = data.getCurrentPriceList().getName();
         this.events = events;
         this.deletedEvents = deletedEvents;
         this.newEvents = newEvents;

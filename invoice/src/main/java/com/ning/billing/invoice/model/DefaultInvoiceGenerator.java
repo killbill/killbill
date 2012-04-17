@@ -16,6 +16,18 @@
 
 package com.ning.billing.invoice.model;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+import org.joda.time.Months;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -28,16 +40,6 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.util.clock.Clock;
-import org.joda.time.DateTime;
-import org.joda.time.Months;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-import javax.annotation.Nullable;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
@@ -211,7 +213,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     if (rate != null) {
                         BigDecimal amount = itemDatum.getNumberOfCycles().multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
 
-                        RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId, accountId,
+                        RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId, 
+                                accountId,
+                                thisEvent.getSubscription().getBundleId(), 
                                 thisEvent.getSubscription().getId(),
                                 thisEvent.getPlan().getName(),
                                 thisEvent.getPlanPhase().getName(),
@@ -246,7 +250,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 Duration duration = thisEvent.getPlanPhase().getDuration();
                 DateTime endDate = duration.addToDateTime(thisEvent.getEffectiveDate());
 
-                return new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getSubscription().getId(),
+                return new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getSubscription().getBundleId(),
+                                                 thisEvent.getSubscription().getId(),
                                                  thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
                                                  thisEvent.getEffectiveDate(), endDate, fixedPrice, currency);
             } else {

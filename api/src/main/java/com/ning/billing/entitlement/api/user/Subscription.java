@@ -16,17 +16,18 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
-
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.ExtendedEntity;
-import org.joda.time.DateTime;
-
-import java.util.UUID;
 
 
 public interface Subscription extends ExtendedEntity {
@@ -58,7 +59,7 @@ public interface Subscription extends ExtendedEntity {
 
     public Plan getCurrentPlan();
 
-    public String getCurrentPriceList();
+    public PriceList getCurrentPriceList();
 
     public PlanPhase getCurrentPhase();
 

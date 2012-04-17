@@ -24,10 +24,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.audit.dao.AuditSqlDao;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -40,6 +38,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
@@ -62,15 +61,17 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.dao.AuditSqlDao;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-
-import javax.annotation.Nullable;
 
 public class EntitlementSqlDao implements EntitlementDao {
 
@@ -86,7 +87,9 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
     private final CustomFieldDao customFieldDao;
+    private final CatalogService catalogService;
 
+    
     //
     // We are not injecting SubscriptionFactory since that creates circular dependencies--
     // Guice would still work, but this is playing with fire.
@@ -95,8 +98,9 @@ public class EntitlementSqlDao implements EntitlementDao {
     //
     @Inject
     public EntitlementSqlDao(final IDBI dbi, final Clock clock,
-            final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-            final CustomFieldDao customFieldDao) {
+                             final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
+                             final CustomFieldDao customFieldDao,
+                             final CatalogService catalogService) {
         this.clock = clock;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
         this.eventsDao = dbi.onDemand(EventSqlDao.class);
@@ -104,6 +108,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
         this.customFieldDao = customFieldDao;
+        this.catalogService = catalogService;
     }
 
     @Override
@@ -613,4 +618,5 @@ public class EntitlementSqlDao implements EntitlementDao {
             subscription.setFields(fields);
         }
     }
+ 
 }

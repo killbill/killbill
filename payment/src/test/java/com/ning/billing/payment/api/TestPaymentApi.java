@@ -27,11 +27,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.clock.Clock;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -49,6 +44,11 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
 public abstract class TestPaymentApi {
@@ -83,9 +83,11 @@ public abstract class TestPaymentApi {
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
         final BigDecimal amount = new BigDecimal("10.0011");
         final UUID subscriptionId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
 
         invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(), account.getId(),
                                                        subscriptionId,
+                                                       bundleId,
                                                        "test plan", "test phase",
                                                        now,
                                                        now.plusMonths(1),

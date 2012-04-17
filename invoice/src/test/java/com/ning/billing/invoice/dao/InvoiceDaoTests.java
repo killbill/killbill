@@ -84,11 +84,12 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), clock.getUTCNow(), Currency.USD);
         UUID invoiceId = invoice.getId();
         UUID subscriptionId = UUID.randomUUID();
+        UUID bundleId = UUID.randomUUID();
         DateTime startDate = new DateTime(2010, 1, 1, 0, 0, 0, 0);
         DateTime endDate = new DateTime(2010, 4, 1, 0, 0, 0, 0);
-        InvoiceItem invoiceItem = new RecurringInvoiceItem(invoiceId, accountId, subscriptionId,
-                "test plan", "test phase", startDate, endDate,
+        InvoiceItem invoiceItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId,subscriptionId, "test plan", "test phase", startDate, endDate,
                 new BigDecimal("21.00"), new BigDecimal("7.00"), Currency.USD);
+
         invoice.addInvoiceItem(invoiceItem);
         invoiceDao.create(invoice, context);
 
@@ -155,6 +156,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     @Test
     public void testGetInvoicesBySubscription() {
         UUID accountId = UUID.randomUUID();
+        UUID bundleId = UUID.randomUUID();
 
         UUID subscriptionId1 = UUID.randomUUID();
         BigDecimal rate1 = new BigDecimal("17.0");
@@ -177,19 +179,20 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
         DateTime endDate = startDate.plusMonths(1);
 
-        RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoiceId1, accountId, subscriptionId1, "test plan", "test A", startDate, endDate,
+
+        RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId,subscriptionId1, "test plan", "test A", startDate, endDate,
                 rate1, rate1, Currency.USD);
         recurringInvoiceItemDao.create(item1, context);
 
-        RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoiceId1, accountId, subscriptionId2, "test plan", "test B", startDate, endDate,
+        RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId,subscriptionId2, "test plan", "test B", startDate, endDate,
                 rate2, rate2, Currency.USD);
         recurringInvoiceItemDao.create(item2, context);
 
-        RecurringInvoiceItem item3 = new RecurringInvoiceItem(invoiceId1, accountId, subscriptionId3, "test plan", "test C", startDate, endDate,
+        RecurringInvoiceItem item3 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId,subscriptionId3, "test plan", "test C", startDate, endDate,
                 rate3, rate3, Currency.USD);
         recurringInvoiceItemDao.create(item3, context);
 
-        RecurringInvoiceItem item4 = new RecurringInvoiceItem(invoiceId1, accountId, subscriptionId4, "test plan", "test D", startDate, endDate,
+        RecurringInvoiceItem item4 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId,subscriptionId4, "test plan", "test D", startDate, endDate,
                 rate4, rate4, Currency.USD);
         recurringInvoiceItemDao.create(item4, context);
 
@@ -202,15 +205,16 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         startDate = endDate;
         endDate = startDate.plusMonths(1);
 
-        RecurringInvoiceItem item5 = new RecurringInvoiceItem(invoiceId2, accountId, subscriptionId1, "test plan", "test phase A", startDate, endDate,
+
+        RecurringInvoiceItem item5 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId,subscriptionId1, "test plan", "test phase A", startDate, endDate,
                 rate1, rate1, Currency.USD);
         recurringInvoiceItemDao.create(item5, context);
 
-        RecurringInvoiceItem item6 = new RecurringInvoiceItem(invoiceId2, accountId, subscriptionId2, "test plan", "test phase B", startDate, endDate,
+        RecurringInvoiceItem item6 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId,subscriptionId2, "test plan", "test phase B", startDate, endDate,
                 rate2, rate2, Currency.USD);
         recurringInvoiceItemDao.create(item6, context);
 
-        RecurringInvoiceItem item7 = new RecurringInvoiceItem(invoiceId2, accountId, subscriptionId3, "test plan", "test phase C", startDate, endDate,
+        RecurringInvoiceItem item7 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId,subscriptionId3, "test plan", "test phase C", startDate, endDate,
                 rate3, rate3, Currency.USD);
         recurringInvoiceItemDao.create(item7, context);
 
@@ -260,6 +264,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     @Test
     public void testAccountBalance() {
         UUID accountId = UUID.randomUUID();
+        UUID bundleId = UUID.randomUUID();
         DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
         Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate1, Currency.USD);
         invoiceDao.create(invoice1, context);
@@ -270,11 +275,11 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal rate1 = new BigDecimal("17.0");
         BigDecimal rate2 = new BigDecimal("42.0");
 
-        RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, UUID.randomUUID(), "test plan", "test phase A", startDate,
+        RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId,UUID.randomUUID(), "test plan", "test phase A", startDate,
                 endDate, rate1, rate1, Currency.USD);
         recurringInvoiceItemDao.create(item1, context);
 
-        RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, UUID.randomUUID(), "test plan", "test phase B", startDate,
+        RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId,UUID.randomUUID(), "test plan", "test phase B", startDate,
                 endDate, rate2, rate2, Currency.USD);
         recurringInvoiceItemDao.create(item2, context);
 
@@ -289,6 +294,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     @Test
     public void testAccountBalanceWithNoPayments() {
         UUID accountId = UUID.randomUUID();
+        UUID bundleId = UUID.randomUUID();
         DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
         Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate1, Currency.USD);
         invoiceDao.create(invoice1, context);
@@ -299,11 +305,11 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal rate1 = new BigDecimal("17.0");
         BigDecimal rate2 = new BigDecimal("42.0");
 
-        RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, UUID.randomUUID(), "test plan", "test phase A", startDate, endDate,
+        RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate, endDate,
                 rate1, rate1, Currency.USD);
         recurringInvoiceItemDao.create(item1, context);
 
-        RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, UUID.randomUUID(), "test plan", "test phase B", startDate, endDate,
+        RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate, endDate,
                 rate2, rate2, Currency.USD);
         recurringInvoiceItemDao.create(item2, context);
 
@@ -329,6 +335,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     @Test
     public void testGetUnpaidInvoicesByAccountId() {
         UUID accountId = UUID.randomUUID();
+        UUID bundleId = UUID.randomUUID();
         DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
         Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate1, Currency.USD);
         invoiceDao.create(invoice1, context);
@@ -339,11 +346,12 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BigDecimal rate1 = new BigDecimal("17.0");
         BigDecimal rate2 = new BigDecimal("42.0");
 
-        RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, UUID.randomUUID(), "test plan", "test phase A", startDate, endDate,
+
+        RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate, endDate,
                 rate1, rate1, Currency.USD);
         recurringInvoiceItemDao.create(item1, context);
 
-        RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, UUID.randomUUID(), "test plan", "test phase B", startDate, endDate,
+        RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate, endDate,
                 rate2, rate2, Currency.USD);
         recurringInvoiceItemDao.create(item2, context);
 
@@ -367,7 +375,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         BigDecimal rate3 = new BigDecimal("21.0");
 
-        RecurringInvoiceItem item3 = new RecurringInvoiceItem(invoice2.getId(), accountId, UUID.randomUUID(), "test plan", "test phase C", startDate2, endDate2,
+        RecurringInvoiceItem item3 = new RecurringInvoiceItem(invoice2.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase C", startDate2, endDate2,
                 rate3, rate3, Currency.USD);
         recurringInvoiceItemDao.create(item3, context);
 
@@ -402,7 +410,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
 
         DateTime effectiveDate1 = new DateTime(2011, 2, 1, 0, 0, 0, 0);
-        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan1, phase1, null,
+        BillingEvent event1 = new DefaultBillingEvent(null, subscription, effectiveDate1, plan1, phase1, null,
                 recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CREATE);
 
@@ -420,7 +428,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         MockPlan plan2 = new MockPlan(phase2);
 
         DateTime effectiveDate2 = new DateTime(2011, 2, 15, 0, 0, 0, 0);
-        BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan2, phase2, null,
+        BillingEvent event2 = new DefaultBillingEvent(null, subscription, effectiveDate2, plan2, phase2, null,
                 recurringPrice2.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent2", 2L, SubscriptionTransitionType.CREATE);
         events.add(event2);
@@ -453,7 +461,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
         DateTime effectiveDate = buildDateTime(2011, 1, 1);
 
-        BillingEvent event = new DefaultBillingEvent(subscription, effectiveDate, plan, phase, null,
+        BillingEvent event = new DefaultBillingEvent(null, subscription, effectiveDate, plan, phase, null,
                 recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
                 "testEvent", 1L, SubscriptionTransitionType.CREATE);
         BillingEventSet events = new BillingEventSet();
@@ -486,7 +494,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
         DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
 
-        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan, phase1, fixedPrice.getPrice(currency),
+        BillingEvent event1 = new DefaultBillingEvent(null, subscription, effectiveDate1, plan, phase1, fixedPrice.getPrice(currency),
                 null, currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CREATE);
         BillingEventSet events = new BillingEventSet();
@@ -502,7 +510,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoiceList.add(invoice1);
 
         DateTime effectiveDate2 = effectiveDate1.plusDays(30);
-        BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan, phase2, null,
+        BillingEvent event2 = new DefaultBillingEvent(null, subscription, effectiveDate2, plan, phase2, null,
                 recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                 "testEvent2", 2L, SubscriptionTransitionType.CHANGE);
         events.add(event2);
@@ -546,7 +554,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
         DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
 
-        BillingEvent event1 = new DefaultBillingEvent(subscription, effectiveDate1, plan, phase1,
+        BillingEvent event1 = new DefaultBillingEvent(null, subscription, effectiveDate1, plan, phase1,
                 fixedPrice.getPrice(currency), null, currency,
                 BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CREATE);
@@ -554,7 +562,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         events.add(event1);
 
         DateTime effectiveDate2 = effectiveDate1.plusDays(30);
-        BillingEvent event2 = new DefaultBillingEvent(subscription, effectiveDate2, plan, phase2, null,
+        BillingEvent event2 = new DefaultBillingEvent(null, subscription, effectiveDate2, plan, phase2, null,
                 recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                 "testEvent2", 2L, SubscriptionTransitionType.CHANGE);
         events.add(event2);
@@ -593,7 +601,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BillingEventSet events = new BillingEventSet();
         List<Invoice> invoices = new ArrayList<Invoice>();
 
-        BillingEvent event1 = new DefaultBillingEvent(subscription, targetDate1, plan, phase1, null,
+        BillingEvent event1 = new DefaultBillingEvent(null, subscription, targetDate1, plan, phase1, null,
                                                       TEN, currency,
                                                       BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                                                       "testEvent1", 1L, SubscriptionTransitionType.CHANGE);
@@ -605,7 +613,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoice1 = invoiceDao.getById(invoice1.getId());
         assertNotNull(invoice1.getInvoiceNumber());
 
-        BillingEvent event2 = new DefaultBillingEvent(subscription, targetDate1, plan, phase2, null,
+        BillingEvent event2 = new DefaultBillingEvent(null, subscription, targetDate1, plan, phase2, null,
                                                       TWENTY, currency,
                                                       BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                                                       "testEvent2", 2L, SubscriptionTransitionType.CHANGE);
@@ -631,7 +639,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Currency currency = Currency.USD;
 
         // create pseudo-random invoice
-        BillingEvent event1 = new DefaultBillingEvent(subscription, targetDate1, plan, phase1, null,
+        BillingEvent event1 = new DefaultBillingEvent(null, subscription, targetDate1, plan, phase1, null,
                                                       TEN, currency,
                                                       BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                                                       "testEvent1", 1L, SubscriptionTransitionType.CHANGE);
@@ -662,7 +670,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Currency currency = Currency.USD;
 
         // create pseudo-random invoice
-        BillingEvent event1 = new DefaultBillingEvent(subscription, targetDate1, plan, phase1, null,
+        BillingEvent event1 = new DefaultBillingEvent(null, subscription, targetDate1, plan, phase1, null,
                                                       TEN, currency,
                                                       BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                                                       "testEvent1", 1L, SubscriptionTransitionType.CHANGE);

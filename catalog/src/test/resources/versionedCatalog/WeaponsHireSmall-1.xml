@@ -67,8 +67,7 @@
             </createAlignmentCase>
         </createAlignment>
 	</rules>
-
-
+ 
 	<plans>
 		<plan name="pistol-monthly">
 			<product>Pistol</product>

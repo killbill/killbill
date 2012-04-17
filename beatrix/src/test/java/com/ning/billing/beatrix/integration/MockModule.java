@@ -22,9 +22,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
-import com.ning.billing.util.glue.CallContextModule;
-import com.ning.billing.util.glue.FieldStoreModule;
-import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -49,12 +46,15 @@ import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.payment.setup.PaymentModule;
+import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.CallContextModule;
+import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.glue.TagStoreModule;
 
 
 public class MockModule extends AbstractModule {

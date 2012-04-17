@@ -32,7 +32,8 @@ public class MockModuleNoEntitlement extends MockModule {
 	@Override
 	protected void installEntitlementModule() {
 		EntitlementBillingApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
-		((ZombieControl)entitlementApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
+        ((ZombieControl)entitlementApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
+        ((ZombieControl)entitlementApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", BrainDeadProxyFactory.ZOMBIE_VOID);
 		bind(EntitlementBillingApi.class).toInstance(entitlementApi);
 		bind(EntitlementDao.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class));
 

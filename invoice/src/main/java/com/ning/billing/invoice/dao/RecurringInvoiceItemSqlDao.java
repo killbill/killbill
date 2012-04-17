@@ -16,12 +16,17 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.EntityDao;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -36,16 +41,12 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.entity.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(RecurringInvoiceItemSqlDao.RecurringInvoiceItemMapper.class)
@@ -79,7 +80,8 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("accountId", item.getAccountId().toString());
-                        q.bind("subscriptionId", item.getSubscriptionId().toString());
+                        q.bind("bundleId", item.getBundleId() == null ? null : item.getBundleId().toString());
+                        q.bind("subscriptionId", item.getSubscriptionId() == null ? null : item.getSubscriptionId().toString());
                         q.bind("planName", item.getPlanName());
                         q.bind("phaseName", item.getPhaseName());
                         q.bind("startDate", item.getStartDate().toDate());
@@ -100,7 +102,8 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             UUID id = UUID.fromString(result.getString("id"));
             UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
             UUID accountId = UUID.fromString(result.getString("account_id"));
-            UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
+            UUID subscriptionId = result.getString("subscription_id") == null ? null : UUID.fromString(result.getString("subscription_id"));
+            UUID bundleId = result.getString("bundle_id") == null ? null : UUID.fromString(result.getString("bundle_id"));
             String planName = result.getString("plan_name");
             String phaseName = result.getString("phase_name");
             DateTime startDate = new DateTime(result.getTimestamp("start_date"));
@@ -113,8 +116,9 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             String createdBy = result.getString("created_by");
             DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
-            return new RecurringInvoiceItem(id, invoiceId, accountId, subscriptionId, planName, phaseName, startDate, endDate,
+            return new RecurringInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
                     amount, rate, currency, reversedItemId, createdBy, createdDate);
+
         }
     }
 }

@@ -45,7 +45,7 @@ public class EntitlementModule extends AbstractModule {
     protected void installEntitlementDao() {
         bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
     }
-
+    
     protected void installEntitlementCore() {
     	bind(SubscriptionFactory.class).asEagerSingleton();
         bind(SubscriptionApiService.class).asEagerSingleton();

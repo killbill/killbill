@@ -481,6 +481,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         UUID accountId = UUID.randomUUID();
         Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
         ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        ((ZombieControl) subscription).addResult("getBundleId", UUID.randomUUID());
 
         Plan plan = new MockPlan("plan 1");
         MockInternationalPrice zeroPrice = new MockInternationalPrice(new DefaultPrice(ZERO, Currency.USD));
@@ -493,13 +494,13 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         BillingEventSet events = new BillingEventSet();
 
-        BillingEvent event1 = new DefaultBillingEvent(subscription, new DateTime("2012-01-1T00:00:00.000-08:00"),
+        BillingEvent event1 = new DefaultBillingEvent(null, subscription, new DateTime("2012-01-1T00:00:00.000-08:00"),
                                                       plan, phase1,
                                                       ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
                                                       BillingModeType.IN_ADVANCE, "Test Event 1", 1L,
                                                       SubscriptionTransitionType.CREATE);
 
-        BillingEvent event2 = new DefaultBillingEvent(subscription, changeDate,
+        BillingEvent event2 = new DefaultBillingEvent(null, subscription, changeDate,
                                                       plan, phase2,
                                                       ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
                                                       BillingModeType.IN_ADVANCE, "Test Event 2", 2L,
@@ -691,7 +692,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Subscription sub = new SubscriptionData(new SubscriptionBuilder().setId(subscriptionId));
         Currency currency = Currency.USD;
 
-        return new DefaultBillingEvent(sub, startDate, plan, planPhase,
+        return new DefaultBillingEvent(null, sub, startDate, plan, planPhase,
                                        planPhase.getFixedPrice() == null ? null : planPhase.getFixedPrice().getPrice(currency),
                                        planPhase.getRecurringPrice() == null ? null : planPhase.getRecurringPrice().getPrice(currency),
                                        currency, planPhase.getBillingPeriod(),
