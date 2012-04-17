@@ -16,9 +16,6 @@
 
 package com.ning.billing.account.api.user;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +27,6 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.MigrationAccountData;
-import com.ning.billing.account.api.DefaultMutableAccountData;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
