@@ -16,17 +16,29 @@
 
 package com.ning.billing.overdue.service;
 
+import java.net.URI;
+
 import com.google.inject.Inject;
+import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.ovedue.OverdueProperties;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;
+import com.ning.billing.overdue.config.OverdueConfig;
+import com.ning.billing.util.config.XMLLoader;
 
-public class DefaultOverdueService implements OverdueService {
+public class DefaultOverdueService implements ExtendedOverdueService {
     public static final String OVERDUE_SERVICE_NAME = "overdue-service";
     private OverdueUserApi userApi;
+    private OverdueConfig overdueConfig;
+    private OverdueProperties properties;
+
+    private boolean isInitialized;
 
     @Inject
-    public DefaultOverdueService(OverdueUserApi userApi){
+    public DefaultOverdueService(OverdueUserApi userApi, OverdueProperties properties){
         this.userApi = userApi;
+        this.properties = properties;
     }
     
     @Override
@@ -39,5 +51,24 @@ public class DefaultOverdueService implements OverdueService {
         return userApi;
     }
 
-   
+    @Override
+   public OverdueConfig getOverdueConfig() {
+        return overdueConfig;
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
+    public synchronized void loadConfig() throws ServiceException {
+        if (!isInitialized) {
+            try {
+                System.out.println("Overdue config URI" + properties.getConfigURI());
+                URI u = new URI(properties.getConfigURI());
+                overdueConfig = XMLLoader.getObjectFromUri(u, OverdueConfig.class);
+
+                isInitialized = true;
+            } catch (Exception e) {
+                throw new ServiceException(e);
+            }
+        }
+    }
+
 }

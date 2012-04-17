@@ -21,22 +21,22 @@ import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.overdue.OverdueError;
-import com.ning.billing.catalog.api.overdue.OverdueState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
-import com.ning.billing.overdue.dao.OverdueDao;
+import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueState;
+import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class OverdueStateApplicator<T extends Overdueable>{
 
-    private final OverdueDao overdueDao;
+    private final OverdueAccessApi accessApi;
     private final Clock clock;
 
 
 
     @Inject
-    public OverdueStateApplicator(OverdueDao overdueDao, Clock clock) {
-        this.overdueDao = overdueDao;
+    public OverdueStateApplicator(OverdueAccessApi accessApi, Clock clock) {
+        this.accessApi = accessApi;
         this.clock = clock;
     }
 
@@ -62,7 +62,7 @@ public class OverdueStateApplicator<T extends Overdueable>{
 
     protected void storeNewState(T overdueable, OverdueState<T> nextOverdueState) throws OverdueError {
         try {
-            overdueDao.setOverdueState(overdueable, nextOverdueState, Overdueable.Type.get(overdueable), clock);
+            accessApi.setOverrideState(overdueable, nextOverdueState, Overdueable.Type.get(overdueable), clock);
         } catch (Exception e) {
             throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, overdueable.getId(), overdueable.getClass().getName());
         }

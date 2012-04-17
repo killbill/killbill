@@ -116,15 +116,8 @@ CREATE TABLE audit_log (
     changed_by varchar(50) NOT NULL,
     reason_code varchar(20) DEFAULT NULL,
     comments varchar(255) DEFAULT NULL,
+    user_token char(36),
     PRIMARY KEY(id)
 ) ENGINE=innodb;
 
-DROP TABLE IF EXISTS overdue_states;
-CREATE TABLE overdue_states (
-  id char(36) NOT NULL,
-  state varchar(50) NOT NULL,
-  type varchar(20) NOT NULL,    
-  created_date datetime NOT NULL
-) ENGINE=innodb;
-CREATE INDEX overdue_states_by_id ON overdue_states (id);
 

@@ -16,8 +16,6 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.tag.dao.TagDao;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -27,11 +25,10 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEntitlementDao {
 
@@ -39,9 +36,9 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
 
     @Inject
     public MockEntitlementDaoSql(IDBI dbi, Clock clock, AddonUtils addonUtils, NotificationQueueService notificationQueueService,
-                                 CustomFieldDao customFieldDao, final OverdueAccessApi overdueApi,
+                                 CustomFieldDao customFieldDao, 
                                  final CatalogService catalogService) {
-        super(dbi, clock, addonUtils, notificationQueueService, customFieldDao, overdueApi, catalogService);
+        super(dbi, clock, addonUtils, notificationQueueService, customFieldDao, catalogService);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
     }
 

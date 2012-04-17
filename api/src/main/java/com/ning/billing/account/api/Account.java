@@ -16,7 +16,7 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.util.customfield.Customizable;
 import com.ning.billing.util.entity.UpdatableEntity;
 import com.ning.billing.util.tag.Taggable;

@@ -24,8 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.config.NotificationConfig;
+import com.ning.billing.ovedue.OverdueProperties;
 import com.ning.billing.overdue.service.DefaultOverdueService;
-import com.ning.billing.util.notificationq.NotificationConfig;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
@@ -38,14 +39,14 @@ public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier {
     public static final String OVERDUE_CHECK_NOTIFIER_QUEUE = "overdue-check-queue";
 
     private final NotificationQueueService notificationQueueService;
-	private final InvoiceConfig config;
+	private final OverdueProperties config;
 
     private NotificationQueue overdueQueue;
 	private final OverdueListener listener;
 
     @Inject
 	public DefaultOverdueCheckNotifier(NotificationQueueService notificationQueueService,
-			InvoiceConfig config, OverdueListener listener){
+	        OverdueProperties config, OverdueListener listener){
 		this.notificationQueueService = notificationQueueService;
 		this.config = config;
         this.listener = listener;
@@ -72,7 +73,7 @@ public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier {
             new NotificationConfig() {
                 @Override
                 public boolean isNotificationProcessingOff() {
-                    return config.isEventProcessingOff();
+                    return config.isNotificationProcessingOff();
                 }
                 @Override
                 public long getNotificationSleepTimeMs() {

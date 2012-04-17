@@ -28,14 +28,14 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.overdue.BillingStateBundle;
-import com.ning.billing.catalog.api.overdue.PaymentResponse;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.overdue.config.api.BillingStateBundle;
+import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.Tag;
 

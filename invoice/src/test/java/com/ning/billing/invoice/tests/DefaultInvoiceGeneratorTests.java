@@ -33,7 +33,7 @@ import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.model.BillingEventSet;
@@ -79,14 +79,14 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         }
 
         @Override
-        public boolean isEventProcessingOff() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public int getNumberOfMonthsInFuture() {
             return 36;
         }
+
+		@Override
+		public boolean isNotificationProcessingOff() {
+            throw new UnsupportedOperationException();			
+		}
     };
 
     private final InvoiceGenerator generator;

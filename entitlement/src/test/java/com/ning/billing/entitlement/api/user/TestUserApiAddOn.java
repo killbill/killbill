@@ -38,11 +38,10 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
-import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class TestUserApiAddOn extends TestApiBase {
@@ -339,7 +338,7 @@ public class TestUserApiAddOn extends TestApiBase {
            assertEquals(aoSubscription.getBundleStartDate(), baseSubscription.getBundleStartDate());
 
            // CHECK next AO PHASE EVENT IS INDEED A MONTH AFTER BP STARTED => BUNDLE ALIGNMENT
-           SubscriptionTransition aoPendingTranstion = aoSubscription.getPendingTransition();
+           SubscriptionEventTransition aoPendingTranstion = aoSubscription.getPendingTransition();
 
            if (expAlignement == PlanAlignmentCreate.START_OF_BUNDLE) {
                assertEquals(aoPendingTranstion.getEffectiveTransitionTime(), baseSubscription.getStartDate().plusMonths(1));

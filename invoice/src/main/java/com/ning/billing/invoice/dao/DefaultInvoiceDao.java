@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
@@ -191,10 +191,11 @@ public class DefaultInvoiceDao implements InvoiceDao {
         });
 
         // TODO: move this inside the transaction once the bus is persistent
-        InvoiceCreationNotification event;
+        InvoiceCreationEvent event;
         event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
                                                       invoice.getBalance(), invoice.getCurrency(),
-                                                      invoice.getInvoiceDate());
+                                                      invoice.getInvoiceDate(),
+                                                      context.getUserToken());
         try {
             eventBus.post(event);
         } catch (Bus.EventBusException e) {

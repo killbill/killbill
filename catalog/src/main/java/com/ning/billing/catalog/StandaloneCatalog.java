@@ -42,10 +42,7 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.StaticCatalog;
-import com.ning.billing.catalog.api.overdue.OverdueStateSet;
-import com.ning.billing.catalog.overdue.OverdueRules;
 import com.ning.billing.catalog.rules.PlanRules;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
@@ -71,9 +68,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
 	@XmlElement(name="rules", required=true)
 	private PlanRules planRules;
-
-    @XmlElement(name="overdueRules", required=false)
-    private OverdueRules overdueRules;
 
 	@XmlElementWrapper(name="plans", required=true)
 	@XmlElement(name="plan", required=true) 
@@ -247,7 +241,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		validate(catalog,errors, plans);
 		priceLists.validate(catalog,errors);
 		planRules.validate(catalog, errors);
-		if(overdueRules != null) {overdueRules.validate(catalog,errors); }
 		return errors;
 	}
 
@@ -310,11 +303,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
-    protected StandaloneCatalog setOverdueRules(OverdueRules overdueRules) {
-        this.overdueRules = overdueRules;
-        return this;
-    }
-
 	@Override
 	public boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException {
 		Product product = findCurrentProduct(specifier.getProductName());
@@ -325,12 +313,5 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 				(!plan.isRetired()) &&
 				(!priceList.isRetired());
 	}
-
-    @Override
-    public OverdueStateSet<SubscriptionBundle> currentBundleOverdueStateSet()
-            throws CatalogApiException {
-         return overdueRules.getBundleStateSet();
-    }
-
 
 }

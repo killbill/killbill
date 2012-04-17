@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;

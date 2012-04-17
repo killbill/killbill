@@ -35,6 +35,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -47,7 +48,6 @@ import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
-import com.ning.billing.entitlement.api.overdue.OverdueChecker;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -63,7 +63,6 @@ import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
-import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.CallContextFactory;
@@ -119,10 +118,9 @@ public class TestNextBillingDateNotifier {
 	@BeforeClass(groups={"slow"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION,  new MockOverdueAccessModule() {
+        final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
 			
             protected void configure() {
-                super.configure();
                 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
                 bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
                 bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
@@ -146,16 +144,7 @@ public class TestNextBillingDateNotifier {
                 bind(AccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
                 bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
                 bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
-                bind(OverdueChecker.class).toInstance(new OverdueChecker() {
-
-                    @Override
-                    public void checkBlocked(Subscription subscription){}
-
-                    @Override
-                    public void checkBlocked(SubscriptionBundle bundle){}
-                                           
-                });
-			}
+            }
         });
 
         clock = g.getInstance(Clock.class);

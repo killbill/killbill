@@ -68,8 +68,8 @@ public interface EntitlementDao {
 
     public void recreateSubscription(final UUID subscriptionId, final List<EntitlementEvent> recreateEvents, final CallContext context);
 
-    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent, final CallContext context);
-
+    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent, final CallContext context, final int cancelSeq);
+    
     public void uncancelSubscription(final UUID subscriptionId, final List<EntitlementEvent> uncancelEvents, final CallContext context);
 
     public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents, final CallContext context);

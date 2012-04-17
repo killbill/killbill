@@ -7,10 +7,11 @@ fields(prefix) ::= <<
     <prefix>change_date,
     <prefix>changed_by,
     <prefix>reason_code,
-    <prefix>comments
+    <prefix>comments,
+    <prefix>user_token
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<fields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL, :userToken);
 >>

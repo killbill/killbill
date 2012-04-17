@@ -16,7 +16,6 @@
 
 package com.ning.billing.account.glue;
 
-import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountService;
@@ -29,8 +28,6 @@ import com.ning.billing.account.dao.AuditedAccountDao;
 public class AccountModule extends AbstractModule {
 
     private void installConfig() {
-        final AccountConfig config = new ConfigurationObjectFactory(System.getProperties()).build(AccountConfig.class);
-        bind(AccountConfig.class).toInstance(config);
     }
 
     protected void installAccountDao() {

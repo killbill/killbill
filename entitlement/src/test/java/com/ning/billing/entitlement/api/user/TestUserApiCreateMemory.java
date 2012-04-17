@@ -16,13 +16,12 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import org.testng.annotations.Test;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
-import com.ning.billing.mock.overdue.MockOverdueAccessModule;
-
-import org.testng.annotations.Test;
 
 public class TestUserApiCreateMemory extends TestUserApiCreate {
 

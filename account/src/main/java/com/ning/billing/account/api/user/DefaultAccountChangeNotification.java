@@ -17,7 +17,7 @@
 package com.ning.billing.account.api.user;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountChangeNotification;
+import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.account.api.DefaultChangedField;
 
@@ -25,14 +25,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class DefaultAccountChangeNotification implements AccountChangeNotification {
+public class DefaultAccountChangeNotification implements AccountChangeEvent {
+	
+	private final UUID userToken;
     private final List<ChangedField> changedFields;
     private final UUID id;
 
-    public DefaultAccountChangeNotification(UUID id, Account oldData, Account newData) {
+    public DefaultAccountChangeNotification(UUID id, UUID userToken, Account oldData, Account newData) {
         this.id = id;
+        this.userToken = userToken;
         this.changedFields = calculateChangedFields(oldData, newData);
     }
+
+    
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.ACCOUNT_CHANGE;
+	}
+
+	   @Override
+	    public UUID getUserToken() {
+	    	return userToken;
+	    }
 
     @Override
     public UUID getAccountId() {

@@ -52,7 +52,6 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
     public synchronized void loadCatalog() throws ServiceException {
         if (!isInitialized) {
             try {
-            	System.out.println("Really really::" + config.getCatalogURI());
             	String url = config.getCatalogURI();
             	catalog = loader.load(url);
 

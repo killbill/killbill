@@ -34,8 +34,9 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.payment.api.DefaultPaymentInfo;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public abstract class TestPaymentDao {
     protected PaymentDao paymentDao;
@@ -43,7 +44,7 @@ public abstract class TestPaymentDao {
 
     @Test
     public void testCreatePayment() {
-        PaymentInfo paymentInfo = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
+        PaymentInfoEvent paymentInfo = new DefaultPaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
                 .setAmount(BigDecimal.TEN)
                 .setStatus("Processed")
                 .setBankIdentificationNumber("1234")
@@ -59,7 +60,7 @@ public abstract class TestPaymentDao {
 
     @Test
     public void testUpdatePaymentInfo() {
-        PaymentInfo paymentInfo = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
+        PaymentInfoEvent paymentInfo = new DefaultPaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
                 .setAmount(BigDecimal.TEN)
                 .setStatus("Processed")
                 .setBankIdentificationNumber("1234")
@@ -118,7 +119,7 @@ public abstract class TestPaymentDao {
 
         Assert.assertEquals(attempt3, attempt4);
 
-        PaymentInfo originalPaymentInfo = new PaymentInfo.Builder().setPaymentId(paymentId)
+        PaymentInfoEvent originalPaymentInfo = new DefaultPaymentInfo.Builder().setPaymentId(paymentId)
                 .setAmount(invoiceAmount)
                 .setStatus("Processed")
                 .setBankIdentificationNumber("1234")
@@ -132,7 +133,7 @@ public abstract class TestPaymentDao {
                 .build();
 
         paymentDao.savePaymentInfo(originalPaymentInfo, thisContext);
-        PaymentInfo paymentInfo = paymentDao.getPaymentInfo(Arrays.asList(invoiceId.toString())).get(0);
+        PaymentInfoEvent paymentInfo = paymentDao.getPaymentInfo(Arrays.asList(invoiceId.toString())).get(0);
         Assert.assertEquals(paymentInfo, originalPaymentInfo);
 
         clock.setDeltaFromReality(60 * 60 * 1000); // move clock forward one hour

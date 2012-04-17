@@ -31,7 +31,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.entitlement.api.overdue.OverdueChecker;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
@@ -46,20 +45,18 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     private final EntitlementDao dao;
     private final CatalogService catalogService;
     private final SubscriptionApiService apiService;
-    private final OverdueChecker overdueChecker;
     private final AddonUtils addonUtils;
     private final SubscriptionFactory subscriptionFactory;
 
     @Inject
     public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, CatalogService catalogService,
-            SubscriptionApiService apiService, final SubscriptionFactory subscriptionFactory, AddonUtils addonUtils, OverdueChecker overdueChecker) {
+            SubscriptionApiService apiService, final SubscriptionFactory subscriptionFactory, AddonUtils addonUtils) {
         super();
         this.clock = clock;
         this.apiService = apiService;
         this.dao = dao;
         this.catalogService = catalogService;
         this.addonUtils = addonUtils;
-        this.overdueChecker = overdueChecker;
         this.subscriptionFactory = subscriptionFactory;
     }
 

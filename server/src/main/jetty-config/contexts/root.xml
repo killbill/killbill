@@ -1,0 +1,11 @@
+<?xml version="1.0"  encoding="UTF-8"?>
+<!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
+<Configure class="org.eclipse.jetty.webapp.WebAppContext">
+    <Set name="contextPath">/</Set>
+    <Set name="war">
+        <SystemProperty name="xn.jetty.webapp.path" default="webapps/root"/>
+    </Set>
+    <Set name="defaultsDescriptor">
+        <SystemProperty name="xn.jetty.webapps.defaultsDescriptor" default="etc/webdefault.xml"/>
+    </Set>
+</Configure>

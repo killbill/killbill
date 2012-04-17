@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
@@ -87,7 +87,7 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void savePaymentInfo(final PaymentInfo info, final CallContext context) {
+    public void savePaymentInfo(final PaymentInfoEvent info, final CallContext context) {
         sqlDao.inTransaction(new Transaction<Void, PaymentSqlDao>() {
             @Override
             public Void inTransaction(PaymentSqlDao transactional, TransactionStatus status) throws Exception {
@@ -128,7 +128,7 @@ public class AuditedPaymentDao implements PaymentDao {
             @Override
             public Void inTransaction(PaymentSqlDao transactional, TransactionStatus status) throws Exception {
                 transactional.updatePaymentInfo(type, paymentId, cardType, cardCountry, context);
-                PaymentInfo paymentInfo = transactional.getPaymentInfo(paymentId);
+                PaymentInfoEvent paymentInfo = transactional.getPaymentInfo(paymentId);
                 UUID historyRecordId = UUID.randomUUID();
                 transactional.insertPaymentInfoHistory(historyRecordId.toString(), paymentInfo, context);
                 AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
@@ -141,9 +141,9 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentInfo> getPaymentInfo(List<String> invoiceIds) {
+    public List<PaymentInfoEvent> getPaymentInfo(List<String> invoiceIds) {
         if (invoiceIds == null || invoiceIds.size() == 0) {
-            return ImmutableList.<PaymentInfo>of();
+            return ImmutableList.<PaymentInfoEvent>of();
         } else {
             return sqlDao.getPaymentInfos(invoiceIds);
         }
@@ -164,7 +164,7 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptIdStr) {
+    public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(String paymentAttemptIdStr) {
         return sqlDao.getPaymentInfoForPaymentAttemptId(paymentAttemptIdStr);
     }
 

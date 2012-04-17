@@ -184,15 +184,7 @@ Use Cases to do:
 			</priceListCase>
 		</priceList>
 	</rules>
-	
-   <overdueRules> 
-      <bundleOverdueStates>
-           <state name="Clear">
-               <isClearState>true</isClearState>
-           </state> 
-       </bundleOverdueStates>
-    </overdueRules>
-    
+
 	<plans>
 		<plan name="pistol-monthly-no-trial">
 			<product>Pistol</product>

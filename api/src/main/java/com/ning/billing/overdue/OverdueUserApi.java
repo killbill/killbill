@@ -17,10 +17,10 @@
 package com.ning.billing.overdue;
 
 import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.overdue.BillingState;
-import com.ning.billing.catalog.api.overdue.OverdueError;
-import com.ning.billing.catalog.api.overdue.OverdueState;
-import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.overdue.config.api.BillingState;
+import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueState;
+import com.ning.billing.overdue.config.api.Overdueable;
 
 public interface OverdueUserApi {
 

@@ -29,11 +29,12 @@ import org.apache.commons.collections.CollectionUtils;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.payment.api.DefaultPaymentInfo;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class MockPaymentDao implements PaymentDao {
-    private final Map<String, PaymentInfo> payments = new ConcurrentHashMap<String, PaymentInfo>();
+    private final Map<String, PaymentInfoEvent> payments = new ConcurrentHashMap<String, PaymentInfoEvent>();
     private final Map<UUID, PaymentAttempt> paymentAttempts = new ConcurrentHashMap<UUID, PaymentAttempt>();
 
     @Override
@@ -70,7 +71,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void savePaymentInfo(PaymentInfo paymentInfo, CallContext context) {
+    public void savePaymentInfo(PaymentInfoEvent paymentInfo, CallContext context) {
         payments.put(paymentInfo.getPaymentId(), paymentInfo);
     }
 
@@ -97,9 +98,9 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry, CallContext context) {
-        PaymentInfo existingPayment = payments.get(paymentId);
+        DefaultPaymentInfo existingPayment = (DefaultPaymentInfo) payments.get(paymentId);
         if (existingPayment != null) {
-            PaymentInfo payment = existingPayment.cloner()
+            PaymentInfoEvent payment = existingPayment.cloner()
                     .setPaymentMethod(paymentMethodType)
                     .setCardType(cardType)
                     .setCardCountry(cardCountry)
@@ -110,14 +111,14 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentInfo> getPaymentInfo(List<String> invoiceIds) {
+    public List<PaymentInfoEvent> getPaymentInfo(List<String> invoiceIds) {
         List<PaymentAttempt> attempts = getPaymentAttemptsForInvoiceIds(invoiceIds);
-        List<PaymentInfo> paymentsToReturn = new ArrayList<PaymentInfo>(invoiceIds.size());
+        List<PaymentInfoEvent> paymentsToReturn = new ArrayList<PaymentInfoEvent>(invoiceIds.size());
 
         for (final PaymentAttempt attempt : attempts) {
-            paymentsToReturn.addAll(Collections2.filter(payments.values(), new Predicate<PaymentInfo>() {
+            paymentsToReturn.addAll(Collections2.filter(payments.values(), new Predicate<PaymentInfoEvent>() {
                 @Override
-                public boolean apply(PaymentInfo input) {
+                public boolean apply(PaymentInfoEvent input) {
                     return input.getPaymentId().equals(attempt.getPaymentId());
                 }
             }));
@@ -143,7 +144,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptId) {
+    public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(String paymentAttemptId) {
         // TODO Auto-generated method stub
         return null;
     }

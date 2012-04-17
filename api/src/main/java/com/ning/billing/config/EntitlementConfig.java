@@ -19,21 +19,27 @@ package com.ning.billing.config;
 import org.skife.config.Config;
 import org.skife.config.Default;
 
-public interface EntitlementConfig {
+import com.google.common.annotations.VisibleForTesting;
 
+public interface EntitlementConfig extends NotificationConfig, KillbillConfig  {
+
+	@Override
     @Config("killbill.entitlement.dao.claim.time")
     @Default("60000")
     public long getDaoClaimTimeMs();
 
+	@Override
     @Config("killbill.entitlement.dao.ready.max")
     @Default("10")
     public int getDaoMaxReadyEvents();
 
+	@Override
     @Config("killbill.entitlement.engine.notifications.sleep")
     @Default("500")
     public long getNotificationSleepTimeMs();
 
+	@Override
     @Config("killbill.notifications.off")
     @Default("false")
-    public boolean isEventProcessingOff();
+    public boolean isNotificationProcessingOff();
 }

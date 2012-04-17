@@ -54,7 +54,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
@@ -76,7 +76,7 @@ public class TestDefaultEntitlementBillingApi {
 	private CatalogService catalogService;
 	private ArrayList<SubscriptionBundle> bundles;
 	private ArrayList<Subscription> subscriptions;
-	private ArrayList<SubscriptionTransition> transitions;
+	private ArrayList<SubscriptionEventTransition> transitions;
 	private EntitlementDao dao;
 
 	private Clock clock;
@@ -101,7 +101,7 @@ public class TestDefaultEntitlementBillingApi {
 		bundles.add(bundle);
 
 
-		transitions = new ArrayList<SubscriptionTransition>();
+		transitions = new ArrayList<SubscriptionEventTransition>();
 		subscriptions = new ArrayList<Subscription>();
 
 		SubscriptionBuilder builder = new SubscriptionBuilder();
@@ -109,7 +109,7 @@ public class TestDefaultEntitlementBillingApi {
 		builder.setStartDate(subscriptionStartDate).setId(oneId);
 		subscription = new SubscriptionData(builder) {
 		    @Override
-            public List<SubscriptionTransition> getBillingTransitions() {
+            public List<SubscriptionEventTransition> getBillingTransitions() {
 		    	return transitions;
 		    }
 		};
@@ -153,8 +153,8 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-annual", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0]; // The trial has no billing period
         PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
+		SubscriptionEventTransition t = new SubscriptionTransitionData(
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
 		transitions.add(t);
 
 
@@ -181,8 +181,8 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-annual", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
 		PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
+		SubscriptionEventTransition t = new SubscriptionTransitionData(
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
 		transitions.add(t);
 
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -210,8 +210,8 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-monthly", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
+		SubscriptionEventTransition t = new SubscriptionTransitionData(
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
 		transitions.add(t);
 
         AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
@@ -237,8 +237,8 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("laser-scope-monthly", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0];
         PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-		SubscriptionTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, true);
+		SubscriptionEventTransition t = new SubscriptionTransitionData(
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
 		transitions.add(t);
 
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);

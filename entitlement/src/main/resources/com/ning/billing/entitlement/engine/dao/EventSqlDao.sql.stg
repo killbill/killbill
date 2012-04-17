@@ -10,6 +10,7 @@ fields(prefix) ::= <<
     <prefix>plan_name,
     <prefix>phase_name,
     <prefix>plist_name,
+    <prefix>user_token,
     <prefix>current_version,
     <prefix>is_active,
     <prefix>created_by,
@@ -17,6 +18,7 @@ fields(prefix) ::= <<
     <prefix>updated_by,
     <prefix>updated_date
 >>
+
 
 getEventById() ::= <<
   select id, <fields()>
@@ -29,21 +31,22 @@ getEventById() ::= <<
 insertEvent() ::= <<
     insert into entitlement_events (<fields()>)
     values (
-      :event_id
-      , :event_type
-      , :user_type
-      , :requested_dt
-      , :effective_dt
-      , :subscription_id
-      , :plan_name
-      , :phase_name
-      , :plist_name
-      , :current_version
-      , :is_active
-      , :userName
-      , :createdDate
-      , :userName
-      , :updatedDate
+    :event_id
+    , :event_type
+    , :user_type
+    , :requested_dt
+    , :effective_dt
+    , :subscription_id
+    , :plan_name
+    , :phase_name
+    , :plist_name
+    , :userToken
+    , :current_version
+    , :is_active
+    , :userName
+    , :createdDate
+    , :userName
+    , :updatedDate
     );   
 >>
 
@@ -68,6 +71,7 @@ reactiveEvent() ::= <<
       event_id = :event_id
     ;
 >>
+
 
 getFutureActiveEventForSubscription() ::= <<
     select id, <fields()>

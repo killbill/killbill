@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.invoice.api.InvoiceApiException;
 
 public class InvoiceListener {
@@ -43,9 +43,13 @@ public class InvoiceListener {
     }
 
     @Subscribe
-    public void handleSubscriptionTransition(final SubscriptionTransition transition) {
+    public void handleSubscriptionTransition(final SubscriptionEventTransition transition) {
         try {
-            CallContext context = factory.createCallContext("Transition", CallOrigin.INTERNAL, UserType.SYSTEM);
+            if (transition.getRemainingEventsForUserOperation() > 0) {
+                // Skip invoice generation as there is more coming...
+                return;
+            }
+            CallContext context = factory.createCallContext("Transition", CallOrigin.INTERNAL, UserType.SYSTEM, transition.getUserToken());
         	dispatcher.processSubscription(transition, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());

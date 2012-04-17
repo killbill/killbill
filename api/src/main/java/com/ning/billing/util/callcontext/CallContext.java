@@ -16,9 +16,12 @@
 
 package com.ning.billing.util.callcontext;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 public interface CallContext {
+	public UUID getUserToken();
     public String getUserName();
     public CallOrigin getCallOrigin();
     public UserType getUserType();

@@ -19,7 +19,7 @@ package com.ning.billing.ovedue.notification;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import com.ning.billing.catalog.api.overdue.Overdueable;
+import com.ning.billing.overdue.config.api.Overdueable;
 
 public interface OverdueCheckPoster {
 

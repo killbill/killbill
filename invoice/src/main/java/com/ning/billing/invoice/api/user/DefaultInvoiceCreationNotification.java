@@ -22,22 +22,36 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.util.bus.BusEvent.BusEventType;
 
-public class DefaultInvoiceCreationNotification implements InvoiceCreationNotification {
+public class DefaultInvoiceCreationNotification implements InvoiceCreationEvent {
+	
     private final UUID invoiceId;
     private final UUID accountId;
     private final BigDecimal amountOwed;
     private final Currency currency;
     private final DateTime invoiceCreationDate;
+    private final UUID userToken;
 
-    public DefaultInvoiceCreationNotification(UUID invoiceId, UUID accountId, BigDecimal amountOwed, Currency currency, DateTime invoiceCreationDate) {
+    public DefaultInvoiceCreationNotification(UUID invoiceId, UUID accountId, BigDecimal amountOwed, Currency currency, DateTime invoiceCreationDate, UUID userToken) {
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.amountOwed = amountOwed;
         this.currency = currency;
         this.invoiceCreationDate = invoiceCreationDate;
+        this.userToken = userToken;
     }
+
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.INVOICE_CREATION;
+	}
+
+	@Override
+	public UUID getUserToken() {
+		return userToken;
+	}
 
     @Override
     public UUID getInvoiceId() {
@@ -68,5 +82,4 @@ public class DefaultInvoiceCreationNotification implements InvoiceCreationNotifi
     public String toString() {
         return "DefaultInvoiceCreationNotification [invoiceId=" + invoiceId + ", accountId=" + accountId + ", amountOwed=" + amountOwed + ", currency=" + currency + ", invoiceCreationDate=" + invoiceCreationDate + "]";
     }
-
 }

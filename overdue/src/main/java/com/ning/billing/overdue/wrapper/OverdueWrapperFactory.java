@@ -18,46 +18,41 @@ package com.ning.billing.overdue.wrapper;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.catalog.api.overdue.OverdueError;
-import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
+import com.ning.billing.overdue.config.OverdueConfig;
+import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.Overdueable;
+import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class OverdueWrapperFactory {
 
-    private final CatalogService catalogService;
+    private final OverdueConfig overdueConfig;
     private final BillingStateCalculatorBundle billingStateCalcuatorBundle;
     private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
     private final OverdueAccessApi api;
     private final Clock clock;
 
     @Inject
-    public OverdueWrapperFactory(OverdueAccessApi api, CatalogService catalogService, Clock clock, 
+    public OverdueWrapperFactory(OverdueAccessApi api, ExtendedOverdueService service, Clock clock, 
             BillingStateCalculatorBundle billingStateCalcuatorBundle, OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle) {
         this.billingStateCalcuatorBundle = billingStateCalcuatorBundle;
         this.overdueStateApplicatorBundle = overdueStateApplicatorBundle;
-        this.catalogService = catalogService;
+        this.overdueConfig = service.getOverdueConfig();
         this.api = api;
         this.clock = clock;
     }
 
     @SuppressWarnings("unchecked")
     public <T extends Overdueable> OverdueWrapper<T> createOverdueWrapperFor(T overdueable) throws OverdueError {
-        try {
-            if(overdueable instanceof SubscriptionBundle) {
-                return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle)overdueable, api, catalogService.getCurrentCatalog().currentBundleOverdueStateSet(), 
-                        clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle );
-            } else {
-                throw new OverdueError(ErrorCode.OVERDUE_OVERDUEABLE_NOT_SUPPORTED, overdueable.getClass());
-            }
-
-        } catch (CatalogApiException e) {
-            throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, overdueable.getId().toString(), overdueable.getClass().toString());
+        if(overdueable instanceof SubscriptionBundle) {
+            return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle)overdueable, api, overdueConfig.getBundleStateSet(), 
+                    clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle );
+        } else {
+            throw new OverdueError(ErrorCode.OVERDUE_OVERDUEABLE_NOT_SUPPORTED, overdueable.getClass());
         }
     }
 

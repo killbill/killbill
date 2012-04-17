@@ -16,14 +16,13 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import org.testng.annotations.Test;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
-import com.ning.billing.mock.overdue.MockOverdueAccessModule;
-
-import org.testng.annotations.Test;
 
 public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
 
@@ -63,14 +62,6 @@ public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
         super.testMultipleChangeLastEOT();
     }
 
-    /*
-    // Set to false until we implement rescue example.
-    @Override
-    @Test(enabled=false, groups={"fast"})
-    public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
-        super.testChangePlanChangePlanAlignEOTWithChargeThroughDate();
-    }
-    */
 
     @Override
     @Test(enabled=true, groups={"fast-disabled"})

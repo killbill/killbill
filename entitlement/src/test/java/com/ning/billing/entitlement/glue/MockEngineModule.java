@@ -18,21 +18,14 @@ package com.ning.billing.entitlement.glue;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.entitlement.api.overdue.MockOverdueChecker;
-import com.ning.billing.entitlement.api.overdue.OverdueChecker;
 import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 
 public class MockEngineModule extends EntitlementModule {
 
-    
-    protected void installOverdueChecker() {
-        bind(OverdueChecker.class).to(MockOverdueChecker.class).asEagerSingleton();       
-    }
-
+   
     @Override
     protected void configure() {
         super.configure();
@@ -41,6 +34,5 @@ public class MockEngineModule extends EntitlementModule {
         bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
         install(new MockClockModule());
         install(new CallContextModule());
-        install(new MockOverdueAccessModule());
     }
 }

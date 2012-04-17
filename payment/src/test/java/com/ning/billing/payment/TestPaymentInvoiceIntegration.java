@@ -50,8 +50,8 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.setup.PaymentTestModuleWithEmbeddedDb;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -137,8 +137,8 @@ public class TestPaymentInvoiceIntegration {
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                List<PaymentInfo> processedPayments = paymentInfoReceiver.getProcessedPayments();
-                List<PaymentError> errors = paymentInfoReceiver.getErrors();
+                List<PaymentInfoEvent> processedPayments = paymentInfoReceiver.getProcessedPayments();
+                List<PaymentErrorEvent> errors = paymentInfoReceiver.getErrors();
 
                 return processedPayments.size() == 1 || errors.size() == 1;
             }
@@ -147,7 +147,7 @@ public class TestPaymentInvoiceIntegration {
         assertFalse(paymentInfoReceiver.getProcessedPayments().isEmpty());
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
 
-        List<PaymentInfo> payments = paymentInfoReceiver.getProcessedPayments();
+        List<PaymentInfoEvent> payments = paymentInfoReceiver.getProcessedPayments();
         PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(payments.get(0).getPaymentId());
         Assert.assertNotNull(paymentAttempt);
 

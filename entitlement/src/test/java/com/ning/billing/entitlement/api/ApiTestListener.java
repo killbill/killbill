@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.api;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.util.bus.Bus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class ApiTestListener {
     }
 
     @Subscribe
-    public void handleEntitlementEvent(SubscriptionTransition event) {
+    public void handleEntitlementEvent(SubscriptionEventTransition event) {
         switch (event.getTransitionType()) {
         case MIGRATE_ENTITLEMENT:
             subscriptionMigrated(event);
@@ -142,33 +142,33 @@ public class ApiTestListener {
     }
 
 
-    public void subscriptionMigrated(SubscriptionTransition migrated) {
+    public void subscriptionMigrated(SubscriptionEventTransition migrated) {
         log.debug("-> Got event MIGRATED");
         assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
         notifyIfStackEmpty();
     }
 
-    public void subscriptionCreated(SubscriptionTransition created) {
+    public void subscriptionCreated(SubscriptionEventTransition created) {
         log.debug("-> Got event CREATED");
         assertEqualsNicely(NextEvent.CREATE);
         notifyIfStackEmpty();
     }
 
-    public void subscriptionReCreated(SubscriptionTransition recreated) {
+    public void subscriptionReCreated(SubscriptionEventTransition recreated) {
         log.debug("-> Got event RE_CREATED");
         assertEqualsNicely(NextEvent.RE_CREATE);
         notifyIfStackEmpty();
     }
 
 
-    public void subscriptionCancelled(SubscriptionTransition cancelled) {
+    public void subscriptionCancelled(SubscriptionEventTransition cancelled) {
         log.debug("-> Got event CANCEL");
         assertEqualsNicely(NextEvent.CANCEL);
         notifyIfStackEmpty();
     }
 
 
-    public void subscriptionChanged(SubscriptionTransition changed) {
+    public void subscriptionChanged(SubscriptionEventTransition changed) {
         log.debug("-> Got event CHANGE");
         assertEqualsNicely(NextEvent.CHANGE);
         notifyIfStackEmpty();
@@ -176,13 +176,13 @@ public class ApiTestListener {
 
 
     public void subscriptionPhaseChanged(
-            SubscriptionTransition phaseChanged) {
+            SubscriptionEventTransition phaseChanged) {
         log.debug("-> Got event PHASE");
         assertEqualsNicely(NextEvent.PHASE);
         notifyIfStackEmpty();
     }
 
-    public void subscriptionMigratedBilling(SubscriptionTransition migrated) {
+    public void subscriptionMigratedBilling(SubscriptionEventTransition migrated) {
         log.debug("-> Got event MIGRATED_BLLING");
         assertEqualsNicely(NextEvent.MIGRATE_BILLING);
         notifyIfStackEmpty();

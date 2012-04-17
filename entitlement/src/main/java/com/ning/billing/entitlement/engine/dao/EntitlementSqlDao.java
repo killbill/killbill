@@ -38,11 +38,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.api.overdue.OverdueState;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
@@ -54,6 +52,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
+import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEvent;
@@ -73,9 +72,9 @@ import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.overdue.OverdueAccessApi;
 
 public class EntitlementSqlDao implements EntitlementDao {
+
     private final static Logger log = LoggerFactory.getLogger(EntitlementSqlDao.class);
     public static final String ENTITLEMENT_EVENTS_TABLE_NAME = "entitlement_events";
     public static final String BUNDLES_TABLE_NAME = "bundles";
@@ -88,7 +87,6 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
     private final CustomFieldDao customFieldDao;
-    private final OverdueAccessApi overdueApi;
     private final CatalogService catalogService;
 
     
@@ -102,7 +100,6 @@ public class EntitlementSqlDao implements EntitlementDao {
     public EntitlementSqlDao(final IDBI dbi, final Clock clock,
                              final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
                              final CustomFieldDao customFieldDao,
-                             final OverdueAccessApi overdueApi,
                              final CatalogService catalogService) {
         this.clock = clock;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
@@ -111,7 +108,6 @@ public class EntitlementSqlDao implements EntitlementDao {
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
         this.customFieldDao = customFieldDao;
-        this.overdueApi = overdueApi;
         this.catalogService = catalogService;
     }
 
@@ -123,12 +119,12 @@ public class EntitlementSqlDao implements EntitlementDao {
     @Override
     public List<SubscriptionBundle> getSubscriptionBundleForAccount(
             final UUID accountId) {
-        return applyOverdueState(bundlesDao.getBundleFromAccount(accountId.toString()));
+        return bundlesDao.getBundleFromAccount(accountId.toString());
     }
 
     @Override
     public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
-        return applyOverdueState(bundlesDao.getBundleFromId(bundleId.toString()));
+        return bundlesDao.getBundleFromId(bundleId.toString());
     }
 
     @Override
@@ -227,12 +223,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                 recordFutureNotificationFromTransaction(dao,
                         nextPhase.getEffectiveDate(),
-                        new NotificationKey() {
-                            @Override
-                            public String toString() {
-                                return nextPhase.getId().toString();
-                            }
-                        });
+                        new EntitlementNotificationKey(nextPhase.getId()));
                 return null;
             }
         });
@@ -274,12 +265,7 @@ public class EntitlementSqlDao implements EntitlementDao {
                     eventIds.add(cur.getId().toString()); // collect ids for batch audit log insert
                     recordFutureNotificationFromTransaction(dao,
                             cur.getEffectiveDate(),
-                            new NotificationKey() {
-                                @Override
-                                public String toString() {
-                                    return cur.getId().toString();
-                                }
-                            });
+                            new EntitlementNotificationKey(cur.getId()));
                 }
 
                 AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
@@ -304,12 +290,8 @@ public class EntitlementSqlDao implements EntitlementDao {
                     eventIds.add(cur.getId().toString()); // gather event ids for batch audit insert
                     recordFutureNotificationFromTransaction(dao,
                             cur.getEffectiveDate(),
-                            new NotificationKey() {
-                                @Override
-                                public String toString() {
-                                    return cur.getId().toString();
-                                }
-                            });
+                            new EntitlementNotificationKey(cur.getId()));
+
                 }
 
                 AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
@@ -320,7 +302,7 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent, final CallContext context) {
+    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent, final CallContext context, final int seqId) {
 
         eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
             @Override
@@ -336,12 +318,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                 recordFutureNotificationFromTransaction(dao,
                         cancelEvent.getEffectiveDate(),
-                        new NotificationKey() {
-                            @Override
-                            public String toString() {
-                                return cancelEvent.getId().toString();
-                            }
-                        });
+                        new EntitlementNotificationKey(cancelEvent.getId(), seqId));
                 return null;
             }
         });
@@ -379,12 +356,7 @@ public class EntitlementSqlDao implements EntitlementDao {
                         eventIds.add(cur.getId().toString()); // gather event ids for batch insert into audit log
                         recordFutureNotificationFromTransaction(dao,
                                 cur.getEffectiveDate(),
-                                new NotificationKey() {
-                                    @Override
-                                    public String toString() {
-                                        return cur.getId().toString();
-                                    }
-                                });
+                                new EntitlementNotificationKey(cur.getId()));
                     }
 
                     AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
@@ -411,12 +383,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                     recordFutureNotificationFromTransaction(dao,
                             cur.getEffectiveDate(),
-                            new NotificationKey() {
-                                @Override
-                                public String toString() {
-                                    return cur.getId().toString();
-                                }
-                            });
+                            new EntitlementNotificationKey(cur.getId()));
                 }
 
                 AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
@@ -439,8 +406,8 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     private void cancelFutureEventFromTransaction(final UUID subscriptionId, final EventSqlDao dao,
-                                                  final EventType type, @Nullable final ApiEventType apiType,
-                                                  final CallContext context) {
+            final EventType type, @Nullable final ApiEventType apiType,
+            final CallContext context) {
 
         UUID futureEventId = null;
         Date now = clock.getUTCNow().toDate();
@@ -466,8 +433,8 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     private void updateCustomFieldsFromTransaction(final SubscriptionSqlDao transactionalDao,
-                                                   final SubscriptionData subscription,
-                                                   final CallContext context) {
+            final SubscriptionData subscription,
+            final CallContext context) {
         customFieldDao.saveFields(transactionalDao, subscription.getId(), subscription.getObjectName(), subscription.getFieldList(), context);
     }
 
@@ -488,8 +455,8 @@ public class EntitlementSqlDao implements EntitlementDao {
             if (cur.getId().equals(input.getId())) {
                 return cur;
             }
-         }
-         throw new EntitlementError(String.format("Unexpected code path in buildSubscription"));
+        }
+        throw new EntitlementError(String.format("Unexpected code path in buildSubscription"));
     }
 
     private List<Subscription> buildBundleSubscriptions(final SubscriptionFactory factory, final List<Subscription> input) {
@@ -508,7 +475,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         });
 
         EntitlementEvent futureBaseEvent = null;
-                List<Subscription> result = new ArrayList<Subscription>(input.size());
+        List<Subscription> result = new ArrayList<Subscription>(input.size());
         for (Subscription cur : input) {
 
             List<EntitlementEvent> events = eventsDao.getEventsForSubscription(cur.getId().toString());
@@ -531,28 +498,28 @@ public class EntitlementSqlDao implements EntitlementDao {
                 String baseProductName = (futureBaseEvent instanceof ApiEventChange) ?
                         ((ApiEventChange) futureBaseEvent).getEventPlan() : null;
 
-                boolean createCancelEvent = (futureBaseEvent != null) &&
-                    ((futureBaseEvent instanceof ApiEventCancel) ||
-                            ((! addonUtils.isAddonAvailable(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan)) ||
-                                    (addonUtils.isAddonIncluded(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan))));
+                        boolean createCancelEvent = (futureBaseEvent != null) &&
+                        ((futureBaseEvent instanceof ApiEventCancel) ||
+                                ((! addonUtils.isAddonAvailable(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan)) ||
+                                        (addonUtils.isAddonIncluded(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan))));
 
-                if (createCancelEvent) {
-                    DateTime now = clock.getUTCNow();
-                    EntitlementEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
-                    .setSubscriptionId(reloaded.getId())
-                    .setActiveVersion(((SubscriptionData) reloaded).getActiveVersion())
-                    .setProcessedDate(now)
-                    .setEffectiveDate(futureBaseEvent.getEffectiveDate())
-                    .setRequestedDate(now)
-                    // This event is only there to indicate the ADD_ON is future canceled, but it is not there
-                    // on disk until the base plan cancellation becomes effective
-                    .setFromDisk(false));
+                        if (createCancelEvent) {
+                            DateTime now = clock.getUTCNow();
+                            EntitlementEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                            .setSubscriptionId(reloaded.getId())
+                            .setActiveVersion(((SubscriptionData) reloaded).getActiveVersion())
+                            .setProcessedDate(now)
+                            .setEffectiveDate(futureBaseEvent.getEffectiveDate())
+                            .setRequestedDate(now)
+                            // This event is only there to indicate the ADD_ON is future canceled, but it is not there
+                            // on disk until the base plan cancellation becomes effective
+                            .setFromDisk(false));
 
-                    events.add(addOnCancelEvent);
-                    // Finally reload subscription with full set of events
-                    reloaded = factory.createSubscription(new SubscriptionBuilder((SubscriptionData) cur), events);
-                }
-                break;
+                            events.add(addOnCancelEvent);
+                            // Finally reload subscription with full set of events
+                            reloaded = factory.createSubscription(new SubscriptionBuilder((SubscriptionData) cur), events);
+                        }
+                        break;
             default:
                 break;
             }
@@ -590,12 +557,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                             recordFutureNotificationFromTransaction(transEventDao,
                                     curEvent.getEffectiveDate(),
-                                    new NotificationKey() {
-                                @Override
-                                public String toString() {
-                                    return curEvent.getId().toString();
-                                }
-                            });
+                                    new EntitlementNotificationKey(curEvent.getId()));
                         }
                         transSubDao.insertSubscription(subData, context);
                         subscriptionIds.add(subData.getId().toString()); // gather subscription ids for batch audit
@@ -629,7 +591,7 @@ public class EntitlementSqlDao implements EntitlementDao {
     private void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime effectiveDate, final NotificationKey notificationKey) {
         try {
             NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
-                Engine.NOTIFICATION_QUEUE_NAME);
+                    Engine.NOTIFICATION_QUEUE_NAME);
             subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
@@ -657,22 +619,4 @@ public class EntitlementSqlDao implements EntitlementDao {
         }
     }
  
-    private List<SubscriptionBundle> applyOverdueState(final List<SubscriptionBundle> bundles)  { 
-        List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>();
-        for(SubscriptionBundle bundle : bundles) {
-            result.add(applyOverdueState(bundle));
-        }
-        return result;
-    }
-
-    private SubscriptionBundle applyOverdueState(final SubscriptionBundle bundle)  {
-        try {
-            String name = overdueApi.getOverdueStateNameFor(bundle);
-            OverdueState<SubscriptionBundle> state = catalogService.getCurrentCatalog().currentBundleOverdueStateSet().findState(name);
-            return new SubscriptionBundleData(bundle.getId(),bundle.getKey(),bundle.getAccountId(), bundle.getStartDate(), state);
-        } catch (CatalogApiException e) {
-           throw new EntitlementError(e);
-        }
-    }
-    
 }

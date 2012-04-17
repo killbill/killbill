@@ -35,8 +35,8 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 
 public class BillCycleDayCalculator {
 	private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
@@ -51,7 +51,7 @@ public class BillCycleDayCalculator {
 		this.entitlementApi = entitlementApi;
 	}
 
-	protected int calculateBcd(SubscriptionBundle bundle, Subscription subscription, final SubscriptionTransition transition, final Account account) throws CatalogApiException, AccountApiException {
+	protected int calculateBcd(SubscriptionBundle bundle, Subscription subscription, final SubscriptionEventTransition transition, final Account account) throws CatalogApiException, AccountApiException {
 		Catalog catalog = catalogService.getFullCatalog();
 		Plan plan =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
 				transition.getNextPlan() : transition.getPreviousPlan();

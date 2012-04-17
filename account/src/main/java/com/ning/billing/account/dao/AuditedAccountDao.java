@@ -33,8 +33,8 @@ import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountChangeNotification;
-import com.ning.billing.account.api.AccountCreationNotification;
+import com.ning.billing.account.api.AccountChangeEvent;
+import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
@@ -134,7 +134,7 @@ public class AuditedAccountDao implements AccountDao {
 
                     saveTagsFromWithinTransaction(account, transactionalDao, context);
                     saveCustomFieldsFromWithinTransaction(account, transactionalDao, context);
-                    AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
+                    AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, context.getUserToken());
                     eventBus.post(creationEvent);
                     return null;
                 }
@@ -180,7 +180,7 @@ public class AuditedAccountDao implements AccountDao {
                     saveTagsFromWithinTransaction(account, accountSqlDao, context);
                     saveCustomFieldsFromWithinTransaction(account, accountSqlDao, context);
 
-                    AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
+                    AccountChangeEvent changeEvent = new DefaultAccountChangeNotification(account.getId(), context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         eventBus.post(changeEvent);
                     }

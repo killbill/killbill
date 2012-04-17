@@ -1,0 +1,1 @@
+bin/db-helper -a clean -d killbill; bin/db-helper -a clean -d test_killbill; mvn -Dcom.ning.billing.dbi.test.useLocalDb=true install 

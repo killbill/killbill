@@ -16,8 +16,6 @@
 
 package com.ning.billing.invoice;
 
-import java.util.UUID;
-
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -27,10 +25,6 @@ import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.overdue.OverdueChecker;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.mock.BrainDeadProxyFactory;
@@ -80,27 +74,7 @@ public class MockModule extends AbstractModule {
     }
     
     protected void installEntitlementModule() {
-        install(new EntitlementModule() {
-
-            @Override
-            protected void installOverdueChecker() {
-                bind(OverdueChecker.class).toInstance(new OverdueChecker() {
-
-                    @Override
-                    public void checkBlocked(Subscription subscription)
-                            throws EntitlementUserApiException {
-                    }
-
-                    @Override
-                    public void checkBlocked(SubscriptionBundle bundle)
-                            throws EntitlementUserApiException {
-                     }
-
-                            
-                });
-            }
-            
-        });
+        install(new EntitlementModule());
     }
 
     protected void installInvoiceModule() {

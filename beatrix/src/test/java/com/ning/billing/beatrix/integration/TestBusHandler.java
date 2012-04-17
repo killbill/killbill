@@ -27,10 +27,10 @@ import org.testng.Assert;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class TestBusHandler {
 
@@ -59,7 +59,7 @@ public class TestBusHandler {
     }
 
     @Subscribe
-    public void handleEntitlementEvents(SubscriptionTransition event) {
+    public void handleEntitlementEvents(SubscriptionEventTransition event) {
         log.info(String.format("TestBusHandler Got subscription event %s", event.toString()));
         switch (event.getTransitionType()) {
         case MIGRATE_ENTITLEMENT:
@@ -96,7 +96,7 @@ public class TestBusHandler {
     }
 
     @Subscribe
-    public void handleInvoiceEvents(InvoiceCreationNotification event) {
+    public void handleInvoiceEvents(InvoiceCreationEvent event) {
         log.info(String.format("TestBusHandler Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
@@ -104,14 +104,14 @@ public class TestBusHandler {
     }
 
     @Subscribe
-    public void handlePaymentEvents(PaymentInfo event) {
+    public void handlePaymentEvents(PaymentInfoEvent event) {
         log.info(String.format("TestBusHandler Got PaymentInfo event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handlePaymentErrorEvents(PaymentError event) {
+    public void handlePaymentErrorEvents(PaymentErrorEvent event) {
         log.info(String.format("TestBusHandler Got PaymentError event %s", event.toString()));
         //Assert.fail("Unexpected payment failure");
     }

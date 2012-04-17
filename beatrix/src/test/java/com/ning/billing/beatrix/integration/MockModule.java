@@ -22,9 +22,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
-import com.ning.billing.util.glue.CallContextModule;
-import com.ning.billing.util.glue.FieldStoreModule;
-import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -37,6 +34,7 @@ import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -45,17 +43,18 @@ import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.lifecycle.KillbillService;
-import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
-import com.ning.billing.payment.setup.PaymentConfig;
 import com.ning.billing.payment.setup.PaymentModule;
+import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.CallContextModule;
+import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.glue.TagStoreModule;
 
 
 public class MockModule extends AbstractModule {
@@ -92,7 +91,6 @@ public class MockModule extends AbstractModule {
         install(new AccountModule());
         install(new CatalogModule());
         install(new EntitlementModule());
-        install(new MockOverdueAccessModule());
         install(new InvoiceModule());
         install(new PaymentMockModule());
     }

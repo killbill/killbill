@@ -49,6 +49,7 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 	private final String phone;
     private final String updatedBy;
     private final DateTime updatedDate;
+    
 
 	//intended for creation and migration
 	public DefaultAccount(final String createdBy, final DateTime createdDate,

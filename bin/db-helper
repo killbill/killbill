@@ -36,122 +36,121 @@ DDL_FILE=
 CLEAN_FILE=
 
 function usage() {
-   echo -n "./db_helper "
-   echo -n " -a <create|clean|dump>"
-   echo -n " -d database_name (default = killbill)"    
-   echo -n " -u user_name (default = root)"
-   echo -n " -p password (default = root)"
-   echo -n " -t (also include test ddl)"
-   echo -n "-h this message"
-   echo
-   exit 1
+    echo -n "./db_helper "
+    echo -n " -a <create|clean|dump>"
+    echo -n " -d database_name (default = killbill)"    
+    echo -n " -u user_name (default = root)"
+    echo -n " -p password (default = root)"
+    echo -n " -t (also include test ddl)"
+    echo -n "-h this message"
+    echo
+    exit 1
 }
 
 function get_modules() {
-   local modules=`grep module $POM  | grep -v modules | cut -d '>' -f 2 | cut -d '<' -f 1`
-   echo $modules
+    local modules=`grep module $POM  | grep -v modules | cut -d '>' -f 2 | cut -d '<' -f 1`
+    echo $modules
 }
 
 function find_test_ddl() {
-
-   local modules=`get_modules`
-   local ddl_test=
-
-   local cur_ddl=
-   for m in $modules; do
-       cur_ddl=`find $m/src/test/resources/ -name ddl_test.sql 2>/dev/null`
-       ddl_test="$ddl_test $cur_ddl"
-   done
-   echo "$ddl_test"
-
+    local modules=`get_modules`
+    local ddl_test=
+    
+    local cur_ddl=
+    for m in $modules; do
+        cur_ddl=`find $m/src/test/resources/ -name ddl_test.sql 2>/dev/null`
+        ddl_test="$ddl_test $cur_ddl"
+    done
+    echo "$ddl_test"
+    
 }
 function find_src_ddl() {
-
-   local modules=`get_modules`
-   local ddl_src=
-
-   local cur_ddl=
-   for m in $modules; do
-       cur_ddl=`find $m/src/main/resources/ -name ddl.sql 2>/dev/null`
-       ddl_src="$ddl_src $cur_ddl"
-   done
-   echo "$ddl_src"
+    
+    local modules=`get_modules`
+    local ddl_src=
+    
+    local cur_ddl=
+    for m in $modules; do
+        cur_ddl=`find $m/src/main/resources/ -name ddl.sql 2>/dev/null`
+        ddl_src="$ddl_src $cur_ddl"
+    done
+    echo "$ddl_src"
 }
 
 
 function create_clean_file() {
-   local ddl_file=$1
-   local tables=`cat $ddl_file | grep -i "create table" | awk ' { print $3 } '` 
+    local ddl_file=$1
+    local tables=`cat $ddl_file | grep -i "create table" | awk ' { print $3 } '` 
 
-   local tmp="/tmp/clean-$DATABASE.$$" 
-   echo "use $DATABASE;" >> $tmp
-   echo "" >> $tmp
-   for t in $tables; do
-       echo "truncate $t;" >> $tmp
-   done
-   echo $tmp
+    local tmp="/tmp/clean-$DATABASE.$$" 
+    echo "use $DATABASE;" >> $tmp
+    echo "" >> $tmp
+    for t in $tables; do
+        echo "truncate $t;" >> $tmp
+    done
+    echo $tmp
 }
 
 function create_ddl_file() {
-   local ddls=`find_src_ddl`
-   local test_ddls=
-   if [ ! -z $TEST_ALSO ]; then
-       test_ddls=`find_test_ddl`
-       ddls="$ddls $test_ddls"
-   fi
+    local ddls=`find_src_ddl`
+    local test_ddls=
+    if [ ! -z $TEST_ALSO ]; then
+        test_ddls=`find_test_ddl`
+        ddls="$ddls $test_ddls"
+    fi
 
-   local tmp="/tmp/ddl-$DATABASE.$$"
-   touch $tmp
-   echo "use $DATABASE;" >> $tmp
-   echo "" >> $tmp
-   for d in $ddls; do
-       cat $d >> $tmp
-       echo "" >> $tmp
-   done
-   echo $tmp
+    local tmp="/tmp/ddl-$DATABASE.$$"
+    touch $tmp
+    echo "use $DATABASE;" >> $tmp
+    echo "" >> $tmp
+    for d in $ddls; do
+        cat $d >> $tmp
+        echo "" >> $tmp
+    done
+    echo $tmp
 }
 
 function cleanup() {
-   rm -f "/tmp/*.$$"
+    rm -f "/tmp/*.$$"
 }
 
 
 while getopts ":a:d:u:pt" options; do
- case $options in
-   a ) ACTION=$OPTARG;;
+  case $options in
+    a ) ACTION=$OPTARG;;
 	d ) DATABASE=$OPTARG;;
 	u ) USER=$OPTARG;;
 	p ) PWD=$OPTARG;;
 	t ) TEST_ALSO=1;;
-   h ) usage;;
-   * ) usage;;
- esac
+    h ) usage;;
+    * ) usage;;
+  esac
 done
 
 
 
 if [ -z $ACTION ]; then
-   echo "Need to specify an action <CREATE|CLEAN>"
-   usage
+    echo "Need to specify an action <CREATE|CLEAN>"
+    usage
 fi
 
 
 if [ $ACTION == "dump" ]; then
-   DDL_FILE=`create_ddl_file`
-   cat $DDL_FILE
+     DDL_FILE=`create_ddl_file`
+    cat $DDL_FILE
 fi
 
 if [ $ACTION == "create" ]; then
-   DDL_FILE=`create_ddl_file`
-   echo "Applying new schema $tmp to database $DATABASE"    
-   mysql -u $USER --password=$PWD < $DDL_FILE
+    DDL_FILE=`create_ddl_file`
+    echo "Applying new schema $tmp to database $DATABASE"    
+    mysql -u $USER --password=$PWD < $DDL_FILE
 fi
 
 if [ $ACTION == "clean" ]; then
-   DDL_FILE=`create_ddl_file` 
-   CLEAN_FILE=`create_clean_file $DDL_FILE`   
-   echo "Cleaning db tables on database $DATABASE"
-   mysql -u $USER --password=$PWD < $DDL_FILE
+    DDL_FILE=`create_ddl_file` 
+    CLEAN_FILE=`create_clean_file $DDL_FILE`   
+    echo "Cleaning db tables on database $DATABASE"
+    mysql -u $USER --password=$PWD < $DDL_FILE
 fi
 
 cleanup

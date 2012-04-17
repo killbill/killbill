@@ -31,11 +31,11 @@ import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -62,7 +62,7 @@ public class RequestProcessor {
     }
 
     @Subscribe
-    public void receiveInvoice(InvoiceCreationNotification event) {
+    public void receiveInvoice(InvoiceCreationEvent event) {
         log.info("Received invoice creation notification for account {} and invoice {}", event.getAccountId(), event.getInvoiceId());
         try {
             final Account account = accountUserApi.getAccountById(event.getAccountId());
@@ -72,9 +72,9 @@ public class RequestProcessor {
             }
             else {
                 CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
-                List<Either<PaymentError, PaymentInfo>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()), context);
+                List<Either<PaymentErrorEvent, PaymentInfoEvent>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()), context);
                 if (!results.isEmpty()) {
-                    Either<PaymentError, PaymentInfo> result = results.get(0);
+                    Either<PaymentErrorEvent, PaymentInfoEvent> result = results.get(0);
                     eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
                 }
             }

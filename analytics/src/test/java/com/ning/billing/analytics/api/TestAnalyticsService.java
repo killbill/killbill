@@ -37,7 +37,7 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountCreationNotification;
+import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.analytics.AnalyticsTestModule;
@@ -65,18 +65,19 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceCreationNotification;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
+import com.ning.billing.payment.api.DefaultPaymentInfo;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -135,12 +136,12 @@ public class TestAnalyticsService {
     @Inject
     private MysqlTestingHelper helper;
 
-    private SubscriptionTransition transition;
+    private SubscriptionEventTransition transition;
     private BusinessSubscriptionTransition expectedTransition;
 
-    private AccountCreationNotification accountCreationNotification;
-    private InvoiceCreationNotification invoiceCreationNotification;
-    private PaymentInfo paymentInfoNotification;
+    private AccountCreationEvent accountCreationNotification;
+    private InvoiceCreationEvent invoiceCreationNotification;
+    private PaymentInfoEvent paymentInfoNotification;
 
     @BeforeMethod(groups = "slow")
     public void cleanup() throws Exception
@@ -193,8 +194,7 @@ public class TestAnalyticsService {
         helper.initDb(paymentDdl);
         helper.initDb(utilDdl);
 
-        helper.cleanupTable("tag_definitions");
-        helper.cleanupTable("accounts");
+    	helper.cleanupAllTables();
     }
 
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {
@@ -230,6 +230,7 @@ public class TestAnalyticsService {
                 phase,
                 priceList,
                 1L,
+                null,
                 true
         );
         expectedTransition = new BusinessSubscriptionTransition(
@@ -244,7 +245,7 @@ public class TestAnalyticsService {
     }
 
     private void createAccountCreationEvent(final Account account) {
-        accountCreationNotification = new DefaultAccountCreationEvent(account);
+        accountCreationNotification = new DefaultAccountCreationEvent(account, null);
     }
 
     private void createInvoiceAndPaymentCreationEvents(final Account account) {
@@ -261,9 +262,9 @@ public class TestAnalyticsService {
 
         // It doesn't really matter what the events contain - the listener will go back to the db
         invoiceCreationNotification = new DefaultInvoiceCreationNotification(invoice.getId(), account.getId(),
-                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow());
+                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow(), null);
 
-        paymentInfoNotification = new PaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
+        paymentInfoNotification = new DefaultPaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
         final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
                 ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getPaymentId(), 1);
         paymentDao.createPaymentAttempt(paymentAttempt, context);
@@ -292,6 +293,7 @@ public class TestAnalyticsService {
 
         // Send events and wait for the async part...
         bus.post(transition);
+
         bus.post(accountCreationNotification);
         Thread.sleep(1000);
 

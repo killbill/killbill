@@ -22,7 +22,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
-import com.ning.billing.mock.overdue.MockOverdueAccessModule;
 
 public class TestUserApiRecreateMemory extends TestUserApiRecreate {
 

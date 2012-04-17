@@ -17,20 +17,33 @@
 package com.ning.billing.account.api.user;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountCreationNotification;
+import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 import java.util.UUID;
 
-public class DefaultAccountCreationEvent implements AccountCreationNotification {
+public class DefaultAccountCreationEvent implements AccountCreationEvent {
+	
+	private final UUID userToken;	
     private final UUID id;
     private final AccountData data;
 
-    public DefaultAccountCreationEvent(Account data) {
+    public DefaultAccountCreationEvent(Account data, UUID userToken) {
         this.id = data.getId();
         this.data = data;
+        this.userToken = userToken;
     }
 
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.ACCOUNT_CREATE;
+	}
+
+    @Override
+    public UUID getUserToken() {
+    	return userToken;
+    }
     @Override
     public UUID getId() {
         return id;

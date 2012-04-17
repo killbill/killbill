@@ -21,6 +21,7 @@ import java.util.Properties;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
+import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.api.DefaultPaymentApi;

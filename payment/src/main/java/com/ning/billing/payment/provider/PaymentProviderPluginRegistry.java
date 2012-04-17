@@ -22,7 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.inject.Inject;
-import com.ning.billing.payment.setup.PaymentConfig;
+import com.ning.billing.config.PaymentConfig;
+
 
 public class PaymentProviderPluginRegistry {
     private final String defaultPlugin;

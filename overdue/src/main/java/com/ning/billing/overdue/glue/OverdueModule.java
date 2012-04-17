@@ -16,35 +16,15 @@
 
 package com.ning.billing.overdue.glue;
 
-import org.skife.jdbi.v2.IDBI;
-
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.ning.billing.overdue.dao.OverdueDao;
-import com.ning.billing.overdue.dao.OverdueSqlDao;
 
 public class OverdueModule extends AbstractModule {
-    
+
     @Override
     protected void configure() {
-        bind(OverdueDao.class).toProvider(OverdueDaoProvider.class);
-    }
-
-    public static class OverdueDaoProvider implements Provider<OverdueDao>{
+        // TODO Auto-generated method stub
         
-        private IDBI dbi;
-
-
-        @Inject
-        public OverdueDaoProvider(IDBI dbi){
-            this.dbi = dbi;
-        }
-        
-
-        @Override
-        public OverdueDao get() {
-            return dbi.onDemand(OverdueSqlDao.class);
-        }   
     }
+    
+
 }

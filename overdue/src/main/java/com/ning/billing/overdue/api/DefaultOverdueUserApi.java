@@ -23,13 +23,16 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.StaticCatalog;
-import com.ning.billing.catalog.api.overdue.BillingState;
-import com.ning.billing.catalog.api.overdue.OverdueError;
-import com.ning.billing.catalog.api.overdue.OverdueState;
-import com.ning.billing.catalog.api.overdue.OverdueStateSet;
-import com.ning.billing.catalog.api.overdue.Overdueable;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;
+import com.ning.billing.overdue.config.OverdueConfig;
+import com.ning.billing.overdue.config.api.BillingState;
+import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueState;
+import com.ning.billing.overdue.config.api.OverdueStateSet;
+import com.ning.billing.overdue.config.api.Overdueable;
+import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.overdue.OverdueAccessApi;
@@ -39,13 +42,13 @@ public class DefaultOverdueUserApi implements OverdueUserApi{
     
     private final OverdueWrapperFactory factory;
     private final OverdueAccessApi accessApi;
-    private final CatalogService catalogService;
+    private final OverdueConfig overdueConfig;
    
     @Inject
-    public DefaultOverdueUserApi(OverdueWrapperFactory factory, OverdueAccessApi accessApi,  CatalogService catalogService) {
+    public DefaultOverdueUserApi(OverdueWrapperFactory factory,OverdueAccessApi accessApi, ExtendedOverdueService service,  CatalogService catalogService) {
         this.factory = factory;
         this.accessApi = accessApi;
-        this.catalogService = catalogService;
+        this.overdueConfig = service.getOverdueConfig();
     }
     
     @SuppressWarnings("unchecked")
@@ -53,8 +56,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi{
     public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueError {
         try {
             String stateName = accessApi.getOverdueStateNameFor(overdueable);
-            StaticCatalog catalog = catalogService.getCurrentCatalog();
-            OverdueStateSet<SubscriptionBundle> states = catalog.currentBundleOverdueStateSet();
+            OverdueStateSet<SubscriptionBundle> states = overdueConfig.getBundleStateSet();
             return (OverdueState<T>) states.findState(stateName);
         } catch (CatalogApiException e) {
             throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED,overdueable.getId(), overdueable.getClass().getSimpleName());

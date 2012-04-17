@@ -16,6 +16,8 @@
 
 package com.ning.billing.entitlement.events.user;
 
+import java.util.UUID;
+
 import com.ning.billing.entitlement.events.EntitlementEvent;
 
 
@@ -30,5 +32,7 @@ public interface ApiEvent extends EntitlementEvent {
     public String getPriceList();
 
     public boolean isFromDisk();
+    
+    public UUID getUserToken();
 
 }
