@@ -16,7 +16,7 @@ CREATE UNIQUE INDEX custom_fields_unique ON custom_fields(object_id, object_type
 
 DROP TABLE IF EXISTS custom_field_history;
 CREATE TABLE custom_field_history (
-  history_id char(36) NOT NULL,
+  history_record_id char(36) NOT NULL,
   id char(36) NOT NULL,
   object_id char(36) NOT NULL,
   object_type varchar(30) NOT NULL,

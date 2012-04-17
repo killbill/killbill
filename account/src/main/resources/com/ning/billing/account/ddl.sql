@@ -30,7 +30,7 @@ CREATE UNIQUE INDEX accounts_email ON accounts(email);
 
 DROP TABLE IF EXISTS account_history;
 CREATE TABLE account_history (
-    history_id char(36) NOT NULL,
+    history_record_id char(36) NOT NULL,
     id char(36) NOT NULL,
     external_key varchar(128) NULL,
     email varchar(50) NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE account_emails (
     updated_date datetime NOT NULL,
     PRIMARY KEY(id)
 ) ENGINE=innodb;
-CREATE INDEX account_email_account_id ON account_mails(account_id);
+CREATE INDEX account_email_account_id ON account_emails(account_id);
 
 DROP TABLE IF EXISTS account_email_history;
 CREATE TABLE account_email_history (

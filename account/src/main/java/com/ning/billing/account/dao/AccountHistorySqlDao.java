@@ -28,7 +28,7 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTempla
 public interface AccountHistorySqlDao extends Transmogrifier {
     @SqlUpdate
     public void insertAccountHistoryFromTransaction(@AccountBinder final Account account,
-                                                    @Bind("historyId") final String historyId,
+                                                    @Bind("historyRecordId") final String historyRecordId,
                                                     @Bind("changeType") String changeType,
                                                     @CallContextBinder CallContext context);
 }
