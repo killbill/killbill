@@ -63,7 +63,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         return new DefaultAccount(UUID.randomUUID(), thisKey, thisEmail, name, firstNameLength, Currency.USD,
                 billCycleDay, null, timeZone, locale,
                 null, null, null, null, null, null, null, // add null address fields
-                phone, "test", DateTime.now(), "test", DateTime.now());
+                phone, false, false, "test", DateTime.now(), "test", DateTime.now());
     }
 
     @Test
@@ -205,6 +205,16 @@ public class TestAccountDao extends AccountDaoTestBase {
             }
 
             @Override
+            public boolean isMigrated() {
+                return false;
+            }
+
+            @Override
+            public boolean isNotifiedForInvoices() {
+                return false;
+            }
+
+            @Override
             public int getBillCycleDay() {
                 return account.getBillCycleDay();
             }
@@ -291,7 +301,8 @@ public class TestAccountDao extends AccountDaoTestBase {
         DefaultAccount account = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null, false, false,
+                                                    null, null, null, null);
         accountDao.create(account, context);
 
         String address1 = "123 address 1";
@@ -307,7 +318,7 @@ public class TestAccountDao extends AccountDaoTestBase {
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     address1, address2, companyName, city, stateOrProvince, country,
-                                                    postalCode, phone, null, null, null, null);
+                                                    postalCode, phone, false, false, null, null, null, null);
 
         accountDao.update(updatedAccount, context);
 
@@ -334,14 +345,14 @@ public class TestAccountDao extends AccountDaoTestBase {
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     "123 address 1", "456 address 2", null, "Cambridge Bay",
                                                     "Nunavut", "Canada", "X0B 0C0", "18001112222",
-                                                    null, null, null, null);
+                                                    false, false, null, null, null, null);
         accountDao.create(account, context);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     null, null, null, null, null, null, null, null,
-                                                    null, null, null, null);
+                                                    false, false, null, null, null, null);
 
         accountDao.update(updatedAccount, context);
 
@@ -367,13 +378,13 @@ public class TestAccountDao extends AccountDaoTestBase {
         DefaultAccount account = new DefaultAccount(accountId, originalExternalKey, "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     null, null, null, null, null, null, null, null, null, null,
-                                                    null, null, null, null);
+                                                    false, false, null, null, null, null);
         accountDao.create(account, context);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey1338", "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     null, null, null, null, null, null, null, null, null, null,
-                                                    null, null, null, null);
+                                                    false, false, null, null, null, null);
         accountDao.update(updatedAccount, context);
     }
 

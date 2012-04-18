@@ -58,6 +58,9 @@ public class AccountMapper extends MapperBase implements ResultSetMapper<Account
         String country = result.getString("country");
         String phone = result.getString("phone");
 
+        Boolean migrated = result.getBoolean("migrated");
+        Boolean isNotifiedForInvoices = result.getBoolean("is_notified_for_invoices");
+
         String createdBy = result.getString("created_by");
         DateTime createdDate = getDate(result, "created_date");
         String updatedBy = result.getString("updated_by");
@@ -73,6 +76,7 @@ public class AccountMapper extends MapperBase implements ResultSetMapper<Account
                                      .companyName(companyName)
                                      .city(city).stateOrProvince(stateOrProvince)
                                      .postalCode(postalCode).country(country)
+                                     .migrated(migrated).isNotifiedForInvoices(isNotifiedForInvoices)
                                      .createdBy(createdBy).createdDate(createdDate)
                                      .updatedBy(updatedBy).updatedDate(updatedDate)
                                      .build();

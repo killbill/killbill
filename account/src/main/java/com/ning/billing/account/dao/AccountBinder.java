@@ -60,6 +60,8 @@ public @interface AccountBinder {
                     q.bind("country", account.getCountry());
                     q.bind("postalCode", account.getPostalCode());
                     q.bind("phone", account.getPhone());
+                    q.bind("migrated", account.isMigrated());
+                    q.bind("isNotifiedForInvoices", account.isNotifiedForInvoices());
                 }
             };
         }

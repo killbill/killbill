@@ -81,6 +81,17 @@ public class AccountJson {
             public String getPhone() {
                 return phone;
             }
+
+            @Override
+            public boolean isMigrated() {
+                return false;
+            }
+
+            @Override
+            public boolean isNotifiedForInvoices() {
+                return false;
+            }
+
             @Override
             public String getPaymentProviderName() {
                 return paymentProvider;

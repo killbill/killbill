@@ -18,8 +18,10 @@ package com.ning.billing.account.dao;
 
 import java.util.UUID;
 
+import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.ChangeTypeBinder;
 import com.ning.billing.util.entity.UpdatableEntityDao;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -48,4 +50,10 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
     @Override
     @SqlUpdate
     public void update(@AccountBinder Account account, @CallContextBinder final CallContext context);
+
+    @SqlUpdate
+    public void insertAccountHistoryFromTransaction(@AccountBinder final Account account,
+                                                    @Bind("historyRecordId") final String historyRecordId,
+                                                    @ChangeTypeBinder ChangeType changeType,
+                                                    @CallContextBinder CallContext context);
 }

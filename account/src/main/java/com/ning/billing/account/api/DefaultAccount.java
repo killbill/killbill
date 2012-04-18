@@ -47,6 +47,8 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 	private final String country;
 	private final String postalCode;
 	private final String phone;
+    private final boolean isMigrated;
+    private final boolean isNotifiedForInvoices;
     private final String updatedBy;
     private final DateTime updatedDate;
     
@@ -80,7 +82,8 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 				data.getTimeZone(), data.getLocale(),
 				data.getAddress1(), data.getAddress2(), data.getCompanyName(),
 				data.getCity(), data.getStateOrProvince(), data.getCountry(),
-				data.getPostalCode(), data.getPhone(), createdBy, createdDate,
+				data.getPostalCode(), data.getPhone(), data.isMigrated(), data.isNotifiedForInvoices(),
+                createdBy, createdDate,
                 updatedBy, updatedDate);
 	}
 
@@ -104,6 +107,8 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 	 * @param country
 	 * @param postalCode
 	 * @param phone
+     * @param isMigrated
+     * @param isNotifiedForInvoices
 	 * @param createdDate
 	 * @param updatedDate
 	 */
@@ -114,6 +119,7 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
                           final String postalCode, final String phone,
+                          final boolean isMigrated, final boolean isNotifiedForInvoices,
                           final String createdBy, final DateTime createdDate,
                           final String updatedBy, final DateTime updatedDate) {
 
@@ -135,6 +141,8 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 		this.postalCode = postalCode;
 		this.country = country;
 		this.phone = phone;
+        this.isMigrated = isMigrated;
+        this.isNotifiedForInvoices = isNotifiedForInvoices;
         this.updatedBy = updatedBy;
         this.updatedDate = updatedDate;
 	}
@@ -238,6 +246,16 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 	public String getCountry() {
 		return country;
 	}
+
+    @Override
+    public boolean isMigrated() {
+        return this.isMigrated;
+    }
+
+    @Override
+    public boolean isNotifiedForInvoices() {
+        return isNotifiedForInvoices;
+    }
 
     @Override
     public String getUpdatedBy() {

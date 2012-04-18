@@ -55,4 +55,8 @@ public interface AccountData {
     public String getCountry();
 
     public String getPhone();
+
+    public boolean isMigrated();
+
+    public boolean isNotifiedForInvoices();
 }

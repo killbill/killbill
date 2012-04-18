@@ -131,9 +131,7 @@ public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
                     transactionalDao.create(account, context);
                     UUID historyId = UUID.randomUUID();
 
-                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
-                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(),
-                            ChangeType.INSERT.toString(), context);
+                    accountSqlDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.INSERT, context);
 
                     AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
                     auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
@@ -177,12 +175,10 @@ public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
                     accountSqlDao.update(account, context);
 
                     UUID historyId = UUID.randomUUID();
-                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
-                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.UPDATE.toString(), context);
+                    accountSqlDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.UPDATE, context);
 
                     AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
-                    auditDao.insertAuditFromTransaction("account_history" ,historyId.toString(),
-                                                        ChangeType.INSERT, context);
+                    auditDao.insertAuditFromTransaction("account_history" ,historyId.toString(), ChangeType.INSERT, context);
 
                     saveTagsFromWithinTransaction(account, accountSqlDao, context);
                     saveCustomFieldsFromWithinTransaction(account, accountSqlDao, context);

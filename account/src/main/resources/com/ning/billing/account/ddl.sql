@@ -19,6 +19,7 @@ CREATE TABLE accounts (
     postal_code varchar(11) DEFAULT NULL,
     phone varchar(25) DEFAULT NULL,
     migrated bool DEFAULT false,
+    is_notified_for_invoices boolean NOT NULL,
     created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
     updated_date datetime DEFAULT NULL,
@@ -49,6 +50,8 @@ CREATE TABLE account_history (
     country varchar(50) DEFAULT NULL,
     postal_code varchar(11) DEFAULT NULL,
     phone varchar(25) DEFAULT NULL,
+    migrated bool DEFAULT false,
+    is_notified_for_invoices boolean NOT NULL,
     change_type char(6) NOT NULL,
     updated_by varchar(50) NOT NULL,
     date datetime NOT NULL

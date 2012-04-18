@@ -61,6 +61,16 @@ public class MockAccount implements Account
     }
 
     @Override
+    public boolean isMigrated() {
+        return false;
+    }
+
+    @Override
+    public boolean isNotifiedForInvoices() {
+        return false;
+    }
+
+    @Override
     public String getExternalKey()
     {
         return accountKey;

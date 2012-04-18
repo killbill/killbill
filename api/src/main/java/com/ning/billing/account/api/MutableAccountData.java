@@ -21,41 +21,6 @@ import org.joda.time.DateTimeZone;
 import com.ning.billing.catalog.api.Currency;
 
 public interface MutableAccountData extends AccountData {
-
-    public String getExternalKey();
-
-    public String getEmail();
-
-    public String getName();
-
-    public int getFirstNameLength();
-
-    public Currency getCurrency();
-
-    public int getBillCycleDay();
-
-    public String getPaymentProviderName();
-
-    public DateTimeZone getTimeZone();
-
-    public String getLocale();
-
-    public String getAddress1();
-
-    public String getAddress2();
-
-    public String getCompanyName();
-
-    public String getCity();
-
-    public String getStateOrProvince();
-
-    public String getCountry();
-
-    public String getPostalCode();
-
-    public String getPhone();
-
     public void setExternalKey(String externalKey);
 
     public void setEmail(String email);
@@ -89,5 +54,9 @@ public interface MutableAccountData extends AccountData {
     public void setPostalCode(String postalCode);
 
     public void setPhone(String phone);
+
+    public void setIsMigrated(boolean isMigrated);
+
+    public void setIsNotifiedForInvoices(boolean isNotifiedForInvoices);
 
 }
