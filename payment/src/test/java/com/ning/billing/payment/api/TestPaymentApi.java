@@ -111,7 +111,7 @@ public abstract class TestPaymentApi {
         assertNotNull(paymentAttempt);
         assertNotNull(paymentAttempt.getPaymentAttemptId());
         assertEquals(paymentAttempt.getInvoiceId(), invoice.getId());
-        assertTrue(paymentAttempt.getAmount().compareTo(amount) == 0);
+        assertTrue(paymentAttempt.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
         assertEquals(paymentAttempt.getCurrency(), Currency.USD);
         assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getPaymentId());
         DateTime nowTruncated = now.withMillisOfSecond(0).withSecondOfMinute(0);
@@ -170,7 +170,7 @@ public abstract class TestPaymentApi {
     public void testCreatePaypalPaymentMethod() throws AccountApiException, EntityPersistenceException {
         PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
         assertNotNull(account);
-        Either<PaymentErrorEvent, List<PaymentMethodInfo>> paymentMethodsOrError = paymentApi.getPaymentMethods(account.getAccountKey());
+        paymentApi.getPaymentMethods(account.getAccountKey());
     }
 
     @Test(enabled=true)
