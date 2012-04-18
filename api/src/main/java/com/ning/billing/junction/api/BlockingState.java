@@ -161,5 +161,20 @@ public class BlockingState implements Comparable<BlockingState>{
         return true;
     }
     
+    public String getDescription() {
+        String entitlement = onOff(isBlockEntitlement());
+        String billing = onOff(isBlockBilling());
+        String change = onOff(isBlockChange());
+               
+        return String.format("(Change: %s, Entitlement: %s, Billing: %s)", change, entitlement, billing);
+    }
+    
+    private String onOff(boolean val) {
+        if(val) {
+            return "Off";
+        } else {
+            return "On";
+        }
+    }
     
 }

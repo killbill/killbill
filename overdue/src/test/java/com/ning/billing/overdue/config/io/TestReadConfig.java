@@ -23,7 +23,7 @@ import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.config.XMLLoader;
 
 public class TestReadConfig {
-    @Test(enabled=false) //TODO MDW whilst refactoring
+    @Test(enabled=true) 
     public void testConfigLoad() throws Exception {
         XMLLoader.getObjectFromString(Resources.getResource("OverdueConfig.xml").toExternalForm(), OverdueConfig.class);
     }

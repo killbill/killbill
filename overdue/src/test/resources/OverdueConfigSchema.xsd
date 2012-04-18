@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0">
-<xs:element name="overdue" type="overdueRules"/>
-<xs:complexType name="overdueRules">
+<xs:element name="overdueConfig" type="overdueConfig"/>
+<xs:complexType name="overdueConfig">
 <xs:complexContent>
 <xs:extension base="validatingConfig">
 <xs:sequence>
