@@ -29,11 +29,11 @@ import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
-import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.util.clock.Clock;
 
-public abstract class BillingStateCalculator<T extends Overdueable> {
+public abstract class BillingStateCalculator<T extends Blockable> {
 
     private final InvoiceUserApi invoiceApi;
     private final Clock clock;

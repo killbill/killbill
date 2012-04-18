@@ -19,6 +19,8 @@ package com.ning.billing.overdue;
 import com.ning.billing.lifecycle.KillbillService;
 
 public interface OverdueService extends KillbillService {
+    String OVERDUE_SERVICE_NAME = "overdue-service";
+
     public String getName();
 
     public OverdueUserApi getUserApi();

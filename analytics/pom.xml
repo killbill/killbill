@@ -86,12 +86,12 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-ne</artifactId>
+            <artifactId>killbill-junction</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-ne</artifactId>
+            <artifactId>killbill-junction</artifactId>
              <type>test-jar</type>
             <scope>test</scope>
         </dependency>

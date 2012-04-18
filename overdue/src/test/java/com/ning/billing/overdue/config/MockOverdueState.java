@@ -16,13 +16,13 @@
 
 package com.ning.billing.overdue.config;
 
-import com.ning.billing.mock.overdue.MockOverdueAccessModule;
-import com.ning.billing.overdue.config.api.Overdueable;
+import com.ning.billing.junction.MockBlockingModule;
+import com.ning.billing.junction.api.Blockable;
 
-public class MockOverdueState<T extends Overdueable> extends DefaultOverdueState<T> {
+public class MockOverdueState<T extends Blockable> extends DefaultOverdueState<T> {
     
     public MockOverdueState() {
-        setName(MockOverdueAccessModule.CLEAR_STATE);
+        setName(MockBlockingModule.CLEAR_STATE);
     }
 
     public MockOverdueState(String name, boolean blockChanges, boolean disableEntitlementAndBlockChanges) {

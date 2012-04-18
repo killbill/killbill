@@ -18,6 +18,7 @@ package com.ning.billing.overdue.glue;
 
 import com.google.inject.AbstractModule;
 
+
 public class OverdueModule extends AbstractModule {
 
     @Override

@@ -1,0 +1,92 @@
+group BlockingStateSqlDao;
+
+getBlockingStateFor() ::= <<
+    select
+        id
+      , state
+      , type
+      , service
+      , block_change
+      , block_entitlement
+      , block_billing
+      , created_date   
+    from blocking_states
+    where id = :id 
+    order by created_date desc
+    limit 1
+    ;
+>>
+
+getBlockingStateForIdAndType() ::= <<
+    select
+       id
+      , state
+      , type
+      , service
+      , block_change
+      , block_entitlement
+      , block_billing
+      , created_date   
+    from blocking_states
+    where id = :id 
+    and type = :type
+    order by created_date desc
+    limit 1
+    ;
+>>
+
+
+getBlockingHistoryFor() ::= <<
+    select
+       id
+      , state
+      , type
+      , service
+      , block_change
+      , block_entitlement
+      , block_billing
+      , created_date   
+    from blocking_states
+    where id = :id 
+    order by created_date asc
+    ;
+>>
+
+getBlockingHistoryForIdAndType() ::= <<
+    select
+       id
+      , state
+      , type
+      , service
+      , block_change
+      , block_entitlement
+      , block_billing
+      , created_date   
+    from blocking_states
+    where id = :id 
+    and type = :type
+    order by created_date asc
+    ;
+>>
+
+setBlockingState() ::= <<
+    insert into blocking_states (
+       id
+      , state
+      , type
+      , service
+      , block_change
+      , block_entitlement
+      , block_billing
+      , created_date   
+    ) values (
+        :id
+      , :state
+      , :type
+      , :service
+      , :block_change
+      , :block_entitlement
+      , :block_billing   
+      , :created_date 
+    );
+>>

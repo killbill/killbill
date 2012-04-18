@@ -44,7 +44,7 @@
         <module>catalog</module>
         <module>entitlement</module>
         <module>invoice</module>
-        <module>ne</module>
+        <module>junction</module>
         <module>overdue</module>
         <module>payment</module>
         <module>util</module>
@@ -111,12 +111,12 @@
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
-                <artifactId>killbill-ne</artifactId>
+                <artifactId>killbill-junction</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.ning.billing</groupId>
-                <artifactId>killbill-ne</artifactId>
+                <artifactId>killbill-junction</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>

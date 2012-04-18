@@ -21,20 +21,21 @@ import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.overdue.OverdueAccessApi;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.overdue.OverdueService;
+import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.OverdueError;
-import com.ning.billing.overdue.config.api.OverdueState;
-import com.ning.billing.overdue.config.api.Overdueable;
-import com.ning.billing.util.clock.Clock;
 
-public class OverdueStateApplicator<T extends Overdueable>{
+public class OverdueStateApplicator<T extends Blockable>{
 
-    private final OverdueAccessApi accessApi;
+    private final BlockingApi blockingApi;
 
 
     @Inject
-    public OverdueStateApplicator(OverdueAccessApi accessApi) {
-        this.accessApi = accessApi;
+    public OverdueStateApplicator(BlockingApi accessApi) {
+        this.blockingApi = accessApi;
     }
 
     public void apply(T overdueable, OverdueState<T> previousOverdueState, OverdueState<T> nextOverdueState, DateTime timeOfNextCheck) throws OverdueError {
@@ -57,23 +58,37 @@ public class OverdueStateApplicator<T extends Overdueable>{
     }
 
 
-    protected void storeNewState(T overdueable, OverdueState<T> nextOverdueState) throws OverdueError {
+    protected void storeNewState(T blockable, OverdueState<T> nextOverdueState) throws OverdueError {
         try {
-            accessApi.setOverrideState(overdueable, nextOverdueState, Overdueable.Type.get(overdueable));
+            blockingApi.setBlockingState(new BlockingState(blockable.getId(), nextOverdueState.getName(), Blockable.Type.get(blockable), 
+                    OverdueService.OVERDUE_SERVICE_NAME, blockChanges(nextOverdueState), blockEntitlement(nextOverdueState), blockBilling(nextOverdueState)));
         } catch (Exception e) {
-            throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, overdueable.getId(), overdueable.getClass().getName());
+            throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, blockable.getId(), blockable.getClass().getName());
         }
+    }
+
+    private boolean blockChanges(OverdueState<T> nextOverdueState) {
+        return nextOverdueState.blockChanges();
+    }
+
+    private boolean blockBilling(OverdueState<T> nextOverdueState) {
+        return nextOverdueState.disableEntitlementAndChangesBlocked();
+    }
+
+    private boolean blockEntitlement(OverdueState<T> nextOverdueState) {
+        return nextOverdueState.disableEntitlementAndChangesBlocked();
     }
 
     protected void createFutureNotification(T overdueable,
             DateTime timeOfNextCheck) {
-        // TODO Auto-generated method stub
+        // TODO MDW
         
     }
 
 
     
     protected void clear(T overdueable) {
+        //TODO MDW
         // Clear future notification checks
         // Clear any overrides
         
