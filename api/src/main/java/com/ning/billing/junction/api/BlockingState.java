@@ -99,6 +99,67 @@ public class BlockingState implements Comparable<BlockingState>{
 
     @Override
     public int compareTo(BlockingState arg0) {
-        return timestamp.compareTo(arg0.getTimestamp());
+        if (timestamp.compareTo(arg0.getTimestamp()) != 0) {
+            return timestamp.compareTo(arg0.getTimestamp());
+        } else {
+            return hashCode() - arg0.hashCode();
+        }
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (blockBilling ? 1231 : 1237);
+        result = prime * result + (blockChange ? 1231 : 1237);
+        result = prime * result + (blockEntitlement ? 1231 : 1237);
+        result = prime * result + ((blockingId == null) ? 0 : blockingId.hashCode());
+        result = prime * result + ((service == null) ? 0 : service.hashCode());
+        result = prime * result + ((stateName == null) ? 0 : stateName.hashCode());
+        result = prime * result + ((timestamp == null) ? 0 : timestamp.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        BlockingState other = (BlockingState) obj;
+        if (blockBilling != other.blockBilling)
+            return false;
+        if (blockChange != other.blockChange)
+            return false;
+        if (blockEntitlement != other.blockEntitlement)
+            return false;
+        if (blockingId == null) {
+            if (other.blockingId != null)
+                return false;
+        } else if (!blockingId.equals(other.blockingId))
+            return false;
+        if (service == null) {
+            if (other.service != null)
+                return false;
+        } else if (!service.equals(other.service))
+            return false;
+        if (stateName == null) {
+            if (other.stateName != null)
+                return false;
+        } else if (!stateName.equals(other.stateName))
+            return false;
+        if (timestamp == null) {
+            if (other.timestamp != null)
+                return false;
+        } else if (!timestamp.equals(other.timestamp))
+            return false;
+        if (type != other.type)
+            return false;
+        return true;
+    }
+    
+    
 }

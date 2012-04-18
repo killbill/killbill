@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.junction.dao;
+package com.ning.billing.junction.api.blocking;
 
 import java.io.IOException;
 import java.util.SortedSet;
@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -35,31 +37,41 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.MockModule;
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.glue.JunctionModule;
+import com.ning.billing.junction.dao.TestBlockingDao;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.ClockMock;
 
-@Guice(modules = {MockModule.class,  JunctionModule.class})
-public class TestBlockingDao {
+@Guice(modules = { MockModule.class })
+public class TestBlockingApi {
     private Logger log = LoggerFactory.getLogger(TestBlockingDao.class);
     
     @Inject
     private MysqlTestingHelper helper;
     
+    @Inject 
+    private BlockingApi api;
+    
     @Inject
-    private BlockingStateDao dao;
+    private ClockMock clock;
 
     @BeforeClass(groups={"slow"})
     public void setup() throws IOException {
-        log.info("Starting set up TestBlockingDao");
+        log.info("Starting set up TestBlockingApi");
 
         final String utilDdl = IOUtils.toString(TestBlockingDao.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));
 
         helper.startMysql();
         helper.initDb(utilDdl);
-
+     
+    }
+    
+    @BeforeMethod(groups={"slow"})
+    public void clean() {       
+        helper.cleanupTable("blocking_states");
+        clock.resetDeltaFromReality();
     }
     
     @AfterClass(groups = "slow")
@@ -67,11 +79,10 @@ public class TestBlockingDao {
     {
         helper.stopMysql();
     }
-    
-    
+
     @Test(groups={"slow"}, enabled=true)
-    public void testDao() { 
-        ClockMock clock = new ClockMock();
+    public void testApi() { 
+
         UUID uuid = UUID.randomUUID();
         String overdueStateName = "WayPassedItMan";
         String service = "TEST";
@@ -81,24 +92,23 @@ public class TestBlockingDao {
         boolean blockBilling = false;
 
         BlockingState state1 = new BlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
-        dao.setBlockingState(state1, clock);
+        api.setBlockingState(state1);
         clock.setDeltaFromReality(1000 * 3600 * 24);
         
         String overdueStateName2 = "NoReallyThisCantGoOn";
         BlockingState state2 = new BlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
-        dao.setBlockingState(state2, clock);
+        api.setBlockingState(state2);
         
         SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
         ((ZombieControl)bundle).addResult("getId", uuid);
         
-        Assert.assertEquals(dao.getBlockingStateFor(bundle), overdueStateName2);
-        Assert.assertEquals(dao.getBlockingStateForIdAndType(bundle.getId(), Blockable.Type.SUBSCRIPTION_BUNDLE), overdueStateName2);
+        Assert.assertEquals(api.getBlockingStateNameFor(bundle), overdueStateName2);
+        Assert.assertEquals(api.getBlockingStateNameFor(bundle.getId(), Blockable.Type.SUBSCRIPTION_BUNDLE), overdueStateName2);
         
     }
     
     @Test(groups={"slow"}, enabled=true)
-    public void testDaoHistory() throws CatalogApiException { 
-        ClockMock clock = new ClockMock();
+    public void testApiHistory() throws CatalogApiException { 
         UUID uuid = UUID.randomUUID();
         String overdueStateName = "WayPassedItMan";
         String service = "TEST";
@@ -108,19 +118,20 @@ public class TestBlockingDao {
         boolean blockBilling = false;
 
         BlockingState state1 = new BlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
-        dao.setBlockingState(state1, clock);
-        clock.setDeltaFromReality(1000 * 3600 * 24);
+        api.setBlockingState(state1);
         
+        clock.setDeltaFromReality(1000 * 3600 * 24);
+
         String overdueStateName2 = "NoReallyThisCantGoOn";
         BlockingState state2 = new BlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
-        dao.setBlockingState(state2, clock);
+        api.setBlockingState(state2);
         
         SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
         ((ZombieControl)bundle).addResult("getId", uuid);
         
      
-        SortedSet<BlockingState> history1 = dao.getBlockingHistoryFor(bundle);
-        SortedSet<BlockingState> history2 = dao.getBlockingHistoryForIdAndType(bundle.getId(), Blockable.Type.get(bundle));
+        SortedSet<BlockingState> history1 = api.getBlockingHistory(bundle);
+        SortedSet<BlockingState> history2 = api.getBlockingHistory(bundle.getId(), Blockable.Type.get(bundle));
         
         Assert.assertEquals(history1.size(), 2);
         Assert.assertEquals(history1.first().getStateName(), overdueStateName);

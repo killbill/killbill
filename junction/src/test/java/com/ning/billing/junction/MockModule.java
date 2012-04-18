@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.junction.dao;
+package com.ning.billing.junction;
 
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
@@ -24,6 +24,7 @@ import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.junction.glue.JunctionModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
@@ -51,6 +52,7 @@ public class MockModule extends AbstractModule {
         }
 
        install(new CatalogModule());
+       install(new JunctionModule());
     }
     
 

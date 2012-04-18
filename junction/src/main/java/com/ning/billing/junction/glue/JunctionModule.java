@@ -26,21 +26,21 @@ import com.ning.billing.junction.api.blocking.DefaultBlockingApi;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.dao.BlockingStateSqlDao;
 
-public class NEModule extends AbstractModule {
+public class JunctionModule extends AbstractModule {
 
     @Override
     protected void configure() {
         bind(BlockingApi.class).to(DefaultBlockingApi.class);
-        bind(BlockingStateDao.class).toProvider(OverdueDaoProvider.class);
+        bind(BlockingStateDao.class).toProvider(BlockingDaoProvider.class);
     }
 
-    public static class OverdueDaoProvider implements Provider<BlockingStateDao>{
+    public static class BlockingDaoProvider implements Provider<BlockingStateDao>{
         
         private IDBI dbi;
 
 
         @Inject
-        public OverdueDaoProvider(IDBI dbi){
+        public BlockingDaoProvider(IDBI dbi){
             this.dbi = dbi;
         }
         
