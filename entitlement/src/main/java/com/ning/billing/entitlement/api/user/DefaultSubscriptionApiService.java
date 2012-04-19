@@ -21,8 +21,9 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
+import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
@@ -37,7 +38,7 @@ import org.joda.time.DateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SubscriptionApiService {
+public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
     private final Clock clock;
     private final EntitlementDao dao;
@@ -45,7 +46,7 @@ public class SubscriptionApiService {
     private final PlanAligner planAligner;
 
     @Inject
-    public SubscriptionApiService(Clock clock, EntitlementDao dao, CatalogService catalogService, PlanAligner planAligner) {
+    public DefaultSubscriptionApiService(Clock clock, EntitlementDao dao, CatalogService catalogService, PlanAligner planAligner) {
         this.clock = clock;
         this.catalogService = catalogService;
         this.planAligner = planAligner;
@@ -117,17 +118,17 @@ public class SubscriptionApiService {
             PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                     PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, processedDate, nextTimedPhase.getStartPhase()) :
                         null;
-                    List<EntitlementEvent> events = new ArrayList<EntitlementEvent>();
-                    events.add(creationEvent);
-                    if (nextPhaseEvent != null) {
-                        events.add(nextPhaseEvent);
-                    }
-                    if (reCreate) {
-                        dao.recreateSubscription(subscription.getId(), events, context);
-                    } else {
-                        dao.createSubscription(subscription, events, context);
-                    }
-                    subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
+            List<EntitlementEvent> events = new ArrayList<EntitlementEvent>();
+            events.add(creationEvent);
+            if (nextPhaseEvent != null) {
+                events.add(nextPhaseEvent);
+            }
+            if (reCreate) {
+                dao.recreateSubscription(subscription.getId(), events, context);
+            } else {
+                dao.createSubscription(subscription, events, context);
+            }
+            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }

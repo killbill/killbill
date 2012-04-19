@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
@@ -45,6 +46,7 @@ import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.EntitlementService;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
@@ -52,7 +54,7 @@ import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;

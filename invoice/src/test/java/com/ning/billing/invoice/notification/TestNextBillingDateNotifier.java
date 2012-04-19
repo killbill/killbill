@@ -26,6 +26,8 @@ import java.util.concurrent.Callable;
 
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MockAccountUserApi;
+import com.ning.billing.entitlement.api.SubscriptionApiService;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.invoice.InvoiceDispatcher;
@@ -56,16 +58,24 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.google.inject.name.Names;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.entitlement.api.repair.RepairEntitlementLifecycleDao;
+import com.ning.billing.entitlement.api.repair.RepairSubscriptionApiService;
+import com.ning.billing.entitlement.api.repair.RepairSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
+import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
+import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
@@ -88,6 +98,7 @@ public class TestNextBillingDateNotifier {
 	private InvoiceListenerMock listener;
 	private NotificationQueueService notificationQueueService;
 
+	
 	private static final class InvoiceListenerMock extends InvoiceListener {
 		int eventCount = 0;
 		UUID latestSubscriptionId = null;
@@ -135,14 +146,21 @@ public class TestNextBillingDateNotifier {
                 bind(IDBI.class).toInstance(dbi);
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
                 bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
+                bind(EntitlementDao.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);
+                bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);
+                bind(RepairEntitlementDao.class).asEagerSingleton();
                 bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
                 bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
-                bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
+                bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
                 bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
                 bind(AccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
                 bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
-                bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();                
+                bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+                bind(SubscriptionApiService.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
+                bind(SubscriptionApiService.class).to(DefaultSubscriptionApiService.class).asEagerSingleton();
+                bind(SubscriptionFactory.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairSubscriptionFactory.class).asEagerSingleton();
+                bind(SubscriptionFactory.class).to(DefaultSubscriptionFactory.class).asEagerSingleton();
 			}
         });
 

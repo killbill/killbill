@@ -59,6 +59,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
+import com.ning.billing.entitlement.api.repair.EntitlementRepairApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -90,6 +91,7 @@ public abstract class TestApiBase {
     protected EntitlementBillingApi billingApi;
 
     protected EntitlementMigrationApi migrationApi;
+    protected EntitlementRepairApi repairApi;
 
     protected CatalogService catalogService;
     protected EntitlementConfig config;
@@ -148,7 +150,7 @@ public abstract class TestApiBase {
             ((DefaultCatalogService) catalogService).loadCatalog();
             ((DefaultBusService) busService).startBus();
             ((Engine) entitlementService).initialize();
-            init();
+            init(g);
         } catch (Exception e) {
         }
     }
@@ -167,7 +169,7 @@ public abstract class TestApiBase {
         }
     }
 
-    private void init() throws Exception {
+    private void init(Injector g) throws Exception {
 
         setupMySQL();
 
@@ -182,6 +184,8 @@ public abstract class TestApiBase {
         entitlementApi = entitlementService.getUserApi();
         billingApi = entitlementService.getBillingApi();
         migrationApi = entitlementService.getMigrationApi();
+        
+        repairApi = g.getInstance(EntitlementRepairApi.class);
     }
 
     @BeforeMethod(alwaysRun = true)

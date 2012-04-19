@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,25 +13,29 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing.entitlement.api.repair;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
-public class EntitlementUserApiException extends BillingExceptionBase {
+public class EntitlementRepairException extends BillingExceptionBase {
 
-    private static final long serialVersionUID = 19083233L;
+    private static final long serialVersionUID = 19067233L;
 
-    public EntitlementUserApiException(CatalogApiException e) {
+    public EntitlementRepairException(EntitlementUserApiException e) {
         super(e, e.getCode(), e.getMessage());
     }
-    public EntitlementUserApiException(Throwable e, ErrorCode code, Object...args) {
+    
+    public EntitlementRepairException(CatalogApiException e) {
+        super(e, e.getCode(), e.getMessage());
+    }
+    public EntitlementRepairException(Throwable e, ErrorCode code, Object...args) {
         super(e, code, args);
     }
 
-    public EntitlementUserApiException(ErrorCode code, Object...args) {
+    public EntitlementRepairException(ErrorCode code, Object...args) {
         super(code, args);
     }
 }

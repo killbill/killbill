@@ -45,18 +45,17 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
 
@@ -72,7 +71,8 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     private static final String SUBSCRIPTION_TABLE_NAME = "subscriptions";
 
     @Inject
-    public DefaultEntitlementBillingApi(final CallContextFactory factory, final SubscriptionFactory subscriptionFactory, final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
+    public DefaultEntitlementBillingApi(final CallContextFactory factory, final SubscriptionFactory subscriptionFactory,
+            final EntitlementDao dao, final AccountUserApi accountApi, final CatalogService catalogService) {
         super();
         this.factory = factory;
         this.subscriptionFactory = subscriptionFactory;

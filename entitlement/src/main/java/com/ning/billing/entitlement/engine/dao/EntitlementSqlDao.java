@@ -21,7 +21,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.util.ChangeType;
@@ -42,6 +45,7 @@ import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
@@ -49,8 +53,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
@@ -197,6 +200,8 @@ public class EntitlementSqlDao implements EntitlementDao {
                     TransactionStatus status) throws Exception {
                 transactionalDao.updateSubscription(subscription.getId().toString(), subscription.getActiveVersion(), ctd, ptd, context);
 
+                BundleSqlDao tmpDao = transactionalDao.become(BundleSqlDao.class);
+                tmpDao.updateBundleLastSysTime(subscription.getBundleId().toString(), clock.getUTCNow().toDate());
                 AuditSqlDao auditSqlDao = transactionalDao.become(AuditSqlDao.class);
                 String subscriptionId = subscription.getId().toString();
                 auditSqlDao.insertAuditFromTransaction(SUBSCRIPTIONS_TABLE_NAME, subscriptionId, ChangeType.UPDATE, context);
@@ -232,6 +237,29 @@ public class EntitlementSqlDao implements EntitlementDao {
     @Override
     public List<EntitlementEvent> getEventsForSubscription(UUID subscriptionId) {
         return eventsDao.getEventsForSubscription(subscriptionId.toString());
+    }
+
+    @Override
+    public Map<UUID, List<EntitlementEvent>> getEventsForBundle(final UUID bundleId) {
+
+        Map<UUID, List<EntitlementEvent>> result = subscriptionsDao.inTransaction(new Transaction<Map<UUID, List<EntitlementEvent>>, SubscriptionSqlDao>() {
+            @Override
+            public Map<UUID, List<EntitlementEvent>> inTransaction(SubscriptionSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+                List<Subscription> subscriptions = transactional.getSubscriptionsFromBundleId(bundleId.toString());
+                if (subscriptions.size() == 0) {
+                    return Collections.emptyMap();
+                }
+                EventSqlDao eventsDaoFromSameTransaction = transactional.become(EventSqlDao.class);
+                Map<UUID, List<EntitlementEvent>> result = new HashMap<UUID, List<EntitlementEvent>>();
+                for (Subscription cur : subscriptions) {
+                    List<EntitlementEvent> events = eventsDaoFromSameTransaction.getEventsForSubscription(cur.getId().toString());
+                    result.put(cur.getId(), events);
+                }
+                return result;
+            }
+        });
+        return result;
     }
 
     @Override

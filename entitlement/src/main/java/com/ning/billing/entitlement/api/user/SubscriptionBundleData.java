@@ -26,17 +26,19 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     private final String key;
     private final UUID accountId;
     private final DateTime startDate;
+    private final DateTime lastSysTimeUpdate; 
 
-    public SubscriptionBundleData(String name, UUID accountId) {
-        this(UUID.randomUUID(), name, accountId, null);
+    public SubscriptionBundleData(String name, UUID accountId, DateTime now) {
+        this(UUID.randomUUID(), name, accountId, null, now);
     }
 
-    public SubscriptionBundleData(UUID id, String key, UUID accountId, DateTime startDate) {
+    public SubscriptionBundleData(UUID id, String key, UUID accountId, DateTime startDate, DateTime now) {
         super();
         this.id = id;
         this.key = key;
         this.accountId = accountId;
         this.startDate = startDate;
+        this.lastSysTimeUpdate = now;
     }
 
     @Override
@@ -59,5 +61,9 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     @Override
     public DateTime getStartDate() {
         return startDate;
+    }
+    
+    public DateTime getLastSysUpdateTime() {
+        return lastSysTimeUpdate;
     }
 }

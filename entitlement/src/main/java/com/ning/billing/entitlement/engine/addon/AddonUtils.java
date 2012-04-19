@@ -28,6 +28,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
@@ -43,6 +44,24 @@ public class AddonUtils {
         this.catalogService = catalogService;
     }
 
+    public void checkAddonCreationRights(SubscriptionData baseSubscription, Plan targetAddOnPlan)
+    throws EntitlementUserApiException, CatalogApiException {
+
+        if (baseSubscription.getState() != SubscriptionState.ACTIVE) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
+        }
+
+        Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
+        if (isAddonIncluded(baseProduct, targetAddOnPlan)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED,
+                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
+        }
+
+        if (!isAddonAvailable(baseProduct, targetAddOnPlan)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE,
+                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
+        }
+    }
 
     public boolean isAddonAvailable(final String basePlanName, final DateTime requestedDate, final Plan targetAddOnPlan) {
         try {

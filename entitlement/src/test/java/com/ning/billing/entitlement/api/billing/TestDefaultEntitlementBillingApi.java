@@ -21,6 +21,7 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
@@ -54,7 +55,7 @@ import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
@@ -72,9 +73,9 @@ public class TestDefaultEntitlementBillingApi {
 	private static final UUID twoId = new UUID(2L,0L);
 
 	private CatalogService catalogService;
-	private ArrayList<SubscriptionBundle> bundles;
-	private ArrayList<Subscription> subscriptions;
-	private ArrayList<SubscriptionEventTransition> transitions;
+	private List<SubscriptionBundle> bundles;
+	private List<Subscription> subscriptions;
+	private List<SubscriptionEventTransition> subscriptionTransitions;
 	private EntitlementDao dao;
 
 	private Clock clock;
@@ -97,12 +98,12 @@ public class TestDefaultEntitlementBillingApi {
 	@BeforeMethod(alwaysRun=true)
 	public void setupEveryTime() {
 		bundles = new ArrayList<SubscriptionBundle>();
-		final SubscriptionBundle bundle = new SubscriptionBundleData( zeroId,"TestKey", oneId,  clock.getUTCNow().minusDays(4));
+		final SubscriptionBundle bundle = new SubscriptionBundleData( zeroId,"TestKey", oneId,  clock.getUTCNow().minusDays(4), null);
 		bundles.add(bundle);
 
 
-		transitions = new ArrayList<SubscriptionEventTransition>();
-		subscriptions = new ArrayList<Subscription>();
+		subscriptionTransitions = new LinkedList<SubscriptionEventTransition>();
+		subscriptions = new LinkedList<Subscription>();
 
 		SubscriptionBuilder builder = new SubscriptionBuilder();
 		subscriptionStartDate = clock.getUTCNow().minusDays(3);
@@ -110,7 +111,7 @@ public class TestDefaultEntitlementBillingApi {
 		subscription = new SubscriptionData(builder) {
 		    @Override
             public List<SubscriptionEventTransition> getBillingTransitions() {
-		    	return transitions;
+		    	return subscriptionTransitions;
 		    }
 		};
 
@@ -153,7 +154,7 @@ public class TestDefaultEntitlementBillingApi {
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionEventTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
-		transitions.add(t);
+		subscriptionTransitions.add(t);
 
         AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -175,7 +176,7 @@ public class TestDefaultEntitlementBillingApi {
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionEventTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
-		transitions.add(t);
+		subscriptionTransitions.add(t);
 
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
 		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC)
@@ -200,7 +201,7 @@ public class TestDefaultEntitlementBillingApi {
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionEventTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
-		transitions.add(t);
+		subscriptionTransitions.add(t);
 
         AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -222,7 +223,7 @@ public class TestDefaultEntitlementBillingApi {
 		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 		SubscriptionEventTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
-		transitions.add(t);
+		subscriptionTransitions.add(t);
 
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
 		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC);

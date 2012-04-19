@@ -38,6 +38,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,13 +49,16 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle,
                              @CallContextBinder final CallContext context);
 
+    @SqlUpdate
+    public void updateBundleLastSysTime(@Bind("id") String id, @Bind("last_sys_update_dt") Date lastSysUpdate);
+    
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
     public SubscriptionBundle getBundleFromId(@Bind("id") String id);
 
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
-    public SubscriptionBundle getBundleFromKey(@Bind("name") String name);
+    public SubscriptionBundle getBundleFromKey(@Bind("external_key") String externalKey);
 
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
@@ -65,8 +69,9 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, SubscriptionBundleData bundle) {
             stmt.bind("id", bundle.getId().toString());
             stmt.bind("start_dt", getDate(bundle.getStartDate()));
-            stmt.bind("name", bundle.getKey());
+            stmt.bind("external_key", bundle.getKey());
             stmt.bind("account_id", bundle.getAccountId().toString());
+            stmt.bind("last_sys_update_dt", getDate(bundle.getLastSysUpdateTime()));            
         }
     }
 
@@ -76,10 +81,11 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
                 StatementContext ctx) throws SQLException {
 
             UUID id = UUID.fromString(r.getString("id"));
-            String name = r.getString("name");
+            String key = r.getString("external_key");
             UUID accountId = UUID.fromString(r.getString("account_id"));
             DateTime startDate = getDate(r, "start_dt");
-            SubscriptionBundleData bundle = new SubscriptionBundleData(id, name, accountId, startDate);
+            DateTime lastSysUpdateDate = getDate(r, "last_sys_update_dt");
+            SubscriptionBundleData bundle = new SubscriptionBundleData(id, key, accountId, startDate, lastSysUpdateDate);
             return bundle;
         }
 

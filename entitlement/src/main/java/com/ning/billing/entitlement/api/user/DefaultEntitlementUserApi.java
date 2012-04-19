@@ -31,8 +31,9 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
@@ -43,13 +44,13 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     private final Clock clock;
     private final EntitlementDao dao;
     private final CatalogService catalogService;
-    private final SubscriptionApiService apiService;
+    private final DefaultSubscriptionApiService apiService;
     private final AddonUtils addonUtils;
     private final SubscriptionFactory subscriptionFactory;
 
     @Inject
     public DefaultEntitlementUserApi(Clock clock, EntitlementDao dao, CatalogService catalogService,
-            SubscriptionApiService apiService, final SubscriptionFactory subscriptionFactory, AddonUtils addonUtils) {
+            DefaultSubscriptionApiService apiService, final SubscriptionFactory subscriptionFactory, AddonUtils addonUtils) {
         super();
         this.clock = clock;
         this.apiService = apiService;
@@ -92,7 +93,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     @Override
     public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleName, CallContext context)
     throws EntitlementUserApiException {
-        SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId);
+        SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId, clock.getUTCNow());
         return dao.createSubscriptionBundle(bundle, context);
     }
 
@@ -141,7 +142,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                 if (baseSubscription == null) {
                     throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_NO_BP, bundleId);
                 }
-                checkAddonCreationRights(baseSubscription, plan);
+                addonUtils.checkAddonCreationRights(baseSubscription, plan);
                 bundleStartDate = baseSubscription.getStartDate();
                 break;
             case STANDALONE:
@@ -167,26 +168,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             return subscription;
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
-        }
-    }
-
-
-    private void checkAddonCreationRights(SubscriptionData baseSubscription, Plan targetAddOnPlan)
-        throws EntitlementUserApiException, CatalogApiException {
-
-        if (baseSubscription.getState() != SubscriptionState.ACTIVE) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
-        }
-
-        Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
-        if (addonUtils.isAddonIncluded(baseProduct, targetAddOnPlan)) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED,
-                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
-        }
-
-        if (!addonUtils.isAddonAvailable(baseProduct, targetAddOnPlan)) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE,
-                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
         }
     }
 

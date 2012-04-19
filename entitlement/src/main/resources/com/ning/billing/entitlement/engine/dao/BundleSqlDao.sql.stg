@@ -4,37 +4,49 @@ insertBundle() ::= <<
     insert into bundles (
       id
       , start_dt
-      , name
+      , external_key
       , account_id
+      , last_sys_update_dt
     ) values (
       :id
       , :start_dt
-      , :name
+      , :external_key
       , :account_id
+      , :last_sys_update_dt
     );
+>>
+
+updateBundleLastSysTime(id, last_sys_update_dt)  ::= <<
+    update bundles
+    set
+        last_sys_update_dt = :last_sys_update_dt
+    where id = :id
+    ;
 >>
 
 getBundleFromId(id) ::= <<
     select
       id
       , start_dt
-      , name
+      , external_key
       , account_id
+      , last_sys_update_dt
     from bundles
     where
       id = :id
     ;
 >>
 
-getBundleFromKey(name) ::= <<
+getBundleFromKey(external_key) ::= <<
     select
       id
       , start_dt
-      , name
+      , external_key
       , account_id
+      , last_sys_update_dt
     from bundles
     where
-      name = :name
+      external_key = :external_key
     ;
 >>
 
@@ -43,8 +55,9 @@ getBundleFromAccount(account_id) ::= <<
     select
       id
       , start_dt
-      , name
+      , external_key
       , account_id
+      , last_sys_update_dt
     from bundles
     where
       account_id = :account_id

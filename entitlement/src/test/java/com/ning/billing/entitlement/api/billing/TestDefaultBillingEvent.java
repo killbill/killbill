@@ -37,8 +37,8 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 

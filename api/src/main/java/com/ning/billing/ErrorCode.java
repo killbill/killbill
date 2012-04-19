@@ -18,6 +18,8 @@ package com.ning.billing;
 
 public enum ErrorCode {
 
+
+    
     /*
      * Range 0 : COMMON EXCEPTIONS
      */
@@ -56,6 +58,19 @@ public enum ErrorCode {
     ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION(1080, "Could not find a bundle for subscription %s"),
     ENT_GET_INVALID_BUNDLE_ID(1081, "Could not find a bundle matching id %s"),
     ENT_INVALID_SUBSCRIPTION_ID(1082, "Unknown subscription %s"),
+
+    /* Repair */
+    ENT_REPAIR_INVALID_DELETE_SET(1091, "Event %s is not deleted for subscription %s but prior events were"),
+    ENT_REPAIR_NON_EXISTENT_DELETE_EVENT(1092, "Event %s does not exist for subscription %s"),    
+    ENT_REPAIR_MISSING_AO_DELETE_EVENT(1093, "Event %s should be in deleted set for subscription %s because BP events got deleted earlier"),
+    ENT_REPAIR_NEW_AO_EVENT_BEFORE_BP(1094, "New event %s for subscription %s is before last remaining event for BP"),
+    ENT_REPAIR_INVALID_NEW_AO_EVENT(1095, "New event %s for subscription %s is before last remaining event"),
+    ENT_REPAIR_UNKNOWN_TYPE(1096, "Unknown new event type %s for subscription %s"),
+    ENT_REPAIR_UNKNOWN_BUNDLE(1097, "Unknown bundle %s"), 
+    ENT_REPAIR_UNKNOWN_SUBSCRIPTION(1098, "Unknown subscription %s"),     
+    ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS(1099, "No active subscriptions on bundle %s"),         
+    ENT_REPAIR_VIEW_CHANGED(1100, "View for bundle %s has changed from %s to %s"),             
+    
     /*
     *
     * Range 2000 : CATALOG
@@ -153,6 +168,7 @@ public enum ErrorCode {
     INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s")
     ;
 
+    
     private int code;
     private String format;
 

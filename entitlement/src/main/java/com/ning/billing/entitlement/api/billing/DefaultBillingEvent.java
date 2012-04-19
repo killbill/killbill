@@ -23,9 +23,9 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 
 import java.math.BigDecimal;

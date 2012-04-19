@@ -354,6 +354,7 @@ public class TestUserApiAddOn extends TestApiBase {
            // MOVE THROUGH TIME TO GO INTO EVERGREEN
            someTimeLater = aoCurrentPhase.getDuration();
            clock.addDeltaFromReality(someTimeLater);
+           clock.addDeltaFromReality(getDurationDay(1));
            assertTrue(testListener.isCompleted(5000));
 
 
