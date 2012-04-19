@@ -223,16 +223,22 @@ public abstract class TestApiBase {
         log.warn("DONE WITH TEST\n");
     }
 
-    protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet) throws EntitlementUserApiException {
-        return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet);
+    protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+        throws EntitlementUserApiException {
+        return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, requestedDate);
+    }
+    protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet)
+    throws EntitlementUserApiException {
+        return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, null);
     }
 
-    protected SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet) throws EntitlementUserApiException {
+    protected SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+        throws EntitlementUserApiException {
         testListener.pushExpectedEvent(NextEvent.CREATE);
 
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundleId,
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
-                clock.getUTCNow(), context);
+                requestedDate == null ? clock.getUTCNow() : requestedDate, context);
         assertNotNull(subscription);
         assertTrue(testListener.isCompleted(5000));
         return subscription;

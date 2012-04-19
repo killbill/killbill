@@ -44,9 +44,9 @@ public class DefaultSubscriptionRepair implements SubscriptionRepair  {
     
     public DefaultSubscriptionRepair(SubscriptionRepair input) {
         this.id = input.getId();
-        this.existingEvents = (input.getExistingEvents() != null) ? new ArrayList<SubscriptionRepair.ExistingEvent>(input.getExistingEvents()) : null;
+        this.existingEvents = (input.getExistingEvents() != null) ? new ArrayList<SubscriptionRepair.ExistingEvent>(input.getExistingEvents()) : Collections.<SubscriptionRepair.ExistingEvent>emptyList();
         sortExistingEvent(this.existingEvents);
-        this.deletedEvents = (input.getDeletedEvents() != null) ? new ArrayList<SubscriptionRepair.DeletedEvent>(input.getDeletedEvents()) : null;
+        this.deletedEvents = (input.getDeletedEvents() != null) ? new ArrayList<SubscriptionRepair.DeletedEvent>(input.getDeletedEvents()) : Collections.<SubscriptionRepair.DeletedEvent>emptyList();
         this.newEvents = (input.getNewEvents() != null) ? new ArrayList<SubscriptionRepair.NewEvent>(input.getNewEvents()) : null;
         sortNewEvent(this.newEvents);
     }

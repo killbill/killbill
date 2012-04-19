@@ -196,20 +196,6 @@ public class SubscriptionData extends ExtendedEntityBase implements
         return apiService.recreatePlan(this, spec, requestedDate, context);
     }
 
-    public List<SubscriptionEventTransition> getBillingTransitions() {
-
-        if (transitions == null) {
-            return Collections.emptyList();
-        }
-        List<SubscriptionEventTransition> result = new ArrayList<SubscriptionEventTransition>();
-        SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
-                clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
-                Visibility.ALL, TimeLimit.ALL);
-        while (it.hasNext()) {
-            result.add(it.next());
-        }
-        return result;
-    }
 
     @Override
     public SubscriptionEventTransition getPendingTransition() {
@@ -233,30 +219,7 @@ public class SubscriptionData extends ExtendedEntityBase implements
                 Visibility.FROM_DISK_ONLY, TimeLimit.PAST_OR_PRESENT_ONLY);
         return it.hasNext() ? it.next() : null;
     }
-
-    public SubscriptionEventTransition getTransitionFromEvent(
-            final EntitlementEvent event, final int seqId) {
-        if (transitions == null || event == null) {
-            return null;
-        }
-        for (SubscriptionEventTransition cur : transitions) {
-            if (cur.getId().equals(event.getId())) {
-                return new SubscriptionTransitionData(
-                        (SubscriptionTransitionData) cur, seqId);
-            }
-        }
-        return null;
-    }
-
-    public long getLastEventOrderedId() {
-        return (getPreviousTransition() == null) ? null
-                : ((SubscriptionTransitionData) getPreviousTransition()).getTotalOrdering();
-    }
     
-    public long getActiveVersion() {
-        return activeVersion;
-    }
-
     @Override
     public ProductCategory getCategory() {
         return category;
@@ -275,6 +238,47 @@ public class SubscriptionData extends ExtendedEntityBase implements
     public DateTime getPaidThroughDate() {
         return paidThroughDate;
     }
+
+    public List<SubscriptionEventTransition> getBillingTransitions() {
+
+        if (transitions == null) {
+            return Collections.emptyList();
+        }
+        List<SubscriptionEventTransition> result = new ArrayList<SubscriptionEventTransition>();
+        SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
+                clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
+                Visibility.ALL, TimeLimit.ALL);
+        while (it.hasNext()) {
+            result.add(it.next());
+        }
+        return result;
+    }
+
+
+    public SubscriptionEventTransition getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
+        if (transitions == null || event == null) {
+            return null;
+        }
+        for (SubscriptionEventTransition cur : transitions) {
+            if (cur.getId().equals(event.getId())) {
+                return new SubscriptionTransitionData(
+                        (SubscriptionTransitionData) cur, seqId);
+            }
+        }
+        return null;
+    }
+
+    public long getLastEventOrderedId() {
+        SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
+                clock, transitions, Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT,
+                Visibility.FROM_DISK_ONLY, TimeLimit.ALL);
+        return it.hasNext() ? it.next().getTotalOrdering() :  -1L;
+    }
+    
+    public long getActiveVersion() {
+        return activeVersion;
+    }
+
 
     public List<SubscriptionTransitionData> getAllTransitions() {
         return transitions;

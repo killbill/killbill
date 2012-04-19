@@ -45,7 +45,6 @@ public class SubscriptionDataRepair extends SubscriptionData {
 
     private final List<EntitlementEvent> newEvents;
 
-
     // Low level events are ONLY used for Repair APIs
     protected List<EntitlementEvent> events;
 
