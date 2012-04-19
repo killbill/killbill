@@ -19,8 +19,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 
 import com.ning.billing.ErrorCode;
@@ -28,22 +26,17 @@ import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.user.ApiEventBuilder;
-import com.ning.billing.entitlement.events.user.ApiEventCancel;
+
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
-import com.sun.org.apache.xml.internal.resolver.CatalogException;
 
 public class SubscriptionDataRepair extends SubscriptionData {
 
