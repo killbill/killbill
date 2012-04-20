@@ -62,9 +62,14 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
     public void updateChargedThroughDate(@Bind("id") String id, @Bind("ctd_dt") Date ctd,
                                    @CallContextBinder final CallContext context);
 
+    @SqlUpdate void updateActiveVersion(@Bind("id") String id, @Bind("active_version") long activeVersion,
+            @CallContextBinder final CallContext context);
+    
     @SqlUpdate
-    public void updateActiveVersion(@Bind("id") String id, @Bind("active_version") long activeVersion,
-                                   @CallContextBinder final CallContext context);
+    public void updateForRepair(@Bind("id") String id, @Bind("active_version") long activeVersion,
+            @Bind("start_dt") Date startDate,
+            @Bind("bundle_start_dt") Date bundleStartDate,
+            @CallContextBinder final CallContext context);
 
     public static class SubscriptionBinder extends BinderBase implements Binder<Bind, SubscriptionData> {
         @Override

@@ -68,7 +68,7 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
 
     @SqlUpdate
     public void updateVersion(@Bind("event_id")String eventId,
-                              @Bind("current_version") Long currentVersion, 
+                              @Bind("current_version") Long currentVersion,
                               @CallContextBinder final CallContext context);
     
     @SqlQuery

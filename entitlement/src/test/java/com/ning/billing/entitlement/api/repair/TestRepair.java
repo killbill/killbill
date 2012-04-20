@@ -132,7 +132,7 @@ public class TestRepair extends TestApiBase {
         String newBaseProduct = "Assault-Rifle";
         
         DateTime startDate = clock.getUTCNow();
-        int clockShift = -10;
+        int clockShift = -1;
         DateTime restartDate =  startDate.plusDays(clockShift).minusDays(1);
         LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionRepair.ExistingEvent>();
         
@@ -251,12 +251,38 @@ public class TestRepair extends TestApiBase {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
         }
         
-        
        // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
         BundleRepair realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
 
+        subscriptionRepair = realRunBundleRepair.getSubscriptions();
+        assertEquals(subscriptionRepair.size(), 1);
+        cur = subscriptionRepair.get(0);
+        assertEquals(cur.getId(), baseSubscription.getId());
+
+        events = cur.getExistingEvents();
+        assertEquals(expectedEvents.size(), events.size());
+        index = 0;
+        for (ExistingEvent e : expectedEvents) {
+           validateExistingEventForAssertion(e, events.get(index++));           
+        }
+        SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
         
+        
+        assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
+        assertEquals(realRunBaseSubscription.getBundleId(), bundle.getId());
+        assertEquals(realRunBaseSubscription.getStartDate(), newCreateTime);
+
+        currentPlan = realRunBaseSubscription.getCurrentPlan();
+        assertNotNull(currentPlan);
+        assertEquals(currentPlan.getProduct().getName(), newBaseProduct);
+        assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
+        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+
+        currentPhase = realRunBaseSubscription.getCurrentPhase();
+        assertNotNull(currentPhase);
+        assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
     }
 
     @Test(groups={"slow"})
@@ -277,7 +303,7 @@ public class TestRepair extends TestApiBase {
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, startDate.plusDays(30)));
 
-        testSimpleBPRepairAddChange(true, startDate, clockShift, baseProduct, newBaseProduct, expected);
+        testSimpleBPRepairAddChange(true, startDate, clockShift, baseProduct, newBaseProduct, expected, 3);
     }
 
     @Test(groups={"slow"})
@@ -297,11 +323,11 @@ public class TestRepair extends TestApiBase {
                 ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, startDate.plusDays(30)));
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CHANGE, newBaseProduct, PhaseType.EVERGREEN,
                 ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, changeDate));
-        testSimpleBPRepairAddChange(false, startDate, clockShift, baseProduct, newBaseProduct, expected);
+        testSimpleBPRepairAddChange(false, startDate, clockShift, baseProduct, newBaseProduct, expected, 3);
     }
 
     private void testSimpleBPRepairAddChange(boolean inTrial, DateTime startDate, int clockShift, 
-            String baseProduct, String newBaseProduct, List<ExistingEvent> expectedEvents) throws Exception {
+            String baseProduct, String newBaseProduct, List<ExistingEvent> expectedEvents, int expectedTransitions) throws Exception {
 
         // CREATE BP
         Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
@@ -371,6 +397,39 @@ public class TestRepair extends TestApiBase {
        // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
         BundleRepair realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+
+        subscriptionRepair = realRunBundleRepair.getSubscriptions();
+        assertEquals(subscriptionRepair.size(), 1);
+        cur = subscriptionRepair.get(0);
+        assertEquals(cur.getId(), baseSubscription.getId());
+
+        events = cur.getExistingEvents();
+        assertEquals(expectedEvents.size(), events.size());
+        index = 0;
+        for (ExistingEvent e : expectedEvents) {
+           validateExistingEventForAssertion(e, events.get(index++));           
+        }
+        SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        assertEquals(realRunBaseSubscription.getAllTransitions().size(), expectedTransitions);
+        
+        
+        assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
+        assertEquals(realRunBaseSubscription.getBundleId(), bundle.getId());
+        assertEquals(realRunBaseSubscription.getStartDate(), baseSubscription.getStartDate());
+
+        currentPlan = realRunBaseSubscription.getCurrentPlan();
+        assertNotNull(currentPlan);
+        assertEquals(currentPlan.getProduct().getName(), newBaseProduct);
+        assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
+        assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
+
+        currentPhase = realRunBaseSubscription.getCurrentPhase();
+        assertNotNull(currentPhase);
+        if (inTrial) {
+            assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
+        } else {
+            assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
+        }
         
     }
 
@@ -444,12 +503,12 @@ public class TestRepair extends TestApiBase {
     }
     
     private void validateExistingEventForAssertion(final ExistingEvent expected, final ExistingEvent input) {
-        assertEquals(expected.getPlanPhaseSpecifier().getProductName(), input.getPlanPhaseSpecifier().getProductName());
-        assertEquals(expected.getPlanPhaseSpecifier().getPhaseType(), input.getPlanPhaseSpecifier().getPhaseType());
-        assertEquals(expected.getPlanPhaseSpecifier().getProductCategory(), input.getPlanPhaseSpecifier().getProductCategory());                    
-        assertEquals(expected.getPlanPhaseSpecifier().getPriceListName(), input.getPlanPhaseSpecifier().getPriceListName());                    
-        assertEquals(expected.getPlanPhaseSpecifier().getBillingPeriod(), input.getPlanPhaseSpecifier().getBillingPeriod());
-        assertEquals(expected.getEffectiveDate(), input.getEffectiveDate());        
+        assertEquals(input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName());
+        assertEquals(input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType());
+        assertEquals(input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory());                    
+        assertEquals(input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName());                    
+        assertEquals(input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod());
+        assertEquals(input.getEffectiveDate(), expected.getEffectiveDate());        
     }
     
     private DeletedEvent createDeletedEvent(final UUID eventId) {

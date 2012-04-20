@@ -79,3 +79,15 @@ updateActiveVersion() ::= <<
     where id = :id
     ;
 >>
+
+updateForRepair() ::= <<
+    update subscriptions
+    set
+      active_version = :active_version
+      , start_dt = :start_dt
+      , bundle_start_dt = :bundle_start_dt
+      , updated_by = :userName
+      , updated_date = :updatedDate
+    where id = :id
+    ;
+>>

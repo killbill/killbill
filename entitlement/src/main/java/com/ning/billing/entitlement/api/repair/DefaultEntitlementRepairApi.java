@@ -189,10 +189,7 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
                 return createGetBundleRepair(input.getBundleId(), input.getViewId(), repairs);
             } else {
                 dao.repair(input.getBundleId(), inRepair, context);
-                bundle = dao.getSubscriptionBundleFromId(input.getBundleId());
-                String newViewId = getViewId(((SubscriptionBundleData) bundle).getLastSysUpdateTime(), subscriptions);
-                final List<SubscriptionRepair> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionRepair>emptyList()); 
-                return createGetBundleRepair(input.getBundleId(), viewId, repairs);
+                return getBundleRepair(input.getBundleId());
             }
         } finally {
             repairDao.cleanup();

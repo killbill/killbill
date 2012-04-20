@@ -609,7 +609,7 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                 EventSqlDao transEventDao = transactional.become(EventSqlDao.class);
                 for (SubscriptionDataRepair cur : inRepair) {
-                    transactional.updateActiveVersion(cur.getId().toString(), cur.getActiveVersion(), context);
+                    transactional.updateForRepair(cur.getId().toString(), cur.getActiveVersion(), cur.getStartDate().toDate(), cur.getBundleStartDate().toDate(), context);
                     for (EntitlementEvent event : cur.getInitialEvents()) {
                         transEventDao.updateVersion(event.getId().toString(), cur.getActiveVersion(), context);
                     }
