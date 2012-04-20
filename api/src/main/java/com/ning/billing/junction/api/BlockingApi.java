@@ -19,15 +19,13 @@ package com.ning.billing.junction.api;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import com.ning.billing.overdue.OverdueState;
-
 
 public interface BlockingApi {
     public static final String CLEAR_STATE_NAME = "__KILLBILL__CLEAR__OVERDUE_STATE__";
 
-    public String getBlockingStateNameFor(Blockable overdueable);
+    public BlockingState getBlockingStateFor(Blockable overdueable);
 
-    public String getBlockingStateNameFor(UUID overdueableId, Blockable.Type type);
+    public BlockingState getBlockingStateFor(UUID overdueableId, Blockable.Type type);
     
     public SortedSet<BlockingState> getBlockingHistory(Blockable overdueable);
 

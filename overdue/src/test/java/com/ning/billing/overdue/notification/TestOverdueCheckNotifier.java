@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.notification;
+package com.ning.billing.overdue.notification;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -35,34 +35,30 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.MockAccountUserApi;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
-import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
-import com.ning.billing.invoice.InvoiceDispatcher;
-import com.ning.billing.invoice.InvoiceListener;
-import com.ning.billing.invoice.dao.DefaultInvoiceDao;
-import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
-import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.junction.api.BillingApi;
+import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.ovedue.OverdueProperties;
+import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
+import com.ning.billing.ovedue.notification.DefaultOverdueCheckPoster;
+import com.ning.billing.ovedue.notification.OverdueCheckPoster;
+import com.ning.billing.ovedue.notification.OverdueListener;
+import com.ning.billing.overdue.glue.OverdueModule;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.CallContextFactory;
@@ -80,26 +76,25 @@ import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
 
-public class TestNextBillingDateNotifier {
+public class TestOverdueCheckNotifier {
 	private Clock clock;
-	private DefaultNextBillingDateNotifier notifier;
+	private DefaultOverdueCheckNotifier notifier;
 	private DummySqlTest dao;
 	private Bus eventBus;
 	private MysqlTestingHelper helper;
-	private InvoiceListenerMock listener;
+	private OverdueListenerMock listener;
 	private NotificationQueueService notificationQueueService;
 
-	private static final class InvoiceListenerMock extends InvoiceListener {
+	private static final class OverdueListenerMock extends OverdueListener {
 		int eventCount = 0;
 		UUID latestSubscriptionId = null;
 
-		public InvoiceListenerMock(CallContextFactory factory, InvoiceDispatcher dispatcher) {
-			super(factory, dispatcher);
+		public OverdueListenerMock() {
+			super();
 		}
 
 		@Override
-		public void handleNextBillingDateEvent(UUID subscriptionId,
-				DateTime eventDateTime) {
+		public void handleNextOverdueCheck(UUID subscriptionId, DateTime eventDateTime) {
 			eventCount++;
 			latestSubscriptionId=subscriptionId;
 		}
@@ -118,9 +113,10 @@ public class TestNextBillingDateNotifier {
 	@BeforeClass(groups={"slow"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
+        final Injector g = Guice.createInjector(Stage.PRODUCTION,  new OverdueModule() {
 			
             protected void configure() {
+                super.configure();
                 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
                 bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
                 bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
@@ -135,16 +131,12 @@ public class TestNextBillingDateNotifier {
                 IDBI dbi = helper.getDBI();
                 bind(IDBI.class).toInstance(dbi);
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
-                bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
                 bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
-                bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
-                bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
-                bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-                bind(AccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
                 bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
-                bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+                bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
                 bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
+                bind(EntitlementUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class));
             }
         });
 
@@ -154,35 +146,37 @@ public class TestNextBillingDateNotifier {
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
-        InvoiceDispatcher dispatcher = g.getInstance(InvoiceDispatcher.class);
+        
+        OverdueProperties properties = g.getInstance(OverdueProperties.class);
 
         Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
         EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
         ((ZombieControl) entitlementUserApi).addResult("getSubscriptionFromId", subscription);
 
-        CallContextFactory factory = new DefaultCallContextFactory(clock);
-        listener = new InvoiceListenerMock(factory, dispatcher);
-        notifier = new DefaultNextBillingDateNotifier(notificationQueueService,g.getInstance(InvoiceConfig.class), entitlementUserApi, listener);
+//        CallContextFactory factory = new DefaultCallContextFactory(clock);
+        listener = new OverdueListenerMock();
+        notifier = new DefaultOverdueCheckNotifier(notificationQueueService,
+                 properties, listener);
         startMysql();
 	}
 
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {
 		final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 		final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
-		final String entitlementDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+
 		helper.startMysql();
 		helper.initDb(ddl);
 		helper.initDb(testDdl);
-        helper.initDb(entitlementDdl);
 	}
-
 
 	@Test(enabled=true, groups="slow")
 	public void test() throws Exception {
 		final UUID subscriptionId = new UUID(0L,1L);
+		final Blockable blockable = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+		((ZombieControl)blockable).addResult("getId", subscriptionId);
 		final DateTime now = new DateTime();
 		final DateTime readyTime = now.plusMillis(2000);
-		final NextBillingDatePoster poster = new DefaultNextBillingDatePoster(notificationQueueService);
+		final OverdueCheckPoster poster = new DefaultOverdueCheckPoster(notificationQueueService);
 
 		eventBus.start();
 		notifier.initialize();
@@ -194,7 +188,7 @@ public class TestNextBillingDateNotifier {
 			public Void inTransaction(DummySqlTest transactional,
 					TransactionStatus status) throws Exception {
 
-				poster.insertNextBillingNotification(transactional, subscriptionId, readyTime);
+				poster.insertOverdueCheckNotification(transactional, blockable, readyTime);
 				return null;
 			}
 		});
@@ -215,10 +209,11 @@ public class TestNextBillingDateNotifier {
 		Assert.assertEquals(listener.getLatestSubscriptionId(), subscriptionId);
 	}
 
-	@AfterClass(groups="slow")
+	@AfterClass(alwaysRun = true)
     public void tearDown() {
-	    notifier.stop();
-    	helper.stopMysql();
+	    eventBus.stop();
+        notifier.stop();
+        helper.stopMysql();
     }
 
 }

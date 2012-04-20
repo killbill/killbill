@@ -100,6 +100,11 @@
             <artifactId>mysql-connector-mxj-db-files</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.jayway.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Strangely this is needed in order to run the tests in local db mode -->
         <dependency>
             <groupId>com.google.guava</groupId>

@@ -102,13 +102,13 @@ public class TestBlockingApi {
         SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
         ((ZombieControl)bundle).addResult("getId", uuid);
         
-        Assert.assertEquals(api.getBlockingStateNameFor(bundle), overdueStateName2);
-        Assert.assertEquals(api.getBlockingStateNameFor(bundle.getId(), Blockable.Type.SUBSCRIPTION_BUNDLE), overdueStateName2);
+        Assert.assertEquals(api.getBlockingStateFor(bundle).getStateName(), overdueStateName2);
+        Assert.assertEquals(api.getBlockingStateFor(bundle.getId(), Blockable.Type.SUBSCRIPTION_BUNDLE).getStateName(), overdueStateName2);
         
     }
     
     @Test(groups={"slow"}, enabled=true)
-    public void testApiHistory() throws CatalogApiException { 
+    public void testApiHistory() throws Exception { 
         UUID uuid = UUID.randomUUID();
         String overdueStateName = "WayPassedItMan";
         String service = "TEST";

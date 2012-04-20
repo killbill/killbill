@@ -16,7 +16,7 @@
 
 package com.ning.billing.entitlement.api;
 
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.lifecycle.KillbillService;
@@ -28,7 +28,7 @@ public interface EntitlementService extends KillbillService {
 
     public EntitlementUserApi getUserApi();
 
-    public EntitlementBillingApi getBillingApi();
+    public ChargeThruApi getBillingApi();
 
     public EntitlementMigrationApi getMigrationApi();
 }

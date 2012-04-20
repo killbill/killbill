@@ -30,18 +30,16 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
-import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.MockModule;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.glue.JunctionModule;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.ClockMock;
 
-@Guice(modules = {MockModule.class,  JunctionModule.class})
+@Guice(modules = {MockModule.class})
 public class TestBlockingDao {
     private Logger log = LoggerFactory.getLogger(TestBlockingDao.class);
     
@@ -91,13 +89,13 @@ public class TestBlockingDao {
         SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
         ((ZombieControl)bundle).addResult("getId", uuid);
         
-        Assert.assertEquals(dao.getBlockingStateFor(bundle), overdueStateName2);
-        Assert.assertEquals(dao.getBlockingStateForIdAndType(bundle.getId(), Blockable.Type.SUBSCRIPTION_BUNDLE), overdueStateName2);
+        Assert.assertEquals(dao.getBlockingStateFor(bundle).getStateName(), state2.getStateName());
+        Assert.assertEquals(dao.getBlockingStateFor(bundle.getId(), Blockable.Type.SUBSCRIPTION_BUNDLE).getStateName(), overdueStateName2);
         
     }
     
     @Test(groups={"slow"}, enabled=true)
-    public void testDaoHistory() throws CatalogApiException { 
+    public void testDaoHistory() throws Exception { 
         ClockMock clock = new ClockMock();
         UUID uuid = UUID.randomUUID();
         String overdueStateName = "WayPassedItMan";

@@ -71,10 +71,12 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
             module = new InvoiceModuleWithEmbeddedDb();
             final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             final String entitlementDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+            final String utilDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
             module.startDb();
             module.initDb(invoiceDdl);
             module.initDb(entitlementDdl);
+            module.initDb(utilDdl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
@@ -101,7 +103,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
             @Override
             public Void inTransaction(Handle h, TransactionStatus status)
                     throws Exception {
-                h.execute("truncate table accounts");
+                //h.execute("truncate table accounts");
                 //h.execute("truncate table entitlement_events");
                 //h.execute("truncate table subscriptions");
                 //h.execute("truncate table bundles");

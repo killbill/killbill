@@ -16,29 +16,38 @@
 
 package com.ning.billing.entitlement.api.billing;
 
-import java.util.SortedSet;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-public interface EntitlementBillingApi {
+import com.ning.billing.util.callcontext.CallContext;
 
+public interface ChargeThruApi {
 
     /**
-     *
-     * @param accountId 
-     * @return an ordered list of billing event for the given accounts
-     *
+     * @param subscriptionId
+     * @return UUID of
      */
-    public SortedSet<BillingEvent> getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId);
-
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId);
-
+    
+    /**
+     * Sets the charged through date for the subscription with that Id.
+     * 
+     * @param subscriptionId
+     * @param ctd
+     * @param context
+     */
     public void setChargedThroughDate(UUID subscriptionId, DateTime ctd, CallContext context);
 
+    /**
+     * Sets the charged through date for the subscription with that Id. Within the context of a SQL Transaction
+     * 
+     * @param transactionalDao
+     * @param subscriptionId
+     * @param ctd
+     * @param context
+     */
     public void setChargedThroughDateFromTransaction(Transmogrifier transactionalDao, UUID subscriptionId,
                                                      DateTime ctd, CallContext context);
 

@@ -24,6 +24,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.junction.MockBlockingModule;
+import com.ning.billing.junction.glue.JunctionModule;
 import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
@@ -48,11 +49,11 @@ public class AnalyticsTestModule extends AnalyticsModule
         install(new AccountModule());
         install(new BusModule());
         install(new EntitlementModule());
-        install(new MockBlockingModule());
         install(new InvoiceModule());
         install(new PaymentModule());
         install(new TagStoreModule());
         install(new NotificationQueueModule());
+        install(new JunctionModule());
 
         // Install the Dao layer
         final MysqlTestingHelper helper = new MysqlTestingHelper();

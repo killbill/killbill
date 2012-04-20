@@ -14,26 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.junction.blocking;
+package com.ning.billing.overdue.notification;
 
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.block.BlockingChecker;
+import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 
-public class MockOverdueChecker implements BlockingChecker {
-
+public class MockOverdueCheckNotifier implements OverdueCheckNotifier {
     @Override
-    public void checkBlocked(Subscription subscription)
-            throws EntitlementUserApiException {
-        //Intentionally blank
-
+    public void initialize() {
+        // do nothing
     }
 
     @Override
-    public void checkBlocked(SubscriptionBundle bundle)
-            throws EntitlementUserApiException {
-        //Intentionally blank
+    public void start() {
+        // do nothing
     }
 
+    @Override
+    public void stop() {
+        // do nothing
+    }
 }

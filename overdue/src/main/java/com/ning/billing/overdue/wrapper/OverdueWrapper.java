@@ -51,7 +51,7 @@ public class OverdueWrapper<T extends Blockable> {
     public OverdueState<T> refresh() throws OverdueError, CatalogApiException {
         OverdueState<T> nextOverdueState;
         BillingState<T> billingState = billingStateCalcuator.calculateBillingState(overdueable);
-        String previousOverdueStateName = api.getBlockingStateNameFor(overdueable);
+        String previousOverdueStateName = api.getBlockingStateFor(overdueable).getStateName();
         nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
         if(!previousOverdueStateName.equals(nextOverdueState.getName())) {
             overdueStateApplicator.apply(overdueable, nextOverdueState, nextOverdueState, overdueStateSet.dateOfNextCheck(billingState, clock.getUTCNow())); 

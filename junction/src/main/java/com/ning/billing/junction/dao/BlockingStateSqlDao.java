@@ -34,10 +34,10 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.clock.Clock;
@@ -56,13 +56,13 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
 
     @Override
     @SqlQuery
-    @Mapper(BlockingStateSqlMapper.class)
-    public abstract String getBlockingStateFor(@Bind(binder = BlockableBinder.class)Blockable overdueable) ;
+    @Mapper(BlockingHistorySqlMapper.class)
+    public abstract BlockingState getBlockingStateFor(@Bind(binder = BlockableBinder.class)Blockable overdueable) ;
     
     @Override
     @SqlQuery
-    @Mapper(BlockingStateSqlMapper.class)
-    public abstract String getBlockingStateForIdAndType(@Bind(binder = UUIDBinder.class) UUID overdueableId, @Bind(binder = BlockableTypeBinder.class)  Type type);
+    @Mapper(BlockingHistorySqlMapper.class)
+    public abstract BlockingState getBlockingStateFor(@Bind(binder = UUIDBinder.class) UUID overdueableId, @Bind(binder = BlockableTypeBinder.class)  Type type);
 
     @Override
     @SqlQuery
@@ -98,7 +98,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
                 blockChange = r.getBoolean("block_change");
                 blockEntitlement = r.getBoolean("block_entitlement");
                 blockBilling = r.getBoolean("block_billing");
-            } catch (CatalogApiException e) {
+            } catch (BlockingApiException e) {
                 throw new SQLException(e);
             }
             return new BlockingState(blockableId, stateName, type, service, blockChange, blockEntitlement, blockBilling, timestamp);

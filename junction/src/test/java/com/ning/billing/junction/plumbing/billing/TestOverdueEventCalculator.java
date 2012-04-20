@@ -14,12 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.billing;
+package com.ning.billing.junction.plumbing.billing;
 
 
 public class TestOverdueEventCalculator {
 
-    //TODO MDW refactoring
+//MDW TODO
 //    private static final String DISABLED_BUNDLE = "disabled-bundle";
 //    private static final String CLEAR_BUNDLE = "clear-bundle";
 //    

@@ -68,4 +68,6 @@ public interface SubscriptionEventTransition extends BusEvent {
     PriceList getNextPriceList();
     
     Integer getRemainingEventsForUserOperation();
+    
+    long getTotalOrdering();
 }

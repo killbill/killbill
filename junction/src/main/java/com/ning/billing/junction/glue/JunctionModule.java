@@ -16,15 +16,19 @@
 
 package com.ning.billing.junction.glue;
 
+import javax.inject.Singleton;
+
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.blocking.DefaultBlockingApi;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.dao.BlockingStateSqlDao;
+import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 
 public class JunctionModule extends AbstractModule {
 
@@ -32,6 +36,11 @@ public class JunctionModule extends AbstractModule {
     protected void configure() {
         bind(BlockingApi.class).to(DefaultBlockingApi.class);
         bind(BlockingStateDao.class).toProvider(BlockingDaoProvider.class);
+        installBillingApi();
+    }
+
+    protected void installBillingApi() {
+        bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
     }
 
     public static class BlockingDaoProvider implements Provider<BlockingStateDao>{

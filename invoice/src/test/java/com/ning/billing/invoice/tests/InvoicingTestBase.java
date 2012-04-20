@@ -16,10 +16,11 @@
 
 package com.ning.billing.invoice.tests;
 
-import com.ning.billing.invoice.model.InvoicingConfiguration;
+import java.math.BigDecimal;
+
 import org.joda.time.DateTime;
 
-import java.math.BigDecimal;
+import com.ning.billing.invoice.model.InvoicingConfiguration;
 
 public abstract class InvoicingTestBase {
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();

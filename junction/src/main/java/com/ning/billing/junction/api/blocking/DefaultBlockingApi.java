@@ -38,13 +38,13 @@ public class DefaultBlockingApi implements BlockingApi {
     }
     
     @Override
-    public String getBlockingStateNameFor(Blockable overdueable) {
+    public BlockingState getBlockingStateFor(Blockable overdueable) {
         return dao.getBlockingStateFor(overdueable);
     }
 
     @Override
-    public String getBlockingStateNameFor(UUID overdueableId, Type type) {
-        return dao.getBlockingStateForIdAndType(overdueableId, type);
+    public BlockingState getBlockingStateFor(UUID overdueableId, Type type) {
+        return dao.getBlockingStateFor(overdueableId, type);
     }
 
     @Override

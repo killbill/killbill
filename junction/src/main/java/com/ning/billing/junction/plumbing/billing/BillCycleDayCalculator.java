@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.billing;
+package com.ning.billing.junction.plumbing.billing;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;

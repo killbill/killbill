@@ -245,4 +245,9 @@ public class MockSubscription implements Subscription
     public boolean processPayment() {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public List<SubscriptionEventTransition> getBillingTransitions() {
+        throw new UnsupportedOperationException();
+    }
 }

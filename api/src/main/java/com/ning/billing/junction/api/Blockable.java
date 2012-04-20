@@ -19,28 +19,37 @@ package com.ning.billing.junction.api;
 import java.util.UUID;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
 public interface Blockable {
 
     public enum Type {
-        //Not currently supported
-        // ACCOUNT,
-        SUBSCRIPTION_BUNDLE;
+        ACCOUNT,
+        SUBSCRIPTION_BUNDLE,
+        SUBSCRIPTION;
         
-        public static Type get(Blockable o) throws CatalogApiException{
-            if (o instanceof SubscriptionBundle){
+        public static Type get(Blockable o) throws BlockingApiException{
+            if (o instanceof Account){
+                return ACCOUNT;
+            } else if (o instanceof SubscriptionBundle){
                 return SUBSCRIPTION_BUNDLE;
+            } else if (o instanceof Subscription){
+                return SUBSCRIPTION;
             }
-            throw new CatalogApiException(ErrorCode.CAT_NO_OVERDUEABLE_TYPE , o.getClass().getName());
+            throw new BlockingApiException(ErrorCode.BLOCK_TYPE_NOT_SUPPORTED , o.getClass().getName());
         }
         
-        public static Type get(String type) throws CatalogApiException {
-            if (type.equalsIgnoreCase(SUBSCRIPTION_BUNDLE.name())) {
+        public static Type get(String type) throws BlockingApiException {
+            if (type.equalsIgnoreCase(ACCOUNT.name())) {
+                return ACCOUNT;
+            } else if (type.equalsIgnoreCase(SUBSCRIPTION_BUNDLE.name())) {
                 return SUBSCRIPTION_BUNDLE;
+            } else if (type.equalsIgnoreCase(SUBSCRIPTION.name())) {
+                return SUBSCRIPTION;
             }
-            throw new CatalogApiException(ErrorCode.CAT_NO_OVERDUEABLE_TYPE , type);
+            throw new BlockingApiException(ErrorCode.BLOCK_TYPE_NOT_SUPPORTED , type);
         }
 
     }

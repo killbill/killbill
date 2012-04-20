@@ -165,8 +165,15 @@ public enum ErrorCode {
      * Range 5000: Overdue system
      * 
      */
-    OVERDUE_OVERDUEABLE_NOT_SUPPORTED(5001, "The Overdueable type '%s' is not supported"), 
-    OVERDUE_CAT_ERROR_ENCOUNTERED(5002,"Catalog error encountered on Overdueable: id='%s', type='%s'"),  
+    OVERDUE_CAT_ERROR_ENCOUNTERED(5001,"Catalog error encountered on Overdueable: id='%s', type='%s'"),  
+    OVERDUE_TYPE_NOT_SUPPORTED(5002,"Overdue of this type is not supported: id='%s', type='%s'"),  
+    /*
+     * 
+     * Range 6000: Blocking system
+     * 
+     */
+    BLOCK_BLOCKED_ACTION(6000, "The action %s is block on this %s with id=%s"),
+    BLOCK_TYPE_NOT_SUPPORTED(6001, "The Blockable type '%s' is not supported") 
     
     
     ;

@@ -131,7 +131,8 @@ public class MockPlan extends DefaultPlan {
 				createPickupTrialEvergreen10USD(),
 				createSportsCarTrialEvergreen100USD(),
 				createJetTrialEvergreen1000USD(),
-				createJetTrialFixedTermEvergreen1000USD()
+				createJetTrialFixedTermEvergreen1000USD(),
+				createHornMonthlyNoTrial1USD()
 		};
 	}
 	

@@ -21,7 +21,7 @@ import org.apache.commons.collections.MapUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Provider;
 import com.ning.billing.config.PaymentConfig;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.bus.Bus;
@@ -30,10 +30,10 @@ import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
 public class PaymentTestModuleWithEmbeddedDb extends PaymentModule {
-	public static class MockProvider implements Provider<EntitlementBillingApi> {
+	public static class MockProvider implements Provider<BillingApi> {
 		@Override
-		public EntitlementBillingApi get() {
-			return BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
+		public BillingApi get() {
+			return BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
 		}
 
 	}
@@ -51,7 +51,7 @@ public class PaymentTestModuleWithEmbeddedDb extends PaymentModule {
     protected void configure() {
         super.configure();
         bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
-        bind(EntitlementBillingApi.class).toProvider(MockProvider.class);
+        bind(BillingApi.class).toProvider(MockProvider.class);
         bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
     }
 }

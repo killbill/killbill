@@ -16,13 +16,29 @@
 
 package com.ning.billing.junction.block;
 
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.junction.api.BlockingApiException;
 
 public interface BlockingChecker {
 
-    public void checkBlocked(Subscription subscription)  throws EntitlementUserApiException;
+    public void checkBlockedChange(Subscription subscription)  throws BlockingApiException;
 
-    public void checkBlocked(SubscriptionBundle bundle) throws EntitlementUserApiException;
+    public void checkBlockedChange(SubscriptionBundle bundle) throws BlockingApiException;
+
+    public void checkBlockedChange(Account account) throws BlockingApiException;
+
+    public void checkBlockedEntitlement(Subscription subscription)  throws BlockingApiException;
+
+    public void checkBlockedEntitlement(SubscriptionBundle bundle) throws BlockingApiException;
+
+    public void checkBlockedEntitlement(Account account) throws BlockingApiException;
+
+    public void checkBlockedBilling(Subscription subscription)  throws BlockingApiException;
+
+    public void checkBlockedBilling(SubscriptionBundle bundleId) throws BlockingApiException;
+
+    public void checkBlockedBilling(Account account) throws BlockingApiException;
+
 }

@@ -16,13 +16,14 @@
 
 package com.ning.billing.invoice.tests.inAdvance.monthly;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.invoice.model.InvalidDateSequenceException;
-import com.ning.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
+import java.math.BigDecimal;
+
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
-import java.math.BigDecimal;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.invoice.model.InvalidDateSequenceException;
+import com.ning.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
 
 @Test(groups = {"fast", "invoicing", "proRation"})
 public class ProRationTests extends ProRationInAdvanceTestBase {

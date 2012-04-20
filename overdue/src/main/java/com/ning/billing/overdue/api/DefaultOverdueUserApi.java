@@ -53,7 +53,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi{
     @Override
     public <T extends Blockable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueError {
         try {
-            String stateName = accessApi.getBlockingStateNameFor(overdueable);
+            String stateName = accessApi.getBlockingStateFor(overdueable).getStateName();
             OverdueStateSet<SubscriptionBundle> states = overdueConfig.getBundleStateSet();
             return (OverdueState<T>) states.findState(stateName);
         } catch (CatalogApiException e) {

@@ -24,18 +24,21 @@ import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.glue.JunctionModule;
+import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
 
-public class MockModule extends AbstractModule {
+public class MockModule extends JunctionModule {
     public static final String PLUGIN_NAME = "Booboo";
 
     @Override
     protected void configure() {
+        super.configure();
         bind(Clock.class).to(ClockMock.class).asEagerSingleton();
         bind(ClockMock.class).asEagerSingleton();
         bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
@@ -52,8 +55,10 @@ public class MockModule extends AbstractModule {
         }
 
        install(new CatalogModule());
-       install(new JunctionModule());
     }
     
+    protected void installBillingApi() {
+        // no billinggApi
+    }
 
 }

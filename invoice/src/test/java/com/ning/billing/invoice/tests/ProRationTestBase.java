@@ -16,17 +16,18 @@
 
 package com.ning.billing.invoice.tests;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.invoice.model.BillingMode;
-import com.ning.billing.invoice.model.InvalidDateSequenceException;
-import com.ning.billing.invoice.model.RecurringInvoiceItemData;
-import org.joda.time.DateTime;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
+import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.invoice.model.BillingMode;
+import com.ning.billing.invoice.model.InvalidDateSequenceException;
+import com.ning.billing.invoice.model.RecurringInvoiceItemData;
 
 public abstract class ProRationTestBase extends InvoicingTestBase {
     protected abstract BillingMode getBillingMode();

@@ -176,5 +176,14 @@ public class BlockingState implements Comparable<BlockingState>{
             return "On";
         }
     }
+
+    @Override
+    public String toString() {
+        return "BlockingState [blockingId=" + blockingId + ", type=" + type + ", stateName=" + stateName + ", service="
+                + service + ", blockChange=" + blockChange + ", blockEntitlement=" + blockEntitlement
+                + ", blockBilling=" + blockBilling + ", timestamp=" + timestamp + "]";
+    }
+    
+    
     
 }

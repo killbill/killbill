@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.billing;
+package com.ning.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
 
@@ -26,10 +26,11 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 
 public class DefaultBillingEvent implements BillingEvent {
     final private Account account;
@@ -68,7 +69,7 @@ public class DefaultBillingEvent implements BillingEvent {
         billingPeriod =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPhase().getBillingPeriod() : transition.getPreviousPhase().getBillingPeriod();
         type = transition.getTransitionType();
-        totalOrdering = ((SubscriptionTransitionData) transition).getTotalOrdering();
+        totalOrdering = transition.getTotalOrdering();
     }
 
     public DefaultBillingEvent(Account account, Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase,

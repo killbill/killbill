@@ -20,21 +20,20 @@ import java.util.SortedSet;
 import java.util.UUID;
 
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.Blockable.Type;
-import com.ning.billing.overdue.OverdueState;
+import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.clock.Clock;
 
 public interface BlockingStateDao {
 
     //Read
-    public String getBlockingStateFor(Blockable overdueable);
+    public BlockingState getBlockingStateFor(Blockable blockable);
 
-    public String getBlockingStateForIdAndType(UUID overdueableId, Type type);
+    public BlockingState getBlockingStateFor(UUID blockableId, Type type);
 
-    public SortedSet<BlockingState> getBlockingHistoryFor(Blockable overdueable);
+    public SortedSet<BlockingState> getBlockingHistoryFor(Blockable blockable);
 
-    public SortedSet<BlockingState> getBlockingHistoryForIdAndType(UUID overdueableId, Type type);
+    public SortedSet<BlockingState> getBlockingHistoryForIdAndType(UUID blockableId, Type type);
 
     //Write
     <T extends Blockable> void  setBlockingState(BlockingState state, Clock clock);

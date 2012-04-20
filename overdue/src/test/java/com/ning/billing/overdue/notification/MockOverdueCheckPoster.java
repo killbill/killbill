@@ -14,24 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance.quarterly;
+package com.ning.billing.overdue.notification;
 
-import java.math.BigDecimal;
+import org.joda.time.DateTime;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import org.testng.annotations.Test;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.invoice.tests.inAdvance.GenericProRationTestBase;
-
-@Test(groups = {"fast", "invoicing", "proRation"})
-public class GenericProRationTests extends GenericProRationTestBase {
+public class MockOverdueCheckPoster implements OverdueCheckPoster {
+    
     @Override
-    protected BillingPeriod getBillingPeriod() {
-        return BillingPeriod.QUARTERLY;
-    }
-
-    @Override
-    protected BigDecimal getDaysInTestPeriod() {
-        return NINETY;
+    public void insertOverdueCheckNotification(Transmogrifier transactionalDao, Blockable overdueable,
+            DateTime futureNotificationTime) {
+        // TODO Auto-generated method stub
+        
     }
 }

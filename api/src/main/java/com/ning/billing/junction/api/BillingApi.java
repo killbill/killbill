@@ -14,24 +14,22 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance.quarterly;
+package com.ning.billing.junction.api;
 
-import java.math.BigDecimal;
+import java.util.SortedSet;
+import java.util.UUID;
 
-import org.testng.annotations.Test;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.invoice.tests.inAdvance.GenericProRationTestBase;
+public interface BillingApi extends ChargeThruApi {
+    /**
+     *
+     * @param accountId 
+     * @return an ordered list of billing event for the given accounts
+     *
+     */
+    public SortedSet<BillingEvent> getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId);
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public class GenericProRationTests extends GenericProRationTestBase {
-    @Override
-    protected BillingPeriod getBillingPeriod() {
-        return BillingPeriod.QUARTERLY;
-    }
 
-    @Override
-    protected BigDecimal getDaysInTestPeriod() {
-        return NINETY;
-    }
 }
