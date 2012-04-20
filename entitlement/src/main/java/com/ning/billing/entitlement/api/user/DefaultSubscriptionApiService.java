@@ -67,7 +67,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
     throws EntitlementUserApiException {
 
         SubscriptionState currentState = subscription.getState();
-        if (currentState != SubscriptionState.CANCELLED) {
+        if (currentState != null && currentState != SubscriptionState.CANCELLED) {
             throw new EntitlementUserApiException(ErrorCode.ENT_RECREATE_BAD_STATE, subscription.getId(), currentState);
         }
         DateTime now = clock.getUTCNow();
@@ -296,7 +296,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         }
 
         SubscriptionEventTransition previousTransition = subscription.getPreviousTransition();
-        if (previousTransition.getEffectiveTransitionTime().isAfter(requestedDate)) {
+        if (previousTransition != null && previousTransition.getEffectiveTransitionTime().isAfter(requestedDate)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE,
                     requestedDate.toString(), previousTransition.getEffectiveTransitionTime());
         }

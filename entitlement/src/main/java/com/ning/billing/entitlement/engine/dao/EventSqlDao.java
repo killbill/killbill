@@ -66,6 +66,11 @@ public interface EventSqlDao extends Transactional<EventSqlDao>, CloseMe, Transm
     public void reactiveEvent(@Bind("event_id")String eventId,
                               @CallContextBinder final CallContext context);
 
+    @SqlUpdate
+    public void updateVersion(@Bind("event_id")String eventId,
+                              @Bind("current_version") Long currentVersion, 
+                              @CallContextBinder final CallContext context);
+    
     @SqlQuery
     @Mapper(EventSqlMapper.class)
     public List<EntitlementEvent> getFutureActiveEventForSubscription(@Bind("subscription_id") String subscriptionId, @Bind("now") Date now);

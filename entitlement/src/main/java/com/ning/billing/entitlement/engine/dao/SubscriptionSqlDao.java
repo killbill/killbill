@@ -59,10 +59,13 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
     public List<Subscription> getSubscriptionsFromBundleId(@Bind("bundle_id") String bundleId);
 
     @SqlUpdate
-    public void updateSubscription(@Bind("id") String id, @Bind("active_version") long activeVersion,
-                                   @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd,
+    public void updateChargedThroughDate(@Bind("id") String id, @Bind("ctd_dt") Date ctd,
                                    @CallContextBinder final CallContext context);
-   
+
+    @SqlUpdate
+    public void updateActiveVersion(@Bind("id") String id, @Bind("active_version") long activeVersion,
+                                   @CallContextBinder final CallContext context);
+
     public static class SubscriptionBinder extends BinderBase implements Binder<Bind, SubscriptionData> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, SubscriptionData sub) {

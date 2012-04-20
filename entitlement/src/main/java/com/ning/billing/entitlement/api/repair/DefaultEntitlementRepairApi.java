@@ -33,6 +33,7 @@ import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.repair.SubscriptionRepair.ExistingEvent;
 import com.ning.billing.entitlement.api.repair.SubscriptionRepair.NewEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -61,7 +62,7 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
         this.repairDao = repairDao;
         this.factory = factory;
     }
-    
+
 
     @Override
     public BundleRepair getBundleRepair(final UUID bundleId) 
@@ -79,33 +80,35 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
         final List<SubscriptionRepair> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionRepair>emptyList()); 
         return createGetBundleRepair(bundleId, viewId, repairs);
     }
-
-
+    
 
     @Override
     public BundleRepair repairBundle(final BundleRepair input, final boolean dryRun, final CallContext context)
     throws EntitlementRepairException {
 
         try {
-            
+
             SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(input.getBundleId());
             if (bundle == null) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_BUNDLE, input.getBundleId());
             }
-            
+
             // Subscriptions are ordered with BASE subscription first-- if exists
             final List<Subscription> subscriptions = dao.getSubscriptions(factory, input.getBundleId());
             if (subscriptions.size() == 0) {
-                throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_BUNDLE,input.getBundleId());
+                throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, input.getBundleId());
             }
-            
+
             final String viewId = getViewId(((SubscriptionBundleData) bundle).getLastSysUpdateTime(), subscriptions);
             if (!viewId.equals(input.getViewId())) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_VIEW_CHANGED,input.getBundleId(), input.getViewId(), viewId);
             }
-            
+
             DateTime firstDeletedBPEventTime = null;
             DateTime lastRemainingBPEventTime = null;
+
+            boolean isBasePlanRecreate = false;
+            DateTime newBundleStartDate = null;
 
             SubscriptionDataRepair baseSubscriptionRepair = null;
             List<SubscriptionDataRepair> addOnSubscriptionInRepair = new LinkedList<SubscriptionDataRepair>();
@@ -117,23 +120,35 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
                     SubscriptionDataRepair curData = ((SubscriptionDataRepair) cur);
                     List<EntitlementEvent> remaining = getRemainingEventsAndValidateDeletedEvents(curData, firstDeletedBPEventTime, curRepair.getDeletedEvents());
 
+                    
+                    
+                    boolean isPlanRecreate = (curRepair.getNewEvents().size() > 0 
+                            && (curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionTransitionType.CREATE 
+                                    || curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionTransitionType.RE_CREATE));
+                    
+                    DateTime newSubscriptionStartDate = isPlanRecreate ? curRepair.getNewEvents().get(0).getRequestedDate() : null;
+                    
+                    if (isPlanRecreate && remaining.size() != 0) {
+                        throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_SUB_RECREATE_NOT_EMPTY, cur.getId(), cur.getBundleId());
+                    }
+                    
                     if (cur.getCategory() == ProductCategory.BASE) {
+
                         int bpTransitionSize =((SubscriptionData) cur).getAllTransitions().size();
                         lastRemainingBPEventTime = (remaining.size() > 0) ? curData.getAllTransitions().get(remaining.size() - 1).getEffectiveTransitionTime() : null;
                         firstDeletedBPEventTime =  (remaining.size() < bpTransitionSize) ? curData.getAllTransitions().get(remaining.size()).getEffectiveTransitionTime() : null;
+
+                        isBasePlanRecreate = isPlanRecreate;
+                        newBundleStartDate = newSubscriptionStartDate;
                     }
 
-                    if (curRepair.getNewEvents() != null && curRepair.getNewEvents().size() > 0) {
-                        Collections.sort(curRepair.getNewEvents(), new Comparator<NewEvent>() {
-                            @Override
-                            public int compare(NewEvent o1, NewEvent o2) {
-                                return o1.getRequestedDate().compareTo(o2.getRequestedDate());
-                            }
-                        });
+                    if (curRepair.getNewEvents().size() > 0) {
                         DateTime lastRemainingEventTime = (remaining.size() == 0) ? null : curData.getAllTransitions().get(remaining.size() - 1).getEffectiveTransitionTime();
                         validateFirstNewEvent(curData, curRepair.getNewEvents().get(0), lastRemainingBPEventTime, lastRemainingEventTime);
                     }
-                    SubscriptionDataRepair sRepair = createSubscriptionDataRepair(curData, remaining);
+
+
+                    SubscriptionDataRepair sRepair = createSubscriptionDataRepair(curData, newBundleStartDate, newSubscriptionStartDate, remaining);
                     repairDao.initializeRepair(curData.getId(), remaining);
                     inRepair.add(sRepair);
                     if (sRepair.getCategory() == ProductCategory.ADD_ON) {
@@ -144,20 +159,8 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
                 }
             }
 
-            if (input.getSubscriptions().size() != inRepair.size()) {
-                for (SubscriptionRepair cur : input.getSubscriptions()) {
-                    boolean found = false;
-                    for (Subscription s : subscriptions) {
-                        if (s.getId().equals(cur.getId())) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_SUBSCRIPTION, cur.getId());
-                    }
-                }
-            }
+            validateBasePlanRecreate(isBasePlanRecreate, subscriptions, input.getSubscriptions());
+            validateInputSubscriptionsKnown(subscriptions, input.getSubscriptions());
 
             TreeSet<NewEvent> newEventSet = new TreeSet<SubscriptionRepair.NewEvent>(new Comparator<NewEvent>() {
                 @Override
@@ -185,84 +188,52 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
                 final List<SubscriptionRepair> repairs = createGetSubscriptionRepairList(subscriptions, convertDataRepair(inRepair)); 
                 return createGetBundleRepair(input.getBundleId(), input.getViewId(), repairs);
             } else {
-                // STEPH no implemented yet
-                return null;
+                dao.repair(input.getBundleId(), inRepair, context);
+                bundle = dao.getSubscriptionBundleFromId(input.getBundleId());
+                String newViewId = getViewId(((SubscriptionBundleData) bundle).getLastSysUpdateTime(), subscriptions);
+                final List<SubscriptionRepair> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionRepair>emptyList()); 
+                return createGetBundleRepair(input.getBundleId(), viewId, repairs);
             }
         } finally {
             repairDao.cleanup();
         }
     }
+
     
-    private String getViewId(DateTime lastUpdateBundleDate, List<Subscription> subscriptions) {
-        StringBuilder tmp = new StringBuilder();
-        long lastOrderedId = -1;
-        for (Subscription cur : subscriptions) {
-            lastOrderedId = lastOrderedId < ((SubscriptionData) cur).getLastEventOrderedId() ? ((SubscriptionData) cur).getLastEventOrderedId() : lastOrderedId;
+    private void validateBasePlanRecreate(boolean isBasePlanRecreate, List<Subscription> subscriptions, List<SubscriptionRepair> input) 
+        throws EntitlementRepairException  {
+        
+        if (!isBasePlanRecreate) {
+            return;
         }
-        tmp.append(lastOrderedId);
-        tmp.append("-");
-        tmp.append(lastUpdateBundleDate.toDate().getTime());
-        return tmp.toString();
-    }
-
-    private BundleRepair createGetBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionRepair> repairList) {
-        return new BundleRepair() {
-            @Override
-            public String getViewId() {
-                return viewId;
+        if (subscriptions.size() != input.size()) {
+            throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO, subscriptions.get(0).getBundleId());
+        }
+        for (SubscriptionRepair cur : input) {
+            if (cur.getNewEvents().size() != 0 
+                    && (cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionTransitionType.CREATE
+                            && cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionTransitionType.RE_CREATE)) {
+                throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE, subscriptions.get(0).getBundleId());
             }
-            @Override
-            public List<SubscriptionRepair> getSubscriptions() {
-                return repairList;
-            }
-            @Override
-            public UUID getBundleId() {
-                return bundleId;
-            }
-        };
-
+        }
     }
     
-    private List<SubscriptionRepair> createGetSubscriptionRepairList(final List<Subscription> subscriptions, final List<SubscriptionRepair> inRepair) {
+    
+    private void validateInputSubscriptionsKnown(List<Subscription> subscriptions, List<SubscriptionRepair> input)
+        throws EntitlementRepairException {
 
-        final List<SubscriptionRepair> result = new LinkedList<SubscriptionRepair>();
-        Set<UUID> repairIds = new TreeSet<UUID>();
-        for (final SubscriptionRepair cur : inRepair) {
-            repairIds.add(cur.getId());
-            result.add(cur);
-        }
-        for (final Subscription cur : subscriptions) {
-            if ( !repairIds.contains(cur.getId())) { 
-                result.add(new DefaultSubscriptionRepair((SubscriptionData) cur));
+        for (SubscriptionRepair cur : input) {
+            boolean found = false;
+            for (Subscription s : subscriptions) {
+                if (s.getId().equals(cur.getId())) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_SUBSCRIPTION, cur.getId());
             }
         }
-        return result;
-    }
-
-
-    private List<SubscriptionRepair> convertDataRepair(List<SubscriptionDataRepair> input) {
-        List<SubscriptionRepair> result = new LinkedList<SubscriptionRepair>();
-        for (SubscriptionDataRepair cur : input) {
-            result.add(new DefaultSubscriptionRepair(cur));
-        }
-        return result;
-    }
-
-    private SubscriptionDataRepair findSubscriptionDataRepair(final UUID targetId, final List<SubscriptionDataRepair> input) {
-        for (SubscriptionDataRepair cur : input) {
-            if (cur.getId().equals(targetId)) {
-                return cur;
-            }
-        }
-        return null;
-    }
-
-
-    private SubscriptionDataRepair createSubscriptionDataRepair(final SubscriptionData curData, final List<EntitlementEvent> initialEvents) {
-        SubscriptionBuilder builder = new SubscriptionBuilder(curData);
-        builder.setActiveVersion(curData.getActiveVersion() + 1);
-        SubscriptionDataRepair result = (SubscriptionDataRepair) factory.createSubscription(builder, initialEvents);
-        return result;
     }
 
     private void validateFirstNewEvent(final SubscriptionData data, final NewEvent firstNewEvent, final DateTime lastBPRemainingTime, final DateTime lastRemainingTime) 
@@ -328,6 +299,91 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
         }
         return result;
     }
+
+    
+    private String getViewId(DateTime lastUpdateBundleDate, List<Subscription> subscriptions) {
+        StringBuilder tmp = new StringBuilder();
+        long lastOrderedId = -1;
+        for (Subscription cur : subscriptions) {
+            lastOrderedId = lastOrderedId < ((SubscriptionData) cur).getLastEventOrderedId() ? ((SubscriptionData) cur).getLastEventOrderedId() : lastOrderedId;
+        }
+        tmp.append(lastOrderedId);
+        tmp.append("-");
+        tmp.append(lastUpdateBundleDate.toDate().getTime());
+        return tmp.toString();
+    }
+
+    private BundleRepair createGetBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionRepair> repairList) {
+        return new BundleRepair() {
+            @Override
+            public String getViewId() {
+                return viewId;
+            }
+            @Override
+            public List<SubscriptionRepair> getSubscriptions() {
+                return repairList;
+            }
+            @Override
+            public UUID getBundleId() {
+                return bundleId;
+            }
+        };
+
+    }
+
+    private List<SubscriptionRepair> createGetSubscriptionRepairList(final List<Subscription> subscriptions, final List<SubscriptionRepair> inRepair) {
+
+        final List<SubscriptionRepair> result = new LinkedList<SubscriptionRepair>();
+        Set<UUID> repairIds = new TreeSet<UUID>();
+        for (final SubscriptionRepair cur : inRepair) {
+            repairIds.add(cur.getId());
+            result.add(cur);
+        }
+        for (final Subscription cur : subscriptions) {
+            if ( !repairIds.contains(cur.getId())) { 
+                result.add(new DefaultSubscriptionRepair((SubscriptionData) cur));
+            }
+        }
+        return result;
+    }
+
+
+    private List<SubscriptionRepair> convertDataRepair(List<SubscriptionDataRepair> input) {
+        List<SubscriptionRepair> result = new LinkedList<SubscriptionRepair>();
+        for (SubscriptionDataRepair cur : input) {
+            result.add(new DefaultSubscriptionRepair(cur));
+        }
+        return result;
+    }
+
+    private SubscriptionDataRepair findSubscriptionDataRepair(final UUID targetId, final List<SubscriptionDataRepair> input) {
+        for (SubscriptionDataRepair cur : input) {
+            if (cur.getId().equals(targetId)) {
+                return cur;
+            }
+        }
+        return null;
+    }
+
+
+    private SubscriptionDataRepair createSubscriptionDataRepair(final SubscriptionData curData, final DateTime newBundleStartDate, final DateTime newSubscriptionStartDate, final List<EntitlementEvent> initialEvents) {
+        SubscriptionBuilder builder = new SubscriptionBuilder(curData);
+        builder.setActiveVersion(curData.getActiveVersion() + 1);
+        if (newBundleStartDate != null) {
+            builder.setBundleStartDate(newBundleStartDate);
+        }
+        if (newSubscriptionStartDate != null) {
+            builder.setStartDate(newSubscriptionStartDate);
+        }
+        if (initialEvents.size() > 0) {
+            for (EntitlementEvent cur : initialEvents) {
+                cur.setActiveVersion(builder.getActiveVersion());
+            }
+        }
+        SubscriptionDataRepair result = (SubscriptionDataRepair) factory.createSubscription(builder, initialEvents);
+        return result;
+    }
+
 
     private SubscriptionRepair findAndCreateSubscriptionRepair(final UUID target, final List<SubscriptionRepair> input) {
         for (SubscriptionRepair cur : input) {

@@ -15,12 +15,15 @@
  */
 package com.ning.billing.entitlement.api.repair;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.joda.time.DateTime;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -43,18 +46,18 @@ public class SubscriptionDataRepair extends SubscriptionData {
     private final AddonUtils addonUtils;
     private final Clock clock;
 
-    private final List<EntitlementEvent> newEvents;
+    private final List<EntitlementEvent> initialEvents;
 
     // Low level events are ONLY used for Repair APIs
     protected List<EntitlementEvent> events;
 
 
-    public SubscriptionDataRepair(SubscriptionBuilder builder, SubscriptionApiService apiService,
+    public SubscriptionDataRepair(SubscriptionBuilder builder, List<EntitlementEvent> initialEvents, SubscriptionApiService apiService,
             Clock clock, AddonUtils addonUtils) {
         super(builder, apiService, clock);
         this.addonUtils = addonUtils;
         this.clock = clock;
-        this.newEvents = new LinkedList<EntitlementEvent>();
+        this.initialEvents = initialEvents;
     }
 
     public void addNewRepairEvent(final DefaultNewEvent input, final SubscriptionDataRepair baseSubscription, final List<SubscriptionDataRepair> addonSubscriptions, final CallContext context)
@@ -131,7 +134,22 @@ public class SubscriptionDataRepair extends SubscriptionData {
         super.rebuildTransitions(inputEvents, catalog);
     }
 
-    public List<EntitlementEvent>  getEvents() {
+    public List<EntitlementEvent> getEvents() {
         return events;
+    }
+
+    public List<EntitlementEvent> getInitialEvents() {
+        return initialEvents;
+    }
+
+    
+    public Collection<EntitlementEvent> getNewEvents() {
+        Collection<EntitlementEvent> newEvents  = Collections2.filter(events, new Predicate<EntitlementEvent>() {
+            @Override
+            public boolean apply(EntitlementEvent input) {
+                return ! initialEvents.contains(input);
+            }
+        });
+        return newEvents;
     }
 }

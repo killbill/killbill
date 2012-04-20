@@ -49,6 +49,7 @@ import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import com.ning.billing.entitlement.api.repair.SubscriptionDataRepair;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -189,16 +190,15 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public void updateSubscription(final SubscriptionData subscription, final CallContext context) {
+    public void updateChargedThroughDate(final SubscriptionData subscription, final CallContext context) {
 
         final Date ctd = (subscription.getChargedThroughDate() != null)  ? subscription.getChargedThroughDate().toDate() : null;
-        final Date ptd = (subscription.getPaidThroughDate() != null)  ? subscription.getPaidThroughDate().toDate() : null;
 
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
             @Override
             public Void inTransaction(SubscriptionSqlDao transactionalDao,
                     TransactionStatus status) throws Exception {
-                transactionalDao.updateSubscription(subscription.getId().toString(), subscription.getActiveVersion(), ctd, ptd, context);
+                transactionalDao.updateChargedThroughDate(subscription.getId().toString(), ctd, context);
 
                 BundleSqlDao tmpDao = transactionalDao.become(BundleSqlDao.class);
                 tmpDao.updateBundleLastSysTime(subscription.getBundleId().toString(), clock.getUTCNow().toDate());
@@ -595,6 +595,28 @@ public class EntitlementSqlDao implements EntitlementDao {
                 auditSqlDao.insertAuditFromTransaction(BUNDLES_TABLE_NAME, bundleIds, ChangeType.INSERT, context);
                 auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, eventIds, ChangeType.INSERT, context);
 
+                return null;
+            }
+        });
+    }
+
+    public void repair(final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context) {
+        subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
+
+            @Override
+            public Void inTransaction(SubscriptionSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+
+                EventSqlDao transEventDao = transactional.become(EventSqlDao.class);
+                for (SubscriptionDataRepair cur : inRepair) {
+                    transactional.updateActiveVersion(cur.getId().toString(), cur.getActiveVersion(), context);
+                    for (EntitlementEvent event : cur.getInitialEvents()) {
+                        transEventDao.updateVersion(event.getId().toString(), cur.getActiveVersion(), context);
+                    }
+                    for (EntitlementEvent event : cur.getNewEvents()) {
+                        transEventDao.insertEvent(event, context);
+                    }
+                }
                 return null;
             }
         });

@@ -24,6 +24,7 @@ import com.ning.billing.util.callcontext.CallContext;
 
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
+import com.ning.billing.entitlement.api.repair.SubscriptionDataRepair;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -53,7 +54,7 @@ public interface EntitlementDao {
     public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey);
 
     // Update
-    public void updateSubscription(final SubscriptionData subscription, final CallContext context);
+    public void updateChargedThroughDate(final SubscriptionData subscription, final CallContext context);
 
     // Event apis
     public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase, final CallContext context);
@@ -79,6 +80,9 @@ public interface EntitlementDao {
 
     public void migrate(final UUID accountId, final AccountMigrationData data, final CallContext context);
 
+    // Repair
+    public void repair(final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context);
+    
     // Custom Fields
     public void saveCustomFields(final SubscriptionData subscription, final CallContext context);
 }

@@ -41,6 +41,7 @@ import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import com.ning.billing.entitlement.api.repair.SubscriptionDataRepair;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -264,7 +265,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void updateSubscription(final SubscriptionData subscription, final CallContext context) {
+    public void updateChargedThroughDate(final SubscriptionData subscription, final CallContext context) {
 
         boolean found = false;
         Iterator<Subscription> it = subscriptions.iterator();
@@ -454,4 +455,8 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         return null;
     }
 
+    @Override
+    public void repair(UUID bundleId, List<SubscriptionDataRepair> inRepair,
+            CallContext context) {
+    }
 }

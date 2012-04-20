@@ -194,7 +194,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             .setChargedThroughDate(ctd)
             .setPaidThroughDate(subscription.getPaidThroughDate());
 
-        entitlementDao.updateSubscription(new SubscriptionData(builder), context);
+        entitlementDao.updateChargedThroughDate(new SubscriptionData(builder), context);
     }
 
     @Override
@@ -206,12 +206,9 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
         if (subscription == null) {
             log.warn("Subscription not found when setting CTD.");
         } else {
-            Date paidThroughDate = (subscription.getPaidThroughDate() == null) ? null : subscription.getPaidThroughDate().toDate();
-
             DateTime chargedThroughDate = subscription.getChargedThroughDate();
             if (chargedThroughDate == null || chargedThroughDate.isBefore(ctd)) {
-                subscriptionSqlDao.updateSubscription(subscriptionId.toString(), subscription.getActiveVersion(),
-                                                      ctd.toDate(), paidThroughDate, context);
+                subscriptionSqlDao.updateActiveVersion(subscriptionId.toString(), subscription.getActiveVersion(), context);
                 AuditSqlDao auditSqlDao = transactionalDao.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction(SUBSCRIPTION_TABLE_NAME, subscriptionId.toString(), ChangeType.UPDATE, context);
             }

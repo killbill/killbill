@@ -27,6 +27,7 @@ import java.util.UUID;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.repair.RepairEntitlementLifecycleDao;
+import com.ning.billing.entitlement.api.repair.SubscriptionDataRepair;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -187,7 +188,7 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public void updateSubscription(SubscriptionData subscription,
+    public void updateChargedThroughDate(SubscriptionData subscription,
             CallContext context) {
         throw new EntitlementError("Not implemented");
     }
@@ -224,6 +225,12 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
 
     @Override
     public void saveCustomFields(SubscriptionData subscription,
+            CallContext context) {
+        throw new EntitlementError("Not implemented");
+    }
+
+    @Override
+    public void repair(UUID bundleId, List<SubscriptionDataRepair> inRepair,
             CallContext context) {
         throw new EntitlementError("Not implemented");
     }

@@ -70,6 +70,9 @@ public enum ErrorCode {
     ENT_REPAIR_UNKNOWN_SUBSCRIPTION(1098, "Unknown subscription %s"),     
     ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS(1099, "No active subscriptions on bundle %s"),         
     ENT_REPAIR_VIEW_CHANGED(1100, "View for bundle %s has changed from %s to %s"),             
+    ENT_REPAIR_SUB_RECREATE_NOT_EMPTY(1101, "Subscription %s with recreation for bundle %s should specify all existing events to be deleted"),    
+    ENT_REPAIR_BP_RECREATE_MISSING_AO(1102, "BP recreation for bundle %s implies repair all subscriptions"),    
+    ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE(1103, "BP recreation for bundle %s implies that all AO should be start also with a CREATE"),        
     
     /*
     *
