@@ -70,9 +70,11 @@ public class SubscriptionDataRepair extends SubscriptionData {
             case CREATE:
             case RE_CREATE:
                 recreate(spec, input.getRequestedDate(), context);
+                checkAddonRights(baseSubscription);
                 break;
             case CHANGE:
                 changePlan(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), input.getRequestedDate(), context);
+                checkAddonRights(baseSubscription);
                 break;
             case CANCEL:
                 cancel(input.getRequestedDate(), false, context);
@@ -82,9 +84,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
             default:
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_TYPE, input.getSubscriptionTransitionType(), id);
             }
-            
             trickleDownBPEffectForAddon(addonSubscriptions, input.getRequestedDate(), context);
-            checkAddonRights(baseSubscription);
             
         } catch (EntitlementUserApiException e) {
             throw new EntitlementRepairException(e);

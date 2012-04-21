@@ -15,6 +15,7 @@
  */
 package com.ning.billing.entitlement.api.repair;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -117,64 +118,62 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
 
                 SubscriptionRepair curRepair = findAndCreateSubscriptionRepair(cur.getId(), input.getSubscriptions());
                 if (curRepair != null) {
-                    SubscriptionDataRepair curData = ((SubscriptionDataRepair) cur);
-                    List<EntitlementEvent> remaining = getRemainingEventsAndValidateDeletedEvents(curData, firstDeletedBPEventTime, curRepair.getDeletedEvents());
-
+                    SubscriptionDataRepair curInputRepair = ((SubscriptionDataRepair) cur);
+                    final List<EntitlementEvent> remaining = getRemainingEventsAndValidateDeletedEvents(curInputRepair, firstDeletedBPEventTime, curRepair.getDeletedEvents());
                     
-                    
-                    boolean isPlanRecreate = (curRepair.getNewEvents().size() > 0 
+                    final boolean isPlanRecreate = (curRepair.getNewEvents().size() > 0 
                             && (curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionTransitionType.CREATE 
                                     || curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionTransitionType.RE_CREATE));
                     
-                    DateTime newSubscriptionStartDate = isPlanRecreate ? curRepair.getNewEvents().get(0).getRequestedDate() : null;
+                    final DateTime newSubscriptionStartDate = isPlanRecreate ? curRepair.getNewEvents().get(0).getRequestedDate() : null;
                     
                     if (isPlanRecreate && remaining.size() != 0) {
                         throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_SUB_RECREATE_NOT_EMPTY, cur.getId(), cur.getBundleId());
                     }
                     
+                    if (!isPlanRecreate && remaining.size() == 0) {
+                        throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_SUB_EMPTY, cur.getId(), cur.getBundleId());
+                    }
+                    
                     if (cur.getCategory() == ProductCategory.BASE) {
 
                         int bpTransitionSize =((SubscriptionData) cur).getAllTransitions().size();
-                        lastRemainingBPEventTime = (remaining.size() > 0) ? curData.getAllTransitions().get(remaining.size() - 1).getEffectiveTransitionTime() : null;
-                        firstDeletedBPEventTime =  (remaining.size() < bpTransitionSize) ? curData.getAllTransitions().get(remaining.size()).getEffectiveTransitionTime() : null;
+                        lastRemainingBPEventTime = (remaining.size() > 0) ? curInputRepair.getAllTransitions().get(remaining.size() - 1).getEffectiveTransitionTime() : null;
+                        firstDeletedBPEventTime =  (remaining.size() < bpTransitionSize) ? curInputRepair.getAllTransitions().get(remaining.size()).getEffectiveTransitionTime() : null;
 
                         isBasePlanRecreate = isPlanRecreate;
                         newBundleStartDate = newSubscriptionStartDate;
                     }
 
                     if (curRepair.getNewEvents().size() > 0) {
-                        DateTime lastRemainingEventTime = (remaining.size() == 0) ? null : curData.getAllTransitions().get(remaining.size() - 1).getEffectiveTransitionTime();
-                        validateFirstNewEvent(curData, curRepair.getNewEvents().get(0), lastRemainingBPEventTime, lastRemainingEventTime);
+                        DateTime lastRemainingEventTime = (remaining.size() == 0) ? null : curInputRepair.getAllTransitions().get(remaining.size() - 1).getEffectiveTransitionTime();
+                        validateFirstNewEvent(curInputRepair, curRepair.getNewEvents().get(0), lastRemainingBPEventTime, lastRemainingEventTime);
                     }
 
 
-                    SubscriptionDataRepair sRepair = createSubscriptionDataRepair(curData, newBundleStartDate, newSubscriptionStartDate, remaining);
-                    repairDao.initializeRepair(curData.getId(), remaining);
-                    inRepair.add(sRepair);
-                    if (sRepair.getCategory() == ProductCategory.ADD_ON) {
-                        addOnSubscriptionInRepair.add(sRepair);
-                    } else if (sRepair.getCategory() == ProductCategory.BASE) {
-                        baseSubscriptionRepair = sRepair;
+                    SubscriptionDataRepair curOutputRepair = createSubscriptionDataRepair(curInputRepair, newBundleStartDate, newSubscriptionStartDate, remaining);
+                    repairDao.initializeRepair(curInputRepair.getId(), remaining);
+                    inRepair.add(curOutputRepair);
+                    if (curOutputRepair.getCategory() == ProductCategory.ADD_ON) {
+                        addOnSubscriptionInRepair.add(curOutputRepair);
+                    } else if (curOutputRepair.getCategory() == ProductCategory.BASE) {
+                        baseSubscriptionRepair = curOutputRepair;
                     }
                 }
+            }
+            
+            // This is a pure AO repair
+            if (baseSubscriptionRepair == null && subscriptions.get(0).getCategory() == ProductCategory.BASE) {
+                SubscriptionDataRepair baseSubscription =  (SubscriptionDataRepair) subscriptions.get(0);
+                baseSubscriptionRepair = createSubscriptionDataRepair(baseSubscription, baseSubscription.getBundleStartDate(), baseSubscription.getStartDate(), baseSubscription.getEvents());
             }
 
             validateBasePlanRecreate(isBasePlanRecreate, subscriptions, input.getSubscriptions());
             validateInputSubscriptionsKnown(subscriptions, input.getSubscriptions());
 
-            TreeSet<NewEvent> newEventSet = new TreeSet<SubscriptionRepair.NewEvent>(new Comparator<NewEvent>() {
-                @Override
-                public int compare(NewEvent o1, NewEvent o2) {
-                    return o1.getRequestedDate().compareTo(o2.getRequestedDate());
-                }
-            });
-            for (SubscriptionRepair cur : input.getSubscriptions()) {
-                for (NewEvent e : cur.getNewEvents()) {
-                    newEventSet.add(new DefaultNewEvent(cur.getId(), e.getPlanPhaseSpecifier(), e.getRequestedDate(), e.getSubscriptionTransitionType()));    
-                }
-            }
 
-            Iterator<NewEvent> it = newEventSet.iterator();
+            Collection<NewEvent> newEvents = createOrderedNewEventInput(input.getSubscriptions());
+            Iterator<NewEvent> it = newEvents.iterator();
             while (it.hasNext()) {
                 DefaultNewEvent cur = (DefaultNewEvent) it.next();
                 SubscriptionDataRepair curDataRepair = findSubscriptionDataRepair(cur.getSubscriptionId(), inRepair);
@@ -237,14 +236,30 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
     throws EntitlementRepairException {
         if (lastBPRemainingTime != null &&
                 firstNewEvent.getRequestedDate().isBefore(lastBPRemainingTime)) {
-            throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NEW_AO_EVENT_BEFORE_BP, firstNewEvent.getPlanPhaseSpecifier().toString(), data.getId());
+            throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING, firstNewEvent.getPlanPhaseSpecifier().toString(), data.getId());
         }
         if (lastRemainingTime != null &&
                 firstNewEvent.getRequestedDate().isBefore(lastRemainingTime)) {
-            throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_INVALID_NEW_AO_EVENT, firstNewEvent.getPlanPhaseSpecifier().toString(), data.getId());
+            throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING, firstNewEvent.getPlanPhaseSpecifier().toString(), data.getId());
         }
 
     }
+    
+    private Collection<NewEvent> createOrderedNewEventInput(List<SubscriptionRepair> subscriptionsReapir) {
+        TreeSet<NewEvent> newEventSet = new TreeSet<SubscriptionRepair.NewEvent>(new Comparator<NewEvent>() {
+            @Override
+            public int compare(NewEvent o1, NewEvent o2) {
+                return o1.getRequestedDate().compareTo(o2.getRequestedDate());
+            }
+        });
+        for (SubscriptionRepair cur : subscriptionsReapir) {
+            for (NewEvent e : cur.getNewEvents()) {
+                newEventSet.add(new DefaultNewEvent(cur.getId(), e.getPlanPhaseSpecifier(), e.getRequestedDate(), e.getSubscriptionTransitionType()));    
+            }
+        }
+        return newEventSet;
+    }
+
 
     private List<EntitlementEvent> getRemainingEventsAndValidateDeletedEvents(final SubscriptionDataRepair data, final DateTime firstBPDeletedTime,
             final List<SubscriptionRepair.DeletedEvent> deletedEvents) 

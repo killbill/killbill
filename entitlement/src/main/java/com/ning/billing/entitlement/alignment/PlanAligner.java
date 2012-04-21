@@ -212,9 +212,11 @@ public class PlanAligner  {
         Catalog catalog = catalogService.getFullCatalog();
         ProductCategory currentCategory = currentPlan.getProduct().getCategory();
         // STEPH tiered ADDON not implemented yet
+        /*
         if (currentCategory != ProductCategory.BASE) {
             throw new EntitlementError(String.format("Only implemented changePlan for BasePlan"));
         }
+        */
 
         PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                 currentCategory,
