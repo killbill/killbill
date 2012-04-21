@@ -94,6 +94,9 @@ public class TestDefaultInvoiceMigrationApi {
 
 	@Inject
 	private InvoiceMigrationApi migrationApi;
+	
+	@Inject
+	private BillingApi billingApi;
 
 
 
@@ -129,8 +132,10 @@ public class TestDefaultInvoiceMigrationApi {
 
 		busService.getBus().start();
 
+        ((ZombieControl)billingApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
 		migrationInvoiceId = createAndCheckMigrationInvoice();
 		regularInvoiceId = generateRegularInvoice();
+
 	}
 
 	@AfterClass(groups={"slow"})

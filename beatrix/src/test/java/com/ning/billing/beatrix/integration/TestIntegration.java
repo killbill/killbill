@@ -110,21 +110,15 @@ public class TestIntegration {
     private BusService busService;
 
     @Inject
-    private EntitlementService entitlementService;
-
-    @Inject
-    private InvoiceService invoiceService;
-
-    @Inject
-    private AccountService accountService;
-
-    @Inject
     private MysqlTestingHelper helper;
 
+    @Inject
     private EntitlementUserApi entitlementUserApi;
 
+    @Inject
     private InvoiceUserApi invoiceUserApi;
 
+    @Inject
     private AccountUserApi accountUserApi;
 
     private TestBusHandler busHandler;
@@ -163,12 +157,6 @@ public class TestIntegration {
 
 
 
-        /**
-         * Retrieve APIs
-         */
-        entitlementUserApi = entitlementService.getUserApi();
-        invoiceUserApi = invoiceService.getUserApi();
-        accountUserApi = accountService.getAccountUserApi();
     }
 
     @AfterSuite(groups = "slow")

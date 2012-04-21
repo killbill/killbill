@@ -157,7 +157,12 @@ public class TestOverdueCheckNotifier {
         listener = new OverdueListenerMock();
         notifier = new DefaultOverdueCheckNotifier(notificationQueueService,
                  properties, listener);
+        
         startMysql();
+        eventBus.start();
+        notifier.initialize();
+        notifier.start();
+
 	}
 
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {
@@ -178,9 +183,6 @@ public class TestOverdueCheckNotifier {
 		final DateTime readyTime = now.plusMillis(2000);
 		final OverdueCheckPoster poster = new DefaultOverdueCheckPoster(notificationQueueService);
 
-		eventBus.start();
-		notifier.initialize();
-		notifier.start();
 
 
 		dao.inTransaction(new Transaction<Void, DummySqlTest>() {
@@ -207,9 +209,10 @@ public class TestOverdueCheckNotifier {
 
 		Assert.assertEquals(listener.getEventCount(), 1);
 		Assert.assertEquals(listener.getLatestSubscriptionId(), subscriptionId);
+        
 	}
 
-	@AfterClass(alwaysRun = true)
+	@AfterClass(groups="slow")
     public void tearDown() {
 	    eventBus.stop();
         notifier.stop();

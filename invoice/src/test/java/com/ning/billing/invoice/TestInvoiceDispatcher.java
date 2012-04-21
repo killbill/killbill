@@ -53,7 +53,6 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.junction.glue.JunctionModule;
 import com.ning.billing.junction.plumbing.billing.DefaultBillingEvent;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
@@ -86,8 +85,11 @@ public class TestInvoiceDispatcher {
 	@Inject
 	private NextBillingDateNotifier notifier;
 
-	@Inject
-	private BusService busService;
+    @Inject
+    private BusService busService;
+
+    @Inject
+    private BillingApi billingApi;
 
     @Inject
     private Clock clock;
@@ -112,6 +114,7 @@ public class TestInvoiceDispatcher {
         context = new DefaultCallContextFactory(clock).createCallContext("Miracle Max", CallOrigin.TEST, UserType.TEST);
 
 		busService.getBus().start();
+		((ZombieControl)billingApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
 	}
 
 	@AfterClass(alwaysRun = true)

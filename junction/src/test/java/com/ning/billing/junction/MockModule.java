@@ -57,8 +57,14 @@ public class MockModule extends JunctionModule {
        install(new CatalogModule());
     }
     
+    @Override
     protected void installBillingApi() {
         // no billinggApi
+    }
+
+    @Override
+    protected void installAccountUserApi() {
+        
     }
 
 }

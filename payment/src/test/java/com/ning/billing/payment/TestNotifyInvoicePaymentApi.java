@@ -20,10 +20,8 @@ import static org.testng.Assert.assertNotNull;
 
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.TestCallContext;
-import com.ning.billing.util.entity.EntityPersistenceException;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -31,18 +29,25 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TestCallContext;
+import com.ning.billing.util.entity.EntityPersistenceException;
 
 @Test
-@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
+@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class})
 public class TestNotifyInvoicePaymentApi {
     @Inject
     private Bus eventBus;
@@ -52,9 +57,16 @@ public class TestNotifyInvoicePaymentApi {
     private InvoicePaymentApi invoicePaymentApi;
     @Inject
     private TestHelper testHelper;
+    @Inject
+    private AccountUserApi accountApi;
 
     private CallContext context = new TestCallContext("Payment Api Tests");
 
+    @BeforeClass(alwaysRun = true)
+    public void setUpClass() {
+        ((ZombieControl)accountApi).addResult("getAccountById", BrainDeadProxyFactory.ZOMBIE_VOID);
+    }
+    
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws EventBusException {
         eventBus.start();

@@ -83,9 +83,6 @@ public class Engine implements EventListener, EntitlementService {
     private final Clock clock;
     private final EntitlementDao dao;
     private final PlanAligner planAligner;
-    private final EntitlementUserApi userApi;
-    private final ChargeThruApi billingApi;
-    private final EntitlementMigrationApi migrationApi;
     private final AddonUtils addonUtils;
     private final Bus eventBus;
 
@@ -97,9 +94,7 @@ public class Engine implements EventListener, EntitlementService {
 
     @Inject
     public Engine(Clock clock, EntitlementDao dao, PlanAligner planAligner,
-            EntitlementConfig config, DefaultEntitlementUserApi userApi,
-            DefaultChargeThruApi billingApi,
-            DefaultEntitlementMigrationApi migrationApi, AddonUtils addonUtils, Bus eventBus,
+            EntitlementConfig config, AddonUtils addonUtils, Bus eventBus,
             NotificationQueueService notificationQueueService,
             SubscriptionFactory subscriptionFactory,
             CallContextFactory factory) {
@@ -107,9 +102,6 @@ public class Engine implements EventListener, EntitlementService {
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
-        this.userApi = userApi;
-        this.billingApi = billingApi;
-        this.migrationApi = migrationApi;
         this.addonUtils = addonUtils;
         this.config = config;
         this.eventBus = eventBus;
@@ -181,24 +173,6 @@ public class Engine implements EventListener, EntitlementService {
             subscriptionEventQueue.stopQueue();
          }
     }
-
-    @Override
-    public EntitlementUserApi getUserApi() {
-        return userApi;
-    }
-
-    @Override
-    public ChargeThruApi getBillingApi() {
-        return billingApi;
-    }
-
-
-    @Override
-    public EntitlementMigrationApi getMigrationApi() {
-        return migrationApi;
-    }
-
-
     @Override
     public void processEventReady(final EntitlementEvent event, final int seqId, final CallContext context) {
         if (!event.isActive()) {

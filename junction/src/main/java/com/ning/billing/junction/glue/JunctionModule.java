@@ -16,35 +16,47 @@
 
 package com.ning.billing.junction.glue;
 
-import javax.inject.Singleton;
-
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.blocking.DefaultBlockingApi;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.dao.BlockingStateSqlDao;
+import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
 import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 
 public class JunctionModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(BlockingApi.class).to(DefaultBlockingApi.class);
-        bind(BlockingStateDao.class).toProvider(BlockingDaoProvider.class);
+        installBlockingApi();
+        installAccountUserApi();
+        installBlockingStateDao();
         installBillingApi();
     }
 
     protected void installBillingApi() {
         bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
     }
-
-    public static class BlockingDaoProvider implements Provider<BlockingStateDao>{
-        
+    
+    protected void installBlockingStateDao() {
+        bind(BlockingStateDao.class).toProvider(BlockingDaoProvider.class);
+    }
+    
+    protected void installAccountUserApi() {
+        bind(AccountUserApi.class).to(BlockingAccountUserApi.class).asEagerSingleton();
+    }
+    
+    protected void installBlockingApi() {
+        bind(BlockingApi.class).to(DefaultBlockingApi.class).asEagerSingleton();
+    }
+    
+    public static class BlockingDaoProvider implements Provider<BlockingStateDao>{        
         private IDBI dbi;
 
 

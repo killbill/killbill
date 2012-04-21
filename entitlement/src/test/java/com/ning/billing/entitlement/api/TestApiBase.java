@@ -69,6 +69,7 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.CallContext;
@@ -128,12 +129,15 @@ public abstract class TestApiBase {
     }
 
     @BeforeClass(alwaysRun = true)
-    public void setup() {
+    public void setup() throws Exception {
 
         loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = getInjector();
 
         entitlementService = g.getInstance(EntitlementService.class);
+        entitlementApi = g.getInstance(EntitlementUserApi.class);
+        billingApi = g.getInstance(ChargeThruApi.class);
+        migrationApi = g.getInstance(EntitlementMigrationApi.class);
         catalogService = g.getInstance(CatalogService.class);
         busService = g.getInstance(BusService.class);
         config = g.getInstance(EntitlementConfig.class);
@@ -141,13 +145,11 @@ public abstract class TestApiBase {
         clock = (ClockMock) g.getInstance(Clock.class);
         helper = (isSqlTest(dao)) ? g.getInstance(MysqlTestingHelper.class) : null;
 
-        try {
-            ((DefaultCatalogService) catalogService).loadCatalog();
-            ((DefaultBusService) busService).startBus();
-            ((Engine) entitlementService).initialize();
-            init();
-        } catch (Exception e) {
-        }
+
+        ((DefaultCatalogService) catalogService).loadCatalog();
+        ((DefaultBusService) busService).startBus();
+        ((Engine) entitlementService).initialize();
+        init();
     }
 
     private static boolean isSqlTest(EntitlementDao theDao) {
@@ -174,11 +176,7 @@ public abstract class TestApiBase {
         catalog = catalogService.getFullCatalog();
         assertNotNull(catalog);
 
-
         testListener = new ApiTestListener(busService.getBus());
-        entitlementApi = entitlementService.getUserApi();
-        billingApi = entitlementService.getBillingApi();
-        migrationApi = entitlementService.getMigrationApi();
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -193,26 +191,18 @@ public abstract class TestApiBase {
         clock.resetDeltaFromReality();
         ((MockEntitlementDao) dao).reset();
 
-        try {
-            busService.getBus().register(testListener);
-            UUID accountId = UUID.randomUUID();
-            bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle", context);
-        } catch (Exception e) {
-            Assert.fail(e.getMessage());
-        }
+        busService.getBus().register(testListener);
+        UUID accountId = UUID.randomUUID();
+        bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle", context);
         assertNotNull(bundle);
 
         ((Engine)entitlementService).start();
     }
 
     @AfterMethod(alwaysRun = true)
-    public void cleanupTest() {
-        try {
-            busService.getBus().unregister(testListener);
-            ((Engine)entitlementService).stop();
-        } catch (Exception e) {
-            Assert.fail(e.getMessage());
-        }
+    public void cleanupTest() throws Exception {
+        busService.getBus().unregister(testListener);
+        ((Engine)entitlementService).stop();
         log.warn("DONE WITH TEST\n");
     }
 

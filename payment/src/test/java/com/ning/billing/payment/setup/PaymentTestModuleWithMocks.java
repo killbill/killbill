@@ -20,6 +20,8 @@ import org.apache.commons.collections.MapUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Provider;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.config.PaymentConfig;
@@ -64,11 +66,9 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
     protected void configure() {
         super.configure();
         bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
-        bind(MockAccountDao.class).asEagerSingleton();
-        bind(AccountDao.class).to(MockAccountDao.class);
+
         bind(MockInvoiceDao.class).asEagerSingleton();
         bind(InvoiceDao.class).to(MockInvoiceDao.class);
-        bind(BillingApi.class).toProvider( MockProvider.class );
         bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
     }
 }
