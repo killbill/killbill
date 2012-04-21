@@ -155,6 +155,10 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
                     repairDao.initializeRepair(curInputRepair.getId(), remaining);
                     inRepair.add(curOutputRepair);
                     if (curOutputRepair.getCategory() == ProductCategory.ADD_ON) {
+                        // Check if ADD_ON RE_CREATE is before BP start
+                        if (isPlanRecreate && subscriptions.get(0).getStartDate().isAfter(curRepair.getNewEvents().get(0).getRequestedDate())) {
+                            throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_AO_CREATE_BEFORE_BP_START, cur.getId(), cur.getBundleId());                            
+                        }
                         addOnSubscriptionInRepair.add(curOutputRepair);
                     } else if (curOutputRepair.getCategory() == ProductCategory.BASE) {
                         baseSubscriptionRepair = curOutputRepair;

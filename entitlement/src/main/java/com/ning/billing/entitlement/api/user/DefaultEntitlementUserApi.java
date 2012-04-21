@@ -142,6 +142,9 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                 if (baseSubscription == null) {
                     throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_NO_BP, bundleId);
                 }
+                if (effectiveDate.isBefore(baseSubscription.getStartDate())) {
+                    throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
+                }
                 addonUtils.checkAddonCreationRights(baseSubscription, plan);
                 bundleStartDate = baseSubscription.getStartDate();
                 break;

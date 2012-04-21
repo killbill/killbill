@@ -43,6 +43,7 @@ import com.ning.billing.entitlement.api.repair.SubscriptionRepair.DeletedEvent;
 import com.ning.billing.entitlement.api.repair.SubscriptionRepair.NewEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 
 public class TestRepairWithError extends TestApiBaseRepair {
@@ -202,6 +203,51 @@ public class TestRepairWithError extends TestApiBaseRepair {
         }, ErrorCode.ENT_REPAIR_SUB_EMPTY);
     }
     
+    @Test(groups={"fast"})
+    public void testENT_REPAIR_AO_CREATE_BEFORE_BP_START() throws Exception {
+        test.withException(new TestWithExceptionCallback() {
+            @Override
+            public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
+               
+
+                // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
+                Duration someTimeLater = getDurationDay(3);
+                clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+
+                SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+
+                // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
+                clock.addDeltaFromReality(someTimeLater);
+
+                BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                sortEventsOnBundle(bundleRepair);
+                
+                // Quick check
+                SubscriptionRepair bpRepair = getSubscriptionRepair(baseSubscription.getId(), bundleRepair);
+                assertEquals(bpRepair.getExistingEvents().size(), 2);
+                
+                SubscriptionRepair aoRepair = getSubscriptionRepair(aoSubscription.getId(), bundleRepair);
+                assertEquals(aoRepair.getExistingEvents().size(), 2);
+                
+
+                List<DeletedEvent> des = new LinkedList<SubscriptionRepair.DeletedEvent>();
+                des.add(createDeletedEvent(aoRepair.getExistingEvents().get(0).getEventId()));        
+                des.add(createDeletedEvent(aoRepair.getExistingEvents().get(1).getEventId()));
+
+                DateTime aoRecreateDate = aoSubscription.getStartDate().minusDays(5);
+                PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.DISCOUNT);
+                NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, aoRecreateDate, spec);
+                
+                SubscriptionRepair saoRepair = createSubscriptionReapir(aoSubscription.getId(), des, Collections.singletonList(ne));
+                
+                BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
+                
+                boolean dryRun = true;
+                repairApi.repairBundle(bRepair, dryRun, context);
+            }
+        }, ErrorCode.ENT_REPAIR_AO_CREATE_BEFORE_BP_START);
+    }
+    
     @Test(groups={"fast"}, enabled=false)
     public void testENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING() throws Exception {
         test.withException(new TestWithExceptionCallback() {
@@ -222,7 +268,6 @@ public class TestRepairWithError extends TestApiBaseRepair {
         }, ErrorCode.ENT_REPAIR_MISSING_AO_DELETE_EVENT);
     }
 
-  
     @Test(groups={"fast"}, enabled=false)
     public void testENT_REPAIR_BP_RECREATE_MISSING_AO() throws Exception {
         test.withException(new TestWithExceptionCallback() {

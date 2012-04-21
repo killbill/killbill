@@ -519,7 +519,7 @@ public class TestRepairBP extends TestApiBaseRepair {
     
     // Needs real SQL backend to be tested properly
     @Test(groups={"slow"})
-    public void testENT_REPAIR_VIEW_CHANGED() throws Exception {
+    public void testENT_REPAIR_VIEW_CHANGED_newEvent() throws Exception {
        
         TestWithException test = new TestWithException();
         DateTime startDate = clock.getUTCNow();
@@ -555,7 +555,43 @@ public class TestRepairBP extends TestApiBaseRepair {
         }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
     }
 
+    @Test(groups={"slow"}, enabled=false)
+    public void testENT_REPAIR_VIEW_CHANGED_ctd() throws Exception {
+       
+        TestWithException test = new TestWithException();
+        DateTime startDate = clock.getUTCNow();
+        
+        testListener.reset();
+        clock.resetDeltaFromReality();
+
+        final Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        
+        test.withException(new TestWithExceptionCallback() {
+            @Override
+            public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
+
+                /*
+                BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                sortEventsOnBundle(bundleRepair);
+                PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
+                NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
+                List<DeletedEvent> des = new LinkedList<SubscriptionRepair.DeletedEvent>();
+                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));                
+                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));                                
+                SubscriptionRepair sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+
+                BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
 
+                testListener.pushExpectedEvent(NextEvent.CHANGE);
+                DateTime changeTime = clock.getUTCNow();
+                baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, context);
+                assertTrue(testListener.isCompleted(5000));
+
+                repairApi.repairBundle(bRepair, true, context);
+                */
+            }
+        }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
+    }
 
 }

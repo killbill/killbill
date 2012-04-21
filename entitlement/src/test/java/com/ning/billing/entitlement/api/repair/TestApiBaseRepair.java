@@ -125,6 +125,15 @@ public abstract class TestApiBaseRepair extends TestApiBase {
         return ev;
     }
     
+    protected SubscriptionRepair getSubscriptionRepair(final UUID id, final BundleRepair bundleRepair) {
+        for (SubscriptionRepair cur : bundleRepair.getSubscriptions()) {
+            if (cur.getId().equals(id)) {
+                return cur;
+            }
+        }
+        Assert.fail("Failed to find SubscriptionReapir " + id);
+        return null;
+    }
     protected void validateExistingEventForAssertion(final ExistingEvent expected, final ExistingEvent input) {
         assertEquals(input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName());
         assertEquals(input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType());

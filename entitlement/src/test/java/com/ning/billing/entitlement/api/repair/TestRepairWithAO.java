@@ -52,13 +52,28 @@ import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 
 public class TestRepairWithAO extends TestApiBaseRepair {
 
-    
-
     @Override
     public Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
+    @Test(groups={"slow"})
+    public void testRepairChangeBPWithAddonIncluded() throws Exception {
+        
+    }
+
+    @Test(groups={"slow"})
+    public void testRepairChangeBPWithAddonNonAvailable() throws Exception {
+        
+    }
+
+    @Test(groups={"slow"})
+    public void testRepairCancelBPWithAddons() throws Exception {
+        
+    }
+
+    
+    
     @Test(groups={"slow"})
     public void testRepairCancelAO() throws Exception {
         String baseProduct = "Shotgun";
@@ -104,6 +119,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), dryRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
         
+        bpRepair = getSubscriptionRepair(baseSubscription.getId(), bundleRepair);
+        assertEquals(bpRepair.getExistingEvents().size(), 2);        
         
         List<ExistingEvent> expected = new LinkedList<SubscriptionRepair.ExistingEvent>();
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, "Telescopic-Scope", PhaseType.DISCOUNT,
@@ -117,6 +134,12 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData newAoSubscription = (SubscriptionData)  entitlementApi.getSubscriptionFromId(aoSubscription.getId());
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
+        assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
+                
+        SubscriptionData newBaseSubscription = (SubscriptionData)  entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
+        assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
+        assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         
         dryRun = false;
         BundleRepair realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
@@ -131,6 +154,12 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         newAoSubscription = (SubscriptionData)  entitlementApi.getSubscriptionFromId(aoSubscription.getId());
         assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
+        assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);        
+                
+        newBaseSubscription = (SubscriptionData)  entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
+        assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
+        assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
     }
     
     
@@ -326,16 +355,5 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         currentPhase = newAoSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
-    }
-    
-    
-    private SubscriptionRepair getSubscriptionRepair(final UUID id, final BundleRepair bundleRepair) {
-        for (SubscriptionRepair cur : bundleRepair.getSubscriptions()) {
-            if (cur.getId().equals(id)) {
-                return cur;
-            }
-        }
-        Assert.fail("Failed to find SubscriptionReapir " + id);
-        return null;
     }
 }
