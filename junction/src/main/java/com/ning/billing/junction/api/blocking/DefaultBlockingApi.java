@@ -39,7 +39,12 @@ public class DefaultBlockingApi implements BlockingApi {
     
     @Override
     public BlockingState getBlockingStateFor(Blockable overdueable) {
-        return dao.getBlockingStateFor(overdueable);
+        BlockingState state = dao.getBlockingStateFor(overdueable);
+        if(state == null) {
+            state = DefaultBlockingState.getClearState();
+        }
+        return state;
+        
     }
 
     @Override

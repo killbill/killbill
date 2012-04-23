@@ -24,14 +24,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.NotificationConfig;
-import com.ning.billing.ovedue.OverdueProperties;
+import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
-public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier {
+public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier { 
 
     private final static Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
 

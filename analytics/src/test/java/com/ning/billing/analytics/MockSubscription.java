@@ -31,6 +31,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
@@ -250,4 +251,10 @@ public class MockSubscription implements Subscription
     public List<SubscriptionEventTransition> getBillingTransitions() {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public BlockingState getBlockingState() {
+        throw new UnsupportedOperationException();
+    }
+
 }

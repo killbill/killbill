@@ -51,15 +51,17 @@ public class DefaultBillingApi implements BillingApi {
     private final AccountUserApi accountApi;
     private final BillCycleDayCalculator bcdCalculator;
     private final EntitlementUserApi entitlementUserApi;
+    private final BlockingCalculator blockCalculator;
 
     @Inject
     public DefaultBillingApi(ChargeThruApi chargeThruApi, CallContextFactory factory, AccountUserApi accountApi, 
-            BillCycleDayCalculator bcdCalculator, EntitlementUserApi entitlementUserApi) {
+            BillCycleDayCalculator bcdCalculator, EntitlementUserApi entitlementUserApi, BlockingCalculator blockCalculator) {
         this.chargeThruApi = chargeThruApi;
         this.accountApi = accountApi;
         this.bcdCalculator = bcdCalculator;
         this.factory = factory;
         this.entitlementUserApi = entitlementUserApi;
+        this.blockCalculator = blockCalculator;
     }
 
     @Override
@@ -94,6 +96,8 @@ public class DefaultBillingApi implements BillingApi {
                 }
             }
         }
+        
+        blockCalculator.insertBlockingEvents(result);
               
         return result;
     }

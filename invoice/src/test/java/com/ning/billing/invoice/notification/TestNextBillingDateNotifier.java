@@ -63,6 +63,7 @@ import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.CallContextFactory;
@@ -141,10 +142,9 @@ public class TestNextBillingDateNotifier {
                 bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
                 bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
                 bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-                bind(AccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
-                bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
                 bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
                 bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
+                install(new MockJunctionModule());
             }
         });
 

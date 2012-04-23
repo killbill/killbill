@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
 
 public class SubscriptionBundleData implements SubscriptionBundle {
@@ -68,5 +69,10 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     @Override
     public OverdueState<SubscriptionBundle> getOverdueState() {
         return overdueState;
+    }
+
+    @Override
+    public BlockingState getBlockingState() {
+        throw new UnsupportedOperationException();
     }
 }

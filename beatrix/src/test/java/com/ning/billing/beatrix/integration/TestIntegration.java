@@ -27,18 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.InvoicingConfiguration;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
@@ -50,10 +38,8 @@ import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
-
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Guice;
@@ -61,25 +47,32 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.beatrix.integration.TestBusHandler.NextEvent;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.EntitlementService;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.invoice.api.InvoiceService;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-
-import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.ClockMock;
 
 @Test(groups = "slow")
 @Guice(modules = {MockModule.class})
@@ -130,6 +123,7 @@ public class TestIntegration {
         final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
         final String utilDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        final String blockingDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));
 
         helper.startMysql();
 
@@ -138,6 +132,7 @@ public class TestIntegration {
         helper.initDb(invoiceDdl);
         helper.initDb(paymentDdl);
         helper.initDb(utilDdl);
+        helper.initDb(blockingDdl);
     }
 
     @BeforeSuite(groups = "slow")

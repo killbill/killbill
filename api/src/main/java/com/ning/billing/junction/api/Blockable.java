@@ -55,4 +55,6 @@ public interface Blockable {
     }
 
     public UUID getId();
+    
+    public BlockingState getBlockingState();
 }

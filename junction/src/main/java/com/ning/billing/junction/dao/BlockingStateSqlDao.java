@@ -39,6 +39,7 @@ import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.blocking.DefaultBlockingState;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.BinderBase;
@@ -101,7 +102,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
             } catch (BlockingApiException e) {
                 throw new SQLException(e);
             }
-            return new BlockingState(blockableId, stateName, type, service, blockChange, blockEntitlement, blockBilling, timestamp);
+            return new DefaultBlockingState(blockableId, stateName, type, service, blockChange, blockEntitlement, blockBilling, timestamp);
         }    
     }
     
@@ -114,9 +115,9 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
         }
     }
     
-    public static class BlockingStateBinder extends BinderBase implements Binder<Bind, BlockingState> {
+    public static class BlockingStateBinder extends BinderBase implements Binder<Bind, DefaultBlockingState> {
         @Override
-        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, BlockingState state) {
+        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, DefaultBlockingState state) {
             stmt.bind("id", state.getBlockedId().toString()); 
             stmt.bind("state", state.getStateName().toString());
             stmt.bind("type", state.getType().toString());

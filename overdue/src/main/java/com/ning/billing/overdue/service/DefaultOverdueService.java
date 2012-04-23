@@ -21,7 +21,7 @@ import java.net.URI;
 import com.google.inject.Inject;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.ovedue.OverdueProperties;
+import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.config.XMLLoader;

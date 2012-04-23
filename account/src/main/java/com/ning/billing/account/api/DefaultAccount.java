@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.junction.api.BlockingState;
 
 import javax.annotation.Nullable;
 
@@ -279,7 +280,12 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 				", postalCode=" + postalCode +
 				", country=" + country +
 				", tags=" + tags +
-                ", fields=" + fields +
-                "]";
+				", fields=" + fields +
+				"]";
+	}
+
+	@Override
+	public BlockingState getBlockingState() {
+	    throw new UnsupportedOperationException();
 	}
 }

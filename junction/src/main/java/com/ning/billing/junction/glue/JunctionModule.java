@@ -28,17 +28,22 @@ import com.ning.billing.junction.api.blocking.DefaultBlockingApi;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.dao.BlockingStateSqlDao;
 import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
+import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 
 public class JunctionModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        // External
         installBlockingApi();
         installAccountUserApi();
-        installBlockingStateDao();
         installBillingApi();
-    }
+        
+        // Internal
+        installBlockingCalculator();
+        installBlockingStateDao();
+     }
 
     protected void installBillingApi() {
         bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
@@ -56,6 +61,10 @@ public class JunctionModule extends AbstractModule {
         bind(BlockingApi.class).to(DefaultBlockingApi.class).asEagerSingleton();
     }
     
+    protected void installBlockingCalculator() {
+        bind(BlockingCalculator.class).asEagerSingleton();
+    }
+
     public static class BlockingDaoProvider implements Provider<BlockingStateDao>{        
         private IDBI dbi;
 

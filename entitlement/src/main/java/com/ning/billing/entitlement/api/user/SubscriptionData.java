@@ -37,8 +37,8 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Kind;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.Order;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionDataIterator.TimeLimit;
@@ -48,6 +48,7 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
@@ -446,6 +447,11 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
             previousPhase = nextPhase;
             previousPriceList = nextPriceList;
         }
+    }
+
+    @Override
+    public BlockingState getBlockingState() {
+        throw new UnsupportedOperationException();
     }
 
 }

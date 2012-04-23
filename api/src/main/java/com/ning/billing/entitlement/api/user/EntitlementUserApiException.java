@@ -31,6 +31,10 @@ public class EntitlementUserApiException extends BillingExceptionBase {
         super(e, code, args);
     }
 
+    public EntitlementUserApiException(Throwable e, int code, String message) {
+        super(e, code, message);
+    }
+
     public EntitlementUserApiException(ErrorCode code, Object...args) {
         super(code, args);
     }

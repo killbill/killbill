@@ -91,12 +91,12 @@ public class TestBlockingApi {
         boolean blockEntitlement = false;
         boolean blockBilling = false;
 
-        BlockingState state1 = new BlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+        BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
         api.setBlockingState(state1);
         clock.setDeltaFromReality(1000 * 3600 * 24);
         
         String overdueStateName2 = "NoReallyThisCantGoOn";
-        BlockingState state2 = new BlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+        BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
         api.setBlockingState(state2);
         
         SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
@@ -117,13 +117,13 @@ public class TestBlockingApi {
         boolean blockEntitlement = false;
         boolean blockBilling = false;
 
-        BlockingState state1 = new BlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+        BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
         api.setBlockingState(state1);
         
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         String overdueStateName2 = "NoReallyThisCantGoOn";
-        BlockingState state2 = new BlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+        BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
         api.setBlockingState(state2);
         
         SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);

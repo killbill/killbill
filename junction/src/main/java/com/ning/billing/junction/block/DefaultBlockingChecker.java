@@ -72,7 +72,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
 
     private final EntitlementUserApi entitlementApi;
     private final BlockingStateDao dao;
-
+    
     @Inject
     public DefaultBlockingChecker(EntitlementUserApi entitlementApi, BlockingStateDao dao) {
         this.entitlementApi = entitlementApi;
@@ -87,12 +87,11 @@ public class DefaultBlockingChecker implements BlockingChecker {
     public BlockingAggregator getBlockedStateSubscription(Subscription subscription)  {
         BlockingAggregator result = new BlockingAggregator();
         if(subscription != null) {
-            BlockingState subscriptionState = dao.getBlockingStateFor(subscription);
+            BlockingState subscriptionState = subscription.getBlockingState();
             if(subscriptionState != null) {
                 result.or(subscriptionState);
             }
             if(subscription.getBundleId() != null) {
-                SubscriptionBundle bundle = entitlementApi.getBundleFromId(subscription.getBundleId());
                 result.or(getBlockedStateBundleId(subscription.getBundleId()));
             } 
         }
@@ -105,15 +104,15 @@ public class DefaultBlockingChecker implements BlockingChecker {
      }
      
     public BlockingAggregator getBlockedStateBundle(SubscriptionBundle bundle)  {
-        BlockingAggregator result = getBlockedStateAccount(bundle.getAccountId());
-        BlockingState bundleState = dao.getBlockingStateFor(bundle);
+        BlockingAggregator result = getBlockedStateAccountId(bundle.getAccountId());
+        BlockingState bundleState = bundle.getBlockingState();
         if(bundleState != null) {
             result.or(bundleState);
         }
         return result;
     }
 
-    public BlockingAggregator getBlockedStateAccount(UUID accountId)  {
+    public BlockingAggregator getBlockedStateAccountId(UUID accountId)  {
         BlockingAggregator result = new BlockingAggregator();
         if(accountId != null) {
             BlockingState accountState = dao.getBlockingStateFor(accountId, Blockable.Type.ACCOUNT);
@@ -124,72 +123,77 @@ public class DefaultBlockingChecker implements BlockingChecker {
 
     public BlockingAggregator getBlockedStateAccount(Account account)  {
         if(account != null) {
-            return getBlockedStateAccount(account.getId());
+            return getBlockedStateAccountId(account.getId());
         }
         return new BlockingAggregator();
     }
     @Override
-    public void checkBlockedChange(Subscription subscription) throws BlockingApiException {
-        if(getBlockedStateSubscription(subscription).isBlockChange()) {
-            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_CHANGE, TYPE_SUBSCRIPTION, subscription.getId().toString());
+    public void checkBlockedChange(Blockable blockable) throws BlockingApiException  {
+        if(blockable instanceof Subscription && getBlockedStateSubscription((Subscription) blockable).isBlockChange()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_CHANGE, TYPE_SUBSCRIPTION, blockable.getId().toString());
+        } else if(blockable instanceof SubscriptionBundle &&  getBlockedStateBundle((SubscriptionBundle) blockable).isBlockChange()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_CHANGE, TYPE_BUNDLE, blockable.getId().toString());
+        } else if(blockable instanceof Account && getBlockedStateAccount((Account) blockable).isBlockChange()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_CHANGE, TYPE_ACCOUNT, blockable.getId().toString());
         }
     }
 
     @Override
-    public void checkBlockedChange(SubscriptionBundle bundle) throws BlockingApiException {
-        if(getBlockedStateBundle(bundle).isBlockChange()) {
-            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_CHANGE, TYPE_BUNDLE, bundle.getId().toString());
+    public void checkBlockedEntitlement(Blockable blockable) throws BlockingApiException  {
+        if(blockable instanceof Subscription && getBlockedStateSubscription((Subscription) blockable).isBlockEntitlement()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_ENTITLEMENT, TYPE_SUBSCRIPTION, blockable.getId().toString());
+        } else if(blockable instanceof SubscriptionBundle &&  getBlockedStateBundle((SubscriptionBundle) blockable).isBlockEntitlement()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_ENTITLEMENT, TYPE_BUNDLE, blockable.getId().toString());
+        } else if(blockable instanceof Account && getBlockedStateAccount((Account) blockable).isBlockEntitlement()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_ENTITLEMENT, TYPE_ACCOUNT, blockable.getId().toString());
         }
     }
 
     @Override
-    public void checkBlockedChange(Account account) throws BlockingApiException {
-        if(getBlockedStateAccount(account).isBlockChange()) {
-            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_CHANGE, TYPE_ACCOUNT, account.getId().toString());
+    public void checkBlockedBilling(Blockable blockable) throws BlockingApiException  {
+        if(blockable instanceof Subscription && getBlockedStateSubscription((Subscription) blockable).isBlockBilling()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_BILLING, TYPE_SUBSCRIPTION, blockable.getId().toString());
+        } else if(blockable instanceof SubscriptionBundle &&  getBlockedStateBundle((SubscriptionBundle) blockable).isBlockBilling()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_BILLING, TYPE_BUNDLE, blockable.getId().toString());
+        } else if(blockable instanceof Account && getBlockedStateAccount((Account) blockable).isBlockBilling()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_BILLING, TYPE_ACCOUNT, blockable.getId().toString());
         }
     }
 
     @Override
-    public void checkBlockedEntitlement(Subscription subscription) throws BlockingApiException {
-        if(getBlockedStateSubscription(subscription).isBlockEntitlement()) {
-            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_ENTITLEMENT, TYPE_SUBSCRIPTION, subscription.getId().toString());
+    public void checkBlockedChange(UUID blockableId, Blockable.Type type) throws BlockingApiException  {
+        if(type == Blockable.Type.SUBSCRIPTION && getBlockedStateSubscriptionId(blockableId).isBlockChange()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_CHANGE, TYPE_SUBSCRIPTION, blockableId.toString());
+        } else if(type == Blockable.Type.SUBSCRIPTION_BUNDLE  &&  getBlockedStateBundleId(blockableId).isBlockChange()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_CHANGE, TYPE_BUNDLE, blockableId.toString());
+        } else if(type == Blockable.Type.ACCOUNT  && getBlockedStateAccountId(blockableId).isBlockChange()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_CHANGE, TYPE_ACCOUNT, blockableId.toString());
         }
     }
 
     @Override
-    public void checkBlockedEntitlement(SubscriptionBundle bundle) throws BlockingApiException {
-        if(getBlockedStateBundle(bundle).isBlockEntitlement()) {
-            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_ENTITLEMENT, TYPE_BUNDLE, bundle.getId().toString());
+    public void checkBlockedEntitlement(UUID blockableId, Blockable.Type type) throws BlockingApiException  {
+        if(type == Blockable.Type.SUBSCRIPTION && getBlockedStateSubscriptionId(blockableId).isBlockEntitlement()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_ENTITLEMENT, TYPE_SUBSCRIPTION, blockableId.toString());
+        } else if(type == Blockable.Type.SUBSCRIPTION_BUNDLE  &&  getBlockedStateBundleId(blockableId).isBlockEntitlement()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_ENTITLEMENT, TYPE_BUNDLE, blockableId.toString());
+        } else if(type == Blockable.Type.ACCOUNT  && getBlockedStateAccountId(blockableId).isBlockEntitlement()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_ENTITLEMENT, TYPE_ACCOUNT, blockableId.toString());
         }
     }
 
     @Override
-    public void checkBlockedEntitlement(Account account) throws BlockingApiException {
-        if(getBlockedStateAccount(account).isBlockEntitlement()) {
-            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_ENTITLEMENT, TYPE_ACCOUNT, account.getId().toString());
+    public void checkBlockedBilling(UUID blockableId, Blockable.Type type) throws BlockingApiException  {
+        if(type == Blockable.Type.SUBSCRIPTION && getBlockedStateSubscriptionId(blockableId).isBlockBilling()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_BILLING, TYPE_SUBSCRIPTION, blockableId.toString());
+        } else if(type == Blockable.Type.SUBSCRIPTION_BUNDLE  &&  getBlockedStateBundleId(blockableId).isBlockBilling()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_BILLING, TYPE_BUNDLE, blockableId.toString());
+        } else if(type == Blockable.Type.ACCOUNT  && getBlockedStateAccountId(blockableId).isBlockBilling()) {
+            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_BILLING, TYPE_ACCOUNT, blockableId.toString());
         }
     }
 
-    @Override
-    public void checkBlockedBilling(Subscription subscription) throws BlockingApiException {
-        if(getBlockedStateSubscription(subscription).isBlockBilling()) {
-            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_BILLING, TYPE_SUBSCRIPTION, subscription.getId().toString());
-        }
-    }
 
-    @Override
-    public void checkBlockedBilling(SubscriptionBundle bundle) throws BlockingApiException {
-        if(getBlockedStateBundle(bundle).isBlockBilling()) {
-            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_BILLING, TYPE_BUNDLE, bundle.getId().toString());
-        }
-    }
-
-    @Override
-    public void checkBlockedBilling(Account account) throws BlockingApiException {
-        if(getBlockedStateAccount(account).isBlockBilling()) {
-            throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION,ACTION_BILLING, TYPE_ACCOUNT, account.getId().toString());
-        }
-    }
 
     
 }
