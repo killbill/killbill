@@ -14,11 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.util.email;
 
 import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.account.api.Account;
+import com.ning.billing.ErrorCode;
 
-public interface InvoiceNotifier {
-    public void notify(Account account, Invoice invoice) throws BillingExceptionBase;
+public class EmailApiException extends BillingExceptionBase {
+    private static final long serialVersionUID = 1L;
+
+    public EmailApiException(Throwable cause, int code, final String msg) {
+        super(cause, code, msg);
+    }
+
+    public EmailApiException(Throwable cause, ErrorCode code, final Object... args) {
+        super(cause, code, args);
+    }
+
+    public EmailApiException(ErrorCode code, final Object... args) {
+        super(code, args);
+    }
 }

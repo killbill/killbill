@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.util.email.formatters;
 
-import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.account.api.Account;
+import com.ning.billing.invoice.api.Invoice;
 
-public interface InvoiceNotifier {
-    public void notify(Account account, Invoice invoice) throws BillingExceptionBase;
+public interface InvoiceFormatter extends Invoice {
+    public String getFormattedInvoiceDate();
 }

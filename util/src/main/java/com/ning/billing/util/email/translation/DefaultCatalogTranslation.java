@@ -14,11 +14,24 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.util.email.translation;
 
-import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.account.api.Account;
+import com.google.inject.Inject;
+import com.ning.billing.util.email.EmailConfig;
 
-public interface InvoiceNotifier {
-    public void notify(Account account, Invoice invoice) throws BillingExceptionBase;
+public class DefaultCatalogTranslation extends DefaultTranslationBase {
+    @Inject
+    public DefaultCatalogTranslation(EmailConfig config) {
+        super(config);
+    }
+
+    @Override
+    protected String getBundlePath() {
+        return "com/ning/billing/util/email/translation/CatalogTranslation";
+    }
+
+    @Override
+    protected String getTranslationType() {
+        return "catalog";
+    }
 }

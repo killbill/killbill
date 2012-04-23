@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.util.email;
 
-import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.account.api.Account;
+import java.io.IOException;
+import java.util.List;
 
-public interface InvoiceNotifier {
-    public void notify(Account account, Invoice invoice) throws BillingExceptionBase;
+public interface EmailSender {
+    public void sendSecureEmail(List<String> to, List<String> cc, String subject, String htmlBody) throws IOException, EmailApiException;
 }

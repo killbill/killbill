@@ -57,7 +57,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-@Test(groups = {"invoicing", "invoicing-invoiceDao"})
+@Test(groups = {"slow", "invoicing", "invoicing-invoiceDao"})
 public class InvoiceDaoTests extends InvoiceDaoTestBase {
     @Test
     public void testCreationAndRetrievalByAccount() {
@@ -406,8 +406,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         MockPlanPhase phase1 = new MockPlanPhase(recurringPrice, null, BillingPeriod.MONTHLY, PhaseType.TRIAL);
         MockPlan plan1 = new MockPlan(phase1);
 
-        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        Subscription subscription = getZombieSubscription();
 
         DateTime effectiveDate1 = new DateTime(2011, 2, 1, 0, 0, 0, 0);
         BillingEvent event1 = new DefaultBillingEvent(null, subscription, effectiveDate1, plan1, phase1, null,
@@ -457,8 +456,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         MockPlanPhase phase = new MockPlanPhase(recurringPrice, null);
         MockPlan plan = new MockPlan(phase);
 
-        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        Subscription subscription = getZombieSubscription();
         DateTime effectiveDate = buildDateTime(2011, 1, 1);
 
         BillingEvent event = new DefaultBillingEvent(null, subscription, effectiveDate, plan, phase, null,
@@ -473,6 +471,13 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         // expect one pro-ration item and one full-period item
         assertEquals(invoice.getNumberOfItems(), 2);
         assertEquals(invoice.getTotalAmount().compareTo(ZERO), 0);
+    }
+
+    private Subscription getZombieSubscription() {
+        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        ((ZombieControl) subscription).addResult("getBundleId", UUID.randomUUID());
+        return subscription;
     }
 
     @Test
@@ -490,8 +495,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         MockPlan plan = new MockPlan();
 
-        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        Subscription subscription = getZombieSubscription();
         DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
 
         BillingEvent event1 = new DefaultBillingEvent(null, subscription, effectiveDate1, plan, phase1, fixedPrice.getPrice(currency),
@@ -550,8 +554,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         MockPlan plan = new MockPlan();
 
-        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        Subscription subscription = getZombieSubscription();
         DateTime effectiveDate1 = buildDateTime(2011, 1, 1);
 
         BillingEvent event1 = new DefaultBillingEvent(null, subscription, effectiveDate1, plan, phase1,
@@ -586,8 +589,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         DateTime targetDate1 = DateTime.now().plusMonths(1);
         DateTime targetDate2 = DateTime.now().plusMonths(2);
 
-        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        Subscription subscription = getZombieSubscription();
 
         Plan plan = BrainDeadProxyFactory.createBrainDeadProxyFor(Plan.class);
         ((ZombieControl) plan).addResult("getName", "plan");
@@ -626,8 +628,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
     @Test
     public void testAddingWrittenOffTag() throws InvoiceApiException {
-        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        Subscription subscription = getZombieSubscription();
 
         Plan plan = BrainDeadProxyFactory.createBrainDeadProxyFor(Plan.class);
         ((ZombieControl) plan).addResult("getName", "plan");
@@ -657,8 +658,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
     @Test
     public void testRemoveWrittenOffTag() throws InvoiceApiException {
-        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        Subscription subscription = getZombieSubscription();
 
         Plan plan = BrainDeadProxyFactory.createBrainDeadProxyFor(Plan.class);
         ((ZombieControl) plan).addResult("getName", "plan");

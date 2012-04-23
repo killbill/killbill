@@ -23,6 +23,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
@@ -169,6 +171,7 @@ public class TestDefaultInvoiceMigrationApi {
 		((ZombieControl)accountUserApi).addResult("getAccountById", account);
 		((ZombieControl)account).addResult("getCurrency", Currency.USD);
 		((ZombieControl)account).addResult("getId", accountId);
+        ((ZombieControl)account).addResult("isNotifiedForInvoices", true);
 
 		Subscription subscription =  BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
         ((ZombieControl)subscription).addResult("getId", subscriptionId);
@@ -185,7 +188,10 @@ public class TestDefaultInvoiceMigrationApi {
 
 		EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
         ((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
-		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker, busService.getBus(), clock);
+
+        InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
+		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi,
+                                                             invoiceDao, invoiceNotifier, locker, busService.getBus(), clock);
 
         CallContext context = new DefaultCallContextFactory(clock).createCallContext("Migration test", CallOrigin.TEST, UserType.TEST);
 		Invoice invoice = dispatcher.processAccount(accountId, date_regular, true, context);

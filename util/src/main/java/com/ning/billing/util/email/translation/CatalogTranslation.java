@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.util.email.translation;
 
-import com.ning.billing.BillingExceptionBase;
-import com.ning.billing.account.api.Account;
+import java.util.Locale;
 
-public interface InvoiceNotifier {
-    public void notify(Account account, Invoice invoice) throws BillingExceptionBase;
+public interface CatalogTranslation {
+    public String getTranslation(Locale locale, String originalText);
 }

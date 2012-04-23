@@ -16,6 +16,9 @@
 
 package com.ning.billing.invoice.glue;
 
+import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.notification.EmailInvoiceNotifier;
+import com.ning.billing.util.email.EmailConfig;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
@@ -39,7 +42,6 @@ import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.glue.GlobalLockerModule;
 
-
 public class InvoiceModule extends AbstractModule {
     protected void installInvoiceDao() {
         bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
@@ -56,6 +58,9 @@ public class InvoiceModule extends AbstractModule {
     protected void installConfig() {
         final InvoiceConfig config = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
         bind(InvoiceConfig.class).toInstance(config);
+
+        final EmailConfig emailConfig = new ConfigurationObjectFactory(System.getProperties()).build(EmailConfig.class);
+        bind(EmailConfig.class).toInstance(emailConfig);
     }
 
     protected void installInvoiceService() {
@@ -66,9 +71,10 @@ public class InvoiceModule extends AbstractModule {
     	bind(InvoiceMigrationApi.class).to(DefaultInvoiceMigrationApi.class).asEagerSingleton();
 	}
 
-    protected void installNotifier() {
+    protected void installNotifiers() {
         bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
+        bind(InvoiceNotifier.class).to(EmailInvoiceNotifier.class).asEagerSingleton();
     }
 
     protected void installGlobalLocker() {
@@ -82,11 +88,11 @@ public class InvoiceModule extends AbstractModule {
     @Override
     protected void configure() {
         installInvoiceService();
-        installNotifier();
+        installConfig();
+        installNotifiers();
 
         installInvoiceListener();
         bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
-        installConfig();
         installInvoiceDao();
         installInvoiceUserApi();
         installInvoicePaymentApi();

@@ -14,11 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.invoice.notification;
 
-import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 
-public interface InvoiceNotifier {
-    public void notify(Account account, Invoice invoice) throws BillingExceptionBase;
+public class NullInvoiceNotifier implements InvoiceNotifier {
+    @Override
+    public void notify(Account account, Invoice invoice) {
+        // deliberate no-op
+    }
 }

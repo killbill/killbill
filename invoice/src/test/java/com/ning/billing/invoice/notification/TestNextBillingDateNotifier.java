@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
@@ -125,6 +126,7 @@ public class TestNextBillingDateNotifier {
                 bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
                 bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
                 bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
+                bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
                 final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
                 bind(InvoiceConfig.class).toInstance(invoiceConfig);
                 final CatalogConfig catalogConfig = new ConfigurationObjectFactory(System.getProperties()).build(CatalogConfig.class);

@@ -21,6 +21,8 @@ import static org.testng.Assert.assertNotNull;
 import java.io.IOException;
 import java.net.URL;
 
+import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.account.api.AccountUserApi;
@@ -80,9 +82,10 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
     }
 
     @Override
-    protected void installNotifier() {
+    protected void installNotifiers() {
         bind(NextBillingDateNotifier.class).to(MockNextBillingDateNotifier.class).asEagerSingleton();
         bind(NextBillingDatePoster.class).to(MockNextBillingDatePoster.class).asEagerSingleton();
+        bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
     }
 
     @Override

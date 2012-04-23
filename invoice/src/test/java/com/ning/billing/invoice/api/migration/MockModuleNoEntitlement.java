@@ -19,11 +19,13 @@ package com.ning.billing.invoice.api.migration;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.invoice.MockModule;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.DefaultNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
@@ -44,11 +46,12 @@ public class MockModuleNoEntitlement extends MockModule {
 		install(new InvoiceModule(){
 
 			@Override
-			protected void installNotifier() {
+			protected void installNotifiers() {
 				 bind(NextBillingDateNotifier.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(NextBillingDateNotifier.class));
 				 NextBillingDatePoster poster = BrainDeadProxyFactory.createBrainDeadProxyFor(NextBillingDatePoster.class);
 				 ((ZombieControl)poster).addResult("insertNextBillingNotification",BrainDeadProxyFactory.ZOMBIE_VOID);
 			     bind(NextBillingDatePoster.class).toInstance(poster);
+                bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
 			}
 			
 			

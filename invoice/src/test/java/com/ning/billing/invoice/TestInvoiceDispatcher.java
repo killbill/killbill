@@ -23,6 +23,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -135,6 +137,7 @@ public class TestInvoiceDispatcher {
 		((ZombieControl)accountUserApi).addResult("getAccountById", account);
 		((ZombieControl)account).addResult("getCurrency", Currency.USD);
 		((ZombieControl)account).addResult("getId", accountId);
+        ((ZombieControl)account).addResult(("isNotifiedForInvoices"), true);
 
 		Subscription subscription =  BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
         ((ZombieControl)subscription).addResult("getId", subscriptionId);
@@ -154,7 +157,9 @@ public class TestInvoiceDispatcher {
 
 		DateTime target = new DateTime();
 
-		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker, busService.getBus(), clock);
+        InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
+		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao,
+                                                             invoiceNotifier, locker, busService.getBus(), clock);
 
 		Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
 		Assert.assertNotNull(invoice);

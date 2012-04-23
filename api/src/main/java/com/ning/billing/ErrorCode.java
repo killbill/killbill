@@ -168,7 +168,15 @@ public enum ErrorCode {
     OVERDUE_OVERDUEABLE_NOT_SUPPORTED(5001, "The Overdueable type '%s' is not supported"), 
     OVERDUE_CAT_ERROR_ENCOUNTERED(5002,"Catalog error encountered on Overdueable: id='%s', type='%s'"),  
     
-    
+   /*
+    *
+    * Range 9000: Miscellaneous
+    *
+    */
+    EMAIL_SENDING_FAILED(9000, "Sending email failed"),
+    EMAIL_PROPERTIES_FILE_MISSING(9001, "The properties file for email configuration could not be found."),
+    MISSING_TRANSLATION_RESOURCE(9010, "The resources for %s translation could not be found."),
+    MISSING_DEFAULT_TRANSLATION_RESOURCE(9011, "The default resource for %s translation could not be found.")
     ;
 
     private int code;

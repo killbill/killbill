@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusEvent;
@@ -59,6 +60,7 @@ public class InvoiceDispatcher {
     private final EntitlementBillingApi entitlementBillingApi;
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
+    private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
     private final Bus eventBus;
     private final Clock clock;
@@ -69,6 +71,7 @@ public class InvoiceDispatcher {
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
                              final EntitlementBillingApi entitlementBillingApi,
                              final InvoiceDao invoiceDao,
+                             final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
                              final Bus eventBus,
                              final Clock clock) {
@@ -76,6 +79,7 @@ public class InvoiceDispatcher {
         this.entitlementBillingApi = entitlementBillingApi;
         this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
+        this.invoiceNotifier = invoiceNotifier;
         this.locker = locker;
         this.eventBus = eventBus;
         this.clock = clock;
@@ -175,6 +179,11 @@ public class InvoiceDispatcher {
                 invoiceDao.create(invoice, context);
             }
         }
+
+        if (account.isNotifiedForInvoices()) {
+
+        }
+
         return invoice;
     }
 
