@@ -33,13 +33,13 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -69,13 +69,13 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.glue.RealImplementation;
 
 
 public abstract class TestApiBase {
@@ -135,7 +135,8 @@ public abstract class TestApiBase {
         final Injector g = getInjector();
 
         entitlementService = g.getInstance(EntitlementService.class);
-        entitlementApi = g.getInstance(EntitlementUserApi.class);
+        EntitlementUserApi entApi = (EntitlementUserApi)g.getInstance(Key.get(EntitlementUserApi.class, RealImplementation.class));
+        entitlementApi = entApi;
         billingApi = g.getInstance(ChargeThruApi.class);
         migrationApi = g.getInstance(EntitlementMigrationApi.class);
         catalogService = g.getInstance(CatalogService.class);

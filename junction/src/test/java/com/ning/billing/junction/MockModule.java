@@ -19,14 +19,11 @@ package com.ning.billing.junction;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.glue.JunctionModule;
-import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
@@ -66,5 +63,8 @@ public class MockModule extends JunctionModule {
     protected void installAccountUserApi() {
         
     }
+
+    
+    
 
 }

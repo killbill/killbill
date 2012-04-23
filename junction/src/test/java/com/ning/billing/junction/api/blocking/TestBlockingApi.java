@@ -42,9 +42,10 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.dao.TestBlockingDao;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.clock.ClockMock;
 
-@Guice(modules = { MockModule.class })
+@Guice(modules = { MockModule.class, MockEntitlementModule.class })
 public class TestBlockingApi {
     private Logger log = LoggerFactory.getLogger(TestBlockingDao.class);
     

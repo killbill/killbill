@@ -26,6 +26,8 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.blocking.DefaultBlockingApi;
+import com.ning.billing.junction.block.BlockingChecker;
+import com.ning.billing.junction.block.DefaultBlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.dao.BlockingStateSqlDao;
 import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
@@ -42,11 +44,17 @@ public class JunctionModule extends AbstractModule {
         installAccountUserApi();
         installBillingApi();
         installEntitlementUserApi();
+        installBlockingChecker();
         
         // Internal
         installBlockingCalculator();
         installBlockingStateDao();
      }
+
+    protected void installBlockingChecker() {
+        bind(BlockingChecker.class).to(DefaultBlockingChecker.class).asEagerSingleton();
+        
+    }
 
     protected void installBillingApi() {
         bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
