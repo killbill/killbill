@@ -35,6 +35,7 @@ import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
+import com.ning.billing.util.glue.RealImplementation;
 
 public class EntitlementModule extends AbstractModule {
     protected void installConfig() {
@@ -54,7 +55,7 @@ public class EntitlementModule extends AbstractModule {
         bind(PlanAligner.class).asEagerSingleton();
         bind(AddonUtils.class).asEagerSingleton();
         bind(MigrationPlanAligner.class).asEagerSingleton();
-        bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+        bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
         bind(EntitlementMigrationApi.class).to(DefaultEntitlementMigrationApi.class).asEagerSingleton();
         bind(ChargeThruApi.class).to(DefaultChargeThruApi.class).asEagerSingleton();
     }

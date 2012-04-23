@@ -18,6 +18,7 @@ package com.ning.billing.mock.glue;
 
 import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
@@ -26,6 +27,7 @@ public class MockJunctionModule extends AbstractModule {
     private BillingApi billingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
     private BlockingApi blockingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingApi.class);
     private AccountUserApi userApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+    private EntitlementUserApi entUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
     
     @Override
     protected void configure() {
@@ -45,5 +47,9 @@ public class MockJunctionModule extends AbstractModule {
     
     protected void installBlockingApi() {
         bind(BlockingApi.class).toInstance(blockingApi);
+    }
+    
+    protected void installEntitlementUserApi() {
+        bind(EntitlementUserApi.class).toInstance(entUserApi);
     }
 }

@@ -22,12 +22,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.blocking.DefaultBlockingApi;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.dao.BlockingStateSqlDao;
 import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
+import com.ning.billing.junction.plumbing.api.BlockingEntitlementUserApi;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 
@@ -39,6 +41,7 @@ public class JunctionModule extends AbstractModule {
         installBlockingApi();
         installAccountUserApi();
         installBillingApi();
+        installEntitlementUserApi();
         
         // Internal
         installBlockingCalculator();
@@ -55,6 +58,10 @@ public class JunctionModule extends AbstractModule {
     
     protected void installAccountUserApi() {
         bind(AccountUserApi.class).to(BlockingAccountUserApi.class).asEagerSingleton();
+    }
+    
+    protected void installEntitlementUserApi() {
+        bind(EntitlementUserApi.class).to(BlockingEntitlementUserApi.class).asEagerSingleton();
     }
     
     protected void installBlockingApi() {
