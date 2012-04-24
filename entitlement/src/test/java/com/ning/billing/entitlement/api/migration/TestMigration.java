@@ -111,7 +111,9 @@ public abstract class TestMigration extends TestApiBase {
 
             Subscription aoSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.ADD_ON) ?
                     subscriptions.get(0) : subscriptions.get(1);
-            assertEquals(aoSubscription.getStartDate(), initalAddonStart);
+            // initalAddonStart.plusMonths(1).minusMonths(1) may be different from initalAddonStart, depending on exact date
+            // e.g : March 31 + 1 month => April 30 and April 30 - 1 month = March 30 which is != March 31 !!!! 
+            assertEquals(aoSubscription.getStartDate(), initalAddonStart.plusMonths(1).minusMonths(1));
             assertEquals(aoSubscription.getEndDate(), null);
             assertEquals(aoSubscription.getCurrentPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(aoSubscription.getCurrentPhase().getPhaseType(), PhaseType.DISCOUNT);
