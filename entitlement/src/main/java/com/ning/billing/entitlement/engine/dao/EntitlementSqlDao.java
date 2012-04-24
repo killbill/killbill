@@ -608,13 +608,18 @@ public class EntitlementSqlDao implements EntitlementDao {
                     TransactionStatus status) throws Exception {
 
                 EventSqlDao transEventDao = transactional.become(EventSqlDao.class);
-                for (SubscriptionDataRepair cur : inRepair) {
+                for (final SubscriptionDataRepair cur : inRepair) {
                     transactional.updateForRepair(cur.getId().toString(), cur.getActiveVersion(), cur.getStartDate().toDate(), cur.getBundleStartDate().toDate(), context);
                     for (EntitlementEvent event : cur.getInitialEvents()) {
-                        transEventDao.updateVersion(event.getId().toString(), cur.getActiveVersion(), context);
+                        transEventDao.updateVersion(event.getId().toString(), event.getActiveVersion(), context);
                     }
                     for (EntitlementEvent event : cur.getNewEvents()) {
                         transEventDao.insertEvent(event, context);
+                        if (event.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                            recordFutureNotificationFromTransaction(transactional,
+                                    event.getEffectiveDate(),
+                                    new EntitlementNotificationKey(event.getId()));
+                        }
                     }
                 }
                 return null;

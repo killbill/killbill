@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import com.ning.billing.entitlement.api.SubscriptionFactory;
@@ -42,23 +43,24 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     
     private final static class SubscriptionRepairEvent {
         
-        private final List<EntitlementEvent> events;
+        private final Set<EntitlementEvent> events;
         
         public SubscriptionRepairEvent(List<EntitlementEvent> initialEvents) {
-            events = new LinkedList<EntitlementEvent>();
-            if (initialEvents != null) {
-                events.addAll(initialEvents);
-            }
-        }
-        public List<EntitlementEvent> getEvents() {
-            Collections.sort(events, new Comparator<EntitlementEvent>() {
+            events = new TreeSet<EntitlementEvent>(new Comparator<EntitlementEvent>() {
                 @Override
                 public int compare(EntitlementEvent o1, EntitlementEvent o2) {
                     return o1.compareTo(o2);
                 }
             });
+            if (initialEvents != null) {
+                events.addAll(initialEvents);
+            }
+        }
+        
+        public Set<EntitlementEvent> getEvents() {
             return events;
         }
+        
         public void addEvents(List<EntitlementEvent> newEvents) {
             events.addAll(newEvents);
         }
@@ -79,7 +81,7 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     @Override
     public List<EntitlementEvent> getEventsForSubscription(UUID subscriptionId) {
         SubscriptionRepairEvent target =  getRepairSubscriptionEvents(subscriptionId);
-        return target.getEvents();
+        return new LinkedList<EntitlementEvent>(target.getEvents());
     }
 
     @Override
@@ -97,7 +99,17 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     @Override
     public void cancelSubscription(UUID subscriptionId,
             EntitlementEvent cancelEvent, CallContext context, int cancelSeq) {
-        addEvents(subscriptionId, Collections.singletonList(cancelEvent));        
+        long activeVersion = cancelEvent.getActiveVersion();
+        addEvents(subscriptionId, Collections.singletonList(cancelEvent));
+        SubscriptionRepairEvent target =  getRepairSubscriptionEvents(subscriptionId);
+        boolean foundCancelEvent = false;
+        for (EntitlementEvent cur : target.getEvents()) {
+            if (cur.getId().equals(cancelEvent.getId())) {
+                foundCancelEvent = true;
+            } else if (foundCancelEvent) { 
+                cur.setActiveVersion(activeVersion - 1);
+            }
+        }
     }
 
     

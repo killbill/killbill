@@ -129,6 +129,7 @@ public class PlanAligner  {
             // If we never had any Plan change, borrow the logics for createPlan alignment
             case MIGRATE_ENTITLEMENT:
             case CREATE:
+            case RE_CREATE:                
                 List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getStartDate(),
                         subscription.getBundleStartDate(),
                         lastPlanTransition.getNextPlan(),

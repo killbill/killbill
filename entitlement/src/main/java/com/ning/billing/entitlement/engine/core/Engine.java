@@ -148,9 +148,6 @@ public class Engine implements EventListener, EntitlementService {
                     final CallContext context = factory.createCallContext("SubscriptionEventQueue", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
                     processEventReady(event, key.getSeqId(), context);
                 }
-                
-    
-
             },
             new NotificationConfig() {
                 @Override
@@ -214,6 +211,11 @@ public class Engine implements EventListener, EntitlementService {
             log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
             return;
         }
+        if (subscription.getActiveVersion() > event.getActiveVersion()) {
+            // Skip repaired events
+            return;
+        }
+        
         //
         // Do any internal processing on that event before we send the event to the bus
         //

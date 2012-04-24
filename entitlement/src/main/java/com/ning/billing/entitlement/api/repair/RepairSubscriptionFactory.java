@@ -27,6 +27,7 @@ import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.util.clock.Clock;
@@ -34,17 +35,21 @@ import com.ning.billing.util.clock.Clock;
 public class RepairSubscriptionFactory extends DefaultSubscriptionFactory implements SubscriptionFactory {
 
     private final AddonUtils addonUtils;
+    private final EntitlementDao repairDao;
     
     @Inject
-    public RepairSubscriptionFactory(@Named(EntitlementModule.REPAIR_NAMED) SubscriptionApiService apiService, Clock clock, CatalogService catalogService, AddonUtils addonUtils) {
+    public RepairSubscriptionFactory(@Named(EntitlementModule.REPAIR_NAMED) SubscriptionApiService apiService,
+            @Named(EntitlementModule.REPAIR_NAMED) EntitlementDao dao,
+            Clock clock, CatalogService catalogService, AddonUtils addonUtils) {
         super(apiService, clock, catalogService);
         this.addonUtils = addonUtils;
+        this.repairDao = dao;
     }
      
     @Override
     public SubscriptionData createSubscription(SubscriptionBuilder builder,
             List<EntitlementEvent> events) {
-        SubscriptionData subscription = new SubscriptionDataRepair(builder, events, apiService, clock, addonUtils);
+        SubscriptionData subscription = new SubscriptionDataRepair(builder, events, apiService, repairDao, clock, addonUtils, catalogService);
         subscription.rebuildTransitions(events, catalogService.getFullCatalog());
         return subscription;
     }

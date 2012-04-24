@@ -41,13 +41,22 @@ public class DefaultSubscriptionRepair implements SubscriptionRepair  {
     private final List<NewEvent> newEvents;
     private final List<DeletedEvent> deletedEvents;    
     
+    public DefaultSubscriptionRepair(final UUID id) {
+        this.id = id;
+        this.existingEvents = Collections.<SubscriptionRepair.ExistingEvent>emptyList();
+        this.deletedEvents =  Collections.<SubscriptionRepair.DeletedEvent>emptyList();
+        this.newEvents = Collections.<SubscriptionRepair.NewEvent>emptyList();
+    }
     
     public DefaultSubscriptionRepair(SubscriptionRepair input) {
         this.id = input.getId();
-        this.existingEvents = (input.getExistingEvents() != null) ? new ArrayList<SubscriptionRepair.ExistingEvent>(input.getExistingEvents()) : Collections.<SubscriptionRepair.ExistingEvent>emptyList();
+        this.existingEvents = (input.getExistingEvents() != null) ? new ArrayList<SubscriptionRepair.ExistingEvent>(input.getExistingEvents()) : 
+            Collections.<SubscriptionRepair.ExistingEvent>emptyList();
         sortExistingEvent(this.existingEvents);
-        this.deletedEvents = (input.getDeletedEvents() != null) ? new ArrayList<SubscriptionRepair.DeletedEvent>(input.getDeletedEvents()) : Collections.<SubscriptionRepair.DeletedEvent>emptyList();
-        this.newEvents = (input.getNewEvents() != null) ? new ArrayList<SubscriptionRepair.NewEvent>(input.getNewEvents()) : null;
+        this.deletedEvents = (input.getDeletedEvents() != null) ? new ArrayList<SubscriptionRepair.DeletedEvent>(input.getDeletedEvents()) : 
+            Collections.<SubscriptionRepair.DeletedEvent>emptyList();
+        this.newEvents = (input.getNewEvents() != null) ? new ArrayList<SubscriptionRepair.NewEvent>(input.getNewEvents()) : 
+            Collections.<SubscriptionRepair.NewEvent>emptyList();
         sortNewEvent(this.newEvents);
     }
     

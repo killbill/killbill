@@ -21,12 +21,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.omg.CORBA.Request;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
@@ -36,7 +38,11 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
+import com.ning.billing.entitlement.events.user.ApiEventBuilder;
+import com.ning.billing.entitlement.events.user.ApiEventCancel;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
@@ -45,7 +51,9 @@ public class SubscriptionDataRepair extends SubscriptionData {
 
     private final AddonUtils addonUtils;
     private final Clock clock;
-
+    private final EntitlementDao repairDao;
+    private final CatalogService catalogService;
+    
     private final List<EntitlementEvent> initialEvents;
 
     // Low level events are ONLY used for Repair APIs
@@ -53,16 +61,32 @@ public class SubscriptionDataRepair extends SubscriptionData {
 
 
     public SubscriptionDataRepair(SubscriptionBuilder builder, List<EntitlementEvent> initialEvents, SubscriptionApiService apiService,
-            Clock clock, AddonUtils addonUtils) {
+            EntitlementDao dao, Clock clock, AddonUtils addonUtils, CatalogService catalogService) {
         super(builder, apiService, clock);
+        this.repairDao = dao;
         this.addonUtils = addonUtils;
         this.clock = clock;
+        this.catalogService = catalogService;
         this.initialEvents = initialEvents;
+    }
+
+    
+    DateTime getLastUserEventEffectiveDate() {
+        DateTime res = null;
+        for (EntitlementEvent cur : events) {
+            if (cur.getActiveVersion() != getActiveVersion()) {
+                break;
+            }
+            if (cur.getType() == EventType.PHASE) {
+                continue;
+            }
+            res = cur.getEffectiveDate();
+        }
+        return res;
     }
 
     public void addNewRepairEvent(final DefaultNewEvent input, final SubscriptionDataRepair baseSubscription, final List<SubscriptionDataRepair> addonSubscriptions, final CallContext context)
     throws EntitlementRepairException {
-
 
         try {
             final PlanPhaseSpecifier spec = input.getPlanPhaseSpecifier();
@@ -75,16 +99,17 @@ public class SubscriptionDataRepair extends SubscriptionData {
             case CHANGE:
                 changePlan(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), input.getRequestedDate(), context);
                 checkAddonRights(baseSubscription);
+                trickleDownBPEffectForAddon(addonSubscriptions, getLastUserEventEffectiveDate(), context);
                 break;
             case CANCEL:
                 cancel(input.getRequestedDate(), false, context);
+                trickleDownBPEffectForAddon(addonSubscriptions, getLastUserEventEffectiveDate(), context);
                 break;
             case PHASE:
                 break;
             default:
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_TYPE, input.getSubscriptionTransitionType(), id);
             }
-            trickleDownBPEffectForAddon(addonSubscriptions, input.getRequestedDate(), context);
             
         } catch (EntitlementUserApiException e) {
             throw new EntitlementRepairException(e);
@@ -94,7 +119,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
     }
 
 
-    private void trickleDownBPEffectForAddon(final List<SubscriptionDataRepair> addonSubscriptions, final DateTime requestedDate, final CallContext context)
+    private void trickleDownBPEffectForAddon(final List<SubscriptionDataRepair> addonSubscriptions, final DateTime effectiveDate, final CallContext context)
      throws EntitlementUserApiException {
 
         if (category != ProductCategory.BASE) {
@@ -117,7 +142,16 @@ public class SubscriptionDataRepair extends SubscriptionData {
                     addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
                     ! addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
 
-                cur.cancel(requestedDate, false, context);
+                EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                .setSubscriptionId(cur.getId())
+                .setActiveVersion(cur.getActiveVersion())
+                .setProcessedDate(now)
+                .setEffectiveDate(effectiveDate)
+                .setRequestedDate(now)
+                .setUserToken(context.getUserToken())
+                .setFromDisk(true));
+                repairDao.cancelSubscription(cur.getId(), cancelEvent, context, 0);
+                cur.rebuildTransitions(repairDao.getEventsForSubscription(cur.getId()), catalogService.getFullCatalog());
             }
         }
     }

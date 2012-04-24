@@ -56,6 +56,14 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
     private final SubscriptionFactory factory;
     private final RepairEntitlementLifecycleDao repairDao;
 
+    
+    private enum RepairType  {
+        BASE_REPAIR,
+        ADD_ON_REPAIR,
+        STANDALONE_REPAIR
+    }
+
+    
     @Inject
     public DefaultEntitlementRepairApi(@Named(EntitlementModule.REPAIR_NAMED) final SubscriptionFactory factory,
             @Named(EntitlementModule.REPAIR_NAMED) final RepairEntitlementLifecycleDao repairDao, final EntitlementDao dao) {
@@ -81,6 +89,7 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
         final List<SubscriptionRepair> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionRepair>emptyList()); 
         return createGetBundleRepair(bundleId, viewId, repairs);
     }
+    
     
 
     @Override
@@ -116,6 +125,7 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
             List<SubscriptionDataRepair> inRepair =  new LinkedList<SubscriptionDataRepair>();
             for (Subscription cur : subscriptions) {
 
+                //
                 SubscriptionRepair curRepair = findAndCreateSubscriptionRepair(cur.getId(), input.getSubscriptions());
                 if (curRepair != null) {
                     SubscriptionDataRepair curInputRepair = ((SubscriptionDataRepair) cur);
@@ -166,10 +176,29 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
                 }
             }
             
-            // This is a pure AO repair
-            if (baseSubscriptionRepair == null && subscriptions.get(0).getCategory() == ProductCategory.BASE) {
-                SubscriptionDataRepair baseSubscription =  (SubscriptionDataRepair) subscriptions.get(0);
-                baseSubscriptionRepair = createSubscriptionDataRepair(baseSubscription, baseSubscription.getBundleStartDate(), baseSubscription.getStartDate(), baseSubscription.getEvents());
+            final RepairType repairType = getRepairType(subscriptions.get(0), (baseSubscriptionRepair != null));
+            switch(repairType) {
+                case BASE_REPAIR:
+                   // We need to add any existing addon that are not in the input repair list
+                    for (Subscription cur : subscriptions) {
+                        if (cur.getCategory() == ProductCategory.ADD_ON && !inRepair.contains(cur)) {
+                            SubscriptionDataRepair curOutputRepair = createSubscriptionDataRepair((SubscriptionDataRepair) cur, newBundleStartDate, null, ((SubscriptionDataRepair) cur).getEvents());
+                            repairDao.initializeRepair(curOutputRepair.getId(), ((SubscriptionDataRepair) cur).getEvents());
+                            inRepair.add(curOutputRepair);
+                            addOnSubscriptionInRepair.add(curOutputRepair);
+                        }
+                    }
+                    
+                    break;
+                case ADD_ON_REPAIR:
+                    // We need to set the baseSubscription as it is useful to calculate addon validity
+                    SubscriptionDataRepair baseSubscription =  (SubscriptionDataRepair) subscriptions.get(0);
+                    baseSubscriptionRepair = createSubscriptionDataRepair(baseSubscription, baseSubscription.getBundleStartDate(), baseSubscription.getStartDate(), baseSubscription.getEvents());
+                    break;
+                case STANDALONE_REPAIR:
+                default:
+                    break;
+                    
             }
 
             validateBasePlanRecreate(isBasePlanRecreate, subscriptions, input.getSubscriptions());
@@ -199,6 +228,13 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
         }
     }
 
+    private RepairType getRepairType(final Subscription firstSubscription, final boolean gotBaseSubscription) {
+        if (firstSubscription.getCategory() == ProductCategory.BASE) {
+            return gotBaseSubscription ? RepairType.BASE_REPAIR : RepairType.ADD_ON_REPAIR;
+        } else {
+            return RepairType.STANDALONE_REPAIR;
+        }
+    }
     
     private void validateBasePlanRecreate(boolean isBasePlanRecreate, List<Subscription> subscriptions, List<SubscriptionRepair> input) 
         throws EntitlementRepairException  {
@@ -240,11 +276,11 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
     throws EntitlementRepairException {
         if (lastBPRemainingTime != null &&
                 firstNewEvent.getRequestedDate().isBefore(lastBPRemainingTime)) {
-            throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING, firstNewEvent.getPlanPhaseSpecifier().toString(), data.getId());
+            throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING, firstNewEvent.getSubscriptionTransitionType(), data.getId());
         }
         if (lastRemainingTime != null &&
                 firstNewEvent.getRequestedDate().isBefore(lastRemainingTime)) {
-            throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING, firstNewEvent.getPlanPhaseSpecifier().toString(), data.getId());
+            throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING, firstNewEvent.getSubscriptionTransitionType(), data.getId());
         }
 
     }
