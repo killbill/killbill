@@ -14,8 +14,9 @@ package com.ning.billing.util.email;/*
  * under the License.
  */
 
-import com.ning.billing.util.email.translation.CatalogTranslation;
-import com.ning.billing.util.email.translation.DefaultCatalogTranslation;
+import com.ning.billing.util.email.translation.DefaultCatalogTranslator;
+import com.ning.billing.util.email.translation.Translator;
+import com.ning.billing.util.email.translation.TranslatorConfig;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -26,12 +27,12 @@ import static org.testng.Assert.assertEquals;
 
 @Test(groups = {"fast", "email"})
 public class DefaultCatalogTranslationTest {
-    private CatalogTranslation translation;
+    private Translator translation;
 
     @BeforeClass(groups={"fast", "email"})
     public void setup() {
-        final EmailConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EmailConfig.class);
-        translation = new DefaultCatalogTranslation(config);
+        final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
+        translation = new DefaultCatalogTranslator(config);
     }
 
     @Test(groups = {"fast", "email"})

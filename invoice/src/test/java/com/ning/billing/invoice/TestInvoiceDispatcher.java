@@ -47,8 +47,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
-import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import com.ning.billing.invoice.api.Invoice;
@@ -56,6 +54,8 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
+import com.ning.billing.junction.api.BillingApi;
+import com.ning.billing.junction.plumbing.billing.DefaultBillingEvent;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.bus.BusService;
@@ -87,8 +87,11 @@ public class TestInvoiceDispatcher {
 	@Inject
 	private NextBillingDateNotifier notifier;
 
-	@Inject
-	private BusService busService;
+    @Inject
+    private BusService busService;
+
+    @Inject
+    private BillingApi billingApi;
 
     @Inject
     private Clock clock;
@@ -113,6 +116,7 @@ public class TestInvoiceDispatcher {
         context = new DefaultCallContextFactory(clock).createCallContext("Miracle Max", CallOrigin.TEST, UserType.TEST);
 
 		busService.getBus().start();
+		((ZombieControl)billingApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
 	}
 
 	@AfterClass(alwaysRun = true)
@@ -152,7 +156,7 @@ public class TestInvoiceDispatcher {
 				fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
 				BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-		EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
+		BillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
 		((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
 
 		DateTime target = new DateTime();

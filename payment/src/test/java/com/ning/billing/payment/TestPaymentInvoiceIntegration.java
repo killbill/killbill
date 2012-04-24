@@ -26,8 +26,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import com.ning.billing.account.glue.AccountModuleWithMocks;
-import com.ning.billing.util.glue.CallContextModule;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
@@ -43,11 +41,11 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -56,7 +54,7 @@ import com.ning.billing.payment.setup.PaymentTestModuleWithEmbeddedDb;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.clock.MockClockModule;
-import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.glue.CallContextModule;
 
 public class TestPaymentInvoiceIntegration {
     // create payment for received invoice and save it -- positive and negative
@@ -72,14 +70,12 @@ public class TestPaymentInvoiceIntegration {
     private PaymentApi paymentApi;
     @Inject
     private TestHelper testHelper;
-    @Inject
-    private NotificationQueueService notificationQueueService;
 
     private MockPaymentInfoReceiver paymentInfoReceiver;
 
     private IDBI dbi;
     private MysqlTestingHelper helper;
-
+    
     @BeforeClass(alwaysRun = true)
     public void startMysql() throws IOException {
         final String accountddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
@@ -101,11 +97,13 @@ public class TestPaymentInvoiceIntegration {
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws EventBusException {
         Injector injector = Guice.createInjector(new PaymentTestModuleWithEmbeddedDb(),
-                                                 new AccountModuleWithMocks(),
                                                  new InvoiceModuleWithMocks(),
                                                  new CallContextModule(),
                                                  new MockClockModule(),
-                                                 new AbstractModule() {
+                                                 new MockJunctionModule(),
+                                                 new AbstractModule()
+                                            
+                                                  {
                                                     @Override
                                                     protected void configure() {
                                                         bind(IDBI.class).toInstance(dbi);

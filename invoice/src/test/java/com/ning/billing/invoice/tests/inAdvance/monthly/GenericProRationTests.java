@@ -16,11 +16,12 @@
 
 package com.ning.billing.invoice.tests.inAdvance.monthly;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.invoice.tests.inAdvance.GenericProRationTestBase;
+import java.math.BigDecimal;
+
 import org.testng.annotations.Test;
 
-import java.math.BigDecimal;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.invoice.tests.inAdvance.GenericProRationTestBase;
 
 @Test(groups = {"fast", "invoicing", "proRation"})
 public class GenericProRationTests extends GenericProRationTestBase {

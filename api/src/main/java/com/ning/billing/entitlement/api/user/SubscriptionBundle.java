@@ -20,10 +20,10 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.overdue.config.api.OverdueState;
-import com.ning.billing.overdue.config.api.Overdueable;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.OverdueState;
 
-public interface SubscriptionBundle extends Overdueable {
+public interface SubscriptionBundle extends Blockable {
 
     public UUID getAccountId();
 

@@ -24,14 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.audit.dao.AuditSqlDao;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
-import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.dao.TagDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -41,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -50,14 +41,23 @@ import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.junction.api.BillingApi;
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.dao.TagDao;
 
 public class DefaultInvoiceDao implements InvoiceDao {
     private final static Logger log = LoggerFactory.getLogger(DefaultInvoiceDao.class);
 
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
-    private final EntitlementBillingApi entitlementBillingApi;
+    private final BillingApi billingApi;
     private final TagDao tagDao;
 
     private final Bus eventBus;
@@ -66,13 +66,13 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi, final Bus eventBus,
-                             final EntitlementBillingApi entitlementBillingApi,
+                             final BillingApi entitlementBillingApi,
                              final NextBillingDatePoster nextBillingDatePoster,
                              final TagDao tagDao) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.eventBus = eventBus;
-        this.entitlementBillingApi = entitlementBillingApi;
+        this.billingApi = entitlementBillingApi;
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.tagDao = tagDao;
     }
@@ -387,7 +387,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
             if(subscriptionId != null) {
                 DateTime chargeThroughDate = chargeThroughDates.get(subscriptionId);
                 log.info("Setting CTD for subscription {} to {}", subscriptionId.toString(), chargeThroughDate.toString());
-                entitlementBillingApi.setChargedThroughDateFromTransaction(dao, subscriptionId, chargeThroughDate, context);
+                billingApi.setChargedThroughDateFromTransaction(dao, subscriptionId, chargeThroughDate, context);
             }
         }
     }

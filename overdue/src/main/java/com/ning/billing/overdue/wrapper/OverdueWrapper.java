@@ -17,25 +17,25 @@
 package com.ning.billing.overdue.wrapper;
 
 import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.overdue.OverdueAccessApi;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculator;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueError;
-import com.ning.billing.overdue.config.api.OverdueState;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
-import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.util.clock.Clock;
 
-public class OverdueWrapper<T extends Overdueable> {
+public class OverdueWrapper<T extends Blockable> {
     private final T overdueable;
-    private final OverdueAccessApi api;
+    private final BlockingApi api;
     private final Clock clock;
     private final OverdueStateSet<T> overdueStateSet;
     private final BillingStateCalculator<T> billingStateCalcuator;
     private final OverdueStateApplicator<T> overdueStateApplicator;
 
-    public OverdueWrapper(T overdueable, OverdueAccessApi api,
+    public OverdueWrapper(T overdueable, BlockingApi api,
             OverdueStateSet<T> overdueStateSet,
             Clock clock,
             BillingStateCalculator<T> billingStateCalcuator,
@@ -51,7 +51,7 @@ public class OverdueWrapper<T extends Overdueable> {
     public OverdueState<T> refresh() throws OverdueError, CatalogApiException {
         OverdueState<T> nextOverdueState;
         BillingState<T> billingState = billingStateCalcuator.calculateBillingState(overdueable);
-        String previousOverdueStateName = api.getOverdueStateNameFor(overdueable);
+        String previousOverdueStateName = api.getBlockingStateFor(overdueable).getStateName();
         nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
         if(!previousOverdueStateName.equals(nextOverdueState.getName())) {
             overdueStateApplicator.apply(overdueable, nextOverdueState, nextOverdueState, overdueStateSet.dateOfNextCheck(billingState, clock.getUTCNow())); 

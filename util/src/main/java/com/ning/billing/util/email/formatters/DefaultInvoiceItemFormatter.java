@@ -18,9 +18,9 @@ package com.ning.billing.util.email.formatters;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.util.email.EmailConfig;
-import com.ning.billing.util.email.translation.CatalogTranslation;
-import com.ning.billing.util.email.translation.DefaultCatalogTranslation;
+import com.ning.billing.util.email.translation.DefaultCatalogTranslator;
+import com.ning.billing.util.email.translation.Translator;
+import com.ning.billing.util.email.translation.TranslatorConfig;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -29,18 +29,18 @@ import java.util.Locale;
 import java.util.UUID;
 
 public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
-    private final CatalogTranslation catalogTranslation;
+    private final Translator translator;
 
     private final InvoiceItem item;
     private final DateTimeFormatter dateFormatter;
     private final Locale locale;
 
-    public DefaultInvoiceItemFormatter(EmailConfig config, InvoiceItem item, DateTimeFormatter dateFormatter, Locale locale) {
+    public DefaultInvoiceItemFormatter(TranslatorConfig config, InvoiceItem item, DateTimeFormatter dateFormatter, Locale locale) {
         this.item = item;
         this.dateFormatter = dateFormatter;
         this.locale = locale;
 
-        this.catalogTranslation = new DefaultCatalogTranslation(config);
+        this.translator = new DefaultCatalogTranslator(config);
     }
 
     @Override
@@ -105,12 +105,12 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public String getPlanName() {
-        return catalogTranslation.getTranslation(locale, item.getPlanName());
+        return translator.getTranslation(locale, item.getPlanName());
     }
 
     @Override
     public String getPhaseName() {
-        return catalogTranslation.getTranslation(locale, item.getPhaseName());
+        return translator.getTranslation(locale, item.getPhaseName());
     }
 
     @Override

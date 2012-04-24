@@ -47,12 +47,10 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.invoice.InvoiceDispatcher;
@@ -61,6 +59,8 @@ import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.junction.api.BillingApi;
+import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
@@ -144,8 +144,9 @@ public class TestNextBillingDateNotifier {
                 bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
                 bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
                 bind(AccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
-                bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
+                bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
                 bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+                bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
             }
         });
 
@@ -216,8 +217,9 @@ public class TestNextBillingDateNotifier {
 		Assert.assertEquals(listener.getLatestSubscriptionId(), subscriptionId);
 	}
 
-	@AfterClass(alwaysRun = true)
+	@AfterClass(groups="slow")
     public void tearDown() {
+	    notifier.stop();
     	helper.stopMysql();
     }
 

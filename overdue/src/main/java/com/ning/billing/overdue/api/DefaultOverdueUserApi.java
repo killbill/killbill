@@ -23,14 +23,14 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.overdue.OverdueAccessApi;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueError;
-import com.ning.billing.overdue.config.api.OverdueState;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
-import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
@@ -39,11 +39,11 @@ public class DefaultOverdueUserApi implements OverdueUserApi{
 
     
     private final OverdueWrapperFactory factory;
-    private final OverdueAccessApi accessApi; 
+    private final BlockingApi accessApi; 
     private final OverdueConfig overdueConfig;
    
     @Inject
-    public DefaultOverdueUserApi(OverdueWrapperFactory factory,OverdueAccessApi accessApi, ExtendedOverdueService service,  CatalogService catalogService) {
+    public DefaultOverdueUserApi(OverdueWrapperFactory factory,BlockingApi accessApi, ExtendedOverdueService service,  CatalogService catalogService) {
         this.factory = factory;
         this.accessApi = accessApi;
         this.overdueConfig = service.getOverdueConfig();
@@ -51,9 +51,9 @@ public class DefaultOverdueUserApi implements OverdueUserApi{
     
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Overdueable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueError {
+    public <T extends Blockable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueError {
         try {
-            String stateName = accessApi.getOverdueStateNameFor(overdueable);
+            String stateName = accessApi.getBlockingStateFor(overdueable).getStateName();
             OverdueStateSet<SubscriptionBundle> states = overdueConfig.getBundleStateSet();
             return (OverdueState<T>) states.findState(stateName);
         } catch (CatalogApiException e) {
@@ -62,14 +62,14 @@ public class DefaultOverdueUserApi implements OverdueUserApi{
     }
     
     @Override
-    public <T extends Overdueable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError, CatalogApiException {
+    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError, CatalogApiException {
         OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(overdueable);
         return wrapper.refresh();
     } 
  
 
     @Override
-    public <T extends Overdueable> void setOverrideBillingStateForAccount(
+    public <T extends Blockable> void setOverrideBillingStateForAccount(
             T overdueable, BillingState<T> state) {
         throw new NotImplementedException();
     }

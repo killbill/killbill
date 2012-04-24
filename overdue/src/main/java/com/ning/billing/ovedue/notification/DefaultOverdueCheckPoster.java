@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.overdue.config.api.Overdueable;
+import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
@@ -42,7 +42,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
 	}
 
 	@Override
-	public void insertOverdueCheckNotification(final Transmogrifier transactionalDao, final Overdueable overdueable, final DateTime futureNotificationTime) {
+	public void insertOverdueCheckNotification(final Transmogrifier transactionalDao, final Blockable overdueable, final DateTime futureNotificationTime) {
     	NotificationQueue checkOverdueQueue;
 		try {
 			checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
@@ -60,7 +60,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
 		}
     }
 	
-	public void clearNotificationEventsFor(final Overdueable overdueable) {
+	public void clearNotificationEventsFor(final Blockable overdueable) {
 	    NotificationQueue checkOverdueQueue;
         try {
             checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,

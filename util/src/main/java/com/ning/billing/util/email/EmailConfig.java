@@ -38,8 +38,4 @@ public interface EmailConfig extends KillbillConfig {
     @Config("mail.smtp.password")
     @Default("killbill@ning!")
     public String getSmtpPassword();
-
-    @Config("email.default.locale")
-    @Default("en_US")
-    public String getDefaultLocale();
 }

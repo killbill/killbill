@@ -37,6 +37,7 @@ import com.ning.billing.invoice.notification.MockNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
@@ -103,6 +104,7 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
         installNotificationQueue();
 //      install(new AccountModule());
         bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
+        bind(BillingApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class));
         install(new CatalogModule());
         install(new EntitlementModule());
         install(new GlobalLockerModule());

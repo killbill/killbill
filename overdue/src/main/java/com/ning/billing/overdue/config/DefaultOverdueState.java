@@ -22,14 +22,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlID;
 
-import com.ning.billing.overdue.config.api.OverdueState;
-import com.ning.billing.overdue.config.api.Overdueable;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultOverdueState<T extends Overdueable> extends ValidatingConfig<OverdueConfig>  implements OverdueState<T> {
+public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<OverdueConfig>  implements OverdueState<T> {
 
     private static final int MAX_NAME_LENGTH = 50;
     

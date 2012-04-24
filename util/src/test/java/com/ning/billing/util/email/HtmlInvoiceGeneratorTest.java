@@ -23,7 +23,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.email.templates.HtmlInvoiceGenerator;
-import org.apache.commons.mail.Email;
+import com.ning.billing.util.email.translation.TranslatorConfig;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
@@ -43,7 +43,7 @@ public class HtmlInvoiceGeneratorTest {
 
     @BeforeClass
     public void setup() {
-        EmailConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EmailConfig.class);
+        TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         g = new HtmlInvoiceGenerator(config);
     }
 

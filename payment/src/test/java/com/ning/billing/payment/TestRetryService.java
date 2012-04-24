@@ -45,6 +45,7 @@ import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
@@ -62,7 +63,7 @@ import com.ning.billing.util.notificationq.MockNotificationQueue;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
-@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
+@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class })
 @Test(groups = "fast")
 public class TestRetryService {
     @Inject

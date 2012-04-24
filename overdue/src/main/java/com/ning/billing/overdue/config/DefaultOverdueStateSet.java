@@ -24,15 +24,15 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
-import com.ning.billing.overdue.config.api.OverdueState;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
-import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public abstract class DefaultOverdueStateSet<T extends Overdueable> extends ValidatingConfig<OverdueConfig> implements OverdueStateSet<T> {
+public abstract class DefaultOverdueStateSet<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements OverdueStateSet<T> {
     private DefaultOverdueState<T> clearState;
     
     protected abstract DefaultOverdueState<T>[] getStates();

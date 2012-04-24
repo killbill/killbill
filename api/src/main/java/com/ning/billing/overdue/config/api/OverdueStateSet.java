@@ -19,8 +19,10 @@ package com.ning.billing.overdue.config.api;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.OverdueState;
 
-public interface OverdueStateSet<T extends Overdueable> {
+public interface OverdueStateSet<T extends Blockable> {
 
     public abstract OverdueState<T> findClearState() throws CatalogApiException;
 

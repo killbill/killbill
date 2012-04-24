@@ -43,7 +43,6 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
     @Inject
     public DefaultCatalogService(CatalogConfig config, VersionedCatalogLoader loader) {
         this.config = config;
-        System.out.println(config.getCatalogURI());
         this.isInitialized = false;
         this.loader = loader;
     }

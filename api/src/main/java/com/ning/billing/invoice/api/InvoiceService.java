@@ -19,6 +19,5 @@ package com.ning.billing.invoice.api;
 import com.ning.billing.lifecycle.KillbillService;
 
 public interface InvoiceService extends KillbillService {
-    public InvoiceUserApi getUserApi();
-    public InvoicePaymentApi getPaymentApi();
+
 }

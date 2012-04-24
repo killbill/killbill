@@ -22,7 +22,9 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.formatters.DefaultInvoiceFormatter;
 import com.ning.billing.util.email.formatters.InvoiceFormatter;
-import com.ning.billing.util.email.translation.DefaultInvoiceTranslation;
+import com.ning.billing.util.email.translation.DefaultInvoiceTranslator;
+import com.ning.billing.util.email.translation.Translator;
+import com.ning.billing.util.email.translation.TranslatorConfig;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
 import org.apache.commons.io.IOUtils;
@@ -36,10 +38,10 @@ import java.util.Locale;
 import java.util.Map;
 
 public class HtmlInvoiceGenerator {
-    private final EmailConfig config;
+    private final TranslatorConfig config;
 
     @Inject
-    public HtmlInvoiceGenerator(EmailConfig config) {
+    public HtmlInvoiceGenerator(TranslatorConfig config) {
         this.config = config;
     }
 
@@ -53,9 +55,11 @@ public class HtmlInvoiceGenerator {
 
         Map<String, Object> data = new HashMap<String, Object>();
 
-        data.put("text", new DefaultInvoiceTranslation(config));
-        data.put("account", account);
+        DefaultInvoiceTranslator invoiceTranslator = new DefaultInvoiceTranslator(config);
         Locale locale = new Locale(account.getLocale());
+        invoiceTranslator.setLocale(locale);
+        data.put("text", invoiceTranslator);
+        data.put("account", account);
 
         InvoiceFormatter formattedInvoice = new DefaultInvoiceFormatter(config, invoice, locale);
         data.put("invoice", formattedInvoice);

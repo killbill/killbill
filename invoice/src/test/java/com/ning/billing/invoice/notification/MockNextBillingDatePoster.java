@@ -16,10 +16,10 @@
 
 package com.ning.billing.invoice.notification;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-
-import java.util.UUID;
 
 public class MockNextBillingDatePoster implements NextBillingDatePoster {
     @Override

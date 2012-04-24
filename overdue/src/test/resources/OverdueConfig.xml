@@ -8,13 +8,13 @@
 	OR CONDITIONS OF ANY KIND, either express or implied. See the ~ License for 
 	the specific language governing permissions and limitations ~ under the License. -->
 
-<overdueRules xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<overdueConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
 	<bundleOverdueStates>
 		<state name="Clear">
 			<isClearState>true</isClearState>
 		</state>
 	</bundleOverdueStates>
-</overdueRules>
+</overdueConfig>
 
     

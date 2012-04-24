@@ -37,7 +37,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.email.EmailConfig;
+import com.ning.billing.util.email.translation.TranslatorConfig;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTime;
@@ -51,12 +51,12 @@ import java.util.Locale;
 import java.util.UUID;
 
 public class DefaultInvoiceFormatter implements InvoiceFormatter {
-    private final EmailConfig config;
+    private final TranslatorConfig config;
     private final Invoice invoice;
     private final DateTimeFormatter dateFormatter;
     private final Locale locale;
 
-    public DefaultInvoiceFormatter(EmailConfig config, Invoice invoice, Locale locale) {
+    public DefaultInvoiceFormatter(TranslatorConfig config, Invoice invoice, Locale locale) {
         this.config = config;
         this.invoice = invoice;
         dateFormatter = DateTimeFormat.mediumDate().withLocale(locale);

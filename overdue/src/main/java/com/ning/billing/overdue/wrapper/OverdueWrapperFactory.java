@@ -19,12 +19,12 @@ package com.ning.billing.overdue.wrapper;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.overdue.OverdueAccessApi;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.config.api.OverdueError;
-import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.util.clock.Clock;
 
@@ -33,11 +33,11 @@ public class OverdueWrapperFactory {
     private final OverdueConfig overdueConfig;
     private final BillingStateCalculatorBundle billingStateCalcuatorBundle;
     private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
-    private final OverdueAccessApi api;
+    private final BlockingApi api;
     private final Clock clock;
 
     @Inject
-    public OverdueWrapperFactory(OverdueAccessApi api, ExtendedOverdueService service, Clock clock, 
+    public OverdueWrapperFactory(BlockingApi api, ExtendedOverdueService service, Clock clock, 
             BillingStateCalculatorBundle billingStateCalcuatorBundle, OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle) {
         this.billingStateCalcuatorBundle = billingStateCalcuatorBundle;
         this.overdueStateApplicatorBundle = overdueStateApplicatorBundle;
@@ -47,12 +47,12 @@ public class OverdueWrapperFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Overdueable> OverdueWrapper<T> createOverdueWrapperFor(T overdueable) throws OverdueError {
-        if(overdueable instanceof SubscriptionBundle) {
-            return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle)overdueable, api, overdueConfig.getBundleStateSet(), 
+    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(T bloackable) throws OverdueError {
+        if(bloackable instanceof SubscriptionBundle) {
+            return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle)bloackable, api, overdueConfig.getBundleStateSet(), 
                     clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle );
         } else {
-            throw new OverdueError(ErrorCode.OVERDUE_OVERDUEABLE_NOT_SUPPORTED, overdueable.getClass());
+            throw new OverdueError(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, bloackable.getId(), bloackable.getClass());
         }
     }
 

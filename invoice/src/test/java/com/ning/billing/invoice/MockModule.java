@@ -28,6 +28,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
@@ -63,14 +64,11 @@ public class MockModule extends AbstractModule {
 
         install(new GlobalLockerModule());
         install(new NotificationQueueModule());
-//        install(new AccountModule());
-        bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
-
         installEntitlementModule();
         install(new CatalogModule());
         install(new BusModule());
         installInvoiceModule();
-
+        install(new MockJunctionModule());
     }
     
     protected void installEntitlementModule() {

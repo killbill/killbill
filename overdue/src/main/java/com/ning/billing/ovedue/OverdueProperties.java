@@ -22,6 +22,7 @@ import org.skife.config.Default;
 import com.ning.billing.config.KillbillConfig;
 import com.ning.billing.config.NotificationConfig;
 
+
 public interface OverdueProperties extends NotificationConfig, KillbillConfig  {
 
     @Override

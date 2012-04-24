@@ -21,9 +21,10 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.util.tag.Tag;
 
-public class BillingState<T extends Overdueable> {
+public class BillingState<T extends Blockable> {
 	private final UUID objectId;
 	private final int numberOfUnpaidInvoices;
 	private final BigDecimal balanceOfUnpaidInvoices;

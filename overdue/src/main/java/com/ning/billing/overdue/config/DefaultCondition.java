@@ -26,8 +26,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
-import com.ning.billing.overdue.config.api.Overdueable;
 import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
@@ -35,7 +35,8 @@ import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultCondition<T extends Overdueable> extends ValidatingConfig<OverdueConfig> implements Condition<T> {
+
+public class DefaultCondition<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements Condition<T> {
 	@XmlElement(required=false, name="numberOfUnpaidInvoicesEqualsOrExceeds")
 	private Integer numberOfUnpaidInvoicesEqualsOrExceeds;
 

@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.overdue.config.api.OverdueState;
+import com.ning.billing.overdue.OverdueState;
 
 public class SubscriptionBundleData implements SubscriptionBundle {
 

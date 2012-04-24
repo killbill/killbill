@@ -16,14 +16,18 @@
 
 package com.ning.billing.overdue.glue;
 
+import org.skife.config.ConfigurationObjectFactory;
+
 import com.google.inject.AbstractModule;
+import com.ning.billing.ovedue.OverdueProperties;
+
 
 public class OverdueModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        // TODO Auto-generated method stub
-        
+        final OverdueProperties config = new ConfigurationObjectFactory(System.getProperties()).build(OverdueProperties.class);
+        bind(OverdueProperties.class).toInstance(config);
     }
     
 

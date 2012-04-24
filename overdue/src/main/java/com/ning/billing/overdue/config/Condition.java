@@ -18,11 +18,12 @@ package com.ning.billing.overdue.config;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
-import com.ning.billing.overdue.config.api.Overdueable;
 
 
-public interface Condition<T extends Overdueable> {
+
+public interface Condition<T extends Blockable> {
 
     public boolean evaluate(BillingState state, DateTime now);
 

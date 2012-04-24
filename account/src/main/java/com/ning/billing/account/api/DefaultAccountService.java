@@ -16,32 +16,17 @@
 
 package com.ning.billing.account.api;
 
-import com.google.inject.Inject;
-import com.ning.billing.lifecycle.LifecycleHandlerType;
-import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
 public class DefaultAccountService implements AccountService {
 
     private static final String ACCOUNT_SERVICE_NAME = "account-service";
 
-    private final AccountUserApi accountApi;
-
-    @Inject
-    public DefaultAccountService(AccountUserApi api) {
-        this.accountApi = api;
-    }
-
-    @Override
+   @Override
     public String getName() {
         return ACCOUNT_SERVICE_NAME;
     }
 
-    @Override
-    public AccountUserApi getAccountUserApi() {
-        return accountApi;
-    }
-
-    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
-    public void initialize() {
-    }
+//    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
+//    public void initialize() {
+//    }
 }

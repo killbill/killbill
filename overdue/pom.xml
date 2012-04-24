@@ -58,12 +58,12 @@
         <!-- Check if we need this one -->
         <dependency>
             <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-ne</artifactId>
+            <artifactId>killbill-junction</artifactId>
             <scope>test</scope>
          </dependency>
          <dependency>
             <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-ne</artifactId>
+            <artifactId>killbill-junction</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -98,6 +98,11 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-mxj-db-files</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.jayway.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Strangely this is needed in order to run the tests in local db mode -->

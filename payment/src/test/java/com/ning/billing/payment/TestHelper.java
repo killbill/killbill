@@ -19,34 +19,35 @@ package com.ning.billing.payment;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.entity.EntityPersistenceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.user.AccountBuilder;
-import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.entity.EntityPersistenceException;
 
 public class TestHelper {
-    protected final AccountDao accountDao;
+    protected final AccountUserApi accountUserApi;
     protected final InvoiceDao invoiceDao;
     private final CallContext context;
 
     @Inject
-    public TestHelper(CallContextFactory factory, AccountDao accountDao, InvoiceDao invoiceDao) {
-        this.accountDao = accountDao;
+    public TestHelper(CallContextFactory factory, AccountUserApi accountUserApi, InvoiceDao invoiceDao) {
+        this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
         context = factory.createCallContext("Princess Buttercup", CallOrigin.TEST, UserType.TEST);
     }
@@ -63,7 +64,8 @@ public class TestHelper {
                                                                      .currency(Currency.USD)
                                                                      .billingCycleDay(1)
                                                                      .build();
-        accountDao.create(account, context);
+        ((ZombieControl)accountUserApi).addResult("getAccountById", account);
+        ((ZombieControl)accountUserApi).addResult("getAccountByKey", account);
         return account;
     }
 
@@ -78,7 +80,8 @@ public class TestHelper {
                                                                      .currency(Currency.USD)
                                                                      .billingCycleDay(1)
                                                                      .build();
-        accountDao.create(account, context);
+        ((ZombieControl)accountUserApi).addResult("getAccountById", account);
+        ((ZombieControl)accountUserApi).addResult("getAccountByKey", account);
         return account;
     }
 

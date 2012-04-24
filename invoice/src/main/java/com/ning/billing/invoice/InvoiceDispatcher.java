@@ -21,13 +21,6 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import com.ning.billing.invoice.api.InvoiceNotifier;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.bus.BusEvent;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.clock.Clock;
-
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,26 +31,32 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.user.DefaultEmptyInvoiceNotification;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.junction.api.BillingApi;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
+import com.ning.billing.util.globallocker.LockFailedException;
 
 public class InvoiceDispatcher {
 	private final static Logger log = LoggerFactory.getLogger(InvoiceDispatcher.class);
     private final static int NB_LOCK_TRY = 5;
 
     private final InvoiceGenerator generator;
-    private final EntitlementBillingApi entitlementBillingApi;
+    private final BillingApi billingApi;
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
     private final InvoiceNotifier invoiceNotifier;
@@ -69,14 +68,14 @@ public class InvoiceDispatcher {
 
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
-                             final EntitlementBillingApi entitlementBillingApi,
+                             final BillingApi billingApi,
                              final InvoiceDao invoiceDao,
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
                              final Bus eventBus,
                              final Clock clock) {
         this.generator = generator;
-        this.entitlementBillingApi = entitlementBillingApi;
+        this.billingApi = billingApi;
         this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
         this.invoiceNotifier = invoiceNotifier;
@@ -104,7 +103,7 @@ public class InvoiceDispatcher {
             return;
         }
 
-        UUID accountId = entitlementBillingApi.getAccountIdFromSubscriptionId(subscriptionId);
+        UUID accountId = billingApi.getAccountIdFromSubscriptionId(subscriptionId);
         if (accountId == null) {
             log.error("Failed handling entitlement change.",
                     new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
@@ -152,7 +151,7 @@ public class InvoiceDispatcher {
             return null;    
         }
 
-        SortedSet<BillingEvent> events = entitlementBillingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
+        SortedSet<BillingEvent> events = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
         BillingEventSet billingEvents = new BillingEventSet(events);
 
         Currency targetCurrency = account.getCurrency();
