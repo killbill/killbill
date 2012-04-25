@@ -17,6 +17,8 @@
 package com.ning.billing.invoice.template.formatters;
 
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 import java.util.Locale;

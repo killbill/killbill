@@ -19,9 +19,9 @@ package com.ning.billing.invoice.template;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.template.formatters.InvoiceFormatterFactory;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.template.translator.DefaultInvoiceTranslator;
-import com.ning.billing.invoice.template.formatters.InvoiceFormatter;
 import com.ning.billing.util.email.templates.TemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 

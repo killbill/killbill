@@ -17,8 +17,8 @@
 package com.ning.billing.invoice;
 
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
-import com.ning.billing.invoice.template.formatters.InvoiceFormatterFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.email.EmailModule;
 import org.skife.config.ConfigurationObjectFactory;

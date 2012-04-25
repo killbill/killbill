@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.template.formatters;
+package com.ning.billing.invoice.api.formatters;
 
 import com.ning.billing.invoice.api.InvoiceItem;
 
