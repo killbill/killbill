@@ -215,9 +215,10 @@ public class ProRationTests extends ProRationInAdvanceTestBase {
         DateTime targetDate = buildDateTime(2011, 4, 21);
 
         BigDecimal expectedValue;
-        expectedValue = SEVEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = SEVEN.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(THREE.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.add(THREE.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, planChangeDate, targetDate, 7, expectedValue);
 
         expectedValue = FIVE.divide(TWENTY_EIGHT, NUMBER_OF_DECIMALS, ROUNDING_METHOD).add(TWO);  

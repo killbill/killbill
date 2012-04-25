@@ -21,6 +21,8 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
+import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
+import com.ning.billing.invoice.template.formatters.InvoiceFormatterFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.email.templates.MustacheTemplateEngine;
@@ -47,7 +49,8 @@ public class HtmlInvoiceGeneratorTest {
     public void setup() {
         TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         TemplateEngine templateEngine = new MustacheTemplateEngine();
-        g = new HtmlInvoiceGenerator(templateEngine, config);
+        InvoiceFormatterFactory factory = new DefaultInvoiceFormatterFactory();
+        g = new HtmlInvoiceGenerator(factory, templateEngine, config);
     }
 
     @Test

@@ -14,10 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.util.email.formatters;
+package com.ning.billing.invoice.template.formatters;
 
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 
-public interface InvoiceFormatter extends Invoice {
-    public String getFormattedInvoiceDate();
+import java.util.Locale;
+
+public class DefaultInvoiceFormatterFactory implements InvoiceFormatterFactory {
+    @Override
+    public InvoiceFormatter createInvoiceFormatter(TranslatorConfig config, Invoice invoice, Locale locale) {
+        return new DefaultInvoiceFormatter(config, invoice, locale);
+    }
 }

@@ -19,9 +19,9 @@ package com.ning.billing.invoice.template;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.template.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.template.translator.DefaultInvoiceTranslator;
-import com.ning.billing.util.email.formatters.DefaultInvoiceFormatter;
-import com.ning.billing.util.email.formatters.InvoiceFormatter;
+import com.ning.billing.invoice.template.formatters.InvoiceFormatter;
 import com.ning.billing.util.email.templates.TemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
@@ -32,11 +32,13 @@ import java.util.Locale;
 import java.util.Map;
 
 public class HtmlInvoiceGenerator {
+    private final InvoiceFormatterFactory factory;
     private final TemplateEngine templateEngine;
     private final TranslatorConfig config;
 
     @Inject
-    public HtmlInvoiceGenerator(TemplateEngine templateEngine, TranslatorConfig config) {
+    public HtmlInvoiceGenerator(InvoiceFormatterFactory factory, TemplateEngine templateEngine, TranslatorConfig config) {
+        this.factory = factory;
         this.templateEngine = templateEngine;
         this.config = config;
     }
@@ -49,7 +51,7 @@ public class HtmlInvoiceGenerator {
         data.put("text", invoiceTranslator);
         data.put("account", account);
 
-        InvoiceFormatter formattedInvoice = new DefaultInvoiceFormatter(config, invoice, locale);
+        InvoiceFormatter formattedInvoice = factory.createInvoiceFormatter(config, invoice, locale);
         data.put("invoice", formattedInvoice);
 
         return templateEngine.executeTemplate(templateName, data);
