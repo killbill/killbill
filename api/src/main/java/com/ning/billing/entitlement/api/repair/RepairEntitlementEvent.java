@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,25 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
-package com.ning.billing.util.bus;
+package com.ning.billing.entitlement.api.repair;
 
 import java.util.UUID;
 
-public interface BusEvent {
-	
-	public enum BusEventType {
-		ACCOUNT_CREATE,
-		ACCOUNT_CHANGE,
-		SUBSCRIPTION_TRANSITION,
-		BUNDLE_REPAIR,
-		INVOICE_EMPTY,
-		INVOICE_CREATION,
-		PAYMENT_INFO,
-		PAYMENT_ERROR
-	}
+import org.joda.time.DateTime;
 
-	public BusEventType getBusEventType();
-	
-	public UUID getUserToken();
+import com.ning.billing.util.bus.BusEvent;
+
+public interface RepairEntitlementEvent extends BusEvent {
+
+    UUID getBundleId();
+
+    DateTime getEffectiveDate();
 }

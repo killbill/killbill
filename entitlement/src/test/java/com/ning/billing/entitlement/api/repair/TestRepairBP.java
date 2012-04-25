@@ -187,8 +187,10 @@ public class TestRepairBP extends TestApiBaseRepair {
         
        // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
+        testListener.expectRepairCompletion();
         BundleRepair realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
-
+        assertTrue(testListener.isRepairCompleted(5000));
+        
         subscriptionRepair = realRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
         cur = subscriptionRepair.get(0);
@@ -243,9 +245,9 @@ public class TestRepairBP extends TestApiBaseRepair {
 
         UUID baseSubscriptionId = testBPRepairCreate(true, startDate, clockShift, baseProduct, newBaseProduct, expected);
         
-        testListener.pushExpectedEvent(NextEvent.PHASE);
+        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
         clock.addDeltaFromReality(getDurationDay(32));
-        assertTrue(testListener.isCompleted(5000));
+        assertTrue(testListener.isApiCompleted(5000));
         
         // CHECK WHAT"S GOING ON AFTER WE MOVE CLOCK-- FUTURE MOTIFICATION SHOULD KICK IN
         SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
@@ -296,12 +298,12 @@ public class TestRepairBP extends TestApiBaseRepair {
         // MOVE CLOCK
         if (clockShift > 0) {
             if (!inTrial) {
-                testListener.pushExpectedEvent(NextEvent.PHASE);
+                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
             }               
             Duration durationShift = getDurationDay(clockShift);
             clock.setDeltaFromReality(durationShift, 0);
             if (!inTrial) {
-                assertTrue(testListener.isCompleted(5000));
+                assertTrue(testListener.isApiCompleted(5000));
             }
         }
 
@@ -415,9 +417,9 @@ public class TestRepairBP extends TestApiBaseRepair {
         UUID baseSubscriptionId = testBPRepairAddChange(true, startDate, clockShift, baseProduct, newBaseProduct, expected, 3);
         
         // CHECK WHAT"S GOING ON AFTER WE MOVE CLOCK-- FUTURE MOTIFICATION SHOULD KICK IN
-        testListener.pushExpectedEvent(NextEvent.PHASE);
+        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
         clock.addDeltaFromReality(getDurationDay(32));
-        assertTrue(testListener.isCompleted(5000));
+        assertTrue(testListener.isApiCompleted(5000));
         SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
         
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -465,13 +467,13 @@ public class TestRepairBP extends TestApiBaseRepair {
 
         // MOVE CLOCK
         if (!inTrial) {
-            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
         }               
 
         Duration durationShift = getDurationDay(clockShift);
         clock.setDeltaFromReality(durationShift, 0);
         if (!inTrial) {
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
         }
 
         BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
@@ -573,9 +575,9 @@ public class TestRepairBP extends TestApiBaseRepair {
         Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK -- OUT OF TRIAL
-        testListener.pushExpectedEvent(NextEvent.PHASE);                
+        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);                
         clock.setDeltaFromReality(getDurationDay(35), 0);
-        assertTrue(testListener.isCompleted(5000));
+        assertTrue(testListener.isApiCompleted(5000));
         
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
@@ -658,10 +660,10 @@ public class TestRepairBP extends TestApiBaseRepair {
 
                 BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
-                testListener.pushExpectedEvent(NextEvent.CHANGE);
+                testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
                 DateTime changeTime = clock.getUTCNow();
                 baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, context);
-                assertTrue(testListener.isCompleted(5000));
+                assertTrue(testListener.isApiCompleted(5000));
                                 
                 repairApi.repairBundle(bRepair, true, context);
             }

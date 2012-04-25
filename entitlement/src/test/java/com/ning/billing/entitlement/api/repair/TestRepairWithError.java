@@ -75,10 +75,10 @@ public class TestRepairWithError extends TestApiBaseRepair {
             public void doTest() throws EntitlementRepairException {
 
                 // MOVE AFTER TRIAL
-                testListener.pushExpectedEvent(NextEvent.PHASE);
+                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
                 Duration durationShift = getDurationDay(40);
                 clock.setDeltaFromReality(durationShift, 0);
-                assertTrue(testListener.isCompleted(5000));
+                assertTrue(testListener.isApiCompleted(5000));
                 
                 BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
@@ -103,16 +103,16 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 Duration durationShift = getDurationDay(3);
                 clock.setDeltaFromReality(durationShift, 0);
                 
-                testListener.pushExpectedEvent(NextEvent.CHANGE);
+                testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
                 DateTime changeTime = clock.getUTCNow();
                 baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, context);
-                assertTrue(testListener.isCompleted(5000));
+                assertTrue(testListener.isApiCompleted(5000));
                 
                 // MOVE AFTER TRIAL
-                testListener.pushExpectedEvent(NextEvent.PHASE);
+                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
                 durationShift = getDurationDay(40);
                 clock.addDeltaFromReality(durationShift);
-                assertTrue(testListener.isCompleted(5000));
+                assertTrue(testListener.isApiCompleted(5000));
                 
                 BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
@@ -155,10 +155,10 @@ public class TestRepairWithError extends TestApiBaseRepair {
             public void doTest() throws EntitlementRepairException {
                 
                 // MOVE AFTER TRIAL
-                   testListener.pushExpectedEvent(NextEvent.PHASE);
+                   testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
                    Duration durationShift = getDurationDay(40);
                    clock.setDeltaFromReality(durationShift, 0);
-                   assertTrue(testListener.isCompleted(5000));
+                   assertTrue(testListener.isApiCompleted(5000));
                    
                    BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
                    sortEventsOnBundle(bundleRepair);
@@ -183,10 +183,10 @@ public class TestRepairWithError extends TestApiBaseRepair {
             public void doTest() throws EntitlementRepairException {
                 
              // MOVE AFTER TRIAL
-                testListener.pushExpectedEvent(NextEvent.PHASE);
+                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
                 Duration durationShift = getDurationDay(40);
                 clock.setDeltaFromReality(durationShift, 0);
-                assertTrue(testListener.isCompleted(5000));
+                assertTrue(testListener.isApiCompleted(5000));
                 
                 BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);

@@ -56,9 +56,9 @@ public abstract class TestMigration extends TestApiBase {
             EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlan(startDate);
             DateTime afterMigration = clock.getUTCNow();
 
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
+            testListener.pushNextApiExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, context);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
             assertEquals(bundles.size(), 1);
@@ -87,10 +87,10 @@ public abstract class TestMigration extends TestApiBase {
             EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlanAndAddons(initalBPStart, initalAddonStart);
             DateTime afterMigration = clock.getUTCNow();
 
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
+            testListener.pushNextApiExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
+            testListener.pushNextApiExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, context);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
             assertEquals(bundles.size(), 1);
@@ -135,9 +135,9 @@ public abstract class TestMigration extends TestApiBase {
             EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlanFutreCancelled(startDate);
             DateTime afterMigration = clock.getUTCNow();
 
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
+            testListener.pushNextApiExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, context);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
             assertEquals(bundles.size(), 1);
@@ -154,11 +154,11 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
 
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            testListener.pushNextApiExpectedEvent(NextEvent.MIGRATE_BILLING);
+            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
             Duration oneYear = getDurationYear(1);
             clock.setDeltaFromReality(oneYear, 0);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
             assertNotNull(subscription.getEndDate());
@@ -179,9 +179,9 @@ public abstract class TestMigration extends TestApiBase {
             final DateTime trialDate = clock.getUTCNow().minusDays(10);
             EntitlementAccountMigration toBeMigrated = createAccountFuturePendingPhase(trialDate);
 
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
+            testListener.pushNextApiExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, context);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
             assertEquals(bundles.size(), 1);
@@ -199,11 +199,11 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-monthly");
             assertEquals(subscription.getChargedThroughDate(), trialDate.plusDays(30));
 
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
-            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.MIGRATE_BILLING);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
             Duration thirtyDays = getDurationDay(30);
             clock.setDeltaFromReality(thirtyDays, 0);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             assertEquals(subscription.getStartDate(), trialDate);
             assertEquals(subscription.getEndDate(), null);
@@ -225,9 +225,9 @@ public abstract class TestMigration extends TestApiBase {
             EntitlementAccountMigration toBeMigrated = createAccountFuturePendingChange();
             DateTime afterMigration = clock.getUTCNow();
 
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
+            testListener.pushNextApiExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             migrationApi.migrate(toBeMigrated, context);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
             assertEquals(bundles.size(), 1);
@@ -243,10 +243,10 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-monthly");
 
-            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
             Duration oneMonth = getDurationMonth(1);
             clock.setDeltaFromReality(oneMonth, 0);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
             assertEquals(subscription.getEndDate(), null);

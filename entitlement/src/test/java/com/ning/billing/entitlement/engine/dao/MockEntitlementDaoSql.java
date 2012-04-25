@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.tag.dao.TagDao;
 import org.skife.jdbi.v2.IDBI;
@@ -37,8 +38,8 @@ public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEnti
 
     @Inject
     public MockEntitlementDaoSql(IDBI dbi, Clock clock, AddonUtils addonUtils, NotificationQueueService notificationQueueService,
-                                 CustomFieldDao customFieldDao) {
-        super(dbi, clock, addonUtils, notificationQueueService, customFieldDao);
+                                 CustomFieldDao customFieldDao, final Bus eventBus) {
+        super(dbi, clock, addonUtils, notificationQueueService, customFieldDao, eventBus);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
     }
 

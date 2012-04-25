@@ -76,8 +76,8 @@ public class TestUserCustomFieldsSql extends TestApiBase {
             BillingPeriod term = BillingPeriod.MONTHLY;
             String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            testListener.pushExpectedEvent(NextEvent.PHASE);
-            testListener.pushExpectedEvent(NextEvent.CREATE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                     getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             assertNotNull(subscription);
@@ -132,8 +132,8 @@ public class TestUserCustomFieldsSql extends TestApiBase {
             BillingPeriod term = BillingPeriod.MONTHLY;
             String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            testListener.pushExpectedEvent(NextEvent.PHASE);
-            testListener.pushExpectedEvent(NextEvent.CREATE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                     getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             assertNotNull(subscription);

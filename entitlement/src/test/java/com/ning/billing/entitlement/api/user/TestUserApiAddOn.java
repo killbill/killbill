@@ -72,8 +72,8 @@ public class TestUserApiAddOn extends TestApiBase {
             aoSubscription.cancel(now, false, context);
 
             testListener.reset();
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
-            assertTrue(testListener.isCompleted(5000));
+            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
+            assertTrue(testListener.isApiCompleted(5000));
 
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
@@ -100,13 +100,13 @@ public class TestUserApiAddOn extends TestApiBase {
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
-            testListener.pushExpectedEvent(NextEvent.PHASE);
-            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
 
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
             Duration twoMonths = getDurationMonth(2);
             clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             // SET CTD TO CANCEL IN FUTURE
             DateTime now = clock.getUTCNow();
@@ -126,10 +126,10 @@ public class TestUserApiAddOn extends TestApiBase {
 
             // MOVE AFTER CANCELLATION
             testListener.reset();
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
+            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
             clock.addDeltaFromReality(ctd);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS CANCELLED
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
@@ -159,13 +159,13 @@ public class TestUserApiAddOn extends TestApiBase {
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
-            testListener.pushExpectedEvent(NextEvent.PHASE);
-            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
 
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
             Duration twoMonths = getDurationMonth(2);
             clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             // SET CTD TO CHANGE IN FUTURE
             DateTime now = clock.getUTCNow();
@@ -180,10 +180,10 @@ public class TestUserApiAddOn extends TestApiBase {
             String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             testListener.reset();
-            testListener.pushExpectedEvent(NextEvent.CHANGE);
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
+            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
             baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, context);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
@@ -212,13 +212,13 @@ public class TestUserApiAddOn extends TestApiBase {
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
-            testListener.pushExpectedEvent(NextEvent.PHASE);
-            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
 
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
             Duration twoMonths = getDurationMonth(2);
             clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
             // SET CTD TO CANCEL IN FUTURE
             DateTime now = clock.getUTCNow();
@@ -242,10 +242,10 @@ public class TestUserApiAddOn extends TestApiBase {
 
             // MOVE AFTER CHANGE
             testListener.reset();
-            testListener.pushExpectedEvent(NextEvent.CHANGE);
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
+            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
             clock.addDeltaFromReality(ctd);
-            assertTrue(testListener.isCompleted(5000));
+            assertTrue(testListener.isApiCompleted(5000));
 
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
@@ -348,14 +348,14 @@ public class TestUserApiAddOn extends TestApiBase {
 
            // ADD TWO PHASE EVENTS (BP + AO)
            testListener.reset();
-           testListener.pushExpectedEvent(NextEvent.PHASE);
-           testListener.pushExpectedEvent(NextEvent.PHASE);
+           testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+           testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
 
            // MOVE THROUGH TIME TO GO INTO EVERGREEN
            someTimeLater = aoCurrentPhase.getDuration();
            clock.addDeltaFromReality(someTimeLater);
            clock.addDeltaFromReality(getDurationDay(1));
-           assertTrue(testListener.isCompleted(5000));
+           assertTrue(testListener.isApiCompleted(5000));
 
 
            // CHECK EVERYTHING AGAIN

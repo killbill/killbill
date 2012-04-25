@@ -52,14 +52,14 @@ public class TestUserApiScenarios extends TestApiBase {
             PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
-            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
-            testListener.isCompleted(3000);
+            testListener.isApiCompleted(3000);
 
             // MOVE TO NEXT PHASE
-            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
             clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
-            assertTrue(testListener.isCompleted(2000));
+            assertTrue(testListener.isApiCompleted(2000));
 
             // SET CTD
             Duration ctd = getDurationMonth(1);
@@ -69,21 +69,21 @@ public class TestUserApiScenarios extends TestApiBase {
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CANCEL EOT
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), false, context);
-            assertFalse(testListener.isCompleted(2000));
+            assertFalse(testListener.isApiCompleted(2000));
             testListener.reset();
 
             // UNCANCEL
             subscription.uncancel(context);
 
             // CHANGE EOT
-            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), context);
-            assertFalse(testListener.isCompleted(2000));
+            assertFalse(testListener.isApiCompleted(2000));
 
             clock.addDeltaFromReality(ctd);
-            assertTrue(testListener.isCompleted(3000));
+            assertTrue(testListener.isApiCompleted(3000));
 
 
         } catch (EntitlementUserApiException e) {

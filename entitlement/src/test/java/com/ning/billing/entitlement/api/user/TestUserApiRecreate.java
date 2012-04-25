@@ -66,8 +66,8 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         BillingPeriod term = BillingPeriod.MONTHLY;
         String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        testListener.pushExpectedEvent(NextEvent.PHASE);
-        testListener.pushExpectedEvent(NextEvent.CREATE);
+        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+        testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                 getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
         assertNotNull(subscription);
@@ -76,7 +76,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         assertEquals(subscription.getStartDate(), requestedDate);
         assertEquals(productName, subscription.getCurrentPlan().getProduct().getName());
 
-        assertTrue(testListener.isCompleted(5000));
+        assertTrue(testListener.isApiCompleted(5000));
 
         // CREATE (AGAIN) WITH NEW PRODUCT
         productName = "Pistol";
@@ -96,11 +96,11 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         }
 
         // NOW CANCEL ADN THIS SHOULD WORK
-        testListener.pushExpectedEvent(NextEvent.CANCEL);
+        testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
         subscription.cancel(null, false, context);
 
-        testListener.pushExpectedEvent(NextEvent.PHASE);
-        testListener.pushExpectedEvent(NextEvent.RE_CREATE);
+        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+        testListener.pushNextApiExpectedEvent(NextEvent.RE_CREATE);
 
         // Avoid ordering issue for events at exact same date; this is actually a real good test, we
         // we test it at Beatrix level. At this level that would work for sql tests but not for in memory.

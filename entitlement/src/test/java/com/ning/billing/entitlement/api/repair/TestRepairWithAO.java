@@ -222,11 +222,11 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         
         // MOVE CLOCK A LITTLE BIT MORE -- AFTER TRIAL
-        testListener.pushExpectedEvent(NextEvent.PHASE);
-        testListener.pushExpectedEvent(NextEvent.PHASE);
+        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
         someTimeLater = getDurationDay(32);
         clock.addDeltaFromReality(someTimeLater);
-        assertTrue(testListener.isCompleted(7000));        
+        assertTrue(testListener.isApiCompleted(7000));        
 
         BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -339,11 +339,11 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         
         // MOVE CLOCK A LITTLE BIT MORE -- AFTER TRIAL
-        testListener.pushExpectedEvent(NextEvent.PHASE);
-        testListener.pushExpectedEvent(NextEvent.PHASE);
+        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
         someTimeLater = getDurationDay(40);
         clock.addDeltaFromReality(someTimeLater);
-        assertTrue(testListener.isCompleted(7000));
+        assertTrue(testListener.isApiCompleted(7000));
         
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
@@ -441,11 +441,11 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         
         // MOVE CLOCK AFTER CANCEL DATE
-        testListener.pushExpectedEvent(NextEvent.CANCEL);
-        testListener.pushExpectedEvent(NextEvent.CANCEL);
+        testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
+        testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
         someTimeLater = getDurationDay(32);
         clock.addDeltaFromReality(someTimeLater);
-        assertTrue(testListener.isCompleted(7000));
+        assertTrue(testListener.isApiCompleted(7000));
 
         newAoSubscription = (SubscriptionData)  entitlementApi.getSubscriptionFromId(aoSubscription.getId());
         assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
@@ -732,10 +732,10 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
         
-        testListener.pushExpectedEvent(NextEvent.PHASE);
+        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
         someTimeLater = getDurationDay(60);
         clock.addDeltaFromReality(someTimeLater);
-        assertTrue(testListener.isCompleted(5000));
+        assertTrue(testListener.isApiCompleted(5000));
         
         newAoSubscription = (SubscriptionData)  entitlementApi.getSubscriptionFromId(aoSubscription.getId());
         currentPhase = newAoSubscription.getCurrentPhase();

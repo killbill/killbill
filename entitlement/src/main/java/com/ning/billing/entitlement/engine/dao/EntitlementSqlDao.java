@@ -29,6 +29,8 @@ import java.util.UUID;
 
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.audit.dao.AuditSqlDao;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import org.joda.time.DateTime;
@@ -49,6 +51,8 @@ import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import com.ning.billing.entitlement.api.repair.DefaultRepairEntitlementEvent;
+import com.ning.billing.entitlement.api.repair.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.repair.SubscriptionDataRepair;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -90,17 +94,13 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
     private final CustomFieldDao customFieldDao;
+    private final Bus eventBus;
 
-    //
-    // We are not injecting SubscriptionFactory since that creates circular dependencies--
-    // Guice would still work, but this is playing with fire.
-    //
-    // Instead that factory passed through API top to bottom for the call where is it needed-- where we returned fully rehydrated Subscriptions
-    //
+
     @Inject
     public EntitlementSqlDao(final IDBI dbi, final Clock clock,
             final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-            final CustomFieldDao customFieldDao) {
+            final CustomFieldDao customFieldDao, final Bus eventBus) {
         this.clock = clock;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
         this.eventsDao = dbi.onDemand(EventSqlDao.class);
@@ -108,6 +108,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
         this.customFieldDao = customFieldDao;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -621,6 +622,12 @@ public class EntitlementSqlDao implements EntitlementDao {
                                     new EntitlementNotificationKey(event.getId()));
                         }
                     }
+                }
+                try {
+                    RepairEntitlementEvent busEvent = new DefaultRepairEntitlementEvent(context.getUserToken(), bundleId, clock.getUTCNow());
+                    eventBus.postFromTransaction(busEvent, transactional);
+                } catch (EventBusException e) {
+                    log.warn("Failed to post repair entitlement event for bundle " + bundleId);
                 }
                 return null;
             }
