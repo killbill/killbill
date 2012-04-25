@@ -25,7 +25,12 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
@@ -33,6 +38,12 @@ import com.ning.billing.entitlement.api.repair.SubscriptionRepair.ExistingEvent;
 import com.ning.billing.entitlement.api.repair.SubscriptionRepair.NewEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
+import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
+import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.entitlement.events.user.ApiEvent;
+import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.sun.org.apache.xml.internal.resolver.CatalogException;
 
 public class DefaultSubscriptionRepair implements SubscriptionRepair  {
 
@@ -61,37 +72,74 @@ public class DefaultSubscriptionRepair implements SubscriptionRepair  {
     }
     
      // CTOR for returning events only
-    public DefaultSubscriptionRepair(SubscriptionData input) {
+    public DefaultSubscriptionRepair(SubscriptionDataRepair input, Catalog catalog) throws CatalogApiException {
         this.id = input.getId();
-        this.existingEvents = toExistingEvents(input.getCategory(), input.getAllTransitions());
+        this.existingEvents = toExistingEvents(catalog, input.getActiveVersion(), input.getCategory(), input.getEvents());
         this.deletedEvents = null;
         this.newEvents = null;
     }
     
-    private List<ExistingEvent> toExistingEvents(final ProductCategory category, final List<SubscriptionTransitionData> transitions) {
+   private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long activeVersion, final ProductCategory category, final List<EntitlementEvent> events) 
+       throws CatalogApiException {
+        
         List<ExistingEvent> result = new LinkedList<SubscriptionRepair.ExistingEvent>();
-        for (final SubscriptionTransitionData cur : transitions) {
+        
+        String prevProductName = null; 
+        BillingPeriod prevBillingPeriod = null;
+        String prevPriceListName = null;
+        PhaseType prevPhaseType = null;
+        
+        DateTime startDate = null;
+        
+        for (final EntitlementEvent cur : events) {
             
-            String productName = null;
+            // First active event is used to figure out which catalog version to use.
+            //startDate = (startDate == null && cur.getActiveVersion() == activeVersion) ?  cur.getEffectiveDate() : startDate;
+            
+            // STEPH that needs tp be reviewed if we support mutli version events
+            if (cur.getActiveVersion() != activeVersion) {
+                continue;
+            }
+            startDate = (startDate == null) ?  cur.getEffectiveDate() : startDate;
+            
+            
+            String productName = null; 
             BillingPeriod billingPeriod = null;
             String priceListName = null;
             PhaseType phaseType = null;
-            if (cur.getTransitionType() != SubscriptionTransitionType.CANCEL) {
-                productName = cur.getNextPlan().getProduct().getName();
-                billingPeriod = cur.getNextPhase().getBillingPeriod(); 
-                priceListName = cur.getNextPriceList(); 
-                phaseType = cur.getNextPhase().getPhaseType();
+
+            ApiEventType apiType = null;
+            switch (cur.getType()) {
+            case PHASE:
+                PhaseEvent phaseEV = (PhaseEvent) cur;
+                phaseType = catalog.findPhase(phaseEV.getPhase(), cur.getEffectiveDate(), startDate).getPhaseType();
+                productName = prevProductName;
+                billingPeriod = catalog.findPhase(phaseEV.getPhase(), cur.getEffectiveDate(), startDate).getBillingPeriod();
+                priceListName = prevPriceListName;
+                break;
+
+            case API_USER:
+                ApiEvent userEV = (ApiEvent) cur;
+                apiType = userEV.getEventType();
+                Plan plan =  (userEV.getEventPlan() != null) ? catalog.findPlan(userEV.getEventPlan(), cur.getRequestedDate(), startDate) : null;
+                phaseType = (userEV.getEventPlanPhase() != null) ? catalog.findPhase(userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate).getPhaseType() : prevPhaseType;
+                productName = (plan != null) ? plan.getProduct().getName() : prevProductName;
+                billingPeriod = (userEV.getEventPlanPhase() != null) ? catalog.findPhase(userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate).getBillingPeriod() : prevBillingPeriod;
+                priceListName = (userEV.getPriceList() != null) ? userEV.getPriceList() : prevPriceListName;
+                break;
             }
+
+            final SubscriptionTransitionType transitionType = SubscriptionTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
             
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
             result.add(new ExistingEvent() {
                 @Override
                 public SubscriptionTransitionType getSubscriptionTransitionType() {
-                    return cur.getTransitionType();
+                    return transitionType;
                 }
                 @Override
                 public DateTime getRequestedDate() {
-                    return cur.getRequestedTransitionTime();
+                    return cur.getRequestedDate();
                 }
                 @Override
                 public PlanPhaseSpecifier getPlanPhaseSpecifier() {
@@ -103,13 +151,106 @@ public class DefaultSubscriptionRepair implements SubscriptionRepair  {
                 }
                 @Override
                 public DateTime getEffectiveDate() {
-                    return cur.getEffectiveTransitionTime();
+                    return cur.getEffectiveDate();
                 }
             });
+            
+            prevProductName = productName; 
+            prevBillingPeriod = billingPeriod;
+            prevPriceListName = priceListName;
+            prevPhaseType = phaseType;
+
         }
         sortExistingEvent(result);
         return result;
     }
+   
+   
+   /*
+   
+   private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long processingVersion, final ProductCategory category, final List<EntitlementEvent> events, List<ExistingEvent> result)
+       throws CatalogApiException {
+       
+       
+       String prevProductName = null; 
+       BillingPeriod prevBillingPeriod = null;
+       String prevPriceListName = null;
+       PhaseType prevPhaseType = null;
+       
+       DateTime startDate = null;
+       
+       for (final EntitlementEvent cur : events) {
+           
+           if (processingVersion != cur.getActiveVersion()) {
+               continue;
+           }
+           
+           // First active event is used to figure out which catalog version to use.
+           startDate = (startDate == null && cur.getActiveVersion() == processingVersion) ?  cur.getEffectiveDate() : startDate;
+           
+           String productName = null; 
+           BillingPeriod billingPeriod = null;
+           String priceListName = null;
+           PhaseType phaseType = null;
+
+           ApiEventType apiType = null;
+           switch (cur.getType()) {
+           case PHASE:
+               PhaseEvent phaseEV = (PhaseEvent) cur;
+               phaseType = catalog.findPhase(phaseEV.getPhase(), cur.getEffectiveDate(), startDate).getPhaseType();
+               productName = prevProductName;
+               billingPeriod = prevBillingPeriod;
+               priceListName = prevPriceListName;
+               break;
+
+           case API_USER:
+               ApiEvent userEV = (ApiEvent) cur;
+               apiType = userEV.getEventType();
+               Plan plan =  (userEV.getEventPlan() != null) ? catalog.findPlan(userEV.getEventPlan(), cur.getRequestedDate(), startDate) : null;
+               phaseType = (userEV.getEventPlanPhase() != null) ? catalog.findPhase(userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate).getPhaseType() : prevPhaseType;
+               productName = (plan != null) ? plan.getProduct().getName() : prevProductName;
+               billingPeriod = (plan != null) ? plan.getBillingPeriod() : prevBillingPeriod;
+               priceListName = (userEV.getPriceList() != null) ? userEV.getPriceList() : prevPriceListName;
+               break;
+           }
+
+           final SubscriptionTransitionType transitionType = SubscriptionTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
+           
+           final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
+           result.add(new ExistingEvent() {
+               @Override
+               public SubscriptionTransitionType getSubscriptionTransitionType() {
+                   return transitionType;
+               }
+               @Override
+               public DateTime getRequestedDate() {
+                   return cur.getRequestedDate();
+               }
+               @Override
+               public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+                   return spec;
+               }
+               @Override
+               public UUID getEventId() {
+                   return cur.getId();
+               }
+               @Override
+               public DateTime getEffectiveDate() {
+                   return cur.getEffectiveDate();
+               }
+           });
+           prevProductName = productName; 
+           prevBillingPeriod = billingPeriod;
+           prevPriceListName = priceListName;
+           prevPhaseType = phaseType;
+       }
+   }
+   */
+   
+   
+    
+    
+    
     
     @Override
     public UUID getId() {

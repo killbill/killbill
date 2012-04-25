@@ -23,7 +23,10 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -40,7 +43,8 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
 public abstract class TestApiBaseRepair extends TestApiBase {
 
-
+    protected final static Logger log = LoggerFactory.getLogger(TestApiBaseRepair.class);
+    
     public interface TestWithExceptionCallback {
         public void doTest() throws EntitlementRepairException, EntitlementUserApiException;
     }
@@ -135,11 +139,18 @@ public abstract class TestApiBaseRepair extends TestApiBase {
         return null;
     }
     protected void validateExistingEventForAssertion(final ExistingEvent expected, final ExistingEvent input) {
+        
+        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName()));
         assertEquals(input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName());
+        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType()));
         assertEquals(input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType());
+        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory()));
         assertEquals(input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory());                    
+        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName()));
         assertEquals(input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName());                    
+        log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod()));
         assertEquals(input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod());
+        log.info(String.format("Got %s -> Expected %s", input.getEffectiveDate(), expected.getEffectiveDate()));
         assertEquals(input.getEffectiveDate(), expected.getEffectiveDate());        
     }
     

@@ -52,7 +52,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
     @Override
     public Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
-    }
+    }    
 
     @Test(groups={"slow"})
     public void testRepairChangeBPWithAddonIncluded() throws Exception {
@@ -116,8 +116,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         List<ExistingEvent> expectedAO = new LinkedList<SubscriptionRepair.ExistingEvent>();
         expectedAO.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, "Telescopic-Scope", PhaseType.DISCOUNT,
                 ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, aoSubscription.getStartDate()));
-        expectedAO.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, null, null,
-                ProductCategory.ADD_ON, null, null, bpChangeDate));
+        expectedAO.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, "Telescopic-Scope", PhaseType.DISCOUNT,
+                ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, bpChangeDate));
         int index = 0;
         for (ExistingEvent e : expectedAO) {
            validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));           
@@ -262,8 +262,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
                 ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, aoSubscription.getStartDate()));
         expectedAO.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, "Telescopic-Scope", PhaseType.EVERGREEN,
                 ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, baseSubscription.getStartDate().plusMonths(1)));
-        expectedAO.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, null, null,
-                ProductCategory.ADD_ON, null, null, bpChangeDate));
+        expectedAO.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, "Telescopic-Scope", PhaseType.EVERGREEN,
+                ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, bpChangeDate));
         int index = 0;
         for (ExistingEvent e : expectedAO) {
            validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));           
@@ -369,7 +369,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         BundleRepair dryRunBundleRepair = repairApi.repairBundle(bundleRepair, dryRun, context);
                 
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), dryRunBundleRepair);
-        assertEquals(aoRepair.getExistingEvents().size(), 2);
+        assertEquals(aoRepair.getExistingEvents().size(), 3);
 
         bpRepair = getSubscriptionRepair(baseSubscription.getId(), dryRunBundleRepair);
         assertEquals(bpRepair.getExistingEvents().size(), 3);        
@@ -380,10 +380,9 @@ public class TestRepairWithAO extends TestApiBaseRepair {
                 ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, aoSubscription.getStartDate()));
         expectedAO.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, "Telescopic-Scope", PhaseType.EVERGREEN,
                 ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, baseSubscription.getStartDate().plusMonths(1)));
-        /*
-        expectedAO.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, null, null,
-                ProductCategory.ADD_ON, null, null, newChargedThroughDate));
-                */
+        expectedAO.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, "Telescopic-Scope", PhaseType.EVERGREEN,
+                ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, newChargedThroughDate));
+
         int index = 0;
         for (ExistingEvent e : expectedAO) {
            validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));           
@@ -395,8 +394,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
                 ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
         expectedBP.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, "Shotgun", PhaseType.EVERGREEN,
                 ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, baseSubscription.getStartDate().plusDays(30)));
-        expectedBP.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, null, null,
-                ProductCategory.BASE, null, null, newChargedThroughDate));
+        expectedBP.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, "Shotgun", PhaseType.EVERGREEN,
+                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, newChargedThroughDate));
         index = 0;
         for (ExistingEvent e : expectedBP) {
            validateExistingEventForAssertion(e, bpRepair.getExistingEvents().get(index++));           
@@ -421,9 +420,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         bpRepair = getSubscriptionRepair(baseSubscription.getId(), realRunBundleRepair);
         assertEquals(bpRepair.getExistingEvents().size(), 3);        
         
-        // STEPH BUG -- WE ONLY SEE THAT AFTER WE HIT DISK.
-        expectedAO.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, null, null,
-                ProductCategory.ADD_ON, null, null, newChargedThroughDate));
         index = 0;
         for (ExistingEvent e : expectedAO) {
            validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));           
@@ -515,8 +511,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         List<ExistingEvent> expected = new LinkedList<SubscriptionRepair.ExistingEvent>();
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, "Telescopic-Scope", PhaseType.DISCOUNT,
                 ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, aoSubscription.getStartDate()));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, null, null,
-                ProductCategory.ADD_ON, null, null, aoCancelDate));
+        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, "Telescopic-Scope", PhaseType.DISCOUNT,
+                ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, aoCancelDate));
         int index = 0;
         for (ExistingEvent e : expected) {
            validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));           

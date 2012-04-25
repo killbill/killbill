@@ -34,8 +34,10 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
@@ -110,7 +112,6 @@ public class SubscriptionDataRepair extends SubscriptionData {
             default:
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_TYPE, input.getSubscriptionTransitionType(), id);
             }
-            
         } catch (EntitlementUserApiException e) {
             throw new EntitlementRepairException(e);
         } catch (CatalogApiException e) {
@@ -119,18 +120,40 @@ public class SubscriptionDataRepair extends SubscriptionData {
     }
 
 
-    private void trickleDownBPEffectForAddon(final List<SubscriptionDataRepair> addonSubscriptions, final DateTime effectiveDate, final CallContext context)
+    public void addFutureAddonCancellation(List<SubscriptionDataRepair> addOnSubscriptionInRepair, final CallContext context) {
+
+        if (category != ProductCategory.BASE) {
+            return;
+        }
+
+        SubscriptionEventTransition pendingTransition = getPendingTransition();
+        if (pendingTransition == null) {
+            return;
+        }
+        Product baseProduct = (pendingTransition.getTransitionType() == SubscriptionTransitionType.CANCEL) ? null : 
+            pendingTransition.getNextPlan().getProduct();
+
+        addAddonCancellationIfRequired(addOnSubscriptionInRepair, baseProduct, pendingTransition.getEffectiveTransitionTime(), context);
+    }
+    
+    private void trickleDownBPEffectForAddon(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final DateTime effectiveDate, final CallContext context)
      throws EntitlementUserApiException {
 
         if (category != ProductCategory.BASE) {
             return;
         }
-        
-        DateTime now = clock.getUTCNow();
+
         Product baseProduct = (getState() == SubscriptionState.CANCELLED ) ?
                 null : getCurrentPlan().getProduct();
+        addAddonCancellationIfRequired(addOnSubscriptionInRepair, baseProduct, effectiveDate, context);
+    }
+    
+    
+    
+    private void addAddonCancellationIfRequired(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, Product baseProduct, final DateTime effectiveDate, final CallContext context) {
 
-        Iterator<SubscriptionDataRepair> it = addonSubscriptions.iterator();
+        DateTime now = clock.getUTCNow();
+        Iterator<SubscriptionDataRepair> it = addOnSubscriptionInRepair.iterator();
         while (it.hasNext()) {
             SubscriptionDataRepair cur = it.next();
             if (cur.getState() == SubscriptionState.CANCELLED ||

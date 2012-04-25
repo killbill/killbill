@@ -162,8 +162,9 @@ public class TestRepairBP extends TestApiBaseRepair {
         List<ExistingEvent> expected = new LinkedList<SubscriptionRepair.ExistingEvent>();
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
                 ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, null, null,
-                    ProductCategory.BASE, null, null, baseSubscription.getStartDate()));
+        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, baseProduct, PhaseType.TRIAL,
+                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD,baseSubscription.getStartDate()));
+
         for (ExistingEvent e : expected) {
            validateExistingEventForAssertion(e, events.get(index++));           
         }
@@ -364,7 +365,10 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(cur.getId(), baseSubscription.getId());
 
         events = cur.getExistingEvents();
-        assertEquals(expectedEvents.size(), events.size());
+        for (ExistingEvent e : events) {
+            log.info(String.format("%s, %s, %s, %s", e.getSubscriptionTransitionType(), e.getEffectiveDate(), e.getPlanPhaseSpecifier().getProductName(),  e.getPlanPhaseSpecifier().getPhaseType()));
+        }
+        assertEquals(events.size(), expectedEvents.size());
         index = 0;
         for (ExistingEvent e : expectedEvents) {
            validateExistingEventForAssertion(e, events.get(index++));           

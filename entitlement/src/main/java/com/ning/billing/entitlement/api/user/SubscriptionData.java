@@ -475,11 +475,9 @@ public class SubscriptionData extends ExtendedEntityBase implements
             Plan nextPlan = null;
             PlanPhase nextPhase = null;
             try {
-                nextPlan = (nextPlanName != null) ? catalog.findPlan(
-                        nextPlanName, cur.getRequestedDate(), getStartDate())
+                nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getRequestedDate(), getStartDate())
                         : null;
-                nextPhase = (nextPhaseName != null) ? catalog.findPhase(
-                        nextPhaseName, cur.getRequestedDate(), getStartDate())
+                nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getStartDate())
                         : null;
             } catch (CatalogApiException e) {
                 log.error(String.format(
