@@ -14,10 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.util.email.translation;
+package com.ning.billing.util.template.translation;
 
-import java.util.Locale;
+import com.google.inject.Inject;
 
-public interface Translator {
-    public String getTranslation(Locale locale, String originalText);
+public class DefaultCatalogTranslator extends DefaultTranslatorBase {
+    @Inject
+    public DefaultCatalogTranslator(TranslatorConfig config) {
+        super(config);
+    }
+
+    @Override
+    protected String getBundlePath() {
+        return "com/ning/billing/util/template/translation/CatalogTranslation";
+    }
+
+    @Override
+    protected String getTranslationType() {
+        return "catalog";
+    }
 }

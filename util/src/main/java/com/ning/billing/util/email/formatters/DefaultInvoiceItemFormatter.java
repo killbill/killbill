@@ -18,9 +18,9 @@ package com.ning.billing.util.email.formatters;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.util.email.translation.DefaultCatalogTranslator;
-import com.ning.billing.util.email.translation.Translator;
-import com.ning.billing.util.email.translation.TranslatorConfig;
+import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
+import com.ning.billing.util.template.translation.Translator;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 

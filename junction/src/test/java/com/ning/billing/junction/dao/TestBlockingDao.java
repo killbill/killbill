@@ -67,8 +67,7 @@ public class TestBlockingDao {
             helper.stopMysql();
         }
     }
-    
-    
+
     @Test(groups={"slow"}, enabled=true)
     public void testDao() { 
         ClockMock clock = new ClockMock();

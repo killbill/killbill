@@ -37,7 +37,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.email.translation.TranslatorConfig;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTime;

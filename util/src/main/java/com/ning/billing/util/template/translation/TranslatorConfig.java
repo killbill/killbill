@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.email.translation;
+package com.ning.billing.util.template.translation;
 
 import org.skife.config.Config;
 import org.skife.config.Default;

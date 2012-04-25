@@ -70,12 +70,10 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected void setup() throws IOException {
             module = new InvoiceModuleWithEmbeddedDb();
             final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-            final String entitlementDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
             final String utilDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
             module.startDb();
             module.initDb(invoiceDdl);
-            module.initDb(entitlementDdl);
             module.initDb(utilDdl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);

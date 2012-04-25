@@ -14,9 +14,9 @@ package com.ning.billing.util.email;/*
  * under the License.
  */
 
-import com.ning.billing.util.email.translation.DefaultCatalogTranslator;
-import com.ning.billing.util.email.translation.Translator;
-import com.ning.billing.util.email.translation.TranslatorConfig;
+import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
+import com.ning.billing.util.template.translation.Translator;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;

@@ -14,47 +14,35 @@
  * under the License.
  */
 
-package com.ning.billing.util.email.templates;
+package com.ning.billing.invoice.template;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.util.email.EmailConfig;
+import com.ning.billing.invoice.template.translator.DefaultInvoiceTranslator;
 import com.ning.billing.util.email.formatters.DefaultInvoiceFormatter;
 import com.ning.billing.util.email.formatters.InvoiceFormatter;
-import com.ning.billing.util.email.translation.DefaultInvoiceTranslator;
-import com.ning.billing.util.email.translation.Translator;
-import com.ning.billing.util.email.translation.TranslatorConfig;
-import com.samskivert.mustache.Mustache;
-import com.samskivert.mustache.Template;
-import org.apache.commons.io.IOUtils;
+import com.ning.billing.util.email.templates.TemplateEngine;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
 import java.lang.String;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 public class HtmlInvoiceGenerator {
+    private final TemplateEngine templateEngine;
     private final TranslatorConfig config;
 
     @Inject
-    public HtmlInvoiceGenerator(TranslatorConfig config) {
+    public HtmlInvoiceGenerator(TemplateEngine templateEngine, TranslatorConfig config) {
+        this.templateEngine = templateEngine;
         this.config = config;
     }
 
     public String generateInvoice(Account account, Invoice invoice, String templateName) throws IOException {
-        InputStream templateStream = this.getClass().getResourceAsStream(templateName + ".mustache");
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(templateStream, writer, "UTF-8");
-        String templateText = writer.toString();
-
-        Template template = Mustache.compiler().compile(templateText);
-
         Map<String, Object> data = new HashMap<String, Object>();
-
         DefaultInvoiceTranslator invoiceTranslator = new DefaultInvoiceTranslator(config);
         Locale locale = new Locale(account.getLocale());
         invoiceTranslator.setLocale(locale);
@@ -64,6 +52,6 @@ public class HtmlInvoiceGenerator {
         InvoiceFormatter formattedInvoice = new DefaultInvoiceFormatter(config, invoice, locale);
         data.put("invoice", formattedInvoice);
 
-        return template.execute(data);
+        return templateEngine.executeTemplate(templateName, data);
     }
 }

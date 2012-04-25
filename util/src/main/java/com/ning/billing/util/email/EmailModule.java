@@ -14,23 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.util.email.translation;
+package com.ning.billing.util.email;
 
-import com.google.inject.Inject;
+import com.google.inject.AbstractModule;
+import org.skife.config.ConfigurationObjectFactory;
 
-public class DefaultCatalogTranslator extends DefaultTranslatorBase {
-    @Inject
-    public DefaultCatalogTranslator(TranslatorConfig config) {
-        super(config);
+public class EmailModule extends AbstractModule {
+    protected void installEmailConfig() {
+        EmailConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EmailConfig.class);
+        bind(EmailConfig.class).toInstance(config);
     }
 
     @Override
-    protected String getBundlePath() {
-        return "com/ning/billing/util/email/translation/CatalogTranslation";
-    }
-
-    @Override
-    protected String getTranslationType() {
-        return "catalog";
+    protected void configure() {
+        installEmailConfig();
     }
 }

@@ -24,6 +24,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.invoice.tests.InvoicingTestBase;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -58,7 +59,6 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.junction.plumbing.billing.DefaultBillingEvent;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.bus.BusService;
@@ -72,7 +72,7 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
 @Guice(modules = {MockModuleNoEntitlement.class})
-public class TestDefaultInvoiceMigrationApi {
+public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
 	Logger log = LoggerFactory.getLogger(TestDefaultInvoiceMigrationApi.class);
 
 	@Inject
@@ -99,8 +99,6 @@ public class TestDefaultInvoiceMigrationApi {
 	
 	@Inject
 	private BillingApi billingApi;
-
-
 
 	private UUID accountId ;
 	private UUID subscriptionId ;
@@ -187,9 +185,9 @@ public class TestDefaultInvoiceMigrationApi {
 		DateTime effectiveDate = new DateTime().minusDays(1);
 		Currency currency = Currency.USD;
 		BigDecimal fixedPrice = null;
-		events.add(new DefaultBillingEvent(account, subscription, effectiveDate,plan, planPhase,
-				fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
-				BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
+		events.add(createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
+                fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
+                BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
 		BillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
         ((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);

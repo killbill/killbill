@@ -165,13 +165,13 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     RecurringInvoiceItemSqlDao recurringInvoiceItemDao = invoiceDao.become(RecurringInvoiceItemSqlDao.class);
                     recurringInvoiceItemDao.batchCreateFromTransaction(recurringInvoiceItems, context);
 
-                    notifyOfFutureBillingEvents(invoiceSqlDao, recurringInvoiceItems);
+                    notifyOfFutureBillingEvents(invoiceDao, recurringInvoiceItems);
 
                     List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = invoiceDao.become(FixedPriceInvoiceItemSqlDao.class);
                     fixedPriceInvoiceItemDao.batchCreateFromTransaction(fixedPriceInvoiceItems, context);
 
-                    setChargedThroughDates(invoiceSqlDao, fixedPriceInvoiceItems, recurringInvoiceItems, context);
+                    setChargedThroughDates(invoiceDao, fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
                     // STEPH Why do we need that? Are the payments not always null at this point?
                     List<InvoicePayment> invoicePayments = invoice.getPayments();

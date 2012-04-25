@@ -103,7 +103,9 @@ public class TestTagStore {
     @AfterClass(groups="slow")
     public void stopMysql()
     {
-        helper.stopMysql();
+        if (helper != null) {
+            helper.stopMysql();
+        }
     }
 
     private void cleanupTags() {

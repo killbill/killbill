@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
+import com.ning.billing.util.email.EmailConfig;
+import com.ning.billing.util.email.EmailModule;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -83,6 +85,7 @@ public class MockModule extends AbstractModule {
             bind(IDBI.class).toInstance(dbi);
         }
 
+        install(new EmailModule());
         install(new CallContextModule());
         install(new GlobalLockerModule());
         install(new BusModule());

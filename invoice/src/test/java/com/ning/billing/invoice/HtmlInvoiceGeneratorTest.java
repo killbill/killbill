@@ -14,16 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.util.email;
+package com.ning.billing.invoice;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
-import com.ning.billing.util.email.templates.HtmlInvoiceGenerator;
-import com.ning.billing.util.email.translation.TranslatorConfig;
+import com.ning.billing.util.email.templates.MustacheTemplateEngine;
+import com.ning.billing.util.email.templates.TemplateEngine;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
@@ -44,7 +46,8 @@ public class HtmlInvoiceGeneratorTest {
     @BeforeClass
     public void setup() {
         TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
-        g = new HtmlInvoiceGenerator(config);
+        TemplateEngine templateEngine = new MustacheTemplateEngine();
+        g = new HtmlInvoiceGenerator(templateEngine, config);
     }
 
     @Test

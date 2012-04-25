@@ -21,6 +21,7 @@ import static org.testng.Assert.assertNotNull;
 import java.io.IOException;
 import java.net.URL;
 
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import org.skife.jdbi.v2.IDBI;
@@ -28,7 +29,6 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
@@ -39,6 +39,7 @@ import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
@@ -98,15 +99,22 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
 
         bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
         bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
-                install(new FieldStoreModule());
+        install(new FieldStoreModule());
         install(new TagStoreModule());
 
         installNotificationQueue();
 //      install(new AccountModule());
         bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
-        bind(BillingApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class));
+
+        BillingApi billingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
+        ((ZombieControl) billingApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
+        bind(BillingApi.class).toInstance(billingApi);
+
         install(new CatalogModule());
-        install(new EntitlementModule());
+
+        EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+        bind(EntitlementUserApi.class).toInstance(entitlementUserApi);
+
         install(new GlobalLockerModule());
 
         super.configure();

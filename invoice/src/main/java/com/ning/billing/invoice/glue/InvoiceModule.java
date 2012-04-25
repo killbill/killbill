@@ -58,9 +58,6 @@ public class InvoiceModule extends AbstractModule {
     protected void installConfig() {
         final InvoiceConfig config = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
         bind(InvoiceConfig.class).toInstance(config);
-
-        final EmailConfig emailConfig = new ConfigurationObjectFactory(System.getProperties()).build(EmailConfig.class);
-        bind(EmailConfig.class).toInstance(emailConfig);
     }
 
     protected void installInvoiceService() {
@@ -77,12 +74,12 @@ public class InvoiceModule extends AbstractModule {
         bind(InvoiceNotifier.class).to(EmailInvoiceNotifier.class).asEagerSingleton();
     }
 
-    protected void installGlobalLocker() {
-        install(new GlobalLockerModule());
-    }
-
     protected void installInvoiceListener() {
         bind(InvoiceListener.class).asEagerSingleton();
+    }
+
+    protected void installInvoiceGenerator() {
+        bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
     }
 
     @Override
@@ -90,15 +87,11 @@ public class InvoiceModule extends AbstractModule {
         installInvoiceService();
         installConfig();
         installNotifiers();
-
         installInvoiceListener();
-        bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
+        installInvoiceGenerator();
         installInvoiceDao();
         installInvoiceUserApi();
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
-        installGlobalLocker();
     }
-
-
 }

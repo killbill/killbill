@@ -24,7 +24,9 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.junction.api.BillingApi;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
@@ -40,27 +42,20 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.MockAccountUserApi;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
-import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
-import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
@@ -115,7 +110,6 @@ public class TestNextBillingDateNotifier {
 
 	}
 
-
 	@BeforeClass(groups={"slow"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
@@ -137,16 +131,19 @@ public class TestNextBillingDateNotifier {
                 IDBI dbi = helper.getDBI();
                 bind(IDBI.class).toInstance(dbi);
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
-                bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
                 bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
                 bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
                 bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
                 bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-                bind(AccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
-                bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
-                bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+                bind(BillingApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class));
                 bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
+
+                AccountUserApi accountUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+                bind(AccountUserApi.class).toInstance(accountUserApi);
+
+                EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+                bind(EntitlementUserApi.class).toInstance(entitlementUserApi);
             }
         });
 
@@ -171,11 +168,9 @@ public class TestNextBillingDateNotifier {
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {
 		final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 		final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
-		final String entitlementDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 		helper.startMysql();
 		helper.initDb(ddl);
 		helper.initDb(testDdl);
-        helper.initDb(entitlementDdl);
 	}
 
 

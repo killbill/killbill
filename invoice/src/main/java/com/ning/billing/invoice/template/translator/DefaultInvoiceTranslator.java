@@ -14,10 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.util.email.translation;
+package com.ning.billing.invoice.template.translator;
 
 import com.google.inject.Inject;
-import com.ning.billing.util.email.templates.InvoiceStrings;
+import com.ning.billing.util.template.translation.DefaultTranslatorBase;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 
 import java.util.Locale;
 

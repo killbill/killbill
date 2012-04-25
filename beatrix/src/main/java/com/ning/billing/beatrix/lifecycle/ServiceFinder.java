@@ -60,7 +60,7 @@ public class ServiceFinder {
 		    final Set<String> packageFilter = new HashSet<String>();
 		    packageFilter.add("com.ning.billing");
 		    final String jarFilter = "killbill";
-			return findClasses(loader, KillbillService.class.getName().toString(), jarFilter, packageFilter);
+			return findClasses(loader, KillbillService.class.getName(), jarFilter, packageFilter);
 		} catch (ClassNotFoundException nfe) {
 			throw new RuntimeException("Failed to initialize ClassFinder", nfe);
 		}

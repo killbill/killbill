@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.email.translation;
+package com.ning.billing.util.template.translation;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;

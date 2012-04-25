@@ -16,6 +16,9 @@
 
 package com.ning.billing.server.modules;
 
+import com.ning.billing.util.email.EmailConfig;
+import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.glue.GlobalLockerModule;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
@@ -71,6 +74,8 @@ public class KillbillServerModule extends AbstractModule
     }
     
     protected void installKillbillModules() {
+        install(new EmailModule());
+        install(new GlobalLockerModule());
         install(new FieldStoreModule());
         install(new TagStoreModule());
         install(new CatalogModule());
