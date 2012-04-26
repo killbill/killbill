@@ -191,6 +191,10 @@
 			<groupId>com.ning.billing</groupId>
 			<artifactId>killbill-analytics</artifactId>
 		</dependency>
+                <dependency>
+                        <groupId>com.ning.billing</groupId>
+                        <artifactId>killbill-junction</artifactId>
+                </dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
