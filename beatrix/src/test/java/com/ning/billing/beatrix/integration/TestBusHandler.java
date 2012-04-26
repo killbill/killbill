@@ -27,6 +27,7 @@ import org.testng.Assert;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
+import com.ning.billing.entitlement.api.repair.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -55,7 +56,15 @@ public class TestBusHandler {
         RESUME,
         PHASE,
         INVOICE,
-        PAYMENT
+        PAYMENT,
+        REPAIR_BUNDLE
+    }
+    
+    @Subscribe
+    public void handleEntitlementEvents(RepairEntitlementEvent event) {
+        log.info(String.format("TestBusHandler Got RepairEntitlementEvent event %s", event.toString()));
+        assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
+        notifyIfStackEmpty();
     }
 
     @Subscribe

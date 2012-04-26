@@ -112,6 +112,7 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
             if (bundle == null) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_BUNDLE, input.getBundleId());
             }
+            
 
             // Subscriptions are ordered with BASE subscription first-- if exists
             final List<Subscription> subscriptions = dao.getSubscriptions(factory, input.getBundleId());
@@ -233,7 +234,7 @@ public class DefaultEntitlementRepairApi implements EntitlementRepairApi {
                 final List<SubscriptionRepair> repairs = createGetSubscriptionRepairList(subscriptions, convertDataRepair(inRepair)); 
                 return createGetBundleRepair(input.getBundleId(), input.getViewId(), repairs);
             } else {
-                dao.repair(input.getBundleId(), inRepair, context);
+                dao.repair(bundle.getAccountId(), input.getBundleId(), inRepair, context);
                 return getBundleRepair(input.getBundleId());
             }
         } catch (CatalogApiException e) {

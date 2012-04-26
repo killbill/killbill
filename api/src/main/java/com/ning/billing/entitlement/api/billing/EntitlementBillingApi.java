@@ -36,7 +36,7 @@ public interface EntitlementBillingApi {
     public SortedSet<BillingEvent> getBillingEventsForAccount(UUID accountId);
 
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId);
-
+    
     public void setChargedThroughDate(UUID subscriptionId, DateTime ctd, CallContext context);
 
     public void setChargedThroughDateFromTransaction(Transmogrifier transactionalDao, UUID subscriptionId,

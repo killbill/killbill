@@ -51,6 +51,7 @@ import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
+import com.ning.billing.entitlement.api.repair.EntitlementRepairApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -91,6 +92,7 @@ public class Engine implements EventListener, EntitlementService {
     private final EntitlementUserApi userApi;
     private final EntitlementBillingApi billingApi;
     private final EntitlementMigrationApi migrationApi;
+    private final EntitlementRepairApi repairApi;
     private final AddonUtils addonUtils;
     private final Bus eventBus;
 
@@ -104,6 +106,7 @@ public class Engine implements EventListener, EntitlementService {
     public Engine(Clock clock, EntitlementDao dao, PlanAligner planAligner,
             EntitlementConfig config, DefaultEntitlementUserApi userApi,
             DefaultEntitlementBillingApi billingApi,
+            EntitlementRepairApi repairApi,
             DefaultEntitlementMigrationApi migrationApi, AddonUtils addonUtils, Bus eventBus,
             NotificationQueueService notificationQueueService,
             SubscriptionFactory subscriptionFactory,
@@ -113,6 +116,7 @@ public class Engine implements EventListener, EntitlementService {
         this.dao = dao;
         this.planAligner = planAligner;
         this.userApi = userApi;
+        this.repairApi = repairApi;
         this.billingApi = billingApi;
         this.migrationApi = migrationApi;
         this.addonUtils = addonUtils;
@@ -200,6 +204,10 @@ public class Engine implements EventListener, EntitlementService {
         return migrationApi;
     }
 
+    @Override
+    public EntitlementRepairApi getRepairApi() {
+        return repairApi;
+    }
 
     @Override
     public void processEventReady(final EntitlementEvent event, final int seqId, final CallContext context) {

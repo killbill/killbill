@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.ning.billing.entitlement.api.repair.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.invoice.api.InvoiceApiException;
 
@@ -42,6 +43,19 @@ public class InvoiceListener {
         this.factory = factory;
     }
 
+    @Subscribe
+    public void handleRepairEntitlementEvent(final RepairEntitlementEvent repairEvent) {
+        // STEPH
+        /*
+        try {
+            CallContext context = factory.createCallContext("RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, repairEvent.getUserToken());
+            dispatcher.processAccount(repairEvent.getAccountId(), repairEvent.getEffectiveDate(), false, context);
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
+        */
+    }
+    
     @Subscribe
     public void handleSubscriptionTransition(final SubscriptionEventTransition transition) {
         try {

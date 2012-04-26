@@ -49,6 +49,7 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -88,13 +89,17 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
 
         List<SubscriptionBundle> bundles = entitlementDao.getSubscriptionBundleForAccount(accountId);
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
+        
         for (final SubscriptionBundle bundle: bundles) {
         	List<Subscription> subscriptions = entitlementDao.getSubscriptions(subscriptionFactory, bundle.getId());
 
+        	DateTime bundleStartDate = bundle.getStartDate(); 
         	for (final Subscription subscription: subscriptions) {
-        		for (final SubscriptionEventTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
+        	    // STEPH hack -- see RI-1169
+                bundleStartDate = (subscription.getCategory() == ProductCategory.BASE && bundleStartDate == null) ? subscription.getStartDate() : bundleStartDate;
+        	    for (final SubscriptionEventTransition transition : ((SubscriptionData) subscription).getBillingTransitions()) {
         			try {
-        				BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBcd(bundle, subscription, transition, accountId), currency);
+        				BillingEvent event = new DefaultBillingEvent(transition, subscription, calculateBcd(bundle, subscription, transition, accountId, bundleStartDate), currency);
         				result.add(event);
         			} catch (CatalogApiException e) {
         				log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
@@ -114,7 +119,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     }
 
     private int calculateBcd(final SubscriptionBundle bundle, final Subscription subscription,
-                             final SubscriptionEventTransition transition, final UUID accountId) throws CatalogApiException, AccountApiException {
+                             final SubscriptionEventTransition transition, final UUID accountId, DateTime bundleStartDate) throws CatalogApiException, AccountApiException {
     	Catalog catalog = catalogService.getFullCatalog();
     	Plan plan =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
     	        transition.getNextPlan() : transition.getPreviousPlan();
@@ -143,7 +148,7 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
     			}
     		break;
     		case BUNDLE :
-    			result = bundle.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
+    			result = bundleStartDate.toDateTime(account.getTimeZone()).getDayOfMonth();
     		break;
     		case SUBSCRIPTION :
     			result = subscription.getStartDate().toDateTime(account.getTimeZone()).getDayOfMonth();
@@ -214,6 +219,4 @@ public class DefaultEntitlementBillingApi implements EntitlementBillingApi {
             }
         }
     }
-
-
 }

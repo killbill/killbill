@@ -23,7 +23,9 @@ import com.ning.billing.util.bus.BusEvent;
 
 public interface RepairEntitlementEvent extends BusEvent {
 
-    UUID getBundleId();
+    public UUID getAccountId();
+    
+    public UUID getBundleId();
 
-    DateTime getEffectiveDate();
+    public DateTime getEffectiveDate();
 }

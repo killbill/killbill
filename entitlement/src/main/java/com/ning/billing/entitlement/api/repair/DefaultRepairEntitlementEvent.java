@@ -23,12 +23,14 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
 
     private final UUID userToken;
     private final UUID bundleId;
+    private final UUID accountId;
     private final DateTime efectiveDate;
     
     
-    public DefaultRepairEntitlementEvent(final UUID userToken, final UUID bundleId, final DateTime efectiveDate) {
+    public DefaultRepairEntitlementEvent(final UUID userToken, final UUID acountId, final UUID bundleId, final DateTime efectiveDate) {
         this.userToken = userToken;
         this.bundleId = bundleId;
+        this.accountId = acountId;
         this.efectiveDate = efectiveDate;
     }
     
@@ -45,6 +47,11 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
     @Override
     public UUID getBundleId() {
         return bundleId;
+    }
+
+    @Override
+    public UUID getAccountId() {
+        return accountId;
     }
 
     @Override

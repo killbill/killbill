@@ -81,7 +81,7 @@ public interface EntitlementDao {
     public void migrate(final UUID accountId, final AccountMigrationData data, final CallContext context);
 
     // Repair
-    public void repair(final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context);
+    public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context);
     
     // Custom Fields
     public void saveCustomFields(final SubscriptionData subscription, final CallContext context);

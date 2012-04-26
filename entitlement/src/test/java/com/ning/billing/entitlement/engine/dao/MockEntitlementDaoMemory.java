@@ -456,7 +456,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void repair(UUID bundleId, List<SubscriptionDataRepair> inRepair,
+    public void repair(UUID accountId, UUID bundleId, List<SubscriptionDataRepair> inRepair,
             CallContext context) {
     }
 }

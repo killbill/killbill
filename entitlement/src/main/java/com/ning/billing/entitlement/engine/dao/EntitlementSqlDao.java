@@ -601,7 +601,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         });
     }
 
-    public void repair(final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context) {
+    public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context) {
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
 
             @Override
@@ -624,7 +624,7 @@ public class EntitlementSqlDao implements EntitlementDao {
                     }
                 }
                 try {
-                    RepairEntitlementEvent busEvent = new DefaultRepairEntitlementEvent(context.getUserToken(), bundleId, clock.getUTCNow());
+                    RepairEntitlementEvent busEvent = new DefaultRepairEntitlementEvent(context.getUserToken(), accountId, bundleId, clock.getUTCNow());
                     eventBus.postFromTransaction(busEvent, transactional);
                 } catch (EventBusException e) {
                     log.warn("Failed to post repair entitlement event for bundle " + bundleId);

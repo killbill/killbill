@@ -242,7 +242,7 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public void repair(UUID bundleId, List<SubscriptionDataRepair> inRepair,
+    public void repair(UUID accountId, UUID bundleId, List<SubscriptionDataRepair> inRepair,
             CallContext context) {
         throw new EntitlementError("Not implemented");
     }
