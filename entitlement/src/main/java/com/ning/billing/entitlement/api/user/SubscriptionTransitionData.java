@@ -16,18 +16,18 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.bus.BusEvent.BusEventType;
-
-import org.joda.time.DateTime;
-
-import java.util.UUID;
 
 public class SubscriptionTransitionData implements SubscriptionEventTransition {
 
@@ -41,11 +41,11 @@ public class SubscriptionTransitionData implements SubscriptionEventTransition {
     private final DateTime requestedTransitionTime;
     private final DateTime effectiveTransitionTime;
     private final SubscriptionState previousState;
-    private final String previousPriceList;
+    private final PriceList previousPriceList;
     private final Plan previousPlan;
     private final PlanPhase previousPhase;
     private final SubscriptionState nextState;
-    private final String nextPriceList;
+    private final PriceList nextPriceList;
     private final Plan nextPlan;
     private final PlanPhase nextPhase;
     private final boolean isFromDisk;
@@ -54,8 +54,8 @@ public class SubscriptionTransitionData implements SubscriptionEventTransition {
 
     public SubscriptionTransitionData(UUID eventId, UUID subscriptionId, UUID bundleId, EventType eventType,
             ApiEventType apiEventType, DateTime requestedTransitionTime, DateTime effectiveTransitionTime,
-            SubscriptionState previousState, Plan previousPlan, PlanPhase previousPhase, String previousPriceList,
-            SubscriptionState nextState, Plan nextPlan, PlanPhase nextPhase, String nextPriceList,
+            SubscriptionState previousState, Plan previousPlan, PlanPhase previousPhase, PriceList previousPriceList,
+            SubscriptionState nextState, Plan nextPlan, PlanPhase nextPhase, PriceList nextPriceList,
             long totalOrdering, UUID userToken, boolean isFromDisk) {
         super();
         this.eventId = eventId;
@@ -156,12 +156,12 @@ public class SubscriptionTransitionData implements SubscriptionEventTransition {
 
 
     @Override
-    public String getPreviousPriceList() {
+    public PriceList getPreviousPriceList() {
         return previousPriceList;
     }
 
     @Override
-    public String getNextPriceList() {
+    public PriceList getNextPriceList() {
         return nextPriceList;
     }
     

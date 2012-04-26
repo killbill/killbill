@@ -20,5 +20,4 @@ import com.ning.billing.lifecycle.KillbillService;
 
 public interface AccountService extends KillbillService {
 
-    public AccountUserApi getAccountUserApi();
 }

@@ -19,11 +19,11 @@ package com.ning.billing.entitlement.api.user;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.catalog.api.Catalog;
-import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
@@ -37,6 +37,7 @@ import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.Subscrip
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -91,6 +92,11 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
+    public Subscription getBaseSubscription(UUID bundleId) {
+        return dao.getBaseSubscription(subscriptionFactory, bundleId);
+    }
+    
+
     public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleName, CallContext context)
     throws EntitlementUserApiException {
         SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId, clock.getUTCNow());
@@ -161,7 +167,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             }
 
             SubscriptionData subscription = apiService.createPlan(new SubscriptionBuilder()
-                .setId(UUID.randomUUID())
+                 .setId(UUID.randomUUID())
                 .setBundleId(bundleId)
                 .setCategory(plan.getProduct().getCategory())
                 .setBundleStartDate(bundleStartDate)
@@ -174,20 +180,21 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         }
     }
 
-	@Override
-	public DateTime getNextBillingDate(UUID accountId) {
-		List<SubscriptionBundle> bundles = getBundlesForAccount(accountId);
-		DateTime result = null;
-		for(SubscriptionBundle bundle : bundles) {
-			List<Subscription> subscriptions = getSubscriptionsForBundle(bundle.getId());
-			for(Subscription subscription : subscriptions) {
-				DateTime chargedThruDate = subscription.getChargedThroughDate();
-				if(result == null ||
-						(chargedThruDate != null && chargedThruDate.isBefore(result))) {
-					result = subscription.getChargedThroughDate();
-				}
-			}
-		}
-		return result;
-	}
+
+    @Override
+    public DateTime getNextBillingDate(UUID accountId) {
+        List<SubscriptionBundle> bundles = getBundlesForAccount(accountId);
+        DateTime result = null;
+        for(SubscriptionBundle bundle : bundles) {
+            List<Subscription> subscriptions = getSubscriptionsForBundle(bundle.getId());
+            for(Subscription subscription : subscriptions) {
+                DateTime chargedThruDate = subscription.getChargedThroughDate();
+                if(result == null ||
+                        (chargedThruDate != null && chargedThruDate.isBefore(result))) {
+                    result = subscription.getChargedThroughDate();
+                }
+            }
+        }
+        return result;
+    }
 }

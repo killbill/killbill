@@ -16,6 +16,20 @@
 
 package com.ning.billing.invoice.tests;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+import org.testng.annotations.Test;
+
 import com.ning.billing.catalog.DefaultPrice;
 import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
@@ -30,10 +44,9 @@ import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
-import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.model.BillingEventSet;
@@ -41,23 +54,11 @@ import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.junction.plumbing.billing.DefaultBillingEvent;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
-
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
-import org.joda.time.DateTime;
-import org.testng.annotations.Test;
-
-import javax.annotation.Nullable;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 
 @Test(groups = {"fast", "invoicing", "invoiceGenerator"})
 public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
@@ -481,6 +482,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         UUID accountId = UUID.randomUUID();
         Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
         ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        ((ZombieControl) subscription).addResult("getBundleId", UUID.randomUUID());
 
         Plan plan = new MockPlan("plan 1");
         MockInternationalPrice zeroPrice = new MockInternationalPrice(new DefaultPrice(ZERO, Currency.USD));
@@ -493,13 +495,13 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         BillingEventSet events = new BillingEventSet();
 
-        BillingEvent event1 = new DefaultBillingEvent(subscription, new DateTime("2012-01-1T00:00:00.000-08:00"),
+        BillingEvent event1 = new DefaultBillingEvent(null, subscription, new DateTime("2012-01-1T00:00:00.000-08:00"),
                                                       plan, phase1,
                                                       ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
                                                       BillingModeType.IN_ADVANCE, "Test Event 1", 1L,
                                                       SubscriptionTransitionType.CREATE);
 
-        BillingEvent event2 = new DefaultBillingEvent(subscription, changeDate,
+        BillingEvent event2 = new DefaultBillingEvent(null, subscription, changeDate,
                                                       plan, phase2,
                                                       ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 1,
                                                       BillingModeType.IN_ADVANCE, "Test Event 2", 2L,
@@ -631,7 +633,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
         assertEquals(invoice2.getInvoiceItems().get(0).getStartDate().compareTo(trialPhaseEndDate), 0);
-        assertEquals(invoice2.getTotalAmount().compareTo(new BigDecimal("3.2097")), 0);
+        assertEquals(invoice2.getTotalAmount().compareTo(new BigDecimal("3.21")), 0);
 
         invoiceList.add(invoice2);
         DateTime targetDate = trialPhaseEndDate.toMutableDateTime().dayOfMonth().set(BILL_CYCLE_DAY).toDateTime();
@@ -691,7 +693,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Subscription sub = new SubscriptionData(new SubscriptionBuilder().setId(subscriptionId));
         Currency currency = Currency.USD;
 
-        return new DefaultBillingEvent(sub, startDate, plan, planPhase,
+        return new DefaultBillingEvent(null, sub, startDate, plan, planPhase,
                                        planPhase.getFixedPrice() == null ? null : planPhase.getFixedPrice().getPrice(currency),
                                        planPhase.getRecurringPrice() == null ? null : planPhase.getRecurringPrice().getPrice(currency),
                                        currency, planPhase.getBillingPeriod(),

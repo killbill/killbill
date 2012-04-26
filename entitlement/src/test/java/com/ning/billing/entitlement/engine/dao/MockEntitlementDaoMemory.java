@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -52,6 +51,7 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;

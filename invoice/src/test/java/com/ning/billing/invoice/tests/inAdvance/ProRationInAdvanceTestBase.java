@@ -16,10 +16,11 @@
 
 package com.ning.billing.invoice.tests.inAdvance;
 
+import org.testng.annotations.Test;
+
 import com.ning.billing.invoice.model.BillingMode;
 import com.ning.billing.invoice.model.InAdvanceBillingMode;
 import com.ning.billing.invoice.tests.ProRationTestBase;
-import org.testng.annotations.Test;
 
 @Test(groups = {"fast", "invoicing", "proRation"})
 public abstract class ProRationInAdvanceTestBase extends ProRationTestBase {

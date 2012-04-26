@@ -61,6 +61,7 @@ import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJson;
 import com.ning.billing.jaxrs.json.SubscriptionJson;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
+import com.ning.billing.junction.glue.JunctionModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
@@ -188,6 +189,7 @@ public class TestJaxrsBase {
             install(new AnalyticsModule());
             install(new PaymentMockModule());
             install(new BeatrixModule());
+            install(new JunctionModule());
             installClock();
         }
 

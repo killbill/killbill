@@ -26,8 +26,8 @@ import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
-import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
+import com.ning.billing.entitlement.api.billing.ChargeThruApi;
+import com.ning.billing.entitlement.api.billing.DefaultChargeThruApi;
 import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.repair.DefaultEntitlementRepairApi;
@@ -60,7 +60,7 @@ public class EntitlementModule extends AbstractModule {
         bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
         bind(RepairEntitlementDao.class).asEagerSingleton();
     }
-
+    
     protected void installEntitlementCore() {
         
         bind(SubscriptionFactory.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionFactory.class).asEagerSingleton();
@@ -77,8 +77,8 @@ public class EntitlementModule extends AbstractModule {
         
         bind(EntitlementRepairApi.class).to(DefaultEntitlementRepairApi.class).asEagerSingleton();
         bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
-        bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
         bind(EntitlementMigrationApi.class).to(DefaultEntitlementMigrationApi.class).asEagerSingleton();
+        bind(ChargeThruApi.class).to(DefaultChargeThruApi.class).asEagerSingleton();
     }
 
     @Override

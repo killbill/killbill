@@ -34,13 +34,14 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 
-@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
+@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class })
 public class TestPaymentProvider {
     @Inject
     private Bus eventBus;

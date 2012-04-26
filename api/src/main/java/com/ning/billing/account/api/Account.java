@@ -16,12 +16,12 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.util.entity.UpdatableEntity;
-
+import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.util.customfield.Customizable;
+import com.ning.billing.util.entity.UpdatableEntity;
 import com.ning.billing.util.tag.Taggable;
 
-public interface Account extends AccountData, Customizable, UpdatableEntity, Taggable {
+public interface Account extends AccountData, Customizable, UpdatableEntity, Taggable, Blockable{ 
     public static String ObjectType = "account";
     
     public MutableAccountData toMutableAccountData();    

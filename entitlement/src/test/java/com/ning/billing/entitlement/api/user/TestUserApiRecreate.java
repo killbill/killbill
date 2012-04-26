@@ -25,11 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import com.google.inject.Injector;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.entitlement.api.TestApiBase;
 
 public abstract class TestUserApiRecreate extends TestApiBase {
 

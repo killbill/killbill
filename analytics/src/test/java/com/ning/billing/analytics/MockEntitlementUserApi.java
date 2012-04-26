@@ -21,14 +21,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
-
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.overdue.OverdueState;
+import com.ning.billing.util.callcontext.CallContext;
 
 public class MockEntitlementUserApi implements EntitlementUserApi
 {
@@ -71,6 +72,11 @@ public class MockEntitlementUserApi implements EntitlementUserApi
             public String getKey()
             {
                 return key;
+            }
+
+            @Override
+            public OverdueState<SubscriptionBundle> getOverdueState() {
+                throw new UnsupportedOperationException();
             }
         };
     }
@@ -119,4 +125,9 @@ public class MockEntitlementUserApi implements EntitlementUserApi
 	public DateTime getNextBillingDate(UUID account) {
 		throw new UnsupportedOperationException();
 	}
+
+    @Override
+    public Subscription getBaseSubscription(UUID bundleId) {
+        throw new UnsupportedOperationException();
+    }
 }

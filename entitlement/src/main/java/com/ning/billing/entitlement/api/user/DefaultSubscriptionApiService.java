@@ -16,9 +16,26 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.joda.time.DateTime;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.*;
+import com.ning.billing.catalog.api.ActionPolicy;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanChangeResult;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
@@ -28,15 +45,17 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEventData;
-import com.ning.billing.entitlement.events.user.*;
+import com.ning.billing.entitlement.events.user.ApiEvent;
+import com.ning.billing.entitlement.events.user.ApiEventBuilder;
+import com.ning.billing.entitlement.events.user.ApiEventCancel;
+import com.ning.billing.entitlement.events.user.ApiEventChange;
+import com.ning.billing.entitlement.events.user.ApiEventCreate;
+import com.ning.billing.entitlement.events.user.ApiEventReCreate;
+import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
-import org.joda.time.DateTime;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
@@ -56,12 +75,15 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
     public SubscriptionData createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
             String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
             CallContext context)
-    throws EntitlementUserApiException {
-
+        throws EntitlementUserApiException {
         SubscriptionData subscription = new SubscriptionData(builder, this, clock);
+
+
+        
         createFromSubscription(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate, processedDate, false, context);
         return subscription;
     }
+
 
     public boolean recreatePlan(SubscriptionData subscription, PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
     throws EntitlementUserApiException {
@@ -97,6 +119,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
             boolean reCreate, CallContext context)
     throws EntitlementUserApiException {
+
 
         try {
             TimedPhase [] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate);
@@ -151,7 +174,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                     currentPlan.getProduct().getCategory(),
                     subscription.getCurrentPlan().getBillingPeriod(),
-                    subscription.getCurrentPriceList(),
+                    subscription.getCurrentPriceList().getName(),
                     subscription.getCurrentPhase().getPhaseType());
 
             ActionPolicy policy = catalogService.getFullCatalog().planCancelPolicy(planPhase, requestedDate);
@@ -209,6 +232,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
     public boolean changePlan(SubscriptionData subscription, String productName, BillingPeriod term,
             String priceList, DateTime requestedDate, CallContext context)
+
     throws EntitlementUserApiException {
 
         try {
@@ -217,7 +241,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
             validateRequestedDate(subscription, now, requestedDate);
 
-            String currentPriceList = subscription.getCurrentPriceList();
+            PriceList currentPriceList = subscription.getCurrentPriceList();
 
             SubscriptionState currentState = subscription.getState();
             if (currentState != SubscriptionState.ACTIVE) {
@@ -235,7 +259,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                 PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                         currentPlan.getProduct().getCategory(),
                         currentPlan.getBillingPeriod(),
-                        currentPriceList, subscription.getCurrentPhase().getPhaseType());
+                        currentPriceList.getName(), subscription.getCurrentPhase().getPhaseType());
                 PlanSpecifier toPlanPhase = new PlanSpecifier(productName,
                         destProduct.getCategory(),
                         term,
@@ -284,6 +308,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         }
     }
 
+
     public void commitCustomFields(SubscriptionData subscription, CallContext context) {
         dao.saveCustomFields(subscription, context);
     }
@@ -301,4 +326,6 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                     requestedDate.toString(), previousTransition.getEffectiveTransitionTime());
         }
     }
+    
+
 }

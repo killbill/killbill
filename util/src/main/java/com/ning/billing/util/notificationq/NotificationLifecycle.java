@@ -24,7 +24,8 @@ public interface NotificationLifecycle {
     public enum NotificationLifecycleState {
         AVAILABLE,
         IN_PROCESSING,
-        PROCESSED
+        PROCESSED,
+        REMOVED
     }
 
     public String getOwner();

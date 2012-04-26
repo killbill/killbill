@@ -17,33 +17,32 @@
 package com.ning.billing.invoice.dao;
 
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 import java.io.IOException;
 
-import com.ning.billing.config.InvoiceConfig;
-import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
-import com.ning.billing.invoice.model.InvoiceGenerator;
-import com.ning.billing.invoice.tests.InvoicingTestBase;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.clock.Clock;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
+import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
+import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
-import org.testng.annotations.BeforeMethod;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 
 public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected InvoiceDao invoiceDao;
@@ -69,14 +68,15 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
-        try {
             module = new InvoiceModuleWithEmbeddedDb();
             final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
             final String entitlementDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+            final String utilDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
             module.startDb();
             module.initDb(invoiceDdl);
             module.initDb(entitlementDdl);
+            module.initDb(utilDdl);
 
             final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
@@ -94,10 +94,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
             ((DefaultBusService) busService).startBus();
 
             assertTrue(true);
-        }
-        catch (Throwable t) {
-            fail(t.toString());
-        }
+       
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -106,7 +103,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
             @Override
             public Void inTransaction(Handle h, TransactionStatus status)
                     throws Exception {
-                h.execute("truncate table accounts");
+                //h.execute("truncate table accounts");
                 //h.execute("truncate table entitlement_events");
                 //h.execute("truncate table subscriptions");
                 //h.execute("truncate table bundles");

@@ -44,6 +44,8 @@
         <module>catalog</module>
         <module>entitlement</module>
         <module>invoice</module>
+        <module>junction</module>
+        <module>overdue</module>
         <module>payment</module>
         <module>util</module>
         <module>jaxrs</module>
@@ -103,6 +105,18 @@
             <dependency>
                 <groupId>com.ning.billing</groupId>
                 <artifactId>killbill-account</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-junction</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ning.billing</groupId>
+                <artifactId>killbill-junction</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
@@ -407,6 +421,7 @@
                                 <exclude>**/.project</exclude>
                                 <exclude>.git/**</exclude>
                                 <exclude>.gitignore</exclude>
+                                <exclude>**/.classpath</exclude>
                                 <exclude>ignore/**</exclude>
                                 <exclude>API.txt</exclude>
                                 <exclude>RELEASE.sh</exclude>
@@ -428,6 +443,8 @@
                                 <exclude>**/*.dont-let-git-remove-this-directory</exclude>
                                 <exclude>**/test-output/**</exclude>
                                 <exclude>**/bin/**</exclude>
+                                <exclude>**/target/**</exclude>
+                                <exclude>**/.settings/**</exclude>
                                 <exclude>.travis.yml</exclude>
                                 <!--  until we merge from server branch we disable rat for those -->
                                 <exclude>jaxrs/**</exclude>

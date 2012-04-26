@@ -26,11 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -56,10 +51,13 @@ import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.dao.BusinessAccountDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
+import com.ning.billing.catalog.MockCatalogModule;
+import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -71,6 +69,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -81,6 +80,10 @@ import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.tag.DefaultTagDefinition;
@@ -88,7 +91,7 @@ import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
-@Guice(modules = AnalyticsTestModule.class)
+@Guice(modules = {AnalyticsTestModule.class, MockCatalogModule.class})
 public class TestAnalyticsService {
     private static final UUID ID = UUID.randomUUID();
     private static final String KEY = "12345";
@@ -208,7 +211,7 @@ public class TestAnalyticsService {
         final UUID subscriptionId = UUID.randomUUID();
         final DateTime effectiveTransitionTime = clock.getUTCNow();
         final DateTime requestedTransitionTime = clock.getUTCNow();
-        final String priceList = "something";
+        final PriceList priceList = new MockPriceList().setName("something");
 
         transition = new SubscriptionTransitionData(
                 ID,
@@ -237,7 +240,7 @@ public class TestAnalyticsService {
                 requestedTransitionTime,
                 BusinessSubscriptionEvent.subscriptionCreated(plan),
                 null,
-                new BusinessSubscription(priceList, plan, phase, ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
+                new BusinessSubscription(priceList.getName(), plan, phase, ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId())
         );
     }
 
@@ -248,7 +251,7 @@ public class TestAnalyticsService {
     private void createInvoiceAndPaymentCreationEvents(final Account account) {
         final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCNow(), clock.getUTCNow(), ACCOUNT_CURRENCY);
         final FixedPriceInvoiceItem invoiceItem = new FixedPriceInvoiceItem(
-                UUID.randomUUID(), invoice.getId(), account.getId(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
+                UUID.randomUUID(), invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
                 INVOICE_AMOUNT, ACCOUNT_CURRENCY, context.getUserName(), clock.getUTCNow());
         invoice.addInvoiceItem(invoiceItem);
 

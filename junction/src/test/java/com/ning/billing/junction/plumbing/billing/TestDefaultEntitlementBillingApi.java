@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.billing;
+package com.ning.billing.junction.plumbing.billing;
 
 
 import static org.testng.Assert.assertNull;
@@ -26,9 +26,6 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.glue.CallContextModule;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
@@ -36,36 +33,40 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.catalog.DefaultCatalogService;
+import com.ning.billing.catalog.MockCatalog;
+import com.ning.billing.catalog.MockCatalogService;
+import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.entitlement.api.billing.BillingModeType;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
+
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.glue.ClockModule;
+import com.ning.billing.util.clock.ClockMock;
 
 public class TestDefaultEntitlementBillingApi {
 	private static final UUID zeroId = new UUID(0L,0L);
@@ -73,26 +74,21 @@ public class TestDefaultEntitlementBillingApi {
 	private static final UUID twoId = new UUID(2L,0L);
 
 	private CatalogService catalogService;
+
 	private List<SubscriptionBundle> bundles;
 	private List<Subscription> subscriptions;
 	private List<SubscriptionEventTransition> subscriptionTransitions;
-	private EntitlementDao dao;
+	private EntitlementUserApi entitlementApi;
+
 
 	private Clock clock;
-	private SubscriptionData subscription;
-    private CallContextFactory factory;
+	private Subscription subscription;
 	private DateTime subscriptionStartDate;
 
 	@BeforeSuite(alwaysRun=true)
 	public void setup() throws ServiceException {
-		TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new CatalogModule(), new ClockModule(), new CallContextModule());
-
-        catalogService = g.getInstance(CatalogService.class);
-        clock = g.getInstance(Clock.class);
-        factory = g.getInstance(CallContextFactory.class);
-
-        ((DefaultCatalogService)catalogService).loadCatalog();
+        catalogService = new MockCatalogService(new MockCatalog());
+        clock = new ClockMock();
 	}
 
 	@BeforeMethod(alwaysRun=true)
@@ -117,31 +113,29 @@ public class TestDefaultEntitlementBillingApi {
 
 		subscriptions.add(subscription);
 
-        dao = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class);
-        ((ZombieControl) dao).addResult("getSubscriptionBundleForAccount", bundles);
-        ((ZombieControl) dao).addResult("getSubscriptions", subscriptions);
-        ((ZombieControl) dao).addResult("getSubscriptionFromId", subscription);
-        ((ZombieControl) dao).addResult("getSubscriptionBundleFromId", bundle);
+        entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+        ((ZombieControl) entitlementApi).addResult("getBundlesForAccount", bundles);
+        ((ZombieControl) entitlementApi).addResult("getSubscriptionsForBundle", subscriptions);
+        ((ZombieControl) entitlementApi).addResult("getSubscriptionFromId", subscription);
+        ((ZombieControl) entitlementApi).addResult("getBundleFromId", bundle);
+        ((ZombieControl) entitlementApi).addResult("getBaseSubscription", subscription);
 
         assertTrue(true);
 	}
 
     @Test(enabled=true, groups="fast")
 	public void testBillingEventsEmpty() {
-
-        dao = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class);
-        ((ZombieControl) dao).addResult("getSubscriptionBundleForAccount", new ArrayList<SubscriptionBundle>());
-
         UUID accountId = UUID.randomUUID();
         Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
         ((ZombieControl) account).addResult("getId", accountId).addResult("getCurrency", Currency.USD);
 
-		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+        AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         ((ZombieControl) accountApi).addResult("getAccountById", account);
 
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
-		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
+		BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi);
+		SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
 
@@ -149,12 +143,13 @@ public class TestDefaultEntitlementBillingApi {
 	public void testBillingEventsNoBillingPeriod() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
-		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-annual", now);
+		Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0]; // The trial has no billing period
-		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+        PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 		SubscriptionEventTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
 		subscriptionTransitions.add(t);
+
 
         AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -162,8 +157,11 @@ public class TestDefaultEntitlementBillingApi {
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
 		       
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
-		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
+        CallContextFactory factory = new DefaultCallContextFactory(clock);
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi);
+        SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
+
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
@@ -171,9 +169,9 @@ public class TestDefaultEntitlementBillingApi {
 	public void testBillingEventsAnnual() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
-		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-annual", now);
+		Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
-		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+		PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 		SubscriptionEventTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
 		subscriptionTransitions.add(t);
@@ -182,13 +180,16 @@ public class TestDefaultEntitlementBillingApi {
 		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC)
                                 .addResult("getCurrency", Currency.USD);
 
-
+        ((MockCatalog)catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.SUBSCRIPTION);
+        
 		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
 		((ZombieControl)accountApi).addResult("getAccountById", account);
 
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
-		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi);
+        SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
+
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
@@ -196,9 +197,9 @@ public class TestDefaultEntitlementBillingApi {
 	public void testBillingEventsMonthly() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
-		Plan nextPlan = catalogService.getFullCatalog().findPlan("shotgun-monthly", now);
+		Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
-		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+        PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 		SubscriptionEventTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
 		subscriptionTransitions.add(t);
@@ -209,8 +210,13 @@ public class TestDefaultEntitlementBillingApi {
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
 
-        DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao,accountApi,catalogService);
-		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
+        ((MockCatalog)catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.ACCOUNT);
+        
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
+        CallContextFactory factory = new DefaultCallContextFactory(clock);
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi);
+        SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
+
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
@@ -218,9 +224,9 @@ public class TestDefaultEntitlementBillingApi {
 	public void testBillingEventsAddOn() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
-		Plan nextPlan = catalogService.getFullCatalog().findPlan("laser-scope-monthly", now);
+		Plan nextPlan = catalogService.getFullCatalog().findPlan("Horn1USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0];
-		String nextPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+        PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 		SubscriptionEventTransition t = new SubscriptionTransitionData(
 				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
 		subscriptionTransitions.add(t);
@@ -229,13 +235,17 @@ public class TestDefaultEntitlementBillingApi {
 		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC);
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
 
-		AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-		((ZombieControl)accountApi).addResult("getAccountById", account);
-
+        AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+        ((ZombieControl)accountApi).addResult("getAccountById", account);
+             
+        ((MockCatalog)catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.BUNDLE);
+        
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-		DefaultEntitlementBillingApi api = new DefaultEntitlementBillingApi(factory, null, dao, accountApi, catalogService);
-		SortedSet<BillingEvent> events = api.getBillingEventsForAccount(new UUID(0L,0L));
-		checkFirstEvent(events, nextPlan, bundles.get(0).getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi);
+        SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
+
+		checkFirstEvent(events, nextPlan, subscription.getStartDate().plusDays(30).getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
 
@@ -265,6 +275,4 @@ public class TestDefaultEntitlementBillingApi {
 		Assert.assertEquals(BillingModeType.IN_ADVANCE, event.getBillingMode());
 		Assert.assertEquals(desc, event.getDescription());
 	}
-
-
 }

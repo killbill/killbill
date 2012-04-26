@@ -23,20 +23,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+
 import com.google.inject.name.Named;
+
 
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
@@ -47,15 +42,7 @@ import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
-import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
-import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.repair.EntitlementRepairApi;
-import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
@@ -70,9 +57,13 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
@@ -89,10 +80,6 @@ public class Engine implements EventListener, EntitlementService {
     private final Clock clock;
     private final EntitlementDao dao;
     private final PlanAligner planAligner;
-    private final EntitlementUserApi userApi;
-    private final EntitlementBillingApi billingApi;
-    private final EntitlementMigrationApi migrationApi;
-    private final EntitlementRepairApi repairApi;
     private final AddonUtils addonUtils;
     private final Bus eventBus;
 
@@ -104,10 +91,8 @@ public class Engine implements EventListener, EntitlementService {
 
     @Inject
     public Engine(Clock clock, EntitlementDao dao, PlanAligner planAligner,
-            EntitlementConfig config, DefaultEntitlementUserApi userApi,
-            DefaultEntitlementBillingApi billingApi,
-            EntitlementRepairApi repairApi,
-            DefaultEntitlementMigrationApi migrationApi, AddonUtils addonUtils, Bus eventBus,
+            EntitlementConfig config,
+            AddonUtils addonUtils, Bus eventBus,
             NotificationQueueService notificationQueueService,
             SubscriptionFactory subscriptionFactory,
             CallContextFactory factory) {
@@ -115,10 +100,6 @@ public class Engine implements EventListener, EntitlementService {
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
-        this.userApi = userApi;
-        this.repairApi = repairApi;
-        this.billingApi = billingApi;
-        this.migrationApi = migrationApi;
         this.addonUtils = addonUtils;
         this.config = config;
         this.eventBus = eventBus;
@@ -186,27 +167,6 @@ public class Engine implements EventListener, EntitlementService {
         if (subscriptionEventQueue != null) {
             subscriptionEventQueue.stopQueue();
          }
-    }
-
-    @Override
-    public EntitlementUserApi getUserApi() {
-        return userApi;
-    }
-
-    @Override
-    public EntitlementBillingApi getBillingApi() {
-        return billingApi;
-    }
-
-
-    @Override
-    public EntitlementMigrationApi getMigrationApi() {
-        return migrationApi;
-    }
-
-    @Override
-    public EntitlementRepairApi getRepairApi() {
-        return repairApi;
     }
 
     @Override

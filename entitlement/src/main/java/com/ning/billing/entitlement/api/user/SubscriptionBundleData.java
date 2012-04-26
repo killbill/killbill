@@ -16,9 +16,11 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
-import java.util.UUID;
+import com.ning.billing.overdue.OverdueState;
 
 public class SubscriptionBundleData implements SubscriptionBundle {
 
@@ -27,18 +29,24 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     private final UUID accountId;
     private final DateTime startDate;
     private final DateTime lastSysTimeUpdate; 
-
-    public SubscriptionBundleData(String name, UUID accountId, DateTime now) {
-        this(UUID.randomUUID(), name, accountId, null, now);
+    private final OverdueState<SubscriptionBundle> overdueState;
+    
+    public SubscriptionBundleData(String name, UUID accountId, DateTime startDate) {
+        this(UUID.randomUUID(), name, accountId, startDate, startDate);
     }
 
-    public SubscriptionBundleData(UUID id, String key, UUID accountId, DateTime startDate, DateTime now) {
+    public SubscriptionBundleData(UUID id, String key, UUID accountId, DateTime startDate, DateTime lastSysUpdate) {
+        this(id, key, accountId, startDate, lastSysUpdate, null);
+    }
+
+    public SubscriptionBundleData(UUID id, String key, UUID accountId, DateTime startDate, DateTime lastSysUpdate, OverdueState<SubscriptionBundle> overdueState) {
         super();
         this.id = id;
         this.key = key;
         this.accountId = accountId;
         this.startDate = startDate;
-        this.lastSysTimeUpdate = now;
+        this.lastSysTimeUpdate = lastSysUpdate;
+        this.overdueState = overdueState;
     }
 
     @Override
@@ -56,7 +64,6 @@ public class SubscriptionBundleData implements SubscriptionBundle {
         return accountId;
     }
 
-
     // STEPH do we need it ? and should we return that and when is that populated/updated?
     @Override
     public DateTime getStartDate() {
@@ -65,5 +72,10 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     
     public DateTime getLastSysUpdateTime() {
         return lastSysTimeUpdate;
+    }
+    
+    @Override
+    public OverdueState<SubscriptionBundle> getOverdueState() {
+        return overdueState;
     }
 }

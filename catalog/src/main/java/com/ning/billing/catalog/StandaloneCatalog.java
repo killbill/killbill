@@ -17,7 +17,6 @@
 package com.ning.billing.catalog;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
@@ -40,6 +39,7 @@ import com.ning.billing.catalog.api.PlanChangeResult;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.catalog.rules.PlanRules;
@@ -70,11 +70,11 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 	private PlanRules planRules;
 
 	@XmlElementWrapper(name="plans", required=true)
-	@XmlElement(name="plan", required=true)
+	@XmlElement(name="plan", required=true) 
 	private DefaultPlan[] plans;
 
-	@XmlElement(name="priceLists", required=true)
-	private DefaultPriceListSet priceLists;
+    @XmlElement(name="priceLists", required=true)
+    private DefaultPriceListSet priceLists;
 
 	public StandaloneCatalog() {}
 
@@ -142,7 +142,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 			throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND,priceListName);
 		}
 		Product product = findCurrentProduct(productName);
-		DefaultPlan result = priceLists.getPlanListFrom(priceListName, product, period);
+		DefaultPlan result = priceLists.getPlanFrom(priceListName, product, period);
 		if ( result == null) {
 			String periodString = (period == null) ? "NULL" :  period.toString();
 			throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND, productName, periodString, priceListName);
@@ -186,6 +186,16 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		Plan plan = findCurrentPlan(planName);
 		return plan.findPhase(name);
 	}
+
+    @Override
+    public PriceList findCurrentPricelist(String name)
+            throws CatalogApiException {
+        if (name == null || priceLists == null) {
+            throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, name);
+        }
+        
+        return priceLists.findPriceListFrom(name);
+    }
 
 
 
@@ -288,10 +298,10 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 		return this;
 	}
 
-	protected StandaloneCatalog setPriceLists(DefaultPriceListSet priceLists) {
-		this.priceLists = priceLists;
-		return this;
-	}
+    protected StandaloneCatalog setPriceLists(DefaultPriceListSet priceLists) {
+        this.priceLists = priceLists;
+        return this;
+    }
 
 	@Override
 	public boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException {
@@ -303,4 +313,5 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 				(!plan.isRetired()) &&
 				(!priceList.isRetired());
 	}
+
 }

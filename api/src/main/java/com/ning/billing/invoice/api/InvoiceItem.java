@@ -28,6 +28,8 @@ public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
 
     UUID getAccountId();
 
+    UUID getBundleId();
+
     UUID getSubscriptionId();
 
     String getPlanName();

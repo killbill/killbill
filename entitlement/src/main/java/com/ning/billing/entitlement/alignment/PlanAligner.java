@@ -134,7 +134,7 @@ public class PlanAligner  {
                         subscription.getBundleStartDate(),
                         lastPlanTransition.getNextPlan(),
                         lastPlanTransition.getNextPhase().getPhaseType(),
-                        lastPlanTransition.getNextPriceList(),
+                        lastPlanTransition.getNextPriceList().getName(),
                         requestedDate);
                 return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
             // If we went through Plan changes, borrow the logics for changePlan alignement
@@ -143,9 +143,9 @@ public class PlanAligner  {
                         subscription.getBundleStartDate(),
                         lastPlanTransition.getPreviousPhase(),
                         lastPlanTransition.getPreviousPlan(),
-                        lastPlanTransition.getPreviousPriceList(),
+                        lastPlanTransition.getPreviousPriceList().getName(),
                         lastPlanTransition.getNextPlan(),
-                        lastPlanTransition.getNextPriceList(),
+                        lastPlanTransition.getNextPriceList().getName(),
                         requestedDate,
                         effectiveDate,
                         WhichPhase.NEXT);
@@ -193,7 +193,7 @@ public class PlanAligner  {
                 subscription.getBundleStartDate(),
                 subscription.getCurrentPhase(),
                 subscription.getCurrentPlan(),
-                subscription.getCurrentPriceList(),
+                subscription.getCurrentPriceList().getName(),
                 nextPlan,
                 nextPriceList,
                 requestedDate,

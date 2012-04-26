@@ -16,24 +16,27 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.Product;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
-import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.user.ApiEventType;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.annotation.Nullable;
-import java.util.UUID;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
+import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.entitlement.events.user.ApiEventType;
 
 public class TestAnalyticsListener
 {
@@ -47,7 +50,7 @@ public class TestAnalyticsListener
     private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
     private final Plan plan = new MockPlan("platinum-monthly", product);
     private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-    private final String priceList = null;
+    private final PriceList priceList = null;
 
     private AnalyticsListener listener;
 

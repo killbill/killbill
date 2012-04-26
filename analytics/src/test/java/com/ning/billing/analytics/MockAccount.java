@@ -19,13 +19,13 @@ package com.ning.billing.analytics;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;

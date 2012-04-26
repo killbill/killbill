@@ -26,18 +26,14 @@ import com.ning.billing.util.bus.Bus;
 public class DefaultInvoiceService implements InvoiceService {
 
     public static final String INVOICE_SERVICE_NAME = "invoice-service";
-    private final InvoiceUserApi userApi;
-    private final InvoicePaymentApi paymentApi;
     private final NextBillingDateNotifier dateNotifier;
     private final InvoiceListener invoiceListener;
     private final Bus eventBus;
 
     @Inject
-    public DefaultInvoiceService(InvoiceListener invoiceListener, Bus eventBus, InvoiceUserApi userApi, InvoicePaymentApi paymentApi, NextBillingDateNotifier dateNotifier) {
+    public DefaultInvoiceService(InvoiceListener invoiceListener, Bus eventBus, NextBillingDateNotifier dateNotifier) {
         this.invoiceListener = invoiceListener;
         this.eventBus = eventBus;
-        this.userApi = userApi;
-        this.paymentApi = paymentApi;
         this.dateNotifier = dateNotifier;
     }
 
@@ -45,16 +41,6 @@ public class DefaultInvoiceService implements InvoiceService {
     @Override
     public String getName() {
         return INVOICE_SERVICE_NAME;
-    }
-
-    @Override
-    public InvoiceUserApi getUserApi() {
-        return userApi;
-    }
-
-    @Override
-    public InvoicePaymentApi getPaymentApi() {
-        return paymentApi;
     }
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.INIT_SERVICE)

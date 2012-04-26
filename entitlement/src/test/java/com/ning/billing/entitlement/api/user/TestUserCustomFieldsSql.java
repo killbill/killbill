@@ -16,16 +16,11 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.List;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.clock.DefaultClock;
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -35,9 +30,14 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
+import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.customfield.CustomField;
 
 
@@ -51,7 +51,7 @@ public class TestUserCustomFieldsSql extends TestApiBase {
     }
 
     @Test(enabled=false, groups={"slow"})
-    public void stress() {
+    public void stress() throws Exception {
         cleanupTest();
         for (int i = 0; i < 20; i++) {
             setupTest();

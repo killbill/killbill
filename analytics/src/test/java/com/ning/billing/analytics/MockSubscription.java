@@ -16,24 +16,26 @@
 
 package com.ning.billing.analytics;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
-
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
-import java.util.List;
-import java.util.UUID;
 
 public class MockSubscription implements Subscription
 {
@@ -118,7 +120,7 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public String getCurrentPriceList()
+    public PriceList getCurrentPriceList()
     {
         return null;
     }
@@ -241,6 +243,11 @@ public class MockSubscription implements Subscription
 
     @Override
     public boolean processPayment() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<SubscriptionEventTransition> getBillingTransitions() {
         throw new UnsupportedOperationException();
     }
 }

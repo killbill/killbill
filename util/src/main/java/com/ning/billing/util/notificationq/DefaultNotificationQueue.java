@@ -19,6 +19,7 @@ package com.ning.billing.util.notificationq;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
@@ -118,5 +119,11 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
             String realDebug = String.format(format, args);
             log.debug(String.format("Thread %d [queue = %s] %s", Thread.currentThread().getId(), getFullQName(), realDebug));
         }
+    }
+
+    @Override
+    public void removeNotificationsByKey(UUID key) {
+        dao.removeNotificationsByKey(key.toString());
+        
     }
 }

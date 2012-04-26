@@ -45,6 +45,7 @@ import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
@@ -62,7 +63,7 @@ import com.ning.billing.util.notificationq.MockNotificationQueue;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
-@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
+@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class })
 @Test(groups = "fast")
 public class TestRetryService {
     @Inject
@@ -116,12 +117,14 @@ public class TestRetryService {
         final Invoice invoice = testHelper.createTestInvoice(account, clock.getUTCNow(), Currency.USD);
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
 
         final DateTime startDate = clock.getUTCNow();
         final DateTime endDate = startDate.plusMonths(1);
         invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
                                                        account.getId(),
                                                        subscriptionId,
+                                                       bundleId,
                                                        "test plan", "test phase",
                                                        startDate,
                                                        endDate,
@@ -157,12 +160,14 @@ public class TestRetryService {
         final Invoice invoice = testHelper.createTestInvoice(account, clock.getUTCNow(), Currency.USD);
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
 
         final DateTime now = clock.getUTCNow();
 
         invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
                                                        account.getId(),
                                                        subscriptionId,
+                                                       bundleId,
                                                        "test plan", "test phase",
                                                        now,
                                                        now.plusMonths(1),

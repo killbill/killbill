@@ -104,13 +104,16 @@ public class TestIntegrationBase {
 
     @Inject
     protected MysqlTestingHelper helper;
-
+    @Inject
     protected EntitlementUserApi entitlementUserApi;
 
+    @Inject
     protected EntitlementRepairApi repairApi;
     
+    @Inject
     protected InvoiceUserApi invoiceUserApi;
 
+    @Inject
     protected AccountUserApi accountUserApi;
 
     protected TestBusHandler busHandler;
@@ -146,16 +149,6 @@ public class TestIntegrationBase {
         lifecycle.fireStartupSequencePriorEventRegistration();
         busService.getBus().register(busHandler);
         lifecycle.fireStartupSequencePostEventRegistration();
-
-
-
-        /**
-         * Retrieve APIs
-         */
-        entitlementUserApi = entitlementService.getUserApi();
-        repairApi = entitlementService.getRepairApi();
-        invoiceUserApi = invoiceService.getUserApi();
-        accountUserApi = accountService.getAccountUserApi();
     }
 
     @AfterClass(groups = "slow")

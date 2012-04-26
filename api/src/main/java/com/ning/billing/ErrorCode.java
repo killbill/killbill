@@ -76,6 +76,9 @@ public enum ErrorCode {
     ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE(1104, "BP recreation for bundle %s implies that all AO should be start also with a CREATE"),        
     ENT_REPAIR_AO_CREATE_BEFORE_BP_START(1105, "Can't recreate AO %s for bundle %s before BP starts"),    
     
+    
+    ENT_BUNDLE_IS_OVERDUE_BLOCKED(1090, "Changes to this bundle are blocked by overdue enforcement (%s :  %s)"),
+    ENT_ACCOUNT_IS_OVERDUE_BLOCKED(1091, "Changes to this account are blocked by overdue enforcement (%s)"),
     /*
     *
     * Range 2000 : CATALOG
@@ -127,7 +130,12 @@ public enum ErrorCode {
      * Billing Alignment
      */
     CAT_INVALID_BILLING_ALIGNMENT(2060, "Invalid billing alignment '%s'"),
-
+    /*
+     * Overdue
+     */
+    CAT_NO_SUCH_OVEDUE_STATE(2070, "No such overdue state '%s'"),
+    CAT_MISSING_CLEAR_STATE(2071, "Missing a clear state"),
+    CAT_NO_OVERDUEABLE_TYPE(2072, "No such overdueable type: "),
    /*
     *
     * Range 3000 : ACCOUNT
@@ -170,7 +178,24 @@ public enum ErrorCode {
     INVOICE_INVALID_TRANSITION(4002, "Transition did not contain a subscription id."),
     INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID(4003, "No account id was retrieved for subscription id %s"),
     INVOICE_INVALID_DATE_SEQUENCE(4004, "Date sequence was invalid. Start Date: %s; End Date: %s; Target Date: %s"),
-    INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s")
+    INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s"),
+    
+    /*
+     * 
+     * Range 5000: Overdue system
+     * 
+     */
+    OVERDUE_CAT_ERROR_ENCOUNTERED(5001,"Catalog error encountered on Overdueable: id='%s', type='%s'"),  
+    OVERDUE_TYPE_NOT_SUPPORTED(5002,"Overdue of this type is not supported: id='%s', type='%s'"),  
+    /*
+     * 
+     * Range 6000: Blocking system
+     * 
+     */
+    BLOCK_BLOCKED_ACTION(6000, "The action %s is block on this %s with id=%s"),
+    BLOCK_TYPE_NOT_SUPPORTED(6001, "The Blockable type '%s' is not supported") 
+    
+    
     ;
 
     

@@ -14,23 +14,27 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.billing;
-
-import com.ning.billing.catalog.api.CatalogApiException;
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
-import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
+package com.ning.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
 
+import org.joda.time.DateTime;
+
+import com.ning.billing.account.api.Account;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.entitlement.api.billing.BillingModeType;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+
 public class DefaultBillingEvent implements BillingEvent {
+    final private Account account;
     final private int billCycleDay;
     final private Subscription subscription;
     final private DateTime effectiveDate;
@@ -45,7 +49,8 @@ public class DefaultBillingEvent implements BillingEvent {
     final private SubscriptionTransitionType type;
     final private Long totalOrdering;
 
-    public DefaultBillingEvent(SubscriptionEventTransition transition, Subscription subscription, int billCycleDay, Currency currency) throws CatalogApiException {
+    public DefaultBillingEvent(Account account, SubscriptionEventTransition transition, Subscription subscription, int billCycleDay, Currency currency) throws CatalogApiException {
+        this.account = account;
         this.billCycleDay = billCycleDay;
         this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();
@@ -65,14 +70,14 @@ public class DefaultBillingEvent implements BillingEvent {
         billingPeriod =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPhase().getBillingPeriod() : transition.getPreviousPhase().getBillingPeriod();
         type = transition.getTransitionType();
-        totalOrdering = ((SubscriptionTransitionData) transition).getTotalOrdering();
+        totalOrdering = transition.getTotalOrdering();
     }
 
-    // Intended for test only
-    public DefaultBillingEvent(Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase,
+    public DefaultBillingEvent(Account account, Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase,
                                BigDecimal fixedPrice, BigDecimal recurringPrice, Currency currency,
                                BillingPeriod billingPeriod, int billCycleDay, BillingModeType billingModeType,
                                String description, long totalOrdering, SubscriptionTransitionType type) {
+        this.account = account;
         this.subscription = subscription;
         this.effectiveDate = effectiveDate;
         this.plan = plan;
@@ -100,6 +105,11 @@ public class DefaultBillingEvent implements BillingEvent {
     			 return getTotalOrdering().compareTo(e1.getTotalOrdering());
     		 }
     	 }
+    }
+
+    @Override
+    public Account getAccount() {
+         return account;
     }
 
     @Override

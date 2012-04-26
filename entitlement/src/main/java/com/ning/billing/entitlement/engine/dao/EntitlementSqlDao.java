@@ -27,12 +27,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -45,6 +47,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
@@ -78,8 +81,6 @@ import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
-import javax.annotation.Nullable;
-
 public class EntitlementSqlDao implements EntitlementDao {
 
     private final static Logger log = LoggerFactory.getLogger(EntitlementSqlDao.class);
@@ -99,8 +100,10 @@ public class EntitlementSqlDao implements EntitlementDao {
 
     @Inject
     public EntitlementSqlDao(final IDBI dbi, final Clock clock,
-            final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-            final CustomFieldDao customFieldDao, final Bus eventBus) {
+                             final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
+                             final CustomFieldDao customFieldDao,
+                             final Bus eventBus) {
+
         this.clock = clock;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
         this.eventsDao = dbi.onDemand(EventSqlDao.class);
@@ -430,7 +433,7 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     private void cancelFutureEventFromTransaction(final UUID subscriptionId, final EventSqlDao dao,
-            final EventType type, @Nullable final ApiEventType apiType,
+            final EventType type, final ApiEventType apiType,
             final CallContext context) {
 
         UUID futureEventId = null;
@@ -675,4 +678,5 @@ public class EntitlementSqlDao implements EntitlementDao {
             subscription.setFields(fields);
         }
     }
+ 
 }

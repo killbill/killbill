@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
@@ -49,6 +50,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionData;
 @Test(groups = "slow")
 @Guice(modules = {MockModule.class})
 public class TestIntegration extends TestIntegrationBase {
+ 
 
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
@@ -171,7 +173,8 @@ public class TestIntegration extends TestIntegrationBase {
                                       boolean proRationExpected) throws Exception {
 
         log.info("Beginning test with BCD of " + billingDay);
-        Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null, context);
+        AccountData accountData = getAccountData(billingDay);
+        Account account = accountUserApi.createAccount(accountData, null, null, context);
         UUID accountId = account.getId();
         assertNotNull(account);
 
@@ -424,7 +427,7 @@ public class TestIntegration extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         invoices = invoiceUserApi.getInvoicesByAccount(accountId);
         assertNotNull(invoices);
-        assertTrue(invoices.size() == 2);
+        assertEquals(invoices.size(),2);
 
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -433,6 +436,6 @@ public class TestIntegration extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         invoices = invoiceUserApi.getInvoicesByAccount(accountId);
         assertNotNull(invoices);
-        assertTrue(invoices.size() == 3);
+        assertEquals(invoices.size(),3);
     }
 }

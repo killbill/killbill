@@ -16,10 +16,6 @@
 
 package com.ning.billing.invoice;
 
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.glue.FieldStoreModule;
-import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -32,11 +28,16 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.glue.MockJunctionModule;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.glue.TagStoreModule;
 
 
 public class MockModule extends AbstractModule {
@@ -63,18 +64,15 @@ public class MockModule extends AbstractModule {
 
         install(new GlobalLockerModule());
         install(new NotificationQueueModule());
-//        install(new AccountModule());
-        bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
-
         installEntitlementModule();
         install(new CatalogModule());
         install(new BusModule());
         installInvoiceModule();
-
+        install(new MockJunctionModule());
     }
     
     protected void installEntitlementModule() {
-    	install(new EntitlementModule());
+        install(new EntitlementModule());
     }
 
     protected void installInvoiceModule() {
