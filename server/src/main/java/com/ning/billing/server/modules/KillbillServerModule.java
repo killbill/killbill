@@ -16,7 +16,6 @@
 
 package com.ning.billing.server.modules;
 
-import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import org.skife.jdbi.v2.DBI;
