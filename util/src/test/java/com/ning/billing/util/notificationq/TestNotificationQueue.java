@@ -92,7 +92,9 @@ public class TestNotificationQueue {
 
     @AfterClass(groups="slow")
     public void tearDown() {
-        helper.stopMysql();
+        if (helper != null) {
+            helper.stopMysql();
+        }
     }
 
     @BeforeTest(groups="slow")
@@ -131,7 +133,7 @@ public class TestNotificationQueue {
                 synchronized (expectedNotifications) {
                     log.info("Handler received key: " + notificationKey);
 
-                    expectedNotifications.put(notificationKey.toString(), Boolean.TRUE);
+                    expectedNotifications.put(notificationKey, Boolean.TRUE);
                     expectedNotifications.notify();
                 }
             }
@@ -432,7 +434,7 @@ public class TestNotificationQueue {
                 new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(String key, DateTime eventDateTime) {
-                    if(key.equals(notificationKey) || key.equals(notificationKey2)) { //ig nore stray events from other tests
+                    if(key.equals(notificationKey) || key.equals(notificationKey2)) { //ignore stray events from other tests
                         log.info("Received notification with key: " + notificationKey);
                         eventsReceived++;
                     }

@@ -108,7 +108,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
     public static final class PaymentAttemptBinder extends BinderBase implements Binder<Bind, PaymentAttempt> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentAttempt paymentAttempt) {
-            stmt.bind("payment_attempt_id", paymentAttempt.getPaymentAttemptId().toString());
+            stmt.bind("payment_attempt_id", paymentAttempt.getPaymentAttemptId() == null ? null : paymentAttempt.getPaymentAttemptId().toString());
             stmt.bind("invoice_id", paymentAttempt.getInvoiceId().toString());
             stmt.bind("account_id", paymentAttempt.getAccountId().toString());
             stmt.bind("amount", paymentAttempt.getAmount());

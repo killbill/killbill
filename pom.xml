@@ -465,7 +465,8 @@
                                 <exclude>jaxrs/**</exclude>
                                 <exclude>server/**</exclude>
                                 <exclude>bin/**</exclude>
-
+                                <!-- exclude mustache template files -->
+                                <exclude>**/*.mustache</exclude>
                             </excludes>
                         </configuration>
                     </execution>

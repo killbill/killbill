@@ -154,9 +154,6 @@ public class TestIntegration {
         lifecycle.fireStartupSequencePriorEventRegistration();
         busService.getBus().register(busHandler);
         lifecycle.fireStartupSequencePostEventRegistration();
-
-
-
     }
 
     @AfterSuite(groups = "slow")
@@ -164,9 +161,10 @@ public class TestIntegration {
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
-        helper.stopMysql();
+        if (helper != null) {
+            helper.stopMysql();
+        }
     }
-
 
     @BeforeMethod(groups = "slow")
     public void setupTest() {
