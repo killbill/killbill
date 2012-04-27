@@ -45,15 +45,12 @@ public class InvoiceListener {
 
     @Subscribe
     public void handleRepairEntitlementEvent(final RepairEntitlementEvent repairEvent) {
-        // STEPH
-        /*
         try {
             CallContext context = factory.createCallContext("RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, repairEvent.getUserToken());
             dispatcher.processAccount(repairEvent.getAccountId(), repairEvent.getEffectiveDate(), false, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
         }
-        */
     }
     
     @Subscribe

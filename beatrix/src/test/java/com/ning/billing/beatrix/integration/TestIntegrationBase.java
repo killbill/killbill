@@ -64,7 +64,7 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.ClockMock;
 
-public class TestIntegrationBase {
+public class TestIntegrationBase implements TestFailure {
 
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
@@ -118,6 +118,29 @@ public class TestIntegrationBase {
 
     protected TestBusHandler busHandler;
 
+    
+    private boolean currentTestStatusSuccess;
+    private String currentTestFailedMsg;
+    
+    @Override
+    public void failed(String msg) {
+        currentTestStatusSuccess = false;
+        currentTestFailedMsg = msg;
+    }
+
+    @Override
+    public void reset() {
+        currentTestStatusSuccess = true;
+        currentTestFailedMsg = null;
+    }
+
+    protected void assertFailureFromBusHandler() {
+        if (!currentTestStatusSuccess) {
+            log.error(currentTestFailedMsg);
+            fail();
+        }
+    }
+
     protected void setupMySQL() throws IOException
     {
         final String accountDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
@@ -139,13 +162,15 @@ public class TestIntegrationBase {
     public void setup() throws Exception{
 
         setupMySQL();
-
+        
+        cleanupData();
+        
         context = new DefaultCallContextFactory(clock).createCallContext("Integration Test", CallOrigin.TEST, UserType.TEST);
 
         /**
          * Initialize lifecyle for subset of services
          */
-        busHandler = new TestBusHandler();
+        busHandler = new TestBusHandler(this);
         lifecycle.fireStartupSequencePriorEventRegistration();
         busService.getBus().register(busHandler);
         lifecycle.fireStartupSequencePostEventRegistration();
@@ -165,16 +190,17 @@ public class TestIntegrationBase {
 
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
+        cleanupData();
         busHandler.reset();
         clock.resetDeltaFromReality();
-        cleanupData();
+        reset();
     }
 
     @AfterMethod(groups = "slow")
     public void cleanupTest() {
         log.warn("DONE WITH TEST\n");
     }
-
+    
     protected void cleanupData() {
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override

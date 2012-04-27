@@ -218,7 +218,7 @@ public class TestJaxrsBase {
         loadConfig();
         httpClient = new AsyncHttpClient();
         mapper = new ObjectMapper();
-        busHandler = new TestBusHandler();
+        busHandler = new TestBusHandler(null);
         this.helper = listener.getMysqlTestingHelper();
         this.clock =  (ClockMock) listener.getClock();
     }

@@ -39,11 +39,14 @@ public class TestBusHandler {
 
     private final List<NextEvent> nextExpectedEvent;
 
+    private final TestFailure testFailure;
+    
     private volatile boolean completed;
 
-    public TestBusHandler() {
+    public TestBusHandler(TestFailure testFailure) {
         nextExpectedEvent = new Stack<NextEvent>();
         this.completed = false;
+        this.testFailure = testFailure;
     }
 
     public enum NextEvent {
@@ -193,7 +196,9 @@ public class TestBusHandler {
             if (!foundIt) {
                 Joiner joiner = Joiner.on(" ");
                 log.error("TestBusHandler Received event " + received + "; expected " + joiner.join(nextExpectedEvent));
-                Assert.fail();
+                if (testFailure != null) {
+                    testFailure.failed("TestBusHandler Received event " + received + "; expected " + joiner.join(nextExpectedEvent));
+                }
             }
         }
     }
