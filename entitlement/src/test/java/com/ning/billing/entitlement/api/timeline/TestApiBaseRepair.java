@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api.repair;
+package com.ning.billing.entitlement.api.timeline;
 
 import static org.testng.Assert.assertEquals;
 
@@ -35,9 +35,12 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.TestApiBase;
-import com.ning.billing.entitlement.api.repair.SubscriptionRepair.DeletedEvent;
-import com.ning.billing.entitlement.api.repair.SubscriptionRepair.ExistingEvent;
-import com.ning.billing.entitlement.api.repair.SubscriptionRepair.NewEvent;
+import com.ning.billing.entitlement.api.timeline.BundleTimeline;
+import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
 
@@ -61,8 +64,8 @@ public abstract class TestApiBaseRepair extends TestApiBase {
     }
 
     
-    protected SubscriptionRepair createSubscriptionReapir(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
-        return new SubscriptionRepair() {
+    protected SubscriptionTimeline createSubscriptionReapir(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
+        return new SubscriptionTimeline() {
             @Override
             public UUID getId() {
                 return id;
@@ -82,19 +85,23 @@ public abstract class TestApiBaseRepair extends TestApiBase {
         };
     }
 
-    protected BundleRepair createBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionRepair> subscriptionRepair) {
-        return new BundleRepair() {
+    protected BundleTimeline createBundleRepair(final UUID bundleId, final String viewId, final List<SubscriptionTimeline> subscriptionRepair) {
+        return new BundleTimeline() {
             @Override
             public String getViewId() {
                 return viewId;
             }
             @Override
-            public List<SubscriptionRepair> getSubscriptions() {
+            public List<SubscriptionTimeline> getSubscriptions() {
                 return subscriptionRepair;
             }
             @Override
             public UUID getBundleId() {
                 return bundleId;
+            }
+            @Override
+            public String getExternalKey() {
+                return null;
             }
         };
     }
@@ -129,8 +136,8 @@ public abstract class TestApiBaseRepair extends TestApiBase {
         return ev;
     }
     
-    protected SubscriptionRepair getSubscriptionRepair(final UUID id, final BundleRepair bundleRepair) {
-        for (SubscriptionRepair cur : bundleRepair.getSubscriptions()) {
+    protected SubscriptionTimeline getSubscriptionRepair(final UUID id, final BundleTimeline bundleRepair) {
+        for (SubscriptionTimeline cur : bundleRepair.getSubscriptions()) {
             if (cur.getId().equals(id)) {
                 return cur;
             }
@@ -181,11 +188,11 @@ public abstract class TestApiBaseRepair extends TestApiBase {
         };
     }
 
-    protected void sortEventsOnBundle(final BundleRepair bundle) {
+    protected void sortEventsOnBundle(final BundleTimeline bundle) {
         if (bundle.getSubscriptions() == null) {
             return;
         }
-        for (SubscriptionRepair cur : bundle.getSubscriptions()) {
+        for (SubscriptionTimeline cur : bundle.getSubscriptions()) {
             if (cur.getExistingEvents() != null) {
                 sortExistingEvent(cur.getExistingEvents());
             }

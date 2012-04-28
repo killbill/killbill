@@ -13,19 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api.repair;
+package com.ning.billing.entitlement.api.timeline;
 
+import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import com.ning.billing.entitlement.events.EntitlementEvent;
 
-import com.ning.billing.util.bus.BusEvent;
+public interface RepairEntitlementLifecycleDao {
 
-public interface RepairEntitlementEvent extends BusEvent {
-
-    public UUID getAccountId();
+    public void initializeRepair(final UUID subscriptionId, final List<EntitlementEvent> initialEvents);
     
-    public UUID getBundleId();
-
-    public DateTime getEffectiveDate();
+    public void cleanup();
 }

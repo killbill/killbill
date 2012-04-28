@@ -20,17 +20,29 @@ import java.math.BigDecimal;
 
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonView;
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.clock.DefaultClock;
 
 public class PaymentJson {
 
+    @JsonView(BundleTimelineViews.Base.class)
     private final BigDecimal paidAmount;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String invoiceId;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String paymentId;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final DateTime requestedDate;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final DateTime effectiveDate;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String status;
 
     @JsonCreator

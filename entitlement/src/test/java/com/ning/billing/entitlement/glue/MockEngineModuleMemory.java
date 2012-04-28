@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.glue;
 
 
 import com.google.inject.name.Names;
-import com.ning.billing.entitlement.api.repair.RepairEntitlementLifecycleDao;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;

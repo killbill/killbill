@@ -26,7 +26,7 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.repair.RepairEntitlementLifecycleDao;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoSql;
 

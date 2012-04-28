@@ -66,10 +66,10 @@ import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
-import com.ning.billing.entitlement.api.repair.RepairEntitlementLifecycleDao;
-import com.ning.billing.entitlement.api.repair.RepairSubscriptionApiService;
-import com.ning.billing.entitlement.api.repair.RepairSubscriptionFactory;
 
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
+import com.ning.billing.entitlement.api.timeline.RepairSubscriptionApiService;
+import com.ning.billing.entitlement.api.timeline.RepairSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;

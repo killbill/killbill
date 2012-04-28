@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api.repair;
+package com.ning.billing.entitlement.api.timeline;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 
-public interface SubscriptionRepair {
+public interface SubscriptionTimeline {
 
     public UUID getId();
     

@@ -56,7 +56,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.repair.EntitlementRepairApi;
+import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -88,7 +88,7 @@ public abstract class TestApiBase {
     protected ChargeThruApi billingApi;
 
     protected EntitlementMigrationApi migrationApi;
-    protected EntitlementRepairApi repairApi;
+    protected EntitlementTimelineApi repairApi;
 
     protected CatalogService catalogService;
     protected EntitlementConfig config;
@@ -139,7 +139,7 @@ public abstract class TestApiBase {
         entitlementApi = g.getInstance(EntitlementUserApi.class);
         billingApi = g.getInstance(ChargeThruApi.class);
         migrationApi = g.getInstance(EntitlementMigrationApi.class);
-        repairApi = g.getInstance(EntitlementRepairApi.class);
+        repairApi = g.getInstance(EntitlementTimelineApi.class);
         catalogService = g.getInstance(CatalogService.class);
         busService = g.getInstance(BusService.class);
         config = g.getInstance(EntitlementConfig.class);

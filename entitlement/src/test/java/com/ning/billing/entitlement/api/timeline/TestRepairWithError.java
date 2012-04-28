@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api.repair;
+package com.ning.billing.entitlement.api.timeline;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -39,8 +39,11 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.api.repair.SubscriptionRepair.DeletedEvent;
-import com.ning.billing.entitlement.api.repair.SubscriptionRepair.NewEvent;
+import com.ning.billing.entitlement.api.timeline.BundleTimeline;
+import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -80,14 +83,14 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 clock.setDeltaFromReality(durationShift, 0);
                 assertTrue(testListener.isApiCompleted(5000));
                 
-                BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
                 
-                SubscriptionRepair sRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.<DeletedEvent>emptyList(), Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.<DeletedEvent>emptyList(), Collections.singletonList(ne));
                 
-                BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+                BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                 repairApi.repairBundle(bRepair, true, context);
             }
@@ -114,14 +117,14 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 clock.addDeltaFromReality(durationShift);
                 assertTrue(testListener.isApiCompleted(5000));
                 
-                BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
                 DeletedEvent de = createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId());                
 
-                SubscriptionRepair sRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.singletonList(de), Collections.singletonList(ne));
-                BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.singletonList(de), Collections.singletonList(ne));
+                BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                 repairApi.repairBundle(bRepair, true, context);
             }
@@ -134,14 +137,14 @@ public class TestRepairWithError extends TestApiBaseRepair {
             @Override
             public void doTest() throws EntitlementRepairException {
                 
-                BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
                 DeletedEvent de = createDeletedEvent(UUID.randomUUID());
-                SubscriptionRepair sRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.singletonList(de), Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.singletonList(de), Collections.singletonList(ne));
                 
-                BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+                BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                 repairApi.repairBundle(bRepair, true, context);
             }
@@ -160,15 +163,15 @@ public class TestRepairWithError extends TestApiBaseRepair {
                    clock.setDeltaFromReality(durationShift, 0);
                    assertTrue(testListener.isApiCompleted(5000));
                    
-                   BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                   BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                    sortEventsOnBundle(bundleRepair);
                    PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                    NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, baseSubscription.getStartDate().plusDays(10), spec);
-                   List<DeletedEvent> des = new LinkedList<SubscriptionRepair.DeletedEvent>();
+                   List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
                    des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));                
-                   SubscriptionRepair sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+                   SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
                    
-                   BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+                   BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                    repairApi.repairBundle(bRepair, true, context);
                 
@@ -188,16 +191,16 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 clock.setDeltaFromReality(durationShift, 0);
                 assertTrue(testListener.isApiCompleted(5000));
                 
-                BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
-                List<DeletedEvent> des = new LinkedList<SubscriptionRepair.DeletedEvent>();
+                List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));                
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));                                
-                SubscriptionRepair sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
                 
-                BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+                BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                 repairApi.repairBundle(bRepair, true, context);
             }
@@ -220,18 +223,18 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
                 clock.addDeltaFromReality(someTimeLater);
 
-                BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 
                 // Quick check
-                SubscriptionRepair bpRepair = getSubscriptionRepair(baseSubscription.getId(), bundleRepair);
+                SubscriptionTimeline bpRepair = getSubscriptionRepair(baseSubscription.getId(), bundleRepair);
                 assertEquals(bpRepair.getExistingEvents().size(), 2);
                 
-                SubscriptionRepair aoRepair = getSubscriptionRepair(aoSubscription.getId(), bundleRepair);
+                SubscriptionTimeline aoRepair = getSubscriptionRepair(aoSubscription.getId(), bundleRepair);
                 assertEquals(aoRepair.getExistingEvents().size(), 2);
                 
 
-                List<DeletedEvent> des = new LinkedList<SubscriptionRepair.DeletedEvent>();
+                List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
                 des.add(createDeletedEvent(aoRepair.getExistingEvents().get(0).getEventId()));        
                 des.add(createDeletedEvent(aoRepair.getExistingEvents().get(1).getEventId()));
 
@@ -239,9 +242,9 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.DISCOUNT);
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, aoRecreateDate, spec);
                 
-                SubscriptionRepair saoRepair = createSubscriptionReapir(aoSubscription.getId(), des, Collections.singletonList(ne));
+                SubscriptionTimeline saoRepair = createSubscriptionReapir(aoSubscription.getId(), des, Collections.singletonList(ne));
                 
-                BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
+                BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
                 
                 boolean dryRun = true;
                 repairApi.repairBundle(bRepair, dryRun, context);
@@ -265,24 +268,24 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
                 clock.addDeltaFromReality(someTimeLater);
 
-                BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 
                 // Quick check
-                SubscriptionRepair bpRepair = getSubscriptionRepair(baseSubscription.getId(), bundleRepair);
+                SubscriptionTimeline bpRepair = getSubscriptionRepair(baseSubscription.getId(), bundleRepair);
                 assertEquals(bpRepair.getExistingEvents().size(), 2);
                 
-                SubscriptionRepair aoRepair = getSubscriptionRepair(aoSubscription.getId(), bundleRepair);
+                SubscriptionTimeline aoRepair = getSubscriptionRepair(aoSubscription.getId(), bundleRepair);
                 assertEquals(aoRepair.getExistingEvents().size(), 2);
                 
 
-                List<DeletedEvent> des = new LinkedList<SubscriptionRepair.DeletedEvent>();
+                List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
                 //des.add(createDeletedEvent(aoRepair.getExistingEvents().get(1).getEventId()));        
                 DateTime aoCancelDate = aoSubscription.getStartDate().plusDays(10);
                 
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CANCEL, aoCancelDate, null);
                 
-                SubscriptionRepair saoRepair = createSubscriptionReapir(aoSubscription.getId(), des, Collections.singletonList(ne));
+                SubscriptionTimeline saoRepair = createSubscriptionReapir(aoSubscription.getId(), des, Collections.singletonList(ne));
                 
                 bundleRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
                 
@@ -306,7 +309,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
                 SubscriptionData aoSubscription = createSubscription("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
                 
-                BundleRepair bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 
                 DateTime newCreateTime = baseSubscription.getStartDate().plusDays(3);
@@ -314,14 +317,14 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
 
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, newCreateTime, spec);
-                List<DeletedEvent> des = new LinkedList<SubscriptionRepair.DeletedEvent>();
+                List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
 
-                SubscriptionRepair sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
                 
                 // FIRST ISSUE DRY RUN
-                BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+                BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
                 
                 boolean dryRun = true;
                 repairApi.repairBundle(bRepair, dryRun, context);

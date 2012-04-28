@@ -13,16 +13,30 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api.repair;
+package com.ning.billing.entitlement.api.timeline;
 
-import java.util.List;
 import java.util.UUID;
 
-public interface BundleRepair {
+import org.joda.time.DateTime;
 
-    String getViewId();
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
+
+public class DefaultDeletedEvent implements DeletedEvent {
+
+    private final UUID id;
+    private final DateTime effectiveDate;
     
-    UUID getBundleId();
-
-    List<SubscriptionRepair> getSubscriptions();
+    public DefaultDeletedEvent(UUID id, DateTime effectiveDate) {
+        this.id = id;
+        this.effectiveDate = effectiveDate;
+    }
+    
+    @Override
+    public UUID getEventId() {
+        return id;
+    }
+    
+    public DateTime getEffectiveDate() {
+        return effectiveDate;
+    }
 }

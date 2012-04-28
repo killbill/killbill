@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,13 +13,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.jaxrs.json;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonView;
 
-public class BundleTimelineViews {
-    public static class Base {};
-    public static class Timeline extends Base {};
-    public static class ReadTimeline extends Timeline {};
-    public static class WriteTimeline extends Timeline {};
+public class SubscriptionJsonSimple {
+    
+    @JsonView(BundleTimelineViews.Base.class)
+    protected final String subscriptionId;
+
+    public SubscriptionJsonSimple() {
+        this.subscriptionId = null;
+    }
+
+    @JsonCreator
+    public SubscriptionJsonSimple(@JsonProperty("subscription_id") String subscriptionId) {
+        this.subscriptionId = subscriptionId;
+    }
+
+    public String getSubscriptionId() {
+        return subscriptionId;
+    }
 }

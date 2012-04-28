@@ -13,16 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api.repair;
+package com.ning.billing.entitlement.api.timeline;
 
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.entitlement.events.EntitlementEvent;
+public interface BundleTimeline {
 
-public interface RepairEntitlementLifecycleDao {
-
-    public void initializeRepair(final UUID subscriptionId, final List<EntitlementEvent> initialEvents);
+    String getViewId();
     
-    public void cleanup();
+    UUID getBundleId();
+    
+    String getExternalKey();
+
+    List<SubscriptionTimeline> getSubscriptions();
 }

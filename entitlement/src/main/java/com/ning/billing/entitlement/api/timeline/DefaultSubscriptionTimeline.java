@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api.repair;
+package com.ning.billing.entitlement.api.timeline;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,40 +32,41 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 
-public class DefaultSubscriptionRepair implements SubscriptionRepair  {
+public class DefaultSubscriptionTimeline implements SubscriptionTimeline  {
 
     private final UUID id;
     private final List<ExistingEvent> existingEvents;
     private final List<NewEvent> newEvents;
     private final List<DeletedEvent> deletedEvents;    
     
-    public DefaultSubscriptionRepair(final UUID id) {
+    public DefaultSubscriptionTimeline(final UUID id) {
         this.id = id;
-        this.existingEvents = Collections.<SubscriptionRepair.ExistingEvent>emptyList();
-        this.deletedEvents =  Collections.<SubscriptionRepair.DeletedEvent>emptyList();
-        this.newEvents = Collections.<SubscriptionRepair.NewEvent>emptyList();
+        this.existingEvents = Collections.<SubscriptionTimeline.ExistingEvent>emptyList();
+        this.deletedEvents =  Collections.<SubscriptionTimeline.DeletedEvent>emptyList();
+        this.newEvents = Collections.<SubscriptionTimeline.NewEvent>emptyList();
     }
     
-    public DefaultSubscriptionRepair(SubscriptionRepair input) {
+    public DefaultSubscriptionTimeline(SubscriptionTimeline input) {
         this.id = input.getId();
-        this.existingEvents = (input.getExistingEvents() != null) ? new ArrayList<SubscriptionRepair.ExistingEvent>(input.getExistingEvents()) : 
-            Collections.<SubscriptionRepair.ExistingEvent>emptyList();
+        this.existingEvents = (input.getExistingEvents() != null) ? new ArrayList<SubscriptionTimeline.ExistingEvent>(input.getExistingEvents()) : 
+            Collections.<SubscriptionTimeline.ExistingEvent>emptyList();
         sortExistingEvent(this.existingEvents);
-        this.deletedEvents = (input.getDeletedEvents() != null) ? new ArrayList<SubscriptionRepair.DeletedEvent>(input.getDeletedEvents()) : 
-            Collections.<SubscriptionRepair.DeletedEvent>emptyList();
-        this.newEvents = (input.getNewEvents() != null) ? new ArrayList<SubscriptionRepair.NewEvent>(input.getNewEvents()) : 
-            Collections.<SubscriptionRepair.NewEvent>emptyList();
+        this.deletedEvents = (input.getDeletedEvents() != null) ? new ArrayList<SubscriptionTimeline.DeletedEvent>(input.getDeletedEvents()) : 
+            Collections.<SubscriptionTimeline.DeletedEvent>emptyList();
+        this.newEvents = (input.getNewEvents() != null) ? new ArrayList<SubscriptionTimeline.NewEvent>(input.getNewEvents()) : 
+            Collections.<SubscriptionTimeline.NewEvent>emptyList();
         sortNewEvent(this.newEvents);
     }
     
      // CTOR for returning events only
-    public DefaultSubscriptionRepair(SubscriptionDataRepair input, Catalog catalog) throws CatalogApiException {
+    public DefaultSubscriptionTimeline(SubscriptionDataRepair input, Catalog catalog) throws CatalogApiException {
         this.id = input.getId();
         this.existingEvents = toExistingEvents(catalog, input.getActiveVersion(), input.getCategory(), input.getEvents());
         this.deletedEvents = null;
@@ -75,7 +76,7 @@ public class DefaultSubscriptionRepair implements SubscriptionRepair  {
    private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long activeVersion, final ProductCategory category, final List<EntitlementEvent> events) 
        throws CatalogApiException {
         
-        List<ExistingEvent> result = new LinkedList<SubscriptionRepair.ExistingEvent>();
+        List<ExistingEvent> result = new LinkedList<SubscriptionTimeline.ExistingEvent>();
         
         String prevProductName = null; 
         BillingPeriod prevBillingPeriod = null;

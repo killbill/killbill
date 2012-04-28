@@ -13,15 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api.repair;
+package com.ning.billing.entitlement.api.timeline;
 
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
 
-public interface EntitlementRepairApi {
+public interface EntitlementTimelineApi {
     
-    public BundleRepair getBundleRepair(final UUID bundleId) throws EntitlementRepairException;
+    public BundleTimeline getBundleRepair(final UUID bundleId) throws EntitlementRepairException;
     
-    public BundleRepair repairBundle(final BundleRepair input, final boolean dryRun, final CallContext context) throws EntitlementRepairException;
+    public BundleTimeline repairBundle(final BundleTimeline input, final boolean dryRun, final CallContext context) throws EntitlementRepairException;
 }

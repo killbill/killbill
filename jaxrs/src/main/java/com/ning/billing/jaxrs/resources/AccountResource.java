@@ -19,7 +19,10 @@ package com.ning.billing.jaxrs.resources;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,12 +51,20 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.entitlement.api.timeline.BundleTimeline;
+import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
+import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.BundleJson;
+import com.ning.billing.jaxrs.json.AccountTimelineJson;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 
 
 @Singleton
@@ -64,14 +75,26 @@ public class AccountResource implements BaseJaxrsResource {
 
     private final AccountUserApi accountApi;
     private final EntitlementUserApi entitlementApi;
+    private final EntitlementTimelineApi timelineApi;
+    private final InvoiceUserApi invoiceApi;
+    private final PaymentApi paymentApi;
     private final Context context;
     private final JaxrsUriBuilder uriBuilder;
 
     @Inject
-    public AccountResource(final JaxrsUriBuilder uriBuilder, final AccountUserApi accountApi, final EntitlementUserApi entitlementApi, final Context context) {
+    public AccountResource(final JaxrsUriBuilder uriBuilder,
+            final AccountUserApi accountApi,
+            final EntitlementUserApi entitlementApi, 
+            final InvoiceUserApi invoiceApi,
+            final PaymentApi paymentApi,
+            final EntitlementTimelineApi timelineApi,
+            final Context context) {
         this.uriBuilder = uriBuilder;
     	this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
+        this.invoiceApi = invoiceApi;
+        this.paymentApi = paymentApi;
+        this.timelineApi = timelineApi;
         this.context = context;
     }
 
@@ -81,7 +104,7 @@ public class AccountResource implements BaseJaxrsResource {
     public Response getAccount(@PathParam("accountId") String accountId) {
         Account account = accountApi.getAccountById(UUID.fromString(accountId));
         if (account == null) {
-        	return Response.status(Status.NO_CONTENT).build();
+            return Response.status(Status.NO_CONTENT).build();
         }
         AccountJson json = new AccountJson(account);
         return Response.status(Status.OK).entity(json).build();
@@ -98,10 +121,10 @@ public class AccountResource implements BaseJaxrsResource {
     		return Response.status(Status.NO_CONTENT).build();    		
     	}
     	List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid);
-    	Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
+    	Collection<BundleJsonNoSubsciptions> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJsonNoSubsciptions>() {
 			@Override
-			public BundleJson apply(SubscriptionBundle input) {
-				return new BundleJson(input);
+			public BundleJsonNoSubsciptions apply(SubscriptionBundle input) {
+				return new BundleJsonNoSubsciptions(input);
 			}
 		});
         return Response.status(Status.OK).entity(result).build();
@@ -175,5 +198,44 @@ public class AccountResource implements BaseJaxrsResource {
         }
        */
         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+    }
+
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + TIMELINE)
+    @Produces(APPLICATION_JSON)
+    public Response getAccountTimeline(@PathParam("accountId") String accountId) {
+        try {
+            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            if (account == null) {
+                return Response.status(Status.NO_CONTENT).build();
+            }
+
+            List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
+            List<PaymentInfoEvent> payments = Collections.emptyList();
+
+            if (invoices.size() > 0) {
+                Collection<String> tmp = Collections2.transform(invoices, new Function<Invoice, String>() {
+                    @Override
+                    public String apply(Invoice input) {
+                        return input.getId().toString();
+                    }
+                });
+                List<String> invoicesId = new ArrayList<String>();
+                invoicesId.addAll(tmp);
+
+                payments = paymentApi.getPaymentInfo(invoicesId);
+            }
+
+            List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());
+            List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
+            for (SubscriptionBundle cur : bundles) {
+                bundlesTimeline.add(timelineApi.getBundleRepair(cur.getId()));
+            }
+            AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline);
+            return Response.status(Status.OK).entity(json).build();
+        } catch (EntitlementRepairException e) {
+            log.error(e.getMessage());
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

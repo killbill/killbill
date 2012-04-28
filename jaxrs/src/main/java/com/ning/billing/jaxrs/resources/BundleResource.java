@@ -42,8 +42,8 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.jaxrs.json.BundleJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 
@@ -71,7 +71,7 @@ public class BundleResource implements BaseJaxrsResource {
 		if (bundle == null) {
 			return Response.status(Status.NO_CONTENT).build();
 		}
-		BundleJson json = new BundleJson(bundle);
+		BundleJsonNoSubsciptions json = new BundleJsonNoSubsciptions(bundle);
 		return Response.status(Status.OK).entity(json).build();
 	}
 
@@ -82,14 +82,14 @@ public class BundleResource implements BaseJaxrsResource {
 		if (bundle == null) {
 			return Response.status(Status.NO_CONTENT).build();
 		}
-		BundleJson json = new BundleJson(bundle);
+		BundleJsonNoSubsciptions json = new BundleJsonNoSubsciptions(bundle);
 		return Response.status(Status.OK).entity(json).build();
 	}
 
 	@POST
 	@Consumes(APPLICATION_JSON)
 	@Produces(APPLICATION_JSON)
-	public Response createBundle(final BundleJson json) {
+	public Response createBundle(final BundleJsonNoSubsciptions json) {
 		try {
 			UUID accountId = UUID.fromString(json.getAccountId());
 			final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(accountId, json.getExternalKey(), context.createContext());
@@ -111,10 +111,10 @@ public class BundleResource implements BaseJaxrsResource {
 			return Response.status(Status.NO_CONTENT).build();
 		}
 		List<Subscription> bundles = entitlementApi.getSubscriptionsForBundle(uuid);
-		Collection<SubscriptionJson> result =  Collections2.transform(bundles, new Function<Subscription, SubscriptionJson>() {
+		Collection<SubscriptionJsonNoEvents> result =  Collections2.transform(bundles, new Function<Subscription, SubscriptionJsonNoEvents>() {
 			@Override
-			public SubscriptionJson apply(Subscription input) {
-				return new SubscriptionJson(input, null, null, null);
+			public SubscriptionJsonNoEvents apply(Subscription input) {
+				return new SubscriptionJsonNoEvents(input);
 			}
 		});
 		return Response.status(Status.OK).entity(result).build();

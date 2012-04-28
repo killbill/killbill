@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.api;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
-import com.ning.billing.entitlement.api.repair.RepairEntitlementEvent;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.util.bus.Bus;
 import org.slf4j.Logger;

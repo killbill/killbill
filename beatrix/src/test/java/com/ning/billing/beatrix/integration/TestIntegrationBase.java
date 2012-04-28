@@ -49,7 +49,7 @@ import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.api.repair.EntitlementRepairApi;
+import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
@@ -108,7 +108,7 @@ public class TestIntegrationBase implements TestFailure {
     protected EntitlementUserApi entitlementUserApi;
 
     @Inject
-    protected EntitlementRepairApi repairApi;
+    protected EntitlementTimelineApi repairApi;
     
     @Inject
     protected InvoiceUserApi invoiceUserApi;

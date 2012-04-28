@@ -15,6 +15,7 @@
  */
 package com.ning.billing.jaxrs.util;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,7 +23,6 @@ import com.google.common.eventbus.Subscribe;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.userrequest.CompletionUserRequest;
 import com.ning.billing.util.userrequest.CompletionUserRequestNotifier;
-import com.ning.billing.util.userrequest.CompletionUserRequestWaiter;
 
 public class KillbillEventHandler {
     
@@ -56,10 +56,14 @@ public class KillbillEventHandler {
      */
     @Subscribe
     public void handleEntitlementevents(final BusEvent event) {
-        if (activeWaiters.size() == 0) {
+        List<CompletionUserRequestNotifier> runningWaiters = new ArrayList<CompletionUserRequestNotifier>();
+        synchronized(activeWaiters) {
+            runningWaiters.addAll(activeWaiters);
+        }
+        if (runningWaiters.size() == 0) {
             return;
         }
-        for (CompletionUserRequestNotifier cur : activeWaiters) {
+        for (CompletionUserRequestNotifier cur : runningWaiters) {
             cur.onBusEvent(event);
         }
     }
