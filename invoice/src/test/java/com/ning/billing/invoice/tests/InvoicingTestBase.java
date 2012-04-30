@@ -23,11 +23,10 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 import org.joda.time.DateTime;
 
 import com.ning.billing.invoice.model.InvoicingConfiguration;
@@ -90,7 +89,7 @@ public abstract class InvoicingTestBase {
                                                   final Currency currency, final BillingPeriod billingPeriod, final int billCycleDay,
                                                   final BillingModeType billingModeType, final String description,
                                                   final long totalOrdering,
-                                                  final SubscriptionEventTransition.SubscriptionTransitionType type) {
+                                                  final SubscriptionTransitionType type) {
         return new BillingEvent() {
             @Override
             public Account getAccount() {

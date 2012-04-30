@@ -46,7 +46,7 @@ public class MysqlTestingHelper
 
     private static final Logger log = LoggerFactory.getLogger(MysqlTestingHelper.class);
 
-    private static final String DB_NAME = "test_killbill";
+    private static final String DB_NAME = "killbill";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 

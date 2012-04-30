@@ -42,8 +42,7 @@ public class KillbillGuiceListener extends SetupServer
     private BusService killbillBusService;
     private KillbillEventHandler killbilleventHandler;
 
-    protected Injector theInjector;
-    
+
     protected Module getModule() {
     	return new KillbillServerModule();
     }
@@ -66,7 +65,7 @@ public class KillbillGuiceListener extends SetupServer
         super.contextInitialized(event);
 
         logger.info("KillbillLifecycleListener : contextInitialized");
-        theInjector = injector(event);
+        Injector theInjector = injector(event);
         killbillLifecycle = theInjector.getInstance(DefaultLifecycle.class);
         killbillBusService = theInjector.getInstance(BusService.class);
         killbilleventHandler = theInjector.getInstance(KillbillEventHandler.class); 

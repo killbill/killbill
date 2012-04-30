@@ -17,16 +17,18 @@
 package com.ning.billing.entitlement.engine.dao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
 
+import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
+import com.ning.billing.entitlement.api.repair.SubscriptionDataRepair;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 
 public interface EntitlementDao {
@@ -52,13 +54,15 @@ public interface EntitlementDao {
     public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey);
 
     // Update
-    public void updateSubscription(final SubscriptionData subscription, final CallContext context);
+    public void updateChargedThroughDate(final SubscriptionData subscription, final CallContext context);
 
     // Event apis
     public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase, final CallContext context);
 
     public EntitlementEvent getEventById(final UUID eventId);
 
+    public Map<UUID, List<EntitlementEvent>> getEventsForBundle(final UUID bundleId);
+    
     public List<EntitlementEvent> getEventsForSubscription(final UUID subscriptionId);
 
     public List<EntitlementEvent> getPendingEventsForSubscription(final UUID subscriptionId);
@@ -76,6 +80,9 @@ public interface EntitlementDao {
 
     public void migrate(final UUID accountId, final AccountMigrationData data, final CallContext context);
 
+    // Repair
+    public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context);
+    
     // Custom Fields
     public void saveCustomFields(final SubscriptionData subscription, final CallContext context);
 }

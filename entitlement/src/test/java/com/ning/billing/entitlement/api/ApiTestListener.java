@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.api;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
+import com.ning.billing.entitlement.api.repair.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.util.bus.Bus;
 import org.slf4j.Logger;
@@ -32,9 +33,13 @@ public class ApiTestListener {
 
     private static final Logger log = LoggerFactory.getLogger(ApiTestListener.class);
 
-    private final List<NextEvent> nextExpectedEvent;
+    private final List<NextEvent> nextApiExpectedEvent;
 
-    private volatile boolean completed;
+
+    private boolean isApiCompleted;
+
+    private boolean expectRepairCompletion;
+    private boolean isRepairCompleted;    
 
     public enum NextEvent {
         MIGRATE_ENTITLEMENT,
@@ -47,8 +52,21 @@ public class ApiTestListener {
     }
 
     public ApiTestListener(Bus eventBus) {
-        this.nextExpectedEvent = new Stack<NextEvent>();
-        this.completed = false;
+        this.nextApiExpectedEvent = new Stack<NextEvent>();
+        reset();
+    }
+    
+    @Subscribe
+    public void handleRepairEvent(RepairEntitlementEvent event) {
+        log.debug("-> Got event RepairEntitlementEvent for bundle " + event.getBundleId());        
+        if (!expectRepairCompletion) {
+            log.error("Did not expect repair any event!!!");
+        } else {
+            synchronized(this) {
+                isRepairCompleted = true;
+                notify();
+            }
+        }
     }
 
     @Subscribe
@@ -83,39 +101,63 @@ public class ApiTestListener {
 
     }
 
-    public void pushExpectedEvent(NextEvent next) {
+    public void pushNextApiExpectedEvent(NextEvent next) {
         synchronized (this) {
-            nextExpectedEvent.add(next);
-            completed = false;
+            nextApiExpectedEvent.add(next);
+            isApiCompleted = false;
         }
     }
+    
+    public void expectRepairCompletion() {
+        expectRepairCompletion = true;
+        isRepairCompleted = false;
+    }
 
-    public boolean isCompleted(long timeout) {
+    public boolean isRepairCompleted(long timeout) {
         synchronized (this) {
-            if (completed) {
-                return completed;
+            if (isRepairCompleted) {
+                return isRepairCompleted;
             }
             try {
                 wait(timeout);
             } catch (Exception ignore) {
             }
         }
-        if (!completed) {
+        if (!isRepairCompleted) {
             log.debug("ApiTestListener did not complete in " + timeout + " ms");
         }
-        return completed;
+        return isRepairCompleted;
+    }
+    
+    public boolean isApiCompleted(long timeout) {
+        synchronized (this) {
+            if (isApiCompleted) {
+                return isApiCompleted;
+            }
+            try {
+                wait(timeout);
+            } catch (Exception ignore) {
+            }
+        }
+        if (!isApiCompleted) {
+            log.debug("ApiTestListener did not complete in " + timeout + " ms");
+        }
+        return isApiCompleted;
     }
 
     public void reset() {
-        nextExpectedEvent.clear();
+        nextApiExpectedEvent.clear();
+        this.isApiCompleted = false;
+        this.expectRepairCompletion = false;
+        this.isRepairCompleted = false;
     }
 
     private void notifyIfStackEmpty() {
         log.debug("notifyIfStackEmpty ENTER");
         synchronized (this) {
-            if (nextExpectedEvent.isEmpty()) {
+            if (nextApiExpectedEvent.isEmpty()) {
                 log.debug("notifyIfStackEmpty EMPTY");
-                completed = true;
+                isApiCompleted = true;
                 notify();
             }
         }
@@ -125,7 +167,7 @@ public class ApiTestListener {
     private void assertEqualsNicely(NextEvent expected) {
 
         boolean foundIt = false;
-        Iterator<NextEvent> it = nextExpectedEvent.iterator();
+        Iterator<NextEvent> it = nextApiExpectedEvent.iterator();
         while (it.hasNext()) {
             NextEvent ev = it.next();
             if (ev == expected) {
@@ -137,7 +179,7 @@ public class ApiTestListener {
 
         if (!foundIt) {
             Joiner joiner = Joiner.on(" ");
-            Assert.fail("Expected event " + expected + " got " + joiner.join(nextExpectedEvent));
+            Assert.fail("Expected event " + expected + " got " + joiner.join(nextApiExpectedEvent));
         }
     }
 

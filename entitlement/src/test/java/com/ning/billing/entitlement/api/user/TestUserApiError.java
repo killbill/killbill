@@ -108,7 +108,7 @@ public class TestUserApiError extends TestApiBase {
         try {
             UUID accountId = UUID.randomUUID();
             SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", context);
-            createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE);
         } catch (Exception e) {
             e.printStackTrace();
@@ -121,7 +121,7 @@ public class TestUserApiError extends TestApiBase {
         try {
             UUID accountId = UUID.randomUUID();
             SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", context);
-            createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED);
         } catch (Exception e) {
             e.printStackTrace();
@@ -153,7 +153,7 @@ public class TestUserApiError extends TestApiBase {
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), false, context);
             try {
                 subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
@@ -180,9 +180,9 @@ public class TestUserApiError extends TestApiBase {
 
             // MOVE TO NEXT PHASE
             PlanPhase currentPhase = subscription.getCurrentPhase();
-            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
             clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
-            assertTrue(testListener.isCompleted(3000));
+            assertTrue(testListener.isApiCompleted(3000));
 
 
             // SET CTD TO CANCEL IN FUTURE

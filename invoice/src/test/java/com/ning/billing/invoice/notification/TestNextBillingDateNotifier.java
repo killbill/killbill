@@ -25,38 +25,37 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.invoice.api.InvoiceNotifier;
-import com.ning.billing.junction.api.BillingApi;
-import org.apache.commons.io.IOUtils;
-import org.joda.time.DateTime;
-import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
+import com.ning.billing.account.api.MockAccountUserApi;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.entitlement.api.SubscriptionApiService;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
+import com.ning.billing.entitlement.api.repair.RepairEntitlementLifecycleDao;
+import com.ning.billing.entitlement.api.repair.RepairSubscriptionApiService;
+import com.ning.billing.entitlement.api.repair.RepairSubscriptionFactory;
+import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
+import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
+import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.InvoiceListener;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
-import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.junction.api.BillingApi;
+import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
+import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.bus.Bus;
@@ -75,6 +74,22 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
+import org.apache.commons.io.IOUtils;
+import org.joda.time.DateTime;
+import org.skife.config.ConfigurationObjectFactory;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionStatus;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
+import com.google.inject.name.Names;
 
 public class TestNextBillingDateNotifier {
 	private Clock clock;
@@ -85,6 +100,7 @@ public class TestNextBillingDateNotifier {
 	private InvoiceListenerMock listener;
 	private NotificationQueueService notificationQueueService;
 
+	
 	private static final class InvoiceListenerMock extends InvoiceListener {
 		int eventCount = 0;
 		UUID latestSubscriptionId = null;
@@ -111,7 +127,7 @@ public class TestNextBillingDateNotifier {
 	}
 
 	@BeforeClass(groups={"slow"})
-	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
+	public void setup() throws KillbillService.ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
 			
@@ -131,19 +147,28 @@ public class TestNextBillingDateNotifier {
                 IDBI dbi = helper.getDBI();
                 bind(IDBI.class).toInstance(dbi);
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
+                bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
+                bind(EntitlementDao.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);
+                bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);
+                bind(RepairEntitlementDao.class).asEagerSingleton();
                 bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
                 bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
-                bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
+                bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
                 bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-                bind(BillingApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class));
+                bind(AccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
+
+                
+
+                bind(SubscriptionApiService.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
+                bind(SubscriptionApiService.class).to(DefaultSubscriptionApiService.class).asEagerSingleton();
+                bind(SubscriptionFactory.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairSubscriptionFactory.class).asEagerSingleton();
+                bind(SubscriptionFactory.class).to(DefaultSubscriptionFactory.class).asEagerSingleton();
+
+                bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
+                bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
                 bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
-
-                AccountUserApi accountUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-                bind(AccountUserApi.class).toInstance(accountUserApi);
-
-                EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
-                bind(EntitlementUserApi.class).toInstance(entitlementUserApi);
+            
             }
         });
 

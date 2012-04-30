@@ -22,7 +22,9 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
 import com.ning.billing.util.email.EmailConfig;
@@ -34,16 +36,18 @@ import java.util.List;
 
 public class EmailInvoiceNotifier implements InvoiceNotifier {
     private final AccountUserApi accountUserApi;
+    private final HtmlInvoiceGenerator generator;
     private final EmailConfig config;
 
     @Inject
-    public EmailInvoiceNotifier(AccountUserApi accountUserApi, EmailConfig config) {
+    public EmailInvoiceNotifier(AccountUserApi accountUserApi, HtmlInvoiceGenerator generator, EmailConfig config) {
         this.accountUserApi = accountUserApi;
+        this.generator = generator;
         this.config = config;
     }
 
     @Override
-    public void notify(Account account, Invoice invoice) throws EmailApiException {
+    public void notify(Account account, Invoice invoice) throws InvoiceApiException {
         List<String> to = new ArrayList<String>();
         to.add(account.getEmail());
 
@@ -53,8 +57,12 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
             cc.add(email.getEmail());
         }
 
-        // TODO: get html body from template
-        String htmlBody = "";
+        String htmlBody = null;
+        try {
+            htmlBody = generator.generateInvoice(account, invoice, "HtmlInvoiceTemplate");
+        } catch (IOException e) {
+            throw new InvoiceApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
+        }
 
         // TODO: get subject
         String subject = "";
@@ -62,8 +70,10 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
         EmailSender sender = new DefaultEmailSender(config);
         try {
             sender.sendSecureEmail(to, cc, subject, htmlBody);
+        } catch (EmailApiException e) {
+            throw new InvoiceApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
         } catch (IOException e) {
-            throw new EmailApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
+            throw new InvoiceApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
         }
     }
 }

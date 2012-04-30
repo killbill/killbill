@@ -461,9 +461,6 @@
                                 <exclude>**/target/**</exclude>
                                 <exclude>**/.settings/**</exclude>
                                 <exclude>.travis.yml</exclude>
-                                <!--  until we merge from server branch we disable rat for those -->
-                                <exclude>jaxrs/**</exclude>
-                                <exclude>server/**</exclude>
                                 <exclude>bin/**</exclude>
                                 <!-- exclude mustache template files -->
                                 <exclude>**/*.mustache</exclude>
@@ -550,7 +547,7 @@
                             <systemPropertyVariables>
                                 <log4j.configuration>file:${project.basedir}/src/test/resources/log4j.xml</log4j.configuration>
                                 <com.ning.billing.dbi.test.useLocalDb>true</com.ning.billing.dbi.test.useLocalDb>
-                                <com.ning.billing.dbi.jdbc.url>jdbc:mysql://127.0.0.1:3306/test_killbill</com.ning.billing.dbi.jdbc.url>
+                                <com.ning.billing.dbi.jdbc.url>jdbc:mysql://127.0.0.1:3306/killbill</com.ning.billing.dbi.jdbc.url>
                                 <file.encoding>UTF-8</file.encoding>
                                 <user.timezone>GMT</user.timezone>
                             </systemPropertyVariables>

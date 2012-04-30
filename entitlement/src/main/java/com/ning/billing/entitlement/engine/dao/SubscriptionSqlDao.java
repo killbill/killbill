@@ -19,7 +19,7 @@ package com.ning.billing.entitlement.engine.dao;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.BinderBase;
@@ -59,10 +59,18 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
     public List<Subscription> getSubscriptionsFromBundleId(@Bind("bundle_id") String bundleId);
 
     @SqlUpdate
-    public void updateSubscription(@Bind("id") String id, @Bind("active_version") long activeVersion,
-                                   @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd,
+    public void updateChargedThroughDate(@Bind("id") String id, @Bind("ctd_dt") Date ctd,
                                    @CallContextBinder final CallContext context);
-   
+
+    @SqlUpdate void updateActiveVersion(@Bind("id") String id, @Bind("active_version") long activeVersion,
+            @CallContextBinder final CallContext context);
+    
+    @SqlUpdate
+    public void updateForRepair(@Bind("id") String id, @Bind("active_version") long activeVersion,
+            @Bind("start_dt") Date startDate,
+            @Bind("bundle_start_dt") Date bundleStartDate,
+            @CallContextBinder final CallContext context);
+
     public static class SubscriptionBinder extends BinderBase implements Binder<Bind, SubscriptionData> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, SubscriptionData sub) {

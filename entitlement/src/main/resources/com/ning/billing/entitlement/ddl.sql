@@ -44,7 +44,8 @@ DROP TABLE IF EXISTS bundles;
 CREATE TABLE bundles (
     id char(36) NOT NULL,
     start_dt datetime, /*NOT NULL*/
-    name varchar(64) NOT NULL,
+    external_key varchar(64) NOT NULL,
     account_id char(36) NOT NULL,
+    last_sys_update_dt datetime,
     PRIMARY KEY(id)
 ) ENGINE=innodb;

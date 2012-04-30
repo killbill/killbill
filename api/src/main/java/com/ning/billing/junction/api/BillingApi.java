@@ -19,8 +19,11 @@ package com.ning.billing.junction.api;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
+import com.ning.billing.util.callcontext.CallContext;
 
 public interface BillingApi extends ChargeThruApi {
     /**
@@ -30,6 +33,4 @@ public interface BillingApi extends ChargeThruApi {
      *
      */
     public SortedSet<BillingEvent> getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId);
-
-
 }

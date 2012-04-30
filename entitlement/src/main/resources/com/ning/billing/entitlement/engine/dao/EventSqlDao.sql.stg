@@ -50,6 +50,15 @@ insertEvent() ::= <<
     );   
 >>
 
+updateVersion() ::= <<
+    update entitlement_events
+    set
+      current_version = :current_version
+    where
+      event_id = :event_id
+    ;
+>>
+
 unactiveEvent() ::= <<
     update entitlement_events
     set

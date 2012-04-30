@@ -64,8 +64,6 @@ public class JunctionModule extends AbstractModule {
         public BlockingDaoProvider(IDBI dbi){
             this.dbi = dbi;
         }
-        
-
         @Override
         public BlockingStateDao get() {
             return dbi.onDemand(BlockingStateSqlDao.class);

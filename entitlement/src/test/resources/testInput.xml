@@ -1,41 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!--
-  ~ Copyright 2010-2011 Ning, Inc.
-  ~
-  ~ Ning licenses this file to you under the Apache License, version 2.0
-  ~ (the "License"); you may not use this file except in compliance with the
-  ~ License.  You may obtain a copy of the License at:
-  ~
-  ~    http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-  ~ License for the specific language governing permissions and limitations
-  ~ under the License.
-  -->
+<!-- ~ Copyright 2010-2011 Ning, Inc. ~ ~ Ning licenses this file to you 
+	under the Apache License, version 2.0 ~ (the "License"); you may not use 
+	this file except in compliance with the ~ License. You may obtain a copy 
+	of the License at: ~ ~ http://www.apache.org/licenses/LICENSE-2.0 ~ ~ Unless 
+	required by applicable law or agreed to in writing, software ~ distributed 
+	under the License is distributed on an "AS IS" BASIS, WITHOUT ~ WARRANTIES 
+	OR CONDITIONS OF ANY KIND, either express or implied. See the ~ License for 
+	the specific language governing permissions and limitations ~ under the License. -->
 
-<!-- 
-Use cases covered so far:
-	Tiered Product (Pistol/Shotgun/Assault-Rifle)
-	Multiple changeEvent plan policies
-	Multiple PlanAlignment (see below, trial add-on alignments and rescue discount package)
-	Product transition rules
-	Add on (Scopes, Hoster)
-	Multi-pack addon (Extra-Ammo)
-	Addon Trial aligned to base plan (holster-monthly-regular)
-	Addon Trial aligned to creation (holster-monthly-special)
-	Rescue discount package (assault-rifle-annual-rescue)
-	Plan phase with a reccurring and a one off (refurbish-maintenance)
-	Phan with more than 2 phase (gunclub discount plans)
-		
-Use Cases to do:
-	Tiered Add On
-	Riskfree period
-	
-
-
- -->
+<!-- Use cases covered so far: Tiered Product (Pistol/Shotgun/Assault-Rifle) 
+	Multiple changeEvent plan policies Multiple PlanAlignment (see below, trial 
+	add-on alignments and rescue discount package) Product transition rules Add 
+	on (Scopes, Hoster) Multi-pack addon (Extra-Ammo) Addon Trial aligned to 
+	base plan (holster-monthly-regular) Addon Trial aligned to creation (holster-monthly-special) 
+	Rescue discount package (assault-rifle-annual-rescue) Plan phase with a reccurring 
+	and a one off (refurbish-maintenance) Phan with more than 2 phase (gunclub 
+	discount plans) Use Cases to do: Tiered Add On Riskfree period -->
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
 
@@ -47,21 +27,21 @@ Use Cases to do:
 		<currency>EUR</currency>
 		<currency>GBP</currency>
 	</currencies>
-	
+
 	<products>
 		<product name="Pistol">
 			<category>BASE</category>
 		</product>
 		<product name="Shotgun">
 			<category>BASE</category>
-            <available>
-                <addonProduct>Telescopic-Scope</addonProduct>
-                <addonProduct>Laser-Scope</addonProduct>
-            </available>
+			<available>
+				<addonProduct>Telescopic-Scope</addonProduct>
+				<addonProduct>Laser-Scope</addonProduct>
+			</available>
 		</product>
 		<product name="Assault-Rifle">
 			<category>BASE</category>
-			<included> 
+			<included>
 				<addonProduct>Telescopic-Scope</addonProduct>
 			</included>
 			<available>
@@ -84,37 +64,37 @@ Use Cases to do:
 			<category>ADD_ON</category>
 		</product>
 	</products>
-	 
+
 	<rules>
 		<changePolicy>
-			<changePolicyCase> 
+			<changePolicyCase>
 				<phaseType>TRIAL</phaseType>
 				<policy>IMMEDIATE</policy>
 			</changePolicyCase>
-            <changePolicyCase> 
-                <toProduct>Assault-Rifle</toProduct>
-                <policy>IMMEDIATE</policy>
-            </changePolicyCase>
-            <changePolicyCase> 
-                <fromProduct>Pistol</fromProduct>            
-                <toProduct>Shotgun</toProduct>
-                <policy>IMMEDIATE</policy>
-            </changePolicyCase>
-			<changePolicyCase> 
+			<changePolicyCase>
+				<toProduct>Assault-Rifle</toProduct>
+				<policy>IMMEDIATE</policy>
+			</changePolicyCase>
+			<changePolicyCase>
+				<fromProduct>Pistol</fromProduct>
+				<toProduct>Shotgun</toProduct>
+				<policy>IMMEDIATE</policy>
+			</changePolicyCase>
+			<changePolicyCase>
 				<toPriceList>rescue</toPriceList>
 				<policy>END_OF_TERM</policy>
 			</changePolicyCase>
-			<changePolicyCase> 
+			<changePolicyCase>
 				<fromBillingPeriod>MONTHLY</fromBillingPeriod>
 				<toBillingPeriod>ANNUAL</toBillingPeriod>
 				<policy>IMMEDIATE</policy>
 			</changePolicyCase>
-			<changePolicyCase> 
+			<changePolicyCase>
 				<fromBillingPeriod>ANNUAL</fromBillingPeriod>
 				<toBillingPeriod>MONTHLY</toBillingPeriod>
 				<policy>END_OF_TERM</policy>
 			</changePolicyCase>
-			<changePolicyCase> 
+			<changePolicyCase>
 				<policy>END_OF_TERM</policy>
 			</changePolicyCase>
 		</changePolicy>
@@ -128,27 +108,27 @@ Use Cases to do:
 				<toPriceList>rescue</toPriceList>
 				<alignment>CHANGE_OF_PRICELIST</alignment>
 			</changeAlignmentCase>
-            <changeAlignmentCase>
-                <alignment>START_OF_SUBSCRIPTION</alignment>
-            </changeAlignmentCase>
+			<changeAlignmentCase>
+				<alignment>START_OF_SUBSCRIPTION</alignment>
+			</changeAlignmentCase>
 		</changeAlignment>
 		<cancelPolicy>
 			<cancelPolicyCase>
 				<phaseType>TRIAL</phaseType>
 				<policy>IMMEDIATE</policy>
 			</cancelPolicyCase>
-            <cancelPolicyCase>
-                <policy>END_OF_TERM</policy>
-            </cancelPolicyCase>
+			<cancelPolicyCase>
+				<policy>END_OF_TERM</policy>
+			</cancelPolicyCase>
 		</cancelPolicy>
 		<createAlignment>
-		    <createAlignmentCase>
-		        <product>Laser-Scope</product>
-                <alignment>START_OF_SUBSCRIPTION</alignment>
-            </createAlignmentCase>
-            <createAlignmentCase>
-                <alignment>START_OF_BUNDLE</alignment>
-            </createAlignmentCase>
+			<createAlignmentCase>
+				<product>Laser-Scope</product>
+				<alignment>START_OF_SUBSCRIPTION</alignment>
+			</createAlignmentCase>
+			<createAlignmentCase>
+				<alignment>START_OF_BUNDLE</alignment>
+			</createAlignmentCase>
 		</createAlignment>
 		<billingAlignment>
 			<billingAlignmentCase>
@@ -191,9 +171,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>MONTHLY</billingPeriod>
 				<recurringPrice>
-					<price><currency>GBP</currency><value>29.95</value></price>
-					<price><currency>EUR</currency><value>29.95</value></price> 
-					<price><currency>USD</currency><value>29.95</value></price>								
+					<price>
+						<currency>GBP</currency>
+						<value>29.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>29.95</value>
+					</price>
+					<price>
+						<currency>USD</currency>
+						<value>29.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -207,7 +196,7 @@ Use Cases to do:
 					</duration>
 					<billingPeriod>NO_BILLING_PERIOD</billingPeriod>
 					<fixedPrice></fixedPrice>
-				    <!-- no price implies $0 -->
+					<!-- no price implies $0 -->
 				</phase>
 			</initialPhases>
 			<finalPhase type="EVERGREEN">
@@ -217,9 +206,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>MONTHLY</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>249.95</value></price>								
-					<price><currency>EUR</currency><value>149.95</value></price>
-					<price><currency>GBP</currency><value>169.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>249.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>149.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>169.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -242,9 +240,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>MONTHLY</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>599.95</value></price>								
-					<price><currency>EUR</currency><value>349.95</value></price>
-					<price><currency>GBP</currency><value>399.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>599.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>349.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>399.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -267,9 +274,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>ANNUAL</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>199.95</value></price>								
-					<price><currency>EUR</currency><value>199.95</value></price>
-					<price><currency>GBP</currency><value>199.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>199.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>199.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>199.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -292,9 +308,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>ANNUAL</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>2399.95</value></price>								
-					<price><currency>EUR</currency><value>1499.95</value></price>
-					<price><currency>GBP</currency><value>1699.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>2399.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>1499.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>1699.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -317,9 +342,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>ANNUAL</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>5999.95</value></price>								
-					<price><currency>EUR</currency><value>3499.95</value></price>
-					<price><currency>GBP</currency><value>3999.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>5999.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>3499.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>3999.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -342,9 +376,18 @@ Use Cases to do:
 					</duration>
 					<billingPeriod>MONTHLY</billingPeriod>
 					<recurringPrice>
-						<price><currency>USD</currency><value>9.95</value></price>								
-						<price><currency>EUR</currency><value>9.95</value></price>
-						<price><currency>GBP</currency><value>9.95</value></price>
+						<price>
+							<currency>USD</currency>
+							<value>9.95</value>
+						</price>
+						<price>
+							<currency>EUR</currency>
+							<value>9.95</value>
+						</price>
+						<price>
+							<currency>GBP</currency>
+							<value>9.95</value>
+						</price>
 					</recurringPrice>
 				</phase>
 			</initialPhases>
@@ -354,9 +397,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>ANNUAL</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>199.95</value></price>								
-					<price><currency>EUR</currency><value>199.95</value></price>
-					<price><currency>GBP</currency><value>199.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>199.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>199.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>199.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -379,9 +431,18 @@ Use Cases to do:
 					</duration>
 					<billingPeriod>MONTHLY</billingPeriod>
 					<recurringPrice>
-						<price><currency>USD</currency><value>19.95</value></price>								
-						<price><currency>EUR</currency><value>49.95</value></price>
-						<price><currency>GBP</currency><value>69.95</value></price>
+						<price>
+							<currency>USD</currency>
+							<value>19.95</value>
+						</price>
+						<price>
+							<currency>EUR</currency>
+							<value>49.95</value>
+						</price>
+						<price>
+							<currency>GBP</currency>
+							<value>69.95</value>
+						</price>
 					</recurringPrice>
 				</phase>
 			</initialPhases>
@@ -391,9 +452,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>ANNUAL</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>2399.95</value></price>								
-					<price><currency>EUR</currency><value>1499.95</value></price>
-					<price><currency>GBP</currency><value>1699.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>2399.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>1499.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>1699.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -416,10 +486,19 @@ Use Cases to do:
 					</duration>
 					<billingPeriod>MONTHLY</billingPeriod>
 					<recurringPrice>
-						<price><currency>USD</currency><value>99.95</value></price>								
-						<price><currency>EUR</currency><value>99.95</value></price>
-						<price><currency>GBP</currency><value>99.95</value></price>
-						</recurringPrice>
+						<price>
+							<currency>USD</currency>
+							<value>99.95</value>
+						</price>
+						<price>
+							<currency>EUR</currency>
+							<value>99.95</value>
+						</price>
+						<price>
+							<currency>GBP</currency>
+							<value>99.95</value>
+						</price>
+					</recurringPrice>
 				</phase>
 			</initialPhases>
 			<finalPhase type="EVERGREEN">
@@ -428,65 +507,110 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>ANNUAL</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>5999.95</value></price>								
-					<price><currency>EUR</currency><value>3499.95</value></price>
-					<price><currency>GBP</currency><value>3999.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>5999.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>3499.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>3999.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
 		<plan name="laser-scope-monthly">
-		<product>Laser-Scope</product>
-           <initialPhases>
-              <phase type="DISCOUNT">
-                 <duration>
-                    <unit>MONTHS</unit>
-                    <number>1</number>
-                  </duration>
-                 <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                      <price><currency>USD</currency><value>999.95</value></price>                             
-                      <price><currency>EUR</currency><value>499.95</value></price>
-                      <price><currency>GBP</currency><value>999.95</value></price>
-                      </recurringPrice>
-                </phase>
-            </initialPhases>
+			<product>Laser-Scope</product>
+			<initialPhases>
+				<phase type="DISCOUNT">
+					<duration>
+						<unit>MONTHS</unit>
+						<number>1</number>
+					</duration>
+					<billingPeriod>MONTHLY</billingPeriod>
+					<recurringPrice>
+						<price>
+							<currency>USD</currency>
+							<value>999.95</value>
+						</price>
+						<price>
+							<currency>EUR</currency>
+							<value>499.95</value>
+						</price>
+						<price>
+							<currency>GBP</currency>
+							<value>999.95</value>
+						</price>
+					</recurringPrice>
+				</phase>
+			</initialPhases>
 			<finalPhase type="EVERGREEN">
 				<duration>
 					<unit>UNLIMITED</unit>
 				</duration>
 				<billingPeriod>MONTHLY</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>1999.95</value></price>								
-					<price><currency>EUR</currency><value>1499.95</value></price>
-					<price><currency>GBP</currency><value>1999.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>1999.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>1499.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>1999.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
 		<plan name="telescopic-scope-monthly">
 			<product>Telescopic-Scope</product>
 			<initialPhases>
-              <phase type="DISCOUNT">
-                 <duration>
-                    <unit>MONTHS</unit>
-                    <number>1</number>
-                  </duration>
-                 <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                      <price><currency>USD</currency><value>399.95</value></price>                             
-                      <price><currency>EUR</currency><value>299.95</value></price>
-                      <price><currency>GBP</currency><value>399.95</value></price>
-                      </recurringPrice>
-                </phase>
-            </initialPhases>
+				<phase type="DISCOUNT">
+					<duration>
+						<unit>MONTHS</unit>
+						<number>1</number>
+					</duration>
+					<billingPeriod>MONTHLY</billingPeriod>
+					<recurringPrice>
+						<price>
+							<currency>USD</currency>
+							<value>399.95</value>
+						</price>
+						<price>
+							<currency>EUR</currency>
+							<value>299.95</value>
+						</price>
+						<price>
+							<currency>GBP</currency>
+							<value>399.95</value>
+						</price>
+					</recurringPrice>
+				</phase>
+			</initialPhases>
 			<finalPhase type="EVERGREEN">
 				<duration>
 					<unit>UNLIMITED</unit>
 				</duration>
 				<billingPeriod>MONTHLY</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>999.95</value></price>								
-					<price><currency>EUR</currency><value>499.95</value></price>
-					<price><currency>GBP</currency><value>999.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>999.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>499.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>999.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -498,9 +622,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>MONTHLY</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>999.95</value></price>								
-					<price><currency>EUR</currency><value>499.95</value></price>
-					<price><currency>GBP</currency><value>999.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>999.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>499.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>999.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 			<plansAllowedInBundle>-1</plansAllowedInBundle> <!-- arbitrary number of these (multipack) -->
@@ -524,9 +657,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>ANNUAL</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>199.95</value></price>								
-					<price><currency>EUR</currency><value>199.95</value></price>
-					<price><currency>GBP</currency><value>199.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>199.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>199.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>199.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -549,9 +691,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>ANNUAL</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>199.95</value></price>								
-					<price><currency>EUR</currency><value>199.95</value></price>
-					<price><currency>GBP</currency><value>199.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>199.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>199.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>199.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -565,9 +716,18 @@ Use Cases to do:
 					</duration>
 					<billingPeriod>ANNUAL</billingPeriod>
 					<recurringPrice>
-						<price><currency>USD</currency><value>5999.95</value></price>								
-						<price><currency>EUR</currency><value>3499.95</value></price>
-						<price><currency>GBP</currency><value>3999.95</value></price>
+						<price>
+							<currency>USD</currency>
+							<value>5999.95</value>
+						</price>
+						<price>
+							<currency>EUR</currency>
+							<value>3499.95</value>
+						</price>
+						<price>
+							<currency>GBP</currency>
+							<value>3999.95</value>
+						</price>
 					</recurringPrice>
 				</phase>
 			</initialPhases>
@@ -577,9 +737,18 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>ANNUAL</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>5999.95</value></price>								
-					<price><currency>EUR</currency><value>3499.95</value></price>
-					<price><currency>GBP</currency><value>3999.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>5999.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>3499.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>3999.95</value>
+					</price>
 				</recurringPrice>
 			</finalPhase>
 		</plan>
@@ -592,20 +761,38 @@ Use Cases to do:
 				</duration>
 				<billingPeriod>MONTHLY</billingPeriod>
 				<recurringPrice>
-					<price><currency>USD</currency><value>199.95</value></price>								
-					<price><currency>EUR</currency><value>199.95</value></price>
-					<price><currency>GBP</currency><value>199.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>199.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>199.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>199.95</value>
+					</price>
 				</recurringPrice>
 				<fixedPrice>
-					<price><currency>USD</currency><value>599.95</value></price>								
-					<price><currency>EUR</currency><value>599.95</value></price>
-					<price><currency>GBP</currency><value>599.95</value></price>
+					<price>
+						<currency>USD</currency>
+						<value>599.95</value>
+					</price>
+					<price>
+						<currency>EUR</currency>
+						<value>599.95</value>
+					</price>
+					<price>
+						<currency>GBP</currency>
+						<value>599.95</value>
+					</price>
 				</fixedPrice>
 			</finalPhase>
 		</plan>
 	</plans>
 	<priceLists>
-		<defaultPriceList name="DEFAULT"> 
+		<defaultPriceList name="DEFAULT">
 			<plans>
 				<plan>pistol-monthly</plan>
 				<plan>shotgun-monthly</plan>

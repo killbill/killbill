@@ -57,6 +57,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
+import com.ning.billing.entitlement.api.repair.EntitlementRepairApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -70,7 +71,6 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.CallContext;
@@ -89,6 +89,7 @@ public abstract class TestApiBase {
     protected ChargeThruApi billingApi;
 
     protected EntitlementMigrationApi migrationApi;
+    protected EntitlementRepairApi repairApi;
 
     protected CatalogService catalogService;
     protected EntitlementConfig config;
@@ -139,6 +140,7 @@ public abstract class TestApiBase {
         entitlementApi = g.getInstance(EntitlementUserApi.class);
         billingApi = g.getInstance(ChargeThruApi.class);
         migrationApi = g.getInstance(EntitlementMigrationApi.class);
+        repairApi = g.getInstance(EntitlementRepairApi.class);
         catalogService = g.getInstance(CatalogService.class);
         busService = g.getInstance(BusService.class);
         config = g.getInstance(EntitlementConfig.class);
@@ -146,11 +148,10 @@ public abstract class TestApiBase {
         clock = (ClockMock) g.getInstance(Clock.class);
         helper = (isSqlTest(dao)) ? g.getInstance(MysqlTestingHelper.class) : null;
 
-
         ((DefaultCatalogService) catalogService).loadCatalog();
         ((DefaultBusService) busService).startBus();
         ((Engine) entitlementService).initialize();
-        init();
+        init(g);
     }
 
     private static boolean isSqlTest(EntitlementDao theDao) {
@@ -167,16 +168,13 @@ public abstract class TestApiBase {
         }
     }
 
-    private void init() throws Exception {
+    private void init(Injector g) throws Exception {
 
         setupMySQL();
-
         accountData = getAccountData();
         assertNotNull(accountData);
-
         catalog = catalogService.getFullCatalog();
         assertNotNull(catalog);
-
         testListener = new ApiTestListener(busService.getBus());
     }
 
@@ -207,18 +205,24 @@ public abstract class TestApiBase {
         log.warn("DONE WITH TEST\n");
     }
 
-    protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet) throws EntitlementUserApiException {
-        return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet);
+    protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+        throws EntitlementUserApiException {
+        return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, requestedDate);
+    }
+    protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet)
+    throws EntitlementUserApiException {
+        return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, null);
     }
 
-    protected SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet) throws EntitlementUserApiException {
-        testListener.pushExpectedEvent(NextEvent.CREATE);
+    protected SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+        throws EntitlementUserApiException {
+        testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
 
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundleId,
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
-                clock.getUTCNow(), context);
+                requestedDate == null ? clock.getUTCNow() : requestedDate, context);
         assertNotNull(subscription);
-        assertTrue(testListener.isCompleted(5000));
+        assertTrue(testListener.isApiCompleted(5000));
         return subscription;
     }
 
