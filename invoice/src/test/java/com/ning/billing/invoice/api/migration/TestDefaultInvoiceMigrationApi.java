@@ -69,7 +69,7 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
-@Guice(modules = {MockModuleNoEntitlement.class})
+@Guice(modules = {MockModuleNoEntitlement.class, })
 public class TestDefaultInvoiceMigrationApi {
 	Logger log = LoggerFactory.getLogger(TestDefaultInvoiceMigrationApi.class);
 

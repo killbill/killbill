@@ -214,5 +214,10 @@ public class BlockingSubscription implements Subscription {
         }
         return blockingState;
     }
+    
+    public Subscription getDelegateSubscription() {
+        return subscription;
+    }
+
 
 }

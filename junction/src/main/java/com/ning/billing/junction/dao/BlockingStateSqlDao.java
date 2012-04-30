@@ -39,7 +39,7 @@ import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.blocking.DefaultBlockingState;
+import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.BinderBase;

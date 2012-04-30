@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -47,16 +48,30 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
         this.checker = checker;
     }
 
-    public SubscriptionBundle getBundleFromId(UUID id) {
-        return new BlockingSubscriptionBundle(entitlementUserApi.getBundleFromId(id), blockingApi);
+    public SubscriptionBundle getBundleFromId(UUID id) throws EntitlementUserApiException {
+        SubscriptionBundle bundle = entitlementUserApi.getBundleFromId(id);
+        if(bundle == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_ID, id);
+        }
+        return new BlockingSubscriptionBundle(bundle, blockingApi);
     }
 
-    public Subscription getSubscriptionFromId(UUID id) {
-        return new BlockingSubscription(entitlementUserApi.getSubscriptionFromId(id), blockingApi, checker);
+    public Subscription getSubscriptionFromId(UUID id) throws EntitlementUserApiException {
+        Subscription subscription = entitlementUserApi.getSubscriptionFromId(id);
+        if(subscription == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, id);
+        }
+        return new BlockingSubscription(subscription, blockingApi, checker);
     }
 
-    public SubscriptionBundle getBundleForKey(String bundleKey) {
-        return new BlockingSubscriptionBundle(entitlementUserApi.getBundleForKey(bundleKey), blockingApi);
+    
+    public SubscriptionBundle getBundleForKey(String bundleKey) throws EntitlementUserApiException {
+        SubscriptionBundle bundle = entitlementUserApi.getBundleForKey(bundleKey);
+        if(bundle == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_KEY, bundleKey);
+        }
+
+        return new BlockingSubscriptionBundle(bundle, blockingApi);
     }
 
     public List<SubscriptionBundle> getBundlesForAccount(UUID accountId) {
@@ -93,8 +108,8 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
     public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleKey, CallContext context)
             throws EntitlementUserApiException {
         try {
-            checker.checkBlockedChange(accountId, Blockable.Type.ACCOUNT);
-            return new BlockingSubscriptionBundle(entitlementUserApi.createBundleForAccount(accountId, bundleKey, context), blockingApi);
+           checker.checkBlockedChange(accountId, Blockable.Type.ACCOUNT);
+           return new BlockingSubscriptionBundle(entitlementUserApi.createBundleForAccount(accountId, bundleKey, context), blockingApi);
         }catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
         }
@@ -104,7 +119,7 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
             CallContext context) throws EntitlementUserApiException {
         try {
             checker.checkBlockedChange(bundleId, Blockable.Type.SUBSCRIPTION_BUNDLE);
-            return new BlockingSubscription(createSubscription(bundleId, spec, requestedDate, context), blockingApi, checker);
+            return new BlockingSubscription(entitlementUserApi.createSubscription(bundleId, spec, requestedDate, context), blockingApi, checker);
         }catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
         }

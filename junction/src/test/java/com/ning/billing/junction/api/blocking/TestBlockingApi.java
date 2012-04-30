@@ -39,6 +39,7 @@ import com.ning.billing.junction.MockModule;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.dao.TestBlockingDao;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;

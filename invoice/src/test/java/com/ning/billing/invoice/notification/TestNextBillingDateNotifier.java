@@ -142,7 +142,6 @@ public class TestNextBillingDateNotifier {
                 bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
                 bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
                 bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-                bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
                 bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
                 install(new MockJunctionModule());
             }

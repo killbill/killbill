@@ -34,6 +34,7 @@ public class MockJunctionModule extends AbstractModule {
         installBlockingApi();
         installAccountUserApi();
         installBillingApi();
+        installEntitlementUserApi();
     }
 
     protected void installBillingApi() {

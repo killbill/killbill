@@ -14,17 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.util.clock;
+package com.ning.billing.mock.glue;
 
 import com.google.inject.AbstractModule;
-
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
 
 public class MockClockModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-	    bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-        bind(ClockMock.class).asEagerSingleton();
+		bind(Clock.class).to(ClockMock.class).asEagerSingleton();
 	}
-
 }

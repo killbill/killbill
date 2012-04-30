@@ -33,8 +33,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,12 +79,16 @@ public class AccountResource implements BaseJaxrsResource {
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getAccount(@PathParam("accountId") String accountId) {
-        Account account = accountApi.getAccountById(UUID.fromString(accountId));
-        if (account == null) {
-        	return Response.status(Status.NO_CONTENT).build();
+        try {
+            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+
+            AccountJson json = new AccountJson(account);
+            return Response.status(Status.OK).entity(json).build();
+        } catch (AccountApiException e) {
+            log.warn("Failed to find account.", e);
+            return Response.status(Status.NO_CONTENT).build();
         }
-        AccountJson json = new AccountJson(account);
-        return Response.status(Status.OK).entity(json).build();
+        
     }
 
     @GET
@@ -92,34 +96,42 @@ public class AccountResource implements BaseJaxrsResource {
     @Produces(APPLICATION_JSON)
     public Response getAccountBundles(@PathParam("accountId") String accountId) {
 
-    	UUID uuid = UUID.fromString(accountId);
-    	Account account = accountApi.getAccountById(uuid);
-    	if (account == null) {
-    		return Response.status(Status.NO_CONTENT).build();    		
-    	}
-    	List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid);
-    	Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
-			@Override
-			public BundleJson apply(SubscriptionBundle input) {
-				return new BundleJson(input);
-			}
-		});
-        return Response.status(Status.OK).entity(result).build();
+        try {
+            UUID uuid = UUID.fromString(accountId);
+            accountApi.getAccountById(uuid);
+
+            List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid);
+            Collection<BundleJson> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJson>() {
+                @Override
+                public BundleJson apply(SubscriptionBundle input) {
+                    return new BundleJson(input);
+                }
+            });
+            return Response.status(Status.OK).entity(result).build();
+        } catch (AccountApiException e) {
+            log.warn("Failed to find account.", e);
+            return Response.status(Status.NO_CONTENT).build();
+        }
     }
 
     
     @GET
     @Produces(APPLICATION_JSON)
     public Response getAccountByKey(@QueryParam(QUERY_EXTERNAL_KEY) String externalKey) {
-        Account account = null;
-        if (externalKey != null) {
-            account = accountApi.getAccountByKey(externalKey);
-        }
-        if (account == null) {
+        try {
+            Account account = null;
+            if (externalKey != null) {
+                account = accountApi.getAccountByKey(externalKey);
+            }
+            if (account == null) {
+                return Response.status(Status.NO_CONTENT).build();
+            }
+            AccountJson json = new AccountJson(account);
+            return Response.status(Status.OK).entity(json).build();
+        } catch (AccountApiException e) {
+            log.warn("Failed to find account.", e);
             return Response.status(Status.NO_CONTENT).build();
         }
-        AccountJson json = new AccountJson(account);
-        return Response.status(Status.OK).entity(json).build();
     }
 
     

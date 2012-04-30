@@ -35,7 +35,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.MockModule;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.blocking.DefaultBlockingState;
+import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockEntitlementModule;

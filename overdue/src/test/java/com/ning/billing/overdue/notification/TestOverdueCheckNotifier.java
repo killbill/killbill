@@ -135,7 +135,6 @@ public class TestOverdueCheckNotifier {
                 bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
                 bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
-                bind(EntitlementUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class));
                 install(new MockJunctionModule());
             }
         });

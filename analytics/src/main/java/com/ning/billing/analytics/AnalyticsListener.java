@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -37,7 +38,7 @@ public class AnalyticsListener {
     }
 
     @Subscribe
-    public void handleSubscriptionTransitionChange(final SubscriptionEventTransition event) throws AccountApiException {
+    public void handleSubscriptionTransitionChange(final SubscriptionEventTransition event) throws AccountApiException, EntitlementUserApiException {
         switch (event.getTransitionType()) {
             // A susbcription enters either through migration or as newly created subscription
             case MIGRATE_ENTITLEMENT:

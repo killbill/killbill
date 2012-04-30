@@ -17,7 +17,6 @@
 package com.ning.billing.invoice.api.migration;
 
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.MockModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
@@ -34,7 +33,7 @@ public class MockModuleNoEntitlement extends MockModule {
         ((ZombieControl)entitlementApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
         ((ZombieControl)entitlementApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", BrainDeadProxyFactory.ZOMBIE_VOID);
 		//bind(BillingApi.class).toInstance(entitlementApi);
-        bind(EntitlementUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class));
+//        bind(EntitlementUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class));
         ChargeThruApi cta = BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class);
         bind(ChargeThruApi.class).toInstance(cta);
         ((ZombieControl)cta).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);

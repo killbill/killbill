@@ -56,6 +56,8 @@ public enum ErrorCode {
     ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION(1080, "Could not find a bundle for subscription %s"),
     ENT_GET_INVALID_BUNDLE_ID(1081, "Could not find a bundle matching id %s"),
     ENT_INVALID_SUBSCRIPTION_ID(1082, "Unknown subscription %s"),
+    ENT_GET_INVALID_BUNDLE_KEY(1083, "Could not find a bundle matching key %s"),
+
     
     ENT_BUNDLE_IS_OVERDUE_BLOCKED(1090, "Changes to this bundle are blocked by overdue enforcement (%s :  %s)"),
     ENT_ACCOUNT_IS_OVERDUE_BLOCKED(1091, "Changes to this account are blocked by overdue enforcement (%s)"),

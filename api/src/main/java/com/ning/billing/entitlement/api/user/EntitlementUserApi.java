@@ -26,11 +26,11 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 
 public interface EntitlementUserApi {
 
-    public SubscriptionBundle getBundleFromId(UUID id);
+    public SubscriptionBundle getBundleFromId(UUID id) throws EntitlementUserApiException;
 
-    public Subscription getSubscriptionFromId(UUID id);
+    public Subscription getSubscriptionFromId(UUID id) throws EntitlementUserApiException;
 
-    public SubscriptionBundle getBundleForKey(String bundleKey);
+    public SubscriptionBundle getBundleForKey(String bundleKey) throws EntitlementUserApiException;
 
     public List<SubscriptionBundle> getBundlesForAccount(UUID accountId);
 

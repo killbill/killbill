@@ -14,14 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.junction.api.blocking;
+package com.ning.billing.junction.api;
 
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingState;
 
 public class DefaultBlockingState implements BlockingState{
 

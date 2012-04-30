@@ -37,7 +37,7 @@ public class BlockingAccount implements Account {
     private BlockingState blockingState = null;
     private BlockingApi blockingApi;
 
-    public BlockingAccount(Account account, BlockingApi blockingApi) {
+    public BlockingAccount( Account account, BlockingApi blockingApi) {
         this.account = account;
         this.blockingApi = blockingApi;
     }

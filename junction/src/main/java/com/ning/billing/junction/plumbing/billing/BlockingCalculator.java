@@ -39,7 +39,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.Subscri
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.blocking.DefaultBlockingState;
+import com.ning.billing.junction.api.DefaultBlockingState;
 
 public class BlockingCalculator {
     private final BlockingApi blockingApi;

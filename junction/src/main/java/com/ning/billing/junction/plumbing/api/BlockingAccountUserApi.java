@@ -69,12 +69,12 @@ public class BlockingAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account getAccountByKey(String key) {
+    public Account getAccountByKey(String key) throws AccountApiException {
         return new BlockingAccount(userApi.getAccountByKey(key), blockingApi);
     }
 
     @Override
-    public Account getAccountById(UUID accountId) {
+    public Account getAccountById(UUID accountId) throws AccountApiException {
         return userApi.getAccountById(accountId);
     }
 

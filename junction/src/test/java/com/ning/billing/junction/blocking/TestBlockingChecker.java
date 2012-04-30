@@ -35,7 +35,7 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.blocking.DefaultBlockingState;
+import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.block.DefaultBlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
