@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
@@ -31,7 +32,7 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 
 public class DefaultBillingEvent implements BillingEvent {
     final private Account account;
@@ -49,26 +50,36 @@ public class DefaultBillingEvent implements BillingEvent {
     final private SubscriptionTransitionType type;
     final private Long totalOrdering;
 
-    public DefaultBillingEvent(Account account, SubscriptionEventTransition transition, Subscription subscription, int billCycleDay, Currency currency) throws CatalogApiException {
+    public DefaultBillingEvent(Account account, SubscriptionEvent transition, Subscription subscription, int billCycleDay, Currency currency, Catalog catalog) throws CatalogApiException {
+
         this.account = account;
         this.billCycleDay = billCycleDay;
         this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();
-        planPhase = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+        String planPhaseName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPhase() : transition.getPreviousPhase();
-        plan = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+        planPhase = (planPhaseName != null) ? catalog.findPhase(planPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+                
+        String planName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPlan() : transition.getPreviousPlan();
-        fixedPrice = (transition.getNextPhase() == null) ? null :
-        		(transition.getNextPhase().getFixedPrice() == null) ? null :
-                        transition.getNextPhase().getFixedPrice().getPrice(currency);
-        recurringPrice = (transition.getNextPhase() == null) ? null :
-                (transition.getNextPhase().getRecurringPrice() == null) ? null :
-                        transition.getNextPhase().getRecurringPrice().getPrice(currency);
+        plan = (planName != null) ? catalog.findPlan(planName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+             
+        String nextPhaseName = transition.getNextPhase();
+        PlanPhase nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+
+        String prevPhaseName = transition.getPreviousPhase();
+        PlanPhase prevPhase = (prevPhaseName != null) ? catalog.findPhase(prevPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+
+        
+        
+        fixedPrice = (nextPhase != null && nextPhase.getFixedPrice() != null) ? nextPhase.getFixedPrice().getPrice(currency) : null;
+        recurringPrice = (nextPhase != null && nextPhase.getRecurringPrice() != null) ? nextPhase.getRecurringPrice().getPrice(currency) : null;
+        
         this.currency = currency;
         description = transition.getTransitionType().toString();
         billingModeType = BillingModeType.IN_ADVANCE;
         billingPeriod =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
-                transition.getNextPhase().getBillingPeriod() : transition.getPreviousPhase().getBillingPeriod();
+                nextPhase.getBillingPeriod() : prevPhase.getBillingPeriod();
         type = transition.getTransitionType();
         totalOrdering = transition.getTotalOrdering();
     }

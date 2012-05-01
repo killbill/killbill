@@ -16,22 +16,36 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.util.clock.DefaultClock;
+
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
 
 public class DefaultChangedField implements ChangedField {
+    
     private final String fieldName;
     private final String oldValue;
     private final String newValue;
     private final DateTime changeDate;
 
-    public DefaultChangedField(String fieldName, String oldValue, String newValue) {
-        this.changeDate = new DefaultClock().getUTCNow();
+    @JsonCreator
+    public DefaultChangedField(@JsonProperty("fieldName") String fieldName,
+            @JsonProperty("oldValue") String oldValue,
+            @JsonProperty("newValue") String newValue,
+            @JsonProperty("changeDate") DateTime changeDate) {
+        this.changeDate = changeDate;
         this.fieldName = fieldName;
         this.oldValue = oldValue;
         this.newValue = newValue;
     }
 
+    public DefaultChangedField(String fieldName,
+            String oldValue,
+            String newValue) {
+        this(fieldName, oldValue, newValue, new DateTime());
+    }
+
+    
     @Override
     public String getFieldName() {
         return fieldName;
@@ -51,4 +65,52 @@ public class DefaultChangedField implements ChangedField {
     public DateTime getChangeDate() {
         return changeDate;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((changeDate == null) ? 0 : changeDate.hashCode());
+        result = prime * result
+                + ((fieldName == null) ? 0 : fieldName.hashCode());
+        result = prime * result
+                + ((newValue == null) ? 0 : newValue.hashCode());
+        result = prime * result
+                + ((oldValue == null) ? 0 : oldValue.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DefaultChangedField other = (DefaultChangedField) obj;
+        if (changeDate == null) {
+            if (other.changeDate != null)
+                return false;
+        } else if (changeDate.compareTo(other.changeDate) != 0)
+            return false;
+        if (fieldName == null) {
+            if (other.fieldName != null)
+                return false;
+        } else if (!fieldName.equals(other.fieldName))
+            return false;
+        if (newValue == null) {
+            if (other.newValue != null)
+                return false;
+        } else if (!newValue.equals(other.newValue))
+            return false;
+        if (oldValue == null) {
+            if (other.oldValue != null)
+                return false;
+        } else if (!oldValue.equals(other.oldValue))
+            return false;
+        return true;
+    }
+    
 }

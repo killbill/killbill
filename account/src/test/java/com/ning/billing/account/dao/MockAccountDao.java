@@ -26,7 +26,7 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeEvent;
-import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
+import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.bus.Bus;
@@ -87,7 +87,7 @@ public class MockAccountDao implements AccountDao {
     public void update(Account account, CallContext context) {
         Account currentAccount = accounts.put(account.getId().toString(), account);
 
-        AccountChangeEvent changeEvent = new DefaultAccountChangeNotification(account.getId(), null, currentAccount, account);
+        AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account);
         if (changeEvent.hasChanges()) {
             try {
                 eventBus.post(changeEvent);

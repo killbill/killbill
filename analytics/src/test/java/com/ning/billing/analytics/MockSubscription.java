@@ -30,7 +30,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
@@ -131,7 +131,7 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public SubscriptionEventTransition getPendingTransition() {
+    public SubscriptionEvent getPendingTransition() {
         throw new UnsupportedOperationException();
     }
 
@@ -146,7 +146,7 @@ public class MockSubscription implements Subscription
 	}
 
     @Override
-    public SubscriptionEventTransition getPreviousTransition() {
+    public SubscriptionEvent getPreviousTransition() {
         return null;
     }
 
@@ -247,7 +247,7 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public List<SubscriptionEventTransition> getBillingTransitions() {
+    public List<SubscriptionEvent> getBillingTransitions() {
         throw new UnsupportedOperationException();
     }
 }

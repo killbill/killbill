@@ -1,0 +1,86 @@
+group PersistentBusSqlDao;
+          
+getNextBusEventEntry(max, now) ::= <<
+    select
+      id
+      , class_name
+      , event_json
+      , created_dt
+      , processing_owner
+      , processing_available_dt
+      , processing_state
+    from bus_events
+    where
+      processing_state != 'PROCESSED'
+      and processing_state != 'REMOVED'
+      and (processing_owner IS NULL OR processing_available_dt \<= :now)
+    order by
+      id asc
+    limit :max
+    ;
+>>
+
+
+claimBusEvent(owner, next_available, id, now) ::= <<
+    update bus_events
+    set
+      processing_owner = :owner
+      , processing_available_dt = :next_available
+      , processing_state = 'IN_PROCESSING'
+    where
+      id = :id
+      and processing_state != 'PROCESSED'
+      and processing_state != 'REMOVED'
+      and (processing_owner IS NULL OR processing_available_dt \<= :now)
+    ;
+>>
+
+clearBusEvent(id, owner) ::= <<
+    update bus_events
+    set
+      processing_state = 'PROCESSED'
+    where
+      id = :id
+    ;
+>>
+
+removeBusEventsById(id) ::= <<
+    update bus_events
+    set
+      processing_state = 'REMOVED'
+    where
+      id = :id
+    ;
+>>
+
+
+insertBusEvent() ::= <<
+    insert into bus_events (
+      class_name
+    , event_json
+    , created_dt
+    , processing_owner
+    , processing_available_dt
+    , processing_state
+    ) values (
+      :class_name
+    , :event_json
+    , :created_dt
+    , :processing_owner
+    , :processing_available_dt
+    , :processing_state
+    );   
+>>
+
+
+insertClaimedHistory(owner_id, claimed_dt, bus_event_id) ::= <<
+    insert into claimed_bus_events (
+          owner_id
+        , claimed_dt
+        , bus_event_id
+      ) values (
+          :owner_id
+        , :claimed_dt
+        , :bus_event_id
+      );
+>>

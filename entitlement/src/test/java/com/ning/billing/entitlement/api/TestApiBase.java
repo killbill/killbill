@@ -61,7 +61,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDao;
@@ -417,8 +417,8 @@ public abstract class TestApiBase {
         }
     }
 
-    protected void printSubscriptionTransitions(List<SubscriptionEventTransition> transitions) {
-        for (SubscriptionEventTransition cur : transitions) {
+    protected void printSubscriptionTransitions(List<SubscriptionEvent> transitions) {
+        for (SubscriptionEvent cur : transitions) {
             log.debug("Transition " + cur);
         }
     }

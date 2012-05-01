@@ -30,7 +30,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.InvoiceApiException;
 
 public class InvoiceListener {
@@ -55,7 +55,7 @@ public class InvoiceListener {
     }
     
     @Subscribe
-    public void handleSubscriptionTransition(final SubscriptionEventTransition transition) {
+    public void handleSubscriptionTransition(final SubscriptionEvent transition) {
         try {
             //  Skip future uncancel event
             //  Skip events which are marked as not being the last one

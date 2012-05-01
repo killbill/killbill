@@ -32,8 +32,8 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.CreditCardPaymentMethodInfo;
-import com.ning.billing.payment.api.DefaultPaymentError;
-import com.ning.billing.payment.api.DefaultPaymentInfo;
+import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
+import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
@@ -61,10 +61,10 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     @Override
     public Either<PaymentErrorEvent, PaymentInfoEvent> processInvoice(Account account, Invoice invoice) {
         if (makeNextInvoiceFail.getAndSet(false)) {
-            return Either.left((PaymentErrorEvent) new DefaultPaymentError("unknown", "test error", account.getId(), invoice.getId(), null));
+            return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "test error", account.getId(), invoice.getId(), null));
         }
         else {
-            PaymentInfoEvent payment = new DefaultPaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
+            PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setPaymentId(UUID.randomUUID().toString())
                                                  .setAmount(invoice.getBalance())
                                                  .setStatus("Processed")
                                                  .setBankIdentificationNumber("1234")
@@ -84,7 +84,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         PaymentInfoEvent payment = payments.get(paymentId);
 
         if (payment == null) {
-            return Either.left((PaymentErrorEvent) new DefaultPaymentError("notfound", "No payment found for id " + paymentId, null, null, null));
+            return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("notfound", "No payment found for id " + paymentId, null, null, null));
         }
         else {
             return Either.right(payment);
@@ -103,7 +103,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
             return Either.right(id);
         }
         else {
-            return Either.left((PaymentErrorEvent)  new DefaultPaymentError("unknown", "Did not get account to create payment provider account", null, null, null));
+            return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("unknown", "Did not get account to create payment provider account", null, null, null));
         }
     }
 
@@ -113,7 +113,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
             return Either.right(accounts.get(accountKey));
         }
         else {
-            return Either.left((PaymentErrorEvent) new DefaultPaymentError("unknown", "Did not get account for accountKey " + accountKey, null, null, null));
+            return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "Did not get account for accountKey " + accountKey, null, null, null));
         }
     }
 
@@ -145,7 +145,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
                     realPaymentMethod = new CreditCardPaymentMethodInfo.Builder(ccPaymentMethod).setId(paymentMethodId).build();
                 }
                 if (realPaymentMethod == null) {
-                    return Either.left((PaymentErrorEvent)  new DefaultPaymentError("unsupported", "Payment method " + paymentMethod.getType() + " not supported by the plugin", null, null, null));
+                    return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("unsupported", "Payment method " + paymentMethod.getType() + " not supported by the plugin", null, null, null));
                 }
                 else {
                     if (shouldBeDefault) {
@@ -156,11 +156,11 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
                 }
             }
                 else {
-                    return Either.left((PaymentErrorEvent)  new DefaultPaymentError("noaccount", "Could not retrieve account for accountKey " + accountKey, null, null, null));
+                    return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("noaccount", "Could not retrieve account for accountKey " + accountKey, null, null, null));
                 }
         }
         else {
-            return Either.left((PaymentErrorEvent)  new DefaultPaymentError("unknown", "Could not create add payment method " + paymentMethod + " for " + accountKey, null, null, null));
+            return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("unknown", "Could not create add payment method " + paymentMethod + " for " + accountKey, null, null, null));
         }
     }
 
@@ -204,7 +204,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
                 realPaymentMethod = new CreditCardPaymentMethodInfo.Builder(ccPaymentMethod).build();
             }
             if (realPaymentMethod == null) {
-                return Either.left((PaymentErrorEvent)  new DefaultPaymentError("unsupported", "Payment method " + paymentMethod.getType() + " not supported by the plugin", null, null, null));
+                return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("unsupported", "Payment method " + paymentMethod.getType() + " not supported by the plugin", null, null, null));
             }
             else {
                 paymentMethods.put(paymentMethod.getId(), paymentMethod);
@@ -212,7 +212,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
             }
         }
         else {
-            return Either.left((PaymentErrorEvent)  new DefaultPaymentError("unknown", "Could not create add payment method " + paymentMethod + " for " + accountKey, null, null, null));
+            return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("unknown", "Could not create add payment method " + paymentMethod + " for " + accountKey, null, null, null));
         }
     }
 
@@ -222,11 +222,11 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         if (paymentMethodInfo != null) {
             if (Boolean.FALSE.equals(paymentMethodInfo.getDefaultMethod()) || paymentMethodInfo.getDefaultMethod() == null) {
                 if (paymentMethods.remove(paymentMethodId) == null) {
-                    return Either.left((PaymentErrorEvent) new DefaultPaymentError("unknown", "Did not get any result back", null, null, null));
+                    return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "Did not get any result back", null, null, null));
                 }
             }
             else {
-                return Either.left((PaymentErrorEvent) new DefaultPaymentError("error", "Cannot delete default payment method", null, null, null));
+                return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("error", "Cannot delete default payment method", null, null, null));
             }
         }
         return Either.right(null);
@@ -235,7 +235,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     @Override
     public Either<PaymentErrorEvent, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
         if (paymentMethodId == null) {
-            return Either.left((PaymentErrorEvent) new DefaultPaymentError("unknown", "Could not retrieve payment method for paymentMethodId " + paymentMethodId, null, null, null));
+            return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "Could not retrieve payment method for paymentMethodId " + paymentMethodId, null, null, null));
         }
 
         return Either.right(paymentMethods.get(paymentMethodId));

@@ -47,6 +47,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
@@ -55,7 +56,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -77,7 +78,7 @@ public class TestDefaultEntitlementBillingApi {
 
 	private List<SubscriptionBundle> bundles;
 	private List<Subscription> subscriptions;
-	private List<SubscriptionEventTransition> subscriptionTransitions;
+	private List<SubscriptionEvent> subscriptionTransitions;
 	private EntitlementUserApi entitlementApi;
 
 
@@ -98,7 +99,7 @@ public class TestDefaultEntitlementBillingApi {
 		bundles.add(bundle);
 
 
-		subscriptionTransitions = new LinkedList<SubscriptionEventTransition>();
+		subscriptionTransitions = new LinkedList<SubscriptionEvent>();
 		subscriptions = new LinkedList<Subscription>();
 
 		SubscriptionBuilder builder = new SubscriptionBuilder();
@@ -106,7 +107,7 @@ public class TestDefaultEntitlementBillingApi {
 		builder.setStartDate(subscriptionStartDate).setId(oneId);
 		subscription = new SubscriptionData(builder) {
 		    @Override
-            public List<SubscriptionEventTransition> getBillingTransitions() {
+            public List<SubscriptionEvent> getBillingTransitions() {
 		    	return subscriptionTransitions;
 		    }
 		};
@@ -134,7 +135,7 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-		BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi);
+		BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, catalogService);
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
@@ -146,10 +147,12 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0]; // The trial has no billing period
         PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-		SubscriptionEventTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
-		subscriptionTransitions.add(t);
+        
 
+		SubscriptionEvent t = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null,
+				SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1L, null, true), then);
+		subscriptionTransitions.add(t);
 
         AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -159,7 +162,7 @@ public class TestDefaultEntitlementBillingApi {
 		       
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi);
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, catalogService);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
@@ -172,8 +175,9 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
 		PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-		SubscriptionEventTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
+		SubscriptionEvent t = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, 
+				nextPlan, nextPhase, nextPriceList, 1L, null, true), then);
 		subscriptionTransitions.add(t);
 
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -187,7 +191,7 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi);
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, catalogService);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
@@ -200,8 +204,9 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-		SubscriptionEventTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
+		SubscriptionEvent t = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList,
+				1L, null, true), then);
 		subscriptionTransitions.add(t);
 
         AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
@@ -214,7 +219,7 @@ public class TestDefaultEntitlementBillingApi {
         
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi);
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, catalogService);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
 		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
@@ -227,8 +232,9 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("Horn1USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0];
         PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-		SubscriptionEventTransition t = new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1, null, true);
+		SubscriptionEvent t = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
+				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1L,
+				null, true), then);
 		subscriptionTransitions.add(t);
 
 		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -242,7 +248,7 @@ public class TestDefaultEntitlementBillingApi {
         
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi);
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, catalogService);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().plusDays(30).getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());

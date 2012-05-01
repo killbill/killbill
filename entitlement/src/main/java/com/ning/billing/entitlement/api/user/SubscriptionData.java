@@ -147,26 +147,26 @@ public class SubscriptionData extends ExtendedEntityBase implements
 
     @Override
     public PlanPhase getCurrentPhase() {
-        return (getPreviousTransition() == null) ? null
-                : getPreviousTransition().getNextPhase();
+        return (getPreviousTransitionData() == null) ? null
+                : getPreviousTransitionData().getNextPhase();
     }
 
     @Override
     public Plan getCurrentPlan() {
-        return (getPreviousTransition() == null) ? null
-                : getPreviousTransition().getNextPlan();
+        return (getPreviousTransitionData() == null) ? null
+                : getPreviousTransitionData().getNextPlan();
     }
 
     @Override
     public PriceList getCurrentPriceList() {
-        return (getPreviousTransition() == null) ? null :
-            getPreviousTransition().getNextPriceList();
+        return (getPreviousTransitionData() == null) ? null :
+            getPreviousTransitionData().getNextPriceList();
 
     }
 
     @Override
     public DateTime getEndDate() {
-        SubscriptionEventTransition latestTransition = getPreviousTransition();
+        SubscriptionEvent latestTransition = getPreviousTransition();
         if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
             return latestTransition.getEffectiveTransitionTime();
         }
@@ -201,8 +201,15 @@ public class SubscriptionData extends ExtendedEntityBase implements
 
 
     @Override
-    public SubscriptionEventTransition getPendingTransition() {
+    public SubscriptionEvent getPendingTransition() {
+        SubscriptionTransitionData data = getPendingTransitionData();
+        if (data == null) {
+            return null;
+        }
+        return new DefaultSubscriptionEvent(data, startDate);
+    }
 
+    protected SubscriptionTransitionData getPendingTransitionData() {
         if (transitions == null) {
             return null;
         }
@@ -211,9 +218,17 @@ public class SubscriptionData extends ExtendedEntityBase implements
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
         return it.hasNext() ? it.next() : null;
     }
-
+    
     @Override
-    public SubscriptionEventTransition getPreviousTransition() {
+    public SubscriptionEvent getPreviousTransition() {
+        SubscriptionTransitionData data = getPreviousTransitionData();
+        if (data == null) {
+            return null;
+        }
+        return new DefaultSubscriptionEvent(data, startDate);
+    }
+
+    protected SubscriptionTransitionData getPreviousTransitionData() {
         if (transitions == null) {
             return null;
         }
@@ -222,7 +237,7 @@ public class SubscriptionData extends ExtendedEntityBase implements
                 Visibility.FROM_DISK_ONLY, TimeLimit.PAST_OR_PRESENT_ONLY);
         return it.hasNext() ? it.next() : null;
     }
-    
+
     @Override
     public ProductCategory getCategory() {
         return category;
@@ -268,30 +283,30 @@ public class SubscriptionData extends ExtendedEntityBase implements
         return true;
     }
 
-    public List<SubscriptionEventTransition> getBillingTransitions() {
+    public List<SubscriptionEvent> getBillingTransitions() {
 
         if (transitions == null) {
             return Collections.emptyList();
         }
-        List<SubscriptionEventTransition> result = new ArrayList<SubscriptionEventTransition>();
+        List<SubscriptionEvent> result = new ArrayList<SubscriptionEvent>();
         SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
                 Visibility.ALL, TimeLimit.ALL);
         while (it.hasNext()) {
-            result.add(it.next());
+            result.add(new DefaultSubscriptionEvent(it.next(), startDate));
         }
         return result;
     }
 
 
-    public SubscriptionEventTransition getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
+    public SubscriptionEvent getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
         if (transitions == null || event == null) {
             return null;
         }
-        for (SubscriptionEventTransition cur : transitions) {
+        for (SubscriptionTransitionData  cur : transitions) {
             if (cur.getId().equals(event.getId())) {
-                return new SubscriptionTransitionData(
-                        (SubscriptionTransitionData) cur, seqId);
+                SubscriptionTransitionData withSeq = new SubscriptionTransitionData((SubscriptionTransitionData) cur, seqId); 
+                return new DefaultSubscriptionEvent(withSeq, startDate);
             }
         }
         return null;

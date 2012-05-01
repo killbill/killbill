@@ -1,0 +1,157 @@
+/*
+ * Copyright 2010-2011 Ning, Inc.
+ *
+ * Ning licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.ning.billing.invoice.api.user;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.util.bus.BusEvent.BusEventType;
+
+public class DefaultInvoiceCreationEvent implements InvoiceCreationEvent {
+	
+    private final UUID invoiceId;
+    private final UUID accountId;
+    private final BigDecimal amountOwed;
+    private final Currency currency;
+    private final DateTime invoiceCreationDate;
+    private final UUID userToken;
+
+    @JsonCreator
+    public DefaultInvoiceCreationEvent(@JsonProperty("invoiceId") UUID invoiceId,
+            @JsonProperty("accountId") UUID accountId,
+            @JsonProperty("amountOwed") BigDecimal amountOwed,
+            @JsonProperty("currency") Currency currency,
+            @JsonProperty("invoiceCreationDate") DateTime invoiceCreationDate,
+            @JsonProperty("userToken") UUID userToken) {
+        this.invoiceId = invoiceId;
+        this.accountId = accountId;
+        this.amountOwed = amountOwed;
+        this.currency = currency;
+        this.invoiceCreationDate = invoiceCreationDate;
+        this.userToken = userToken;
+    }
+
+    @JsonIgnore
+	@Override
+	public BusEventType getBusEventType() {
+		return BusEventType.INVOICE_CREATION;
+	}
+
+	@Override
+	public UUID getUserToken() {
+		return userToken;
+	}
+
+    @Override
+    public UUID getInvoiceId() {
+        return invoiceId;
+    }
+
+    @Override
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    @Override
+    public BigDecimal getAmountOwed() {
+        return amountOwed;
+    }
+
+    @Override
+    public Currency getCurrency() {
+        return currency;
+    }
+
+    @Override
+    public DateTime getInvoiceCreationDate() {
+        return invoiceCreationDate;
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultInvoiceCreationNotification [invoiceId=" + invoiceId + ", accountId=" + accountId + ", amountOwed=" + amountOwed + ", currency=" + currency + ", invoiceCreationDate=" + invoiceCreationDate + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((accountId == null) ? 0 : accountId.hashCode());
+        result = prime * result
+                + ((amountOwed == null) ? 0 : amountOwed.hashCode());
+        result = prime * result
+                + ((currency == null) ? 0 : currency.hashCode());
+        result = prime
+                * result
+                + ((invoiceCreationDate == null) ? 0 : invoiceCreationDate
+                        .hashCode());
+        result = prime * result
+                + ((invoiceId == null) ? 0 : invoiceId.hashCode());
+        result = prime * result
+                + ((userToken == null) ? 0 : userToken.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DefaultInvoiceCreationEvent other = (DefaultInvoiceCreationEvent) obj;
+        if (accountId == null) {
+            if (other.accountId != null)
+                return false;
+        } else if (!accountId.equals(other.accountId))
+            return false;
+        if (amountOwed == null) {
+            if (other.amountOwed != null)
+                return false;
+        } else if (!amountOwed.equals(other.amountOwed))
+            return false;
+        if (currency != other.currency)
+            return false;
+        if (invoiceCreationDate == null) {
+            if (other.invoiceCreationDate != null)
+                return false;
+        } else if (invoiceCreationDate.compareTo(other.invoiceCreationDate) != 0)
+            return false;
+        if (invoiceId == null) {
+            if (other.invoiceId != null)
+                return false;
+        } else if (!invoiceId.equals(other.invoiceId))
+            return false;
+        if (userToken == null) {
+            if (other.userToken != null)
+                return false;
+        } else if (!userToken.equals(other.userToken))
+            return false;
+        return true;
+    }
+    
+    
+}

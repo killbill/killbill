@@ -37,7 +37,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
+import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
@@ -192,7 +192,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
         // TODO: move this inside the transaction once the bus is persistent
         InvoiceCreationEvent event;
-        event = new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
+        event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                       invoice.getBalance(), invoice.getCurrency(),
                                                       invoice.getInvoiceDate(),
                                                       context.getUserToken());

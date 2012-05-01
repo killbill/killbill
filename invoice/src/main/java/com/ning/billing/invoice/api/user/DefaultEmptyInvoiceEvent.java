@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api.timeline;
+package com.ning.billing.invoice.api.user;
 
 import java.util.UUID;
 
@@ -22,31 +22,29 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
+import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 
-public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
+public class DefaultEmptyInvoiceEvent implements EmptyInvoiceEvent {
 
-    private final UUID userToken;
-    private final UUID bundleId;
     private final UUID accountId;
-    private final DateTime effectiveDate;
-    
+    private final DateTime processingDate;
+    private final UUID userToken;
+
     
     @JsonCreator
-    public DefaultRepairEntitlementEvent(@JsonProperty("userToken") final UUID userToken,
-            @JsonProperty("accountId") final UUID accountId,
-            @JsonProperty("bundleId") final UUID bundleId,
-            @JsonProperty("effectiveDate") final DateTime effectiveDate) {
-        this.userToken = userToken;
-        this.bundleId = bundleId;
+    public DefaultEmptyInvoiceEvent(@JsonProperty("accountId") final UUID accountId,
+            @JsonProperty("processingDate") final DateTime processingDate,
+            @JsonProperty("userToken") final UUID userToken) {
+        super();
         this.accountId = accountId;
-        this.effectiveDate = effectiveDate;
+        this.processingDate = processingDate;
+        this.userToken = userToken;
     }
-    
+
     @JsonIgnore
     @Override
     public BusEventType getBusEventType() {
-        return BusEventType.BUNDLE_REPAIR;
+        return BusEventType.INVOICE_EMPTY;
     }
 
     @Override
@@ -54,19 +52,12 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
         return userToken;
     }
 
-    @Override
-    public UUID getBundleId() {
-        return bundleId;
-    }
-
-    @Override
     public UUID getAccountId() {
         return accountId;
     }
 
-    @Override
-    public DateTime getEffectiveDate() {
-        return effectiveDate;
+    public DateTime getProcessingDate() {
+        return processingDate;
     }
 
     @Override
@@ -76,9 +67,7 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
         result = prime * result
                 + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result
-                + ((bundleId == null) ? 0 : bundleId.hashCode());
-        result = prime * result
-                + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
+                + ((processingDate == null) ? 0 : processingDate.hashCode());
         result = prime * result
                 + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
@@ -92,21 +81,16 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        DefaultRepairEntitlementEvent other = (DefaultRepairEntitlementEvent) obj;
+        DefaultEmptyInvoiceEvent other = (DefaultEmptyInvoiceEvent) obj;
         if (accountId == null) {
             if (other.accountId != null)
                 return false;
         } else if (!accountId.equals(other.accountId))
             return false;
-        if (bundleId == null) {
-            if (other.bundleId != null)
+        if (processingDate == null) {
+            if (other.processingDate != null)
                 return false;
-        } else if (!bundleId.equals(other.bundleId))
-            return false;
-        if (effectiveDate == null) {
-            if (other.effectiveDate != null)
-                return false;
-        } else if (effectiveDate.compareTo(other.effectiveDate) != 0)
+        } else if (processingDate.compareTo(other.processingDate) != 0)
             return false;
         if (userToken == null) {
             if (other.userToken != null)
@@ -115,4 +99,6 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
             return false;
         return true;
     }
+    
+    
 }

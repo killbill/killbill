@@ -17,6 +17,7 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.analytics.utils.Rounder;
+import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Duration;
@@ -89,18 +90,27 @@ public class BusinessSubscription
      * @param subscription Subscription to use as a model
      * @param currency     Account currency
      */
-    BusinessSubscription(final Subscription subscription, final Currency currency)
+    BusinessSubscription(final Subscription subscription, final Currency currency, Catalog catalog)
     {
-        this(subscription.getCurrentPriceList() == null ? null : subscription.getCurrentPriceList().getName(), subscription.getCurrentPlan(), subscription.getCurrentPhase(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId());
+        this(subscription.getCurrentPriceList() == null ? null : subscription.getCurrentPriceList().getName(), subscription.getCurrentPlan().getName(), subscription.getCurrentPhase().getName(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId(), catalog);
     }
 
-    public BusinessSubscription(final String priceList, final Plan currentPlan, final PlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
+    public BusinessSubscription(final String priceList, final String currentPlan, final String currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId, Catalog catalog)
     {
         this.priceList = priceList;
 
+        Plan thePlan = null;
+        PlanPhase thePhase = null;
+        try {
+            thePlan = catalog.findPlan(currentPlan, new DateTime(), startDate);
+            thePhase = catalog.findPhase(currentPhase, new DateTime(), getStartDate());
+        } catch (CatalogApiException e) {
+            log.error(String.format("Failed to retrieve Plan from catalog for plan %s, phase ", currentPlan, currentPhase));
+        }
+        
         // Record plan information
-        if (currentPlan != null && currentPlan.getProduct() != null) {
-            final Product product = currentPlan.getProduct();
+        if (thePlan != null && thePlan.getProduct() != null) {
+            final Product product = thePlan.getProduct();
             productName = product.getName();
             productCategory = product.getCategory();
             // TODO - we should keep the product type
@@ -113,33 +123,33 @@ public class BusinessSubscription
         }
 
         // Record phase information
-        if (currentPhase != null) {
-            slug = currentPhase.getName();
+        if (thePhase != null) {
+            slug = thePhase.getName();
 
-            if (currentPhase.getPhaseType() != null) {
-                phase = currentPhase.getPhaseType().toString();
+            if (thePhase.getPhaseType() != null) {
+                phase = thePhase.getPhaseType().toString();
             }
             else {
                 phase = null;
             }
 
-            if (currentPhase.getBillingPeriod() != null) {
-                billingPeriod = currentPhase.getBillingPeriod().toString();
+            if (thePhase.getBillingPeriod() != null) {
+                billingPeriod = thePhase.getBillingPeriod().toString();
             }
             else {
                 billingPeriod = null;
             }
 
-            if (currentPhase.getRecurringPrice() != null) {
+            if (thePhase.getRecurringPrice() != null) {
             	//TODO check if this is the right way to handle exception
             	BigDecimal tmpPrice = null;
                 try {
-                	tmpPrice = currentPhase.getRecurringPrice().getPrice(USD);
+                	tmpPrice = thePhase.getRecurringPrice().getPrice(USD);
 				} catch (CatalogApiException e) {
 					tmpPrice = new BigDecimal(0);
 				}
                 price = tmpPrice;
-                mrr = getMrrFromISubscription(currentPhase.getDuration(), price);
+                mrr = getMrrFromISubscription(thePhase.getDuration(), price);
             }
             else {
                 price = BigDecimal.ZERO;

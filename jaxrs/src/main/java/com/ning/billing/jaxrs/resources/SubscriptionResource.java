@@ -59,7 +59,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.jaxrs.json.BundleTimelineViews;
@@ -283,7 +283,7 @@ public class SubscriptionResource implements BaseJaxrsResource {
             super(userToken);
         }
         @Override
-        public void onSubscriptionTransition(SubscriptionEventTransition curEvent) {
+        public void onSubscriptionTransition(SubscriptionEvent curEvent) {
             log.debug(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ", 
                     curEvent.getUserToken(), curEvent.getTransitionType(),  curEvent.getRemainingEventsForUserOperation())); 
         }

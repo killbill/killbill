@@ -29,7 +29,7 @@ import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.api.user.DefaultInvoiceCreationNotification;
+import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.tag.ControlTagType;
@@ -50,7 +50,7 @@ public class MockInvoiceDao implements InvoiceDao {
             invoices.put(invoice.getId(), invoice);
         }
         try {
-            eventBus.post(new DefaultInvoiceCreationNotification(invoice.getId(), invoice.getAccountId(),
+            eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                  invoice.getBalance(), invoice.getCurrency(),
                                                                  invoice.getInvoiceDate(), null));
         }
