@@ -176,7 +176,6 @@ public class TestEventBusBase {
         }
     }
 
-    @Test(groups = "slow")
     public void testSimple() {
         try {
 
@@ -195,7 +194,6 @@ public class TestEventBusBase {
         }
     }
 
-    @Test(groups = "slow")
     public void testDifferentType() {
         try {
 

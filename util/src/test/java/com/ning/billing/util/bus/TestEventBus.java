@@ -28,4 +28,14 @@ public class TestEventBus extends TestEventBusBase {
         eventBus = new InMemoryBus();
         super.setup();
     }
+    
+    @Test(groups = "slow")
+    public void testSimple() {
+        super.testSimple();
+    }
+
+    @Test(groups = "slow")
+    public void testDifferentType() {
+        super.testDifferentType();
+    }
 }

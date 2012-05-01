@@ -52,6 +52,7 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
@@ -63,6 +64,8 @@ import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.dbi.DBIProvider;
+import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
@@ -132,6 +135,10 @@ public class TestNextBillingDateNotifier {
 
 	}
 
+	@BeforeMethod(groups={"slow"})
+	public void cleanup() {
+	    helper.cleanupAllTables();
+	}
 
 	@BeforeClass(groups={"slow"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
@@ -148,10 +155,18 @@ public class TestNextBillingDateNotifier {
                 final CatalogConfig catalogConfig = new ConfigurationObjectFactory(System.getProperties()).build(CatalogConfig.class);
                 bind(CatalogConfig.class).toInstance(catalogConfig);
                 bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
+                
                 final MysqlTestingHelper helper = new MysqlTestingHelper();
                 bind(MysqlTestingHelper.class).toInstance(helper);
-                IDBI dbi = helper.getDBI();
-                bind(IDBI.class).toInstance(dbi);
+                if (helper.isUsingLocalInstance()) {
+                    bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
+                    final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
+                    bind(DbiConfig.class).toInstance(config);
+                } else {
+                    final IDBI dbi = helper.getDBI();
+                    bind(IDBI.class).toInstance(dbi);
+                }
+                
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
                 bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
                 bind(EntitlementDao.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);

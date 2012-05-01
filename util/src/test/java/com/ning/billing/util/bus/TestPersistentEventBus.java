@@ -15,7 +15,7 @@
  */
 package com.ning.billing.util.bus;
 
-import org.codehaus.jackson.map.ObjectMapper;
+
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.AfterClass;
@@ -26,7 +26,6 @@ import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -58,7 +57,7 @@ public class TestPersistentEventBus extends TestEventBusBase {
         @Override
         protected void configure() {
             
-            System.setProperty("com.ning.billing.dbi.test.useLocalDb", "true");
+            //System.setProperty("com.ning.billing.dbi.test.useLocalDb", "true");
 
             bind(Clock.class).to(ClockMock.class).asEagerSingleton();
             bind(ClockMock.class).asEagerSingleton();

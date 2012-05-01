@@ -203,6 +203,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         return transitionType;
     }
     
+    @JsonProperty("startDate")
     @Override
     public DateTime getSubscriptionStartDate() {
         return startDate;
