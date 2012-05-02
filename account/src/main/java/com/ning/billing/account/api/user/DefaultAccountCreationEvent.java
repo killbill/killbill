@@ -265,11 +265,13 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         }
 
         @Override
+        @JsonIgnore
         public boolean isMigrated() {
             return isMigrated;
         }
 
         @Override
+        @JsonIgnore
         public boolean isNotifiedForInvoices() {
             return isNotifiedForInvoices;
         }
