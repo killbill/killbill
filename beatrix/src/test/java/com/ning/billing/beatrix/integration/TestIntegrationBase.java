@@ -151,6 +151,7 @@ public class TestIntegrationBase implements TestFailure {
         final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
         final String utilDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        final String junctionDb = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));
 
         helper.startMysql();
 
@@ -159,6 +160,7 @@ public class TestIntegrationBase implements TestFailure {
         helper.initDb(invoiceDdl);
         helper.initDb(paymentDdl);
         helper.initDb(utilDdl);
+        helper.initDb(junctionDb);
     }
 
     @BeforeClass(groups = "slow")
