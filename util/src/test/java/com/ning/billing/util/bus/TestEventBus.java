@@ -24,7 +24,7 @@ public class TestEventBus extends TestEventBusBase {
 
 
     @BeforeClass(groups = "slow")
-    public void setup() {
+    public void setup() throws Exception {
         eventBus = new InMemoryBus();
         super.setup();
     }

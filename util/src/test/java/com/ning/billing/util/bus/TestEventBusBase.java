@@ -40,7 +40,7 @@ public class TestEventBusBase {
     protected Bus eventBus;
 
     @BeforeClass(groups = "slow")
-    public void setup() {
+    public void setup() throws Exception {
         eventBus.start();
     }
     

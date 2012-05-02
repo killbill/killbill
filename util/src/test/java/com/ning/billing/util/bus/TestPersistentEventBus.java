@@ -16,6 +16,9 @@
 package com.ning.billing.util.bus;
 
 
+import java.io.IOException;
+
+import org.apache.commons.io.IOUtils;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.AfterClass;
@@ -41,7 +44,10 @@ public class TestPersistentEventBus extends TestEventBusBase {
     private MysqlTestingHelper helper;
     
     @BeforeClass(groups = {"slow"})
-    public void setup() {
+    public void setup() throws Exception {
+        helper.startMysql();
+        final String ddl = IOUtils.toString(TestPersistentEventBus.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        helper.initDb(ddl);
         cleanup();
         super.setup();
     }
