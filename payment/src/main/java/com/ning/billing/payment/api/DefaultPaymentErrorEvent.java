@@ -17,7 +17,9 @@
 package com.ning.billing.payment.api;
 import java.util.UUID;
 
+import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.codehaus.jackson.annotate.JsonTypeInfo.Id;
 
@@ -25,7 +27,7 @@ import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 @JsonTypeInfo(use = Id.NAME, property = "error")
-public class DefaultPaymentError implements PaymentErrorEvent {
+public class DefaultPaymentErrorEvent implements PaymentErrorEvent {
 	
     private final String type;
     private final String message;
@@ -33,7 +35,7 @@ public class DefaultPaymentError implements PaymentErrorEvent {
     private final UUID invoiceId;
     private final UUID userToken;
 
-    public DefaultPaymentError(final DefaultPaymentError src, final UUID accountId, final UUID invoiceId) {
+    public DefaultPaymentErrorEvent(final DefaultPaymentErrorEvent src, final UUID accountId, final UUID invoiceId) {
         this.type = src.type;
         this.message = src.message;
         this.accountId = accountId;
@@ -41,7 +43,12 @@ public class DefaultPaymentError implements PaymentErrorEvent {
         this.userToken = src.userToken;
     }
 
-    public DefaultPaymentError(String type, String message, UUID accountId, UUID invoiceId, UUID userToken) {
+    @JsonCreator
+    public DefaultPaymentErrorEvent(@JsonProperty("type") String type,
+            @JsonProperty("message") String message,
+            @JsonProperty("accountId") UUID accountId,
+            @JsonProperty("invoiceId") UUID invoiceId,
+            @JsonProperty("userToken") UUID userToken) {
         this.type = type;
         this.message = message;
         this.accountId = accountId;
@@ -49,7 +56,7 @@ public class DefaultPaymentError implements PaymentErrorEvent {
         this.userToken = userToken;        
     }
 
-    public DefaultPaymentError(String type, String message) {
+    public DefaultPaymentErrorEvent(String type, String message) {
     	this(type, message, null, null, null);
     }
 
@@ -103,7 +110,7 @@ public class DefaultPaymentError implements PaymentErrorEvent {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        DefaultPaymentError other = (DefaultPaymentError) obj;
+        DefaultPaymentErrorEvent other = (DefaultPaymentErrorEvent) obj;
         if (accountId == null) {
             if (other.accountId != null)
                 return false;

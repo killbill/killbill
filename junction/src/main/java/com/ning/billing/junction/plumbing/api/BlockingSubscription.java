@@ -30,7 +30,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
@@ -207,15 +207,15 @@ public class BlockingSubscription implements Subscription {
         return subscription.getCategory();
     }
 
-    public SubscriptionEventTransition getPendingTransition() {
+    public SubscriptionEvent getPendingTransition() {
         return subscription.getPendingTransition();
     }
 
-    public SubscriptionEventTransition getPreviousTransition() {
+    public SubscriptionEvent getPreviousTransition() {
         return subscription.getPreviousTransition();
     }
 
-    public List<SubscriptionEventTransition> getBillingTransitions() {
+    public List<SubscriptionEvent> getBillingTransitions() {
         return subscription.getBillingTransitions();
     }
 

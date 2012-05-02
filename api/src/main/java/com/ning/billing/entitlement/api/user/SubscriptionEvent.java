@@ -30,7 +30,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.util.bus.BusEvent;
 
-public interface SubscriptionEventTransition extends BusEvent {
+public interface SubscriptionEvent extends BusEvent {
 
     UUID getId();
 
@@ -39,6 +39,8 @@ public interface SubscriptionEventTransition extends BusEvent {
     UUID getBundleId();
 
     UUID getSubscriptionId();
+    
+    DateTime getSubscriptionStartDate();
 
     DateTime getRequestedTransitionTime();
 
@@ -46,21 +48,21 @@ public interface SubscriptionEventTransition extends BusEvent {
 
     SubscriptionState getPreviousState();
 
-    Plan getPreviousPlan();
+    String getPreviousPlan();
 
-    PriceList getPreviousPriceList();
+    String getPreviousPriceList();
 
-    PlanPhase getPreviousPhase();
+    String getPreviousPhase();
 
-    Plan getNextPlan();
+    String getNextPlan();
 
-    PlanPhase getNextPhase();
+    String getNextPhase();
 
     SubscriptionState getNextState();
 
-    PriceList getNextPriceList();
+    String getNextPriceList();
     
     Integer getRemainingEventsForUserOperation();
     
-    long getTotalOrdering();
+    Long getTotalOrdering();
 }

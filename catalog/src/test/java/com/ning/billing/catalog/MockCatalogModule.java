@@ -17,6 +17,7 @@
 package com.ning.billing.catalog;
 
 import com.google.inject.AbstractModule;
+import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
@@ -27,6 +28,12 @@ public class MockCatalogModule extends AbstractModule {
     protected void configure() {
         CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
         ((ZombieControl) catalogService).addResult("getCurrentCatalog", new MockCatalog());
+        
+        catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
+        Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
+
+        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog); 
+        
         bind(CatalogService.class).toInstance(catalogService);
     }
 }

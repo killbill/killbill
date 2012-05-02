@@ -16,6 +16,13 @@
 
 package com.ning.billing.analytics;
 
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -27,6 +34,9 @@ import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionSta
  */
 public class BusinessSubscriptionEvent
 {
+    
+    private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionEvent.class);
+    
     private static final String MISC = "MISC";
 
     public enum EventType
@@ -78,44 +88,52 @@ public class BusinessSubscriptionEvent
         return eventType;
     }
 
-    public static BusinessSubscriptionEvent subscriptionCreated(final Plan plan)
+    public static BusinessSubscriptionEvent subscriptionCreated(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
     {
-        return eventFromType(EventType.ADD, plan);
+        return eventFromType(EventType.ADD, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionCancelled(final Plan plan)
+    public static BusinessSubscriptionEvent subscriptionCancelled(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
     {
-        return eventFromType(EventType.CANCEL, plan);
+        return eventFromType(EventType.CANCEL, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionChanged(final Plan plan)
+    public static BusinessSubscriptionEvent subscriptionChanged(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
     {
-        return eventFromType(EventType.CHANGE, plan);
+        return eventFromType(EventType.CHANGE, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionRecreated(final Plan plan)
+    public static BusinessSubscriptionEvent subscriptionRecreated(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
     {
-        return eventFromType(EventType.RE_ADD, plan);
+        return eventFromType(EventType.RE_ADD, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionPhaseChanged(final Plan plan, final SubscriptionState state)
+    public static BusinessSubscriptionEvent subscriptionPhaseChanged(final String plan, final SubscriptionState state, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
     {
         if (state != null && state.equals(SubscriptionState.CANCELLED)) {
-            return eventFromType(EventType.SYSTEM_CANCEL, plan);
+            return eventFromType(EventType.SYSTEM_CANCEL, plan, catalog, eventTime, subscriptionCreationDate);
         }
         else {
-            return eventFromType(EventType.SYSTEM_CHANGE, plan);
+            return eventFromType(EventType.SYSTEM_CHANGE, plan, catalog, eventTime, subscriptionCreationDate);
         }
     }
 
-    private static BusinessSubscriptionEvent eventFromType(final EventType eventType, final Plan plan)
+    private static BusinessSubscriptionEvent eventFromType(final EventType eventType, final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
     {
-        final ProductCategory category = getTypeFromSubscription(plan);
+        Plan thePlan = null;
+        try {
+            thePlan = catalog.findPlan(plan, eventTime, subscriptionCreationDate);
+        } catch (CatalogApiException e) {
+            log.error(String.format("Failed to retrieve PLan from catalog for %s", plan));
+            
+        }
+        final ProductCategory category = getTypeFromSubscription(thePlan);
         return new BusinessSubscriptionEvent(eventType, category);
     }
 
     private static ProductCategory getTypeFromSubscription(final Plan plan)
     {
+        
         if (plan != null && plan.getProduct() != null) {
             final Product product = plan.getProduct();
             if (product.getCatalogName() != null && product.getCategory() != null) {

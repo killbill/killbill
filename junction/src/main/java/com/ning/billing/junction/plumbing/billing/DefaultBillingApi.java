@@ -32,12 +32,13 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
@@ -52,16 +53,20 @@ public class DefaultBillingApi implements BillingApi {
     private final AccountUserApi accountApi;
     private final BillCycleDayCalculator bcdCalculator;
     private final EntitlementUserApi entitlementUserApi;
+    private final CatalogService catalogService;
     private final BlockingCalculator blockCalculator;
 
     @Inject
-    public DefaultBillingApi(ChargeThruApi chargeThruApi, CallContextFactory factory, AccountUserApi accountApi, 
-            BillCycleDayCalculator bcdCalculator, EntitlementUserApi entitlementUserApi, BlockingCalculator blockCalculator) {
+    public DefaultBillingApi(final ChargeThruApi chargeThruApi, final CallContextFactory factory, final AccountUserApi accountApi, 
+            final BillCycleDayCalculator bcdCalculator, final EntitlementUserApi entitlementUserApi, final BlockingCalculator blockCalculator,
+            final CatalogService catalogService) {
+
         this.chargeThruApi = chargeThruApi;
         this.accountApi = accountApi;
         this.bcdCalculator = bcdCalculator;
         this.factory = factory;
         this.entitlementUserApi = entitlementUserApi;
+        this.catalogService = catalogService;
         this.blockCalculator = blockCalculator;
     }
 
@@ -71,13 +76,14 @@ public class DefaultBillingApi implements BillingApi {
 
         List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
         SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
+
         try {
             Account account = accountApi.getAccountById(accountId);
             for (final SubscriptionBundle bundle: bundles) {
                 List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundle.getId());
 
                 for (final Subscription subscription: subscriptions) {
-                    for (final SubscriptionEventTransition transition : subscription.getBillingTransitions()) {
+                    for (final SubscriptionEvent transition : subscription.getBillingTransitions()) {
                         try {
                             int bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
 
@@ -87,7 +93,7 @@ public class DefaultBillingApi implements BillingApi {
                                 accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
                             }
 
-                            BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd, account.getCurrency());
+                            BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd, account.getCurrency(), catalogService.getFullCatalog());
                             result.add(event);
                         } catch (CatalogApiException e) {
                             log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
@@ -95,10 +101,11 @@ public class DefaultBillingApi implements BillingApi {
                         } catch (Exception e) {
                             log.warn("Failed while getting BillingEvent", e);
                         }
+
                     }
                 }
             }
-        }catch (AccountApiException e) {
+        } catch (AccountApiException e) {
             log.warn("Failed while getting BillingEvent", e);
         }
 

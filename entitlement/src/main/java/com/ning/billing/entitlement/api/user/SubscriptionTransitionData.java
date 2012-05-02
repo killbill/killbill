@@ -18,6 +18,8 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.UUID;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Plan;
@@ -29,10 +31,10 @@ import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 
-public class SubscriptionTransitionData implements SubscriptionEventTransition {
+public class SubscriptionTransitionData /* implements SubscriptionEvent */ {
 
 
-    private final long totalOrdering;
+    private final Long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;
     private final UUID eventId;
@@ -48,15 +50,29 @@ public class SubscriptionTransitionData implements SubscriptionEventTransition {
     private final PriceList nextPriceList;
     private final Plan nextPlan;
     private final PlanPhase nextPhase;
-    private final boolean isFromDisk;
-    private final int remainingEventsForUserOperation;
+    private final Boolean isFromDisk;
+    private final Integer remainingEventsForUserOperation;
     private final UUID userToken;
 
-    public SubscriptionTransitionData(UUID eventId, UUID subscriptionId, UUID bundleId, EventType eventType,
-            ApiEventType apiEventType, DateTime requestedTransitionTime, DateTime effectiveTransitionTime,
-            SubscriptionState previousState, Plan previousPlan, PlanPhase previousPhase, PriceList previousPriceList,
-            SubscriptionState nextState, Plan nextPlan, PlanPhase nextPhase, PriceList nextPriceList,
-            long totalOrdering, UUID userToken, boolean isFromDisk) {
+
+    public SubscriptionTransitionData(UUID eventId,
+            UUID subscriptionId,
+            UUID bundleId,
+            EventType eventType,
+            ApiEventType apiEventType,
+            DateTime requestedTransitionTime,
+            DateTime effectiveTransitionTime,
+            SubscriptionState previousState,
+            Plan previousPlan,
+            PlanPhase previousPhase,
+            PriceList previousPriceList,
+            SubscriptionState nextState,
+            Plan nextPlan,
+            PlanPhase nextPhase,
+            PriceList nextPriceList,
+            Long totalOrdering,
+            UUID userToken,
+            Boolean isFromDisk) {
         super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
@@ -102,81 +118,61 @@ public class SubscriptionTransitionData implements SubscriptionEventTransition {
         this.remainingEventsForUserOperation = remainingEventsForUserOperation;
     }
 
-	@Override
-	public BusEventType getBusEventType() {
-		return BusEventType.SUBSCRIPTION_TRANSITION;
-	}
 
-
-    @Override
     public UUID getId() {
         return eventId;
     }
 
-    @Override
     public UUID getSubscriptionId() {
         return subscriptionId;
     }
 
-    @Override
     public UUID getBundleId() {
         return bundleId;
     }
 
-
-    @Override
     public SubscriptionState getPreviousState() {
         return previousState;
     }
 
-    @Override
     public Plan getPreviousPlan() {
         return previousPlan;
     }
 
-    @Override
     public PlanPhase getPreviousPhase() {
         return previousPhase;
     }
 
-    @Override
     public Plan getNextPlan() {
         return nextPlan;
     }
 
-    @Override
     public PlanPhase getNextPhase() {
         return nextPhase;
     }
 
-    @Override
     public SubscriptionState getNextState() {
         return nextState;
     }
 
 
-    @Override
     public PriceList getPreviousPriceList() {
         return previousPriceList;
     }
 
-    @Override
     public PriceList getNextPriceList() {
         return nextPriceList;
     }
     
-	@Override
 	public UUID getUserToken() {
 		return userToken;
 	}
 	
-	@Override
 	public Integer getRemainingEventsForUserOperation() {
 		return remainingEventsForUserOperation;
 	}
 
 
-    @Override
     public SubscriptionTransitionType getTransitionType() {
         return toSubscriptionTransitionType(eventType, apiEventType);
     }
@@ -192,21 +188,20 @@ public class SubscriptionTransitionData implements SubscriptionEventTransition {
         }
     }
 
-    @Override
     public DateTime getRequestedTransitionTime() {
         return requestedTransitionTime;
     }
 
-    @Override
     public DateTime getEffectiveTransitionTime() {
         return effectiveTransitionTime;
     }
 
-    public long getTotalOrdering() {
+
+    public Long getTotalOrdering() {
         return totalOrdering;
     }
 
-    public boolean isFromDisk() {
+    public Boolean isFromDisk() {
         return isFromDisk;
     }
 
@@ -217,7 +212,6 @@ public class SubscriptionTransitionData implements SubscriptionEventTransition {
     public EventType getEventType() {
         return eventType;
     }
-
 
 
     @Override

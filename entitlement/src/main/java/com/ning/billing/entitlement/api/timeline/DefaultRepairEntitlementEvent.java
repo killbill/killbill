@@ -17,6 +17,9 @@ package com.ning.billing.entitlement.api.timeline;
 
 import java.util.UUID;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
@@ -26,16 +29,21 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
     private final UUID userToken;
     private final UUID bundleId;
     private final UUID accountId;
-    private final DateTime efectiveDate;
+    private final DateTime effectiveDate;
     
     
-    public DefaultRepairEntitlementEvent(final UUID userToken, final UUID acountId, final UUID bundleId, final DateTime efectiveDate) {
+    @JsonCreator
+    public DefaultRepairEntitlementEvent(@JsonProperty("userToken") final UUID userToken,
+            @JsonProperty("accountId") final UUID accountId,
+            @JsonProperty("bundleId") final UUID bundleId,
+            @JsonProperty("effectiveDate") final DateTime effectiveDate) {
         this.userToken = userToken;
         this.bundleId = bundleId;
-        this.accountId = acountId;
-        this.efectiveDate = efectiveDate;
+        this.accountId = accountId;
+        this.effectiveDate = effectiveDate;
     }
     
+    @JsonIgnore
     @Override
     public BusEventType getBusEventType() {
         return BusEventType.BUNDLE_REPAIR;
@@ -58,6 +66,53 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
 
     @Override
     public DateTime getEffectiveDate() {
-        return efectiveDate;
+        return effectiveDate;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((accountId == null) ? 0 : accountId.hashCode());
+        result = prime * result
+                + ((bundleId == null) ? 0 : bundleId.hashCode());
+        result = prime * result
+                + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
+        result = prime * result
+                + ((userToken == null) ? 0 : userToken.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DefaultRepairEntitlementEvent other = (DefaultRepairEntitlementEvent) obj;
+        if (accountId == null) {
+            if (other.accountId != null)
+                return false;
+        } else if (!accountId.equals(other.accountId))
+            return false;
+        if (bundleId == null) {
+            if (other.bundleId != null)
+                return false;
+        } else if (!bundleId.equals(other.bundleId))
+            return false;
+        if (effectiveDate == null) {
+            if (other.effectiveDate != null)
+                return false;
+        } else if (effectiveDate.compareTo(other.effectiveDate) != 0)
+            return false;
+        if (userToken == null) {
+            if (other.userToken != null)
+                return false;
+        } else if (!userToken.equals(other.userToken))
+            return false;
+        return true;
     }
 }

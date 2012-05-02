@@ -34,7 +34,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.payment.api.DefaultPaymentInfo;
+import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
@@ -44,7 +44,7 @@ public abstract class TestPaymentDao {
 
     @Test
     public void testCreatePayment() {
-        PaymentInfoEvent paymentInfo = new DefaultPaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
+        PaymentInfoEvent paymentInfo = new DefaultPaymentInfoEvent.Builder().setPaymentId(UUID.randomUUID().toString())
                 .setAmount(BigDecimal.TEN)
                 .setStatus("Processed")
                 .setBankIdentificationNumber("1234")
@@ -60,7 +60,7 @@ public abstract class TestPaymentDao {
 
     @Test
     public void testUpdatePaymentInfo() {
-        PaymentInfoEvent paymentInfo = new DefaultPaymentInfo.Builder().setPaymentId(UUID.randomUUID().toString())
+        PaymentInfoEvent paymentInfo = new DefaultPaymentInfoEvent.Builder().setPaymentId(UUID.randomUUID().toString())
                 .setAmount(BigDecimal.TEN)
                 .setStatus("Processed")
                 .setBankIdentificationNumber("1234")
@@ -119,7 +119,7 @@ public abstract class TestPaymentDao {
 
         Assert.assertEquals(attempt3, attempt4);
 
-        PaymentInfoEvent originalPaymentInfo = new DefaultPaymentInfo.Builder().setPaymentId(paymentId)
+        PaymentInfoEvent originalPaymentInfo = new DefaultPaymentInfoEvent.Builder().setPaymentId(paymentId)
                 .setAmount(invoiceAmount)
                 .setStatus("Processed")
                 .setBankIdentificationNumber("1234")

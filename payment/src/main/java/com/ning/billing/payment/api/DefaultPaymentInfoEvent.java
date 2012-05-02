@@ -29,7 +29,7 @@ import com.google.common.base.Objects;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
 
-public class DefaultPaymentInfo implements PaymentInfoEvent {
+public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
 	
 
     private final String paymentId;
@@ -50,7 +50,7 @@ public class DefaultPaymentInfo implements PaymentInfoEvent {
     private final DateTime updatedDate;
 
     @JsonCreator
-    public DefaultPaymentInfo(@JsonProperty("paymentId") String paymentId,
+    public DefaultPaymentInfoEvent(@JsonProperty("paymentId") String paymentId,
                        @JsonProperty("amount") BigDecimal amount,
                        @JsonProperty("refundAmount") BigDecimal refundAmount,
                        @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
@@ -84,7 +84,7 @@ public class DefaultPaymentInfo implements PaymentInfoEvent {
         this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
     }
 
-    public DefaultPaymentInfo(DefaultPaymentInfo src) {
+    public DefaultPaymentInfoEvent(DefaultPaymentInfoEvent src) {
         this(src.paymentId,
              src.amount,
              src.refundAmount,
@@ -214,7 +214,7 @@ public class DefaultPaymentInfo implements PaymentInfoEvent {
         public Builder() {
         }
 
-        public Builder(DefaultPaymentInfo src) {
+        public Builder(DefaultPaymentInfoEvent src) {
             this.paymentId = src.paymentId;
             this.amount = src.amount;
             this.refundAmount = src.refundAmount;
@@ -314,7 +314,7 @@ public class DefaultPaymentInfo implements PaymentInfoEvent {
         }
 
         public PaymentInfoEvent build() {
-            return new DefaultPaymentInfo(paymentId,
+            return new DefaultPaymentInfoEvent(paymentId,
                                    amount,
                                    refundAmount,
                                    bankIdentificationNumber,
@@ -357,7 +357,7 @@ public class DefaultPaymentInfo implements PaymentInfoEvent {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        final DefaultPaymentInfo that = (DefaultPaymentInfo) o;
+        final DefaultPaymentInfoEvent that = (DefaultPaymentInfoEvent) o;
 
         if (amount != null ? !(amount.compareTo(that.amount) == 0) : that.amount != null) return false;
         if (bankIdentificationNumber != null ? !bankIdentificationNumber.equals(that.bankIdentificationNumber) : that.bankIdentificationNumber != null)

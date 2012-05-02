@@ -28,9 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class InMemoryBus implements Bus {
 
-    private final static String EVENT_BUS_IDENTIFIER = "bus-service";
-    private final static String EVENT_BUS_GROUP_NAME = "bus-grp";
-    private final static String EVENT_BUS_TH_NAME = "bus-th";
+ 
 
     private static final Logger log = LoggerFactory.getLogger(InMemoryBus.class);
 
@@ -64,15 +62,15 @@ public class InMemoryBus implements Bus {
 
     public InMemoryBus() {
 
-        final ThreadGroup group = new ThreadGroup(EVENT_BUS_GROUP_NAME);
+        final ThreadGroup group = new ThreadGroup(DefaultBusService.EVENT_BUS_GROUP_NAME);
         Executor executor = Executors.newCachedThreadPool(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
-                return new Thread(group, r, EVENT_BUS_TH_NAME);
+                return new Thread(group, r, DefaultBusService.EVENT_BUS_TH_NAME);
             }
         });
 
-        this.delegate = new EventBusDelegate(EVENT_BUS_IDENTIFIER, group, executor);
+        this.delegate = new EventBusDelegate(DefaultBusService.EVENT_BUS_IDENTIFIER, group, executor);
         this.isInitialized = new AtomicBoolean(false);
     }
 

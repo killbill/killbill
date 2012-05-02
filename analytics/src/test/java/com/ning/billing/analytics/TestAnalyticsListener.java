@@ -23,9 +23,12 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
@@ -33,10 +36,13 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
 public class TestAnalyticsListener
 {
@@ -52,12 +58,23 @@ public class TestAnalyticsListener
     private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
     private final PriceList priceList = null;
 
+    private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
+    private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
+    
+    
     private AnalyticsListener listener;
 
+    @BeforeClass(alwaysRun = true) 
+    public void setupCatalog() {
+        ((ZombieControl) catalog).addResult("findPlan", plan);
+        ((ZombieControl) catalog).addResult("findPhase", phase);        
+        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);        
+        
+    }
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
     {
-        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, new MockEntitlementUserApi(bundleUUID, KEY), new MockAccountUserApi(ACCOUNT_KEY, CURRENCY));
+        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, catalogService, new MockEntitlementUserApi(bundleUUID, KEY), new MockAccountUserApi(ACCOUNT_KEY, CURRENCY));
         listener = new AnalyticsListener(recorder, null);
     }
 
@@ -66,28 +83,28 @@ public class TestAnalyticsListener
     {
         // Create a subscription
         final DateTime effectiveTransitionTime = new DateTime(DateTimeZone.UTC);
-        final DateTime requestedTransitionTime = new DateTime(DateTimeZone.UTC);
+        final DateTime requestedTransitionTime = effectiveTransitionTime;
         final SubscriptionTransitionData firstTransition = createFirstSubscriptionTransition(requestedTransitionTime, effectiveTransitionTime);
         final BusinessSubscriptionTransition firstBST = createExpectedFirstBST(firstTransition.getId(), requestedTransitionTime, effectiveTransitionTime);
-        listener.handleSubscriptionTransitionChange(firstTransition);
+        listener.handleSubscriptionTransitionChange(new DefaultSubscriptionEvent(firstTransition, effectiveTransitionTime));
         Assert.assertEquals(dao.getTransitions(KEY).size(), 1);
         Assert.assertEquals(dao.getTransitions(KEY).get(0), firstBST);
 
         // Cancel it
         final DateTime effectiveCancelTransitionTime = new DateTime(DateTimeZone.UTC);
-        final DateTime requestedCancelTransitionTime = new DateTime(DateTimeZone.UTC);
+        final DateTime requestedCancelTransitionTime = effectiveCancelTransitionTime;
         final SubscriptionTransitionData cancelledSubscriptionTransition = createCancelSubscriptionTransition(requestedCancelTransitionTime, effectiveCancelTransitionTime, firstTransition.getNextState());
         final BusinessSubscriptionTransition cancelledBST = createExpectedCancelledBST(cancelledSubscriptionTransition.getId(), requestedCancelTransitionTime, effectiveCancelTransitionTime, firstBST.getNextSubscription());
-        listener.handleSubscriptionTransitionChange(cancelledSubscriptionTransition);
+        listener.handleSubscriptionTransitionChange(new DefaultSubscriptionEvent(cancelledSubscriptionTransition, effectiveTransitionTime));
         Assert.assertEquals(dao.getTransitions(KEY).size(), 2);
         Assert.assertEquals(dao.getTransitions(KEY).get(1), cancelledBST);
 
        // Recreate it
         final DateTime effectiveRecreatedTransitionTime = new DateTime(DateTimeZone.UTC);
-        final DateTime requestedRecreatedTransitionTime = new DateTime(DateTimeZone.UTC);
+        final DateTime requestedRecreatedTransitionTime = effectiveRecreatedTransitionTime;
         final SubscriptionTransitionData recreatedSubscriptionTransition = createRecreatedSubscriptionTransition(requestedRecreatedTransitionTime, effectiveRecreatedTransitionTime, cancelledSubscriptionTransition.getNextState());
         final BusinessSubscriptionTransition recreatedBST = createExpectedRecreatedBST(recreatedSubscriptionTransition.getId(), requestedRecreatedTransitionTime, effectiveRecreatedTransitionTime, cancelledBST.getNextSubscription());
-        listener.handleSubscriptionTransitionChange(recreatedSubscriptionTransition);
+        listener.handleSubscriptionTransitionChange(new DefaultSubscriptionEvent(recreatedSubscriptionTransition, effectiveTransitionTime));
         Assert.assertEquals(dao.getTransitions(KEY).size(), 3);
         Assert.assertEquals(dao.getTransitions(KEY).get(2), recreatedBST);
 
@@ -95,20 +112,21 @@ public class TestAnalyticsListener
 
     private BusinessSubscriptionTransition createExpectedFirstBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime)
     {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(plan);
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(plan.getName(), catalog, effectiveTransitionTime, effectiveTransitionTime);
+                
         final Subscription.SubscriptionState subscriptionState = Subscription.SubscriptionState.ACTIVE;
         return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, null, subscriptionState);
     }
 
     private BusinessSubscriptionTransition createExpectedCancelledBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription)
     {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan);
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan.getName(), catalog, effectiveTransitionTime, effectiveTransitionTime);
         return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, null);
     }
 
     private BusinessSubscriptionTransition createExpectedRecreatedBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription)
     {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionRecreated(plan);
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionRecreated(plan.getName(), catalog, effectiveTransitionTime, effectiveTransitionTime);
         final Subscription.SubscriptionState subscriptionState = Subscription.SubscriptionState.ACTIVE;
         return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, subscriptionState);
     }
@@ -132,13 +150,13 @@ public class TestAnalyticsListener
             previousSubscription,
             nextState == null ? null : new BusinessSubscription(
                 null,
-                plan,
-                phase,
+                plan.getName(),
+                phase.getName(),
                 CURRENCY,
                 effectiveTransitionTime,
                 nextState,
                 subscriptionId,
-                bundleUUID
+                bundleUUID, catalog
             )
         );
     }

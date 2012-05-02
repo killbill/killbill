@@ -22,8 +22,13 @@ import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
 public class DefaultBusService implements BusService {
 
-    private final static String EVENT_BUS_SERVICE = "bus-service";
-
+    
+    public final static String EVENT_BUS_GROUP_NAME = "bus-grp";
+    public final static String EVENT_BUS_TH_NAME = "bus-th";
+    
+    public final static String EVENT_BUS_SERVICE = "bus-service";
+    public final static String EVENT_BUS_IDENTIFIER = EVENT_BUS_SERVICE;
+    
     private final Bus eventBus;
 
     @Inject

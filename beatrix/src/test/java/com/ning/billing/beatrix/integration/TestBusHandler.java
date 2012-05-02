@@ -28,7 +28,7 @@ import org.testng.Assert;
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
@@ -71,7 +71,7 @@ public class TestBusHandler {
     }
 
     @Subscribe
-    public void handleEntitlementEvents(SubscriptionEventTransition event) {
+    public void handleEntitlementEvents(SubscriptionEvent event) {
         log.info(String.format("TestBusHandler Got subscription event %s", event.toString()));
         switch (event.getTransitionType()) {
         case MIGRATE_ENTITLEMENT:

@@ -39,7 +39,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
-import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
+import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
@@ -183,7 +183,7 @@ public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
                     saveTagsFromWithinTransaction(account, accountSqlDao, context);
                     saveCustomFieldsFromWithinTransaction(account, accountSqlDao, context);
 
-                    AccountChangeEvent changeEvent = new DefaultAccountChangeNotification(account.getId(), context.getUserToken(), currentAccount, account);
+                    AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         eventBus.post(changeEvent);
                     }

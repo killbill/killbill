@@ -32,12 +32,12 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.user.DefaultEmptyInvoiceNotification;
+import com.ning.billing.invoice.api.user.DefaultEmptyInvoiceEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.InvoiceGenerator;
@@ -88,7 +88,7 @@ public class InvoiceDispatcher {
         VERBOSE_OUTPUT = (verboseOutputValue != null) && Boolean.parseBoolean(verboseOutputValue);
     }
 
-    public void processSubscription(final SubscriptionEventTransition transition,
+    public void processSubscription(final SubscriptionEvent transition,
                                     final CallContext context) throws InvoiceApiException {
         UUID subscriptionId = transition.getSubscriptionId();
         DateTime targetDate = transition.getEffectiveTransitionTime();
@@ -136,7 +136,7 @@ public class InvoiceDispatcher {
 
     private void postEmptyInvoiceEvent(final UUID accountId, final UUID userToken) {
         try {
-            BusEvent event = new DefaultEmptyInvoiceNotification(accountId, clock.getUTCNow(), userToken);
+            BusEvent event = new DefaultEmptyInvoiceEvent(accountId, clock.getUTCNow(), userToken);
             eventBus.post(event);
         } catch (EventBusException e){
             log.error("Failed to post DefaultEmptyInvoiceNotification event for account {} ", accountId, e);

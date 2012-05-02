@@ -16,12 +16,17 @@
 
 package com.ning.billing.analytics;
 
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
@@ -43,6 +48,9 @@ public class TestBusinessSubscriptionTransition
     private String accountKey;
     private BusinessSubscriptionTransition transition;
 
+    private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
+    private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
+    
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
     {
@@ -52,9 +60,15 @@ public class TestBusinessSubscriptionTransition
         final Subscription prevISubscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
         final Subscription nextISubscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
 
-        prevSubscription = new BusinessSubscription(prevISubscription, USD);
-        nextSubscription = new BusinessSubscription(nextISubscription, USD);
-        event = BusinessSubscriptionEvent.subscriptionCancelled(prevISubscription.getCurrentPlan());
+        ((ZombieControl) catalog).addResult("findPlan", plan);
+        ((ZombieControl) catalog).addResult("findPhase", phase);        
+        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog); 
+        
+        DateTime now = new DateTime();
+        
+        prevSubscription = new BusinessSubscription(prevISubscription, USD, catalog);
+        nextSubscription = new BusinessSubscription(nextISubscription, USD, catalog);
+        event = BusinessSubscriptionEvent.subscriptionCancelled(prevISubscription.getCurrentPlan().getName(), catalog, now, now);
         requestedTimestamp = new DateTime(DateTimeZone.UTC);
         id = UUID.randomUUID();
         key = "1234";

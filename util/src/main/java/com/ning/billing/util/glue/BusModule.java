@@ -21,14 +21,50 @@ import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.InMemoryBus;
+import com.ning.billing.util.bus.PersistentBus;
 
 public class BusModule extends AbstractModule {
 
+    private final BusType type;
+    
+    public BusModule() {
+        super();
+        // Default to Memory at this point
+        type = BusType.MEMORY;
+    }
+
+    public BusModule(BusType type) {
+        super();
+        this.type = type;
+    }
+
+    public enum BusType {
+        MEMORY,
+        PERSISTENT
+    }
+    
     @Override
     protected void configure() {
         bind(BusService.class).to(DefaultBusService.class);
-        bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
-
+        switch(type) {
+        case MEMORY:
+            configureInMemoryEventBus();
+            break;
+        case PERSISTENT:
+            configurePersistentEventBus();
+            break;
+        default:
+            new RuntimeException("Unrecognized EventBus type " + type);
+        }
+        
     }
 
+    private void configurePersistentEventBus() {
+        bind(Bus.class).to(PersistentBus.class).asEagerSingleton();
+        
+    }
+    
+    private void configureInMemoryEventBus() {
+        bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
+    }
 }

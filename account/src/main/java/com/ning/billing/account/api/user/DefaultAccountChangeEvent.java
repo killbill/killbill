@@ -25,42 +25,102 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class DefaultAccountChangeNotification implements AccountChangeEvent {
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
+
+public class DefaultAccountChangeEvent implements AccountChangeEvent {
 	
 	private final UUID userToken;
     private final List<ChangedField> changedFields;
-    private final UUID id;
+    private final UUID accountId;
 
-    public DefaultAccountChangeNotification(UUID id, UUID userToken, Account oldData, Account newData) {
-        this.id = id;
+    
+    @JsonCreator
+    public DefaultAccountChangeEvent(@JsonProperty("userToken") UUID userToken,
+            @JsonProperty("changeFields") List<ChangedField> changedFields,
+            @JsonProperty("accountId") UUID accountId) {
+        super();
+        this.userToken = userToken;
+        this.accountId = accountId;
+        this.changedFields = changedFields;
+        //new ArrayList<ChangedField>();
+        //this.changedFields.addAll(changedFields);
+    }
+
+    public DefaultAccountChangeEvent(UUID id, UUID userToken, Account oldData, Account newData) {
+        this.accountId = id;
         this.userToken = userToken;
         this.changedFields = calculateChangedFields(oldData, newData);
     }
 
-    
+    @JsonIgnore
 	@Override
 	public BusEventType getBusEventType() {
 		return BusEventType.ACCOUNT_CHANGE;
 	}
 
-	   @Override
-	    public UUID getUserToken() {
-	    	return userToken;
-	    }
+    @Override
+    public UUID getUserToken() {
+        return userToken;
+	}
 
     @Override
     public UUID getAccountId() {
-        return id;
+        return accountId;
     }
 
+    @JsonDeserialize(contentAs = DefaultChangedField.class)
     @Override
     public List<ChangedField> getChangedFields() {
         return changedFields;
     }
 
+    @JsonIgnore
     @Override
     public boolean hasChanges() {
         return (changedFields.size() > 0);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((accountId == null) ? 0 : accountId.hashCode());
+        result = prime * result
+                + ((changedFields == null) ? 0 : changedFields.hashCode());
+        result = prime * result
+                + ((userToken == null) ? 0 : userToken.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DefaultAccountChangeEvent other = (DefaultAccountChangeEvent) obj;
+        if (accountId == null) {
+            if (other.accountId != null)
+                return false;
+        } else if (!accountId.equals(other.accountId))
+            return false;
+        if (changedFields == null) {
+            if (other.changedFields != null)
+                return false;
+        } else if (!changedFields.equals(other.changedFields))
+            return false;
+        if (userToken == null) {
+            if (other.userToken != null)
+                return false;
+        } else if (!userToken.equals(other.userToken))
+            return false;
+        return true;
     }
 
     private List<ChangedField> calculateChangedFields(Account oldData, Account newData) {
