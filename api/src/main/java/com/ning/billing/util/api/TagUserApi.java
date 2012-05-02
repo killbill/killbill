@@ -57,7 +57,6 @@ public interface TagUserApi {
      */
     public void deleteTagDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
 
-    
 	/**
 	 * 
 	 * @param name

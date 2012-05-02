@@ -22,11 +22,11 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.tag.Tag;
 
 public class MockAccountUserApi implements AccountUserApi {
     private final CopyOnWriteArrayList<Account> accounts = new CopyOnWriteArrayList<Account>();
@@ -61,7 +61,7 @@ public class MockAccountUserApi implements AccountUserApi {
 
     @Override
     public Account createAccount(final AccountData data, final List<CustomField> fields,
-                                 final List<Tag> tags, final CallContext context) throws AccountApiException {
+                                 final List<TagDefinition> tagDefinitions, final CallContext context) throws AccountApiException {
         Account result = new DefaultAccount(data);
         accounts.add(result);
         return result;
@@ -119,7 +119,7 @@ public class MockAccountUserApi implements AccountUserApi {
 
 	@Override
 	public Account migrateAccount(final MigrationAccountData data,
-			final List<CustomField> fields, final List<Tag> tags, final CallContext context)
+			final List<CustomField> fields, final List<TagDefinition> tagDefinitions, final CallContext context)
 			throws AccountApiException {
 		Account result = new DefaultAccount(data);
         accounts.add(result);

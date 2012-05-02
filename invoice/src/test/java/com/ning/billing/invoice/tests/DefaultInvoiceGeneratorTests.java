@@ -22,11 +22,14 @@ import static org.testng.Assert.assertNull;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
@@ -717,6 +720,117 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         existingInvoices.add(invoice);
         assertEquals(invoice.getTotalAmount(), expectedAmount);
+    }
+
+    @Test(groups = {"fast", "invoicing"})
+    public void testAddOnInvoiceGeneration() throws CatalogApiException, InvoiceApiException {
+        DateTime april25 = new DateTime(2012, 4, 25, 0, 0, 0, 0);
+
+        // create a base plan on April 25th
+        UUID accountId = UUID.randomUUID();
+        Subscription baseSubscription = createZombieSubscription();
+
+        Plan basePlan = new MockPlan("base Plan");
+        MockInternationalPrice price5 = new MockInternationalPrice(new DefaultPrice(FIVE, Currency.USD));
+        MockInternationalPrice price10 = new MockInternationalPrice(new DefaultPrice(TEN, Currency.USD));
+        MockInternationalPrice price20 = new MockInternationalPrice(new DefaultPrice(TWENTY, Currency.USD));
+        PlanPhase basePlanEvergreen = new MockPlanPhase(price10, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+
+        BillingEventSet events = new BillingEventSet();
+        events.add(createBillingEvent(baseSubscription.getId(), april25, basePlan, basePlanEvergreen, 25));
+
+        // generate invoice
+        Invoice invoice1 = generator.generateInvoice(accountId, events, null, april25, Currency.USD);
+        assertNotNull(invoice1);
+        assertEquals(invoice1.getNumberOfItems(), 1);
+        assertEquals(invoice1.getTotalAmount().compareTo(TEN), 0);
+
+        List<Invoice> invoices = new ArrayList<Invoice>();
+        invoices.add(invoice1);
+
+        // create 2 add ons on April 28th
+        DateTime april28 = new DateTime(2012, 4, 28, 0, 0, 0, 0);
+        Subscription addOnSubscription1 = createZombieSubscription();
+        Plan addOn1Plan = new MockPlan("add on 1");
+        PlanPhase addOn1PlanPhaseEvergreen = new MockPlanPhase(price5, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        events.add(createBillingEvent(addOnSubscription1.getId(), april28, addOn1Plan, addOn1PlanPhaseEvergreen, 25));
+
+        Subscription addOnSubscription2 = createZombieSubscription();
+        Plan addOn2Plan = new MockPlan("add on 2");
+        PlanPhase addOn2PlanPhaseEvergreen = new MockPlanPhase(price20, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        events.add(createBillingEvent(addOnSubscription2.getId(), april28, addOn2Plan, addOn2PlanPhaseEvergreen, 25));
+
+        // generate invoice
+        Invoice invoice2 = generator.generateInvoice(accountId, events, invoices, april28, Currency.USD);
+        invoices.add(invoice2);
+        assertNotNull(invoice2);
+        assertEquals(invoice2.getNumberOfItems(), 2);
+        assertEquals(invoice2.getTotalAmount().compareTo(TWENTY_FIVE.multiply(new BigDecimal("0.9")).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD)), 0);
+
+        // perform a repair (change base plan; remove one add-on)
+        // event stream should include just two plans
+        BillingEventSet newEvents = new BillingEventSet();
+        Plan basePlan2 = new MockPlan("base plan 2");
+        MockInternationalPrice price13 = new MockInternationalPrice(new DefaultPrice(THIRTEEN, Currency.USD));
+        PlanPhase basePlan2Phase = new MockPlanPhase(price13, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        newEvents.add(createBillingEvent(baseSubscription.getId(), april25, basePlan2, basePlan2Phase, 25));
+        newEvents.add(createBillingEvent(addOnSubscription1.getId(), april28, addOn1Plan, addOn1PlanPhaseEvergreen, 25));
+
+        // generate invoice
+        DateTime may1 = new DateTime(2012, 5, 1, 0, 0, 0, 0);
+        Invoice invoice3 = generator.generateInvoice(accountId, newEvents, invoices, may1, Currency.USD);
+        assertNotNull(invoice3);
+        assertEquals(invoice3.getNumberOfItems(), 5);
+        // -4.50 -18 - 10 (to correct the previous 2 invoices) + 4.50 + 13
+        assertEquals(invoice3.getTotalAmount().compareTo(FIFTEEN.negate()), 0);
+    }
+
+    @Test
+    public void testRepairForPaidInvoice() throws CatalogApiException, InvoiceApiException {
+        // create an invoice
+        DateTime april25 = new DateTime(2012, 4, 25, 0, 0, 0, 0);
+
+        // create a base plan on April 25th
+        UUID accountId = UUID.randomUUID();
+        Subscription originalSubscription = createZombieSubscription();
+
+        Plan originalPlan = new MockPlan("original plan");
+        MockInternationalPrice price10 = new MockInternationalPrice(new DefaultPrice(TEN, Currency.USD));
+        PlanPhase originalPlanEvergreen = new MockPlanPhase(price10, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+
+        BillingEventSet events = new BillingEventSet();
+        events.add(createBillingEvent(originalSubscription.getId(), april25, originalPlan, originalPlanEvergreen, 25));
+
+        Invoice invoice1 = generator.generateInvoice(accountId, events, null, april25, Currency.USD);
+        List<Invoice> invoices = new ArrayList<Invoice>();
+        invoices.add(invoice1);
+
+        // pay the invoice
+        invoice1.addPayment(new DefaultInvoicePayment(UUID.randomUUID(), invoice1.getId(), april25, TEN, Currency.USD));
+        assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
+
+        // change the plan (i.e. repair) on start date
+        events.clear();
+        Subscription newSubscription = createZombieSubscription();
+        Plan newPlan = new MockPlan("new plan");
+        MockInternationalPrice price5 = new MockInternationalPrice(new DefaultPrice(FIVE, Currency.USD));
+        PlanPhase newPlanEvergreen = new MockPlanPhase(price5, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        events.add(createBillingEvent(newSubscription.getId(), april25, newPlan, newPlanEvergreen, 25));
+
+        // generate a new invoice
+        Invoice invoice2 = generator.generateInvoice(accountId, events, invoices, april25, Currency.USD);
+        invoices.add(invoice2);
+
+        // move items to the correct invoice (normally, the dao calls will sort that out)
+        generator.distributeItems(invoices);
+
+        // ensure that the original invoice balance is zero
+
+        assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
+
+        // ensure that the account balance is correct
+        assertEquals(invoice2.getBalance().compareTo(FIVE.negate()), 0);
+
     }
 
     // TODO: Jeff C -- how do we ensure that an annual add-on is properly aligned *at the end* with the base plan?

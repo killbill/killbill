@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.util.tag.TagDefinition;
 import org.apache.commons.lang.NotImplementedException;
 
 import com.ning.billing.account.api.Account;
@@ -31,7 +32,6 @@ import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.tag.Tag;
 
 public class MockAccountUserApi implements AccountUserApi
 {
@@ -45,7 +45,8 @@ public class MockAccountUserApi implements AccountUserApi
     }
 
     @Override
-    public Account createAccount(final AccountData data, final List<CustomField> fields, final List<Tag> tags, final CallContext context)
+    public Account createAccount(final AccountData data, final List<CustomField> fields,
+                                 final List<TagDefinition> tagDefinitions, final CallContext context)
     {
         throw new UnsupportedOperationException();
     }
@@ -89,7 +90,7 @@ public class MockAccountUserApi implements AccountUserApi
 
     @Override
 	public Account migrateAccount(MigrationAccountData data,
-			List<CustomField> fields, List<Tag> tags, final CallContext context)
+			List<CustomField> fields, List<TagDefinition> tagDefinitions, final CallContext context)
 			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}

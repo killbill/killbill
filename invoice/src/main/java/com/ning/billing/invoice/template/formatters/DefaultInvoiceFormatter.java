@@ -38,6 +38,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
@@ -239,8 +240,13 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public boolean hasTag(String tagName) {
-        return invoice.hasTag(tagName);
+    public boolean hasTag(TagDefinition tagDefinition) {
+        return invoice.hasTag(tagDefinition);
+    }
+
+    @Override
+    public boolean hasTag(ControlTagType controlTagType) {
+        return invoice.hasTag(controlTagType);
     }
 
     @Override
@@ -251,6 +257,11 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     @Override
     public void addTags(List<Tag> tags) {
         invoice.addTags(tags);
+    }
+
+    @Override
+    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
+        invoice.addTagsFromDefinitions(tagDefinitions);
     }
 
     @Override

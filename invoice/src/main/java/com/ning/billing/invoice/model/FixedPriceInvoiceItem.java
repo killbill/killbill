@@ -38,7 +38,7 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public InvoiceItem asCredit() {
+    public InvoiceItem asReversingItem() {
         throw new UnsupportedOperationException();
     }
 

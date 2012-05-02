@@ -86,7 +86,7 @@ public class TestUserApiAddOn extends TestApiBase {
     }
 
     @Test(enabled=true, groups={"slow"})
-    public void testCancelBPWthAddon() {
+    public void testCancelBPWithAddon() {
         try {
 
             String baseProduct = "Shotgun";
@@ -114,6 +114,7 @@ public class TestUserApiAddOn extends TestApiBase {
             // SET CTD TO CANCEL IN FUTURE
             DateTime now = clock.getUTCNow();
             Duration ctd = getDurationMonth(1);
+            // Why not just use clock.getUTCNow().plusMonths(1) ?
             DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
             billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
@@ -125,7 +126,6 @@ public class TestUserApiAddOn extends TestApiBase {
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(aoSubscription.isSubscriptionFutureCancelled());
-
 
             // MOVE AFTER CANCELLATION
             testListener.reset();
@@ -145,7 +145,7 @@ public class TestUserApiAddOn extends TestApiBase {
 
 
     @Test(enabled=true, groups={"slow"})
-    public void testChangeBPWthAddonNonIncluded() {
+    public void testChangeBPWithAddonNonIncluded() {
         try {
 
             String baseProduct = "Shotgun";
@@ -198,7 +198,7 @@ public class TestUserApiAddOn extends TestApiBase {
     }
 
     @Test(enabled=true, groups={"slow"})
-    public void testChangeBPWthAddonNonAvailable() {
+    public void testChangeBPWithAddonNonAvailable() {
         try {
 
             String baseProduct = "Shotgun";

@@ -87,31 +87,9 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
                 updatedBy, updatedDate);
 	}
 
-	/**
+	/*
 	 * This call is used for testing and update from an existing account
-	 * @param id
-	 * @param externalKey
-	 * @param email
-	 * @param name
-	 * @param firstNameLength
-	 * @param currency
-	 * @param billCycleDay
-	 * @param paymentProviderName
-	 * @param timeZone
-	 * @param locale
-	 * @param address1
-	 * @param address2
-	 * @param companyName
-	 * @param city
-	 * @param stateOrProvince
-	 * @param country
-	 * @param postalCode
-	 * @param phone
-     * @param isMigrated
-     * @param isNotifiedForInvoices
-	 * @param createdDate
-	 * @param updatedDate
-	 */
+     */
 	public DefaultAccount(final UUID id, final String externalKey, final String email,
                           final String name, final int firstNameLength,
                           final Currency currency, final int billCycleDay, final String paymentProviderName,
@@ -296,7 +274,7 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 				", stateOrProvince=" + stateOrProvince +
 				", postalCode=" + postalCode +
 				", country=" + country +
-				", tags=" + tags +
+				", tagStore=" + tagStore +
                 ", fields=" + fields +
                 "]";
 	}

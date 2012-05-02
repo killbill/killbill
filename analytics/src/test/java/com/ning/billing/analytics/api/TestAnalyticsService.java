@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.tag.TagDefinition;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -87,8 +88,6 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.tag.DefaultTagDefinition;
-import com.ning.billing.util.tag.DescriptiveTag;
-import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
 @Guice(modules = {AnalyticsTestModule.class, MockCatalogModule.class})
@@ -161,11 +160,11 @@ public class TestAnalyticsService {
 
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, ACCOUNT_CURRENCY);
         try {
-            final List<Tag> tags = new ArrayList<Tag>();
-            tags.add(new DescriptiveTag(TAG_ONE));
-            tags.add(new DescriptiveTag(TAG_TWO));
+            final List<TagDefinition> tagDefinitions = new ArrayList<TagDefinition>();
+            tagDefinitions.add(TAG_ONE);
+            tagDefinitions.add(TAG_TWO);
 
-            final Account storedAccount = accountApi.createAccount(account, null, tags, context);
+            final Account storedAccount = accountApi.createAccount(account, null, tagDefinitions, context);
 
             // Create events for the bus and expected results
             createSubscriptionTransitionEvent(storedAccount);

@@ -653,7 +653,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoiceDao.addControlTag(ControlTagType.WRITTEN_OFF, invoice.getId(), context);
 
         Invoice savedInvoice = invoiceDao.getById(invoice.getId());
-        assertTrue(savedInvoice.hasTag(ControlTagType.WRITTEN_OFF.toString()));
+        assertTrue(savedInvoice.hasTag(ControlTagType.WRITTEN_OFF));
     }
 
     @Test
@@ -683,10 +683,10 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoiceDao.addControlTag(ControlTagType.WRITTEN_OFF, invoice.getId(), context);
 
         Invoice savedInvoice = invoiceDao.getById(invoice.getId());
-        assertTrue(savedInvoice.hasTag(ControlTagType.WRITTEN_OFF.toString()));
+        assertTrue(savedInvoice.hasTag(ControlTagType.WRITTEN_OFF));
 
         invoiceDao.removeControlTag(ControlTagType.WRITTEN_OFF, invoice.getId(), context);
         savedInvoice = invoiceDao.getById(invoice.getId());
-        assertFalse(savedInvoice.hasTag(ControlTagType.WRITTEN_OFF.toString()));
+        assertFalse(savedInvoice.hasTag(ControlTagType.WRITTEN_OFF));
     }
 }

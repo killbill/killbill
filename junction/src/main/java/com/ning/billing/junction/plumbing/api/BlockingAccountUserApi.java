@@ -29,10 +29,9 @@ import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.glue.RealImplementation;
-import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 
 public class BlockingAccountUserApi implements AccountUserApi {
-    
     private AccountUserApi userApi;
 
     @Inject
@@ -41,15 +40,15 @@ public class BlockingAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account createAccount(AccountData data, List<CustomField> fields, List<Tag> tags, CallContext context)
+    public Account createAccount(AccountData data, List<CustomField> fields, List<TagDefinition> tagDefinitions, CallContext context)
             throws AccountApiException {
-        return userApi.createAccount(data, fields, tags, context);
+        return userApi.createAccount(data, fields, tagDefinitions, context);
     }
 
     @Override
-    public Account migrateAccount(MigrationAccountData data, List<CustomField> fields, List<Tag> tags,
+    public Account migrateAccount(MigrationAccountData data, List<CustomField> fields, List<TagDefinition> tagDefinitions,
             CallContext context) throws AccountApiException {
-        return userApi.migrateAccount(data, fields, tags, context);
+        return userApi.migrateAccount(data, fields, tagDefinitions, context);
     }
 
     @Override

@@ -32,7 +32,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTime;
 
 public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
@@ -47,10 +47,10 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 
     @Override
     public Account createAccount(final AccountData data, final List<CustomField> fields,
-                                 final List<Tag> tags, final CallContext context) throws AccountApiException {
+                                 final List<TagDefinition> tagDefinitions, final CallContext context) throws AccountApiException {
         Account account = new DefaultAccount(data);
         account.setFields(fields);
-        account.addTags(tags);
+        account.addTagsFromDefinitions(tagDefinitions);
 
         try {
             dao.create(account, context);
@@ -113,14 +113,14 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 
 	@Override
 	public Account migrateAccount(final MigrationAccountData data, final List<CustomField> fields,
-                                  final List<Tag> tags, final CallContext context)
+                                  final List<TagDefinition> tagDefinitions, final CallContext context)
             throws AccountApiException {
         DateTime createdDate = data.getCreatedDate() == null ? context.getCreatedDate() : data.getCreatedDate();
         DateTime updatedDate = data.getUpdatedDate() == null ? context.getUpdatedDate() : data.getUpdatedDate();
         CallContext migrationContext = factory.toMigrationCallContext(context, createdDate, updatedDate);
 		Account account = new DefaultAccount(data);
         account.setFields(fields);
-        account.addTags(tags);
+        account.addTagsFromDefinitions(tagDefinitions);
 
         try {
             dao.create(account, migrationContext);

@@ -55,8 +55,8 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
-    public InvoiceItem asCredit() {
-        return item.asCredit();
+    public InvoiceItem asReversingItem() {
+        return item.asReversingItem();
     }
 
     @Override

@@ -119,7 +119,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public abstract InvoiceItem asCredit();
+    public abstract InvoiceItem asReversingItem();
 
     @Override
     public abstract String getDescription();

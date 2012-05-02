@@ -115,7 +115,7 @@ public class TestTagStore {
                 public Void withHandle(Handle handle) throws Exception {
                     handle.createScript("delete from tag_definitions").execute();
                     handle.createScript("delete from tag_definition_history").execute();
-                    handle.createScript("delete from tags").execute();
+                    handle.createScript("delete from tagStore").execute();
                     handle.createScript("delete from tag_history").execute();
                     return null;
                 }
@@ -309,7 +309,7 @@ public class TestTagStore {
         try {
             tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
         } catch (TagDefinitionApiException e) {
-            fail("Could not delete tags for tag definition", e);
+            fail("Could not delete tagStore for tag definition", e);
         }
 
         try {
@@ -334,7 +334,7 @@ public class TestTagStore {
         try {
             tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
         } catch (TagDefinitionApiException e) {
-            fail("Could not delete tags for tag definition", e);
+            fail("Could not delete tagStore for tag definition", e);
         }
 
         try {

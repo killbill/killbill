@@ -19,8 +19,10 @@ package com.ning.billing.invoice.model;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -59,9 +61,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     */
     @Override
     public Invoice generateInvoice(final UUID accountId, @Nullable final BillingEventSet events,
-                                   @Nullable final List<Invoice> existingInvoices,
-                                   DateTime targetDate,
-                                   final Currency targetCurrency) throws InvoiceApiException {
+                                         @Nullable final List<Invoice> existingInvoices,
+                                         DateTime targetDate,
+                                         final Currency targetCurrency) throws InvoiceApiException {
         if ((events == null) || (events.size() == 0)) {
             return null;
         }
@@ -91,15 +93,87 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         for (InvoiceItem existingItem : existingItems) {
             if (existingItem instanceof RecurringInvoiceItem) {
                 RecurringInvoiceItem recurringItem = (RecurringInvoiceItem) existingItem;
-                proposedItems.add(recurringItem.asCredit());
+                proposedItems.add(recurringItem.asReversingItem());
             }
         }
+
+        addCreditItems(accountId, proposedItems, existingInvoices, targetCurrency);
 
         if (proposedItems == null || proposedItems.size() == 0) {
             return null;
         } else {
             invoice.addInvoiceItems(proposedItems);
+
             return invoice;
+        }
+    }
+
+   /*
+    * ensures that the balance of all invoices are zero or positive, adding an adjusting credit item if needed
+    */
+    private void addCreditItems(UUID accountId, List<InvoiceItem> invoiceItems, List<Invoice> invoices, Currency currency) {
+        Map<UUID, BigDecimal> invoiceBalances = new HashMap<UUID, BigDecimal>();
+
+        updateInvoiceBalance(invoiceItems, invoiceBalances);
+
+        // add all existing items and payments
+        for (Invoice invoice : invoices) {
+            updateInvoiceBalance(invoice.getInvoiceItems(), invoiceBalances);
+        }
+
+        for (Invoice invoice : invoices) {
+            UUID invoiceId = invoice.getId();
+            invoiceBalances.put(invoiceId, invoiceBalances.get(invoiceId).subtract(invoice.getAmountPaid()));
+        }
+
+        BigDecimal creditTotal = BigDecimal.ZERO;
+
+        for (UUID invoiceId : invoiceBalances.keySet()) {
+            BigDecimal balance = invoiceBalances.get(invoiceId);
+            if (balance.compareTo(BigDecimal.ZERO) < 0) {
+                creditTotal = creditTotal.add(balance.negate());
+                invoiceItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), balance, currency));
+            }
+        }
+
+        if (creditTotal.compareTo(BigDecimal.ZERO) != 0) {
+            // create a single credit item to cover all credits
+            //invoiceItems.add(new CreditInvoiceItem());
+        }
+    }
+
+    private void updateInvoiceBalance(List<InvoiceItem> items, Map<UUID, BigDecimal> invoiceBalances) {
+        for (InvoiceItem item : items) {
+            UUID invoiceId = item.getInvoiceId();
+
+            if (!invoiceBalances.containsKey(invoiceId)) {
+                invoiceBalances.put(invoiceId, BigDecimal.ZERO);
+            }
+
+            invoiceBalances.put(invoiceId, invoiceBalances.get(invoiceId).add(item.getAmount()));
+        }
+    }
+
+    @Override
+    public void distributeItems(List<Invoice> invoices) {
+        Map<UUID, Invoice> invoiceMap = new HashMap<UUID, Invoice>();
+
+        for (Invoice invoice : invoices) {
+            invoiceMap.put(invoice.getId(), invoice);
+        }
+
+        for (final Invoice invoice: invoices) {
+            Iterator<InvoiceItem> itemIterator = invoice.getInvoiceItems().iterator();
+            final UUID invoiceId = invoice.getId();
+
+            while (itemIterator.hasNext()) {
+                InvoiceItem item = itemIterator.next();
+
+                if (!item.getInvoiceId().equals(invoiceId)) {
+                    invoiceMap.get(item.getInvoiceId()).addInvoiceItem(item);
+                    itemIterator.remove();
+                }
+            }
         }
     }
 

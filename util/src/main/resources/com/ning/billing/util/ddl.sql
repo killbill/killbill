@@ -119,5 +119,7 @@ CREATE TABLE audit_log (
     user_token char(36),
     PRIMARY KEY(id)
 ) ENGINE=innodb;
+CREATE INDEX audit_log_fetch_record ON audit_log(table_name, record_id);
+CREATE INDEX audit_log_user_name ON audit_log(changed_by);
 
 

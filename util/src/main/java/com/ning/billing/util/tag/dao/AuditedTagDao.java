@@ -52,10 +52,10 @@ public class AuditedTagDao extends AuditedDaoBase implements TagDao {
                                         final List<Tag> tags, final CallContext context) {
         TagSqlDao tagSqlDao = dao.become(TagSqlDao.class);
 
-        // get list of existing tags
+        // get list of existing tagStore
         List<Tag> existingTags = tagSqlDao.load(objectId.toString(), objectType);
 
-        // sort into tags to update (tagsToUpdate), tags to add (tags), and tags to delete (existingTags)
+        // sort into tagStore to update (tagsToUpdate), tagStore to add (tagStore), and tagStore to delete (existingTags)
         Iterator<Tag> tagIterator = tags.iterator();
         while (tagIterator.hasNext()) {
             Tag tag = tagIterator.next();
@@ -64,7 +64,7 @@ public class AuditedTagDao extends AuditedDaoBase implements TagDao {
             while (existingTagIterator.hasNext()) {
                 Tag existingTag = existingTagIterator.next();
                 if (tag.getTagDefinitionName().equals(existingTag.getTagDefinitionName())) {
-                    // if the tags match, remove from both lists
+                    // if the tagStore match, remove from both lists
                     // in the case of tag, this just means the tag remains associated
                     tagIterator.remove();
                     existingTagIterator.remove();
