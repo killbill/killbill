@@ -22,6 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.LOCAL_VARIABLE;
 
 import com.google.inject.BindingAnnotation;
 
@@ -32,7 +33,7 @@ import com.google.inject.BindingAnnotation;
  * is let unannotated.
  *
  */
-@BindingAnnotation @Target({ FIELD, PARAMETER, METHOD }) @Retention(RUNTIME)
+@BindingAnnotation @Target({ FIELD, PARAMETER, METHOD,LOCAL_VARIABLE }) @Retention(RUNTIME)
 public @interface RealImplementation {
 
 }

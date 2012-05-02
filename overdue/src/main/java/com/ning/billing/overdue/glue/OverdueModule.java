@@ -19,7 +19,7 @@ package com.ning.billing.overdue.glue;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.ovedue.OverdueProperties;
+import com.ning.billing.overdue.OverdueProperties;
 
 
 public class OverdueModule extends AbstractModule {

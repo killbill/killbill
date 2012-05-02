@@ -230,6 +230,7 @@ public class TestJaxrsBase {
         final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
         final String utilDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
         final String analyticsDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));        
+        final String junctionDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));        
 
         helper.startMysql();
 
@@ -239,7 +240,8 @@ public class TestJaxrsBase {
         helper.initDb(paymentDdl);
         helper.initDb(utilDdl);
         helper.initDb(analyticsDdl);        
-    }
+        helper.initDb(junctionDdl);        
+   }
 
 
     private void loadConfig() {

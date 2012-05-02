@@ -58,6 +58,7 @@ public enum ErrorCode {
     ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION(1080, "Could not find a bundle for subscription %s"),
     ENT_GET_INVALID_BUNDLE_ID(1081, "Could not find a bundle matching id %s"),
     ENT_INVALID_SUBSCRIPTION_ID(1082, "Unknown subscription %s"),
+    ENT_GET_INVALID_BUNDLE_KEY(1083, "Could not find a bundle matching key %s"),
 
     /* Repair */
     ENT_REPAIR_INVALID_DELETE_SET(1091, "Event %s is not deleted for subscription %s but prior events were"),

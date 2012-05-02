@@ -153,4 +153,10 @@ public class ClockMock extends DefaultClock {
         return truncateMs(input.plus(deltaFromRealityMs));
     }
 
+    @Override
+    public String toString() {
+        return getUTCNow().toString();
+    }
+
+    
 }

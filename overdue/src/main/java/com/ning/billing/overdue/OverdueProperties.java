@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.ovedue;
+package com.ning.billing.overdue;
 
 import org.skife.config.Config;
 import org.skife.config.Default;

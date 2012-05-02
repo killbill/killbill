@@ -20,10 +20,13 @@ package com.ning.billing.junction.plumbing.billing;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -41,26 +44,35 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.CurrencyValueNull;
+import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Price;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionEvent;
+
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
-
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.junction.api.BillingApi;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.Blockable.Type;
+import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
@@ -70,16 +82,66 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
 public class TestDefaultEntitlementBillingApi {
-	private static final UUID zeroId = new UUID(0L,0L);
-	private static final UUID oneId = new UUID(1L,0L);
-	private static final UUID twoId = new UUID(2L,0L);
+    
+    class MockPrice implements InternationalPrice {
+        private final BigDecimal price;
+        
+        public MockPrice(String val) {
+            price = new BigDecimal(val);
+        }
+        
+        @Override
+        public boolean isZero() {
+            return price.compareTo(BigDecimal.ZERO) == 0;
+        }
+        
+        @Override
+        public Price[] getPrices() {
+            return new Price[]{ 
+                    new Price() {
+
+                        @Override
+                        public Currency getCurrency() {
+                            return Currency.USD;
+                        }
+
+                        @Override
+                        public BigDecimal getValue() throws CurrencyValueNull {
+                            return price;
+                        }
+
+                    }
+            };
+        }
+        
+        @Override
+        public BigDecimal getPrice(Currency currency) throws CatalogApiException {
+             return price;
+        }
+    };
+    
+    private static final String DISABLED_BUNDLE = "disabled-bundle";
+    private static final String CLEAR_BUNDLE = "clear-bundle";
+
+	private static final UUID eventId = new UUID(0L,0L);
+	private static final UUID subId = new UUID(1L,0L);
+	private static final UUID bunId = new UUID(2L,0L);
 
 	private CatalogService catalogService;
-
 	private List<SubscriptionBundle> bundles;
 	private List<Subscription> subscriptions;
+
 	private List<SubscriptionEvent> subscriptionTransitions;
 	private EntitlementUserApi entitlementApi;
+
+    private BlockingCalculator blockCalculator = new BlockingCalculator(null) {
+        @Override
+        public void insertBlockingEvents(SortedSet<BillingEvent> billingEvents) {
+           
+        }
+        
+    };
+
 
 
 	private Clock clock;
@@ -95,7 +157,7 @@ public class TestDefaultEntitlementBillingApi {
 	@BeforeMethod(alwaysRun=true)
 	public void setupEveryTime() {
 		bundles = new ArrayList<SubscriptionBundle>();
-		final SubscriptionBundle bundle = new SubscriptionBundleData( zeroId,"TestKey", oneId,  clock.getUTCNow().minusDays(4), null);
+		final SubscriptionBundle bundle = new SubscriptionBundleData( eventId,"TestKey", subId,  clock.getUTCNow().minusDays(4), null);
 		bundles.add(bundle);
 
 
@@ -104,7 +166,7 @@ public class TestDefaultEntitlementBillingApi {
 
 		SubscriptionBuilder builder = new SubscriptionBuilder();
 		subscriptionStartDate = clock.getUTCNow().minusDays(3);
-		builder.setStartDate(subscriptionStartDate).setId(oneId);
+		builder.setStartDate(subscriptionStartDate).setId(subId).setBundleId(bunId);
 		subscription = new SubscriptionData(builder) {
 		    @Override
             public List<SubscriptionEvent> getBillingTransitions() {
@@ -135,7 +197,9 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-		BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, catalogService);
+
+		BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockCalculator, catalogService);
+
 		SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 		Assert.assertEquals(events.size(), 0);
 	}
@@ -147,10 +211,9 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0]; // The trial has no billing period
         PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-        
 
 		SubscriptionEvent t = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null,
+				eventId, subId, bunId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null,
 				SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1L, null, true), then);
 		subscriptionTransitions.add(t);
 
@@ -162,10 +225,10 @@ public class TestDefaultEntitlementBillingApi {
 		       
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, catalogService);
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockCalculator, catalogService);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
-		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
+		checkFirstEvent(events, nextPlan, 32, subId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
     @Test(enabled=true, groups="fast")
@@ -176,7 +239,7 @@ public class TestDefaultEntitlementBillingApi {
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
 		PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 		SubscriptionEvent t = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, 
+		        eventId, subId, bunId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, 
 				nextPlan, nextPhase, nextPriceList, 1L, null, true), then);
 		subscriptionTransitions.add(t);
 
@@ -191,10 +254,11 @@ public class TestDefaultEntitlementBillingApi {
 
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, catalogService);
+
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockCalculator, catalogService);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
-		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
+		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), subId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
     @Test(enabled=true, groups="fast")
@@ -204,8 +268,9 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
+
 		SubscriptionEvent t = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList,
+		        eventId, subId, bunId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList,
 				1L, null, true), then);
 		subscriptionTransitions.add(t);
 
@@ -219,10 +284,11 @@ public class TestDefaultEntitlementBillingApi {
         
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, catalogService);
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockCalculator, catalogService);
+
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
-		checkFirstEvent(events, nextPlan, 32, oneId, now, nextPhase, ApiEventType.CREATE.toString());
+		checkFirstEvent(events, nextPlan, 32, subId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
     @Test(enabled=true, groups="fast")
@@ -232,8 +298,9 @@ public class TestDefaultEntitlementBillingApi {
 		Plan nextPlan = catalogService.getFullCatalog().findPlan("Horn1USD", now);
 		PlanPhase nextPhase = nextPlan.getAllPhases()[0];
         PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
+
 		SubscriptionEvent t = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
-				zeroId, oneId, twoId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1L,
+		        eventId, subId, bunId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1L,
 				null, true), then);
 		subscriptionTransitions.add(t);
 
@@ -248,26 +315,97 @@ public class TestDefaultEntitlementBillingApi {
         
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, catalogService);
+
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockCalculator, catalogService);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
-		checkFirstEvent(events, nextPlan, subscription.getStartDate().plusDays(30).getDayOfMonth(), oneId, now, nextPhase, ApiEventType.CREATE.toString());
+		checkFirstEvent(events, nextPlan, subscription.getStartDate().plusDays(30).getDayOfMonth(), subId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
+    @Test(enabled=true, groups="fast")
+    public void testBillingEventsWithBlock() throws CatalogApiException {
+        DateTime now = clock.getUTCNow();
+        DateTime then = now.minusDays(1);
+        Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
+        PlanPhase nextPhase = nextPlan.getAllPhases()[1];
+        PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
+        SubscriptionEvent t =  new DefaultSubscriptionEvent(new SubscriptionTransitionData(
+                eventId, subId, bunId, EventType.API_USER, ApiEventType.CREATE, then, now, null, null, null, null, SubscriptionState.ACTIVE, nextPlan, nextPhase, nextPriceList, 1L, null, true), then);
+        subscriptionTransitions.add(t);
+
+        AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+        Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        ((ZombieControl)account).addResult("getBillCycleDay", 32);
+        ((ZombieControl)account).addResult("getCurrency", Currency.USD);
+        ((ZombieControl)accountApi).addResult("getAccountById", account);
+        ((ZombieControl)account).addResult("getId", UUID.randomUUID());
+
+        ((MockCatalog)catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.ACCOUNT);
+        
+        final SortedSet<BlockingState> blockingStates = new TreeSet<BlockingState>();
+        blockingStates.add(new DefaultBlockingState(bunId,DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
+        blockingStates.add(new DefaultBlockingState(bunId,CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
+        
+        BlockingCalculator blockingCal = new BlockingCalculator(new BlockingApi() {
+            
+            @Override
+            public <T extends Blockable> void setBlockingState(BlockingState state) {}
+            
+            @Override
+            public BlockingState getBlockingStateFor(UUID overdueableId, Type type) {
+                return null;
+            }
+            
+            @Override
+            public BlockingState getBlockingStateFor(Blockable overdueable) {
+                return null;
+            }
+            
+            @Override
+            public SortedSet<BlockingState> getBlockingHistory(UUID overdueableId, Type type) {
+                if(type == Type.SUBSCRIPTION_BUNDLE) {
+                    return blockingStates;
+                }
+                return new TreeSet<BlockingState>();
+            }
+            
+            @Override
+            public SortedSet<BlockingState> getBlockingHistory(Blockable overdueable) {
+                return new TreeSet<BlockingState>();
+            }
+        });
+        
+        BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
+        CallContextFactory factory = new DefaultCallContextFactory(clock);
+        BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockingCal, catalogService);
+        SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
+
+        Assert.assertEquals(events.size(), 3);
+        Iterator<BillingEvent> it = events.iterator();
+       
+        checkEvent(it.next(), nextPlan, 32, subId, now, nextPhase, ApiEventType.CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+        checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(1), nextPhase, ApiEventType.CANCEL.toString(), new MockPrice("0"), new MockPrice("0"));
+        checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(2), nextPhase, ApiEventType.RE_CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+        
+    }
 
 	private void checkFirstEvent(SortedSet<BillingEvent> events, Plan nextPlan,
 			int BCD, UUID id, DateTime time, PlanPhase nextPhase, String desc) throws CatalogApiException {
 		Assert.assertEquals(events.size(), 1);
-		BillingEvent event = events.first();
+		checkEvent(events.first(), nextPlan,
+	            BCD, id, time, nextPhase, desc, nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+	}
 
-        if(nextPhase.getFixedPrice() != null) {
-			Assert.assertEquals(nextPhase.getFixedPrice().getPrice(Currency.USD), event.getFixedPrice());
+	private void checkEvent(BillingEvent event, Plan nextPlan,
+	            int BCD, UUID id, DateTime time, PlanPhase nextPhase, String desc, InternationalPrice fixedPrice, InternationalPrice recurringPrice) throws CatalogApiException {
+        if(fixedPrice != null) {
+			Assert.assertEquals(fixedPrice.getPrice(Currency.USD), event.getFixedPrice());
         } else {
             assertNull(event.getFixedPrice());
 		}
 
-		if(nextPhase.getRecurringPrice() != null) {
-			Assert.assertEquals(nextPhase.getRecurringPrice().getPrice(Currency.USD), event.getRecurringPrice());
+		if(recurringPrice != null) {
+			Assert.assertEquals(recurringPrice.getPrice(Currency.USD), event.getRecurringPrice());
         } else {
             assertNull(event.getRecurringPrice());
 		}
@@ -279,6 +417,6 @@ public class TestDefaultEntitlementBillingApi {
 		Assert.assertEquals(nextPlan, event.getPlan());
 		Assert.assertEquals(nextPhase.getBillingPeriod(), event.getBillingPeriod());
 		Assert.assertEquals(BillingModeType.IN_ADVANCE, event.getBillingMode());
-		Assert.assertEquals(desc, event.getDescription());
+		Assert.assertEquals(desc, event.getTransitionType().toString());
 	}
 }

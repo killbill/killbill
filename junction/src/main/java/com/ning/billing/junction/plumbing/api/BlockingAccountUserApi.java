@@ -25,18 +25,20 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MigrationAccountData;
+import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.tag.Tag;
 
-public class BlockingAccountUserApi implements AccountUserApi {
-    
+public class BlockingAccountUserApi implements AccountUserApi { 
     private AccountUserApi userApi;
+    private BlockingApi blockingApi;
 
     @Inject
-    public BlockingAccountUserApi(@RealImplementation AccountUserApi userApi) {
+    public BlockingAccountUserApi(@RealImplementation AccountUserApi userApi, BlockingApi blockingApi) {
         this.userApi = userApi;
+        this.blockingApi = blockingApi;
     }
 
     @Override
@@ -67,12 +69,12 @@ public class BlockingAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account getAccountByKey(String key) {
-        return userApi.getAccountByKey(key);
+    public Account getAccountByKey(String key) throws AccountApiException {
+        return new BlockingAccount(userApi.getAccountByKey(key), blockingApi);
     }
 
     @Override
-    public Account getAccountById(UUID accountId) {
+    public Account getAccountById(UUID accountId) throws AccountApiException {
         return userApi.getAccountById(accountId);
     }
 

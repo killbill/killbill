@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
 
 public interface SubscriptionBundle extends Blockable {
@@ -34,4 +35,5 @@ public interface SubscriptionBundle extends Blockable {
     public String getKey();
 
     public OverdueState<SubscriptionBundle> getOverdueState();
+    
 }

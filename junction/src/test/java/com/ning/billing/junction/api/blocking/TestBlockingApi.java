@@ -39,12 +39,14 @@ import com.ning.billing.junction.MockModule;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.dao.TestBlockingDao;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.clock.ClockMock;
 
-@Guice(modules = { MockModule.class })
+@Guice(modules = { MockModule.class, MockEntitlementModule.class })
 public class TestBlockingApi {
     private Logger log = LoggerFactory.getLogger(TestBlockingDao.class);
     
@@ -91,12 +93,12 @@ public class TestBlockingApi {
         boolean blockEntitlement = false;
         boolean blockBilling = false;
 
-        BlockingState state1 = new BlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+        BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
         api.setBlockingState(state1);
         clock.setDeltaFromReality(1000 * 3600 * 24);
         
         String overdueStateName2 = "NoReallyThisCantGoOn";
-        BlockingState state2 = new BlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+        BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
         api.setBlockingState(state2);
         
         SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
@@ -117,13 +119,13 @@ public class TestBlockingApi {
         boolean blockEntitlement = false;
         boolean blockBilling = false;
 
-        BlockingState state1 = new BlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+        BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
         api.setBlockingState(state1);
         
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         String overdueStateName2 = "NoReallyThisCantGoOn";
-        BlockingState state2 = new BlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+        BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
         api.setBlockingState(state2);
         
         SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);

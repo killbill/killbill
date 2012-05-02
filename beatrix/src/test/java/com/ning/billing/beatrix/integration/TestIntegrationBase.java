@@ -51,12 +51,15 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
+import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -229,8 +232,8 @@ public class TestIntegrationBase implements TestFailure {
     protected void verifyTestResult(UUID accountId, UUID subscriptionId,
                                   DateTime startDate, DateTime endDate,
                                   BigDecimal amount, DateTime chargeThroughDate,
-                                  int totalInvoiceItemCount) {
-        SubscriptionData subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscriptionId);
+                                  int totalInvoiceItemCount) throws EntitlementUserApiException {
+        SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscriptionId));
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
         List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
@@ -262,7 +265,10 @@ public class TestIntegrationBase implements TestFailure {
         assertTrue(clock.getUTCNow().isBefore(ctd));
         assertTrue(ctd.compareTo(chargeThroughDate) == 0);
     }
-    
+       
+    protected SubscriptionData subscriptionDataFromSubscription(Subscription sub) {
+        return (SubscriptionData)((BlockingSubscription)sub).getDelegateSubscription();
+    }
     
     protected AccountData getAccountData(final int billingDay) {
 

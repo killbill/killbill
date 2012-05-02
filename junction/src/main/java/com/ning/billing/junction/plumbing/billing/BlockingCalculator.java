@@ -14,13 +14,12 @@
  * under the License.
  */
 
-package com.ning.billing.junction.api.billing;
+package com.ning.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -30,7 +29,6 @@ import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -41,10 +39,10 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.DefaultBlockingState;
 
-public class BlockingEventCalculator {
-    private final BlockingApi overdueApi;
-    private final CatalogService catalogService;
+public class BlockingCalculator {
+    private final BlockingApi blockingApi;
 
     protected static class DisabledDuration {
         private final DateTime start;
@@ -63,7 +61,7 @@ public class BlockingEventCalculator {
 
     }
 
-    protected static class MergeEvent extends BlockingState {
+    protected static class MergeEvent extends DefaultBlockingState {
 
         public MergeEvent(DateTime timestamp) {
             super(null,null,null,null,false,false,false,timestamp);
@@ -72,28 +70,28 @@ public class BlockingEventCalculator {
     }
 
     @Inject
-    public BlockingEventCalculator(BlockingApi overdueApi, CatalogService catalogService) {
-        this.overdueApi = overdueApi;
-        this.catalogService = catalogService;
+    public BlockingCalculator(BlockingApi blockingApi) {
+        this.blockingApi = blockingApi;
     }
 
-    public void insertOverdueEvents(SortedSet<BillingEvent> billingEvents) {
+    public void insertBlockingEvents(SortedSet<BillingEvent> billingEvents) {
         if(billingEvents.size() <= 0) { return; }
 
         Account account = billingEvents.first().getAccount();
  
-        Hashtable<UUID,Set<Subscription>> bundleMap = createBundleSubscriptionMap(billingEvents);
+        Hashtable<UUID,List<Subscription>> bundleMap = createBundleSubscriptionMap(billingEvents);
 
         SortedSet<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
         SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
 
         for(UUID bundleId : bundleMap.keySet()) {
-            SortedSet<BlockingState> overdueBundleEvents = overdueApi.getBlockingHistory(bundleId, Blockable.Type.SUBSCRIPTION_BUNDLE);
-            List<DisabledDuration>  bundleDisablePairs  = createDisablePairs(overdueBundleEvents); 
+            SortedSet<BlockingState> blockingEvents = blockingApi.getBlockingHistory(bundleId, Blockable.Type.SUBSCRIPTION_BUNDLE);
+            blockingEvents.addAll(blockingApi.getBlockingHistory(account.getId(), Blockable.Type.ACCOUNT));
+            List<DisabledDuration>  blockingDurations  = createBlockingDurations(blockingEvents); 
 
             for (Subscription subscription: bundleMap.get(bundleId)) {
-                billingEventsToAdd.addAll(createNewEvents( bundleDisablePairs, billingEvents, account, subscription));
-                billingEventsToRemove.addAll(eventsToRemove(bundleDisablePairs, billingEvents, subscription));
+                billingEventsToAdd.addAll(createNewEvents( blockingDurations, billingEvents, account, subscription));
+                billingEventsToRemove.addAll(eventsToRemove(blockingDurations, billingEvents, subscription));
             }
         }
 
@@ -200,13 +198,10 @@ public class BlockingEventCalculator {
         final SubscriptionTransitionType type = SubscriptionTransitionType.CANCEL;
         final Long totalOrdering = 0L; //TODO
 
-        return null;
-        
-        //TODO MDW
-//        new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
-//                fixedPrice, recurringPrice, currency,
-//                billingPeriod, billCycleDay, billingModeType,
-//                description, totalOrdering, type);
+        return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
+                fixedPrice, recurringPrice, currency,
+                billingPeriod, billCycleDay, billingModeType,
+                description, totalOrdering, type);
     }
 
     protected BillingEvent createNewReenableEvent(DateTime odEventTime, BillingEvent previousEvent) {
@@ -225,39 +220,38 @@ public class BlockingEventCalculator {
         final SubscriptionTransitionType type = SubscriptionTransitionType.RE_CREATE;
         final Long totalOrdering = 0L; //TODO
 
-        return null;
-        
-        //TODO MDW
-//        return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
-//                fixedPrice, recurringPrice, currency,
-//                billingPeriod, billCycleDay, billingModeType,
-//                description, totalOrdering, type);
+        return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
+                fixedPrice, recurringPrice, currency,
+                billingPeriod, billCycleDay, billingModeType,
+                description, totalOrdering, type);
     }
 
-    protected Hashtable<UUID,Set<Subscription>> createBundleSubscriptionMap(SortedSet<BillingEvent> billingEvents) {
-        Hashtable<UUID,Set<Subscription>> result = new Hashtable<UUID,Set<Subscription>>();
+    protected Hashtable<UUID,List<Subscription>> createBundleSubscriptionMap(SortedSet<BillingEvent> billingEvents) {
+        Hashtable<UUID,List<Subscription>> result = new Hashtable<UUID,List<Subscription>>();
         for(BillingEvent event : billingEvents) {
             UUID bundleId = event.getSubscription().getBundleId();
-            Set<Subscription> subs = result.get(bundleId);
+            List<Subscription> subs = result.get(bundleId);
             if(subs == null) {
-                subs = new TreeSet<Subscription>();
+                subs = new ArrayList<Subscription>();
                 result.put(bundleId,subs);
             }
-            subs.add(event.getSubscription());        
+            if(!result.contains(event.getSubscription())) {
+                subs.add(event.getSubscription());        
+            }
         }
         return result;
     }
 
 
 
-    protected List<DisabledDuration> createDisablePairs(SortedSet<BlockingState> overdueBundleEvents) {
-        List<DisabledDuration> result = new ArrayList<BlockingEventCalculator.DisabledDuration>();
+    protected List<DisabledDuration> createBlockingDurations(SortedSet<BlockingState> overdueBundleEvents) {
+        List<DisabledDuration> result = new ArrayList<BlockingCalculator.DisabledDuration>();
         BlockingState first = null;
 
         for(BlockingState e : overdueBundleEvents) {
-            if(isDisableEvent(e) && first == null) { // found a transition to disabled
+            if(e.isBlockBilling() && first == null) { // found a transition to disabled
                 first = e;
-            } else if(first != null && !isDisableEvent(e)) { // found a transition from disabled
+            } else if(first != null && !e.isBlockBilling()) { // found a transition from disabled
                 result.add(new DisabledDuration(first.getTimestamp(), e.getTimestamp()));
                 first = null;
             }
@@ -268,23 +262,6 @@ public class BlockingEventCalculator {
         }
 
         return result;
-    }
-
-    protected boolean isDisableEvent(BlockingState e) {
-        //TODO Martin refactoring 
-        return false;
-//        OverdueState<?> state = null;
-//        try {
-//            if (e.getType() == Overdueable.Type.SUBSCRIPTION_BUNDLE) {
-//                state = catalogService.getCurrentCatalog().currentBundleOverdueStateSet().findState(e.getStateName());
-//            }
-//        } catch (CatalogApiException exp) {
-//            throw new EntitlementError(exp);
-//        }
-//        if (state == null) {
-//            throw new EntitlementError("Unable to find an overdue state with name: " + e.getStateName());
-//        }
-//        return state.disableEntitlementAndChangesBlocked();
     }
 
 }

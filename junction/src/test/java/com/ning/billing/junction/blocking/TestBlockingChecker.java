@@ -35,6 +35,7 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.block.DefaultBlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
@@ -117,7 +118,6 @@ public class TestBlockingChecker {
                 bind(BlockingStateDao.class).toInstance(dao);             
                 
                 EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
-                //((ZombieControl) entitlementDao).addResult("", result)
                 bind(EntitlementUserApi.class).toInstance(entitlementUserApi);
                 ((ZombieControl) entitlementUserApi).addResult("getBundleFromId",bundle);
                 
@@ -129,15 +129,17 @@ public class TestBlockingChecker {
 
 
     private void setStateBundle(boolean bC, boolean bE, boolean bB) {
-        bundleState = new BlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE,bB);
+        bundleState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE,bB);
+        ((ZombieControl) bundle).addResult("getBlockingState", bundleState);
     }
 
     private void setStateAccount(boolean bC, boolean bE, boolean bB) {
-        accountState = new BlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE,bB);
+        accountState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE,bB);
     }
 
     private void setStateSubscription(boolean bC, boolean bE, boolean bB) {
-        subscriptionState = new BlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE,bB);
+        subscriptionState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE,bB);
+        ((ZombieControl) subscription).addResult("getBlockingState", subscriptionState);
     }
 
     @Test(groups={"fast"}, enabled = true)

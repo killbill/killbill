@@ -14,15 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.mock.glue;
 
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.util.customfield.Customizable;
-import com.ning.billing.util.entity.UpdatableEntity;
-import com.ning.billing.util.tag.Taggable;
+import com.google.inject.AbstractModule;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
 
-public interface Account extends AccountData, Customizable, UpdatableEntity, Taggable, Blockable{ 
-    public static String ObjectType = "account";
-    
-    public MutableAccountData toMutableAccountData(); 
+public class MockClockModule extends AbstractModule {
+
+	@Override
+	protected void configure() {
+		bind(Clock.class).to(ClockMock.class).asEagerSingleton();
+	}
 }

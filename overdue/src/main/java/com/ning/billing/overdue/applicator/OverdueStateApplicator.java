@@ -23,7 +23,8 @@ import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
-import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.DefaultBlockingState;
+
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.OverdueError;
@@ -60,7 +61,7 @@ public class OverdueStateApplicator<T extends Blockable>{
 
     protected void storeNewState(T blockable, OverdueState<T> nextOverdueState) throws OverdueError {
         try {
-            blockingApi.setBlockingState(new BlockingState(blockable.getId(), nextOverdueState.getName(), Blockable.Type.get(blockable), 
+            blockingApi.setBlockingState(new DefaultBlockingState(blockable.getId(), nextOverdueState.getName(), Blockable.Type.get(blockable), 
                     OverdueService.OVERDUE_SERVICE_NAME, blockChanges(nextOverdueState), blockEntitlement(nextOverdueState), blockBilling(nextOverdueState)));
         } catch (Exception e) {
             throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, blockable.getId(), blockable.getClass().getName());

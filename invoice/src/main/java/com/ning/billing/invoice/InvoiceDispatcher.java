@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
@@ -138,43 +139,43 @@ public class InvoiceDispatcher {
         }
     }
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDate,
-                                           final boolean dryRun, final CallContext context) throws InvoiceApiException {
+            final boolean dryRun, final CallContext context) throws InvoiceApiException {
+        try {
+            Account account = accountUserApi.getAccountById(accountId);
+            SortedSet<BillingEvent> events = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
+            BillingEventSet billingEvents = new BillingEventSet(events);
 
-        Account account = accountUserApi.getAccountById(accountId);
-        if (account == null) {
-            log.error("Failed handling entitlement change.",
-                    new InvoiceApiException(ErrorCode.INVOICE_ACCOUNT_ID_INVALID, accountId.toString()));
-            return null;    
-        }
+            Currency targetCurrency = account.getCurrency();
 
-        SortedSet<BillingEvent> events = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
-        BillingEventSet billingEvents = new BillingEventSet(events);
+            List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
+            Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency);
 
-        Currency targetCurrency = account.getCurrency();
-
-        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
-        Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency);
-
-        if (invoice == null) {
-            log.info("Generated null invoice.");
-            outputDebugData(events, invoices);
-            if (!dryRun) {
-                postEmptyInvoiceEvent(accountId, context.getUserToken());
-            }
-        } else {
-            log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
-            if (VERBOSE_OUTPUT) {
-                log.info("New items");
-                for (InvoiceItem item : invoice.getInvoiceItems()) {
-                    log.info(item.toString());
+            if (invoice == null) {
+                log.info("Generated null invoice.");
+                outputDebugData(events, invoices);
+                if (!dryRun) {
+                    postEmptyInvoiceEvent(accountId, context.getUserToken());
+                }
+            } else {
+                log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
+                if (VERBOSE_OUTPUT) {
+                    log.info("New items");
+                    for (InvoiceItem item : invoice.getInvoiceItems()) {
+                        log.info(item.toString());
+                    }
+                }
+                outputDebugData(events, invoices);
+                if (!dryRun) {
+                    invoiceDao.create(invoice, context);
                 }
             }
-            outputDebugData(events, invoices);
-            if (!dryRun) {
-                invoiceDao.create(invoice, context);
-            }
+            return invoice;
+        } catch(AccountApiException e) {
+            log.error("Failed handling entitlement change.",e);
+            return null;    
+
         }
-        return invoice;
+
     }
 
     private void outputDebugData(Collection<BillingEvent> events, Collection<Invoice> invoices) {

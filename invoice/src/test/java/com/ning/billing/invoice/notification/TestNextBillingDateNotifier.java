@@ -24,25 +24,6 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.MockAccountUserApi;
-import com.ning.billing.entitlement.api.SubscriptionApiService;
-import com.ning.billing.entitlement.api.SubscriptionFactory;
-import com.ning.billing.invoice.InvoiceDispatcher;
-import com.ning.billing.invoice.dao.DefaultInvoiceDao;
-import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
-import com.ning.billing.invoice.model.InvoiceGenerator;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.MySqlGlobalLocker;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
-
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
@@ -67,13 +48,11 @@ import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
-
+import com.ning.billing.entitlement.api.SubscriptionApiService;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.api.timeline.RepairSubscriptionApiService;
 import com.ning.billing.entitlement.api.timeline.RepairSubscriptionFactory;
-import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
@@ -82,22 +61,32 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.entitlement.glue.EntitlementModule;
-
+import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.InvoiceListener;
-import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
+import com.ning.billing.invoice.dao.DefaultInvoiceDao;
+import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
+import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
-
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 
 
 public class TestNextBillingDateNotifier {
@@ -136,7 +125,7 @@ public class TestNextBillingDateNotifier {
 	}
 
 	@BeforeMethod(groups={"slow"})
-	public void cleanup() {
+    public void cleanDb() {
 	    helper.cleanupAllTables();
 	}
 
@@ -177,19 +166,12 @@ public class TestNextBillingDateNotifier {
                 bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
                 bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
                 bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-                bind(AccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
-
-                
-
                 bind(SubscriptionApiService.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
                 bind(SubscriptionApiService.class).to(DefaultSubscriptionApiService.class).asEagerSingleton();
                 bind(SubscriptionFactory.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairSubscriptionFactory.class).asEagerSingleton();
                 bind(SubscriptionFactory.class).to(DefaultSubscriptionFactory.class).asEagerSingleton();
-
-                bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
-                bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
-                bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
             
+                install(new MockJunctionModule());
             }
         });
 

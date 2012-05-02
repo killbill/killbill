@@ -170,23 +170,27 @@ public class TestUserApiDemos extends TestApiBase {
 
         System.out.println("");
         System.out.println("******\t STEP " + stepMsg + " **************");
+        try {
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscriptionId);
 
-        SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscriptionId);
 
+            Plan currentPlan = subscription.getCurrentPlan();
+            PlanPhase currentPhase = subscription.getCurrentPhase();
+            String priceList = subscription.getCurrentPriceList().getName();
 
-        Plan currentPlan = subscription.getCurrentPlan();
-        PlanPhase currentPhase = subscription.getCurrentPhase();
-        String priceList = subscription.getCurrentPriceList().getName();
-        System.out.println("");
-        System.out.println("\t CURRENT TIME = " + clock.getUTCNow());
-        System.out.println("");
-        System.out.println("\t CURRENT STATE = " +  subscription.getState());
-        System.out.println("\t CURRENT PRODUCT = " +  ((currentPlan == null) ? "NONE" : currentPlan.getProduct().getName()));
-        System.out.println("\t CURRENT TERM = " +  ((currentPlan == null) ? "NONE" : currentPlan.getBillingPeriod().toString()));
-        System.out.println("\t CURRENT PHASE = " +  ((currentPhase == null) ? "NONE" : currentPhase.getPhaseType()));
-        System.out.println("\t CURRENT PRICE LIST = " + ((priceList == null) ? "NONE" : priceList));
-        System.out.println("\t CURRENT \'SLUG\' = " +  ((currentPhase == null) ? "NONE" : currentPhase.getName()));
+            System.out.println("");
+            System.out.println("\t CURRENT TIME = " + clock.getUTCNow());
+            System.out.println("");
+            System.out.println("\t CURRENT STATE = " +  subscription.getState());
+            System.out.println("\t CURRENT PRODUCT = " +  ((currentPlan == null) ? "NONE" : currentPlan.getProduct().getName()));
+            System.out.println("\t CURRENT TERM = " +  ((currentPlan == null) ? "NONE" : currentPlan.getBillingPeriod().toString()));
+            System.out.println("\t CURRENT PHASE = " +  ((currentPhase == null) ? "NONE" : currentPhase.getPhaseType()));
+            System.out.println("\t CURRENT PRICE LIST = " + ((priceList == null) ? "NONE" : priceList));
+            System.out.println("\t CURRENT \'SLUG\' = " +  ((currentPhase == null) ? "NONE" : currentPhase.getName()));
 
+        } catch (EntitlementUserApiException e) {
+            System.out.println("No subscription found for id:"  + subscriptionId );
+        }
         System.out.println("");
 
     }

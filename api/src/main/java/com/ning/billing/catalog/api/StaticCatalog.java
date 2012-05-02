@@ -18,10 +18,6 @@ package com.ning.billing.catalog.api;
 
 import java.util.Date;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.overdue.config.api.OverdueStateSet;
-
 
 public interface StaticCatalog {
     //

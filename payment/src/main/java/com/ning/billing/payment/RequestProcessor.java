@@ -19,17 +19,13 @@ package com.ning.billing.payment;
 import java.util.Arrays;
 import java.util.List;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.Either;
@@ -39,6 +35,11 @@ import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 
 public class RequestProcessor {
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
@@ -78,6 +79,9 @@ public class RequestProcessor {
                     eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
                 }
             }
+        }
+        catch(AccountApiException e) {
+            log.warn("could not process invoice payment", e);
         }
         catch (EventBusException ex) {
             throw new RuntimeException(ex);

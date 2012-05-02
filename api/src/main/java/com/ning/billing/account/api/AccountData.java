@@ -19,6 +19,7 @@ package com.ning.billing.account.api;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.junction.api.BlockingState;
 
 public interface AccountData {
 
@@ -55,4 +56,5 @@ public interface AccountData {
     public String getCountry();
 
     public String getPhone();
+
 }

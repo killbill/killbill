@@ -19,18 +19,18 @@ package com.ning.billing.junction;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.glue.JunctionModule;
-import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
+import com.ning.billing.mock.glue.MockDbHelperModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.util.glue.CallContextModule;
 
 
 public class MockModule extends JunctionModule {
@@ -39,21 +39,10 @@ public class MockModule extends JunctionModule {
     @Override
     protected void configure() {
         super.configure();
-        bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-        bind(ClockMock.class).asEagerSingleton();
-        bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
 
-        final MysqlTestingHelper helper = new MysqlTestingHelper();
-        bind(MysqlTestingHelper.class).toInstance(helper);
-        if (helper.isUsingLocalInstance()) {
-            bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-            final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-            bind(DbiConfig.class).toInstance(config);
-        } else {
-            final IDBI dbi = helper.getDBI(); 
-            bind(IDBI.class).toInstance(dbi);
-        }
-
+        install(new MockClockModule());
+        install(new MockDbHelperModule());
+        install(new CallContextModule());
        install(new CatalogModule());
     }
     
@@ -66,5 +55,8 @@ public class MockModule extends JunctionModule {
     protected void installAccountUserApi() {
         
     }
+
+    
+    
 
 }

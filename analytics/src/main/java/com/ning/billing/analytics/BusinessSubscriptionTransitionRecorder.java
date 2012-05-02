@@ -24,6 +24,7 @@ import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import org.joda.time.DateTime;
@@ -51,39 +52,43 @@ public class BusinessSubscriptionTransitionRecorder
         this.accountApi = accountApi;
     }
 
-    public void subscriptionCreated(final SubscriptionEvent created) throws AccountApiException
+
+    public void subscriptionCreated(final SubscriptionEvent created) throws AccountApiException, EntitlementUserApiException
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan(), catalogService.getFullCatalog(), created.getEffectiveTransitionTime(), created.getSubscriptionStartDate());
         recordTransition(event, created);
     }
 
-    public void subscriptionRecreated(final SubscriptionEvent recreated) throws AccountApiException
+
+    public void subscriptionRecreated(final SubscriptionEvent recreated) throws AccountApiException, EntitlementUserApiException
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionRecreated(recreated.getNextPlan(), catalogService.getFullCatalog(), recreated.getEffectiveTransitionTime(), recreated.getSubscriptionStartDate());
         recordTransition(event, recreated);
     }
 
 
-    public void subscriptionCancelled(final SubscriptionEvent cancelled) throws AccountApiException
+    public void subscriptionCancelled(final SubscriptionEvent cancelled) throws AccountApiException, EntitlementUserApiException
     {
         // cancelled.getNextPlan() is null here - need to look at the previous one to create the correct event name
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getPreviousPlan(), catalogService.getFullCatalog(), cancelled.getEffectiveTransitionTime(), cancelled.getSubscriptionStartDate());
         recordTransition(event, cancelled);
     }
 
-    public void subscriptionChanged(final SubscriptionEvent changed) throws AccountApiException
+
+    public void subscriptionChanged(final SubscriptionEvent changed) throws AccountApiException, EntitlementUserApiException
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan(), catalogService.getFullCatalog(), changed.getEffectiveTransitionTime(), changed.getSubscriptionStartDate());
         recordTransition(event, changed);
     }
 
-    public void subscriptionPhaseChanged(final SubscriptionEvent phaseChanged) throws AccountApiException
+    public void subscriptionPhaseChanged(final SubscriptionEvent phaseChanged) throws AccountApiException, EntitlementUserApiException
     {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState(), catalogService.getFullCatalog(), phaseChanged.getEffectiveTransitionTime(), phaseChanged.getSubscriptionStartDate());
         recordTransition(event, phaseChanged);
     }
 
-    public void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionEvent transition) throws AccountApiException
+    public void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionEvent transition)
+        throws AccountApiException, EntitlementUserApiException
     {
         Currency currency = null;
         String transitionKey = null;
