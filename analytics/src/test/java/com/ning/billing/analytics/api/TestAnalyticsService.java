@@ -206,6 +206,7 @@ public class TestAnalyticsService {
         final String invoiceDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         final String paymentDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
         final String utilDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        final String junctionDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));
 
         helper.startMysql();
         helper.initDb(analyticsDdl);
@@ -214,6 +215,7 @@ public class TestAnalyticsService {
         helper.initDb(invoiceDdl);
         helper.initDb(paymentDdl);
         helper.initDb(utilDdl);
+        helper.initDb(junctionDdl);
 
     	helper.cleanupAllTables();
     }
