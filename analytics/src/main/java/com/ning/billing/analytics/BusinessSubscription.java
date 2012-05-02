@@ -95,21 +95,20 @@ public class BusinessSubscription
         this(subscription.getCurrentPriceList() == null ? null : subscription.getCurrentPriceList().getName(), subscription.getCurrentPlan().getName(), subscription.getCurrentPhase().getName(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId(), catalog);
     }
 
-    public BusinessSubscription(final String priceList, final String currentPlan, final String currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId, Catalog catalog)
-    {
-        this.priceList = priceList;
-
+    public BusinessSubscription(final String priceList, final String currentPlan, final String currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId, Catalog catalog) {
         Plan thePlan = null;
         PlanPhase thePhase = null;
         try {
             thePlan = catalog.findPlan(currentPlan, new DateTime(), startDate);
-            thePhase = catalog.findPhase(currentPhase, new DateTime(), getStartDate());
+            thePhase = catalog.findPhase(currentPhase, new DateTime(), startDate);
         } catch (CatalogApiException e) {
             log.error(String.format("Failed to retrieve Plan from catalog for plan %s, phase ", currentPlan, currentPhase));
         }
         
+      this.priceList = priceList;
+        
         // Record plan information
-        if (thePlan != null && thePlan.getProduct() != null) {
+        if (currentPlan != null && thePlan.getProduct() != null) {
             final Product product = thePlan.getProduct();
             productName = product.getName();
             productCategory = product.getCategory();
@@ -123,7 +122,7 @@ public class BusinessSubscription
         }
 
         // Record phase information
-        if (thePhase != null) {
+        if (currentPhase != null) {
             slug = thePhase.getName();
 
             if (thePhase.getPhaseType() != null) {
@@ -141,15 +140,88 @@ public class BusinessSubscription
             }
 
             if (thePhase.getRecurringPrice() != null) {
+                //TODO check if this is the right way to handle exception
+                BigDecimal tmpPrice = null;
+                try {
+                    tmpPrice = thePhase.getRecurringPrice().getPrice(USD);
+                } catch (CatalogApiException e) {
+                    tmpPrice = new BigDecimal(0);
+                }
+                price = tmpPrice;
+                mrr = getMrrFromISubscription(thePhase.getDuration(), price);
+            }
+            else {
+                price = BigDecimal.ZERO;
+                mrr = BigDecimal.ZERO;
+            }
+        }
+        else {
+            slug = null;
+            phase = null;
+            billingPeriod = null;
+            price = BigDecimal.ZERO;
+            mrr = BigDecimal.ZERO;
+        }
+
+        if (currency != null) {
+            this.currency = currency.toString();
+        }
+        else {
+            this.currency = null;
+        }
+
+        this.startDate = startDate;
+        this.state = state;
+        this.subscriptionId = subscriptionId;
+        this.bundleId = bundleId;
+    }
+    
+    public BusinessSubscription(final String priceList, final Plan currentPlan, final PlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
+    {
+        this.priceList = priceList;
+        
+        // Record plan information
+        if (currentPlan != null && currentPlan.getProduct() != null) {
+            final Product product = currentPlan.getProduct();
+            productName = product.getName();
+            productCategory = product.getCategory();
+            // TODO - we should keep the product type
+            productType = product.getCatalogName();
+        }
+        else {
+            productName = null;
+            productCategory = null;
+            productType = null;
+        }
+
+        // Record phase information
+        if (currentPhase != null) {
+            slug = currentPhase.getName();
+
+            if (currentPhase.getPhaseType() != null) {
+                phase = currentPhase.getPhaseType().toString();
+            }
+            else {
+                phase = null;
+            }
+
+            if (currentPhase.getBillingPeriod() != null) {
+                billingPeriod = currentPhase.getBillingPeriod().toString();
+            }
+            else {
+                billingPeriod = null;
+            }
+
+            if (currentPhase.getRecurringPrice() != null) {
             	//TODO check if this is the right way to handle exception
             	BigDecimal tmpPrice = null;
                 try {
-                	tmpPrice = thePhase.getRecurringPrice().getPrice(USD);
+                	tmpPrice = currentPhase.getRecurringPrice().getPrice(USD);
 				} catch (CatalogApiException e) {
 					tmpPrice = new BigDecimal(0);
 				}
                 price = tmpPrice;
-                mrr = getMrrFromISubscription(thePhase.getDuration(), price);
+                mrr = getMrrFromISubscription(currentPhase.getDuration(), price);
             }
             else {
                 price = BigDecimal.ZERO;
