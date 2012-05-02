@@ -33,6 +33,7 @@ import com.ning.billing.jaxrs.resources.InvoiceResource;
 import com.ning.billing.jaxrs.resources.PaymentResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
+import com.ning.billing.junction.glue.JunctionModule;
 import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
@@ -83,6 +84,7 @@ public class KillbillServerModule extends AbstractModule
         install(new AnalyticsModule());
         install(new PaymentModule());
         install(new BeatrixModule());
+        install(new JunctionModule());        
         installClock();
     }
 }

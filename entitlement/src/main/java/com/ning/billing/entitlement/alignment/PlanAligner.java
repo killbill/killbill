@@ -129,6 +129,7 @@ public class PlanAligner  {
             // If we never had any Plan change, borrow the logics for createPlan alignment
             case MIGRATE_ENTITLEMENT:
             case CREATE:
+            case RE_CREATE:                
                 List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getStartDate(),
                         subscription.getBundleStartDate(),
                         lastPlanTransition.getNextPlan(),
@@ -211,11 +212,6 @@ public class PlanAligner  {
 
         Catalog catalog = catalogService.getFullCatalog();
         ProductCategory currentCategory = currentPlan.getProduct().getCategory();
-        // STEPH tiered ADDON not implemented yet
-        if (currentCategory != ProductCategory.BASE) {
-            throw new EntitlementError(String.format("Only implemented changePlan for BasePlan"));
-        }
-
         PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                 currentCategory,
                 currentPlan.getBillingPeriod(),

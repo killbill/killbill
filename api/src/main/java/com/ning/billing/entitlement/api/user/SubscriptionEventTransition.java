@@ -22,22 +22,15 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+
 import com.ning.billing.catalog.api.PriceList;
+
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.util.bus.BusEvent;
 
 public interface SubscriptionEventTransition extends BusEvent {
-
-    public enum SubscriptionTransitionType {
-        MIGRATE_ENTITLEMENT,
-        CREATE,
-        MIGRATE_BILLING,
-        CHANGE,
-        RE_CREATE,
-        CANCEL,
-        UNCANCEL,
-        PHASE
-    }
 
     UUID getId();
 

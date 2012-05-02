@@ -19,6 +19,4 @@ package com.ning.billing.entitlement.api;
 import com.ning.billing.lifecycle.KillbillService;
 
 public interface EntitlementService extends KillbillService {
-
-
 }

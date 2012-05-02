@@ -27,6 +27,7 @@ import org.testng.Assert;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -38,11 +39,14 @@ public class TestBusHandler {
 
     private final List<NextEvent> nextExpectedEvent;
 
+    private final TestFailure testFailure;
+    
     private volatile boolean completed;
 
-    public TestBusHandler() {
+    public TestBusHandler(TestFailure testFailure) {
         nextExpectedEvent = new Stack<NextEvent>();
         this.completed = false;
+        this.testFailure = testFailure;
     }
 
     public enum NextEvent {
@@ -55,7 +59,15 @@ public class TestBusHandler {
         RESUME,
         PHASE,
         INVOICE,
-        PAYMENT
+        PAYMENT,
+        REPAIR_BUNDLE
+    }
+    
+    @Subscribe
+    public void handleEntitlementEvents(RepairEntitlementEvent event) {
+        log.info(String.format("TestBusHandler Got RepairEntitlementEvent event %s", event.toString()));
+        assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
+        notifyIfStackEmpty();
     }
 
     @Subscribe
@@ -184,7 +196,9 @@ public class TestBusHandler {
             if (!foundIt) {
                 Joiner joiner = Joiner.on(" ");
                 log.error("TestBusHandler Received event " + received + "; expected " + joiner.join(nextExpectedEvent));
-                Assert.fail();
+                if (testFailure != null) {
+                    testFailure.failed("TestBusHandler Received event " + received + "; expected " + joiner.join(nextExpectedEvent));
+                }
             }
         }
     }

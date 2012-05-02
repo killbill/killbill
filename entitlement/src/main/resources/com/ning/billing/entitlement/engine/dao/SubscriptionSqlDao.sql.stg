@@ -60,12 +60,32 @@ getSubscriptionsFromBundleId(bundle_id) ::= <<
     ;
 >>
 
-updateSubscription(id, active_version, ctd_dt, ptd_dt) ::= <<
+updateChargedThroughDate() ::= <<
+    update subscriptions
+    set
+      ctd_dt = :ctd_dt
+      , updated_by = :userName
+      , updated_date = :updatedDate
+    where id = :id
+    ;
+>>
+
+updateActiveVersion() ::= <<
     update subscriptions
     set
       active_version = :active_version
-      , ctd_dt = :ctd_dt
-      , ptd_dt = :ptd_dt
+      , updated_by = :userName
+      , updated_date = :updatedDate
+    where id = :id
+    ;
+>>
+
+updateForRepair() ::= <<
+    update subscriptions
+    set
+      active_version = :active_version
+      , start_dt = :start_dt
+      , bundle_start_dt = :bundle_start_dt
       , updated_by = :userName
       , updated_date = :updatedDate
     where id = :id

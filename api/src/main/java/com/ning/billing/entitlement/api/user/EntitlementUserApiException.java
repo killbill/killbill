@@ -38,5 +38,4 @@ public class EntitlementUserApiException extends BillingExceptionBase {
     public EntitlementUserApiException(ErrorCode code, Object...args) {
         super(code, args);
     }
-
 }

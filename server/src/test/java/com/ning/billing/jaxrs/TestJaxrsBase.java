@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.skife.config.ConfigurationObjectFactory;
@@ -42,12 +43,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
-import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.beatrix.integration.TestBusHandler;
+import com.ning.billing.beatrix.integration.TestIntegration;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.config.PaymentConfig;
@@ -57,8 +58,8 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.BundleJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.billing.junction.glue.JunctionModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
@@ -93,12 +94,11 @@ public class TestJaxrsBase {
     public static final String HEADER_CONTENT_TYPE = "Content-type";
     public static final String CONTENT_TYPE = "application/json";
 
+    private static TestKillbillGuiceListener listener;
+    
+    
     private MysqlTestingHelper helper;
     private HttpServer server;
-
-
-    // YAck...
-    private static Injector injector;
 
     protected CoreConfig config;
     protected AsyncHttpClient httpClient;	
@@ -117,23 +117,48 @@ public class TestJaxrsBase {
     }
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {
-        public TestKillbillGuiceListener() {
+        
+        private final MysqlTestingHelper helper;
+        private final Clock clock;
+        
+        public TestKillbillGuiceListener(final MysqlTestingHelper helper, final Clock clock) {
             super();
+            this.helper = helper;
+            this.clock = clock;
         }
         @Override
         protected Module getModule() {
-            return new TestKillbillServerModule();
+            return new TestKillbillServerModule(helper, clock);
         }
-        public Injector getTheInjector() {
-            return theInjector;
+        
+        //
+        // Listener is created once before Suite and keeps pointer to helper and clock so they can get
+        // reset for each test Class-- needed in order to ONLY start Jetty once across all the test classes
+        // while still being able to start mysql before Jetty is started
+        //
+        public MysqlTestingHelper getMysqlTestingHelper() {
+            return helper;
+        }
+        
+        public Clock getClock() {
+            return clock;
         }
     }
 
     public static class TestKillbillServerModule extends KillbillServerModule {
 
+        private final MysqlTestingHelper helper;
+        private final Clock clock;
+        
+        public TestKillbillServerModule(final MysqlTestingHelper helper, final Clock clock) {
+            super();
+            this.helper = helper;
+            this.clock = clock;
+        }
+        
         @Override
         protected void installClock() {
-            bind(Clock.class).to(ClockMock.class).asEagerSingleton();
+            bind(Clock.class).toInstance(clock);
         }
 
 
@@ -170,7 +195,6 @@ public class TestJaxrsBase {
 
         @Override
         protected void configureDao() {
-            final MysqlTestingHelper helper = new MysqlTestingHelper();
             bind(MysqlTestingHelper.class).toInstance(helper);
             if (helper.isUsingLocalInstance()) {
                 bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
@@ -184,21 +208,40 @@ public class TestJaxrsBase {
     }
 
     @BeforeMethod(groups="slow")
-    public void cleanupTables() {
-        helper.cleanupAllTables();
+    public void cleanupBeforeMethod() {
         busHandler.reset();
+        helper.cleanupAllTables();
     }
 
     @BeforeClass(groups="slow")
-    public void setupClass() {
-
+    public void setupClass() throws IOException {
         loadConfig();
         httpClient = new AsyncHttpClient();
         mapper = new ObjectMapper();
-        helper = injector.getInstance(MysqlTestingHelper.class);
-        clock = (ClockMock) injector.getInstance(Clock.class);
-        busHandler = new TestBusHandler();
+        busHandler = new TestBusHandler(null);
+        this.helper = listener.getMysqlTestingHelper();
+        this.clock =  (ClockMock) listener.getClock();
     }
+    
+    private void setupMySQL() throws IOException {
+        final String accountDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+        final String entitlementDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
+        final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+        final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
+        final String utilDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        final String analyticsDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));        
+        final String junctionDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));        
+
+        helper.startMysql();
+
+        helper.initDb(accountDdl);
+        helper.initDb(entitlementDdl);
+        helper.initDb(invoiceDdl);
+        helper.initDb(paymentDdl);
+        helper.initDb(utilDdl);
+        helper.initDb(analyticsDdl);        
+        helper.initDb(junctionDdl);        
+   }
 
 
     private void loadConfig() {
@@ -211,32 +254,38 @@ public class TestJaxrsBase {
     public void setup() throws Exception {
 
         loadSystemPropertiesFromClasspath("/killbill.properties");
-
-        final EventListener eventListener = new TestKillbillGuiceListener();
-        server = new HttpServer();
         loadConfig();
+        
+        this.helper = new MysqlTestingHelper();
+        this.clock = new ClockMock();
+        listener = new TestKillbillGuiceListener(helper, clock);
+        server = new HttpServer();
+
         final Iterable<EventListener> eventListeners = new Iterable<EventListener>() {
             @Override
             public Iterator<EventListener> iterator() {
                 ArrayList<EventListener> array = new ArrayList<EventListener>();
-                array.add(eventListener);
+                array.add(listener);
                 return array.iterator();
             }
         };
         server.configure(config, eventListeners, new HashMap<FilterHolder, String>());
+
+        setupMySQL();
+        helper.cleanupAllTables();
+
         server.start();
-        injector = ((TestKillbillGuiceListener) eventListener).getTheInjector();		
     }
 
     @AfterSuite(groups="slow")
     public void tearDown() {
-        if (helper != null) {
-            helper.stopMysql();
-        }
         try {
             server.stop();
         } catch (Exception e) {
 
+        }
+        if (helper != null) {
+            helper.stopMysql();
         }
     }
 
@@ -262,8 +311,8 @@ public class TestJaxrsBase {
 
 
 
-    protected BundleJson createBundle(String accountId, String key) throws Exception {
-        BundleJson input = new BundleJson(null, accountId, key, null);
+    protected BundleJsonNoSubsciptions createBundle(String accountId, String key) throws Exception {
+        BundleJsonNoSubsciptions input = new BundleJsonNoSubsciptions(null, accountId, key, null);
         String baseJson = mapper.writeValueAsString(input);
         Response response = doPost(BaseJaxrsResource.BUNDLES_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -276,14 +325,14 @@ public class TestJaxrsBase {
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         baseJson = response.getResponseBody();
-        BundleJson objFromJson = mapper.readValue(baseJson, BundleJson.class);
+        BundleJsonNoSubsciptions objFromJson = mapper.readValue(baseJson, BundleJsonNoSubsciptions.class);
         Assert.assertTrue(objFromJson.equalsNoId(input));
         return objFromJson;
     }
 
-    protected SubscriptionJson createSubscription(final String bundleId, final String productName, final String productCategory, final String billingPeriod, final boolean waitCompletion) throws Exception {
+    protected SubscriptionJsonNoEvents createSubscription(final String bundleId, final String productName, final String productCategory, final String billingPeriod, final boolean waitCompletion) throws Exception {
 
-        SubscriptionJson input = new SubscriptionJson(null, bundleId, productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null, null, null);
+        SubscriptionJsonNoEvents input = new SubscriptionJsonNoEvents(null, bundleId, null, productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         String baseJson = mapper.writeValueAsString(input);
 
 
@@ -300,7 +349,7 @@ public class TestJaxrsBase {
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         baseJson = response.getResponseBody();
-        SubscriptionJson objFromJson = mapper.readValue(baseJson, SubscriptionJson.class);
+        SubscriptionJsonNoEvents objFromJson = mapper.readValue(baseJson, SubscriptionJsonNoEvents.class);
         Assert.assertTrue(objFromJson.equalsNoId(input));
         return objFromJson;
     }
@@ -405,4 +454,14 @@ public class TestJaxrsBase {
         AccountJson accountJson = new AccountJson(accountId, name, length, externalKey, email, billCycleDay, currency, paymentProvider, timeZone, address1, address2, company, state, country, phone);
         return accountJson;
     }
+    
+    /**
+     * 
+     * We could implement a ClockResource in jaxrs with the ability to sync on user token
+     * but until we have a strong need for it, this is in the TODO list...
+     */
+    protected void crappyWaitForLackOfProperSynchonization() throws Exception {
+        Thread.sleep(5000);
+    }
+
 }

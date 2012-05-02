@@ -31,12 +31,12 @@ import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.TimedMigration;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
@@ -86,7 +86,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
 
         for (final EntitlementBundleMigration curBundle : toBeMigrated.getBundles()) {
 
-            SubscriptionBundleData bundleData = new SubscriptionBundleData(curBundle.getBundleKey(), accountId);
+            SubscriptionBundleData bundleData = new SubscriptionBundleData(curBundle.getBundleKey(), accountId, clock.getUTCNow());
             List<SubscriptionMigrationData> bundleSubscriptionData = new LinkedList<AccountMigrationData.SubscriptionMigrationData>();
 
 

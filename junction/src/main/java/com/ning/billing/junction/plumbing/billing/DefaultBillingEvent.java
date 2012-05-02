@@ -26,11 +26,12 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
-import com.ning.billing.entitlement.api.user.SubscriptionEventTransition.SubscriptionTransitionType;
 
 public class DefaultBillingEvent implements BillingEvent {
     final private Account account;

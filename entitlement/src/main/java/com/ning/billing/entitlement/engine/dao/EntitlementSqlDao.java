@@ -21,10 +21,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.audit.dao.AuditSqlDao;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
@@ -41,15 +50,18 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
+import com.ning.billing.entitlement.api.timeline.DefaultRepairEntitlementEvent;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
+import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
@@ -61,12 +73,8 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.audit.dao.AuditSqlDao;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
@@ -87,20 +95,15 @@ public class EntitlementSqlDao implements EntitlementDao {
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
     private final CustomFieldDao customFieldDao;
-    private final CatalogService catalogService;
+    private final Bus eventBus;
 
-    
-    //
-    // We are not injecting SubscriptionFactory since that creates circular dependencies--
-    // Guice would still work, but this is playing with fire.
-    //
-    // Instead that factory passed through API top to bottom for the call where is it needed-- where we returned fully rehydrated Subscriptions
-    //
+
     @Inject
     public EntitlementSqlDao(final IDBI dbi, final Clock clock,
                              final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
                              final CustomFieldDao customFieldDao,
-                             final CatalogService catalogService) {
+                             final Bus eventBus) {
+
         this.clock = clock;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
         this.eventsDao = dbi.onDemand(EventSqlDao.class);
@@ -108,7 +111,7 @@ public class EntitlementSqlDao implements EntitlementDao {
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
         this.customFieldDao = customFieldDao;
-        this.catalogService = catalogService;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -191,17 +194,18 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     @Override
-    public void updateSubscription(final SubscriptionData subscription, final CallContext context) {
+    public void updateChargedThroughDate(final SubscriptionData subscription, final CallContext context) {
 
         final Date ctd = (subscription.getChargedThroughDate() != null)  ? subscription.getChargedThroughDate().toDate() : null;
-        final Date ptd = (subscription.getPaidThroughDate() != null)  ? subscription.getPaidThroughDate().toDate() : null;
 
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
             @Override
             public Void inTransaction(SubscriptionSqlDao transactionalDao,
                     TransactionStatus status) throws Exception {
-                transactionalDao.updateSubscription(subscription.getId().toString(), subscription.getActiveVersion(), ctd, ptd, context);
+                transactionalDao.updateChargedThroughDate(subscription.getId().toString(), ctd, context);
 
+                BundleSqlDao tmpDao = transactionalDao.become(BundleSqlDao.class);
+                tmpDao.updateBundleLastSysTime(subscription.getBundleId().toString(), clock.getUTCNow().toDate());
                 AuditSqlDao auditSqlDao = transactionalDao.become(AuditSqlDao.class);
                 String subscriptionId = subscription.getId().toString();
                 auditSqlDao.insertAuditFromTransaction(SUBSCRIPTIONS_TABLE_NAME, subscriptionId, ChangeType.UPDATE, context);
@@ -237,6 +241,29 @@ public class EntitlementSqlDao implements EntitlementDao {
     @Override
     public List<EntitlementEvent> getEventsForSubscription(UUID subscriptionId) {
         return eventsDao.getEventsForSubscription(subscriptionId.toString());
+    }
+
+    @Override
+    public Map<UUID, List<EntitlementEvent>> getEventsForBundle(final UUID bundleId) {
+
+        Map<UUID, List<EntitlementEvent>> result = subscriptionsDao.inTransaction(new Transaction<Map<UUID, List<EntitlementEvent>>, SubscriptionSqlDao>() {
+            @Override
+            public Map<UUID, List<EntitlementEvent>> inTransaction(SubscriptionSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+                List<Subscription> subscriptions = transactional.getSubscriptionsFromBundleId(bundleId.toString());
+                if (subscriptions.size() == 0) {
+                    return Collections.emptyMap();
+                }
+                EventSqlDao eventsDaoFromSameTransaction = transactional.become(EventSqlDao.class);
+                Map<UUID, List<EntitlementEvent>> result = new HashMap<UUID, List<EntitlementEvent>>();
+                for (Subscription cur : subscriptions) {
+                    List<EntitlementEvent> events = eventsDaoFromSameTransaction.getEventsForSubscription(cur.getId().toString());
+                    result.put(cur.getId(), events);
+                }
+                return result;
+            }
+        });
+        return result;
     }
 
     @Override
@@ -406,7 +433,7 @@ public class EntitlementSqlDao implements EntitlementDao {
     }
 
     private void cancelFutureEventFromTransaction(final UUID subscriptionId, final EventSqlDao dao,
-            final EventType type, @Nullable final ApiEventType apiType,
+            final EventType type, final ApiEventType apiType,
             final CallContext context) {
 
         UUID futureEventId = null;
@@ -572,6 +599,39 @@ public class EntitlementSqlDao implements EntitlementDao {
                 auditSqlDao.insertAuditFromTransaction(BUNDLES_TABLE_NAME, bundleIds, ChangeType.INSERT, context);
                 auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, eventIds, ChangeType.INSERT, context);
 
+                return null;
+            }
+        });
+    }
+
+    public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context) {
+        subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
+
+            @Override
+            public Void inTransaction(SubscriptionSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+
+                EventSqlDao transEventDao = transactional.become(EventSqlDao.class);
+                for (final SubscriptionDataRepair cur : inRepair) {
+                    transactional.updateForRepair(cur.getId().toString(), cur.getActiveVersion(), cur.getStartDate().toDate(), cur.getBundleStartDate().toDate(), context);
+                    for (EntitlementEvent event : cur.getInitialEvents()) {
+                        transEventDao.updateVersion(event.getId().toString(), event.getActiveVersion(), context);
+                    }
+                    for (EntitlementEvent event : cur.getNewEvents()) {
+                        transEventDao.insertEvent(event, context);
+                        if (event.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                            recordFutureNotificationFromTransaction(transactional,
+                                    event.getEffectiveDate(),
+                                    new EntitlementNotificationKey(event.getId()));
+                        }
+                    }
+                }
+                try {
+                    RepairEntitlementEvent busEvent = new DefaultRepairEntitlementEvent(context.getUserToken(), accountId, bundleId, clock.getUTCNow());
+                    eventBus.postFromTransaction(busEvent, transactional);
+                } catch (EventBusException e) {
+                    log.warn("Failed to post repair entitlement event for bundle " + bundleId);
+                }
                 return null;
             }
         });

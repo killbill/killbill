@@ -43,8 +43,8 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.jaxrs.json.BundleJson;
-import com.ning.billing.jaxrs.json.SubscriptionJson;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 
@@ -70,7 +70,7 @@ public class BundleResource implements BaseJaxrsResource {
     public Response getBundle(@PathParam("bundleId") final String bundleId) throws EntitlementUserApiException {
         try {
             SubscriptionBundle bundle = entitlementApi.getBundleFromId(UUID.fromString(bundleId));
-            BundleJson json = new BundleJson(bundle);
+            BundleJsonNoSubsciptions json = new BundleJsonNoSubsciptions(bundle);
             return Response.status(Status.OK).entity(json).build();
         } catch (EntitlementUserApiException e) {
             if (e.getCode() == ErrorCode.ENT_GET_INVALID_BUNDLE_ID.getCode()) {
@@ -87,7 +87,7 @@ public class BundleResource implements BaseJaxrsResource {
     public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey) throws EntitlementUserApiException {
         try {
             SubscriptionBundle bundle = entitlementApi.getBundleForKey(externalKey);
-            BundleJson json = new BundleJson(bundle);
+            BundleJsonNoSubsciptions json = new BundleJsonNoSubsciptions(bundle);
             return Response.status(Status.OK).entity(json).build();
         } catch (EntitlementUserApiException e) {
             if (e.getCode() == ErrorCode.ENT_GET_INVALID_BUNDLE_KEY.getCode()) {
@@ -102,7 +102,7 @@ public class BundleResource implements BaseJaxrsResource {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createBundle(final BundleJson json) {
+    public Response createBundle(final BundleJsonNoSubsciptions json) {
         try {
             UUID accountId = UUID.fromString(json.getAccountId());
             final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(accountId, json.getExternalKey(), context.createContext());
@@ -124,12 +124,12 @@ public class BundleResource implements BaseJaxrsResource {
                 return Response.status(Status.NO_CONTENT).build();
             }
             List<Subscription> bundles = entitlementApi.getSubscriptionsForBundle(uuid);
-            Collection<SubscriptionJson> result =  Collections2.transform(bundles, new Function<Subscription, SubscriptionJson>() {
+            Collection<SubscriptionJsonNoEvents> result =  Collections2.transform(bundles, new Function<Subscription, SubscriptionJsonNoEvents>() {
                 @Override
-                public SubscriptionJson apply(Subscription input) {
-                    return new SubscriptionJson(input, null, null, null);
+                public SubscriptionJsonNoEvents apply(Subscription input) {
+                    return new SubscriptionJsonNoEvents(input);
                 }
-            });
+             });
             return Response.status(Status.OK).entity(result).build();
         } catch (EntitlementUserApiException e) {
             if (e.getCode() == ErrorCode.ENT_GET_INVALID_BUNDLE_ID.getCode()) {

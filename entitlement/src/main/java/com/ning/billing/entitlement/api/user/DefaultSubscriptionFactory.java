@@ -19,6 +19,9 @@ package com.ning.billing.entitlement.api.user;
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.SubscriptionApiService;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
+import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
@@ -28,18 +31,19 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.UUID;
 
-public class SubscriptionFactory {
+public class DefaultSubscriptionFactory implements SubscriptionFactory {
 
-    private final SubscriptionApiService apiService;
-    private final Clock clock;
-    private final CatalogService catalogService;
+    protected final SubscriptionApiService apiService;
+    protected final Clock clock;
+    protected final CatalogService catalogService;
 
     @Inject
-    public SubscriptionFactory(SubscriptionApiService apiService, Clock clock, CatalogService catalogService) {
+    public DefaultSubscriptionFactory(SubscriptionApiService apiService, Clock clock, CatalogService catalogService) {
         this.apiService = apiService;
         this.clock = clock;
         this.catalogService = catalogService;
     }
+
 
     public SubscriptionData createSubscription(SubscriptionBuilder builder, List<EntitlementEvent> events) {
         SubscriptionData subscription = new SubscriptionData(builder, apiService, clock);

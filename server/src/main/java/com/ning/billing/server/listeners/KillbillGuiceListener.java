@@ -29,6 +29,8 @@ import com.ning.jetty.core.listeners.SetupServer;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +44,7 @@ public class KillbillGuiceListener extends SetupServer
     private BusService killbillBusService;
     private KillbillEventHandler killbilleventHandler;
 
-    protected Injector theInjector;
-    
+
     protected Module getModule() {
     	return new KillbillServerModule();
     }
@@ -66,11 +67,11 @@ public class KillbillGuiceListener extends SetupServer
         super.contextInitialized(event);
 
         logger.info("KillbillLifecycleListener : contextInitialized");
-        theInjector = injector(event);
+        Injector theInjector = injector(event);
         killbillLifecycle = theInjector.getInstance(DefaultLifecycle.class);
         killbillBusService = theInjector.getInstance(BusService.class);
         killbilleventHandler = theInjector.getInstance(KillbillEventHandler.class); 
-
+        
         //
         // Fire all Startup levels up to service start
         //

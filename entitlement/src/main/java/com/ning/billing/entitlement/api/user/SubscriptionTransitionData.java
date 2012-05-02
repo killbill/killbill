@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
@@ -177,6 +178,10 @@ public class SubscriptionTransitionData implements SubscriptionEventTransition {
 
     @Override
     public SubscriptionTransitionType getTransitionType() {
+        return toSubscriptionTransitionType(eventType, apiEventType);
+    }
+    
+    public static SubscriptionTransitionType toSubscriptionTransitionType(EventType eventType, ApiEventType apiEventType) {
         switch(eventType) {
         case API_USER:
             return apiEventType.getSubscriptionTransitionType();

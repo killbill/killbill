@@ -23,34 +23,32 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 
-@Test(groups = "slow")
 public class TestMigrationSql extends TestMigration {
-//TODO MDW These tests pass but not when you run them all together - some clean up needed
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
     @Override
-    @Test(enabled=false, groups="slow")
+    @Test(enabled=true, groups="slow")
     public void testSingleBasePlan() {
         super.testSingleBasePlan();
     }
 
     @Override
-    @Test(enabled=false, groups="slow")
+    @Test(enabled=true, groups="slow")
     public void testPlanWithAddOn() {
         super.testPlanWithAddOn();
     }
 
     @Override
-    @Test(enabled=false, groups="slow")
+    @Test(enabled=true, groups="slow")
     public void testSingleBasePlanFutureCancelled() {
         super.testSingleBasePlanFutureCancelled();
     }
 
     @Override
-    @Test(enabled=false, groups="slow")
+    @Test(enabled=true, groups="slow")
     public void testSingleBasePlanWithPendingPhase() {
         super.testSingleBasePlanWithPendingPhase();
     }

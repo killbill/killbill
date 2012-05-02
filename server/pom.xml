@@ -34,8 +34,7 @@
 	</properties>
 
 	<dependencies>
-
-
+                <!-- Jetty provided scope -->
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-http</artifactId>
@@ -80,8 +79,6 @@
 			<scope>test</scope>
 		</dependency>
 
-
-
 		<!-- NOT in master POM; include version as well -->
 		<dependency>
 			<groupId>org.weakref</groupId>
@@ -118,7 +115,6 @@
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.0.1</version>
 		</dependency>
-		<!-- Do we want to depend on skeleton -->
 		<dependency>
 			<groupId>com.ning.jetty</groupId>
 			<artifactId>ning-service-skeleton-base</artifactId>
@@ -195,6 +191,10 @@
 			<groupId>com.ning.billing</groupId>
 			<artifactId>killbill-analytics</artifactId>
 		</dependency>
+                <dependency>
+                        <groupId>com.ning.billing</groupId>
+                        <artifactId>killbill-junction</artifactId>
+                </dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
@@ -233,6 +233,10 @@
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 		</dependency>
+                <dependency>
+                        <groupId>commons-io</groupId>
+                        <artifactId>commons-io</artifactId>
+                </dependency>
 		<dependency>
 			<groupId>com.ning</groupId>
 			<artifactId>async-http-client</artifactId>

@@ -16,14 +16,22 @@
 
 package com.ning.billing.entitlement.glue;
 
+
+import com.google.inject.name.Names;
+
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
+
 
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoSql;
+
+import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
+
 import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
@@ -33,7 +41,11 @@ public class MockEngineModuleSql extends MockEngineModule {
     @Override
     protected void installEntitlementDao() {
         bind(EntitlementDao.class).to(MockEntitlementDaoSql.class).asEagerSingleton();
+        bind(EntitlementDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
+        bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
+        bind(RepairEntitlementDao.class).asEagerSingleton();
     }
+    
 
     protected void installDBI() {
         final MysqlTestingHelper helper = new MysqlTestingHelper();
