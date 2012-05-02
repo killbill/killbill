@@ -20,26 +20,36 @@ import java.math.BigDecimal;
 
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonView;
 import org.joda.time.DateTime;
 
 public class InvoiceJson {
 
+    @JsonView(BundleTimelineViews.Base.class)
     private final BigDecimal amount;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String invoiceId;
-    private final DateTime requestedDate;
+    
+    @JsonView(BundleTimelineViews.Base.class)
+    private final DateTime invoiceDate;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String invoiceNumber;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final BigDecimal balance;
 
     @JsonCreator
     public InvoiceJson(@JsonProperty("amount") BigDecimal amount,
             @JsonProperty("invoice_id") String invoiceId,
-            @JsonProperty("requested_dt") DateTime requestedDate,
+            @JsonProperty("invoice_date") DateTime invoiceDate,
             @JsonProperty("invoice_number") String invoiceNumber,
             @JsonProperty("balance") BigDecimal balance) {
         super();
         this.amount = amount;
         this.invoiceId = invoiceId;
-        this.requestedDate = requestedDate;
+        this.invoiceDate = invoiceDate;
         this.invoiceNumber = invoiceNumber;
         this.balance = balance;
     }
@@ -52,8 +62,8 @@ public class InvoiceJson {
         return invoiceId;
     }
 
-    public DateTime getRequestedDate() {
-        return requestedDate;
+    public DateTime getInvoiceDate() {
+        return invoiceDate;
     }
 
     public String getInvoiceNumber() {

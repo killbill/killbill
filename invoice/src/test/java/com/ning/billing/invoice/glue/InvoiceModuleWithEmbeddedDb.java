@@ -112,9 +112,6 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
 
         install(new CatalogModule());
 
-        EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
-        bind(EntitlementUserApi.class).toInstance(entitlementUserApi);
-
         install(new GlobalLockerModule());
 
         super.configure();

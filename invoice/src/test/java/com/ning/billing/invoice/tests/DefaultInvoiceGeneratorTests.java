@@ -785,7 +785,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice3.getTotalAmount().compareTo(FIFTEEN.negate()), 0);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testRepairForPaidInvoice() throws CatalogApiException, InvoiceApiException {
         // create an invoice
         DateTime april25 = new DateTime(2012, 4, 25, 0, 0, 0, 0);

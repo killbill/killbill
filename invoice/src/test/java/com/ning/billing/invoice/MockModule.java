@@ -16,10 +16,8 @@
 
 package com.ning.billing.invoice;
 
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.email.EmailModule;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
@@ -66,16 +64,10 @@ public class MockModule extends AbstractModule {
         install(new EmailModule());
         install(new GlobalLockerModule());
         install(new NotificationQueueModule());
-        installEntitlementModule();
         install(new CatalogModule());
         install(new BusModule());
         installInvoiceModule();
         install(new MockJunctionModule());
-    }
-    
-    protected void installEntitlementModule() {
-        EntitlementUserApi api = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
-        bind(EntitlementUserApi.class).toInstance(api);
     }
 
     protected void installInvoiceModule() {

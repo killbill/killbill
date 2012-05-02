@@ -18,8 +18,8 @@ package com.ning.billing.jaxrs.json;
 
 
 public class BundleTimelineViews {
-    static class Base {};
-    static class Timeline extends Base {};
-    static class ReadTimeline extends Timeline {};
-    static class WriteTimeline extends Timeline {};
+    public static class Base {};
+    public static class Timeline extends Base {};
+    public static class ReadTimeline extends Timeline {};
+    public static class WriteTimeline extends Timeline {};
 }

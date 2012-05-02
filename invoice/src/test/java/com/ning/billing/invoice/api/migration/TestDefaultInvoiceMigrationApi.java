@@ -23,7 +23,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -58,6 +57,7 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
@@ -213,7 +213,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
 	}
 
 	// Check migration invoice is NOT returned for all user api invoice calls
-	@Test(groups={"slow"},enabled=true)
+	@Test(groups={"slow"}, enabled=true)
 	public void testUserApiAccess(){
 		List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId);
 		Assert.assertEquals(byAccount.size(),1);

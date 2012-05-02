@@ -16,8 +16,18 @@
 
 package com.ning.billing.analytics;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.ChangedField;
@@ -28,14 +38,6 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.tag.Tag;
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 public class BusinessAccountRecorder {
     private static final Logger log = LoggerFactory.getLogger(BusinessAccountRecorder.class);
@@ -54,12 +56,17 @@ public class BusinessAccountRecorder {
     }
 
     public void accountCreated(final AccountData data) {
-        final Account account = accountApi.getAccountByKey(data.getExternalKey());
+        Account account;
+        try {
+            account = accountApi.getAccountByKey(data.getExternalKey());
         final BusinessAccount bac = createBusinessAccountFromAccount(account);
 
         log.info("ACCOUNT CREATION " + bac);
         dao.createAccount(bac);
-    }
+        } catch (AccountApiException e) {
+           log.warn("Error encountered creating BusinessAccount",e);
+        }
+   }
 
     /**
      * Notification handler for Account changes
@@ -82,13 +89,13 @@ public class BusinessAccountRecorder {
         if (paymentAttempt == null) {
             return;
         }
-
-        final Account account = accountApi.getAccountById(paymentAttempt.getAccountId());
-        if (account == null) {
-            return;
+        try {
+            final Account account = accountApi.getAccountById(paymentAttempt.getAccountId());
+            accountUpdated(account.getId());
+        } catch (AccountApiException e) {
+            log.warn("Error encountered creating BusinessAccount",e);
         }
 
-        accountUpdated(account.getId());
     }
 
     /**
@@ -97,23 +104,28 @@ public class BusinessAccountRecorder {
      * @param accountId account id associated with the created invoice
      */
     public void accountUpdated(final UUID accountId) {
-        final Account account = accountApi.getAccountById(accountId);
+        try {
+            final Account account = accountApi.getAccountById(accountId);
 
-        if (account == null) {
-            log.warn("Couldn't find account {}", accountId);
-            return;
+            if (account == null) {
+                log.warn("Couldn't find account {}", accountId);
+                return;
+            }
+
+            BusinessAccount bac = dao.getAccount(account.getExternalKey());
+            if (bac == null) {
+                bac = createBusinessAccountFromAccount(account);
+                log.info("ACCOUNT CREATION " + bac);
+                dao.createAccount(bac);
+            } else {
+                updateBusinessAccountFromAccount(account, bac);
+                log.info("ACCOUNT UPDATE " + bac);
+                dao.saveAccount(bac);
+            }
+        } catch (AccountApiException e) {
+            log.warn("Error encountered creating BusinessAccount",e);
         }
 
-        BusinessAccount bac = dao.getAccount(account.getExternalKey());
-        if (bac == null) {
-            bac = createBusinessAccountFromAccount(account);
-            log.info("ACCOUNT CREATION " + bac);
-            dao.createAccount(bac);
-        } else {
-            updateBusinessAccountFromAccount(account, bac);
-            log.info("ACCOUNT UPDATE " + bac);
-            dao.saveAccount(bac);
-        }
     }
 
     private BusinessAccount createBusinessAccountFromAccount(final Account account) {

@@ -49,14 +49,17 @@ import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.api.repair.EntitlementRepairApi;
+import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
+import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -108,7 +111,7 @@ public class TestIntegrationBase implements TestFailure {
     protected EntitlementUserApi entitlementUserApi;
 
     @Inject
-    protected EntitlementRepairApi repairApi;
+    protected EntitlementTimelineApi repairApi;
     
     @Inject
     protected InvoiceUserApi invoiceUserApi;
@@ -148,6 +151,7 @@ public class TestIntegrationBase implements TestFailure {
         final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
         final String utilDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        final String junctionDb = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));
 
         helper.startMysql();
 
@@ -156,6 +160,7 @@ public class TestIntegrationBase implements TestFailure {
         helper.initDb(invoiceDdl);
         helper.initDb(paymentDdl);
         helper.initDb(utilDdl);
+        helper.initDb(junctionDb);
     }
 
     @BeforeClass(groups = "slow")
@@ -229,8 +234,8 @@ public class TestIntegrationBase implements TestFailure {
     protected void verifyTestResult(UUID accountId, UUID subscriptionId,
                                   DateTime startDate, DateTime endDate,
                                   BigDecimal amount, DateTime chargeThroughDate,
-                                  int totalInvoiceItemCount) {
-        SubscriptionData subscription = (SubscriptionData) entitlementUserApi.getSubscriptionFromId(subscriptionId);
+                                  int totalInvoiceItemCount) throws EntitlementUserApiException {
+        SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscriptionId));
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
         List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
@@ -262,7 +267,10 @@ public class TestIntegrationBase implements TestFailure {
         assertTrue(clock.getUTCNow().isBefore(ctd));
         assertTrue(ctd.compareTo(chargeThroughDate) == 0);
     }
-    
+       
+    protected SubscriptionData subscriptionDataFromSubscription(Subscription sub) {
+        return (SubscriptionData)((BlockingSubscription)sub).getDelegateSubscription();
+    }
     
     protected AccountData getAccountData(final int billingDay) {
 

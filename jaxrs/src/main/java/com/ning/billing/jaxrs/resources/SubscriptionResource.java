@@ -22,7 +22,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -43,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -52,7 +52,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionEventTransition;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.jaxrs.json.SubscriptionJson;
+import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
@@ -63,7 +63,7 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.userrequest.CompletionUserRequestBase;
 
 @Path(BaseJaxrsResource.SUBSCRIPTIONS_PATH)
-public class SubscriptionResource implements BaseJaxrsResource{
+public class SubscriptionResource implements BaseJaxrsResource {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
 
@@ -73,7 +73,9 @@ public class SubscriptionResource implements BaseJaxrsResource{
     private final Context context;
     private final JaxrsUriBuilder uriBuilder;	
     private final KillbillEventHandler killbillHandler;
+    
 
+    
     @Inject
     public SubscriptionResource(final JaxrsUriBuilder uriBuilder, final EntitlementUserApi entitlementApi,
             final Clock clock, final Context context, final KillbillEventHandler killbillHandler) {
@@ -86,22 +88,61 @@ public class SubscriptionResource implements BaseJaxrsResource{
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getSubscription(@PathParam("subscriptionId") final String subscriptionId) {
+    public Response getSubscription(@PathParam("subscriptionId") final String subscriptionId) throws EntitlementUserApiException {
 
+        try {
+            UUID uuid = UUID.fromString(subscriptionId);
+            Subscription subscription = entitlementApi.getSubscriptionFromId(uuid);
+
+            SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription);
+            return Response.status(Status.OK).entity(json).build();
+        } catch (EntitlementUserApiException e) {
+            if (e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                throw e;
+            }
+
+        }
+    }
+    
+    /*
+    @GET
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public StreamingOutput getSubscription(@PathParam("subscriptionId") final String subscriptionId) {
 
         UUID uuid = UUID.fromString(subscriptionId);
-        Subscription subscription = entitlementApi.getSubscriptionFromId(uuid);
+        final Subscription subscription = entitlementApi.getSubscriptionFromId(uuid);
         if (subscription == null) {
-            return Response.status(Status.NO_CONTENT).build();
+            throw new WebApplicationException(Response.Status.NO_CONTENT);
         }
-        SubscriptionJson json = new SubscriptionJson(subscription, null, null, null);
-        return Response.status(Status.OK).entity(json).build();
+        final SubscriptionJson json = new SubscriptionJson(subscription, null, null, null);
+        return new StreamingOutput() {
+
+            final SubscriptionJson json = new SubscriptionJson(subscription, null, null, null);
+            
+            @Override
+            public void write(OutputStream output) throws IOException,
+                    WebApplicationException {
+                
+                final ObjectWriter objWriter = objectMapper.writerWithView(BundleTimelineViews.Base.class);
+                
+                Writer writer = new StringWriter();
+                objWriter.writeValue(writer, json);
+                String baseJson = writer.toString();
+                output.write(baseJson.getBytes());
+                output.flush();
+            }
+        };
     }
+    */
+
 
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createSubscription(final SubscriptionJson subscription,
+    public Response createSubscription(final SubscriptionJsonNoEvents subscription,
             final @QueryParam(QUERY_REQUESTED_DT) String requestedDate,
             final @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") Boolean callCompletion,
             final @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") long timeoutSec) {
@@ -136,28 +177,30 @@ public class SubscriptionResource implements BaseJaxrsResource{
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
-    public Response changeSubscriptionPlan(final SubscriptionJson subscription,
+    public Response changeSubscriptionPlan(final SubscriptionJsonNoEvents subscription,
             final @PathParam("subscriptionId") String subscriptionId,
             final @QueryParam(QUERY_REQUESTED_DT) String requestedDate,
             final @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") Boolean callCompletion,
             final @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") long timeoutSec) {
-        
+
         SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
-            
+
             @Override
             public Response doOperation(CallContext ctx)
                     throws EntitlementUserApiException, InterruptedException,
                     TimeoutException {
-                UUID uuid = UUID.fromString(subscriptionId);
-                Subscription current = entitlementApi.getSubscriptionFromId(uuid);
-                if (current == null) {
+                try {
+                    UUID uuid = UUID.fromString(subscriptionId);
+                    Subscription current = entitlementApi.getSubscriptionFromId(uuid);
+                    DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
+                    isImmediateOp = current.changePlan(subscription.getProductName(),  BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), inputDate, ctx);
+                    return Response.status(Status.OK).build();
+                } catch (EntitlementUserApiException e) {
+                    log.warn("Subscription not found: " + subscriptionId , e);
                     return Response.status(Status.NO_CONTENT).build();
                 }
-                DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
-                isImmediateOp = current.changePlan(subscription.getProductName(),  BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), inputDate, ctx);
-                return Response.status(Status.OK).build();
             }
             @Override
             public boolean isImmOperation() {
@@ -168,13 +211,22 @@ public class SubscriptionResource implements BaseJaxrsResource{
                 if (operationResponse.getStatus() != Status.OK.getStatusCode()) {
                     return operationResponse;
                 }
+                try {
                 return getSubscription(subscriptionId);
+                } catch (EntitlementUserApiException e) {
+                    if (e.getCode() == ErrorCode.ENT_GET_INVALID_BUNDLE_ID.getCode()) {
+                        return Response.status(Status.NO_CONTENT).build();
+                    } else {
+                        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+                    }
+
+                }
             }
         };
         SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion);
     }
-    
+
     @PUT
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
@@ -182,14 +234,17 @@ public class SubscriptionResource implements BaseJaxrsResource{
         try {
             UUID uuid = UUID.fromString(subscriptionId);
             Subscription current = entitlementApi.getSubscriptionFromId(uuid);
-            if (current == null) {
-                return Response.status(Status.NO_CONTENT).build();
-            }
+        
             current.uncancel(context.createContext());
             return Response.status(Status.OK).build();
         } catch (EntitlementUserApiException e) {
-            log.info(String.format("Failed to uncancel plan for subscription %s", subscriptionId), e);
-            return Response.status(Status.BAD_REQUEST).build();
+            if(e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
+                log.info(String.format("Failed to find subscription %s", subscriptionId), e);
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                log.info(String.format("Failed to uncancel plan for subscription %s", subscriptionId), e);
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         }
     }
 
@@ -200,23 +255,31 @@ public class SubscriptionResource implements BaseJaxrsResource{
             final @QueryParam(QUERY_REQUESTED_DT) String requestedDate,
             final @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") Boolean callCompletion,
             final @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") long timeoutSec) {
-        
+
         SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
-            
+
             @Override
             public Response doOperation(CallContext ctx)
                     throws EntitlementUserApiException, InterruptedException,
                     TimeoutException {
-                UUID uuid = UUID.fromString(subscriptionId);
-                Subscription current = entitlementApi.getSubscriptionFromId(uuid);
-                if (current == null) {
-                    return Response.status(Status.NO_CONTENT).build();
+                try {
+                    UUID uuid = UUID.fromString(subscriptionId);
+
+                    Subscription current = entitlementApi.getSubscriptionFromId(uuid);
+
+                    DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
+                    isImmediateOp = current.cancel(inputDate, false, ctx);
+                    return Response.status(Status.OK).build();
+                } catch (EntitlementUserApiException e) {
+                    if(e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
+                        log.info(String.format("Failed to find subscription %s", subscriptionId), e);
+                        return Response.status(Status.NO_CONTENT).build();
+                    } else {
+                        throw e;
+                    }
                 }
-                DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
-                isImmediateOp = current.cancel(inputDate, false, ctx);
-                return Response.status(Status.OK).build();
             }
             @Override
             public boolean isImmOperation() {
@@ -230,7 +293,7 @@ public class SubscriptionResource implements BaseJaxrsResource{
         SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion);
     }
-    
+
     private final static class CompletionUserRequestSubscription extends CompletionUserRequestBase {
 
         public CompletionUserRequestSubscription(final UUID userToken) {
@@ -238,33 +301,33 @@ public class SubscriptionResource implements BaseJaxrsResource{
         }
         @Override
         public void onSubscriptionTransition(SubscriptionEventTransition curEvent) {
-            log.info(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ", 
+            log.debug(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ", 
                     curEvent.getUserToken(), curEvent.getTransitionType(),  curEvent.getRemainingEventsForUserOperation())); 
         }
         @Override
         public void onEmptyInvoice(final EmptyInvoiceEvent curEvent) {
-            log.info(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken())); 
+            log.debug(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken())); 
             notifyForCompletion();
         }
         @Override
         public void onInvoiceCreation(InvoiceCreationEvent curEvent) {
-            log.info(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken())); 
+            log.debug(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken())); 
             if (curEvent.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
                 notifyForCompletion();
             }
         }
         @Override
         public void onPaymentInfo(PaymentInfoEvent curEvent) {
-            log.info(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));  
+            log.debug(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));  
             notifyForCompletion();
         }
         @Override
         public void onPaymentError(PaymentErrorEvent curEvent) {
-            log.info(String.format("Got event PaymentError token = %s ", curEvent.getUserToken())); 
+            log.debug(String.format("Got event PaymentError token = %s ", curEvent.getUserToken())); 
             notifyForCompletion();
         }
     }
-    
+
     private interface SubscriptionCallCompletionCallback<T> {
         public T doOperation(final CallContext ctx) throws EntitlementUserApiException, InterruptedException, TimeoutException;
         public boolean isImmOperation();
@@ -272,7 +335,7 @@ public class SubscriptionResource implements BaseJaxrsResource{
     }
 
     private class SubscriptionCallCompletion<T> {
-        
+
         public Response withSynchronization(final SubscriptionCallCompletionCallback<T> callback, final long timeoutSec, final boolean callCompletion) {
 
             CallContext ctx = context.createContext();
@@ -288,10 +351,13 @@ public class SubscriptionResource implements BaseJaxrsResource{
                 return callback.doResponseOk(operationValue);
             } catch (EntitlementUserApiException e) {
                 log.info(String.format("Failed to complete operation"), e);
+                //throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 return Response.status(Status.BAD_REQUEST).build();
             } catch (InterruptedException e) {
+                //throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);                
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             } catch (TimeoutException e) {
+                //throw new WebApplicationException(Response.Status.fromStatusCode(408));                
                 return Response.status(Status.fromStatusCode(408)).build();   
             } finally {
                 if (waiter != null) {

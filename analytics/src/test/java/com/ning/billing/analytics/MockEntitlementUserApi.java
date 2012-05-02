@@ -28,6 +28,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.callcontext.CallContext;
 
@@ -76,6 +77,11 @@ public class MockEntitlementUserApi implements EntitlementUserApi
 
             @Override
             public OverdueState<SubscriptionBundle> getOverdueState() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public BlockingState getBlockingState() {
                 throw new UnsupportedOperationException();
             }
         };

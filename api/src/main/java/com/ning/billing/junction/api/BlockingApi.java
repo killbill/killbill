@@ -32,5 +32,5 @@ public interface BlockingApi {
     public SortedSet<BlockingState> getBlockingHistory(UUID overdueableId, Blockable.Type type);
     
     public <T extends Blockable> void  setBlockingState(BlockingState state);
-
+    
 }

@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 public interface Taggable {
     public List<Tag> getTagList();
 
-    public boolean hasTag(TagDefinition definition);
+    public boolean hasTag(TagDefinition tagDefinition);
     public boolean hasTag(ControlTagType controlTagType);
 
     public void addTag(TagDefinition definition);

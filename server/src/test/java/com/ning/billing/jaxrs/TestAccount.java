@@ -16,6 +16,8 @@
 package com.ning.billing.jaxrs;
 
 
+import static org.testng.Assert.assertNotNull;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,13 +25,20 @@ import java.util.Map;
 import javax.ws.rs.core.Response.Status;
 
 
+import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.json.AccountTimelineJson;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.http.client.Response;
 
@@ -90,5 +99,45 @@ public class TestAccount extends TestJaxrsBase {
 		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/yo";
 		Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
+	}
+	
+	@Test(groups="slow", enabled=true)
+	public void testAccountTimeline() throws Exception {
+	    
+	    DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        
+        
+	    AccountJson accountJson = createAccount("poney", "shdddqgfhwe", "poney@yahoo.com");
+	    assertNotNull(accountJson);
+	    
+	    BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAcountId(), "996599");
+	    assertNotNull(bundleJson);
+	    
+        SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        assertNotNull(subscriptionJson);
+        
+        // MOVE AFTER TRIAL
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(3).plusDays(1));
+        clock.addDeltaFromReality(it.toDurationMillis());
+
+        crappyWaitForLackOfProperSynchonization();
+        
+        
+        final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAcountId() + "/" + BaseJaxrsResource.TIMELINE;
+        
+        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        String baseJson = response.getResponseBody();
+        AccountTimelineJson objFromJson = mapper.readValue(baseJson, AccountTimelineJson.class);
+        assertNotNull(objFromJson);
+        log.info(baseJson);
+        
+        Assert.assertEquals(objFromJson.getPayments().size(), 3);
+        Assert.assertEquals(objFromJson.getInvoices().size(), 4);   
+        Assert.assertEquals(objFromJson.getBundles().size(), 1); 
+        Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().size(), 1);
+        Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);        
+ 
 	}
 }

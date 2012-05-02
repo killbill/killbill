@@ -53,11 +53,12 @@ import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
-import com.ning.billing.ovedue.OverdueProperties;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckPoster;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.ovedue.notification.OverdueListener;
+import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.glue.OverdueModule;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
@@ -133,10 +134,8 @@ public class TestOverdueCheckNotifier {
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
                 bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
-                bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
-                bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
                 bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
-                bind(EntitlementUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class));
+                install(new MockJunctionModule());
             }
         });
 

@@ -97,7 +97,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             }
         }
 
-        addCreditItems(accountId, proposedItems, existingInvoices, targetCurrency);
+        //addCreditItems(accountId, proposedItems, existingInvoices, targetCurrency);
 
         if (proposedItems == null || proposedItems.size() == 0) {
             return null;
@@ -117,13 +117,15 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         updateInvoiceBalance(invoiceItems, invoiceBalances);
 
         // add all existing items and payments
-        for (Invoice invoice : invoices) {
-            updateInvoiceBalance(invoice.getInvoiceItems(), invoiceBalances);
-        }
+        if (invoices != null) {
+            for (Invoice invoice : invoices) {
+                updateInvoiceBalance(invoice.getInvoiceItems(), invoiceBalances);
+            }
 
-        for (Invoice invoice : invoices) {
-            UUID invoiceId = invoice.getId();
-            invoiceBalances.put(invoiceId, invoiceBalances.get(invoiceId).subtract(invoice.getAmountPaid()));
+            for (Invoice invoice : invoices) {
+                UUID invoiceId = invoice.getId();
+                invoiceBalances.put(invoiceId, invoiceBalances.get(invoiceId).subtract(invoice.getAmountPaid()));
+            }
         }
 
         BigDecimal creditTotal = BigDecimal.ZERO;

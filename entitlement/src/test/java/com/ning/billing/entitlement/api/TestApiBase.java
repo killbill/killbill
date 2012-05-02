@@ -34,13 +34,13 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -57,7 +57,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.repair.EntitlementRepairApi;
+import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -77,6 +77,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.glue.RealImplementation;
 
 
 public abstract class TestApiBase {
@@ -89,7 +90,7 @@ public abstract class TestApiBase {
     protected ChargeThruApi billingApi;
 
     protected EntitlementMigrationApi migrationApi;
-    protected EntitlementRepairApi repairApi;
+    protected EntitlementTimelineApi repairApi;
 
     protected CatalogService catalogService;
     protected EntitlementConfig config;
@@ -137,10 +138,11 @@ public abstract class TestApiBase {
         final Injector g = getInjector();
 
         entitlementService = g.getInstance(EntitlementService.class);
-        entitlementApi = g.getInstance(EntitlementUserApi.class);
+        EntitlementUserApi entApi = (EntitlementUserApi)g.getInstance(Key.get(EntitlementUserApi.class, RealImplementation.class));
+        entitlementApi = entApi;
         billingApi = g.getInstance(ChargeThruApi.class);
         migrationApi = g.getInstance(EntitlementMigrationApi.class);
-        repairApi = g.getInstance(EntitlementRepairApi.class);
+        repairApi = g.getInstance(EntitlementTimelineApi.class);
         catalogService = g.getInstance(CatalogService.class);
         busService = g.getInstance(BusService.class);
         config = g.getInstance(EntitlementConfig.class);

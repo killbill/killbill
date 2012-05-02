@@ -20,6 +20,8 @@ public interface BaseJaxrsResource {
 	public static final String API_PREFIX = "";
 	public static final String API_VERSION = "/1.0";
 	
+	public static final String TIMELINE = "timeline";
+	
 	/*
 	 * Patterns
 	 */
@@ -35,7 +37,7 @@ public interface BaseJaxrsResource {
 	
 	public static final String ACCOUNTS = "accounts";	
 	public static final String ACCOUNTS_PATH = API_PREFIX + API_VERSION + "/" + ACCOUNTS;
-	
+
 	public static final String BUNDLES = "bundles";		
 	public static final String BUNDLES_PATH = API_PREFIX + API_VERSION + "/" + BUNDLES;
 

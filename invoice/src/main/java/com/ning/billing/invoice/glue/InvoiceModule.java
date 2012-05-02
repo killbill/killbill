@@ -19,6 +19,7 @@ package com.ning.billing.invoice.glue;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.notification.EmailInvoiceNotifier;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
 import com.ning.billing.util.email.templates.MustacheTemplateEngine;
 import com.ning.billing.util.email.templates.TemplateEngine;
@@ -79,7 +80,7 @@ public class InvoiceModule extends AbstractModule {
         bind(TranslatorConfig.class).toInstance(config);
         bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
         bind(TemplateEngine.class).to(MustacheTemplateEngine.class).asEagerSingleton();
-        bind(InvoiceNotifier.class).to(EmailInvoiceNotifier.class).asEagerSingleton();
+        bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
     }
 
     protected void installInvoiceListener() {

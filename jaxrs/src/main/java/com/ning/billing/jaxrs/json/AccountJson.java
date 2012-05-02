@@ -18,38 +18,61 @@ package com.ning.billing.jaxrs.json;
 
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonView;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.Currency;
 
-public class AccountJson {
+public class AccountJson extends AccountJsonSimple {
 
-    // Missing city, locale, postalCode from https://home.ninginc.com:8443/display/REVINFRA/Killbill+1.0+APIs
+    // STEPH Missing city, locale, postalCode from https://home.ninginc.com:8443/display/REVINFRA/Killbill+1.0+APIs
 
-    private final String acountId;
+    @JsonView(BundleTimelineViews.Base.class)
     private final String name;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final Integer length;
-    private final String externalKey;
+        
+    @JsonView(BundleTimelineViews.Base.class)
     private final String email;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final Integer billCycleDay;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String currency;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String paymentProvider;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String timeZone;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String address1;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String address2;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String company;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String state;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String country;
+    
+    @JsonView(BundleTimelineViews.Base.class)
     private final String phone;
 
 
     public AccountJson(Account account) {
-        this.acountId = account.getId().toString();
+        super(account.getId().toString(), account.getExternalKey());
         this.name = account.getName();
         this.length = account.getFirstNameLength();
-        this.externalKey = account.getExternalKey();
         this.email = account.getEmail();
         this.billCycleDay = account.getBillCycleDay();
         this.currency = account.getCurrency().toString();
@@ -151,10 +174,9 @@ public class AccountJson {
     // Seems like Jackson (JacksonJsonProvider.readFrom(Class<Object>, Type, Annotation[], MediaType, MultivaluedMap<String,String>, InputStream) line: 443)
     // needs us to define a default CTOR to instanciate the class first.
     public AccountJson() {
-        this.acountId = null;
+        super();
         this.name = null;
         this.length = null;
-        this.externalKey = null;
         this.email = null;
         this.billCycleDay = null;
         this.currency = null;
@@ -184,11 +206,9 @@ public class AccountJson {
             @JsonProperty("state") String state,
             @JsonProperty("country") String country,
             @JsonProperty("phone") String phone) {
-        super();
-        this.acountId = acountId;
+        super(acountId, externalKey);
         this.name = name;
         this.length = length;
-        this.externalKey = externalKey;
         this.email = email;
         this.billCycleDay = billCycleDay;
         this.currency = currency;
@@ -202,20 +222,12 @@ public class AccountJson {
         this.phone = phone;
     }
 
-    public String getAcountId() {
-        return acountId;
-    }
-
     public String getName() {
         return name;
     }
 
     public Integer getLength() {
         return length;
-    }
-
-    public String getExternalKey() {
-        return externalKey;
     }
 
     public String getEmail() {

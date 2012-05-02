@@ -30,20 +30,21 @@ import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.billing.DefaultChargeThruApi;
 import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
-import com.ning.billing.entitlement.api.repair.DefaultEntitlementRepairApi;
-import com.ning.billing.entitlement.api.repair.EntitlementRepairApi;
-import com.ning.billing.entitlement.api.repair.RepairEntitlementLifecycleDao;
-import com.ning.billing.entitlement.api.repair.RepairSubscriptionApiService;
-import com.ning.billing.entitlement.api.repair.RepairSubscriptionFactory;
+import com.ning.billing.entitlement.api.timeline.DefaultEntitlementTimelineApi;
+import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
+import com.ning.billing.entitlement.api.timeline.RepairSubscriptionApiService;
+import com.ning.billing.entitlement.api.timeline.RepairSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
+import com.ning.billing.util.glue.RealImplementation;
 
 public class EntitlementModule extends AbstractModule {
     
@@ -74,9 +75,9 @@ public class EntitlementModule extends AbstractModule {
         bind(PlanAligner.class).asEagerSingleton();
         bind(AddonUtils.class).asEagerSingleton();
         bind(MigrationPlanAligner.class).asEagerSingleton();
+        bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
         
-        bind(EntitlementRepairApi.class).to(DefaultEntitlementRepairApi.class).asEagerSingleton();
-        bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+        bind(EntitlementTimelineApi.class).to(DefaultEntitlementTimelineApi.class).asEagerSingleton();
         bind(EntitlementMigrationApi.class).to(DefaultEntitlementMigrationApi.class).asEagerSingleton();
         bind(ChargeThruApi.class).to(DefaultChargeThruApi.class).asEagerSingleton();
     }

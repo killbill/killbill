@@ -30,7 +30,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.BundleJson;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.http.client.Response;
 
@@ -44,7 +44,7 @@ public class TestBundle extends TestJaxrsBase {
 	public void testBundleOk() throws Exception {
 
 		AccountJson accountJson = createAccount("xlxl", "shdgfhkkl", "xlxl@yahoo.com");
-		BundleJson bundleJson = createBundle(accountJson.getAcountId(), "12345");
+		BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAcountId(), "12345");
 		
 		// Retrieves by external key
 		Map<String, String> queryParams = new HashMap<String, String>();
@@ -52,7 +52,7 @@ public class TestBundle extends TestJaxrsBase {
 		Response response = doGet(BaseJaxrsResource.BUNDLES_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 		String baseJson = response.getResponseBody();
-		BundleJson objFromJson = mapper.readValue(baseJson, BundleJson.class);
+		BundleJsonNoSubsciptions objFromJson = mapper.readValue(baseJson, BundleJsonNoSubsciptions.class);
 		Assert.assertTrue(objFromJson.equals(bundleJson));
 	}
 	
@@ -61,18 +61,18 @@ public class TestBundle extends TestJaxrsBase {
 	public void testBundleFromAccount() throws Exception {
 
 		AccountJson accountJson = createAccount("xaxa", "saagfhkkl", "xaxa@yahoo.com");
-		BundleJson bundleJson1 = createBundle(accountJson.getAcountId(), "156567");
-		BundleJson bundleJson2 = createBundle(accountJson.getAcountId(), "265658");
+		BundleJsonNoSubsciptions bundleJson1 = createBundle(accountJson.getAcountId(), "156567");
+		BundleJsonNoSubsciptions bundleJson2 = createBundle(accountJson.getAcountId(), "265658");
 
 		String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAcountId().toString() + "/" + BaseJaxrsResource.BUNDLES;
 		Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 		String baseJson = response.getResponseBody();
-		List<BundleJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJson>>() {});
+		List<BundleJsonNoSubsciptions> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJsonNoSubsciptions>>() {});
 		
-		Collections.sort(objFromJson, new Comparator<BundleJson>() {
+		Collections.sort(objFromJson, new Comparator<BundleJsonNoSubsciptions>() {
 			@Override
-			public int compare(BundleJson o1, BundleJson o2) {
+			public int compare(BundleJsonNoSubsciptions o1, BundleJsonNoSubsciptions o2) {
 				return o1.getExternalKey().compareTo(o2.getExternalKey());
 			}
 		});
@@ -100,7 +100,7 @@ public class TestBundle extends TestJaxrsBase {
 		response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 		String baseJson = response.getResponseBody();
-		List<BundleJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJson>>() {});
+		List<BundleJsonNoSubsciptions> objFromJson = mapper.readValue(baseJson, new TypeReference<List<BundleJsonNoSubsciptions>>() {});
 		Assert.assertNotNull(objFromJson);
 		Assert.assertEquals(objFromJson.size(), 0);
 	}

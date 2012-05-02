@@ -85,8 +85,8 @@ public abstract class ExtendedEntityBase extends EntityBase implements Customiza
 	}
 
 	@Override
-	public boolean hasTag(final TagDefinition definition) {
-		return tagStore.containsTagForDefinition(definition);
+	public boolean hasTag(final TagDefinition tagDefinition) {
+		return tagStore.containsTagForDefinition(tagDefinition);
 	}
 
     @Override

@@ -27,8 +27,8 @@ import java.util.UUID;
 
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
-import com.ning.billing.entitlement.api.repair.RepairEntitlementLifecycleDao;
-import com.ning.billing.entitlement.api.repair.SubscriptionDataRepair;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
+import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;

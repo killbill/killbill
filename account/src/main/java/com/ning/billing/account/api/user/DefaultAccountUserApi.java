@@ -19,12 +19,15 @@ package com.ning.billing.account.api.user;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
@@ -33,9 +36,8 @@ import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.TagDefinition;
-import org.joda.time.DateTime;
 
-public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
+public class DefaultAccountUserApi implements AccountUserApi {
     private final CallContextFactory factory;
     private final AccountDao dao;
 
@@ -62,13 +64,21 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
     }
 
     @Override
-    public Account getAccountByKey(final String key) {
-        return dao.getAccountByKey(key);
+    public Account getAccountByKey(final String key) throws AccountApiException {
+        Account account = dao.getAccountByKey(key);
+        if(account == null) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, key);
+        }
+        return account;
     }
 
     @Override
-    public Account getAccountById(final UUID id) {
-        return dao.getById(id.toString());
+    public Account getAccountById(final UUID id) throws AccountApiException {
+        Account account = dao.getById(id.toString());
+        if(account == null) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, id);
+        }
+        return account;
     }
 
     @Override
