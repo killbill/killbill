@@ -56,7 +56,7 @@ import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
-import com.ning.billing.invoice.glue.InvoiceModule;
+import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
@@ -184,7 +184,7 @@ public class TestJaxrsBase {
             install(new NotificationQueueModule());
             install(new CallContextModule());
             install(new AccountModule());
-            install(new InvoiceModule());
+            install(new DefaultInvoiceModule());
             install(new DefaultEntitlementModule());
             install(new AnalyticsModule());
             install(new PaymentMockModule());

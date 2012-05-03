@@ -25,7 +25,7 @@ import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
-import com.ning.billing.invoice.glue.InvoiceModule;
+import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.jaxrs.resources.AccountResource;
 import com.ning.billing.jaxrs.resources.BundleResource;
 import com.ning.billing.jaxrs.resources.BundleTimelineResource;
@@ -79,7 +79,7 @@ public class KillbillServerModule extends AbstractModule
         install(new NotificationQueueModule());
         install(new CallContextModule());
         install(new AccountModule());
-        install(new InvoiceModule());
+        install(new DefaultInvoiceModule());
         install(new DefaultEntitlementModule());
         install(new AnalyticsModule());
         install(new PaymentModule());

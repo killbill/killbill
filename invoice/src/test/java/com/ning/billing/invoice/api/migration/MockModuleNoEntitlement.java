@@ -18,7 +18,7 @@ package com.ning.billing.invoice.api.migration;
 
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.invoice.MockModule;
-import com.ning.billing.invoice.glue.InvoiceModule;
+import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.junction.api.BillingApi;
@@ -41,7 +41,7 @@ public class MockModuleNoEntitlement extends MockModule {
 
 	@Override
 	protected void installInvoiceModule() {
-		install(new InvoiceModule(){
+		install(new DefaultInvoiceModule(){
 
 			@Override
 			protected void installNotifier() {

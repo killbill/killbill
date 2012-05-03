@@ -48,7 +48,7 @@ import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
-public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
+public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private IDBI dbi;
 

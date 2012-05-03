@@ -22,7 +22,7 @@ import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
-import com.ning.billing.invoice.glue.InvoiceModule;
+import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.junction.MockBlockingModule;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.setup.PaymentModule;
@@ -49,7 +49,7 @@ public class AnalyticsTestModule extends AnalyticsModule
         install(new AccountModule());
         install(new BusModule());
         install(new DefaultEntitlementModule());
-        install(new InvoiceModule());
+        install(new DefaultInvoiceModule());
         install(new PaymentModule());
         install(new TagStoreModule());
         install(new NotificationQueueModule());
