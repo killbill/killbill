@@ -138,6 +138,7 @@ public class InvoiceDispatcher {
             log.error("Failed to post DefaultEmptyInvoiceNotification event for account {} ", accountId, e);
         }
     }
+    
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDate,
             final boolean dryRun, final CallContext context) throws InvoiceApiException {
         try {

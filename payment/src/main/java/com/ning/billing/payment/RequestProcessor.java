@@ -76,15 +76,15 @@ public class RequestProcessor {
                 List<Either<PaymentErrorEvent, PaymentInfoEvent>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()), context);
                 if (!results.isEmpty()) {
                     Either<PaymentErrorEvent, PaymentInfoEvent> result = results.get(0);
-                    eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
+                    try {
+                        eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
+                    } catch (EventBusException e) {
+                        log.error("Failed to post Payment event event for account {} ", account.getId(), e);
+                    }
                 }
             }
-        }
-        catch(AccountApiException e) {
+        } catch(AccountApiException e) {
             log.warn("could not process invoice payment", e);
-        }
-        catch (EventBusException ex) {
-            throw new RuntimeException(ex);
         }
     }
 }

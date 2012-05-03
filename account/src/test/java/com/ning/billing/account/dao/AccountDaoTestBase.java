@@ -37,6 +37,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.account.glue.AccountModuleWithEmbeddedDb;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.BusService;
 import org.testng.annotations.BeforeMethod;
@@ -91,6 +92,8 @@ public abstract class AccountDaoTestBase {
             public Void inTransaction(Handle h, TransactionStatus status) throws Exception {
                 h.execute("truncate table accounts");
                 h.execute("truncate table notifications");
+                h.execute("truncate table bus_events");
+                h.execute("truncate table claimed_bus_events");                              
                 h.execute("truncate table claimed_notifications");
                 h.execute("truncate table tag_definitions");
                 h.execute("truncate table tags");

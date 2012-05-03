@@ -32,8 +32,10 @@ import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoSql;
 
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 
+import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.glue.BusModule.BusType;
 
 public class MockEngineModuleSql extends MockEngineModule {
 
@@ -65,6 +67,7 @@ public class MockEngineModuleSql extends MockEngineModule {
         installDBI();
         install(new NotificationQueueModule());
         install(new FieldStoreModule());
+        install(new BusModule(BusType.PERSISTENT));
         super.configure();
     }
 }

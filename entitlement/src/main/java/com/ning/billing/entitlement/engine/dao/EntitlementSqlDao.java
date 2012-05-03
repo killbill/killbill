@@ -134,7 +134,7 @@ public class EntitlementSqlDao implements EntitlementDao {
     public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final CallContext context) {
         return bundlesDao.inTransaction(new Transaction<SubscriptionBundle, BundleSqlDao>() {
             @Override
-            public SubscriptionBundle inTransaction(BundleSqlDao bundlesDao, TransactionStatus status) {
+            public SubscriptionBundle inTransaction(BundleSqlDao transactional, TransactionStatus status) {
                 bundlesDao.insertBundle(bundle, context);
 
                 AuditSqlDao auditSqlDao = bundlesDao.become(AuditSqlDao.class);
@@ -200,13 +200,13 @@ public class EntitlementSqlDao implements EntitlementDao {
 
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
             @Override
-            public Void inTransaction(SubscriptionSqlDao transactionalDao,
+            public Void inTransaction(SubscriptionSqlDao transactional,
                     TransactionStatus status) throws Exception {
-                transactionalDao.updateChargedThroughDate(subscription.getId().toString(), ctd, context);
+                transactional.updateChargedThroughDate(subscription.getId().toString(), ctd, context);
 
-                BundleSqlDao tmpDao = transactionalDao.become(BundleSqlDao.class);
+                BundleSqlDao tmpDao = transactional.become(BundleSqlDao.class);
                 tmpDao.updateBundleLastSysTime(subscription.getBundleId().toString(), clock.getUTCNow().toDate());
-                AuditSqlDao auditSqlDao = transactionalDao.become(AuditSqlDao.class);
+                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 String subscriptionId = subscription.getId().toString();
                 auditSqlDao.insertAuditFromTransaction(SUBSCRIPTIONS_TABLE_NAME, subscriptionId, ChangeType.UPDATE, context);
                 return null;
@@ -218,14 +218,14 @@ public class EntitlementSqlDao implements EntitlementDao {
     public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase, final CallContext context) {
         eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
             @Override
-            public Void inTransaction(EventSqlDao dao,
+            public Void inTransaction(EventSqlDao transactional,
                     TransactionStatus status) throws Exception {
-                cancelNextPhaseEventFromTransaction(subscriptionId, dao, context);
-                dao.insertEvent(nextPhase, context);
-                AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
+                cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
+                transactional.insertEvent(nextPhase, context);
+                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, nextPhase.getId().toString(), ChangeType.INSERT, context);
 
-                recordFutureNotificationFromTransaction(dao,
+                recordFutureNotificationFromTransaction(transactional,
                         nextPhase.getEffectiveDate(),
                         new EntitlementNotificationKey(nextPhase.getId()));
                 return null;
@@ -279,23 +279,23 @@ public class EntitlementSqlDao implements EntitlementDao {
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
 
             @Override
-            public Void inTransaction(SubscriptionSqlDao dao,
+            public Void inTransaction(SubscriptionSqlDao transactional,
                     TransactionStatus status) throws Exception {
 
-                dao.insertSubscription(subscription, context);
+                transactional.insertSubscription(subscription, context);
                 // STEPH batch as well
-                EventSqlDao eventsDaoFromSameTransaction = dao.become(EventSqlDao.class);
+                EventSqlDao eventsDaoFromSameTransaction = transactional.become(EventSqlDao.class);
                 List<String> eventIds = new ArrayList<String>();
 
                 for (final EntitlementEvent cur : initialEvents) {
                     eventsDaoFromSameTransaction.insertEvent(cur, context);
                     eventIds.add(cur.getId().toString()); // collect ids for batch audit log insert
-                    recordFutureNotificationFromTransaction(dao,
+                    recordFutureNotificationFromTransaction(transactional,
                             cur.getEffectiveDate(),
                             new EntitlementNotificationKey(cur.getId()));
                 }
 
-                AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
+                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, eventIds, ChangeType.INSERT, context);
                 return null;
             }
@@ -308,20 +308,20 @@ public class EntitlementSqlDao implements EntitlementDao {
 
         eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
             @Override
-            public Void inTransaction(EventSqlDao dao,
+            public Void inTransaction(EventSqlDao transactional,
                     TransactionStatus status) throws Exception {
 
                 List<String> eventIds = new ArrayList<String>();
                 for (final EntitlementEvent cur : recreateEvents) {
-                    dao.insertEvent(cur, context);
+                    transactional.insertEvent(cur, context);
                     eventIds.add(cur.getId().toString()); // gather event ids for batch audit insert
-                    recordFutureNotificationFromTransaction(dao,
+                    recordFutureNotificationFromTransaction(transactional,
                             cur.getEffectiveDate(),
                             new EntitlementNotificationKey(cur.getId()));
 
                 }
 
-                AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
+                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, eventIds, ChangeType.INSERT, context);
                 return null;
             }
@@ -333,17 +333,17 @@ public class EntitlementSqlDao implements EntitlementDao {
 
         eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
             @Override
-            public Void inTransaction(EventSqlDao dao,
+            public Void inTransaction(EventSqlDao transactional,
                     TransactionStatus status) throws Exception {
-                cancelNextCancelEventFromTransaction(subscriptionId, dao, context);
-                cancelNextChangeEventFromTransaction(subscriptionId, dao, context);
-                cancelNextPhaseEventFromTransaction(subscriptionId, dao, context);
-                dao.insertEvent(cancelEvent, context);
-                AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
+                cancelNextCancelEventFromTransaction(subscriptionId, transactional, context);
+                cancelNextChangeEventFromTransaction(subscriptionId, transactional, context);
+                cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
+                transactional.insertEvent(cancelEvent, context);
+                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 String cancelEventId = cancelEvent.getId().toString();
                 auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, cancelEventId, ChangeType.INSERT, context);
 
-                recordFutureNotificationFromTransaction(dao,
+                recordFutureNotificationFromTransaction(transactional,
                         cancelEvent.getEffectiveDate(),
                         new EntitlementNotificationKey(cancelEvent.getId(), seqId));
                 return null;
@@ -357,12 +357,12 @@ public class EntitlementSqlDao implements EntitlementDao {
         eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
 
             @Override
-            public Void inTransaction(EventSqlDao dao,
+            public Void inTransaction(EventSqlDao transactional,
                     TransactionStatus status) throws Exception {
 
                 UUID existingCancelId = null;
                 Date now = clock.getUTCNow().toDate();
-                List<EntitlementEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
+                List<EntitlementEvent> events = transactional.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
 
                 for (EntitlementEvent cur : events) {
                     if (cur.getType() == EventType.API_USER && ((ApiEvent) cur).getEventType() == ApiEventType.CANCEL) {
@@ -374,19 +374,19 @@ public class EntitlementSqlDao implements EntitlementDao {
                 }
 
                 if (existingCancelId != null) {
-                    dao.unactiveEvent(existingCancelId.toString(), context);
+                    transactional.unactiveEvent(existingCancelId.toString(), context);
                     String deactivatedEventId = existingCancelId.toString();
 
                     List<String> eventIds = new ArrayList<String>();
                     for (final EntitlementEvent cur : uncancelEvents) {
-                        dao.insertEvent(cur, context);
+                        transactional.insertEvent(cur, context);
                         eventIds.add(cur.getId().toString()); // gather event ids for batch insert into audit log
-                        recordFutureNotificationFromTransaction(dao,
+                        recordFutureNotificationFromTransaction(transactional,
                                 cur.getEffectiveDate(),
                                 new EntitlementNotificationKey(cur.getId()));
                     }
 
-                    AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
+                    AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                     auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, deactivatedEventId, ChangeType.UPDATE, context);
                     auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, eventIds, ChangeType.INSERT, context);
                 }
@@ -399,21 +399,21 @@ public class EntitlementSqlDao implements EntitlementDao {
     public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents, final CallContext context) {
         eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
             @Override
-            public Void inTransaction(EventSqlDao dao, TransactionStatus status) throws Exception {
-                cancelNextChangeEventFromTransaction(subscriptionId, dao, context);
-                cancelNextPhaseEventFromTransaction(subscriptionId, dao, context);
+            public Void inTransaction(EventSqlDao transactional, TransactionStatus status) throws Exception {
+                cancelNextChangeEventFromTransaction(subscriptionId, transactional, context);
+                cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
 
                 List<String> eventIds = new ArrayList<String>();
                 for (final EntitlementEvent cur : changeEvents) {
-                    dao.insertEvent(cur, context);
+                    transactional.insertEvent(cur, context);
                     eventIds.add(cur.getId().toString()); // gather event ids for batch audit log insert
 
-                    recordFutureNotificationFromTransaction(dao,
+                    recordFutureNotificationFromTransaction(transactional,
                             cur.getEffectiveDate(),
                             new EntitlementNotificationKey(cur.getId()));
                 }
 
-                AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
+                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                 auditSqlDao.insertAuditFromTransaction(ENTITLEMENT_EVENTS_TABLE_NAME, eventIds, ChangeType.INSERT, context);
                 return null;
             }
@@ -562,11 +562,11 @@ public class EntitlementSqlDao implements EntitlementDao {
         eventsDao.inTransaction(new Transaction<Void, EventSqlDao>() {
 
             @Override
-            public Void inTransaction(EventSqlDao transEventDao,
+            public Void inTransaction(EventSqlDao transactional,
                     TransactionStatus status) throws Exception {
 
-                SubscriptionSqlDao transSubDao = transEventDao.become(SubscriptionSqlDao.class);
-                BundleSqlDao transBundleDao = transEventDao.become(BundleSqlDao.class);
+                SubscriptionSqlDao transSubDao = transactional.become(SubscriptionSqlDao.class);
+                BundleSqlDao transBundleDao = transactional.become(BundleSqlDao.class);
 
                 List<String> bundleIds = new ArrayList<String>();
                 List<String> subscriptionIds = new ArrayList<String>();
@@ -579,10 +579,10 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                         SubscriptionData subData = curSubscription.getData();
                         for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
-                            transEventDao.insertEvent(curEvent, context);
+                            transactional.insertEvent(curEvent, context);
                             eventIds.add(curEvent.getId().toString()); // gather event ids for batch audit
 
-                            recordFutureNotificationFromTransaction(transEventDao,
+                            recordFutureNotificationFromTransaction(transactional,
                                     curEvent.getEffectiveDate(),
                                     new EntitlementNotificationKey(curEvent.getId()));
                         }
@@ -630,7 +630,7 @@ public class EntitlementSqlDao implements EntitlementDao {
                     RepairEntitlementEvent busEvent = new DefaultRepairEntitlementEvent(context.getUserToken(), accountId, bundleId, clock.getUTCNow());
                     eventBus.postFromTransaction(busEvent, transactional);
                 } catch (EventBusException e) {
-                    log.warn("Failed to post repair entitlement event for bundle " + bundleId);
+                    log.warn("Failed to post repair entitlement event for bundle " + bundleId, e);
                 }
                 return null;
             }
@@ -662,9 +662,9 @@ public class EntitlementSqlDao implements EntitlementDao {
     public void saveCustomFields(final SubscriptionData subscription, final CallContext context) {
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
             @Override
-            public Void inTransaction(SubscriptionSqlDao transactionalDao,
+            public Void inTransaction(SubscriptionSqlDao transactional,
                     TransactionStatus status) throws Exception {
-                updateCustomFieldsFromTransaction(transactionalDao, subscription, context);
+                updateCustomFieldsFromTransaction(transactional, subscription, context);
                 return null;
             }
         });

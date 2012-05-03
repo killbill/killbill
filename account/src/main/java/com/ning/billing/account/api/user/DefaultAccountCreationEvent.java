@@ -19,6 +19,7 @@ package com.ning.billing.account.api.user;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
 
@@ -46,7 +47,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
     
     public DefaultAccountCreationEvent(Account data, UUID userToken) {
         this.id = data.getId();
-        this.data = data;
+        this.data = new DefaultAccountData(data);
         this.userToken = userToken;
     }
 
@@ -129,6 +130,27 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         private final String postalCode;
         private final String country;
         private final String phone;
+        
+        
+        public DefaultAccountData(Account d) {
+            this(d.getExternalKey() != null ?  d.getExternalKey().toString() : null,
+                    d.getName(),
+                    d.getFirstNameLength(),
+                    d.getEmail(),
+                    d.getBillCycleDay(),
+                    d.getCurrency() != null ?  d.getCurrency().name() : null,
+                    d.getPaymentProviderName(), 
+                    d.getTimeZone() != null ?  d.getTimeZone().getID() : null,
+                    d.getLocale(),
+                    d.getAddress1(),
+                    d.getAddress2(),
+                    d.getCompanyName(),
+                    d.getCity(),
+                    d.getStateOrProvince(),
+                    d.getPostalCode(),
+                    d.getCountry(),
+                    d.getPhone());
+        }
         
         @JsonCreator
         public DefaultAccountData(@JsonProperty("externalKey") String externalKey,

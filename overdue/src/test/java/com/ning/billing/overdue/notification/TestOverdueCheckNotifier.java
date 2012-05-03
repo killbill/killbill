@@ -141,7 +141,7 @@ public class TestOverdueCheckNotifier {
 
         clock = g.getInstance(Clock.class);
         IDBI dbi = g.getInstance(IDBI.class);
-        dao = dbi.onDemand(DummySqlTest.class);
+
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
@@ -161,7 +161,7 @@ public class TestOverdueCheckNotifier {
         eventBus.start();
         notifier.initialize();
         notifier.start();
-
+        dao = dbi.onDemand(DummySqlTest.class);
 	}
 
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {

@@ -45,6 +45,7 @@ import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
@@ -151,56 +152,56 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public void create(final Invoice invoice, final CallContext context) {
+        
+        final InvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
+                invoice.getBalance(), invoice.getCurrency(),
+                invoice.getInvoiceDate(),
+                context.getUserToken());
+
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
-            public Void inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+            public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
 
                 // STEPH this seems useless
-                Invoice currentInvoice = invoiceDao.getById(invoice.getId().toString());
+                Invoice currentInvoice = transactional.getById(invoice.getId().toString());
 
                 if (currentInvoice == null) {
-                    invoiceDao.create(invoice, context);
+                    transactional.create(invoice, context);
 
                     List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-                    RecurringInvoiceItemSqlDao recurringInvoiceItemDao = invoiceDao.become(RecurringInvoiceItemSqlDao.class);
+                    RecurringInvoiceItemSqlDao recurringInvoiceItemDao = transactional.become(RecurringInvoiceItemSqlDao.class);
                     recurringInvoiceItemDao.batchCreateFromTransaction(recurringInvoiceItems, context);
 
                     notifyOfFutureBillingEvents(invoiceSqlDao, recurringInvoiceItems);
 
                     List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
-                    FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = invoiceDao.become(FixedPriceInvoiceItemSqlDao.class);
+                    FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = transactional.become(FixedPriceInvoiceItemSqlDao.class);
                     fixedPriceInvoiceItemDao.batchCreateFromTransaction(fixedPriceInvoiceItems, context);
 
                     setChargedThroughDates(invoiceSqlDao, fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
                     // STEPH Why do we need that? Are the payments not always null at this point?
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
-                    InvoicePaymentSqlDao invoicePaymentSqlDao = invoiceDao.become(InvoicePaymentSqlDao.class);
+                    InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
                     invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments, context);
 
-                    AuditSqlDao auditSqlDao = invoiceDao.become(AuditSqlDao.class);
+                    AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
                     auditSqlDao.insertAuditFromTransaction("invoices", invoice.getId().toString(), ChangeType.INSERT, context);
                     auditSqlDao.insertAuditFromTransaction("recurring_invoice_items", getIdsFromInvoiceItems(recurringInvoiceItems), ChangeType.INSERT, context);
                     auditSqlDao.insertAuditFromTransaction("fixed_invoice_items", getIdsFromInvoiceItems(fixedPriceInvoiceItems), ChangeType.INSERT, context);
                     auditSqlDao.insertAuditFromTransaction("invoice_payments", getIdsFromInvoicePayments(invoicePayments), ChangeType.INSERT, context);
 
                 }
-
+                try {
+                    eventBus.postFromTransaction(event, transactional);
+                } catch (EventBusException e) {
+                    log.warn("Failed to post invoice event for invoiceId " + invoice.getId(), e);
+                }
                 return null;
             }
         });
 
-        // TODO: move this inside the transaction once the bus is persistent
-        InvoiceCreationEvent event;
-        event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                      invoice.getBalance(), invoice.getCurrency(),
-                                                      invoice.getInvoiceDate(),
-                                                      context.getUserToken());
-        try {
-            eventBus.post(event);
-        } catch (Bus.EventBusException e) {
-            throw new RuntimeException(e);
-        }
+
     }
 
     private List<String> getIdsFromInvoiceItems(List<InvoiceItem> invoiceItems) {

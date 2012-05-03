@@ -16,6 +16,7 @@
 package com.ning.billing.util.bus;
 
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -198,10 +199,10 @@ public class PersistentBus implements Bus  {
 
         int result = 0;
         for (final BusEventEntry cur : events) {
-            BusEvent e = deserializeBusEvent(cur.getBusEventClass(), cur.getBusEventJson());
+            BusEvent evt = deserializeBusEvent(cur.getBusEventClass(), cur.getBusEventJson());
             result++;
-            // STEPH need to look at failure cases
-            eventBusDelegate.post(e);
+            // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
+            eventBusDelegate.post(evt);
             dao.clearBusEvent(cur.getId(), hostname);
         }
         return result;
