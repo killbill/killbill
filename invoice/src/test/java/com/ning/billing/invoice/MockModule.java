@@ -25,7 +25,7 @@ import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.glue.EntitlementModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.glue.MockJunctionModule;
@@ -72,7 +72,7 @@ public class MockModule extends AbstractModule {
     }
     
     protected void installEntitlementModule() {
-        install(new EntitlementModule());
+        install(new DefaultEntitlementModule());
     }
 
     protected void installInvoiceModule() {

@@ -32,7 +32,7 @@ public class MockDbHelperModule extends AbstractModule {
         installMysqlTestingHelper();
     }
     
-    protected void  installMysqlTestingHelper() {
+    public void  installMysqlTestingHelper() {
 
         final MysqlTestingHelper helper = new MysqlTestingHelper();
         bind(MysqlTestingHelper.class).toInstance(helper);

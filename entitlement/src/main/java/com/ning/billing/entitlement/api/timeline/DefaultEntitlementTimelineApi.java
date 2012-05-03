@@ -55,7 +55,7 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.entitlement.glue.EntitlementModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.util.callcontext.CallContext;
 
 public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
@@ -74,8 +74,8 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
 
 
     @Inject
-    public DefaultEntitlementTimelineApi(@Named(EntitlementModule.REPAIR_NAMED) final SubscriptionFactory factory, final CatalogService catalogService,
-            @Named(EntitlementModule.REPAIR_NAMED) final RepairEntitlementLifecycleDao repairDao, final EntitlementDao dao) {
+    public DefaultEntitlementTimelineApi(@Named(DefaultEntitlementModule.REPAIR_NAMED) final SubscriptionFactory factory, final CatalogService catalogService,
+            @Named(DefaultEntitlementModule.REPAIR_NAMED) final RepairEntitlementLifecycleDao repairDao, final EntitlementDao dao) {
         this.catalogService = catalogService;
         this.dao = dao;
         this.repairDao = repairDao;

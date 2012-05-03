@@ -24,7 +24,7 @@ import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.entitlement.glue.EntitlementModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.jaxrs.resources.AccountResource;
 import com.ning.billing.jaxrs.resources.BundleResource;
@@ -33,7 +33,7 @@ import com.ning.billing.jaxrs.resources.InvoiceResource;
 import com.ning.billing.jaxrs.resources.PaymentResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
-import com.ning.billing.junction.glue.JunctionModule;
+import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
@@ -80,11 +80,11 @@ public class KillbillServerModule extends AbstractModule
         install(new CallContextModule());
         install(new AccountModule());
         install(new InvoiceModule());
-        install(new EntitlementModule());
+        install(new DefaultEntitlementModule());
         install(new AnalyticsModule());
         install(new PaymentModule());
         install(new BeatrixModule());
-        install(new JunctionModule());        
+        install(new DefaultJunctionModule());        
         installClock();
     }
 }

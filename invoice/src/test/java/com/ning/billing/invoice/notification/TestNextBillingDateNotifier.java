@@ -60,7 +60,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
-import com.ning.billing.entitlement.glue.EntitlementModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
@@ -158,17 +158,17 @@ public class TestNextBillingDateNotifier {
                 
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
                 bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
-                bind(EntitlementDao.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);
-                bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);
+                bind(EntitlementDao.class).annotatedWith(Names.named(DefaultEntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);
+                bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(DefaultEntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);
                 bind(RepairEntitlementDao.class).asEagerSingleton();
                 bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
                 bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
                 bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
                 bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-                bind(SubscriptionApiService.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
+                bind(SubscriptionApiService.class).annotatedWith(Names.named(DefaultEntitlementModule.REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
                 bind(SubscriptionApiService.class).to(DefaultSubscriptionApiService.class).asEagerSingleton();
-                bind(SubscriptionFactory.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairSubscriptionFactory.class).asEagerSingleton();
+                bind(SubscriptionFactory.class).annotatedWith(Names.named(DefaultEntitlementModule.REPAIR_NAMED)).to(RepairSubscriptionFactory.class).asEagerSingleton();
                 bind(SubscriptionFactory.class).to(DefaultSubscriptionFactory.class).asEagerSingleton();
             
                 install(new MockJunctionModule());

@@ -16,24 +16,14 @@
 
 package com.ning.billing.junction;
 
-import org.skife.config.ConfigurationObjectFactory;
-import org.skife.jdbi.v2.IDBI;
-
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.dbi.DBIProvider;
-import com.ning.billing.dbi.DbiConfig;
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.junction.glue.JunctionModule;
+import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.mock.glue.MockDbHelperModule;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.CallContextModule;
 
 
-public class MockModule extends JunctionModule {
+public class MockModule extends DefaultJunctionModule {
     public static final String PLUGIN_NAME = "Booboo";
 
     @Override
@@ -47,12 +37,12 @@ public class MockModule extends JunctionModule {
     }
     
     @Override
-    protected void installBillingApi() {
+    public void installBillingApi() {
         // no billinggApi
     }
 
     @Override
-    protected void installAccountUserApi() {
+    public void installAccountUserApi() {
         
     }
 

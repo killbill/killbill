@@ -44,9 +44,10 @@ import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
+import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.util.glue.RealImplementation;
 
-public class EntitlementModule extends AbstractModule {
+public class DefaultEntitlementModule extends AbstractModule implements EntitlementModule{
     
     public static final String REPAIR_NAMED = "repair";
     
@@ -70,16 +71,16 @@ public class EntitlementModule extends AbstractModule {
         bind(SubscriptionApiService.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
         bind(SubscriptionApiService.class).to(DefaultSubscriptionApiService.class).asEagerSingleton();
         
-        bind(EntitlementService.class).to(Engine.class).asEagerSingleton();
         bind(Engine.class).asEagerSingleton();
         bind(PlanAligner.class).asEagerSingleton();
         bind(AddonUtils.class).asEagerSingleton();
         bind(MigrationPlanAligner.class).asEagerSingleton();
-        bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
         
-        bind(EntitlementTimelineApi.class).to(DefaultEntitlementTimelineApi.class).asEagerSingleton();
-        bind(EntitlementMigrationApi.class).to(DefaultEntitlementMigrationApi.class).asEagerSingleton();
-        bind(ChargeThruApi.class).to(DefaultChargeThruApi.class).asEagerSingleton();
+        installEntitlementService();
+        installEntitlementTimelineApi();
+        installEntitlementMigrationApi();
+        installChargeThruApi();
+        installEntitlementUserApi();
     }
 
     @Override
@@ -87,5 +88,30 @@ public class EntitlementModule extends AbstractModule {
         installConfig();
         installEntitlementDao();
         installEntitlementCore();
+    }
+
+    @Override
+    public void installEntitlementService() {
+        bind(EntitlementService.class).to(Engine.class).asEagerSingleton();
+     }
+
+    @Override
+    public void installEntitlementTimelineApi() {
+        bind(EntitlementTimelineApi.class).to(DefaultEntitlementTimelineApi.class).asEagerSingleton();
+    }
+
+    @Override
+    public void installEntitlementMigrationApi() {
+        bind(EntitlementMigrationApi.class).to(DefaultEntitlementMigrationApi.class).asEagerSingleton();
+    }
+
+    @Override
+    public void installChargeThruApi() {
+        bind(ChargeThruApi.class).to(DefaultChargeThruApi.class).asEagerSingleton();
+    }
+
+    @Override
+    public void installEntitlementUserApi() {
+        bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
     }
 }

@@ -39,10 +39,10 @@ import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.glue.EntitlementModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.glue.InvoiceModule;
-import com.ning.billing.junction.glue.JunctionModule;
+import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
@@ -91,10 +91,10 @@ public class MockModule extends AbstractModule {
         install(new FieldStoreModule());
         install(new AccountModule());
         install(new CatalogModule());
-        install(new EntitlementModule());
+        install(new DefaultEntitlementModule());
         install(new InvoiceModule());
         install(new PaymentMockModule());
-        install(new JunctionModule());
+        install(new DefaultJunctionModule());
     }
 
     private static final class PaymentMockModule extends PaymentModule {

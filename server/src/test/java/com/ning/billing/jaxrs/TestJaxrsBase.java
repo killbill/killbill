@@ -55,13 +55,13 @@ import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.glue.EntitlementModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.glue.InvoiceModule;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
-import com.ning.billing.junction.glue.JunctionModule;
+import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
@@ -185,11 +185,11 @@ public class TestJaxrsBase {
             install(new CallContextModule());
             install(new AccountModule());
             install(new InvoiceModule());
-            install(new EntitlementModule());
+            install(new DefaultEntitlementModule());
             install(new AnalyticsModule());
             install(new PaymentMockModule());
             install(new BeatrixModule());
-            install(new JunctionModule());
+            install(new DefaultJunctionModule());
             installClock();
         }
 

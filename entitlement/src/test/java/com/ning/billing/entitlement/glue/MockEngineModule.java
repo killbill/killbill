@@ -23,7 +23,7 @@ import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 
-public class MockEngineModule extends EntitlementModule {
+public class MockEngineModule extends DefaultEntitlementModule {
 
    
     @Override
