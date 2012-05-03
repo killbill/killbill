@@ -37,7 +37,7 @@ public @interface CustomFieldHistoryBinder {
             return new Binder<CustomFieldHistoryBinder, CustomFieldHistory>() {
                 @Override
                 public void bind(SQLStatement q, CustomFieldHistoryBinder bind, CustomFieldHistory customFieldHistory) {
-                    q.bind("historyId", customFieldHistory.getHistoryId().toString());
+                    q.bind("historyRecordId", customFieldHistory.getHistoryId().toString());
                     q.bind("changeType", customFieldHistory.getChangeType().toString());
                     q.bind("id", customFieldHistory.getId().toString());
                     q.bind("fieldName", customFieldHistory.getName());

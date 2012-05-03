@@ -68,7 +68,7 @@ public abstract class AccountDaoTestBase {
             accountDao.test();
 
             Clock clock = injector.getInstance(Clock.class);
-            context = new DefaultCallContextFactory(clock).createCallContext("Vizzini", CallOrigin.TEST, UserType.TEST);
+            context = new DefaultCallContextFactory(clock).createCallContext("Account Dao Tests", CallOrigin.TEST, UserType.TEST);
 
 
             BusService busService = injector.getInstance(BusService.class);

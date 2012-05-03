@@ -19,6 +19,7 @@ CREATE TABLE accounts (
     postal_code varchar(11) DEFAULT NULL,
     phone varchar(25) DEFAULT NULL,
     migrated bool DEFAULT false,
+    is_notified_for_invoices boolean NOT NULL,
     created_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
     updated_date datetime DEFAULT NULL,
@@ -30,7 +31,7 @@ CREATE UNIQUE INDEX accounts_email ON accounts(email);
 
 DROP TABLE IF EXISTS account_history;
 CREATE TABLE account_history (
-    history_id char(36) NOT NULL,
+    history_record_id char(36) NOT NULL,
     id char(36) NOT NULL,
     external_key varchar(128) NULL,
     email varchar(50) NOT NULL,
@@ -49,8 +50,35 @@ CREATE TABLE account_history (
     country varchar(50) DEFAULT NULL,
     postal_code varchar(11) DEFAULT NULL,
     phone varchar(25) DEFAULT NULL,
+    migrated bool DEFAULT false,
+    is_notified_for_invoices boolean NOT NULL,
     change_type char(6) NOT NULL,
     updated_by varchar(50) NOT NULL,
-    date datetime
+    date datetime NOT NULL
 ) ENGINE=innodb;
 CREATE INDEX account_id ON account_history(id);
+
+DROP TABLE IF EXISTS account_emails;
+CREATE TABLE account_emails (
+    id char(36) NOT NULL,
+    account_id char(36) NOT NULL,
+    email varchar(50) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
+    PRIMARY KEY(id)
+) ENGINE=innodb;
+CREATE INDEX account_email_account_id ON account_emails(account_id);
+
+DROP TABLE IF EXISTS account_email_history;
+CREATE TABLE account_email_history (
+    history_record_id char(36) NOT NULL,
+    id char(36) NOT NULL,
+    account_id char(36) NOT NULL,
+    email varchar(50) NOT NULL,
+    change_type char(6) NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    date datetime NOT NULL,
+    PRIMARY KEY(history_record_id)
+) ENGINE=innodb;

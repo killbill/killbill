@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
@@ -53,7 +54,7 @@ public class DefaultDuration extends ValidatingConfig<OverdueConfig> implements 
 
     @Override
     public DateTime addToDateTime(DateTime dateTime) {
-        if (number == null) {return dateTime;}
+        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {return dateTime;}
 
         switch (unit) {
             case DAYS:
@@ -66,6 +67,24 @@ public class DefaultDuration extends ValidatingConfig<OverdueConfig> implements 
                 return dateTime.plusYears(100);
             default:
                 return dateTime;
+        }
+    }
+
+    @Override
+    public Period toJodaPeriod() {
+        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {return new Period();}
+
+        switch (unit) {
+            case DAYS:
+                return new Period().withDays(number);
+            case MONTHS:
+                return new Period().withMonths(number);
+            case YEARS:
+                return new Period().withYears(number);
+            case UNLIMITED:
+                return new Period().withYears(100);
+            default:
+                return new Period();
         }
     }
 

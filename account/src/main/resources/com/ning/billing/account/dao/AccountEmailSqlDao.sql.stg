@@ -1,0 +1,48 @@
+group account_emails;
+
+fields(prefix) ::= <<
+    <prefix>id,
+    <prefix>account_id,
+    <prefix>email,
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date
+>>
+
+create() ::= <<
+    INSERT INTO account_emails(<fields()>)
+    VALUES
+    (:id, :accountId, :email, :userName, :createdDate, :userName, :updatedDate);
+>>
+
+update() ::= <<
+    UPDATE account_emails
+    SET email = :email, updated_by = :userName, updated_date = :updatedDate;
+>>
+
+delete() ::= <<
+    DELETE FROM account_emails
+    WHERE id = :id;
+>>
+
+insertAccountEmailHistoryFromTransaction() ::= <<
+    INSERT INTO account_email_history(history_record_id, id, account_id, email, change_type, updated_by, date)
+    VALUES (:historyRecordId, :id, :accountId, :email, :changeType, :userName, :updatedDate);
+>>
+
+getById() ::= <<
+    SELECT <fields()> FROM account_emails WHERE id = :id;
+>>
+
+get() ::= <<
+    SELECT <fields()> FROM account_emails;
+>>
+
+getByAccountId() ::= <<
+    SELECT <fields()> FROM account_emails WHERE account_id = :accountId;
+>>
+
+test() ::= <<
+    SELECT 1 FROM account_emails;
+>>

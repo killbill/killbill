@@ -21,12 +21,17 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.skife.jdbi.v2.Handle;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -40,7 +45,7 @@ import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
 @Test(groups = {"slow", "account-dao"})
-public class TestSimpleAccountDao extends AccountDaoTestBase {
+public class TestAccountDao extends AccountDaoTestBase {
     private Account createTestAccount(int billCycleDay) {
         return createTestAccount(billCycleDay, "123-456-7890");
     }
@@ -58,7 +63,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         return new DefaultAccount(UUID.randomUUID(), thisKey, thisEmail, name, firstNameLength, Currency.USD,
                 billCycleDay, null, timeZone, locale,
                 null, null, null, null, null, null, null, // add null address fields
-                phone, "test", DateTime.now(), "test", DateTime.now());
+                phone, false, false, "test", DateTime.now(), "test", DateTime.now());
     }
 
     @Test
@@ -200,6 +205,16 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
             }
 
             @Override
+            public boolean isMigrated() {
+                return false;
+            }
+
+            @Override
+            public boolean isNotifiedForInvoices() {
+                return false;
+            }
+
+            @Override
             public int getBillCycleDay() {
                 return account.getBillCycleDay();
             }
@@ -286,7 +301,8 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         DefaultAccount account = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null, null, null, null, null, null);
+                                                    null, null, null, null, null, null, null, null, false, false,
+                                                    null, null, null, null);
         accountDao.create(account, context);
 
         String address1 = "123 address 1";
@@ -302,7 +318,7 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     address1, address2, companyName, city, stateOrProvince, country,
-                                                    postalCode, phone, null, null, null, null);
+                                                    postalCode, phone, false, false, null, null, null, null);
 
         accountDao.update(updatedAccount, context);
 
@@ -329,14 +345,14 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     "123 address 1", "456 address 2", null, "Cambridge Bay",
                                                     "Nunavut", "Canada", "X0B 0C0", "18001112222",
-                                                    null, null, null, null);
+                                                    false, false, null, null, null, null);
         accountDao.create(account, context);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     null, null, null, null, null, null, null, null,
-                                                    null, null, null, null);
+                                                    false, false, null, null, null, null);
 
         accountDao.update(updatedAccount, context);
 
@@ -362,13 +378,72 @@ public class TestSimpleAccountDao extends AccountDaoTestBase {
         DefaultAccount account = new DefaultAccount(accountId, originalExternalKey, "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     null, null, null, null, null, null, null, null, null, null,
-                                                    null, null, null, null);
+                                                    false, false, null, null, null, null);
         accountDao.create(account, context);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey1338", "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     null, null, null, null, null, null, null, null, null, null,
-                                                    null, null, null, null);
+                                                    false, false, null, null, null, null);
         accountDao.update(updatedAccount, context);
+    }
+
+    @Test
+    public void testAccountEmail() {
+        List<AccountEmail> emails = new ArrayList<AccountEmail>();
+
+        // generate random account id
+        UUID accountId = UUID.randomUUID();
+
+        // add a new e-mail
+        final AccountEmail email = new DefaultAccountEmail(accountId, "test@gmail.com");
+        emails.add(email);
+        accountDao.saveEmails(accountId, emails, context);
+        emails = accountDao.getEmails(accountId);
+        assertEquals(emails.size(), 1);
+
+        // verify that history and audit contain one entry
+        verifyAccountEmailAuditAndHistoryCount(accountId, 1);
+
+        // update e-mail
+        AccountEmail updatedEmail = new DefaultAccountEmail(email, "test2@gmail.com");
+        emails.clear();
+        emails.add(updatedEmail);
+        accountDao.saveEmails(accountId, emails, context);
+        emails = accountDao.getEmails(accountId);
+        assertEquals(emails.size(), 1);
+
+        // verify that history and audit contain two entries
+        verifyAccountEmailAuditAndHistoryCount(accountId, 2);
+
+        // delete e-mail
+        accountDao.saveEmails(accountId, new ArrayList<AccountEmail>(), context);
+        emails = accountDao.getEmails(accountId);
+        assertEquals(emails.size(), 0);
+
+        // verify that history and audit contain three entries
+        verifyAccountEmailAuditAndHistoryCount(accountId, 3);
+    }
+
+    private void verifyAccountEmailAuditAndHistoryCount(UUID accountId, int expectedCount) {
+        Handle handle = dbi.open();
+
+        // verify audit
+        StringBuilder sb = new StringBuilder();
+        sb.append("select * from audit_log a ");
+        sb.append("inner join account_email_history aeh on a.record_id = aeh.history_record_id ");
+        sb.append("where a.table_name = 'account_email_history' ");
+        sb.append(String.format("and aeh.account_id='%s'", accountId.toString()));
+        List<Map<String, Object>> result = handle.select(sb.toString());
+        assertEquals(result.size(), expectedCount);
+
+        // verify history table
+        sb = new StringBuilder();
+        sb.append("select * from account_email_history ");
+        sb.append(String.format("where account_id='%s'", accountId.toString()));
+        result = handle.select(sb.toString());
+        assertEquals(result.size(), expectedCount);
+
+        handle.close();
     }
 }

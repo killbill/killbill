@@ -103,7 +103,9 @@ public class TestTagStore {
     @AfterClass(groups="slow")
     public void stopMysql()
     {
-        helper.stopMysql();
+        if (helper != null) {
+            helper.stopMysql();
+        }
     }
 
     private void cleanupTags() {
@@ -113,7 +115,7 @@ public class TestTagStore {
                 public Void withHandle(Handle handle) throws Exception {
                     handle.createScript("delete from tag_definitions").execute();
                     handle.createScript("delete from tag_definition_history").execute();
-                    handle.createScript("delete from tags").execute();
+                    handle.createScript("delete from tagStore").execute();
                     handle.createScript("delete from tag_history").execute();
                     return null;
                 }
@@ -307,7 +309,7 @@ public class TestTagStore {
         try {
             tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
         } catch (TagDefinitionApiException e) {
-            fail("Could not delete tags for tag definition", e);
+            fail("Could not delete tagStore for tag definition", e);
         }
 
         try {
@@ -332,7 +334,7 @@ public class TestTagStore {
         try {
             tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
         } catch (TagDefinitionApiException e) {
-            fail("Could not delete tags for tag definition", e);
+            fail("Could not delete tagStore for tag definition", e);
         }
 
         try {
@@ -391,6 +393,8 @@ public class TestTagStore {
         String query = String.format("select * from audit_log a inner join tag_history th on a.record_id = th.history_record_id where a.table_name = 'tag_history' and th.id='%s' and a.change_type='INSERT'",
                                      tag.getId().toString());
         List<Map<String, Object>> result = handle.select(query);
+        handle.close();
+
         assertNotNull(result);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).get("change_type"), "INSERT");
@@ -420,6 +424,8 @@ public class TestTagStore {
         String query = String.format("select * from audit_log a inner join tag_history th on a.record_id = th.history_record_id where a.table_name = 'tag_history' and th.id='%s' and a.change_type='DELETE'",
                                      tag.getId().toString());
         List<Map<String, Object>> result = handle.select(query);
+        handle.close();
+
         assertNotNull(result);
         assertEquals(result.size(), 1);
         assertNotNull(result.get(0).get("change_date"));

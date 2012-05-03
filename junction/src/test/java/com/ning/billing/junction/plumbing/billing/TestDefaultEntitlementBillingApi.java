@@ -148,13 +148,13 @@ public class TestDefaultEntitlementBillingApi {
 	private Subscription subscription;
 	private DateTime subscriptionStartDate;
 
-	@BeforeSuite(alwaysRun=true)
+	@BeforeSuite(groups={"fast", "slow"})
 	public void setup() throws ServiceException {
         catalogService = new MockCatalogService(new MockCatalog());
         clock = new ClockMock();
 	}
 
-	@BeforeMethod(alwaysRun=true)
+	@BeforeMethod(groups={"fast", "slow"})
 	public void setupEveryTime() {
 		bundles = new ArrayList<SubscriptionBundle>();
 		final SubscriptionBundle bundle = new SubscriptionBundleData( eventId,"TestKey", subId,  clock.getUTCNow().minusDays(4), null);

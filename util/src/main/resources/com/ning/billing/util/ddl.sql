@@ -16,7 +16,7 @@ CREATE UNIQUE INDEX custom_fields_unique ON custom_fields(object_id, object_type
 
 DROP TABLE IF EXISTS custom_field_history;
 CREATE TABLE custom_field_history (
-  history_id char(36) NOT NULL,
+  history_record_id char(36) NOT NULL,
   id char(36) NOT NULL,
   object_id char(36) NOT NULL,
   object_type varchar(30) NOT NULL,
@@ -119,6 +119,8 @@ CREATE TABLE audit_log (
     user_token char(36),
     PRIMARY KEY(id)
 ) ENGINE=innodb;
+CREATE INDEX audit_log_fetch_record ON audit_log(table_name, record_id);
+CREATE INDEX audit_log_user_name ON audit_log(changed_by);
 
 DROP TABLE IF EXISTS bus_events;
 CREATE TABLE bus_events (

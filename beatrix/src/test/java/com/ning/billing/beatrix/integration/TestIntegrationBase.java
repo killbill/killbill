@@ -292,6 +292,17 @@ public class TestIntegrationBase implements TestFailure {
             public String getPhone() {
                 return "4152876341";
             }
+
+            @Override
+            public boolean isMigrated() {
+                return false;
+            }
+
+            @Override
+            public boolean isNotifiedForInvoices() {
+                return false;
+            }
+
             @Override
             public String getExternalKey() {
                 return someRandomKey;

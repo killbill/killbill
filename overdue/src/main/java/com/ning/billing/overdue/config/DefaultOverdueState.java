@@ -58,7 +58,7 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
 	//Other actions could include
 	// - send email
 	// - trigger payment retry?
-	// - add tags to bundle/account
+	// - add tagStore to bundle/account
 	// - set payment failure email template
 	// - set payment retry interval
 	// - backup payment mechanism?

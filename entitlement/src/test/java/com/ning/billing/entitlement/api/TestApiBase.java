@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -159,7 +160,7 @@ public abstract class TestApiBase {
         return (! (theDao instanceof MockEntitlementDaoMemory));
     }
 
-   private void setupMySQL() throws IOException {
+    private void setupMySQL() throws IOException {
         if (helper != null) {
             final String entitlementDdl = IOUtils.toString(TestApiBase.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
             final String utilDdl = IOUtils.toString(TestApiBase.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
@@ -254,7 +255,6 @@ public abstract class TestApiBase {
         }
     }
 
-
     protected void assertDateWithin(DateTime in, DateTime lower, DateTime upper) {
         assertTrue(in.isEqual(lower) || in.isAfter(lower));
         assertTrue(in.isEqual(upper) || in.isBefore(upper));
@@ -275,6 +275,10 @@ public abstract class TestApiBase {
             public DateTime addToDateTime(DateTime dateTime) {
                 return null;
             }
+            @Override
+            public Period toJodaPeriod() {
+                throw new UnsupportedOperationException();
+            }
         };
         return result;
     }
@@ -293,6 +297,10 @@ public abstract class TestApiBase {
             @Override
             public DateTime addToDateTime(DateTime dateTime) {
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
+            }
+            @Override
+            public Period toJodaPeriod() {
+                throw new UnsupportedOperationException();
             }
         };
         return result;
@@ -313,6 +321,10 @@ public abstract class TestApiBase {
             @Override
             public DateTime addToDateTime(DateTime dateTime) {
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
+            }
+            @Override
+            public Period toJodaPeriod() {
+                throw new UnsupportedOperationException();
             }
         };
         return result;
@@ -338,6 +350,16 @@ public abstract class TestApiBase {
             @Override
             public String getPhone() {
                 return "4152876341";
+            }
+
+            @Override
+            public boolean isMigrated() {
+                return false;
+            }
+
+            @Override
+            public boolean isNotifiedForInvoices() {
+                return false;
             }
 
             @Override

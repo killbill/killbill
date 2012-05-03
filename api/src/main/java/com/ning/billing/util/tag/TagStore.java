@@ -23,7 +23,9 @@ public interface TagStore extends EntityCollection<Tag> {
 
     public boolean generateInvoice();
 
-    public void remove(String tagName);
+    public boolean containsTagForDefinition(TagDefinition definition);
 
-    public boolean containsTag(String tagName);
+    public boolean containsTagForControlTagType(ControlTagType controlTagType);
+
+    public Tag remove(TagDefinition tagDefinition);
 }

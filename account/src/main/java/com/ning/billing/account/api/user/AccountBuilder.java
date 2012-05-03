@@ -43,6 +43,8 @@ public class AccountBuilder {
     private String country;
     private String postalCode;
     private String phone;
+    private boolean migrated;
+    private boolean isNotifiedForInvoices;
     private String createdBy;
     private DateTime createdDate;
     private String updatedBy;
@@ -141,6 +143,16 @@ public class AccountBuilder {
         return this;
     }
 
+    public AccountBuilder migrated(final boolean migrated) {
+        this.migrated = migrated;
+        return this;
+    }
+
+    public AccountBuilder isNotifiedForInvoices(final boolean isNotifiedForInvoices) {
+        this.isNotifiedForInvoices = isNotifiedForInvoices;
+        return this;
+    }
+
     public AccountBuilder createdBy(final String createdBy) {
         this.createdBy = createdBy;
         return this;
@@ -166,6 +178,7 @@ public class AccountBuilder {
                                   currency, billingCycleDay, paymentProviderName,
                                   timeZone, locale,
                                   address1, address2, companyName, city, stateOrProvince, country,
-                                  postalCode, phone, createdBy, createdDate, updatedBy, updatedDate);
+                                  postalCode, phone, migrated, isNotifiedForInvoices,
+                                  createdBy, createdDate, updatedBy, updatedDate);
     }
 }

@@ -58,7 +58,9 @@ public class TestMysqlGlobalLocker {
 
     @AfterClass(groups = "slow")
     public void tearDown() {
-        helper.stopMysql();
+        if (helper != null) {
+            helper.stopMysql();
+        }
     }
 
     // Used as a manual test to validate the simple DAO by stepping through that locking is done and release correctly

@@ -26,6 +26,8 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
@@ -33,9 +35,9 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 
-public class DefaultAccountUserApi implements com.ning.billing.account.api.AccountUserApi {
+public class DefaultAccountUserApi implements AccountUserApi {
     private final CallContextFactory factory;
     private final AccountDao dao;
 
@@ -47,10 +49,10 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 
     @Override
     public Account createAccount(final AccountData data, final List<CustomField> fields,
-                                 final List<Tag> tags, final CallContext context) throws AccountApiException {
+                                 final List<TagDefinition> tagDefinitions, final CallContext context) throws AccountApiException {
         Account account = new DefaultAccount(data);
         account.setFields(fields);
-        account.addTags(tags);
+        account.addTagsFromDefinitions(tagDefinitions);
 
         try {
             dao.create(account, context);
@@ -108,7 +110,6 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, e.getCode(), e.getMessage());
         }
-  
     }
 
     @Override
@@ -122,14 +123,14 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
 
 	@Override
 	public Account migrateAccount(final MigrationAccountData data, final List<CustomField> fields,
-                                  final List<Tag> tags, final CallContext context)
+                                  final List<TagDefinition> tagDefinitions, final CallContext context)
             throws AccountApiException {
         DateTime createdDate = data.getCreatedDate() == null ? context.getCreatedDate() : data.getCreatedDate();
         DateTime updatedDate = data.getUpdatedDate() == null ? context.getUpdatedDate() : data.getUpdatedDate();
         CallContext migrationContext = factory.toMigrationCallContext(context, createdDate, updatedDate);
 		Account account = new DefaultAccount(data);
         account.setFields(fields);
-        account.addTags(tags);
+        account.addTagsFromDefinitions(tagDefinitions);
 
         try {
             dao.create(account, migrationContext);
@@ -140,5 +141,13 @@ public class DefaultAccountUserApi implements com.ning.billing.account.api.Accou
         return account;
 	}
 
+    @Override
+    public List<AccountEmail> getEmails(final UUID accountId) {
+        return dao.getEmails(accountId);
+    }
 
+    @Override
+    public void saveEmails(final UUID accountId, final List<AccountEmail> newEmails, final CallContext context) {
+        dao.saveEmails(accountId, newEmails, context);
+    }
 }

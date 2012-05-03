@@ -63,11 +63,12 @@ import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.InvoiceListener;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
-import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockJunctionModule;
@@ -87,7 +88,6 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
-
 
 public class TestNextBillingDateNotifier {
 	private Clock clock;
@@ -130,7 +130,7 @@ public class TestNextBillingDateNotifier {
 	}
 
 	@BeforeClass(groups={"slow"})
-	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
+	public void setup() throws KillbillService.ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
 			
@@ -139,6 +139,7 @@ public class TestNextBillingDateNotifier {
                 bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
                 bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
                 bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
+                bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
                 final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
                 bind(InvoiceConfig.class).toInstance(invoiceConfig);
                 final CatalogConfig catalogConfig = new ConfigurationObjectFactory(System.getProperties()).build(CatalogConfig.class);
@@ -196,11 +197,9 @@ public class TestNextBillingDateNotifier {
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {
 		final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 		final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
-		final String entitlementDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 		helper.startMysql();
 		helper.initDb(ddl);
 		helper.initDb(testDdl);
-        helper.initDb(entitlementDdl);
 	}
 
 

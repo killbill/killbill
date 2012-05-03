@@ -32,7 +32,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
     @Override
     /***
      * Collates the contents of the TagStore to determine if payments should be processed
-     * @return true is no tags contraindicate payment processing
+     * @return true if no tags contraindicate payment processing
      */
     public boolean processPayment() {
         for (Tag tag : entities.values()) {
@@ -49,7 +49,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
 
     /***
      * Collates the contents of the TagStore to determine if invoices should be generated
-     * @return true is no tags contraindicate invoice generation
+     * @return true if no tags contraindicate invoice generation
      */
     @Override
     public boolean generateInvoice() {
@@ -66,18 +66,30 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
     }
 
     @Override
-    public void remove(final String tagName) {
-        entities.remove(entities.get(tagName));
-    }
-
-    @Override
-    public boolean containsTag(final String tagName) {
+    public boolean containsTagForDefinition(final TagDefinition tagDefinition) {
         for (Tag tag : entities.values()) {
-            if (tag.getTagDefinitionName().equals(tagName)) {
+            if (tag.getTagDefinitionName().equals(tagDefinition.getName())) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    @Override
+    public boolean containsTagForControlTagType(final ControlTagType controlTagType) {
+        for (Tag tag : entities.values()) {
+            if (tag.getTagDefinitionName().equals(controlTagType.toString())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public Tag remove(TagDefinition tagDefinition) {
+        Tag tag = entities.get(tagDefinition.getName());
+        return (tag == null) ? null : entities.remove(tag);
     }
 }

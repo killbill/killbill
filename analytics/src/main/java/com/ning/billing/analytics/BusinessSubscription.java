@@ -99,8 +99,8 @@ public class BusinessSubscription
         Plan thePlan = null;
         PlanPhase thePhase = null;
         try {
-            thePlan = catalog.findPlan(currentPlan, new DateTime(), startDate);
-            thePhase = catalog.findPhase(currentPhase, new DateTime(), startDate);
+            thePlan = (currentPlan != null) ? catalog.findPlan(currentPlan, new DateTime(), startDate) : null;
+            thePhase = (currentPhase != null) ? catalog.findPhase(currentPhase, new DateTime(), startDate) : null;
         } catch (CatalogApiException e) {
             log.error(String.format("Failed to retrieve Plan from catalog for plan %s, phase ", currentPlan, currentPhase));
         }

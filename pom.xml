@@ -243,9 +243,19 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-email</artifactId>
+                <version>1.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.directory.studio</groupId>
+                <artifactId>org.apache.commons.io</artifactId>
+                <version>2.1</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.0.1</version>
+                <version>2.0</version>
             </dependency>
             <dependency>
                 <groupId>commons-lang</groupId>
@@ -315,6 +325,11 @@
                 <artifactId>testng</artifactId>
                 <version>6.3.1</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.samskivert</groupId>
+                <artifactId>jmustache</artifactId>
+                <version>1.5</version>
             </dependency>
             <dependency>
                 <groupId>com.jayway.awaitility</groupId>
@@ -447,7 +462,8 @@
                                 <exclude>**/.settings/**</exclude>
                                 <exclude>.travis.yml</exclude>
                                 <exclude>bin/**</exclude>
-
+                                <!-- exclude mustache template files -->
+                                <exclude>**/*.mustache</exclude>
                             </excludes>
                         </configuration>
                     </execution>

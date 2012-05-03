@@ -16,13 +16,12 @@
 
 package com.ning.billing.account.api;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.tag.TagStore;
 
-public class DefaultMutableAccountData implements AccountData, MutableAccountData {
+public class DefaultMutableAccountData implements MutableAccountData {
     private String externalKey;
     private String email;
     private String name;
@@ -40,6 +39,8 @@ public class DefaultMutableAccountData implements AccountData, MutableAccountDat
     private String country;
     private String postalCode;
     private String phone;
+    private boolean isMigrated;
+    private boolean isNotifiedForInvoices;
     
     public DefaultMutableAccountData(String externalKey, String email, String name,
             int firstNameLength, Currency currency, int billCycleDay,
@@ -47,7 +48,7 @@ public class DefaultMutableAccountData implements AccountData, MutableAccountDat
             String locale, String address1, String address2,
             String companyName, String city, String stateOrProvince,
             String country, String postalCode, String phone,
-            DateTime createdDate, DateTime updatedDate) {
+            boolean isMigrated, boolean isNotifiedForInvoices) {
         super();
         this.externalKey = externalKey;
         this.email = email;
@@ -66,6 +67,8 @@ public class DefaultMutableAccountData implements AccountData, MutableAccountDat
         this.country = country;
         this.postalCode = postalCode;
         this.phone = phone;
+        this.isMigrated = isMigrated;
+        this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
     
     public DefaultMutableAccountData(AccountData accountData) {
@@ -87,6 +90,8 @@ public class DefaultMutableAccountData implements AccountData, MutableAccountDat
         this.country = accountData.getCountry();
         this.postalCode = accountData.getPostalCode();
         this.phone = accountData.getPhone();
+        this.isMigrated = accountData.isMigrated();
+        this.isNotifiedForInvoices = accountData.isNotifiedForInvoices();
     }
 
     /* (non-Javadoc)
@@ -208,7 +213,20 @@ public class DefaultMutableAccountData implements AccountData, MutableAccountDat
     public String getPhone() {
         return phone;
     }
-    
+    /* (non-Javadoc)
+     * @see com.ning.billing.account.api.MutableAccountData#isMigrated()
+     */
+    @Override
+    public boolean isMigrated() {
+        return isMigrated;
+    }
+    /* (non-Javadoc)
+     * @see com.ning.billing.account.api.MutableAccountData#getSendInvoiceEmails()
+     */
+    @Override
+    public boolean isNotifiedForInvoices() {
+        return isNotifiedForInvoices;
+    }
     /* (non-Javadoc)
      * @see com.ning.billing.account.api.MutableAccountData#setExternalKey(java.lang.String)
      */
@@ -327,6 +345,16 @@ public class DefaultMutableAccountData implements AccountData, MutableAccountDat
     @Override
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    @Override
+    public void setIsMigrated(boolean isMigrated) {
+        this.isMigrated = isMigrated;
+    }
+
+    @Override
+    public void setIsNotifiedForInvoices(boolean isNotifiedForInvoices) {
+        this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
 
 

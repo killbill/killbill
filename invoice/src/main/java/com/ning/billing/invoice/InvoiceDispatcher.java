@@ -34,6 +34,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.user.DefaultEmptyInvoiceEvent;
@@ -59,6 +60,7 @@ public class InvoiceDispatcher {
     private final BillingApi billingApi;
     private final AccountUserApi accountUserApi;
     private final InvoiceDao invoiceDao;
+    private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
     private final Bus eventBus;
     private final Clock clock;
@@ -69,6 +71,7 @@ public class InvoiceDispatcher {
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
                              final BillingApi billingApi,
                              final InvoiceDao invoiceDao,
+                             final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
                              final Bus eventBus,
                              final Clock clock) {
@@ -76,6 +79,7 @@ public class InvoiceDispatcher {
         this.billingApi = billingApi;
         this.accountUserApi = accountUserApi;
         this.invoiceDao = invoiceDao;
+        this.invoiceNotifier = invoiceNotifier;
         this.locker = locker;
         this.eventBus = eventBus;
         this.clock = clock;
@@ -138,7 +142,7 @@ public class InvoiceDispatcher {
             log.error("Failed to post DefaultEmptyInvoiceNotification event for account {} ", accountId, e);
         }
     }
-    
+
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDate,
             final boolean dryRun, final CallContext context) throws InvoiceApiException {
         try {
@@ -170,13 +174,16 @@ public class InvoiceDispatcher {
                     invoiceDao.create(invoice, context);
                 }
             }
+
+            if (account.isNotifiedForInvoices()) {
+                invoiceNotifier.notify(account, invoice);
+            }
+
             return invoice;
         } catch(AccountApiException e) {
             log.error("Failed handling entitlement change.",e);
             return null;    
-
         }
-
     }
 
     private void outputDebugData(Collection<BillingEvent> events, Collection<Invoice> invoices) {

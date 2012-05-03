@@ -194,10 +194,17 @@ public enum ErrorCode {
      * 
      */
     BLOCK_BLOCKED_ACTION(6000, "The action %s is block on this %s with id=%s"),
-    BLOCK_TYPE_NOT_SUPPORTED(6001, "The Blockable type '%s' is not supported") 
+    BLOCK_TYPE_NOT_SUPPORTED(6001, "The Blockable type '%s' is not supported"),
     
-    
-    ;
+   /*
+    *
+    * Range 9000: Miscellaneous
+    *
+    */
+    EMAIL_SENDING_FAILED(9000, "Sending email failed"),
+    EMAIL_PROPERTIES_FILE_MISSING(9001, "The properties file for email configuration could not be found."),
+    MISSING_TRANSLATION_RESOURCE(9010, "The resources for %s translation could not be found."),
+    MISSING_DEFAULT_TRANSLATION_RESOURCE(9011, "The default resource for %s translation could not be found.");
 
     
     private int code;

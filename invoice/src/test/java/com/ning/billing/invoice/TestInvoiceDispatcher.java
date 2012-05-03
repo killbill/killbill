@@ -23,6 +23,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.invoice.tests.InvoicingTestBase;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -53,7 +56,6 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.junction.plumbing.billing.DefaultBillingEvent;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockJunctionModule;
@@ -68,7 +70,7 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 
 @Test(groups = "slow")
 @Guice(modules = {MockModule.class})
-public class TestInvoiceDispatcher {
+public class TestInvoiceDispatcher extends InvoicingTestBase {
 	private Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
 
 	@Inject
@@ -100,13 +102,11 @@ public class TestInvoiceDispatcher {
     @BeforeSuite(groups = "slow")
     public void setup() throws IOException
     {
-		final String entitlementDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 		final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
 		final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
 		helper.startMysql();
 
-		helper.initDb(entitlementDdl);
 		helper.initDb(invoiceDdl);
 		helper.initDb(utilDdl);
 		notifier.initialize();
@@ -140,6 +140,7 @@ public class TestInvoiceDispatcher {
 		((ZombieControl)accountUserApi).addResult("getAccountById", account);
 		((ZombieControl)account).addResult("getCurrency", Currency.USD);
 		((ZombieControl)account).addResult("getId", accountId);
+        ((ZombieControl)account).addResult(("isNotifiedForInvoices"), true);
 
 		Subscription subscription =  BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
         ((ZombieControl)subscription).addResult("getId", subscriptionId);
@@ -150,16 +151,18 @@ public class TestInvoiceDispatcher {
 		DateTime effectiveDate = new DateTime().minusDays(1);
 		Currency currency = Currency.USD;
 		BigDecimal fixedPrice = null;
-		events.add(new DefaultBillingEvent(account, subscription, effectiveDate,plan, planPhase,
-				fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
-				BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
+		events.add(createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
+                fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
+                BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
 		BillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
-		((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
+		((ZombieControl) entitlementBillingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
 
 		DateTime target = new DateTime();
 
-		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker, busService.getBus(), clock);
+        InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
+		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao,
+                                                             invoiceNotifier, locker, busService.getBus(), clock);
 
 		Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
 		Assert.assertNotNull(invoice);

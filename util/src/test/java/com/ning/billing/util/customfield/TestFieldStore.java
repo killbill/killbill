@@ -79,7 +79,9 @@ public class TestFieldStore {
     @AfterClass(groups = {"util", "slow"})
     public void stopMysql()
     {
-        helper.stopMysql();
+        if (helper!= null) {
+            helper.stopMysql();
+        }
     }
 
     @Test
