@@ -74,8 +74,6 @@ public class SubscriptionResource implements BaseJaxrsResource {
     private final JaxrsUriBuilder uriBuilder;	
     private final KillbillEventHandler killbillHandler;
     
-
-    
     @Inject
     public SubscriptionResource(final JaxrsUriBuilder uriBuilder, final EntitlementUserApi entitlementApi,
             final Clock clock, final Context context, final KillbillEventHandler killbillHandler) {
@@ -239,7 +237,6 @@ public class SubscriptionResource implements BaseJaxrsResource {
             return Response.status(Status.OK).build();
         } catch (EntitlementUserApiException e) {
             if(e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
-                log.info(String.format("Failed to find subscription %s", subscriptionId), e);
                 return Response.status(Status.NO_CONTENT).build();
             } else {
                 log.info(String.format("Failed to uncancel plan for subscription %s", subscriptionId), e);
@@ -274,7 +271,6 @@ public class SubscriptionResource implements BaseJaxrsResource {
                     return Response.status(Status.OK).build();
                 } catch (EntitlementUserApiException e) {
                     if(e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
-                        log.info(String.format("Failed to find subscription %s", subscriptionId), e);
                         return Response.status(Status.NO_CONTENT).build();
                     } else {
                         throw e;

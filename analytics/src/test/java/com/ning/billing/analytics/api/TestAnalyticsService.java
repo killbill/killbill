@@ -157,14 +157,7 @@ public class TestAnalyticsService {
     private  CatalogService catalogService;
     
     private Catalog catalog;
-    
-    @BeforeMethod(groups = "slow")
-    public void cleanup() throws Exception
-    {
-        helper.cleanupAllTables();
-    }
-
-
+ 
     @BeforeClass(groups = "slow")
     public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
 
@@ -175,6 +168,8 @@ public class TestAnalyticsService {
         // Killbill generic setup
         setupBusAndMySQL();
 
+        helper.cleanupAllTables();
+        
         tagDao.create(TAG_ONE, context);
         tagDao.create(TAG_TWO, context);
 
@@ -296,35 +291,7 @@ public class TestAnalyticsService {
         helper.stopMysql();
     }
 
-    // STEPH Test cannot pass, as we never insert things on disk befopre sending events:
-    // TODO check with Pierre
-    /*
-     * SEVERE: Could not dispatch event: com.ning.billing.entitlement.api.user.DefaultSubscriptionEvent@6b67496c to handler [wrapper public void com.ning.billing.analytics.AnalyticsListener.handleSubscriptionTransitionChange(com.ning.billing.entitlement.api.user.SubscriptionEvent) throws com.ning.billing.account.api.AccountApiException,com.ning.billing.entitlement.api.user.EntitlementUserApiException]
-java.lang.reflect.InvocationTargetException
-    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-    at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
-    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
-    at java.lang.reflect.Method.invoke(Method.java:597)
-    at com.google.common.eventbus.EventHandler.handleEvent(EventHandler.java:68)
-    at com.google.common.eventbus.SynchronizedEventHandler.handleEvent(SynchronizedEventHandler.java:45)
-    at com.google.common.eventbus.EventBus.dispatch(EventBus.java:313)
-    at com.google.common.eventbus.EventBus.dispatchQueuedEvents(EventBus.java:296)
-    at com.google.common.eventbus.EventBus.post(EventBus.java:264)
-    at com.ning.billing.util.bus.PersistentBus.doProcessEvents(PersistentBus.java:205)
-    at com.ning.billing.util.bus.PersistentBus.access$200(PersistentBus.java:46)
-    at com.ning.billing.util.bus.PersistentBus$2.run(PersistentBus.java:144)
-    at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:886)
-    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:908)
-    at java.lang.Thread.run(Thread.java:680)
-Caused by: java.lang.IllegalArgumentException: An event must have an key
-    at com.ning.billing.analytics.BusinessSubscriptionTransition.<init>(BusinessSubscriptionTransition.java:44)
-    at com.ning.billing.analytics.BusinessSubscriptionTransitionRecorder.record(BusinessSubscriptionTransitionRecorder.java:149)
-    at com.ning.billing.analytics.BusinessSubscriptionTransitionRecorder.recordTransition(BusinessSubscriptionTransitionRecorder.java:143)
-    at com.ning.billing.analytics.BusinessSubscriptionTransitionRecorder.subscriptionCreated(BusinessSubscriptionTransitionRecorder.java:59)
-    at com.ning.billing.analytics.AnalyticsListener.handleSubscriptionTransitionChange(AnalyticsListener.java:46)
-    ... 15 more
-     */
-    @Test(groups = "slow", enabled=false)
+    @Test(groups = "slow", enabled=true)
     public void testRegisterForNotifications() throws Exception {
         // Make sure the service has been instantiated
         Assert.assertEquals(service.getName(), "analytics-service");
@@ -340,9 +307,6 @@ Caused by: java.lang.IllegalArgumentException: An event must have an key
 
         // Send events and wait for the async part...
         bus.post(transition);
-        
-        Thread.sleep(5000000);
-
         bus.post(accountCreationNotification);
         Thread.sleep(5000);
 

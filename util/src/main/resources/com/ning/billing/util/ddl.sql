@@ -126,7 +126,7 @@ DROP TABLE IF EXISTS bus_events;
 CREATE TABLE bus_events (
     id int(11) unsigned NOT NULL AUTO_INCREMENT,
     class_name varchar(128) NOT NULL, 
-    event_json varchar(1024) NOT NULL,     
+    event_json varchar(2048) NOT NULL,     
     created_dt datetime NOT NULL,
     processing_owner char(50) DEFAULT NULL,
     processing_available_dt datetime DEFAULT NULL,
