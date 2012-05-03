@@ -19,6 +19,7 @@ package com.ning.billing.junction.plumbing.api;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -46,6 +47,11 @@ public class BlockingAccount implements Account {
         return account.getTagList();
     }
 
+    @Override
+    public boolean hasTag(TagDefinition tagDefinition) {
+        return account.hasTag(tagDefinition);
+    }
+
     public String getUpdatedBy() {
         return account.getUpdatedBy();
     }
@@ -58,8 +64,9 @@ public class BlockingAccount implements Account {
         return account.getCreatedBy();
     }
 
-    public boolean hasTag(String tagName) {
-        return account.hasTag(tagName);
+    @Override
+    public boolean hasTag(ControlTagType controlTagType) {
+        return account.hasTag(controlTagType);
     }
 
     public DateTime getUpdatedDate() {
@@ -88,6 +95,11 @@ public class BlockingAccount implements Account {
 
     public void addTags(List<Tag> tags) {
         account.addTags(tags);
+    }
+
+    @Override
+    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
+        account.addTagsFromDefinitions(tagDefinitions);
     }
 
     public void setFieldValue(String fieldName, String fieldValue) {
@@ -207,6 +219,16 @@ public class BlockingAccount implements Account {
 
     public String getPhone() {
         return account.getPhone();
+    }
+
+    @Override
+    public boolean isMigrated() {
+        return account.isMigrated();
+    }
+
+    @Override
+    public boolean isNotifiedForInvoices() {
+        return account.isNotifiedForInvoices();
     }
 
 }

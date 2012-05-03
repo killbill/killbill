@@ -67,7 +67,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public InvoiceItem asCredit() {
+    public InvoiceItem asReversingItem() {
         BigDecimal amountNegated = amount == null ? null : amount.negate();
 
         return new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,

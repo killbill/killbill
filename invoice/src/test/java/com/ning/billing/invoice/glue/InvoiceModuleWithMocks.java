@@ -16,22 +16,20 @@
 
 package com.ning.billing.invoice.glue;
 
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
 import com.ning.billing.util.glue.FieldStoreModule;
 
 
 public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
-    @Override
+    @Override 
     protected void installInvoiceDao() {
         bind(MockInvoiceDao.class).asEagerSingleton();
         bind(InvoiceDao.class).to(MockInvoiceDao.class);
-        bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
-    }
-
-    protected void installGlobalLocker() {
         bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
     }
 
@@ -41,8 +39,8 @@ public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
     }
 
     @Override
-    protected void installNotifier() {
-
+    protected void installNotifiers() {
+        bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
     }
 
     @Override
@@ -60,6 +58,5 @@ public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
         super.configure();
 
         install(new FieldStoreModule());
-        //install(new TagStoreModule());
     }
 }

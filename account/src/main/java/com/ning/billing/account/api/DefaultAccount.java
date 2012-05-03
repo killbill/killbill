@@ -48,6 +48,8 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 	private final String country;
 	private final String postalCode;
 	private final String phone;
+    private final boolean isMigrated;
+    private final boolean isNotifiedForInvoices;
     private final String updatedBy;
     private final DateTime updatedDate;
     
@@ -81,33 +83,14 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 				data.getTimeZone(), data.getLocale(),
 				data.getAddress1(), data.getAddress2(), data.getCompanyName(),
 				data.getCity(), data.getStateOrProvince(), data.getCountry(),
-				data.getPostalCode(), data.getPhone(), createdBy, createdDate,
+				data.getPostalCode(), data.getPhone(), data.isMigrated(), data.isNotifiedForInvoices(),
+                createdBy, createdDate,
                 updatedBy, updatedDate);
 	}
 
-	/**
+	/*
 	 * This call is used for testing and update from an existing account
-	 * @param id
-	 * @param externalKey
-	 * @param email
-	 * @param name
-	 * @param firstNameLength
-	 * @param currency
-	 * @param billCycleDay
-	 * @param paymentProviderName
-	 * @param timeZone
-	 * @param locale
-	 * @param address1
-	 * @param address2
-	 * @param companyName
-	 * @param city
-	 * @param stateOrProvince
-	 * @param country
-	 * @param postalCode
-	 * @param phone
-	 * @param createdDate
-	 * @param updatedDate
-	 */
+     */
 	public DefaultAccount(final UUID id, final String externalKey, final String email,
                           final String name, final int firstNameLength,
                           final Currency currency, final int billCycleDay, final String paymentProviderName,
@@ -115,6 +98,7 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
                           final String postalCode, final String phone,
+                          final boolean isMigrated, final boolean isNotifiedForInvoices,
                           final String createdBy, final DateTime createdDate,
                           final String updatedBy, final DateTime updatedDate) {
 
@@ -136,6 +120,8 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 		this.postalCode = postalCode;
 		this.country = country;
 		this.phone = phone;
+        this.isMigrated = isMigrated;
+        this.isNotifiedForInvoices = isNotifiedForInvoices;
         this.updatedBy = updatedBy;
         this.updatedDate = updatedDate;
 	}
@@ -241,6 +227,16 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 	}
 
     @Override
+    public boolean isMigrated() {
+        return this.isMigrated;
+    }
+
+    @Override
+    public boolean isNotifiedForInvoices() {
+        return isNotifiedForInvoices;
+    }
+
+    @Override
     public String getUpdatedBy() {
         return updatedBy;
     }
@@ -279,7 +275,7 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 				", stateOrProvince=" + stateOrProvince +
 				", postalCode=" + postalCode +
 				", country=" + country +
-				", tags=" + tags +
+				", tags=" + tagStore +
 				", fields=" + fields +
 				"]";
 	}

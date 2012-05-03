@@ -23,6 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -84,9 +85,8 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    //TODO Martin re-enable this after merge
-    @Test(enabled=false, groups={"slow"})
-    public void testCancelBPWthAddon() {
+    @Test(enabled=true, groups={"slow"})
+    public void testCancelBPWithAddon() {
         try {
 
             String baseProduct = "Shotgun";
@@ -114,6 +114,7 @@ public class TestUserApiAddOn extends TestApiBase {
             // SET CTD TO CANCEL IN FUTURE
             DateTime now = clock.getUTCNow();
             Duration ctd = getDurationMonth(1);
+            // Why not just use clock.getUTCNow().plusMonths(1) ?
             DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
             billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
@@ -125,7 +126,6 @@ public class TestUserApiAddOn extends TestApiBase {
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(aoSubscription.isSubscriptionFutureCancelled());
-
 
             // MOVE AFTER CANCELLATION
             testListener.reset();
@@ -145,7 +145,7 @@ public class TestUserApiAddOn extends TestApiBase {
 
 
     @Test(enabled=true, groups={"slow"})
-    public void testChangeBPWthAddonNonIncluded() {
+    public void testChangeBPWithAddonNonIncluded() {
         try {
 
             String baseProduct = "Shotgun";
@@ -197,9 +197,8 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    //TODO Martin re-enable this after merge
-    @Test(enabled=false, groups={"slow"})
-    public void testChangeBPWthAddonNonAvailable() {
+    @Test(enabled=true, groups={"slow"})
+    public void testChangeBPWithAddonNonAvailable() {
         try {
 
             String baseProduct = "Shotgun";
@@ -364,20 +363,24 @@ public class TestUserApiAddOn extends TestApiBase {
            
            //someTimeLater = aoCurrentPhase.getDuration();
            someTimeLater = new Duration() {
-               @Override
-               public TimeUnit getUnit() {
+                @Override
+                public TimeUnit getUnit() {
                    return TimeUnit.DAYS;
-               }
+                }
 
-               @Override
-               public int getNumber() {
+                @Override
+                public int getNumber() {
                    return 32;
-               }
+                }
 
-               @Override
-               public DateTime addToDateTime(DateTime dateTime) {
+                @Override
+                public DateTime addToDateTime(DateTime dateTime) {
                    throw new NotImplementedException();
-               }
+                }
+                @Override
+                public Period toJodaPeriod() {
+                    throw new UnsupportedOperationException();
+                }
            };
            
            clock.addDeltaFromReality(someTimeLater);

@@ -100,7 +100,10 @@ public class RetryService implements KillbillService {
                 return id;
             }
         };
-        retryQueue.recordFutureNotification(timeOfRetry, key);
+
+        if (retryQueue != null) {
+            retryQueue.recordFutureNotification(timeOfRetry, key);
+        }
     }
 
     private void retry(String paymentAttemptId, CallContext context) {

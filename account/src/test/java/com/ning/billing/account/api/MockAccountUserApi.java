@@ -22,11 +22,11 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.tag.Tag;
 
 public class MockAccountUserApi implements AccountUserApi {
     private final CopyOnWriteArrayList<Account> accounts = new CopyOnWriteArrayList<Account>();
@@ -53,14 +53,15 @@ public class MockAccountUserApi implements AccountUserApi {
 		Account result = new DefaultAccount(id, externalKey, email, name,
 				firstNameLength, currency, billCycleDay, paymentProviderName,
 				timeZone, locale, address1, address2, companyName, city,
-				stateOrProvince, country, postalCode, phone, null, null, null, null);
+				stateOrProvince, country, postalCode, phone, false, false,
+                null, null, null, null);
 		accounts.add(result);
 		return result;
 	}
 
     @Override
     public Account createAccount(final AccountData data, final List<CustomField> fields,
-                                 final List<Tag> tags, final CallContext context) throws AccountApiException {
+                                 final List<TagDefinition> tagDefinitions, final CallContext context) throws AccountApiException {
         Account result = new DefaultAccount(data);
         accounts.add(result);
         return result;
@@ -102,13 +103,23 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
+    public List<AccountEmail> getEmails(UUID accountId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void updateAccount(final Account account, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 
 	@Override
 	public Account migrateAccount(final MigrationAccountData data,
-			final List<CustomField> fields, final List<Tag> tags, final CallContext context)
+			final List<CustomField> fields, final List<TagDefinition> tagDefinitions, final CallContext context)
 			throws AccountApiException {
 		Account result = new DefaultAccount(data);
         accounts.add(result);

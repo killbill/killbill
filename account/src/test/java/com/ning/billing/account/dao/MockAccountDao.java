@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
@@ -81,6 +81,16 @@ public class MockAccountDao implements AccountDao {
     public UUID getIdFromKey(String externalKey) {
         Account account = getAccountByKey(externalKey);
         return account == null ? null : account.getId();
+    }
+
+    @Override
+    public List<AccountEmail> getEmails(UUID accountId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

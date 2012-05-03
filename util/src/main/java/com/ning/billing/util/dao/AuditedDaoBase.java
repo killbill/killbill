@@ -14,11 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.util.entity;
+package com.ning.billing.util.dao;
 
-import org.joda.time.DateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-public interface UpdatableEntity extends Entity {
-    public String getUpdatedBy();
-    public DateTime getUpdatedDate();
+public abstract class AuditedDaoBase {
+    protected List<String> getIdList(int size) {
+        List<String> results = new ArrayList<String>();
+        for (int i = 0; i < size; i++) {
+            results.add(UUID.randomUUID().toString());
+        }
+        return results;
+    }
 }

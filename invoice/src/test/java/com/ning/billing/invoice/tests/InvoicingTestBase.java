@@ -18,9 +18,20 @@ package com.ning.billing.invoice.tests;
 
 import java.math.BigDecimal;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.entitlement.api.billing.BillingModeType;
+import com.ning.billing.entitlement.api.user.Subscription;
 import org.joda.time.DateTime;
 
 import com.ning.billing.invoice.model.InvoicingConfiguration;
+
+import javax.annotation.Nullable;
 
 public abstract class InvoicingTestBase {
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
@@ -32,7 +43,7 @@ public abstract class InvoicingTestBase {
     protected static final BigDecimal ONE_AND_A_HALF = new BigDecimal("1.5").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal TWO = new BigDecimal("2.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal THREE = new BigDecimal("3.0").setScale(NUMBER_OF_DECIMALS);
-    //protected static final BigDecimal FOUR = new BigDecimal("4.0").setScale(NUMBER_OF_DECIMALS);
+    protected static final BigDecimal FOUR = new BigDecimal("4.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal FIVE = new BigDecimal("5.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal SIX = new BigDecimal("6.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal SEVEN = new BigDecimal("7.0").setScale(NUMBER_OF_DECIMALS);
@@ -49,6 +60,7 @@ public abstract class InvoicingTestBase {
     protected static final BigDecimal TWENTY = new BigDecimal("20.0").setScale(NUMBER_OF_DECIMALS);
 
     protected static final BigDecimal TWENTY_FOUR = new BigDecimal("24.0").setScale(NUMBER_OF_DECIMALS);
+    protected static final BigDecimal TWENTY_FIVE = new BigDecimal("25.0").setScale(NUMBER_OF_DECIMALS);
 
     protected static final BigDecimal TWENTY_EIGHT = new BigDecimal("28.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal TWENTY_NINE = new BigDecimal("29.0").setScale(NUMBER_OF_DECIMALS);
@@ -69,5 +81,85 @@ public abstract class InvoicingTestBase {
 
     protected DateTime buildDateTime(int year, int month, int day) {
         return new DateTime(year, month, day, 0, 0, 0, 0);
+    }
+
+    protected BillingEvent createMockBillingEvent(@Nullable final Account account, final Subscription subscription,
+                                                  final DateTime effectiveDate,
+                                                  final Plan plan, final PlanPhase planPhase,
+                                                  @Nullable final BigDecimal fixedPrice, @Nullable final BigDecimal recurringPrice,
+                                                  final Currency currency, final BillingPeriod billingPeriod, final int billCycleDay,
+                                                  final BillingModeType billingModeType, final String description,
+                                                  final long totalOrdering,
+                                                  final SubscriptionTransitionType type) {
+        return new BillingEvent() {
+            @Override
+            public Account getAccount() {
+                return account;
+            }
+            @Override
+            public int getBillCycleDay() {
+                return billCycleDay;
+            }
+            @Override
+            public Subscription getSubscription() {
+                return subscription;
+            }
+            @Override
+            public DateTime getEffectiveDate() {
+                return effectiveDate;
+            }
+            @Override
+            public PlanPhase getPlanPhase() {
+                return planPhase;
+            }
+            @Override
+            public Plan getPlan() {
+                return plan;
+            }
+            @Override
+            public BillingPeriod getBillingPeriod() {
+                return billingPeriod;
+            }
+            @Override
+            public BillingModeType getBillingMode() {
+                return billingModeType;
+            }
+            @Override
+            public String getDescription() {
+                return description;
+            }
+            @Override
+            public BigDecimal getFixedPrice() {
+                return fixedPrice;
+            }
+            @Override
+            public BigDecimal getRecurringPrice() {
+                return recurringPrice;
+            }
+            @Override
+            public Currency getCurrency() {
+                return currency;
+            }
+            @Override
+            public SubscriptionTransitionType getTransitionType() {
+                return type;
+            }
+            @Override
+            public Long getTotalOrdering() {
+                return totalOrdering;
+            }
+            @Override
+            public int compareTo(BillingEvent e1) {
+                if (!getSubscription().getId().equals(e1.getSubscription().getId())) { // First order by subscription
+                    return getSubscription().getId().compareTo(e1.getSubscription().getId());
+                } else { // subscriptions are the same
+                    if (! getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
+                        return getEffectiveDate().compareTo(e1.getEffectiveDate());
+                    } else { // dates and subscriptions are the same
+                        return getTotalOrdering().compareTo(e1.getTotalOrdering());
+                    }
+                }
+            }
+        };
     }
 }

@@ -30,7 +30,7 @@ import com.google.inject.BindingAnnotation;
  * This annotation is used to bing classes that are being intercepted in junction.
  * 
  * The real implementation of the class is bound in Guice with this parameter, the Blocking implementation
- * is let unannotated.
+ * is left unannotated.
  *
  */
 @BindingAnnotation @Target({ FIELD, PARAMETER, METHOD,LOCAL_VARIABLE }) @Retention(RUNTIME)

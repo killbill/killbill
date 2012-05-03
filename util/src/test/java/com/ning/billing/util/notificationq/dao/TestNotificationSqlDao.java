@@ -78,7 +78,9 @@ public class TestNotificationSqlDao {
     @AfterSuite(groups = "slow")
     public void stopMysql()
     {
-        helper.stopMysql();
+        if (helper != null) {
+            helper.stopMysql();
+        }
     }
 
 

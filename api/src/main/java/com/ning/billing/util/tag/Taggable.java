@@ -21,11 +21,16 @@ import org.joda.time.DateTime;
 
 public interface Taggable {
     public List<Tag> getTagList();
-    public boolean hasTag(String tagName);
+
+    public boolean hasTag(TagDefinition tagDefinition);
+    public boolean hasTag(ControlTagType controlTagType);
+
     public void addTag(TagDefinition definition);
     public void addTags(List<Tag> tags);
+    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions);
     public void clearTags();
     public void removeTag(TagDefinition definition);
+
     public boolean generateInvoice();
     public boolean processPayment();
 }

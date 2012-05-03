@@ -113,5 +113,4 @@ public interface BillingEvent extends Comparable<BillingEvent> {
 	 * @return a unique long indicating the ordering on which events got inserted on disk-- used for sorting only
 	 */
 	public Long getTotalOrdering();
-
  }

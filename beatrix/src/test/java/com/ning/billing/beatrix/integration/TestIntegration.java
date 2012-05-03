@@ -47,7 +47,6 @@ import com.ning.billing.invoice.api.Invoice;
 @Test(groups = "slow")
 @Guice(modules = {MockModule.class})
 public class TestIntegration extends TestIntegrationBase {
- 
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
@@ -96,8 +95,8 @@ public class TestIntegration extends TestIntegrationBase {
         }
     }
 
-   @Test(groups = "slow", enabled = true) 
-   public void testRepairChangeBPWithAddonIncluded() throws Exception {
+    @Test(groups = "slow", enabled = true)
+    public void testRepairChangeBPWithAddonIncluded() throws Exception {
         
         DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
@@ -147,10 +146,40 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(busHandler.isCompleted(DELAY));
-   }
+    }
    
-   
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = {"slow"})
+    public void testRepairForInvoicing() throws AccountApiException, EntitlementUserApiException {
+        log.info("Starting testRepairForInvoicing");
+
+        Account account = accountUserApi.createAccount(getAccountData(1), null, null, context);
+        UUID accountId = account.getId();
+        assertNotNull(account);
+
+        DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "someBundle", context);
+        assertNotNull(bundle);
+
+        String productName = "Shotgun";
+        BillingPeriod term = BillingPeriod.MONTHLY;
+        String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+        entitlementUserApi.createSubscription(bundle.getId(),
+                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context);
+
+        busHandler.reset();
+        busHandler.pushExpectedEvent(NextEvent.CREATE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
+        assertEquals(invoices.size(), 1);
+
+        // TODO: Jeff implement repair
+    }
+
+    @Test(groups = "slow", enabled = false)
     public void testWithRecreatePlan() throws Exception {
 
         DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);

@@ -19,6 +19,7 @@ package com.ning.billing.payment;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -30,7 +31,6 @@ import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
@@ -42,13 +42,13 @@ import com.ning.billing.util.entity.EntityPersistenceException;
 
 public class TestHelper {
     protected final AccountUserApi accountUserApi;
-    protected final InvoiceDao invoiceDao;
+    protected final InvoiceTestApi invoiceTestApi;
     private final CallContext context;
 
     @Inject
-    public TestHelper(CallContextFactory factory, AccountUserApi accountUserApi, InvoiceDao invoiceDao) {
+    public TestHelper(CallContextFactory factory, AccountUserApi accountUserApi, InvoiceTestApi invoiceTestApi) {
         this.accountUserApi = accountUserApi;
-        this.invoiceDao = invoiceDao;
+        this.invoiceTestApi = invoiceTestApi;
         context = factory.createCallContext("Princess Buttercup", CallOrigin.TEST, UserType.TEST);
     }
 
@@ -107,7 +107,8 @@ public class TestHelper {
                                                                recurringInvoiceItem.getCurrency()));
             }
         }
-        invoiceDao.create(invoice, context);
+
+        invoiceTestApi.create(invoice, context);
         return invoice;
     }
 

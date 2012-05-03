@@ -45,7 +45,7 @@ public class AuditedCustomFieldDao implements CustomFieldDao {
             while (existingFieldIterator.hasNext()) {
                 CustomField existingField = existingFieldIterator.next();
                 if (field.getName().equals(existingField.getName())) {
-                    // if the tags match, remove from both lists
+                    // if the tagStore match, remove from both lists
                     fieldsToUpdate.add(field);
                     fieldIterator.remove();
                     existingFieldIterator.remove();

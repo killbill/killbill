@@ -1,7 +1,7 @@
 group CustomFieldHistorySqlDao;
 
 fields(prefix) ::= <<
-  <prefix>history_id,
+  <prefix>history_record_id,
   <prefix>id,
   <prefix>object_id,
   <prefix>object_type,
@@ -14,5 +14,5 @@ fields(prefix) ::= <<
 
 batchAddHistoryFromTransaction() ::= <<
     INSERT INTO custom_field_history(<fields()>)
-    VALUES(:historyId, :id, :objectId, :objectType, :fieldName, :fieldValue, :userName, :updatedDate, :changeType);
+    VALUES(:historyRecordId, :id, :objectId, :objectType, :fieldName, :fieldValue, :userName, :updatedDate, :changeType);
 >>

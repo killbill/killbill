@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.Response.Status;
 
+import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.glue.GlobalLockerModule;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -177,6 +179,8 @@ public class TestJaxrsBase {
             super.installKillbillModules();
             Modules.override(new com.ning.billing.payment.setup.PaymentModule()).with(new PaymentMockModule());
             */
+            install(new EmailModule());
+            install(new GlobalLockerModule());
             install(new FieldStoreModule());
             install(new TagStoreModule());
             install(new CatalogModule());

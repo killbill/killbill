@@ -16,6 +16,8 @@
 
 package com.ning.billing.analytics;
 
+import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.glue.GlobalLockerModule;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.account.glue.AccountModule;
@@ -42,6 +44,8 @@ public class AnalyticsTestModule extends AnalyticsModule
         super.configure();
 
         // Need to configure a few more things for the EventBus
+        install(new EmailModule());
+        install(new GlobalLockerModule());
         install(new ClockModule());
         install(new CallContextModule());
         install(new FieldStoreModule());

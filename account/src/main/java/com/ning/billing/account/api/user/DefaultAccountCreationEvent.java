@@ -20,7 +20,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 import java.util.UUID;
 
@@ -129,6 +128,8 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         private final String postalCode;
         private final String country;
         private final String phone;
+        private final boolean isMigrated;
+        private final boolean isNotifiedForInvoices;
         
         @JsonCreator
         public DefaultAccountData(@JsonProperty("externalKey") String externalKey,
@@ -147,7 +148,9 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
                 @JsonProperty("stateOrProvince") String stateOrProvince,
                 @JsonProperty("postalCode") String postalCode,
                 @JsonProperty("country") String country,
-                @JsonProperty("phone") String phone) {
+                @JsonProperty("phone") String phone,
+                @JsonProperty("isMigrated") boolean isMigrated,
+                @JsonProperty("isNotifiedForInvoices") boolean isNotifiedForInvoices) {
             super();
             this.externalKey = externalKey;
             this.name = name;
@@ -166,6 +169,8 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
             this.postalCode = postalCode;
             this.country = country;
             this.phone = phone;
+            this.isMigrated = isMigrated;
+            this.isNotifiedForInvoices = isNotifiedForInvoices;
         }
 
         @Override
@@ -214,7 +219,6 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
             return timeZone;
         }
 
-
         @Override
         public String getLocale() {
             return locale;
@@ -258,6 +262,18 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         @Override
         public String getPhone() {
             return phone;
+        }
+
+        @Override
+        @JsonIgnore
+        public boolean isMigrated() {
+            return isMigrated;
+        }
+
+        @Override
+        @JsonIgnore
+        public boolean isNotifiedForInvoices() {
+            return isNotifiedForInvoices;
         }
 
         @Override

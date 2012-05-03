@@ -19,6 +19,7 @@ package com.ning.billing.analytics;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -59,6 +60,16 @@ public class MockAccount implements Account
     public String getPhone()
     {
         return "408-555-6665";
+    }
+
+    @Override
+    public boolean isMigrated() {
+        return false;
+    }
+
+    @Override
+    public boolean isNotifiedForInvoices() {
+        return false;
     }
 
     @Override
@@ -201,7 +212,12 @@ public class MockAccount implements Account
     }
 
     @Override
-    public boolean hasTag(String tagName) {
+    public boolean hasTag(TagDefinition tagDefinition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasTag(ControlTagType controlTagType) {
         throw new UnsupportedOperationException();
     }
 
@@ -212,6 +228,11 @@ public class MockAccount implements Account
 
     @Override
     public void addTags(List<Tag> tags) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
         throw new UnsupportedOperationException();
     }
 

@@ -23,9 +23,11 @@ import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import com.ning.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
@@ -37,8 +39,11 @@ import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.DefaultNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.util.glue.GlobalLockerModule;
-
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
+import com.ning.billing.util.email.templates.MustacheTemplateEngine;
+import com.ning.billing.util.email.templates.TemplateEngine;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 
 public class DefaultInvoiceModule extends AbstractModule {
     protected void installInvoiceDao() {
@@ -66,28 +71,34 @@ public class DefaultInvoiceModule extends AbstractModule {
     	bind(InvoiceMigrationApi.class).to(DefaultInvoiceMigrationApi.class).asEagerSingleton();
 	}
 
-    protected void installNotifier() {
+    protected void installNotifiers() {
         bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
+        TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
+        bind(TranslatorConfig.class).toInstance(config);
+        bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
+        bind(TemplateEngine.class).to(MustacheTemplateEngine.class).asEagerSingleton();
+        bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
     }
 
     protected void installInvoiceListener() {
         bind(InvoiceListener.class).asEagerSingleton();
     }
 
+    protected void installInvoiceGenerator() {
+        bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         installInvoiceService();
-        installNotifier();
-
-        installInvoiceListener();
-        bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
         installConfig();
+        installNotifiers();
+        installInvoiceListener();
+        installInvoiceGenerator();
         installInvoiceDao();
         installInvoiceUserApi();
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
     }
-
-
 }

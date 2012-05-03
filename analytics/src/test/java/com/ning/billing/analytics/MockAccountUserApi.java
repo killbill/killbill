@@ -19,6 +19,8 @@ package com.ning.billing.analytics;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.util.tag.TagDefinition;
 import org.apache.commons.lang.NotImplementedException;
 
 import com.ning.billing.account.api.Account;
@@ -30,21 +32,21 @@ import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.tag.Tag;
 
-public class MockIAccountUserApi implements AccountUserApi
+public class MockAccountUserApi implements AccountUserApi
 {
     private final AccountData account;
     private final UUID id;
 
-    public MockIAccountUserApi(final String accountKey, final Currency currency)
+    public MockAccountUserApi(final String accountKey, final Currency currency)
     {
         this.id = UUID.randomUUID();
         account = new MockAccount(id, accountKey, currency);
     }
 
     @Override
-    public Account createAccount(final AccountData data, final List<CustomField> fields, final List<Tag> tags, final CallContext context)
+    public Account createAccount(final AccountData data, final List<CustomField> fields,
+                                 final List<TagDefinition> tagDefinitions, final CallContext context)
     {
         throw new UnsupportedOperationException();
     }
@@ -76,9 +78,19 @@ public class MockIAccountUserApi implements AccountUserApi
         return id;
     }
 
-	@Override
+    @Override
+    public List<AccountEmail> getEmails(UUID accountId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
 	public Account migrateAccount(MigrationAccountData data,
-			List<CustomField> fields, List<Tag> tags, final CallContext context)
+			List<CustomField> fields, List<TagDefinition> tagDefinitions, final CallContext context)
 			throws AccountApiException {
 		throw new UnsupportedOperationException();
 	}

@@ -22,18 +22,18 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.dao.AuditedDaoBase;
 import com.ning.billing.util.tag.Tag;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-public class AuditedTagDao implements TagDao {
+public class AuditedTagDao extends AuditedDaoBase implements TagDao {
     private final TagSqlDao tagSqlDao;
 
     @Inject
@@ -52,10 +52,10 @@ public class AuditedTagDao implements TagDao {
                                         final List<Tag> tags, final CallContext context) {
         TagSqlDao tagSqlDao = dao.become(TagSqlDao.class);
 
-        // get list of existing tags
+        // get list of existing tagStore
         List<Tag> existingTags = tagSqlDao.load(objectId.toString(), objectType);
 
-        // sort into tags to update (tagsToUpdate), tags to add (tags), and tags to delete (existingTags)
+        // sort into tagStore to update (tagsToUpdate), tagStore to add (tagStore), and tagStore to delete (existingTags)
         Iterator<Tag> tagIterator = tags.iterator();
         while (tagIterator.hasNext()) {
             Tag tag = tagIterator.next();
@@ -64,7 +64,7 @@ public class AuditedTagDao implements TagDao {
             while (existingTagIterator.hasNext()) {
                 Tag existingTag = existingTagIterator.next();
                 if (tag.getTagDefinitionName().equals(existingTag.getTagDefinitionName())) {
-                    // if the tags match, remove from both lists
+                    // if the tagStore match, remove from both lists
                     // in the case of tag, this just means the tag remains associated
                     tagIterator.remove();
                     existingTagIterator.remove();
@@ -83,14 +83,6 @@ public class AuditedTagDao implements TagDao {
         AuditSqlDao auditSqlDao = tagSqlDao.become(AuditSqlDao.class);
         auditSqlDao.insertAuditFromTransaction("tag_history", historyIdsForInsert, ChangeType.INSERT, context);
         auditSqlDao.insertAuditFromTransaction("tag_history", historyIdsForDelete, ChangeType.DELETE, context);
-    }
-
-    private List<String> getIdList(int size) {
-        List<String> results = new ArrayList<String>();
-        for (int i = 0; i < size; i++) {
-            results.add(UUID.randomUUID().toString());
-        }
-        return results;
     }
 
     @Override

@@ -19,6 +19,7 @@ package com.ning.billing.junction.plumbing.api;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -57,6 +58,11 @@ public class BlockingSubscription implements Subscription {
         return subscription.getTagList();
     }
 
+    @Override
+    public boolean hasTag(TagDefinition tagDefinition) {
+        return subscription.hasTag(tagDefinition);
+    }
+
     public UUID getId() {
         return subscription.getId();
     }
@@ -65,8 +71,8 @@ public class BlockingSubscription implements Subscription {
         return subscription.getCreatedBy();
     }
 
-    public boolean hasTag(String tagName) {
-        return subscription.hasTag(tagName);
+    public boolean hasTag(ControlTagType controlTagType) {
+        return subscription.hasTag(controlTagType);
     }
 
     public DateTime getCreatedDate() {
@@ -83,6 +89,11 @@ public class BlockingSubscription implements Subscription {
 
     public void addTags(List<Tag> tags) {
         subscription.addTags(tags);
+    }
+
+    @Override
+    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
+        subscription.addTagsFromDefinitions(tagDefinitions);
     }
 
     public void setFieldValue(String fieldName, String fieldValue) {
