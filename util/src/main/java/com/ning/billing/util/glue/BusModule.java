@@ -29,8 +29,7 @@ public class BusModule extends AbstractModule {
     
     public BusModule() {
         super();
-        // Default to Memory at this point
-        type = BusType.MEMORY;
+        type = BusType.PERSISTENT;        
     }
 
     public BusModule(BusType type) {

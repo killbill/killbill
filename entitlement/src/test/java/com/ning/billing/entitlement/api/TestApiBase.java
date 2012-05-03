@@ -151,9 +151,9 @@ public abstract class TestApiBase {
         helper = (isSqlTest(dao)) ? g.getInstance(MysqlTestingHelper.class) : null;
 
         ((DefaultCatalogService) catalogService).loadCatalog();
-        ((DefaultBusService) busService).startBus();
         ((Engine) entitlementService).initialize();
         init(g);
+        ((DefaultBusService) busService).startBus();
     }
 
     private static boolean isSqlTest(EntitlementDao theDao) {

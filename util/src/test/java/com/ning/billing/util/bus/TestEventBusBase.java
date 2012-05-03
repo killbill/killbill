@@ -49,7 +49,8 @@ public class TestEventBusBase {
         eventBus.stop();
     }
 
-    public static final class MyEvent implements BusEvent {
+    
+    public static  class MyEvent implements BusEvent {
         
         private String name;
         private Long value;
@@ -91,6 +92,18 @@ public class TestEventBusBase {
             return type;
         }
     }
+    
+    public static final class MyEventWithException extends MyEvent {
+        
+        @JsonCreator
+        public MyEventWithException(@JsonProperty("name") String name,
+                @JsonProperty("value") Long value,
+                @JsonProperty("token") UUID token,
+                @JsonProperty("type") String type) {
+            super(name, value, token, type);
+        }        
+    }
+
 
     public static final class MyOtherEvent implements BusEvent {
 
@@ -135,6 +148,12 @@ public class TestEventBusBase {
             return type;
         }
     }
+    
+    public static class MyEventHandlerException extends RuntimeException {
+        public MyEventHandlerException(String msg) {
+            super(msg);
+        }
+    }
 
     public static class MyEventHandler {
 
@@ -158,6 +177,11 @@ public class TestEventBusBase {
             //log.debug("Got event {} {}", event.name, event.value);
         }
 
+        @Subscribe
+        public synchronized void processEvent(MyEventWithException event) {
+            throw new MyEventHandlerException("FAIL");
+        }
+        
         public synchronized boolean waitForCompletion(long timeoutMs) {
 
             long ini = System.currentTimeMillis();
@@ -176,6 +200,20 @@ public class TestEventBusBase {
         }
     }
 
+    public void testSimpleWithException() {
+        try {
+        MyEventHandler handler = new MyEventHandler(1);
+        eventBus.register(handler);
+
+        eventBus.post(new MyEventWithException("my-event", 1L, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()));
+        
+        Thread.sleep(50000);
+        } catch (Exception e) {
+            
+        }
+        
+    }
+    
     public void testSimple() {
         try {
 

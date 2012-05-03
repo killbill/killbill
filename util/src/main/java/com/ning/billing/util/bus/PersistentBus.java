@@ -103,7 +103,6 @@ public class PersistentBus implements Bus  {
     }
 
     
-    
     @Override
     public void start() {
         
@@ -111,8 +110,9 @@ public class PersistentBus implements Bus  {
         curActiveThreads = 0;
         
         final PersistentBus thePersistentBus = this;
-        
         final CountDownLatch doneInitialization = new CountDownLatch(NB_BUS_THREADS);
+
+        log.info("Starting Persistent BUS with {} threads, countDownLatch = {}", NB_BUS_THREADS, doneInitialization.getCount());
         
         for (int i = 0; i < NB_BUS_THREADS; i++) {
             executor.execute(new Runnable() {
@@ -126,7 +126,7 @@ public class PersistentBus implements Bus  {
                     synchronized(thePersistentBus) {
                         curActiveThreads++;
                     }
-                    
+
                     doneInitialization.countDown();
                     
                     try {
@@ -172,7 +172,12 @@ public class PersistentBus implements Bus  {
             });
         }
         try {
-            doneInitialization.await(TIMEOUT_MSEC, TimeUnit.SECONDS);
+            boolean success = doneInitialization.await(TIMEOUT_MSEC, TimeUnit.MILLISECONDS);
+            if (!success) {
+                log.warn("Failed to wait for all threads to be started, got {}/{}", doneInitialization.getCount(), NB_BUS_THREADS);
+            } else {
+                log.info("Done waiting for all threads to be started, got {}/{}", doneInitialization.getCount(), NB_BUS_THREADS);
+            }
         } catch (InterruptedException e) {
             log.warn("PersistentBus start sequence got interrupted...");
         }
@@ -198,10 +203,10 @@ public class PersistentBus implements Bus  {
 
         int result = 0;
         for (final BusEventEntry cur : events) {
-            BusEvent e = deserializeBusEvent(cur.getBusEventClass(), cur.getBusEventJson());
+            BusEvent evt = deserializeBusEvent(cur.getBusEventClass(), cur.getBusEventJson());
             result++;
-            // STEPH need to look at failure cases
-            eventBusDelegate.post(e);
+            // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
+            eventBusDelegate.post(evt);
             dao.clearBusEvent(cur.getId(), hostname);
         }
         return result;

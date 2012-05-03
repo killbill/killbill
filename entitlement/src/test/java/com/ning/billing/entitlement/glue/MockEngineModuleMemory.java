@@ -22,6 +22,8 @@ import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
+import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
@@ -42,6 +44,7 @@ public class MockEngineModuleMemory extends MockEngineModule {
     @Override
     protected void configure() {
         super.configure();
+        install(new BusModule(BusType.MEMORY));
         installNotificationQueue();
     }
 }

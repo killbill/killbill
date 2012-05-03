@@ -29,7 +29,6 @@ public class MockEngineModule extends DefaultEntitlementModule {
     @Override
     protected void configure() {
         super.configure();
-        install(new BusModule());
         install(new CatalogModule());
         bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
         install(new MockClockModule());

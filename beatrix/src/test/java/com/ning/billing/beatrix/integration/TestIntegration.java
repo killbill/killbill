@@ -71,10 +71,6 @@ public class TestIntegration extends TestIntegrationBase {
         testBasePlanComplete(startDate, 3, true);
     }
 
-//    private void waitForDebug() throws Exception {
-//        Thread.sleep(600000);
-//    }
-
     @Test(groups = {"slow", "stress"}, enabled = false)
     public void stressTest() throws Exception {
         final int maxIterations = 7;

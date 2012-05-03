@@ -108,7 +108,6 @@ public class AccountResource implements BaseJaxrsResource {
             AccountJson json = new AccountJson(account);
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
-            log.warn("Failed to find account.", e);
             return Response.status(Status.NO_CONTENT).build();            
         }
         
@@ -131,7 +130,6 @@ public class AccountResource implements BaseJaxrsResource {
             });
             return Response.status(Status.OK).entity(result).build();
         } catch (AccountApiException e) {
-            log.warn("Failed to find account.", e);
             return Response.status(Status.NO_CONTENT).build();
         }
     }
@@ -151,7 +149,6 @@ public class AccountResource implements BaseJaxrsResource {
             AccountJson json = new AccountJson(account);
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
-            log.warn("Failed to find account.", e);
             return Response.status(Status.NO_CONTENT).build();
         }
     }
@@ -242,7 +239,6 @@ public class AccountResource implements BaseJaxrsResource {
             AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline);
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
-            log.warn("Failed to find account.", e);
             return Response.status(Status.NO_CONTENT).build();
         } catch (EntitlementRepairException e) {
             log.error(e.getMessage());
