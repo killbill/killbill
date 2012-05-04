@@ -49,7 +49,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     //
     @SqlQuery
     @Mapper(NotificationSqlMapper.class)
-    public List<Notification> getReadyNotifications(@Bind("now") Date now, @Bind("max") int max, @Bind("queue_name") String queueName);
+    public List<Notification> getReadyNotifications(@Bind("now") Date now, @Bind("owner") String owner, @Bind("max") int max, @Bind("queue_name") String queueName);
 
     @SqlUpdate
     public int claimNotification(@Bind("owner") String owner, @Bind("next_available") Date nextAvailable, @Bind("id") long id, @Bind("now") Date now);
@@ -71,6 +71,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, Notification evt) {
             stmt.bind("notification_id", evt.getUUID().toString());
             stmt.bind("created_dt", getDate(new DateTime()));
+            stmt.bind("creating_owner", evt.getCreatedOwner());            
             stmt.bind("notification_key", evt.getNotificationKey());
             stmt.bind("effective_dt", getDate(evt.getEffectiveDate()));
             stmt.bind("queue_name", evt.getQueueName());
@@ -88,6 +89,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
 
             final long id = r.getLong("id");
             final UUID uuid = UUID.fromString(r.getString("notification_id"));
+            final String createdOwner = r.getString("creating_owner");            
             final String notificationKey = r.getString("notification_key");
             final String queueName = r.getString("queue_name");
             final DateTime effectiveDate = getDate(r, "effective_dt");
@@ -95,7 +97,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             final String processingOwner = r.getString("processing_owner");
             final NotificationLifecycleState processingState = NotificationLifecycleState.valueOf(r.getString("processing_state"));
 
-            return new DefaultNotification(id, uuid, processingOwner, queueName, nextAvailableDate,
+            return new DefaultNotification(id, uuid, createdOwner, processingOwner, queueName, nextAvailableDate,
                     processingState, notificationKey, effectiveDate);
 
         }

@@ -42,7 +42,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
     
     @SqlQuery
     @Mapper(PersistentBusSqlMapper.class)
-    public BusEventEntry getNextBusEventEntry(@Bind("max") int max, @Bind("now") Date now);
+    public BusEventEntry getNextBusEventEntry(@Bind("max") int max, @Bind("owner") String owner, @Bind("now") Date now);
     
     @SqlUpdate
     public int claimBusEvent(@Bind("owner") String owner, @Bind("next_available") Date nextAvailable, @Bind("id") long id, @Bind("now") Date now);
@@ -67,6 +67,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
             stmt.bind("class_name", evt.getBusEventClass());
             stmt.bind("event_json", evt.getBusEventJson()); 
             stmt.bind("created_dt", getDate(new DateTime()));
+            stmt.bind("creating_owner", evt.getCreatedOwner());
             stmt.bind("processing_available_dt", getDate(evt.getNextAvailableDate()));
             stmt.bind("processing_owner", evt.getOwner());
             stmt.bind("processing_state", NotificationLifecycleState.AVAILABLE.toString());
@@ -81,12 +82,13 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
 
             final long id = r.getLong("id");
             final String className = r.getString("class_name"); 
+            final String createdOwner = r.getString("creating_owner");
             final String eventJson = r.getString("event_json"); 
             final DateTime nextAvailableDate = getDate(r, "processing_available_dt");
             final String processingOwner = r.getString("processing_owner");
             final NotificationLifecycleState processingState = NotificationLifecycleState.valueOf(r.getString("processing_state"));
             
-            return new BusEventEntry(id, processingOwner, nextAvailableDate, processingState, className, eventJson);
+            return new BusEventEntry(id, createdOwner, processingOwner, nextAvailableDate, processingState, className, eventJson);
         }
     }
 }

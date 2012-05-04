@@ -165,6 +165,7 @@ public abstract class TestApiBase {
             final String entitlementDdl = IOUtils.toString(TestApiBase.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
             final String utilDdl = IOUtils.toString(TestApiBase.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
             helper.startMysql();
+            helper.cleanupAllTables();
             helper.initDb(entitlementDdl);
             helper.initDb(utilDdl);
         }
