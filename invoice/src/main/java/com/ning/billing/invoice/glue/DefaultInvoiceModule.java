@@ -20,6 +20,7 @@ import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
@@ -43,15 +44,23 @@ import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
-public class DefaultInvoiceModule extends AbstractModule {
+public class DefaultInvoiceModule extends AbstractModule implements InvoiceModule {
     protected void installInvoiceDao() {
         bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
     }
 
+    /* (non-Javadoc)
+     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceUserApi()
+     */
+    @Override
     public void installInvoiceUserApi() {
         bind(InvoiceUserApi.class).to(DefaultInvoiceUserApi.class).asEagerSingleton();
     }
 
+    /* (non-Javadoc)
+     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoicePaymentApi()
+     */
+    @Override
     public void installInvoicePaymentApi() {
         bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
     }
@@ -65,6 +74,10 @@ public class DefaultInvoiceModule extends AbstractModule {
         bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
     }
     
+    /* (non-Javadoc)
+     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceMigrationApi()
+     */
+    @Override
     public void installInvoiceMigrationApi() {
     	bind(InvoiceMigrationApi.class).to(DefaultInvoiceMigrationApi.class).asEagerSingleton();
 	}
