@@ -26,7 +26,6 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.api.test.InvoiceTestApi;
@@ -40,6 +39,7 @@ import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
@@ -112,7 +112,7 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
         bind(BillingApi.class).toInstance(billingApi);
 
         install(new CatalogModule());
-        install(new DefaultEntitlementModule());
+        install(new MockEntitlementModule());
         install(new GlobalLockerModule());
 
         super.configure();

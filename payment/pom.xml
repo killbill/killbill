@@ -26,14 +26,6 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-invoice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-account</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-util</artifactId>
         </dependency>
         <dependency>
@@ -78,12 +70,13 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <!--  TEST SCOPE -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
+        <dependency> 
             <groupId>com.jayway.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <scope>test</scope>
@@ -94,16 +87,30 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+        <!-- TODO: MDW REMOVE -->
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-account</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+        <!-- TODO: MDW REMOVE -->
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-invoice</artifactId>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+         <!-- TODO: MDW REMOVE -->
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-invoice</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- TODO: MDW REMOVE -->
+         <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-account</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -42,7 +42,7 @@ public interface InvoicePaymentApi {
     public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context);
 
     public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context);
-
+    
     public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context);
 
 }

@@ -35,7 +35,6 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
@@ -268,13 +267,14 @@ public class DefaultPaymentApi implements PaymentApi {
             }
         }
 
-        invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getPaymentAttemptId(),
+        invoicePaymentApi.notifyOfPaymentAttempt(
                 invoice.getId(),
-                paymentAttempt.getPaymentAttemptDate(),
                 paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
                         //                                                                         paymentInfo.getRefundAmount(), TODO
-                        paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency()),
-                        context);
+                paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency(),
+                paymentAttempt.getPaymentAttemptId(),
+                paymentAttempt.getPaymentAttemptDate(),
+                context);
 
         return paymentOrError;
     }

@@ -55,6 +55,7 @@
             <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- TEST SCOPE -->
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-util</artifactId>
@@ -72,18 +73,7 @@
             <artifactId>killbill-catalog</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-entitlement</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-entitlement</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
+         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <scope>runtime</scope>
