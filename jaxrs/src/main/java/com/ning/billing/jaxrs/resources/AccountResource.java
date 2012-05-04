@@ -65,6 +65,7 @@ import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
 
@@ -229,7 +230,7 @@ public class AccountResource implements BaseJaxrsResource {
             Account account = accountApi.getAccountById(UUID.fromString(accountId));
            
             List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
-            List<PaymentInfoEvent> payments = Collections.emptyList();
+            List<PaymentAttempt> payments = new LinkedList<PaymentAttempt>();
 
             if (invoices.size() > 0) {
                 Collection<String> tmp = Collections2.transform(invoices, new Function<Invoice, String>() {
@@ -240,8 +241,9 @@ public class AccountResource implements BaseJaxrsResource {
                 });
                 List<String> invoicesId = new ArrayList<String>();
                 invoicesId.addAll(tmp);
-
-                payments = paymentApi.getPaymentInfo(invoicesId);
+                for (String curId : invoicesId) {
+                    payments.addAll(paymentApi.getPaymentAttemptsForInvoiceId(curId));
+                }
             }
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());
