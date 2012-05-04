@@ -33,6 +33,7 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
@@ -68,6 +69,8 @@ public class MockModule extends AbstractModule {
         install(new BusModule());
         installInvoiceModule();
         install(new MockJunctionModule());
+        install(new TemplateModule());
+
     }
 
     protected void installInvoiceModule() {

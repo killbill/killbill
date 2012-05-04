@@ -24,6 +24,7 @@ import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.util.email.templates.TemplateModule;
 
 public class MockModuleNoEntitlement extends MockModule {
 //	@Override
@@ -53,7 +54,8 @@ public class MockModuleNoEntitlement extends MockModule {
 			
 			
 		});
-		
+        install(new TemplateModule());
+
 		
 	}
 

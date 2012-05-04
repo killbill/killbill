@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.Response.Status;
 
 import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -189,6 +190,7 @@ public class TestJaxrsBase {
             install(new CallContextModule());
             install(new AccountModule());
             install(new DefaultInvoiceModule());
+            install(new TemplateModule());
             install(new DefaultEntitlementModule());
             install(new AnalyticsModule());
             install(new PaymentMockModule());

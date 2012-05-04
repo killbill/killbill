@@ -41,8 +41,6 @@ import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
-import com.ning.billing.util.email.templates.MustacheTemplateEngine;
-import com.ning.billing.util.email.templates.TemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 public class DefaultInvoiceModule extends AbstractModule {
@@ -77,7 +75,6 @@ public class DefaultInvoiceModule extends AbstractModule {
         TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
         bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
-        bind(TemplateEngine.class).to(MustacheTemplateEngine.class).asEagerSingleton();
         bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
     }
 

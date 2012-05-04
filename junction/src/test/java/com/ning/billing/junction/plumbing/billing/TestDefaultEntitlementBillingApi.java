@@ -147,6 +147,7 @@ public class TestDefaultEntitlementBillingApi {
 	private Clock clock;
 	private Subscription subscription;
 	private DateTime subscriptionStartDate;
+	private Plan subscriptionPlan;
 
 	@BeforeSuite(groups={"fast", "slow"})
 	public void setup() throws ServiceException {
@@ -172,6 +173,12 @@ public class TestDefaultEntitlementBillingApi {
             public List<SubscriptionEvent> getBillingTransitions() {
 		    	return subscriptionTransitions;
 		    }
+
+            @Override
+            public Plan getCurrentPlan() {
+                return subscriptionPlan;
+            }
+		    
 		};
 
 		subscriptions.add(subscription);
@@ -258,7 +265,7 @@ public class TestDefaultEntitlementBillingApi {
         BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockCalculator, catalogService);
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
-		checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), subId, now, nextPhase, ApiEventType.CREATE.toString());
+		checkFirstEvent(events, nextPlan, subscription.getStartDate().plusDays(30).getDayOfMonth(), subId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
     @Test(enabled=true, groups="fast")
@@ -315,8 +322,10 @@ public class TestDefaultEntitlementBillingApi {
         
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         CallContextFactory factory = new DefaultCallContextFactory(clock);
-
+        
         BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockCalculator, catalogService);
+        subscriptionPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
+
         SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L,0L));
 
 		checkFirstEvent(events, nextPlan, subscription.getStartDate().plusDays(30).getDayOfMonth(), subId, now, nextPhase, ApiEventType.CREATE.toString());

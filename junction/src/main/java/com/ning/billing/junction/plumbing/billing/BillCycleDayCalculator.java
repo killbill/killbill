@@ -84,7 +84,8 @@ public class BillCycleDayCalculator {
 		    break;
 		case BUNDLE :
 		    Subscription baseSub = entitlementApi.getBaseSubscription(bundle.getId());
-		    result = calculateBcdFromSubscription(baseSub, plan, account);
+		    Plan basePlan = baseSub.getCurrentPlan();
+		    result = calculateBcdFromSubscription(baseSub, basePlan, account);
 		    break;
 		case SUBSCRIPTION :
 		    result = calculateBcdFromSubscription(subscription, plan, account);

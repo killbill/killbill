@@ -24,6 +24,8 @@ import java.util.Set;
 
 import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.email.templates.TemplateModule;
+
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -96,6 +98,7 @@ public class MockModule extends AbstractModule {
         install(new CatalogModule());
         install(new DefaultEntitlementModule());
         install(new DefaultInvoiceModule());
+        install(new TemplateModule());
         install(new PaymentMockModule());
         install(new DefaultJunctionModule());
     }

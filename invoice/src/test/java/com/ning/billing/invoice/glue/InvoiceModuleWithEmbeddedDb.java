@@ -44,6 +44,7 @@ import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
@@ -118,6 +119,8 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
 
         bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
         install(new BusModule());
+        install(new TemplateModule());
+
     }
 
     private static void loadSystemPropertiesFromClasspath(final String resource) {
