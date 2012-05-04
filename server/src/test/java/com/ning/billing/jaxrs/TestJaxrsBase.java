@@ -109,6 +109,11 @@ public class TestJaxrsBase {
     protected ClockMock clock;
     protected TestBusHandler busHandler;
 
+    // Context informtation to be passed around
+    private static final String createdBy = "Toto";
+    private static final String reason = "i am god";
+    private static final String comment = "no comment";    
+    
     public static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestJaxrsBase.class.getResource(resource);
         assertNotNull(url);
@@ -375,7 +380,7 @@ public class TestJaxrsBase {
         if (body != null) {
             builder.setBody(body);
         }
-        return executeAndWait(builder, timeoutSec);
+        return executeAndWait(builder, timeoutSec, true);
     }
 
     protected Response doPut(final String uri, final String body, final Map<String, String> queryParams, final int timeoutSec) {
@@ -384,13 +389,13 @@ public class TestJaxrsBase {
         if (body != null) {
             builder.setBody(body);
         }
-        return executeAndWait(builder, timeoutSec);
+        return executeAndWait(builder, timeoutSec, true);
     }
 
     protected Response doDelete(final String uri, final Map<String, String> queryParams, final int timeoutSec) {
         final String url = String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
         BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("DELETE", url, queryParams);
-        return executeAndWait(builder, timeoutSec);
+        return executeAndWait(builder, timeoutSec, true);
     }
 
     protected Response doGet(final String uri, final Map<String, String> queryParams, final int timeoutSec) {
@@ -400,10 +405,17 @@ public class TestJaxrsBase {
 
     protected Response doGetWithUrl(final String url, final Map<String, String> queryParams, final int timeoutSec) {
         BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("GET", url, queryParams);
-        return executeAndWait(builder, timeoutSec);
+        return executeAndWait(builder, timeoutSec, false);
     }
 
-    private Response executeAndWait(final BoundRequestBuilder builder, final int timeoutSec) {
+    private Response executeAndWait(final BoundRequestBuilder builder, final int timeoutSec, final boolean addContextHeader) {
+        
+        if (addContextHeader) {
+            builder.addHeader(BaseJaxrsResource.HDR_CREATED_BY, createdBy);
+            builder.addHeader(BaseJaxrsResource.HDR_REASON, reason);
+            builder.addHeader(BaseJaxrsResource.HDR_COMMENT, comment);            
+        }
+        
         Response response = null;
         try {
             ListenableFuture<Response> futureStatus = 

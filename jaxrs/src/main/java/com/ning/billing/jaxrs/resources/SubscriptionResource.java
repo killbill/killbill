@@ -26,6 +26,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -141,9 +142,12 @@ public class SubscriptionResource implements BaseJaxrsResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createSubscription(final SubscriptionJsonNoEvents subscription,
-            final @QueryParam(QUERY_REQUESTED_DT) String requestedDate,
-            final @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") Boolean callCompletion,
-            final @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") long timeoutSec) {
+            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
 
 
         SubscriptionCallCompletionCallback<Subscription> callback = new SubscriptionCallCompletionCallback<Subscription>() {
@@ -168,7 +172,7 @@ public class SubscriptionResource implements BaseJaxrsResource {
             }
         };
         SubscriptionCallCompletion<Subscription> callCompletionCreation = new SubscriptionCallCompletion<Subscription>();
-        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion);
+        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, createdBy, reason, comment);
     }
 
     @PUT
@@ -176,10 +180,13 @@ public class SubscriptionResource implements BaseJaxrsResource {
     @Consumes(APPLICATION_JSON)
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     public Response changeSubscriptionPlan(final SubscriptionJsonNoEvents subscription,
-            final @PathParam("subscriptionId") String subscriptionId,
-            final @QueryParam(QUERY_REQUESTED_DT) String requestedDate,
-            final @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") Boolean callCompletion,
-            final @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") long timeoutSec) {
+            @PathParam("subscriptionId") final String subscriptionId,
+            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
 
         SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
@@ -222,18 +229,21 @@ public class SubscriptionResource implements BaseJaxrsResource {
             }
         };
         SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
-        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion);
+        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, createdBy, reason, comment);
     }
 
     @PUT
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
-    public Response uncancelSubscriptionPlan(@PathParam("subscriptionId") String subscriptionId) {
+    public Response uncancelSubscriptionPlan(@PathParam("subscriptionId") final String subscriptionId,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
         try {
             UUID uuid = UUID.fromString(subscriptionId);
             Subscription current = entitlementApi.getSubscriptionFromId(uuid);
         
-            current.uncancel(context.createContext());
+            current.uncancel(context.createContext(createdBy, reason, comment));
             return Response.status(Status.OK).build();
         } catch (EntitlementUserApiException e) {
             if(e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
@@ -249,9 +259,12 @@ public class SubscriptionResource implements BaseJaxrsResource {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response cancelSubscriptionPlan(final @PathParam("subscriptionId") String subscriptionId,
-            final @QueryParam(QUERY_REQUESTED_DT) String requestedDate,
-            final @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") Boolean callCompletion,
-            final @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") long timeoutSec) {
+            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
 
         SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
@@ -287,7 +300,7 @@ public class SubscriptionResource implements BaseJaxrsResource {
             }
         };
         SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
-        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion);
+        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, createdBy, reason, comment);
     }
 
     private final static class CompletionUserRequestSubscription extends CompletionUserRequestBase {
@@ -332,9 +345,14 @@ public class SubscriptionResource implements BaseJaxrsResource {
 
     private class SubscriptionCallCompletion<T> {
 
-        public Response withSynchronization(final SubscriptionCallCompletionCallback<T> callback, final long timeoutSec, final boolean callCompletion) {
+        public Response withSynchronization(final SubscriptionCallCompletionCallback<T> callback,
+                final long timeoutSec,
+                final boolean callCompletion,
+                final String createdBy,
+                final String reason,
+                final String comment) {
 
-            CallContext ctx = context.createContext();
+            CallContext ctx = context.createContext(createdBy, reason, comment);
             CompletionUserRequestSubscription waiter = callCompletion ? new CompletionUserRequestSubscription(ctx.getUserToken()) : null; 
             try {
                 if (waiter != null) {

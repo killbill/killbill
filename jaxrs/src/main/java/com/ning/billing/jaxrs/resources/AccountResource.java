@@ -29,6 +29,7 @@ import java.util.UUID;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -81,6 +82,7 @@ public class AccountResource implements BaseJaxrsResource {
     private final Context context;
     private final JaxrsUriBuilder uriBuilder;
 
+    
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
             final AccountUserApi accountApi,
@@ -157,17 +159,22 @@ public class AccountResource implements BaseJaxrsResource {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createAccount(AccountJson json) {
+    public Response createAccount(final AccountJson json,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
 
         try {
-        	
             AccountData data = json.toAccountData();
-            final Account account = accountApi.createAccount(data, null, null, context.createContext());
+            final Account account = accountApi.createAccount(data, null, null, context.createContext(createdBy, reason, comment));
             URI uri = UriBuilder.fromPath(account.getId().toString()).build();
             return uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
         } catch (AccountApiException e) {
-            log.info(String.format("Failed to create account %s", json), e);
-            return Response.status(Status.BAD_REQUEST).build();
+            final String error = String.format("Failed to create account %s", json);
+            log.info(error, e);
+            return Response.status(Status.BAD_REQUEST).entity(error).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 
@@ -175,11 +182,15 @@ public class AccountResource implements BaseJaxrsResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}")
-    public Response updateAccount(AccountJson json, @PathParam("accountId") String accountId) {
+    public Response updateAccount(final AccountJson json,
+            @PathParam("accountId") final String accountId,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
         try {
             AccountData data = json.toAccountData();
             UUID uuid = UUID.fromString(accountId);
-            accountApi.updateAccount(uuid, data, context.createContext());
+            accountApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment));
             return getAccount(accountId);
         } catch (AccountApiException e) {
         	if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
@@ -188,6 +199,8 @@ public class AccountResource implements BaseJaxrsResource {
         		log.info(String.format("Failed to update account %s with %s", accountId, json), e);
         		return Response.status(Status.BAD_REQUEST).build();
         	}
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 
