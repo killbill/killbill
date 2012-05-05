@@ -44,6 +44,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -64,9 +66,14 @@ import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 
 
 @Singleton
@@ -81,8 +88,9 @@ public class AccountResource implements BaseJaxrsResource {
     private final InvoiceUserApi invoiceApi;
     private final PaymentApi paymentApi;
     private final Context context;
+    private final TagUserApi tagUserApi;
     private final JaxrsUriBuilder uriBuilder;
-
+    private final TagHelper tagHelper;
     
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
@@ -91,14 +99,18 @@ public class AccountResource implements BaseJaxrsResource {
             final InvoiceUserApi invoiceApi,
             final PaymentApi paymentApi,
             final EntitlementTimelineApi timelineApi,
+            final TagUserApi tagUserApi,
+            final TagHelper tagHelper,
             final Context context) {
         this.uriBuilder = uriBuilder;
     	this.accountApi = accountApi;
+    	this.tagUserApi = tagUserApi;
         this.entitlementApi = entitlementApi;
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.timelineApi = timelineApi;
         this.context = context;
+        this.tagHelper = tagHelper;
     }
 
     @GET
@@ -168,8 +180,8 @@ public class AccountResource implements BaseJaxrsResource {
         try {
             AccountData data = json.toAccountData();
             final Account account = accountApi.createAccount(data, null, null, context.createContext(createdBy, reason, comment));
-            URI uri = UriBuilder.fromPath(account.getId().toString()).build();
-            return uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
+            Response response = uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
+            return response;
         } catch (AccountApiException e) {
             final String error = String.format("Failed to create account %s", json);
             log.info(error, e);
@@ -258,6 +270,101 @@ public class AccountResource implements BaseJaxrsResource {
         } catch (EntitlementRepairException e) {
             log.error(e.getMessage());
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    
+    @GET
+    @Path(BaseJaxrsResource.TAGS + "/{accountId:" + UUID_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response getAccountTags(@PathParam("accountId") String accountId) {
+        try {
+            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            List<Tag> tags = account.getTagList();
+            Collection<String> tagNameList = (tags.size() == 0) ?
+                    Collections.<String>emptyList() :
+                Collections2.transform(tags, new Function<Tag, String>() {
+                @Override
+                public String apply(Tag input) {
+                    return input.getTagDefinitionName();
+                }
+            });
+            return Response.status(Status.OK).entity(tagNameList).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.NO_CONTENT).build();
+        }
+    }
+
+    
+    @POST
+    @Path(BaseJaxrsResource.TAGS + "/{accountId:" + UUID_PATTERN + "}")    
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response createAccountTag(@PathParam("accountId") final String accountId,
+            @QueryParam(QUERY_TAGS) final String tagList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+
+        try {
+            Preconditions.checkNotNull(tagList, "Query % list cannot be null", QUERY_TAGS);
+            
+            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+
+            List<TagDefinition> input = tagHelper.getTagDifinitionFromTagList(tagList);
+            account.addTagsFromDefinitions(input);
+            Response response = uriBuilder.buildResponse(AccountResource.class, "getAccountTags", account.getId());
+            return response;
+        } catch (AccountApiException e) {
+            return Response.status(Status.NO_CONTENT).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (TagDefinitionApiException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+    
+    @DELETE
+    @Path(BaseJaxrsResource.TAGS +  "/{accountId:" + UUID_PATTERN + "}")    
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response deleteAccountTag(@PathParam("accountId") final String accountId,
+            @QueryParam(QUERY_TAGS) final String tagList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+
+        try {
+            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+
+            // Tag APIs needs tome rework...
+            String inputTagList = tagList;
+            if (inputTagList == null) {
+                List<Tag> existingTags = account.getTagList();
+                StringBuilder tmp = new StringBuilder();
+                for (Tag cur : existingTags) {
+                    tmp.append(cur.getTagDefinitionName());
+                    tmp.append(",");
+                }
+                inputTagList = tmp.toString();
+            }
+
+            List<TagDefinition> input = tagHelper.getTagDifinitionFromTagList(tagList);   
+            for (TagDefinition cur : input) {
+                account.removeTag(cur);
+            }
+
+            return Response.status(Status.OK).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.NO_CONTENT).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (TagDefinitionApiException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 }

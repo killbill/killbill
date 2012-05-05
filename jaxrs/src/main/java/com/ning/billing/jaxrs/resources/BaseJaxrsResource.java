@@ -35,6 +35,7 @@ public interface BaseJaxrsResource {
 	/*
 	 * Patterns
 	 */
+	public static String STRING_PATTERN = "\\w+";	
 	public static String UUID_PATTERN = "\\w+-\\w+-\\w+-\\w+-\\w+";
 	
 	/*
@@ -43,15 +44,21 @@ public interface BaseJaxrsResource {
 	public static final String QUERY_EXTERNAL_KEY = "external_key";
 	public static final String QUERY_REQUESTED_DT = "requested_date";
 	public static final String QUERY_CALL_COMPLETION = "call_completion";
-	public static final String QUERY_CALL_TIMEOUT = "call_timeout_sec";	
+	public static final String QUERY_CALL_TIMEOUT = "call_timeout_sec";    
 	
-	public static final String ACCOUNTS = "accounts";	
-	public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;
+	public static final String QUERY_TAGS = "taglist";    
+	
+	public static final String ACCOUNTS = "accounts";  
+    public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;
 
 	public static final String BUNDLES = "bundles";		
 	public static final String BUNDLES_PATH = PREFIX + "/" + BUNDLES;
 
-	public static final String SUBSCRIPTIONS = "subscriptions";		
-	public static final String SUBSCRIPTIONS_PATH = PREFIX + "/" + SUBSCRIPTIONS;
+    public static final String SUBSCRIPTIONS = "subscriptions";     
+    public static final String SUBSCRIPTIONS_PATH = PREFIX + "/" + SUBSCRIPTIONS;
 
+    public static final String TAG_DEFINITIONS = "tag_definitions";     
+    public static final String TAG_DEFINITIONS_PATH = PREFIX + "/" + TAG_DEFINITIONS;
+
+    public static final String TAGS = "tags";
 }

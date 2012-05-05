@@ -16,6 +16,7 @@
 package com.ning.billing.jaxrs;
 
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 import java.util.HashMap;
@@ -39,6 +40,7 @@ import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
+import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.http.client.Response;
 
@@ -138,6 +140,38 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(objFromJson.getBundles().size(), 1); 
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().size(), 1);
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);        
- 
+ 	}
+
+	@Test(groups="slow", enabled=true)
+	public void testAccountWithTags() throws Exception {
+	    //Create Tag definition
+	    TagDefinitionJson input = new TagDefinitionJson("yoyo", "nothing more to say");
+	    String baseJson = mapper.writeValueAsString(input);
+	    Response response = doPost(BaseJaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+	    assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+	    
+	    AccountJson accountJson = createAccount("couroucoucou", "shdwdsqgfhwe", "couroucoucou@yahoo.com");
+	    assertNotNull(accountJson);
+	        
+	    Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(BaseJaxrsResource.QUERY_TAGS, input.getName());
+        String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + BaseJaxrsResource.TAGS + "/" + accountJson.getAcountId() ;
+	    response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+        
+        /*
+         * STEPH Some how Location returns the ID twice (confused) :
+         * Location: http://127.0.0.1:8080/1.0/kb/accounts/tags/ebb5f830-6f0a-4521-9553-521d173169be/ebb5f830-6f0a-4521-9553-521d173169be
+         * 
+        String location = response.getHeader("Location");
+        Assert.assertNotNull(location);
+
+        // Retrieves by Id based on Location returned
+        response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        */
+
 	}
+
+
 }

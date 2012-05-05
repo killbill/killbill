@@ -104,39 +104,7 @@ public class SubscriptionResource implements BaseJaxrsResource {
 
         }
     }
-    
-    /*
-    @GET
-    @Path("/{subscriptionId:" + UUID_PATTERN + "}")
-    @Produces(APPLICATION_JSON)
-    public StreamingOutput getSubscription(@PathParam("subscriptionId") final String subscriptionId) {
-
-        UUID uuid = UUID.fromString(subscriptionId);
-        final Subscription subscription = entitlementApi.getSubscriptionFromId(uuid);
-        if (subscription == null) {
-            throw new WebApplicationException(Response.Status.NO_CONTENT);
-        }
-        final SubscriptionJson json = new SubscriptionJson(subscription, null, null, null);
-        return new StreamingOutput() {
-
-            final SubscriptionJson json = new SubscriptionJson(subscription, null, null, null);
-            
-            @Override
-            public void write(OutputStream output) throws IOException,
-                    WebApplicationException {
-                
-                final ObjectWriter objWriter = objectMapper.writerWithView(BundleTimelineViews.Base.class);
-                
-                Writer writer = new StringWriter();
-                objWriter.writeValue(writer, json);
-                String baseJson = writer.toString();
-                output.write(baseJson.getBytes());
-                output.flush();
-            }
-        };
-    }
-    */
-
+  
 
     @POST
     @Consumes(APPLICATION_JSON)
