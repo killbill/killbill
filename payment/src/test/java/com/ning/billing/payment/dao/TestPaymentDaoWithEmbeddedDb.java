@@ -33,9 +33,11 @@ public class TestPaymentDaoWithEmbeddedDb extends TestPaymentDao {
     @BeforeClass(groups = { "slow", "database" })
     public void startMysql() throws IOException {
         final String paymentddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
+        final String utilddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
         helper.startMysql();
         helper.initDb(paymentddl);
+        helper.initDb(utilddl);
     }
 
     @AfterClass(groups = { "slow", "database" })

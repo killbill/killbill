@@ -24,4 +24,6 @@ public interface InvoiceModule {
 
     public abstract void installInvoiceMigrationApi();
 
+    public abstract void installInvoiceTestApi();
+
 }

@@ -65,6 +65,13 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
         </dependency>
+
+        <!-- TEST SCOPE -->
+        <dependency> 
+            <groupId>com.jayway.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <scope>test</scope>
+        </dependency>      
          <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-junction</artifactId>
@@ -74,6 +81,12 @@
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-payment</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-invoice</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

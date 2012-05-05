@@ -16,8 +16,6 @@
 
 package com.ning.billing.payment.setup;
 
-import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
-import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import org.apache.commons.collections.MapUtils;
 
 import com.google.common.collect.ImmutableMap;
@@ -25,14 +23,14 @@ import com.google.inject.Provider;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockInvoiceModule;
+import com.ning.billing.mock.glue.MockNotificationQueueModule;
+import com.ning.billing.mock.glue.TestDbiModule;
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.InMemoryBus;
-import com.ning.billing.util.notificationq.MockNotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.BusModule.BusType;
 
 public class PaymentTestModuleWithMocks extends PaymentModule {
 	public static class MockProvider implements Provider<BillingApi> {
@@ -62,9 +60,9 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
     @Override
     protected void configure() {
         super.configure();
-        bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
-        bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
-
-        bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
+        install(new BusModule(BusType.MEMORY));
+        install(new MockNotificationQueueModule());
+        install(new MockInvoiceModule());
+        install(new TestDbiModule());
     }
 }

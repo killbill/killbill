@@ -31,6 +31,8 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import com.ning.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
+import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
+import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -55,6 +57,14 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     @Override
     public void installInvoiceUserApi() {
         bind(InvoiceUserApi.class).to(DefaultInvoiceUserApi.class).asEagerSingleton();
+    }
+    
+    /* (non-Javadoc)
+     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceUserApi()
+     */
+    @Override
+    public void installInvoiceTestApi() {
+        bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
     }
 
     /* (non-Javadoc)
@@ -110,5 +120,6 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
         installInvoiceUserApi();
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
+        installInvoiceTestApi();
     }
 }
