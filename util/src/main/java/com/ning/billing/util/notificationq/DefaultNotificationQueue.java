@@ -68,7 +68,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
 
     @Override
     public void recordFutureNotification(DateTime futureNotificationTime, NotificationKey notificationKey) {
-        Notification notification = new DefaultNotification(getFullQName(), notificationKey.toString(), futureNotificationTime);
+        Notification notification = new DefaultNotification(getFullQName(), hostname,  notificationKey.toString(), futureNotificationTime);
         dao.insertNotification(notification);
     }
 
@@ -76,7 +76,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
             final DateTime futureNotificationTime, final NotificationKey notificationKey) {
         NotificationSqlDao transactionalNotificationDao =  transactionalDao.become(NotificationSqlDao.class);
-        Notification notification = new DefaultNotification(getFullQName(), notificationKey.toString(), futureNotificationTime);
+        Notification notification = new DefaultNotification(getFullQName(), hostname, notificationKey.toString(), futureNotificationTime);
         transactionalNotificationDao.insertNotification(notification);
     }
 
@@ -90,7 +90,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(config.getDaoClaimTimeMs()).toDate();
 
-        List<Notification> input = dao.getReadyNotifications(now, config.getDaoMaxReadyEvents(), getFullQName());
+        List<Notification> input = dao.getReadyNotifications(now, hostname, config.getDaoMaxReadyEvents(), getFullQName());
 
         List<Notification> claimedNotifications = new ArrayList<Notification>();
         for (Notification cur : input) {

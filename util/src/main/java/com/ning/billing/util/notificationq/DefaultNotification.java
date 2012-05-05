@@ -25,6 +25,7 @@ public class DefaultNotification implements Notification {
     private final long id;
     private final UUID uuid;
     private final String owner;
+    private final String createdOwner;
     private final String queueName;
     private final DateTime nextAvailableDate;
     private final NotificationLifecycleState lifecycleState;
@@ -32,13 +33,14 @@ public class DefaultNotification implements Notification {
     private final DateTime effectiveDate;
 
 
-    public DefaultNotification(long id, UUID uuid, String owner, String queueName, DateTime nextAvailableDate,
+    public DefaultNotification(long id, UUID uuid, String createdOwner, String owner, String queueName, DateTime nextAvailableDate,
             NotificationLifecycleState lifecycleState,
             String notificationKey, DateTime effectiveDate) {
         super();
         this.id = id;
         this.uuid = uuid;
         this.owner = owner;
+        this.createdOwner = createdOwner;
         this.queueName = queueName;
         this.nextAvailableDate = nextAvailableDate;
         this.lifecycleState = lifecycleState;
@@ -51,8 +53,8 @@ public class DefaultNotification implements Notification {
         return id;
     }
 
-    public DefaultNotification(String queueName, String notificationKey, DateTime effectiveDate) {
-        this(-1L, UUID.randomUUID(), null, queueName, null, NotificationLifecycleState.AVAILABLE, notificationKey, effectiveDate);
+    public DefaultNotification(String queueName, String createdOwner, String notificationKey, DateTime effectiveDate) {
+        this(-1L, UUID.randomUUID(), createdOwner, null, queueName, null, NotificationLifecycleState.AVAILABLE, notificationKey, effectiveDate);
     }
     @Override
     public UUID getUUID() {
@@ -108,4 +110,8 @@ public class DefaultNotification implements Notification {
 		return queueName;
 	}
 
+    @Override
+    public String getCreatedOwner() {
+        return createdOwner;
+    }
 }

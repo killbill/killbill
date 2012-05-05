@@ -6,6 +6,7 @@ getReadyNotifications(now, max) ::= <<
       ,  notification_id
       , notification_key
       , created_dt
+      , creating_owner
       , effective_dt
       , queue_name
       , processing_owner
@@ -65,6 +66,7 @@ insertNotification() ::= <<
       notification_id
     , notification_key
       , created_dt
+      , creating_owner
       , effective_dt
       , queue_name
       , processing_owner
@@ -74,6 +76,7 @@ insertNotification() ::= <<
       :notification_id
       , :notification_key
       , :created_dt
+      , :creating_owner
       , :effective_dt
       , :queue_name
       , :processing_owner

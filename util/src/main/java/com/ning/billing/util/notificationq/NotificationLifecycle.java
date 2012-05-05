@@ -29,6 +29,8 @@ public interface NotificationLifecycle {
     }
 
     public String getOwner();
+    
+    public String getCreatedOwner();
 
     public DateTime getNextAvailableDate();
 

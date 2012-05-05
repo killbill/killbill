@@ -50,7 +50,8 @@ import static org.testng.Assert.assertNotNull;
 public class TestNotificationSqlDao {
 
     private static AtomicInteger sequenceId = new AtomicInteger();
-
+    private final static String hostname = "Yop";
+    
     @Inject
     private IDBI dbi;
 
@@ -104,12 +105,12 @@ public class TestNotificationSqlDao {
 
         String notificationKey = UUID.randomUUID().toString();
         DateTime effDt = new DateTime();
-        Notification notif = new DefaultNotification("testBasic",notificationKey, effDt);
+        Notification notif = new DefaultNotification("testBasic", hostname, notificationKey, effDt);
         dao.insertNotification(notif);
 
         Thread.sleep(1000);
         DateTime now = new DateTime();
-        List<Notification> notifications = dao.getReadyNotifications(now.toDate(), 3, "testBasic");
+        List<Notification> notifications = dao.getReadyNotifications(now.toDate(), hostname, 3, "testBasic");
         assertNotNull(notifications);
         assertEquals(notifications.size(), 1);
 
@@ -153,6 +154,7 @@ public class TestNotificationSqlDao {
                 		", notification_id" +
                 		", notification_key" +
                 		", created_dt" +
+                		", creating_owner" +
                 		", effective_dt" +
                 		", queue_name" +
                 		", processing_owner" +
@@ -197,12 +199,6 @@ public class TestNotificationSqlDao {
             bind(MysqlTestingHelper.class).toInstance(helper);
             IDBI dbi = helper.getDBI();
             bind(IDBI.class).toInstance(dbi);
-
-            /*
-            bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-            final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-            bind(DbiConfig.class).toInstance(config);
-            */
         }
     }
 }

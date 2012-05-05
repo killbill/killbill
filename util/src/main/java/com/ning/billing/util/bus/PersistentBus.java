@@ -218,7 +218,7 @@ public class PersistentBus implements Bus  {
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(DELTA_IN_PROCESSING_TIME_MS).toDate();
 
-        BusEventEntry input = dao.getNextBusEventEntry(MAX_BUS_EVENTS, now);
+        BusEventEntry input = dao.getNextBusEventEntry(MAX_BUS_EVENTS, hostname, now);
         if (input == null) {
             return Collections.emptyList();
         }
@@ -291,7 +291,7 @@ public class PersistentBus implements Bus  {
     private void postFromTransaction(BusEvent event, PersistentBusSqlDao transactional) {
         try {
             String json = objectMapper.writeValueAsString(event);
-            BusEventEntry entry  =  new BusEventEntry(event.getClass().getName(), json);
+            BusEventEntry entry  =  new BusEventEntry(hostname, event.getClass().getName(), json);
             transactional.insertBusEvent(entry);
         } catch (Exception e) {
             log.error("Failed to post BusEvent " + event.toString(), e);

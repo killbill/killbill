@@ -26,7 +26,7 @@ public interface Notification extends NotificationLifecycle {
     public long getId();
 
     public UUID getUUID();
-
+    
     public String getNotificationKey();
 
     public DateTime getEffectiveDate();
