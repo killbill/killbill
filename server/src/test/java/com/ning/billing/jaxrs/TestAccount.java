@@ -20,6 +20,8 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -39,6 +41,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
@@ -142,7 +145,7 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);        
  	}
 
-	@Test(groups="slow", enabled=true)
+	@Test(groups="slow", enabled=false)
 	public void testAccountWithTags() throws Exception {
 	    //Create Tag definition
 	    TagDefinitionJson input = new TagDefinitionJson("yoyo", "nothing more to say");
@@ -172,6 +175,28 @@ public class TestAccount extends TestJaxrsBase {
         */
 
 	}
+	
+    @Test(groups="slow", enabled=false)
+	public void testAccountWithCustomFields() throws Exception {
+        
+        AccountJson accountJson = createAccount("carafe", "shdwhwgaz", "carafe@yahoo.com");
+        assertNotNull(accountJson);
+        
+        List<CustomFieldJson> customFields =  new LinkedList<CustomFieldJson>();
+        customFields.add(new CustomFieldJson("1", "value1"));
+        customFields.add(new CustomFieldJson("2", "value2"));
+        customFields.add(new CustomFieldJson("3", "value3"));  
+        String baseJson = mapper.writeValueAsString(customFields);
 
+        String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + BaseJaxrsResource.CUSTOM_FIELDS + "/" + accountJson.getAcountId() ;
+        Response response = doPost(uri,baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+        String location = response.getHeader("Location");
+        Assert.assertNotNull(location);
 
+        // Retrieves by Id based on Location returned
+        response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        
+	}
 }

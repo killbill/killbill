@@ -88,7 +88,7 @@ public class TestJaxrsBase {
 
     private final static String PLUGIN_NAME = "noop";
 
-    protected static final int DEFAULT_HTTP_TIMEOUT_SEC =  1000; /* 5;  STEPH */
+    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 5;
 
     protected static final Map<String, String> DEFAULT_EMPTY_QUERY = new HashMap<String, String>();
 

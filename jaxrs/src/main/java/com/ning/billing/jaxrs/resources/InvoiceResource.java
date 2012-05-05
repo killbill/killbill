@@ -18,8 +18,14 @@ package com.ning.billing.jaxrs.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -29,34 +35,117 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.InvoiceJson;
+import com.ning.billing.jaxrs.util.Context;
+import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.jaxrs.util.TagHelper;
+import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.util.api.TagUserApi;
 
 
 
-@Path("/1.0/invoice")
-public class InvoiceResource {
+@Path(BaseJaxrsResource.INVOICES_PATH)
+public class InvoiceResource implements BaseJaxrsResource {
 
 
+    private static final Logger log = LoggerFactory.getLogger(AccountResource.class);
+
+    private final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
+    
+    private final AccountUserApi accountApi;
+    private final InvoiceUserApi invoiceApi;
+    private final Context context;
+    private final JaxrsUriBuilder uriBuilder;
+    
+    @Inject
+    public InvoiceResource(final AccountUserApi accountApi,
+            final InvoiceUserApi invoiceApi,
+            final Context context,
+            final JaxrsUriBuilder uriBuilder) {
+        this.accountApi = accountApi;
+        this.invoiceApi = invoiceApi;
+        this.context = context;
+        this.uriBuilder = uriBuilder;
+    }
+    
     @GET
     @Produces(APPLICATION_JSON)
-    public Response getInvoices(@QueryParam("accountId") String accountId) {
-        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+    public Response getInvoices(@QueryParam(QUERY_ACCOUNT_ID) final String accountId) {
+        try {
+            
+            Preconditions.checkNotNull(accountId, "% query parameter must be specified", QUERY_ACCOUNT_ID);
+            accountApi.getAccountById(UUID.fromString(accountId));
+            List<Invoice> invoices = invoiceApi.getInvoicesByAccount(UUID.fromString(accountId));
+            List<InvoiceJson> result = new LinkedList<InvoiceJson>();
+            for (Invoice cur : invoices) {
+                result.add(new InvoiceJson(cur));
+            }
+            return Response.status(Status.OK).entity(result).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.NO_CONTENT).build();            
+        } catch (NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).build();            
+        }
     }
 
     @GET
     @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     @Produces(APPLICATION_JSON)
-    public Response getInvoice(@PathParam("invoiceId") String accountId) {
-        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+    public Response getInvoice(@PathParam("invoiceId") String invoiceId) {
+        Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId));
+        InvoiceJson json = new InvoiceJson(invoice);
+        return Response.status(Status.OK).entity(json).build();
     }
 
     @POST
-    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createFutureInvoice(InvoiceJson invoice,
-            @PathParam("accountId") String accountId,
-            @QueryParam("targetDate") String targetDate) {
-        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+    public Response createFutureInvoice(final InvoiceJson invoice,
+            @QueryParam(QUERY_ACCOUNT_ID) final String accountId,
+            @QueryParam(QUERY_TARGET_DATE) final String targetDate,
+            @QueryParam(QUERY_DRY_RUN) @DefaultValue("false") final Boolean dryRun,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+
+        try {
+            
+            Preconditions.checkNotNull(accountId, "% needs to be specified", QUERY_ACCOUNT_ID);
+            Preconditions.checkNotNull(targetDate, "% needs to be specified", QUERY_TARGET_DATE);
+            
+            DateTime inputDate = (targetDate != null) ? DATE_TIME_FORMATTER.parseDateTime(targetDate) : null;        
+            
+            accountApi.getAccountById(UUID.fromString(accountId));
+            Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRun.booleanValue(),
+                    context.createContext(createdBy, reason, comment));
+            if (dryRun) {
+                return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice)).build();
+            } else {
+               return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", generatedInvoice.getId());
+            }
+        } catch (AccountApiException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();  
+        } catch (InvoiceApiException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();  
+        } catch (NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();            
+        }
     }
 }

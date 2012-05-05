@@ -18,7 +18,7 @@ package com.ning.billing.jaxrs.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-import java.net.URI;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,13 +38,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
@@ -64,6 +62,7 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.TagHelper;
@@ -72,6 +71,8 @@ import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -274,6 +275,8 @@ public class AccountResource implements BaseJaxrsResource {
     }
     
     
+    /****************************      TAGS     ******************************/
+    
     @GET
     @Path(BaseJaxrsResource.TAGS + "/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
@@ -367,4 +370,77 @@ public class AccountResource implements BaseJaxrsResource {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
+    
+    /************************   CUSTOM FIELDS   ******************************/
+    
+    @GET
+    @Path(BaseJaxrsResource.CUSTOM_FIELDS + "/{accountId:" + UUID_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response getAccountCustomFields(@PathParam("accountId") String accountId) {
+        try {
+            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            List<CustomField> fields = account.getFieldList();
+            List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
+            for (CustomField cur : fields) {
+                result.add(new CustomFieldJson(cur));
+            }
+            return Response.status(Status.OK).entity(result).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.NO_CONTENT).build();
+        }
+    }
+    
+    
+    @POST
+    @Path(BaseJaxrsResource.CUSTOM_FIELDS + "/{accountId:" + UUID_PATTERN + "}")    
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response createCustomField(@PathParam("accountId") final String accountId,
+            List<CustomFieldJson> customFields,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+
+        try {
+            
+            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            LinkedList<CustomField> input = new LinkedList<CustomField>();
+            for (CustomFieldJson cur : customFields) {
+                input.add(new StringCustomField(cur.getName(), cur.getValue()));
+            }
+            account.saveFields(input, context.createContext(createdBy, reason, comment));
+            Response response = uriBuilder.buildResponse(AccountResource.class, "getAccountCustomFields", account.getId());            
+            return response;
+        } catch (AccountApiException e) {
+            return Response.status(Status.NO_CONTENT).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+    
+    @DELETE
+    @Path(BaseJaxrsResource.CUSTOM_FIELDS +  "/{accountId:" + UUID_PATTERN + "}")    
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response deleteCustomFields(@PathParam("accountId") final String accountId,
+            @QueryParam(QUERY_CUSTOM_FIELDS) final String cutomFieldList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+
+        try {
+            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            // STEPH missing API to delete custom fields
+            return Response.status(Status.OK).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.NO_CONTENT).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+    
 }
