@@ -28,6 +28,8 @@ import java.util.Map;
 import javax.ws.rs.core.Response.Status;
 
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.PropertyNamingStrategy;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.slf4j.Logger;
@@ -53,6 +55,8 @@ public class TestAccount extends TestJaxrsBase {
 	private static final Logger log = LoggerFactory.getLogger(TestAccount.class);
 
 
+	
+	
 	@Test(groups="slow", enabled=true)
 	public void testAccountOk() throws Exception {
 		

@@ -22,11 +22,11 @@ import java.util.List;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.http.client.Response;

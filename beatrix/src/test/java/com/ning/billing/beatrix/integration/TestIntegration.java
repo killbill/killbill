@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.beatrix.integration.TestBusHandler.NextEvent;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;

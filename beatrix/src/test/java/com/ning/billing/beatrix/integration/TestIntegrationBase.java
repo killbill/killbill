@@ -45,6 +45,8 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.api.TestApiListener;
+import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -67,7 +69,7 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.ClockMock;
 
-public class TestIntegrationBase implements TestFailure {
+public class TestIntegrationBase implements TestListenerStatus {
 
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
@@ -119,7 +121,7 @@ public class TestIntegrationBase implements TestFailure {
     @Inject
     protected AccountUserApi accountUserApi;
 
-    protected TestBusHandler busHandler;
+    protected TestApiListener busHandler;
 
     
     private boolean currentTestStatusSuccess;
@@ -132,7 +134,7 @@ public class TestIntegrationBase implements TestFailure {
     }
 
     @Override
-    public void reset() {
+    public void resetTestListenerStatus() {
         currentTestStatusSuccess = true;
         currentTestFailedMsg = null;
     }
@@ -175,7 +177,7 @@ public class TestIntegrationBase implements TestFailure {
         /**
          * Initialize lifecyle for subset of services
          */
-        busHandler = new TestBusHandler(this);
+        busHandler = new TestApiListener(this);
         lifecycle.fireStartupSequencePriorEventRegistration();
         busService.getBus().register(busHandler);
         lifecycle.fireStartupSequencePostEventRegistration();
@@ -198,7 +200,7 @@ public class TestIntegrationBase implements TestFailure {
         cleanupData();
         busHandler.reset();
         clock.resetDeltaFromReality();
-        reset();
+        resetTestListenerStatus();
     }
 
     @AfterMethod(groups = "slow")

@@ -34,7 +34,6 @@ import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
@@ -46,11 +45,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.inject.Module;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
+import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
-import com.ning.billing.beatrix.integration.TestBusHandler;
 import com.ning.billing.beatrix.integration.TestIntegration;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -107,7 +110,7 @@ public class TestJaxrsBase {
     protected AsyncHttpClient httpClient;	
     protected ObjectMapper mapper;
     protected ClockMock clock;
-    protected TestBusHandler busHandler;
+    protected TestApiListener busHandler;
 
     // Context informtation to be passed around
     private static final String createdBy = "Toto";
@@ -229,7 +232,12 @@ public class TestJaxrsBase {
         loadConfig();
         httpClient = new AsyncHttpClient();
         mapper = new ObjectMapper();
-        busHandler = new TestBusHandler(null);
+        mapper.registerModule(new JodaModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());        
+
+        busHandler = new TestApiListener(null);
         this.helper = listener.getMysqlTestingHelper();
         this.clock =  (ClockMock) listener.getClock();
     }

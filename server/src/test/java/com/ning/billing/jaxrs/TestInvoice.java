@@ -24,7 +24,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.codehaus.jackson.type.TypeReference;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.format.DateTimeFormatter;
@@ -34,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;

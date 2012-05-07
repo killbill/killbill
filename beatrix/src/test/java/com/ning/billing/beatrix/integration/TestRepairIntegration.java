@@ -32,7 +32,7 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.beatrix.integration.TestBusHandler.NextEvent;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;

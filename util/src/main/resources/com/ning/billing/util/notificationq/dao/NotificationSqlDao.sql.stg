@@ -88,13 +88,11 @@ insertNotification() ::= <<
 
 insertClaimedHistory(sequence_id, owner, hostname, claimed_dt, notification_id) ::= <<
     insert into claimed_notifications (
-        sequence_id
-        , owner_id
+          owner_id
         , claimed_dt
         , notification_id
       ) values (
-        :sequence_id
-        , :owner
+          :owner
         , :claimed_dt
         , :notification_id
       );

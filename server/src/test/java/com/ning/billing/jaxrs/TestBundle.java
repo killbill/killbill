@@ -23,12 +23,12 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;

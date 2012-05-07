@@ -17,10 +17,8 @@
 package com.ning.billing.util.notificationq;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -28,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.util.Hostname;
-import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.queue.PersistentQueueBase;
@@ -53,9 +50,7 @@ public abstract class NotificationQueueBase extends PersistentQueueBase implemen
 
     // Package visibility on purpose
     NotificationQueueBase(final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
-        // final String svcName, final Executor executor, final int nbThreads, final long waitTimeoutMs, final long sleepTimeMs) {
         super(svcName, Executors.newFixedThreadPool(1, new ThreadFactory() {
-
 
             @Override
             public Thread newThread(Runnable r) {

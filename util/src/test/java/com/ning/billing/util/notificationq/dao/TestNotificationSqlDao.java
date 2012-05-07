@@ -49,7 +49,6 @@ import static org.testng.Assert.assertNotNull;
 @Guice(modules = TestNotificationSqlDao.TestNotificationSqlDaoModule.class)
 public class TestNotificationSqlDao {
 
-    private static AtomicInteger sequenceId = new AtomicInteger();
     private final static String hostname = "Yop";
     
     @Inject
@@ -124,7 +123,7 @@ public class TestNotificationSqlDao {
         DateTime nextAvailable = now.plusMinutes(5);
         int res = dao.claimNotification(ownerId, nextAvailable.toDate(), notification.getId(), now.toDate());
         assertEquals(res, 1);
-        dao.insertClaimedHistory(sequenceId.incrementAndGet(), ownerId, now.toDate(), notification.getUUID().toString());
+        dao.insertClaimedHistory(ownerId, now.toDate(), notification.getUUID().toString());
 
         notification = fetchNotification(notification.getUUID().toString());
         assertEquals(notification.getNotificationKey(), notificationKey);

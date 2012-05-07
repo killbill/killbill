@@ -152,8 +152,8 @@ public class TestApiListener {
     public void pushExpectedEvent(NextEvent next) {
         synchronized (this) {
             Joiner joiner = Joiner.on(" ");
-            log.info("TestListener stacking expected event {}, got [{}]", next, joiner.join(nextExpectedEvent));
             nextExpectedEvent.add(next);
+            log.info("TestListener stacking expected event {}, got [{}]", next, joiner.join(nextExpectedEvent));
             completed = false;
         }
     }

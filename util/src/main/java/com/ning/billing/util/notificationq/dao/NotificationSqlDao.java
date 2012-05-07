@@ -64,7 +64,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     public void insertNotification(@Bind(binder = NotificationSqlDaoBinder.class) Notification evt);
 
     @SqlUpdate
-    public void insertClaimedHistory(@Bind("sequence_id") int sequenceId, @Bind("owner") String owner, @Bind("claimed_dt") Date clainedDate, @Bind("notification_id") String notificationId);
+    public void insertClaimedHistory(@Bind("owner") String owner, @Bind("claimed_dt") Date clainedDate, @Bind("notification_id") String notificationId);
 
     public static class NotificationSqlDaoBinder extends BinderBase implements Binder<Bind, Notification> {
         @Override

@@ -44,8 +44,18 @@ public class PaymentJson {
     private final String currency;
     
     private final String status;
-    
-    
+      
+    public PaymentJson() {
+        this.amount = null;
+        this.paidAmount = null;
+        this.invoiceId = null;
+        this.paymentId = null;
+        this.requestedDate = null;
+        this.effectiveDate = null;
+        this.currency = null;
+        this.retryCount = null;
+        this.status = null;
+    }
 
     @JsonCreator
     public PaymentJson(@JsonProperty("amount") BigDecimal amount,
