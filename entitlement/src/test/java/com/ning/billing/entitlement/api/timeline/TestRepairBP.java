@@ -34,6 +34,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
@@ -43,7 +44,6 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
@@ -67,6 +67,8 @@ public class TestRepairBP extends TestApiBaseRepair {
     @Test(groups={"slow"})
     public void testFetchBundleRepair() throws Exception  {
 
+        log.info("Starting testFetchBundleRepair");
+        
         String baseProduct = "Shotgun";
         BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -125,11 +127,14 @@ public class TestRepairBP extends TestApiBaseRepair {
                 assertEquals(events.get(1).getPlanPhaseSpecifier().getBillingPeriod(), aoTerm);                    
             }
         }
+        assertListenerStatus();
     }
     
     @Test(groups={"slow"})
     public void testBPRepairWithCancellationOnstart() throws Exception {
 
+        log.info("Starting testBPRepairWithCancellationOnstart");
+        
         String baseProduct = "Shotgun";
         DateTime startDate = clock.getUTCNow();
         
@@ -190,9 +195,9 @@ public class TestRepairBP extends TestApiBaseRepair {
         
        // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
-        testListener.expectRepairCompletion();
+        testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
-        assertTrue(testListener.isRepairCompleted(5000));
+        assertTrue(testListener.isCompleted(5000));
         
         subscriptionRepair = realRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
@@ -211,10 +216,15 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(realRunBaseSubscription.getStartDate(), startDate);
 
         assertEquals(realRunBaseSubscription.getState(), SubscriptionState.CANCELLED);
+        
+        assertListenerStatus();
     }
     
     @Test(groups={"slow"})
     public void testBPRepairReplaceCreateBeforeTrial() throws Exception {
+        
+        log.info("Starting testBPRepairReplaceCreateBeforeTrial");
+        
         String baseProduct = "Shotgun";
         String newBaseProduct = "Assault-Rifle";
         
@@ -229,10 +239,14 @@ public class TestRepairBP extends TestApiBaseRepair {
                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
 
         testBPRepairCreate(true, startDate, clockShift, baseProduct, newBaseProduct, expected);
+        assertListenerStatus();
     }
 
     @Test(groups={"slow"}, enabled=true)
     public void testBPRepairReplaceCreateInTrial() throws Exception {
+        
+        log.info("Starting testBPRepairReplaceCreateInTrial");
+        
         String baseProduct = "Shotgun";
         String newBaseProduct = "Assault-Rifle";
         
@@ -248,9 +262,9 @@ public class TestRepairBP extends TestApiBaseRepair {
 
         UUID baseSubscriptionId = testBPRepairCreate(true, startDate, clockShift, baseProduct, newBaseProduct, expected);
         
-        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+        testListener.pushExpectedEvent(NextEvent.PHASE);
         clock.addDeltaFromReality(getDurationDay(32));
-        assertTrue(testListener.isApiCompleted(5000));
+        assertTrue(testListener.isCompleted(5000));
         
         // CHECK WHAT"S GOING ON AFTER WE MOVE CLOCK-- FUTURE MOTIFICATION SHOULD KICK IN
         SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
@@ -269,11 +283,16 @@ public class TestRepairBP extends TestApiBaseRepair {
         PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
+        
+        assertListenerStatus();
     }
 
     
     @Test(groups={"slow"})
     public void testBPRepairReplaceCreateAfterTrial() throws Exception {
+        
+        log.info("Starting testBPRepairReplaceCreateAfterTrial");
+        
         String baseProduct = "Shotgun";
         String newBaseProduct = "Assault-Rifle";
         
@@ -288,25 +307,27 @@ public class TestRepairBP extends TestApiBaseRepair {
                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
 
         testBPRepairCreate(false, startDate, clockShift, baseProduct, newBaseProduct, expected);
-        
+        assertListenerStatus();
     }
     
     
     private UUID testBPRepairCreate(boolean inTrial, DateTime startDate, int clockShift, 
             String baseProduct, String newBaseProduct, List<ExistingEvent> expectedEvents) throws Exception {
 
+        log.info("Starting testBPRepairCreate");
+        
         // CREATE BP
         Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK
         if (clockShift > 0) {
             if (!inTrial) {
-                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+                testListener.pushExpectedEvent(NextEvent.PHASE);
             }               
             Duration durationShift = getDurationDay(clockShift);
             clock.setDeltaFromReality(durationShift, 0);
             if (!inTrial) {
-                assertTrue(testListener.isApiCompleted(5000));
+                assertTrue(testListener.isCompleted(5000));
             }
         }
 
@@ -327,7 +348,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         // FIRST ISSUE DRY RUN
         BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
         
-        boolean dryRun = true;
+        boolean dryRun = true;        
         BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
         List<SubscriptionTimeline> subscriptionRepair = dryRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
@@ -362,8 +383,9 @@ public class TestRepairBP extends TestApiBaseRepair {
         
        // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
+        testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
-
+        assertTrue(testListener.isCompleted(5000));
         subscriptionRepair = realRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
         cur = subscriptionRepair.get(0);
@@ -402,6 +424,8 @@ public class TestRepairBP extends TestApiBaseRepair {
     @Test(groups={"slow"})
     public void testBPRepairAddChangeInTrial() throws Exception {
         
+        log.info("Starting testBPRepairAddChangeInTrial");
+        
         String baseProduct = "Shotgun";
         String newBaseProduct = "Assault-Rifle";
         
@@ -420,9 +444,9 @@ public class TestRepairBP extends TestApiBaseRepair {
         UUID baseSubscriptionId = testBPRepairAddChange(true, startDate, clockShift, baseProduct, newBaseProduct, expected, 3);
         
         // CHECK WHAT"S GOING ON AFTER WE MOVE CLOCK-- FUTURE MOTIFICATION SHOULD KICK IN
-        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+        testListener.pushExpectedEvent(NextEvent.PHASE);
         clock.addDeltaFromReality(getDurationDay(32));
-        assertTrue(testListener.isApiCompleted(5000));
+        assertTrue(testListener.isCompleted(5000));
         SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
         
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -439,10 +463,14 @@ public class TestRepairBP extends TestApiBaseRepair {
         PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
+        
+        assertListenerStatus();
     }
 
     @Test(groups={"slow"})
     public void testBPRepairAddChangeAfterTrial() throws Exception {
+        
+        log.info("Starting testBPRepairAddChangeAfterTrial");
         
         String baseProduct = "Shotgun";
         String newBaseProduct = "Assault-Rifle";
@@ -459,24 +487,27 @@ public class TestRepairBP extends TestApiBaseRepair {
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CHANGE, newBaseProduct, PhaseType.EVERGREEN,
                 ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, changeDate));
         testBPRepairAddChange(false, startDate, clockShift, baseProduct, newBaseProduct, expected, 3);
+    
+        assertListenerStatus();
     }
     
 
     private UUID testBPRepairAddChange(boolean inTrial, DateTime startDate, int clockShift, 
             String baseProduct, String newBaseProduct, List<ExistingEvent> expectedEvents, int expectedTransitions) throws Exception {
 
+        
         // CREATE BP
         Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK
         if (!inTrial) {
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
         }               
 
         Duration durationShift = getDurationDay(clockShift);
         clock.setDeltaFromReality(durationShift, 0);
         if (!inTrial) {
-            assertTrue(testListener.isApiCompleted(5000));
+            assertTrue(testListener.isCompleted(5000));
         }
 
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
@@ -498,6 +529,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         
         boolean dryRun = true;
         BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        
         List<SubscriptionTimeline> subscriptionRepair = dryRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
         SubscriptionTimeline cur = subscriptionRepair.get(0);
@@ -532,7 +564,9 @@ public class TestRepairBP extends TestApiBaseRepair {
         
        // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
+        testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        assertTrue(testListener.isCompleted(5000));
 
         subscriptionRepair = realRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
@@ -572,15 +606,17 @@ public class TestRepairBP extends TestApiBaseRepair {
     @Test(groups={"slow"})
     public void testRepairWithFurureCancelEvent() throws Exception {
       
+        log.info("Starting testRepairWithFurureCancelEvent");
+        
         DateTime startDate = clock.getUTCNow();
         
         // CREATE BP
         Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK -- OUT OF TRIAL
-        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);                
+        testListener.pushExpectedEvent(NextEvent.PHASE);                
         clock.setDeltaFromReality(getDurationDay(35), 0);
-        assertTrue(testListener.isApiCompleted(5000));
+        assertTrue(testListener.isCompleted(5000));
         
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
@@ -616,7 +652,9 @@ public class TestRepairBP extends TestApiBaseRepair {
         BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
         
         boolean dryRun = false;
+        testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         repairApi.repairBundle(bRepair, dryRun, context);
+        assertTrue(testListener.isCompleted(5000));
      
         baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
         
@@ -633,6 +671,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         PlanPhase currentPhase = baseSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
+        
+        assertListenerStatus();
     }
     
     
@@ -640,6 +680,8 @@ public class TestRepairBP extends TestApiBaseRepair {
     @Test(groups={"slow"})
     public void testENT_REPAIR_VIEW_CHANGED_newEvent() throws Exception {
        
+        log.info("Starting testENT_REPAIR_VIEW_CHANGED_newEvent");
+        
         TestWithException test = new TestWithException();
         DateTime startDate = clock.getUTCNow();
         
@@ -663,12 +705,13 @@ public class TestRepairBP extends TestApiBaseRepair {
 
                 BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
-                testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
+                testListener.pushExpectedEvent(NextEvent.CHANGE);
                 DateTime changeTime = clock.getUTCNow();
                 baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, context);
-                assertTrue(testListener.isApiCompleted(5000));
-                                
+                assertTrue(testListener.isCompleted(5000));
+                
                 repairApi.repairBundle(bRepair, true, context);
+                assertListenerStatus();
             }
         }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
     }
@@ -676,6 +719,8 @@ public class TestRepairBP extends TestApiBaseRepair {
     @Test(groups={"slow"}, enabled=false)
     public void testENT_REPAIR_VIEW_CHANGED_ctd() throws Exception {
        
+        log.info("Starting testENT_REPAIR_VIEW_CHANGED_ctd");
+        
         TestWithException test = new TestWithException();
         DateTime startDate = clock.getUTCNow();
         
@@ -704,6 +749,8 @@ public class TestRepairBP extends TestApiBaseRepair {
                 entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
                 repairApi.repairBundle(bRepair, true, context);
+                
+                assertListenerStatus();
             }
         }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
     }

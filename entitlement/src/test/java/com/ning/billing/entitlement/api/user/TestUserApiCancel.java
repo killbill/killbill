@@ -24,13 +24,13 @@ import static org.testng.Assert.assertTrue;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.util.clock.DefaultClock;
@@ -59,16 +59,17 @@ public abstract class TestUserApiCancel extends TestApiBase {
             clock.setDeltaFromReality(moveALittleInTime, 0);
 
             DateTime future = clock.getUTCNow();
-            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL in trial period to get IMM policy
             subscription.cancel(clock.getUTCNow(), false, context);
             currentPhase = subscription.getCurrentPhase();
-            testListener.isApiCompleted(1000);
+            testListener.isCompleted(3000);
 
             assertNull(currentPhase);
             checkNextPhaseChange(subscription, 0, null);
 
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -94,9 +95,9 @@ public abstract class TestUserApiCancel extends TestApiBase {
             checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
-            assertTrue(testListener.isApiCompleted(2000));
+            assertTrue(testListener.isCompleted(5000));
             trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.EVERGREEN);
 
@@ -106,21 +107,22 @@ public abstract class TestUserApiCancel extends TestApiBase {
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
-            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
             subscription.cancel(clock.getUTCNow(), false, context);
-            assertFalse(testListener.isApiCompleted(2000));
+            assertFalse(testListener.isCompleted(5000));
 
             // MOVE TO EOT + RECHECK
             clock.addDeltaFromReality(ctd);
             DateTime future = clock.getUTCNow();
-            assertTrue(testListener.isApiCompleted(2000));
+            assertTrue(testListener.isCompleted(5000));
 
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNull(currentPhase);
             checkNextPhaseChange(subscription, 0, null);
 
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -147,22 +149,23 @@ public abstract class TestUserApiCancel extends TestApiBase {
             checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
-            assertTrue(testListener.isApiCompleted(2000));
+            assertTrue(testListener.isCompleted(5000));
             trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.EVERGREEN);
 
-            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
             subscription.cancel(clock.getUTCNow(), false, context);
-            assertTrue(testListener.isApiCompleted(2000));
+            assertTrue(testListener.isCompleted(5000));
 
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNull(currentPhase);
             checkNextPhaseChange(subscription, 0, null);
 
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -191,9 +194,9 @@ public abstract class TestUserApiCancel extends TestApiBase {
             checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
 
             // MOVE TO NEXT PHASE
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
-            assertTrue(testListener.isApiCompleted(2000));
+            assertTrue(testListener.isCompleted(5000));
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
@@ -203,27 +206,24 @@ public abstract class TestUserApiCancel extends TestApiBase {
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
-            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
-
-            // CANCEL
+            // CANCEL EOT
             subscription.cancel(clock.getUTCNow(), false, context);
-            assertFalse(testListener.isApiCompleted(2000));
 
             subscription.uncancel(context);
-
+            
             // MOVE TO EOT + RECHECK
+            testListener.pushExpectedEvent(NextEvent.UNCANCEL);
             clock.addDeltaFromReality(ctd);
-            DateTime future = clock.getUTCNow();
-            assertFalse(testListener.isApiCompleted(2000));
+            assertTrue(testListener.isCompleted(5000));
 
             Plan currentPlan = subscription.getCurrentPlan();
             assertEquals(currentPlan.getProduct().getName(), prod);
             currentPhase = subscription.getCurrentPhase();
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
-
 }

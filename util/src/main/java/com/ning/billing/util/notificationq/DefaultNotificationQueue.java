@@ -41,10 +41,10 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     }
 
     @Override
-    protected int doProcessEvents(final int sequenceId) {
+    public int doProcessEvents() {
 
         logDebug("ENTER doProcessEvents");
-        List<Notification> notifications = getReadyNotifications(sequenceId);
+        List<Notification> notifications = getReadyNotifications(1);
         if (notifications.size() == 0) {
             logDebug("EXIT doProcessEvents");
             return 0;

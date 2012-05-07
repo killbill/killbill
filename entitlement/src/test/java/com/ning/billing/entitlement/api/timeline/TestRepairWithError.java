@@ -31,6 +31,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
@@ -38,7 +39,6 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
@@ -73,15 +73,18 @@ public class TestRepairWithError extends TestApiBaseRepair {
   
     @Test(groups={"fast"})
     public void testENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException {
 
                 // MOVE AFTER TRIAL
-                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+                testListener.pushExpectedEvent(NextEvent.PHASE);
                 Duration durationShift = getDurationDay(40);
                 clock.setDeltaFromReality(durationShift, 0);
-                assertTrue(testListener.isApiCompleted(5000));
+                assertTrue(testListener.isCompleted(5000));
                 
                 BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
@@ -99,6 +102,9 @@ public class TestRepairWithError extends TestApiBaseRepair {
     
     @Test(groups={"fast"})
     public void testENT_REPAIR_INVALID_DELETE_SET() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_INVALID_DELETE_SET");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
@@ -106,16 +112,16 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 Duration durationShift = getDurationDay(3);
                 clock.setDeltaFromReality(durationShift, 0);
                 
-                testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
+                testListener.pushExpectedEvent(NextEvent.CHANGE);
                 DateTime changeTime = clock.getUTCNow();
                 baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, context);
-                assertTrue(testListener.isApiCompleted(5000));
+                assertTrue(testListener.isCompleted(5000));
                 
                 // MOVE AFTER TRIAL
-                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+                testListener.pushExpectedEvent(NextEvent.PHASE);
                 durationShift = getDurationDay(40);
                 clock.addDeltaFromReality(durationShift);
-                assertTrue(testListener.isApiCompleted(5000));
+                assertTrue(testListener.isCompleted(5000));
                 
                 BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
@@ -133,6 +139,9 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
     @Test(groups={"fast"})
     public void testENT_REPAIR_NON_EXISTENT_DELETE_EVENT() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_NON_EXISTENT_DELETE_EVENT");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException {
@@ -153,15 +162,18 @@ public class TestRepairWithError extends TestApiBaseRepair {
     
     @Test(groups={"fast"})
     public void testENT_REPAIR_SUB_RECREATE_NOT_EMPTY() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_SUB_RECREATE_NOT_EMPTY");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException {
                 
                 // MOVE AFTER TRIAL
-                   testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+                   testListener.pushExpectedEvent(NextEvent.PHASE);
                    Duration durationShift = getDurationDay(40);
                    clock.setDeltaFromReality(durationShift, 0);
-                   assertTrue(testListener.isApiCompleted(5000));
+                   assertTrue(testListener.isCompleted(5000));
                    
                    BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                    sortEventsOnBundle(bundleRepair);
@@ -181,15 +193,19 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
     @Test(groups={"fast"})
     public void testENT_REPAIR_SUB_EMPTY() throws Exception {
+
+        log.info("Starting testENT_REPAIR_SUB_EMPTY");
+        
         test.withException(new TestWithExceptionCallback() {
+
             @Override
             public void doTest() throws EntitlementRepairException {
                 
              // MOVE AFTER TRIAL
-                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+                testListener.pushExpectedEvent(NextEvent.PHASE);
                 Duration durationShift = getDurationDay(40);
                 clock.setDeltaFromReality(durationShift, 0);
-                assertTrue(testListener.isApiCompleted(5000));
+                assertTrue(testListener.isCompleted(5000));
                 
                 BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
@@ -209,6 +225,9 @@ public class TestRepairWithError extends TestApiBaseRepair {
     
     @Test(groups={"fast"})
     public void testENT_REPAIR_AO_CREATE_BEFORE_BP_START() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_AO_CREATE_BEFORE_BP_START");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
@@ -254,6 +273,9 @@ public class TestRepairWithError extends TestApiBaseRepair {
     
     @Test(groups={"fast"})
     public void testENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
@@ -298,6 +320,9 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
     @Test(groups={"fast"})
     public void testENT_REPAIR_BP_RECREATE_MISSING_AO() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_BP_RECREATE_MISSING_AO");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
@@ -337,6 +362,9 @@ public class TestRepairWithError extends TestApiBaseRepair {
     //
     @Test(groups={"fast"}, enabled=false)
     public void testENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
@@ -382,6 +410,9 @@ public class TestRepairWithError extends TestApiBaseRepair {
     
     @Test(groups={"fast"}, enabled=false)
     public void testENT_REPAIR_MISSING_AO_DELETE_EVENT() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_MISSING_AO_DELETE_EVENT");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
