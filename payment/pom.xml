@@ -87,32 +87,7 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <!-- TODO: MDW REMOVE -->
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-account</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <!-- TODO: MDW REMOVE -->
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-invoice</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-         <!-- TODO: MDW REMOVE -->
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-invoice</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- TODO: MDW REMOVE -->
-         <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-account</artifactId>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-mxj</artifactId>

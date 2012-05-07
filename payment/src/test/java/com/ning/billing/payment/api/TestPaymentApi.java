@@ -37,10 +37,13 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.payment.MockRecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -58,6 +61,8 @@ public abstract class TestPaymentApi {
     protected PaymentApi paymentApi;
     @Inject
     protected TestHelper testHelper;
+    @Inject
+    protected InvoicePaymentApi invoicePaymentApi;
 
     protected CallContext context;
 
@@ -77,7 +82,9 @@ public abstract class TestPaymentApi {
     }
 
     @Test(enabled=true)
-    public void testCreateCreditCardPayment() throws AccountApiException, EntityPersistenceException {
+    public void testCreateCreditCardPayment() throws Exception {
+        ((ZombieControl)invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
+
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
@@ -85,7 +92,7 @@ public abstract class TestPaymentApi {
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
 
-        invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(), account.getId(),
+        invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(), account.getId(),
                                                        subscriptionId,
                                                        bundleId,
                                                        "test plan", "test phase",
@@ -181,7 +188,7 @@ public abstract class TestPaymentApi {
         String newName = "Tester " + RandomStringUtils.randomAlphanumeric(10);
         String newNumber = "888-888-" + RandomStringUtils.randomNumeric(4);
 
-        final Account accountToUpdate = new AccountBuilder(account.getId())
+        final Account accountToUpdate = new MockAccountBuilder(account.getId())
                                                                   .name(newName)
                                                                   .firstNameLength(newName.length())
                                                                   .externalKey(account.getExternalKey())
@@ -204,35 +211,6 @@ public abstract class TestPaymentApi {
         assertTrue(errorOrVoid.isLeft());
     }
 
-    @Test(enabled=true)
-    public void testDeleteNonDefaultPaymentMethod() throws AccountApiException, EntityPersistenceException {
-        final Account account = testHelper.createTestPayPalAccount();
-        paymentApi.createPaymentProviderAccount(account, context);
-
-        String accountKey = account.getExternalKey();
-
-        PaypalPaymentMethodInfo paymentMethod1 = new PaypalPaymentMethodInfo.Builder().setDefaultMethod(false).setBaid("12345").setEmail(account.getEmail()).build();
-        Either<PaymentErrorEvent, String> paymentMethodIdOrError1 = paymentApi.addPaymentMethod(accountKey, paymentMethod1, context);
-
-        assertTrue(paymentMethodIdOrError1.isRight());
-        assertNotNull(paymentMethodIdOrError1.getRight());
-
-        PaypalPaymentMethodInfo paymentMethod2 = new PaypalPaymentMethodInfo.Builder().setDefaultMethod(true).setBaid("12345").setEmail(account.getEmail()).build();
-
-        Either<PaymentErrorEvent, String> paymentMethodIdOrError2 = paymentApi.addPaymentMethod(accountKey, paymentMethod2, context);
-
-        assertTrue(paymentMethodIdOrError2.isRight());
-        assertNotNull(paymentMethodIdOrError2.getRight());
-
-        Either<PaymentErrorEvent, List<PaymentMethodInfo>> paymentMethodsOrError = paymentApi.getPaymentMethods(accountKey);
-
-        assertTrue(paymentMethodsOrError.isRight());
-
-        Either<PaymentErrorEvent, Void> errorOrVoid1 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError1.getRight(), context);
-        Either<PaymentErrorEvent, Void> errorOrVoid2 = paymentApi.deletePaymentMethod(accountKey, paymentMethodIdOrError2.getRight(), context);
-
-        assertTrue(errorOrVoid1.isRight());
-        assertTrue(errorOrVoid2.isLeft());
-    }
+   
 
 }

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.beatrix.integration.payment;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -26,15 +26,14 @@ import org.joda.time.DateTimeZone;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.invoice.api.test.InvoiceTestApi;
+import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
-import com.ning.billing.mock.MockAccountBuilder;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -43,15 +42,13 @@ import com.ning.billing.util.entity.EntityPersistenceException;
 
 public class TestHelper {
     protected final AccountUserApi accountUserApi;
-    protected final InvoicePaymentApi invoicePaymentApi;
+    protected final InvoiceTestApi invoiceTestApi;
     private final CallContext context;
-    private final Bus eventBus;
 
     @Inject
-    public TestHelper(CallContextFactory factory, AccountUserApi accountUserApi, InvoicePaymentApi invoicePaymentApi, Bus eventBus) {
-        this.eventBus = eventBus;
+    public TestHelper(CallContextFactory factory, AccountUserApi accountUserApi, InvoiceTestApi invoiceTestApi) {
         this.accountUserApi = accountUserApi;
-        this.invoicePaymentApi = invoicePaymentApi;
+        this.invoiceTestApi = invoiceTestApi;
         context = factory.createCallContext("Princess Buttercup", CallOrigin.TEST, UserType.TEST);
     }
 
@@ -59,7 +56,7 @@ public class TestHelper {
     public Account createTestCreditCardAccount() throws EntityPersistenceException {
         final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
         final String externalKey = RandomStringUtils.randomAlphanumeric(10);
-        final Account account = new MockAccountBuilder(UUID.randomUUID()).name(name)
+        final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
                                                                      .firstNameLength(name.length())
                                                                      .externalKey(externalKey)
                                                                      .phone("123-456-7890")
@@ -75,7 +72,7 @@ public class TestHelper {
     public Account createTestPayPalAccount() throws EntityPersistenceException {
         final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
         final String externalKey = RandomStringUtils.randomAlphanumeric(10);
-        final Account account = new MockAccountBuilder(UUID.randomUUID()).name(name)
+        final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
                                                                      .firstNameLength(name.length())
                                                                      .externalKey(externalKey)
                                                                      .phone("123-456-7890")
@@ -91,13 +88,13 @@ public class TestHelper {
     public Invoice createTestInvoice(Account account,
                                      DateTime targetDate,
                                      Currency currency,
-                                     InvoiceItem... items) throws EventBusException {
-        Invoice invoice = new MockInvoice(account.getId(), new DateTime(), targetDate, currency);
+                                     InvoiceItem... items) {
+        Invoice invoice = new DefaultInvoice(account.getId(), new DateTime(), targetDate, currency);
 
         for (InvoiceItem item : items) {
-            if (item instanceof MockRecurringInvoiceItem) {
-                MockRecurringInvoiceItem recurringInvoiceItem = (MockRecurringInvoiceItem) item;
-                invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(),
+            if (item instanceof RecurringInvoiceItem) {
+                RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
+                invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
                                                                account.getId(),
                                                                recurringInvoiceItem.getBundleId(),
                                                                recurringInvoiceItem.getSubscriptionId(),
@@ -111,24 +108,17 @@ public class TestHelper {
             }
         }
 
- //       invoiceTestApi.create(invoice, context);
-        ((ZombieControl)invoicePaymentApi).addResult("getInvoice", invoice);
-        InvoiceCreationEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                invoice.getBalance(), invoice.getCurrency(),
-                invoice.getInvoiceDate(),
-                context.getUserToken());
-        
-        eventBus.post(event);
+        invoiceTestApi.create(invoice, context);
         return invoice;
     }
 
-    public Invoice createTestInvoice(Account account) throws EventBusException {
+    public Invoice createTestInvoice(Account account) {
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal("10.00");
         
-        final InvoiceItem item = new MockRecurringInvoiceItem(null, account.getId(), bundleId, subscriptionId, "test plan", "test phase", now, now.plusMonths(1),
+        final InvoiceItem item = new RecurringInvoiceItem(null, account.getId(), bundleId, subscriptionId, "test plan", "test phase", now, now.plusMonths(1),
                 amount, new BigDecimal("1.0"), Currency.USD);
 
 

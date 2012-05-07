@@ -14,16 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.glue;
+package com.ning.billing.mock.glue;
 
-public interface InvoiceModule {
+import com.google.inject.AbstractModule;
+import com.ning.billing.util.notificationq.MockNotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService;
 
-    public abstract void installInvoiceUserApi();
+public class MockNotificationQueueModule extends AbstractModule {
 
-    public abstract void installInvoicePaymentApi();
-
-    public abstract void installInvoiceMigrationApi();
-
-    public abstract void installInvoiceTestApi();
+    @Override
+    protected void configure() {
+        bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
+    }
 
 }
