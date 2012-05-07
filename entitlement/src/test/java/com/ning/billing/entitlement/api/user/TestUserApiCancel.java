@@ -107,13 +107,15 @@ public abstract class TestUserApiCancel extends TestApiBase {
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
-            testListener.pushExpectedEvent(NextEvent.CANCEL);
-
             // CANCEL
+            testListener.setNonExpectedMode();
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), false, context);
-            assertFalse(testListener.isCompleted(5000));
+            assertFalse(testListener.isCompleted(3000));
+            testListener.reset();
 
             // MOVE TO EOT + RECHECK
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
             clock.addDeltaFromReality(ctd);
             DateTime future = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));

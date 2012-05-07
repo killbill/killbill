@@ -71,6 +71,7 @@ public class TestUserApiScenarios extends TestApiBase {
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CANCEL EOT
+            testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), false, context);
             assertFalse(testListener.isCompleted(5000));
@@ -80,10 +81,13 @@ public class TestUserApiScenarios extends TestApiBase {
             subscription.uncancel(context);
 
             // CHANGE EOT
+            testListener.setNonExpectedMode();            
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(5000));
-
+            testListener.reset();
+            
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
             clock.addDeltaFromReality(ctd);
             assertTrue(testListener.isCompleted(5000));
 

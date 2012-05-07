@@ -133,10 +133,11 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
 
             // RE READ SUBSCRIPTION + CHANGE PLAN
+            testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
             subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), context);
-            assertFalse(testListener.isCompleted(5000));
+            assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
             // CHECK CHANGE PLAN
@@ -249,16 +250,18 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // CHANGE PLAN
             currentTime = clock.getUTCNow();
-
-            testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), context);
 
             checkChangePlan(subscription, fromProd, ProductCategory.BASE, fromTerm, PhaseType.EVERGREEN);
 
             // CHECK CHANGE DID NOT KICK IN YET
-            assertFalse(testListener.isCompleted(5000));
+            testListener.setNonExpectedMode();
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            assertFalse(testListener.isCompleted(3000));
+            testListener.reset();
 
             // MOVE TO AFTER CTD
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
             clock.addDeltaFromReality(ctd);
             currentTime = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
@@ -271,18 +274,19 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
-            testListener.pushExpectedEvent(NextEvent.PHASE);
-
             // MOVE TIME ABOUT ONE MONTH BEFORE NEXT EXPECTED PHASE CHANGE
+            testListener.setNonExpectedMode();
+            testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.addDeltaFromReality(getDurationMonth(11));
-
             currentTime = clock.getUTCNow();
-            assertFalse(testListener.isCompleted(5000));
+            assertFalse(testListener.isCompleted(3000));
+            testListener.reset();
 
             DateTime nextExpectedPhaseChange = DefaultClock.addDuration(newChargedThroughDate, currentPhase.getDuration());
             checkNextPhaseChange(subscription, 1, nextExpectedPhaseChange);
 
             // MOVE TIME RIGHT AFTER NEXT EXPECTED PHASE CHANGE
+            testListener.pushExpectedEvent(NextEvent.PHASE);
             clock.addDeltaFromReality(getDurationMonth(1));
             currentTime = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
@@ -317,14 +321,16 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CHANGE EOT
+            testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), context);
-            assertFalse(testListener.isCompleted(5000));
+            assertFalse(testListener.isCompleted(3000));
+            testListener.reset();
 
             // CHANGE
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
-            assertFalse(testListener.isCompleted(5000));
+            assertTrue(testListener.isCompleted(5000));
 
             Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
@@ -365,15 +371,17 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CHANGE EOT
+            testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), context);
-            assertFalse(testListener.isCompleted(5000));
+            assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
             // CHANGE EOT
+            testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
-            assertFalse(testListener.isCompleted(5000));
+            assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
             // CHECK NO CHANGE OCCURED YET

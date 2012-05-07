@@ -42,7 +42,7 @@ import com.ning.billing.util.queue.PersistentQueueBase;
 
 public class PersistentBus extends PersistentQueueBase implements Bus {
 
-    private final static int NB_BUS_THREADS = 3;
+    private final static int NB_BUS_THREADS = 1;
     private final static long TIMEOUT_MSEC = 15L * 1000L; // 15 sec
     private final static long DELTA_IN_PROCESSING_TIME_MS = 1000L * 60L * 5L; // 5 minutes
     private final static long SLEEP_TIME_MS = 1000; // 1 sec

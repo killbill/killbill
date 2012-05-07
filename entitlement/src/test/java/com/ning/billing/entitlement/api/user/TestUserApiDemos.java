@@ -104,17 +104,19 @@ public class TestUserApiDemos extends TestApiBase {
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
+            testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
-            assertFalse(testListener.isCompleted(5000));
+            assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
             displayState(subscription.getId(), "STEP 4. SET CTD AND CHANGE PLAN EOT (Shotgun)");
 
             /* STEP 5. CHANGE AGAIN */
+            testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
-            assertFalse(testListener.isCompleted(5000));
+            assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
             displayState(subscription.getId(), "STEP 5. CHANGE AGAIN EOT (Pistol)");

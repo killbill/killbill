@@ -32,11 +32,14 @@ import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class TestApiListener {
+    
     protected static final Logger log = LoggerFactory.getLogger(TestApiListener.class);
 
     private final List<NextEvent> nextExpectedEvent;
 
     private final TestListenerStatus testStatus;
+    
+    private boolean nonExpectedMode;
     
     private volatile boolean completed;
 
@@ -44,6 +47,7 @@ public class TestApiListener {
         nextExpectedEvent = new Stack<NextEvent>();
         this.completed = false;
         this.testStatus = testStatus;
+        this.nonExpectedMode = false;
     }
 
     public enum NextEvent {
@@ -63,16 +67,22 @@ public class TestApiListener {
         REPAIR_BUNDLE
     }
     
+    public void setNonExpectedMode() {
+        synchronized(this) {
+            this.nonExpectedMode = true;
+        }
+    }
+    
     @Subscribe
     public void handleEntitlementEvents(RepairEntitlementEvent event) {
-        log.info(String.format("TestBusHandler Got RepairEntitlementEvent event %s", event.toString()));
+        log.info(String.format("TestApiListener Got RepairEntitlementEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
         notifyIfStackEmpty();
     }
 
     @Subscribe
     public void handleEntitlementEvents(SubscriptionEvent event) {
-        log.info(String.format("TestBusHandler Got subscription event %s", event.toString()));
+        log.info(String.format("TestApiListener Got subscription event %s", event.toString()));
         switch (event.getTransitionType()) {
         case MIGRATE_ENTITLEMENT:
             assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
@@ -113,7 +123,7 @@ public class TestApiListener {
 
     @Subscribe
     public void handleInvoiceEvents(InvoiceCreationEvent event) {
-        log.info(String.format("TestBusHandler Got Invoice event %s", event.toString()));
+        log.info(String.format("TestApiListener Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
 
@@ -121,24 +131,28 @@ public class TestApiListener {
 
     @Subscribe
     public void handlePaymentEvents(PaymentInfoEvent event) {
-        log.info(String.format("TestBusHandler Got PaymentInfo event %s", event.toString()));
+        log.info(String.format("TestApiListener Got PaymentInfo event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT);
         notifyIfStackEmpty();
     }
 
     @Subscribe
     public void handlePaymentErrorEvents(PaymentErrorEvent event) {
-        log.info(String.format("TestBusHandler Got PaymentError event %s", event.toString()));
+        log.info(String.format("TestApiListener Got PaymentError event %s", event.toString()));
     }
 
     public void reset() {
-        nextExpectedEvent.clear();
-        completed = true;
+        synchronized(this) {
+            nextExpectedEvent.clear();
+            completed = true;
+            nonExpectedMode = false;
+        }
     }
 
     public void pushExpectedEvent(NextEvent next) {
         synchronized (this) {
-            log.info("TestListener stacking expected event {}", next);
+            Joiner joiner = Joiner.on(" ");
+            log.info("TestListener stacking expected event {}, got [{}]", next, joiner.join(nextExpectedEvent));
             nextExpectedEvent.add(next);
             completed = false;
         }
@@ -153,7 +167,7 @@ public class TestApiListener {
             do {
                 try {
                     DateTime before = new DateTime();
-                    wait(1000);
+                    wait(500);
                     if (completed) {
                         return completed;
                     }
@@ -165,15 +179,15 @@ public class TestApiListener {
                 }
             } while (waitTimeMs > 0 && !completed);
         }
-        if (!completed) {
+        if (!completed && !nonExpectedMode) {
             Joiner joiner = Joiner.on(" ");
-            log.error("TestBusHandler did not complete in " + timeout + " ms, remaining events are " + joiner.join(nextExpectedEvent));
+            log.error("TestApiListener did not complete in " + timeout + " ms, remaining events are " + joiner.join(nextExpectedEvent));
         }
         return completed;
     }
 
     private void notifyIfStackEmpty() {
-        log.debug("TestBusHandler notifyIfStackEmpty ENTER");
+        log.debug("TestApiListener notifyIfStackEmpty ENTER");
         synchronized (this) {
             if (nextExpectedEvent.isEmpty()) {
                 log.debug("notifyIfStackEmpty EMPTY");
@@ -181,7 +195,7 @@ public class TestApiListener {
                 notify();
             }
         }
-        log.debug("TestBusHandler notifyIfStackEmpty EXIT");
+        log.debug("TestApiListener notifyIfStackEmpty EXIT");
     }
 
     private void assertEqualsNicely(NextEvent received) {
@@ -194,14 +208,19 @@ public class TestApiListener {
                 if (ev == received) {
                     it.remove();
                     foundIt = true;
+                    if (!nonExpectedMode) {
+                        log.info("TestApiListener found event {}. Yeah!", received);    
+                    } else {
+                        log.error("TestApiListener found non expected event {}. Boohh! ", received);    
+                    }
                     break;
                 }
             }
-            if (!foundIt) {
+            if (!foundIt && !nonExpectedMode) {
                 Joiner joiner = Joiner.on(" ");
-                log.error("TestBusHandler Received event " + received + "; expecting " + joiner.join(nextExpectedEvent));
+                log.error("TestApiListener Received event " + received + "; expecting " + joiner.join(nextExpectedEvent));
                 if (testStatus != null) {
-                    testStatus.failed("TestBusHandler Received event " + received + "; expecting " + joiner.join(nextExpectedEvent));
+                    testStatus.failed("TestApiListener [ApiListenerStatus]: Received event " + received + "; expecting " + joiner.join(nextExpectedEvent));
                 }
             }
         }
