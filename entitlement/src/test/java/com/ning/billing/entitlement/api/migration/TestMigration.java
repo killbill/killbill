@@ -155,8 +155,9 @@ public abstract class TestMigration extends TestApiBase {
 
             testListener.pushNextApiExpectedEvent(NextEvent.MIGRATE_BILLING);
             testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
-            Duration oneYear = getDurationYear(1);
-            clock.setDeltaFromReality(oneYear, 0);
+ //           Duration oneYear = getDurationYear(1);
+ //           clock.setDeltaFromReality(oneYear, 0);
+            clock.addYears(1);
             assertTrue(testListener.isApiCompleted(5000));
 
             assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
@@ -201,7 +202,8 @@ public abstract class TestMigration extends TestApiBase {
             testListener.pushNextApiExpectedEvent(NextEvent.MIGRATE_BILLING);
             testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
             Duration thirtyDays = getDurationDay(30);
-            clock.setDeltaFromReality(thirtyDays, 0);
+           // clock.setDeltaFromReality(thirtyDays, 0);
+            clock.addDays(30);
             assertTrue(testListener.isApiCompleted(5000));
 
             assertEquals(subscription.getStartDate(), trialDate);
