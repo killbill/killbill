@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.Assert;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
@@ -50,8 +51,11 @@ public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlan() {
 
         try {
+            
+            log.info("Starting testSingleBasePlan");
+
             final DateTime startDate = clock.getUTCNow().minusMonths(2);
-            DateTime beforeMigration = clock.getUTCNow();
+            DateTime beforeMigration =  clock.getUTCNow();
             EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlan(startDate);
             DateTime afterMigration = clock.getUTCNow();
 
@@ -73,7 +77,7 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
-            
+
             assertListenerStatus();
         } catch (EntitlementMigrationApiException e) {
             Assert.fail("", e);
@@ -82,6 +86,7 @@ public abstract class TestMigration extends TestApiBase {
 
     public void testPlanWithAddOn() {
         try {
+            log.info("Starting testPlanWithAddOn");
             DateTime beforeMigration = clock.getUTCNow();
             final DateTime initalBPStart = clock.getUTCNow().minusMonths(3);
             final DateTime initalAddonStart = clock.getUTCNow().minusMonths(1).plusDays(7);
@@ -131,7 +136,7 @@ public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlanFutureCancelled() {
 
         try {
-
+            log.info("Starting testSingleBasePlanFutureCancelled");
             final DateTime startDate = clock.getUTCNow().minusMonths(1);
             DateTime beforeMigration = clock.getUTCNow();
             EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlanFutreCancelled(startDate);
@@ -158,8 +163,9 @@ public abstract class TestMigration extends TestApiBase {
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            Duration oneYear = getDurationYear(1);
-            clock.setDeltaFromReality(oneYear, 0);
+            
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusYears(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
@@ -180,6 +186,8 @@ public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlanWithPendingPhase() {
 
         try {
+            
+            log.info("Starting testSingleBasePlanWithPendingPhase");
             final DateTime trialDate = clock.getUTCNow().minusDays(10);
             EntitlementAccountMigration toBeMigrated = createAccountFuturePendingPhase(trialDate);
 
@@ -205,8 +213,9 @@ public abstract class TestMigration extends TestApiBase {
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            Duration thirtyDays = getDurationDay(30);
-            clock.setDeltaFromReality(thirtyDays, 0);
+
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(30));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             assertEquals(subscription.getStartDate(), trialDate);
@@ -227,6 +236,7 @@ public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlanWithPendingChange() {
 
         try {
+            log.info("Starting testSingleBasePlanWithPendingChange");
             DateTime beforeMigration = clock.getUTCNow();
             EntitlementAccountMigration toBeMigrated = createAccountFuturePendingChange();
             DateTime afterMigration = clock.getUTCNow();
@@ -250,8 +260,9 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-monthly");
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            Duration oneMonth = getDurationMonth(1);
-            clock.setDeltaFromReality(oneMonth, 0);
+            
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);

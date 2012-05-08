@@ -24,6 +24,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.annotations.Test;
 
 import com.google.inject.Guice;
@@ -69,15 +70,16 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         
         SubscriptionData aoSubscription2 = createSubscription("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
-        clock.addDeltaFromReality(someTimeLater);
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -225,16 +227,17 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         
         // MOVE CLOCK A LITTLE BIT MORE -- AFTER TRIAL
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        someTimeLater = getDurationDay(32);
-        clock.addDeltaFromReality(someTimeLater);
+        
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
+        clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(7000));        
 
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
@@ -346,16 +349,18 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+        clock.addDeltaFromReality(it.toDurationMillis());
+
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         
         // MOVE CLOCK A LITTLE BIT MORE -- AFTER TRIAL
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        someTimeLater = getDurationDay(40);
-        clock.addDeltaFromReality(someTimeLater);
+        
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
+        clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(7000));
         
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
@@ -458,8 +463,9 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         // MOVE CLOCK AFTER CANCEL DATE
         testListener.pushExpectedEvent(NextEvent.CANCEL);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        someTimeLater = getDurationDay(32);
-        clock.addDeltaFromReality(someTimeLater);
+        
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
+        clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(7000));
 
         newAoSubscription = (SubscriptionData)  entitlementApi.getSubscriptionFromId(aoSubscription.getId());
@@ -488,13 +494,14 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
-        clock.addDeltaFromReality(someTimeLater);
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -583,13 +590,14 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
-        clock.addDeltaFromReality(someTimeLater);
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -678,13 +686,14 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
-        clock.addDeltaFromReality(someTimeLater);
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+        clock.addDeltaFromReality(it.toDurationMillis());
         
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -763,8 +772,9 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
         
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        someTimeLater = getDurationDay(60);
-        clock.addDeltaFromReality(someTimeLater);
+        
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(60));
+        clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(5000));
         
         newAoSubscription = (SubscriptionData)  entitlementApi.getSubscriptionFromId(aoSubscription.getId());

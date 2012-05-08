@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -165,8 +166,8 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertEquals(nextPhaseChange, nextExpectedPhaseChange);
 
             testListener.pushExpectedEvent(NextEvent.PHASE);
-
-            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
 
             DateTime futureNow = clock.getUTCNow();
             assertTrue(futureNow.isAfter(nextPhaseChange));
@@ -203,15 +204,18 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
             // MOVE TO DISCOUNT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
-            assertTrue(testListener.isCompleted(5000));
+            
 
             // MOVE TO EVERGREEN PHASE + RE-READ SUBSCRIPTION
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.addDeltaFromReality(currentPhase.getDuration());
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusYears(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());

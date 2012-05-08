@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -192,7 +193,8 @@ public class TestUserApiError extends TestApiBase {
             // MOVE TO NEXT PHASE
             PlanPhase currentPhase = subscription.getCurrentPhase();
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
 

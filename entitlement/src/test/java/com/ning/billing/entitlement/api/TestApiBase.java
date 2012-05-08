@@ -113,6 +113,13 @@ public abstract class TestApiBase implements TestListenerStatus {
     private boolean isListenerFailed;
     private String listenerFailedMsg;    
 
+    //
+    // The date on which we make our test start; just to ensure that running tests at different dates does not
+    // produce different results. nothing specific about that date; we could change it to anything.
+    //
+    protected DateTime testStartDate = new DateTime(2012, 5, 7, 0, 3, 42, 0);
+
+
     
     public static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestApiBase.class.getResource(resource);
@@ -224,6 +231,9 @@ public abstract class TestApiBase implements TestListenerStatus {
         
         // START NOTIFICATION QUEUE FOR ENTITLEMENT
         ((Engine)entitlementService).start();
+        
+        // SETUP START DATE
+        clock.setDeltaFromReality(testStartDate.getMillis() - clock.getUTCNow().getMillis());
         
         // CREATE NEW BUNDLE FOR TEST
         UUID accountId = UUID.randomUUID();

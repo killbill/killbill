@@ -21,9 +21,8 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
-import org.joda.time.Period;
+import org.joda.time.Interval;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -41,7 +40,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
@@ -113,8 +111,8 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
 
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
-            Duration twoMonths = getDurationMonth(2);
-            clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD TO CANCEL IN FUTURE
@@ -137,7 +135,9 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            clock.addDeltaFromReality(ctd);
+            
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS CANCELLED
@@ -177,8 +177,8 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
 
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
-            Duration twoMonths = getDurationMonth(2);
-            clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD TO CHANGE IN FUTURE
@@ -234,8 +234,8 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
 
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
-            Duration twoMonths = getDurationMonth(2);
-            clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD TO CANCEL IN FUTURE
@@ -262,7 +262,8 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            clock.addDeltaFromReality(ctd);
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
 
@@ -343,9 +344,9 @@ public class TestUserApiAddOn extends TestApiBase {
             SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
             // MOVE CLOCK 14 DAYS LATER
-            Duration someTimeLater = getDurationDay(13);
-            clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
-
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(14));
+            clock.addDeltaFromReality(it.toDurationMillis());
+  
             // CREATE ADDON
             DateTime beforeAOCreation = clock.getUTCNow();
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
@@ -380,35 +381,8 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
 
             // MOVE THROUGH TIME TO GO INTO EVERGREEN
-
-            // Talk with Stephane about this fix. It seemed that the add on phase change was not appearing in the queue
-            // hypothesis is that waiting a period that is exactly the duration of the phase might be an instant too short
-            // depending how the comparison works
-
-            //someTimeLater = aoCurrentPhase.getDuration();
-            someTimeLater = new Duration() {
-                @Override
-                public TimeUnit getUnit() {
-                    return TimeUnit.DAYS;
-                }
-
-                @Override
-                public int getNumber() {
-                    return 32;
-                }
-
-                @Override
-                public DateTime addToDateTime(DateTime dateTime) {
-                    throw new NotImplementedException();
-                }
-                @Override
-                public Period toJodaPeriod() {
-                    throw new UnsupportedOperationException();
-                }
-            };
-
-            clock.addDeltaFromReality(someTimeLater);
-            clock.addDeltaFromReality(getDurationDay(1));
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(33));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
 

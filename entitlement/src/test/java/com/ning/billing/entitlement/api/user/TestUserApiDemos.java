@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -89,7 +90,8 @@ public class TestUserApiDemos extends TestApiBase {
 
             /* STEP 3. MOVE TO DISCOUNT PHASE */
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             displayState(subscription.getId(), "STEP 3. MOVE TO DISCOUNT PHASE");
@@ -123,7 +125,8 @@ public class TestUserApiDemos extends TestApiBase {
 
             /* STEP 6. MOVE TO EOT AND CHECK CHANGE OCCURED */
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            clock.addDeltaFromReality(ctd);
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             Plan currentPlan = subscription.getCurrentPlan();
@@ -140,7 +143,8 @@ public class TestUserApiDemos extends TestApiBase {
 
             /* STEP 7.  MOVE TO NEXT PHASE */
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.addDeltaFromReality(currentPhase.getDuration());
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(6));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 

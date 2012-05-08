@@ -21,6 +21,7 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -44,7 +45,7 @@ public class TestUserApiScenarios extends TestApiBase {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(enabled=true)
+    @Test(groups={"slow"}, enabled=true)
     public void testChangeIMMCancelUncancelChangeEOT() throws EntitlementBillingApiException {
 
         log.info("Starting testChangeIMMCancelUncancelChangeEOT");
@@ -60,7 +61,8 @@ public class TestUserApiScenarios extends TestApiBase {
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD
@@ -88,7 +90,8 @@ public class TestUserApiScenarios extends TestApiBase {
             testListener.reset();
             
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            clock.addDeltaFromReality(ctd);
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             assertListenerStatus();

@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.Assert;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
@@ -79,7 +80,10 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             // MOVE TO NEXT PHASE
             PlanPhase currentPhase = subscription.getCurrentPhase();
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
+            
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
+
             DateTime futureNow = clock.getUTCNow();
             DateTime nextExpectedPhaseChange = DefaultClock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
             assertTrue(futureNow.isAfter(nextExpectedPhaseChange));
@@ -121,7 +125,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
@@ -155,7 +160,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // MOVE TO EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            clock.addDeltaFromReality(ctd);
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
@@ -185,8 +191,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
 
-            Duration moveALittleInTime = getDurationDay(3);
-            clock.setDeltaFromReality(moveALittleInTime, 0);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+            clock.addDeltaFromReality(it.toDurationMillis());
 
             // CHANGE PLAN IMM
             subscription.changePlan(toProd, toTerm, toPlanSet, clock.getUTCNow(), context);
@@ -200,7 +206,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.addDeltaFromReality(currentPhase.getDuration());
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(30));
+            clock.addDeltaFromReality(it.toDurationMillis());
             DateTime futureNow = clock.getUTCNow();
 
             assertTrue(futureNow.isAfter(nextExpectedPhaseChange));
@@ -233,7 +240,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
             currentTime = clock.getUTCNow();
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
             currentTime = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
 
@@ -262,7 +270,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // MOVE TO AFTER CTD
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            clock.addDeltaFromReality(ctd);
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             currentTime = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
 
@@ -277,7 +286,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             // MOVE TIME ABOUT ONE MONTH BEFORE NEXT EXPECTED PHASE CHANGE
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.addDeltaFromReality(getDurationMonth(11));
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(11));
+            clock.addDeltaFromReality(it.toDurationMillis());
             currentTime = clock.getUTCNow();
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
@@ -287,7 +297,9 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // MOVE TIME RIGHT AFTER NEXT EXPECTED PHASE CHANGE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.addDeltaFromReality(getDurationMonth(1));
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
+
             currentTime = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
 
@@ -307,7 +319,9 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
+
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD
@@ -358,7 +372,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD
@@ -397,7 +412,9 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // ACTIVATE CHNAGE BY MOVING AFTER CTD
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            clock.addDeltaFromReality(ctd);
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
+
             assertTrue(testListener.isCompleted(5000));
 
             currentPlan = subscription.getCurrentPlan();
@@ -414,7 +431,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.addDeltaFromReality(currentPhase.getDuration());
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(6));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
@@ -446,7 +464,9 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             // MOVE 2 DAYS AHEAD
-            clock.setDeltaFromReality(getDurationDay(1), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(2));
+            clock.addDeltaFromReality(it.toDurationMillis());
+    
 
             // CHANGE IMMEDIATE TO A 3 PHASES PLAN
             testListener.reset();
@@ -467,7 +487,9 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
 
             // MOVE AFTER TRIAL PERIOD -> DISCOUNT
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.addDeltaFromReality(trialPhase.getDuration());
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(30));
+            clock.addDeltaFromReality(it.toDurationMillis());
+
             assertTrue(testListener.isCompleted(5000));
 
             trialPhase = subscription.getCurrentPhase();

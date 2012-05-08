@@ -22,6 +22,7 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.Assert;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
@@ -55,8 +56,8 @@ public abstract class TestUserApiCancel extends TestApiBase {
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
 
             // ADVANCE TIME still in trial
-            Duration moveALittleInTime = getDurationDay(3);
-            clock.setDeltaFromReality(moveALittleInTime, 0);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+            clock.addDeltaFromReality(it.toDurationMillis());
 
             DateTime future = clock.getUTCNow();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
@@ -96,7 +97,9 @@ public abstract class TestUserApiCancel extends TestApiBase {
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
+
             assertTrue(testListener.isCompleted(5000));
             trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -116,7 +119,8 @@ public abstract class TestUserApiCancel extends TestApiBase {
 
             // MOVE TO EOT + RECHECK
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            clock.addDeltaFromReality(ctd);
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             DateTime future = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
 
@@ -152,7 +156,9 @@ public abstract class TestUserApiCancel extends TestApiBase {
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
+            
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
             trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -197,7 +203,8 @@ public abstract class TestUserApiCancel extends TestApiBase {
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -214,8 +221,9 @@ public abstract class TestUserApiCancel extends TestApiBase {
             subscription.uncancel(context);
             
             // MOVE TO EOT + RECHECK
-            testListener.pushExpectedEvent(NextEvent.UNCANCEL);
-            clock.addDeltaFromReality(ctd);
+            testListener.pushExpectedEvent(NextEvent.UNCANCEL);            
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             Plan currentPlan = subscription.getCurrentPlan();

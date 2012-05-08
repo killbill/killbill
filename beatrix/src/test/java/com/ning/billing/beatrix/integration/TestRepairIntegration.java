@@ -56,11 +56,13 @@ public class TestRepairIntegration extends TestIntegrationBase {
     
     @Test(groups={"slow"}, enabled=true)
     public void testRepairChangeBPWithAddonIncludedIntrial() throws Exception {
+        log.info("Starting testRepairChangeBPWithAddonIncludedIntrial");
         testRepairChangeBPWithAddonIncluded(true);
     }
     
     @Test(groups={"slow"}, enabled=true)
     public void testRepairChangeBPWithAddonIncludedOutOfTrial() throws Exception {
+        log.info("Starting testRepairChangeBPWithAddonIncludedOutOfTrial");
         testRepairChangeBPWithAddonIncluded(false);
     }
     
@@ -168,7 +170,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
             assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
             assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-            assertFailureFromBusHandler();
+            assertListenerStatus();
         }
      }
     
@@ -327,6 +329,4 @@ public class TestRepairIntegration extends TestIntegrationBase {
             }
         });
     }
-    
-
 }

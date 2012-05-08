@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -142,8 +143,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // Stays in trial-- for instance
-        Duration durationShift = getDurationDay(10);
-        clock.setDeltaFromReality(durationShift, 0);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(10));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -263,7 +264,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         UUID baseSubscriptionId = testBPRepairCreate(true, startDate, clockShift, baseProduct, newBaseProduct, expected);
         
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        clock.addDeltaFromReality(getDurationDay(32));
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
+        clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(5000));
         
         // CHECK WHAT"S GOING ON AFTER WE MOVE CLOCK-- FUTURE MOTIFICATION SHOULD KICK IN
@@ -324,8 +326,9 @@ public class TestRepairBP extends TestApiBaseRepair {
             if (!inTrial) {
                 testListener.pushExpectedEvent(NextEvent.PHASE);
             }               
-            Duration durationShift = getDurationDay(clockShift);
-            clock.setDeltaFromReality(durationShift, 0);
+            
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(clockShift));
+            clock.addDeltaFromReality(it.toDurationMillis());
             if (!inTrial) {
                 assertTrue(testListener.isCompleted(5000));
             }
@@ -445,7 +448,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         
         // CHECK WHAT"S GOING ON AFTER WE MOVE CLOCK-- FUTURE MOTIFICATION SHOULD KICK IN
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        clock.addDeltaFromReality(getDurationDay(32));
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
+        clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(5000));
         SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
         
@@ -503,9 +507,9 @@ public class TestRepairBP extends TestApiBaseRepair {
         if (!inTrial) {
             testListener.pushExpectedEvent(NextEvent.PHASE);
         }               
-
-        Duration durationShift = getDurationDay(clockShift);
-        clock.setDeltaFromReality(durationShift, 0);
+        
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(clockShift));
+        clock.addDeltaFromReality(it.toDurationMillis());
         if (!inTrial) {
             assertTrue(testListener.isCompleted(5000));
         }
@@ -614,8 +618,10 @@ public class TestRepairBP extends TestApiBaseRepair {
         Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK -- OUT OF TRIAL
-        testListener.pushExpectedEvent(NextEvent.PHASE);                
-        clock.setDeltaFromReality(getDurationDay(35), 0);
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(35));
+        clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(5000));
         
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
@@ -685,9 +691,6 @@ public class TestRepairBP extends TestApiBaseRepair {
         TestWithException test = new TestWithException();
         DateTime startDate = clock.getUTCNow();
         
-        testListener.reset();
-        clock.resetDeltaFromReality();
-
         final Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
         
         test.withException(new TestWithExceptionCallback() {
@@ -724,9 +727,6 @@ public class TestRepairBP extends TestApiBaseRepair {
         TestWithException test = new TestWithException();
         DateTime startDate = clock.getUTCNow();
         
-        testListener.reset();
-        clock.resetDeltaFromReality();
-
         final Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
         
         test.withException(new TestWithExceptionCallback() {
