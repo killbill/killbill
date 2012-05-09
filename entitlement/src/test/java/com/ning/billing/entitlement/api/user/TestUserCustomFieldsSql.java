@@ -28,9 +28,9 @@ import org.testng.annotations.Test;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.callcontext.CallContext;
@@ -66,7 +66,7 @@ public class TestUserCustomFieldsSql extends TestApiBase {
 
     @Test(enabled=true, groups={"slow"})
     public void testOverwriteCustomFields() {
-        log.info("Starting testCreateWithRequestedDate");
+        log.info("Starting testOverwriteCustomFields");
         try {
 
             DateTime init = clock.getUTCNow();
@@ -76,8 +76,8 @@ public class TestUserCustomFieldsSql extends TestApiBase {
             BillingPeriod term = BillingPeriod.MONTHLY;
             String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-            testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.CREATE);
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                     getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             assertNotNull(subscription);
@@ -122,7 +122,7 @@ public class TestUserCustomFieldsSql extends TestApiBase {
 
     @Test(enabled=true, groups={"slow"})
     public void testBasicCustomFields() {
-        log.info("Starting testCreateWithRequestedDate");
+        log.info("Starting testBasicCustomFields");
         try {
 
             DateTime init = clock.getUTCNow();
@@ -132,8 +132,8 @@ public class TestUserCustomFieldsSql extends TestApiBase {
             BillingPeriod term = BillingPeriod.MONTHLY;
             String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-            testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.CREATE);
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                     getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             assertNotNull(subscription);

@@ -75,7 +75,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    protected int doProcessEvents(int sequenceId) {
+    public int doProcessEvents() {
 
         int result = 0;
 

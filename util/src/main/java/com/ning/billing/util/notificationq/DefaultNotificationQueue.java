@@ -41,10 +41,10 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     }
 
     @Override
-    protected int doProcessEvents(final int sequenceId) {
+    public int doProcessEvents() {
 
         logDebug("ENTER doProcessEvents");
-        List<Notification> notifications = getReadyNotifications(sequenceId);
+        List<Notification> notifications = getReadyNotifications();
         if (notifications.size() == 0) {
             logDebug("EXIT doProcessEvents");
             return 0;
@@ -85,7 +85,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
         dao.clearNotification(cleared.getId(), hostname);
     }
 
-    private List<Notification> getReadyNotifications(final int seqId) {
+    private List<Notification> getReadyNotifications() {
 
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(config.getDaoClaimTimeMs()).toDate();
@@ -101,7 +101,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
                     cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate(), Boolean.valueOf(claimed));
             if (claimed) {
                 claimedNotifications.add(cur);
-                dao.insertClaimedHistory(seqId, hostname, now, cur.getUUID().toString());
+                dao.insertClaimedHistory(hostname, now, cur.getUUID().toString());
             }
         }
 

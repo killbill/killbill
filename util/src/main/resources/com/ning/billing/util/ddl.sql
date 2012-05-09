@@ -100,7 +100,6 @@ CREATE INDEX  `idx_get_ready` ON notifications (`effective_dt`,`created_dt`,`id`
 DROP TABLE IF EXISTS claimed_notifications;
 CREATE TABLE claimed_notifications (
     id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    sequence_id int(11) unsigned NOT NULL,
     owner_id varchar(64) NOT NULL,
     claimed_dt datetime NOT NULL,
     notification_id char(36) NOT NULL,

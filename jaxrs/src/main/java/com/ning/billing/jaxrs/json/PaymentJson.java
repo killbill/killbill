@@ -27,37 +27,55 @@ import com.ning.billing.util.clock.DefaultClock;
 
 public class PaymentJson {
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final BigDecimal paidAmount;
-    
-    @JsonView(BundleTimelineViews.Base.class)
+
+    private final BigDecimal amount;
+
     private final String invoiceId;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String paymentId;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final DateTime requestedDate;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final DateTime effectiveDate;
     
-    @JsonView(BundleTimelineViews.Base.class)
+    private final Integer retryCount;
+    
+    private final String currency;
+    
     private final String status;
+      
+    public PaymentJson() {
+        this.amount = null;
+        this.paidAmount = null;
+        this.invoiceId = null;
+        this.paymentId = null;
+        this.requestedDate = null;
+        this.effectiveDate = null;
+        this.currency = null;
+        this.retryCount = null;
+        this.status = null;
+    }
 
     @JsonCreator
-    public PaymentJson(@JsonProperty("paid_amount") BigDecimal paidAmount,
+    public PaymentJson(@JsonProperty("amount") BigDecimal amount,
+            @JsonProperty("paid_amount") BigDecimal paidAmount,
             @JsonProperty("invoice_id") String invoiceId,
             @JsonProperty("payment_id") String paymentId,
             @JsonProperty("requested_dt") DateTime requestedDate,
             @JsonProperty("effective_dt") DateTime effectiveDate,
+            @JsonProperty("retry_count") Integer retryCount,
+            @JsonProperty("currency") String currency,            
             @JsonProperty("status") String status) {
         super();
+        this.amount = amount;
         this.paidAmount = paidAmount;
         this.invoiceId = invoiceId;
         this.paymentId = paymentId;
         this.requestedDate = DefaultClock.toUTCDateTime(requestedDate);
         this.effectiveDate = DefaultClock.toUTCDateTime(effectiveDate);
+        this.currency = currency;
+        this.retryCount = retryCount;
         this.status = status;
     }
 
@@ -83,5 +101,17 @@ public class PaymentJson {
 
     public String getStatus() {
         return status;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public Integer getRetryCount() {
+        return retryCount;
+    }
+
+    public String getCurrency() {
+        return currency;
     }
 }

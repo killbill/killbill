@@ -158,7 +158,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     @Override
     public void createSubscription(final SubscriptionData subscription, final List<EntitlementEvent> initialEvents,
                                    final CallContext context) {
-
         synchronized(events) {
             events.addAll(initialEvents);
             for (final EntitlementEvent cur : initialEvents) {
@@ -285,7 +284,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     @Override
     public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent,
                                    final CallContext context, final int seqId) {
-        synchronized (cancelEvent) {
+        synchronized(events) {
             cancelNextPhaseEvent(subscriptionId);
             insertEvent(cancelEvent);
         }

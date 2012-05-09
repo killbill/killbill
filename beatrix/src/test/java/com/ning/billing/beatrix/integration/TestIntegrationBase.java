@@ -36,6 +36,7 @@ import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -45,7 +46,10 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.api.TestApiListener;
+import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
+import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
@@ -54,6 +58,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceService;
@@ -67,7 +72,7 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.ClockMock;
 
-public class TestIntegrationBase implements TestFailure {
+public class TestIntegrationBase implements TestListenerStatus {
 
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
@@ -80,7 +85,7 @@ public class TestIntegrationBase implements TestFailure {
     protected static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
     protected static long AT_LEAST_ONE_MONTH_MS =  31L * 24L * 3600L * 1000L;
 
-    protected static final long DELAY = 5000;
+    protected static final long DELAY = 10000;
 
     @Inject
     protected IDBI dbi;
@@ -119,28 +124,29 @@ public class TestIntegrationBase implements TestFailure {
     @Inject
     protected AccountUserApi accountUserApi;
 
-    protected TestBusHandler busHandler;
+    protected TestApiListener busHandler;
 
     
-    private boolean currentTestStatusSuccess;
-    private String currentTestFailedMsg;
+    private boolean isListenerFailed;
+    private String listenerFailedMsg;
     
     @Override
     public void failed(String msg) {
-        currentTestStatusSuccess = false;
-        currentTestFailedMsg = msg;
+        isListenerFailed = true;
+        listenerFailedMsg = msg;
     }
 
     @Override
-    public void reset() {
-        currentTestStatusSuccess = true;
-        currentTestFailedMsg = null;
+    public void resetTestListenerStatus() {
+        isListenerFailed = false;
+        listenerFailedMsg = null;
     }
 
-    protected void assertFailureFromBusHandler() {
-        if (!currentTestStatusSuccess) {
-            log.error(currentTestFailedMsg);
-            fail();
+    
+    protected void assertListenerStatus() {
+        if (isListenerFailed) {
+            log.error(listenerFailedMsg);
+            Assert.fail(listenerFailedMsg);
         }
     }
 
@@ -163,73 +169,50 @@ public class TestIntegrationBase implements TestFailure {
         helper.initDb(junctionDb);
     }
 
+  
     @BeforeClass(groups = "slow")
     public void setup() throws Exception{
 
         setupMySQL();
         
-        cleanupData();
-        
         context = new DefaultCallContextFactory(clock).createCallContext("Integration Test", CallOrigin.TEST, UserType.TEST);
-
-        /**
-         * Initialize lifecyle for subset of services
-         */
-        busHandler = new TestBusHandler(this);
-        lifecycle.fireStartupSequencePriorEventRegistration();
-        busService.getBus().register(busHandler);
-        lifecycle.fireStartupSequencePostEventRegistration();
+        busHandler = new TestApiListener(this);
+        
     }
 
     @AfterClass(groups = "slow")
     public void tearDown() throws Exception {
-        lifecycle.fireShutdownSequencePriorEventUnRegistration();
-        busService.getBus().unregister(busHandler);
-        lifecycle.fireShutdownSequencePostEventUnRegistration();
         helper.stopMysql();
     }
 
 
     @BeforeMethod(groups = "slow")
-    public void setupTest() {
+    public void setupTest() throws Exception {
 
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
-        cleanupData();
-        busHandler.reset();
+        
+        // Pre test cleanup
+        helper.cleanupAllTables();
+
         clock.resetDeltaFromReality();
-        reset();
+        resetTestListenerStatus();
+        
+        // Start services
+        lifecycle.fireStartupSequencePriorEventRegistration();
+        busService.getBus().register(busHandler);
+        lifecycle.fireStartupSequencePostEventRegistration();
     }
 
     @AfterMethod(groups = "slow")
-    public void cleanupTest() {
+    public void cleanupTest() throws Exception {
+        lifecycle.fireShutdownSequencePriorEventUnRegistration();
+        busService.getBus().unregister(busHandler);
+        lifecycle.fireShutdownSequencePostEventUnRegistration();
+
         log.warn("DONE WITH TEST\n");
     }
     
-    protected void cleanupData() {
-        dbi.inTransaction(new TransactionCallback<Void>() {
-            @Override
-            public Void inTransaction(Handle h, TransactionStatus status)
-                    throws Exception {
-                h.execute("truncate table accounts");
-                h.execute("truncate table entitlement_events");
-                h.execute("truncate table subscriptions");
-                h.execute("truncate table bundles");
-                h.execute("truncate table notifications");
-                h.execute("truncate table claimed_notifications");
-                h.execute("truncate table invoices");
-                h.execute("truncate table fixed_invoice_items");
-                h.execute("truncate table recurring_invoice_items");
-                h.execute("truncate table tag_definitions");
-                h.execute("truncate table tags");
-                h.execute("truncate table custom_fields");
-                h.execute("truncate table invoice_payments");
-                h.execute("truncate table payment_attempts");
-                h.execute("truncate table payments");
-                return null;
-            }
-        });
-    }
 
     protected void verifyTestResult(UUID accountId, UUID subscriptionId,
                                   DateTime startDate, DateTime endDate,

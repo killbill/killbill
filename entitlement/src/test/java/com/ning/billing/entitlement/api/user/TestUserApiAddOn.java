@@ -21,15 +21,15 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
-import org.joda.time.Period;
+import org.joda.time.Interval;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Duration;
@@ -40,8 +40,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
@@ -56,6 +54,8 @@ public class TestUserApiAddOn extends TestApiBase {
 
     @Test(enabled=true, groups={"slow"})
     public void testCreateCancelAddon() {
+
+        log.info("Starting testCreateCancelAddon");
 
         try {
             String baseProduct = "Shotgun";
@@ -75,11 +75,12 @@ public class TestUserApiAddOn extends TestApiBase {
             aoSubscription.cancel(now, false, context);
 
             testListener.reset();
-            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
-            assertTrue(testListener.isApiCompleted(5000));
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            assertTrue(testListener.isCompleted(5000));
 
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
+            assertListenerStatus();
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -87,6 +88,9 @@ public class TestUserApiAddOn extends TestApiBase {
 
     @Test(enabled=true, groups={"slow"})
     public void testCancelBPWithAddon() {
+
+        log.info("Starting testCancelBPWithAddon");
+
         try {
 
             String baseProduct = "Shotgun";
@@ -103,13 +107,13 @@ public class TestUserApiAddOn extends TestApiBase {
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
 
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
-            Duration twoMonths = getDurationMonth(2);
-            clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
-            assertTrue(testListener.isApiCompleted(5000));
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
             // SET CTD TO CANCEL IN FUTURE
             DateTime now = clock.getUTCNow();
@@ -129,14 +133,18 @@ public class TestUserApiAddOn extends TestApiBase {
 
             // MOVE AFTER CANCELLATION
             testListener.reset();
-            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
-            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
-            clock.addDeltaFromReality(ctd);
-            assertTrue(testListener.isApiCompleted(5000));
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS CANCELLED
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
+
+            assertListenerStatus();
 
         } catch (Exception e) {
             Assert.fail(e.getMessage());
@@ -146,6 +154,9 @@ public class TestUserApiAddOn extends TestApiBase {
 
     @Test(enabled=true, groups={"slow"})
     public void testChangeBPWithAddonNonIncluded() {
+
+        log.info("Starting testChangeBPWithAddonNonIncluded");
+
         try {
 
             String baseProduct = "Shotgun";
@@ -162,13 +173,13 @@ public class TestUserApiAddOn extends TestApiBase {
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
 
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
-            Duration twoMonths = getDurationMonth(2);
-            clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
-            assertTrue(testListener.isApiCompleted(5000));
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
             // SET CTD TO CHANGE IN FUTURE
             DateTime now = clock.getUTCNow();
@@ -183,15 +194,16 @@ public class TestUserApiAddOn extends TestApiBase {
             String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             testListener.reset();
-            testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
-            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
             baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, context);
-            assertTrue(testListener.isApiCompleted(5000));
+            assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
+            assertListenerStatus();
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -199,6 +211,9 @@ public class TestUserApiAddOn extends TestApiBase {
 
     @Test(enabled=true, groups={"slow"})
     public void testChangeBPWithAddonNonAvailable() {
+
+        log.info("Starting testChangeBPWithAddonNonAvailable");
+
         try {
 
             String baseProduct = "Shotgun";
@@ -215,13 +230,13 @@ public class TestUserApiAddOn extends TestApiBase {
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
             testListener.reset();
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
 
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
-            Duration twoMonths = getDurationMonth(2);
-            clock.setDeltaFromReality(twoMonths, DAY_IN_MS);
-            assertTrue(testListener.isApiCompleted(5000));
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
             // SET CTD TO CANCEL IN FUTURE
             DateTime now = clock.getUTCNow();
@@ -245,16 +260,18 @@ public class TestUserApiAddOn extends TestApiBase {
 
             // MOVE AFTER CHANGE
             testListener.reset();
-            testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
-            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
-            clock.addDeltaFromReality(ctd);
-            assertTrue(testListener.isApiCompleted(5000));
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
+            assertListenerStatus();
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -263,6 +280,9 @@ public class TestUserApiAddOn extends TestApiBase {
 
     @Test(enabled=true, groups={"slow"})
     public void testAddonCreateWithBundleAlign() {
+
+        log.info("Starting testAddonCreateWithBundleAlign");
+
         try {
             String aoProduct = "Telescopic-Scope";
             BillingPeriod aoTerm = BillingPeriod.MONTHLY;
@@ -278,6 +298,7 @@ public class TestUserApiAddOn extends TestApiBase {
 
             testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignement);
 
+            assertListenerStatus();
         } catch (CatalogApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -286,6 +307,8 @@ public class TestUserApiAddOn extends TestApiBase {
     //TODO MDW - debugging reenable if you find this
     @Test(enabled=true, groups={"slow"})
     public void testAddonCreateWithSubscriptionAlign() {
+
+        log.info("Starting testAddonCreateWithSubscriptionAlign");
 
         try {
             String aoProduct = "Laser-Scope";
@@ -302,13 +325,15 @@ public class TestUserApiAddOn extends TestApiBase {
 
             testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignement);
 
-            } catch (CatalogApiException e) {
-                Assert.fail(e.getMessage());
-            }
+            assertListenerStatus();
+        } catch (CatalogApiException e) {
+            Assert.fail(e.getMessage());
+        }
     }
 
 
     private void testAddonCreateInternal(String aoProduct, BillingPeriod aoTerm, String aoPriceList, PlanAlignmentCreate expAlignement) {
+
         try {
 
             String baseProduct = "Shotgun";
@@ -319,9 +344,9 @@ public class TestUserApiAddOn extends TestApiBase {
             SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
             // MOVE CLOCK 14 DAYS LATER
-            Duration someTimeLater = getDurationDay(13);
-            clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
-
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(14));
+            clock.addDeltaFromReality(it.toDurationMillis());
+  
             // CREATE ADDON
             DateTime beforeAOCreation = clock.getUTCNow();
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
@@ -338,73 +363,46 @@ public class TestUserApiAddOn extends TestApiBase {
             assertNotNull(aoCurrentPhase);
             assertEquals(aoCurrentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
-           assertDateWithin(aoSubscription.getStartDate(), beforeAOCreation, afterAOCreation);
-           assertEquals(aoSubscription.getBundleStartDate(), baseSubscription.getBundleStartDate());
+            assertDateWithin(aoSubscription.getStartDate(), beforeAOCreation, afterAOCreation);
+            assertEquals(aoSubscription.getBundleStartDate(), baseSubscription.getBundleStartDate());
 
-           // CHECK next AO PHASE EVENT IS INDEED A MONTH AFTER BP STARTED => BUNDLE ALIGNMENT
-           SubscriptionEvent aoPendingTranstion = aoSubscription.getPendingTransition();
+            // CHECK next AO PHASE EVENT IS INDEED A MONTH AFTER BP STARTED => BUNDLE ALIGNMENT
+            SubscriptionEvent aoPendingTranstion = aoSubscription.getPendingTransition();
 
-           if (expAlignement == PlanAlignmentCreate.START_OF_BUNDLE) {
-               assertEquals(aoPendingTranstion.getEffectiveTransitionTime(), baseSubscription.getStartDate().plusMonths(1));
-           } else {
-               assertEquals(aoPendingTranstion.getEffectiveTransitionTime(), aoSubscription.getStartDate().plusMonths(1));
-           }
+            if (expAlignement == PlanAlignmentCreate.START_OF_BUNDLE) {
+                assertEquals(aoPendingTranstion.getEffectiveTransitionTime(), baseSubscription.getStartDate().plusMonths(1));
+            } else {
+                assertEquals(aoPendingTranstion.getEffectiveTransitionTime(), aoSubscription.getStartDate().plusMonths(1));
+            }
 
-           // ADD TWO PHASE EVENTS (BP + AO)
-           testListener.reset();
-           testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-           testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
+            // ADD TWO PHASE EVENTS (BP + AO)
+            testListener.reset();
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
 
-           // MOVE THROUGH TIME TO GO INTO EVERGREEN
-           
-           // Talk with Stephane about this fix. It seemed that the add on phase change was not appearing in the queue
-           // hypothesis is that waiting a period that is exactly the duration of the phase might be an instant too short
-           // depending how the comparison works
-           
-           //someTimeLater = aoCurrentPhase.getDuration();
-           someTimeLater = new Duration() {
-                @Override
-                public TimeUnit getUnit() {
-                   return TimeUnit.DAYS;
-                }
-
-                @Override
-                public int getNumber() {
-                   return 32;
-                }
-
-                @Override
-                public DateTime addToDateTime(DateTime dateTime) {
-                   throw new NotImplementedException();
-                }
-                @Override
-                public Period toJodaPeriod() {
-                    throw new UnsupportedOperationException();
-                }
-           };
-           
-           clock.addDeltaFromReality(someTimeLater);
-           clock.addDeltaFromReality(getDurationDay(1));
-           assertTrue(testListener.isApiCompleted(5000));
+            // MOVE THROUGH TIME TO GO INTO EVERGREEN
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(33));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
 
-           // CHECK EVERYTHING AGAIN
-           aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            // CHECK EVERYTHING AGAIN
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
 
-           aoCurrentPlan = aoSubscription.getCurrentPlan();
-           assertNotNull(aoCurrentPlan);
-           assertEquals(aoCurrentPlan.getProduct().getName(),aoProduct);
-           assertEquals(aoCurrentPlan.getProduct().getCategory(), ProductCategory.ADD_ON);
-           assertEquals(aoCurrentPlan.getBillingPeriod(), aoTerm);
+            aoCurrentPlan = aoSubscription.getCurrentPlan();
+            assertNotNull(aoCurrentPlan);
+            assertEquals(aoCurrentPlan.getProduct().getName(),aoProduct);
+            assertEquals(aoCurrentPlan.getProduct().getCategory(), ProductCategory.ADD_ON);
+            assertEquals(aoCurrentPlan.getBillingPeriod(), aoTerm);
 
-           aoCurrentPhase = aoSubscription.getCurrentPhase();
-           assertNotNull(aoCurrentPhase);
-           assertEquals(aoCurrentPhase.getPhaseType(), PhaseType.EVERGREEN);
+            aoCurrentPhase = aoSubscription.getCurrentPhase();
+            assertNotNull(aoCurrentPhase);
+            assertEquals(aoCurrentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
 
-           aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
-           aoPendingTranstion = aoSubscription.getPendingTransition();
-           assertNull(aoPendingTranstion);
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            aoPendingTranstion = aoSubscription.getPendingTransition();
+            assertNull(aoPendingTranstion);
 
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());

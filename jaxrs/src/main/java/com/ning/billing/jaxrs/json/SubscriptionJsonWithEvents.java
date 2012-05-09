@@ -51,6 +51,12 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
         @JsonView(BundleTimelineViews.Timeline.class)
         private final DateTime effectiveDate;
 
+        public SubscriptionReadEventJson() {
+            super();
+            this.eventId = null;
+            this.effectiveDate = null;
+        }
+ 
         @JsonCreator
         public SubscriptionReadEventJson(@JsonProperty("event_id") String eventId,
                 @JsonProperty("billing_period") String billingPeriod,
@@ -148,6 +154,15 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
         @JsonView(BundleTimelineViews.Timeline.class)
         private final String phase;
 
+        public SubscriptionBaseEventJson() {
+            this.billingPeriod = null;
+            this.requestedDate = null;
+            this.product = null;
+            this.priceList = null;
+            this.eventType = null;
+            this.phase = null;
+        }
+        
         @JsonCreator
         public SubscriptionBaseEventJson(@JsonProperty("billing_period") String billingPeriod,
                 @JsonProperty("requested_dt") DateTime requestedDate,

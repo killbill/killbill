@@ -34,6 +34,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -42,6 +43,9 @@ import org.testng.annotations.BeforeMethod;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.api.TestApiListener;
+import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Catalog;
@@ -54,7 +58,6 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -80,7 +83,8 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.RealImplementation;
 
 
-public abstract class TestApiBase {
+public abstract class TestApiBase implements TestListenerStatus {
+    
     protected static final Logger log = LoggerFactory.getLogger(TestApiBase.class);
 
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
@@ -100,12 +104,23 @@ public abstract class TestApiBase {
 
     protected AccountData accountData;
     protected Catalog catalog;
-    protected ApiTestListener testListener;
+    protected TestApiListener testListener;
     protected SubscriptionBundle bundle;
 
     private MysqlTestingHelper helper;
     protected CallContext context = new TestCallContext("Api Test");
 
+    private boolean isListenerFailed;
+    private String listenerFailedMsg;    
+
+    //
+    // The date on which we make our test start; just to ensure that running tests at different dates does not
+    // produce different results. nothing specific about that date; we could change it to anything.
+    //
+    protected DateTime testStartDate = new DateTime(2012, 5, 7, 0, 3, 42, 0);
+
+
+    
     public static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestApiBase.class.getResource(resource);
         assertNotNull(url);
@@ -131,6 +146,19 @@ public abstract class TestApiBase {
         }
     }
 
+    
+    @Override
+    public void failed(final String msg) {
+        this.isListenerFailed = true;
+        this.listenerFailedMsg = msg;
+    }
+
+    @Override
+    public void resetTestListenerStatus() {
+        this.isListenerFailed = false;
+        this.listenerFailedMsg = null;
+    }
+    
     @BeforeClass(alwaysRun = true)
     public void setup() throws Exception {
 
@@ -149,63 +177,96 @@ public abstract class TestApiBase {
         dao = g.getInstance(EntitlementDao.class);
         clock = (ClockMock) g.getInstance(Clock.class);
         helper = (isSqlTest(dao)) ? g.getInstance(MysqlTestingHelper.class) : null;
+        init();
+    }
+
+    private void init() throws Exception {
+
+        setupDao();
 
         ((DefaultCatalogService) catalogService).loadCatalog();
         ((Engine) entitlementService).initialize();
-        init(g);
-        ((DefaultBusService) busService).startBus();
+
+        accountData = getAccountData();
+        assertNotNull(accountData);
+        catalog = catalogService.getFullCatalog();
+        assertNotNull(catalog);
+        testListener = new TestApiListener(this);
     }
 
-    private static boolean isSqlTest(EntitlementDao theDao) {
-        return (! (theDao instanceof MockEntitlementDaoMemory));
-    }
-
-    private void setupMySQL() throws IOException {
+    private void setupDao() throws IOException {
         if (helper != null) {
             final String entitlementDdl = IOUtils.toString(TestApiBase.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
             final String utilDdl = IOUtils.toString(TestApiBase.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
             helper.startMysql();
-            helper.cleanupAllTables();
             helper.initDb(entitlementDdl);
             helper.initDb(utilDdl);
         }
     }
 
-    private void init(Injector g) throws Exception {
-
-        setupMySQL();
-        accountData = getAccountData();
-        assertNotNull(accountData);
-        catalog = catalogService.getFullCatalog();
-        assertNotNull(catalog);
-        testListener = new ApiTestListener(busService.getBus());
+    private static boolean isSqlTest(EntitlementDao theDao) {
+        return (! (theDao instanceof MockEntitlementDaoMemory));
     }
-
+   
     @BeforeMethod(alwaysRun = true)
     public void setupTest() throws Exception {
 
         log.warn("RESET TEST FRAMEWORK\n\n");
 
+        // CLEANUP ALL DB TABLES OR IN MEMORY STRUCTURES
+        cleanupDao();
+        
+        // RESET LIST OF EXPECTED EVENTS
         if (testListener != null) {
             testListener.reset();
+            resetTestListenerStatus();
         }
-
+        
+        // RESET CLOCK
         clock.resetDeltaFromReality();
-        ((MockEntitlementDao) dao).reset();
 
+        // START BUS AND REGISTER LISTENER
+        busService.getBus().start();
         busService.getBus().register(testListener);
+        
+        // START NOTIFICATION QUEUE FOR ENTITLEMENT
+        ((Engine)entitlementService).start();
+        
+        // SETUP START DATE
+        clock.setDeltaFromReality(testStartDate.getMillis() - clock.getUTCNow().getMillis());
+        
+        // CREATE NEW BUNDLE FOR TEST
         UUID accountId = UUID.randomUUID();
         bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle", context);
         assertNotNull(bundle);
-
-        ((Engine)entitlementService).start();
     }
 
     @AfterMethod(alwaysRun = true)
     public void cleanupTest() throws Exception {
+        
+        // UNREGISTER TEST LISTENER AND STOP BUS
         busService.getBus().unregister(testListener);
+        busService.getBus().stop();
+        
+        // STOP NOTIFICATION QUEUE
         ((Engine)entitlementService).stop();
+
         log.warn("DONE WITH TEST\n");
+    }
+    
+    protected void assertListenerStatus() {
+        if (isListenerFailed) {
+            log.error(listenerFailedMsg);
+            Assert.fail(listenerFailedMsg);
+        }
+    }
+    
+    private void cleanupDao() {
+        if (helper != null) {
+            helper.cleanupAllTables();
+        } else {
+            ((MockEntitlementDao) dao).reset();
+        }
     }
 
     protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
@@ -219,13 +280,13 @@ public abstract class TestApiBase {
 
     protected SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
         throws EntitlementUserApiException {
-        testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
-
+        
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundleId,
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
                 requestedDate == null ? clock.getUTCNow() : requestedDate, context);
         assertNotNull(subscription);
-        assertTrue(testListener.isApiCompleted(5000));
+        assertTrue(testListener.isCompleted(5000));
         return subscription;
     }
 

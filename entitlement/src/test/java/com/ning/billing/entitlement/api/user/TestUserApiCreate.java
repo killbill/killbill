@@ -24,17 +24,18 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
@@ -56,8 +57,8 @@ public abstract class TestUserApiCreate extends TestApiBase {
             String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
 
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-            testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            testListener.pushExpectedEvent(NextEvent.CREATE);
 
 
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
@@ -69,8 +70,10 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertEquals(subscription.getBundleId(), bundle.getId());
             assertEquals(subscription.getStartDate(), requestedDate);
 
-            assertTrue(testListener.isApiCompleted(5000));
+            assertTrue(testListener.isCompleted(5000));
 
+            assertListenerStatus();
+            
         } catch (EntitlementUserApiException e) {
         	log.error("Unexpected exception",e);
             Assert.fail(e.getMessage());
@@ -89,7 +92,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             BillingPeriod term = BillingPeriod.MONTHLY;
             String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
+            testListener.pushExpectedEvent(NextEvent.CREATE);
 
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                     getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), context);
@@ -111,6 +114,8 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
+            assertListenerStatus();
+            
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -127,7 +132,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             BillingPeriod term = BillingPeriod.MONTHLY;
             String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
+            testListener.pushExpectedEvent(NextEvent.CREATE);
 
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                     getProductSpecifier(productName, planSetName, term, null),
@@ -149,7 +154,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
-            assertTrue(testListener.isApiCompleted(5000));
+            assertTrue(testListener.isCompleted(5000));
 
             List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
             assertNotNull(events);
@@ -160,15 +165,16 @@ public abstract class TestUserApiCreate extends TestApiBase {
             DateTime nextExpectedPhaseChange = DefaultClock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
             assertEquals(nextPhaseChange, nextExpectedPhaseChange);
 
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-
-            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
 
             DateTime futureNow = clock.getUTCNow();
             assertTrue(futureNow.isAfter(nextPhaseChange));
 
-            assertTrue(testListener.isApiCompleted(5000));
+            assertTrue(testListener.isCompleted(5000));
 
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -184,7 +190,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             BillingPeriod term = BillingPeriod.ANNUAL;
             String planSetName = "gunclubDiscount";
 
-            testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
+            testListener.pushExpectedEvent(NextEvent.CREATE);
 
             // CREATE SUBSCRIPTION
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
@@ -194,27 +200,30 @@ public abstract class TestUserApiCreate extends TestApiBase {
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
-            assertTrue(testListener.isApiCompleted(5000));
+            assertTrue(testListener.isCompleted(5000));
 
             // MOVE TO DISCOUNT PHASE
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
-            assertTrue(testListener.isApiCompleted(2000));
+            
 
             // MOVE TO EVERGREEN PHASE + RE-READ SUBSCRIPTION
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-            clock.addDeltaFromReality(currentPhase.getDuration());
-            assertTrue(testListener.isApiCompleted(2000));
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusYears(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
-
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -229,17 +238,15 @@ public abstract class TestUserApiCreate extends TestApiBase {
             BillingPeriod term = BillingPeriod.ANNUAL;
             String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
+            testListener.pushExpectedEvent(NextEvent.CREATE);
 
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                     getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
             assertNotNull(subscription);
 
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
-
-
-
 }

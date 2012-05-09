@@ -13,11 +13,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.beatrix.integration;
+package com.ning.billing.util.queue;
 
-public interface TestFailure {
+public interface QueueLifecycle {
+    /**
+     * Starts the queue
+     */
+    public void startQueue();
 
-    public void failed(String msg);
-
-    public void reset();
+    /**
+     * Stop the queue
+     *
+     */
+    public void stopQueue();
+    
+    /**
+     *  Processes event from queue
+     */
+    public int doProcessEvents();
 }

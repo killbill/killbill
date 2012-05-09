@@ -21,17 +21,18 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
@@ -44,7 +45,7 @@ public class TestUserApiScenarios extends TestApiBase {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(enabled=true)
+    @Test(groups={"slow"}, enabled=true)
     public void testChangeIMMCancelUncancelChangeEOT() throws EntitlementBillingApiException {
 
         log.info("Starting testChangeIMMCancelUncancelChangeEOT");
@@ -54,14 +55,15 @@ public class TestUserApiScenarios extends TestApiBase {
             PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
-            testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
-            testListener.isApiCompleted(3000);
+            testListener.isCompleted(5000);
 
             // MOVE TO NEXT PHASE
-            testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
-            assertTrue(testListener.isApiCompleted(2000));
+            testListener.pushExpectedEvent(NextEvent.PHASE);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
             // SET CTD
             Duration ctd = getDurationMonth(1);
@@ -71,22 +73,28 @@ public class TestUserApiScenarios extends TestApiBase {
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CANCEL EOT
-            testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
+            testListener.setNonExpectedMode();
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), false, context);
-            assertFalse(testListener.isApiCompleted(2000));
+            assertFalse(testListener.isCompleted(5000));
             testListener.reset();
 
             // UNCANCEL
             subscription.uncancel(context);
 
             // CHANGE EOT
-            testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
+            testListener.setNonExpectedMode();            
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), context);
-            assertFalse(testListener.isApiCompleted(2000));
+            assertFalse(testListener.isCompleted(5000));
+            testListener.reset();
+            
+            testListener.pushExpectedEvent(NextEvent.CHANGE);
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
-            clock.addDeltaFromReality(ctd);
-            assertTrue(testListener.isApiCompleted(3000));
-
+            assertListenerStatus();
 
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());

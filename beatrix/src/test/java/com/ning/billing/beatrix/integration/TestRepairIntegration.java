@@ -32,7 +32,7 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.beatrix.integration.TestBusHandler.NextEvent;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -56,11 +56,13 @@ public class TestRepairIntegration extends TestIntegrationBase {
     
     @Test(groups={"slow"}, enabled=true)
     public void testRepairChangeBPWithAddonIncludedIntrial() throws Exception {
+        log.info("Starting testRepairChangeBPWithAddonIncludedIntrial");
         testRepairChangeBPWithAddonIncluded(true);
     }
     
     @Test(groups={"slow"}, enabled=true)
     public void testRepairChangeBPWithAddonIncludedOutOfTrial() throws Exception {
+        log.info("Starting testRepairChangeBPWithAddonIncludedOutOfTrial");
         testRepairChangeBPWithAddonIncluded(false);
     }
     
@@ -168,7 +170,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
             assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
             assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-            assertFailureFromBusHandler();
+            assertListenerStatus();
         }
      }
     
@@ -327,6 +329,4 @@ public class TestRepairIntegration extends TestIntegrationBase {
             }
         });
     }
-    
-
 }

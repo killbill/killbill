@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -102,14 +103,20 @@ public class BundleResource implements BaseJaxrsResource {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createBundle(final BundleJsonNoSubsciptions json) {
+    public Response createBundle(final BundleJsonNoSubsciptions json,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
         try {
             UUID accountId = UUID.fromString(json.getAccountId());
-            final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(accountId, json.getExternalKey(), context.createContext());
+            final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(accountId, json.getExternalKey(),
+                    context.createContext(createdBy, reason, comment));
             return uriBuilder.buildResponse(BundleResource.class, "getBundle", bundle.getId());
         } catch (EntitlementUserApiException e) {
             log.info(String.format("Failed to create bundle %s", json), e);
             return Response.status(Status.BAD_REQUEST).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 

@@ -26,11 +26,11 @@ import com.ning.billing.util.bus.BusService;
 import com.ning.jetty.base.modules.ServerModuleBuilder;
 import com.ning.jetty.core.listeners.SetupServer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +72,9 @@ public class KillbillGuiceListener extends SetupServer
         killbillBusService = theInjector.getInstance(BusService.class);
         killbilleventHandler = theInjector.getInstance(KillbillEventHandler.class); 
         
+        ObjectMapper mapper = theInjector.getInstance(ObjectMapper.class);
+        mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
+
         //
         // Fire all Startup levels up to service start
         //

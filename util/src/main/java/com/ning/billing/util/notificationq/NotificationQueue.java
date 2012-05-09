@@ -22,8 +22,9 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
+import com.ning.billing.util.queue.QueueLifecycle;
 
-public interface NotificationQueue {
+public interface NotificationQueue extends QueueLifecycle {
 
    /**
     *
@@ -61,25 +62,9 @@ public interface NotificationQueue {
    public int processReadyNotification();
 
    /**
-    * Stops the queue. Blocks until queue is completely stopped.
-    *
-    * @see NotificationQueueHandler.completedQueueStop to be notified when the notification thread exited
-    */
-   public void stopQueue();
-
-   /**
-    * Starts the queue. Blocks until queue has completely started.
-    *
-    * @see NotificationQueueHandler.completedQueueStart to be notified when the notification thread started
-    */
-   public void startQueue();
-
-   /**
     *
     * @return the name of that queue
     */
    public String getFullQName();
-
-   
 
 }

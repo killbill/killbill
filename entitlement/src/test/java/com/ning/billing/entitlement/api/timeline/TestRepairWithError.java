@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -31,6 +32,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
@@ -38,7 +40,6 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
@@ -61,27 +62,30 @@ public class TestRepairWithError extends TestApiBaseRepair {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleMemory());
     }
 
-
-    @BeforeMethod(groups={"fast"})
-    public void beforeMethod() throws Exception {
+    @BeforeMethod(alwaysRun = true)
+    public void setupTest() throws Exception {
+        super.setupTest();
         test = new TestWithException();
         startDate = clock.getUTCNow();
         baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
-        testListener.reset();
-        clock.resetDeltaFromReality();
     }
   
     @Test(groups={"fast"})
     public void testENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException {
 
                 // MOVE AFTER TRIAL
-                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-                Duration durationShift = getDurationDay(40);
-                clock.setDeltaFromReality(durationShift, 0);
-                assertTrue(testListener.isApiCompleted(5000));
+                testListener.pushExpectedEvent(NextEvent.PHASE);
+                
+                Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
+                clock.addDeltaFromReality(it.toDurationMillis());
+
+                assertTrue(testListener.isCompleted(5000));
                 
                 BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
@@ -99,23 +103,26 @@ public class TestRepairWithError extends TestApiBaseRepair {
     
     @Test(groups={"fast"})
     public void testENT_REPAIR_INVALID_DELETE_SET() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_INVALID_DELETE_SET");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
 
-                Duration durationShift = getDurationDay(3);
-                clock.setDeltaFromReality(durationShift, 0);
+                Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+                clock.addDeltaFromReality(it.toDurationMillis());
                 
-                testListener.pushNextApiExpectedEvent(NextEvent.CHANGE);
+                testListener.pushExpectedEvent(NextEvent.CHANGE);
                 DateTime changeTime = clock.getUTCNow();
                 baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, context);
-                assertTrue(testListener.isApiCompleted(5000));
+                assertTrue(testListener.isCompleted(5000));
                 
                 // MOVE AFTER TRIAL
-                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-                durationShift = getDurationDay(40);
-                clock.addDeltaFromReality(durationShift);
-                assertTrue(testListener.isApiCompleted(5000));
+                testListener.pushExpectedEvent(NextEvent.PHASE);
+                it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
+                clock.addDeltaFromReality(it.toDurationMillis());
+                assertTrue(testListener.isCompleted(5000));
                 
                 BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
@@ -133,6 +140,9 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
     @Test(groups={"fast"})
     public void testENT_REPAIR_NON_EXISTENT_DELETE_EVENT() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_NON_EXISTENT_DELETE_EVENT");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException {
@@ -153,15 +163,18 @@ public class TestRepairWithError extends TestApiBaseRepair {
     
     @Test(groups={"fast"})
     public void testENT_REPAIR_SUB_RECREATE_NOT_EMPTY() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_SUB_RECREATE_NOT_EMPTY");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException {
                 
                 // MOVE AFTER TRIAL
-                   testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-                   Duration durationShift = getDurationDay(40);
-                   clock.setDeltaFromReality(durationShift, 0);
-                   assertTrue(testListener.isApiCompleted(5000));
+                   testListener.pushExpectedEvent(NextEvent.PHASE);
+                   Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
+                   clock.addDeltaFromReality(it.toDurationMillis());
+                   assertTrue(testListener.isCompleted(5000));
                    
                    BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                    sortEventsOnBundle(bundleRepair);
@@ -181,15 +194,19 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
     @Test(groups={"fast"})
     public void testENT_REPAIR_SUB_EMPTY() throws Exception {
+
+        log.info("Starting testENT_REPAIR_SUB_EMPTY");
+        
         test.withException(new TestWithExceptionCallback() {
+
             @Override
             public void doTest() throws EntitlementRepairException {
                 
              // MOVE AFTER TRIAL
-                testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-                Duration durationShift = getDurationDay(40);
-                clock.setDeltaFromReality(durationShift, 0);
-                assertTrue(testListener.isApiCompleted(5000));
+                testListener.pushExpectedEvent(NextEvent.PHASE);
+                Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
+                clock.addDeltaFromReality(it.toDurationMillis());
+                assertTrue(testListener.isCompleted(5000));
                 
                 BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
@@ -209,19 +226,22 @@ public class TestRepairWithError extends TestApiBaseRepair {
     
     @Test(groups={"fast"})
     public void testENT_REPAIR_AO_CREATE_BEFORE_BP_START() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_AO_CREATE_BEFORE_BP_START");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
                
 
                 // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-                Duration someTimeLater = getDurationDay(3);
-                clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
-
+                Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+                clock.addDeltaFromReality(it.toDurationMillis());
                 SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
                 // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
-                clock.addDeltaFromReality(someTimeLater);
+                it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+                clock.addDeltaFromReality(it.toDurationMillis());
 
                 BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
@@ -254,19 +274,22 @@ public class TestRepairWithError extends TestApiBaseRepair {
     
     @Test(groups={"fast"})
     public void testENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
                 
 
                 // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-                Duration someTimeLater = getDurationDay(3);
-                clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
-
+                Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+                clock.addDeltaFromReality(it.toDurationMillis());
                 SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
                 // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
-                clock.addDeltaFromReality(someTimeLater);
+                it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+                clock.addDeltaFromReality(it.toDurationMillis());
 
                 BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
@@ -298,13 +321,17 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
     @Test(groups={"fast"})
     public void testENT_REPAIR_BP_RECREATE_MISSING_AO() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_BP_RECREATE_MISSING_AO");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
 
               //testListener.pushExpectedEvent(NextEvent.PHASE);
 
-                clock.setDeltaFromReality(getDurationDay(5), 0);
+                Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+                clock.addDeltaFromReality(it.toDurationMillis());
                 //assertTrue(testListener.isCompleted(5000));
 
                 SubscriptionData aoSubscription = createSubscription("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -337,14 +364,18 @@ public class TestRepairWithError extends TestApiBaseRepair {
     //
     @Test(groups={"fast"}, enabled=false)
     public void testENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
                 /*
               //testListener.pushExpectedEvent(NextEvent.PHASE);
 
-                clock.setDeltaFromReality(getDurationDay(5), 0);
-                //assertTrue(testListener.isCompleted(5000));
+                Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+                clock.addDeltaFromReality(it.toDurationMillis());
+
 
                 SubscriptionData aoSubscription = createSubscription("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
                 
@@ -382,6 +413,9 @@ public class TestRepairWithError extends TestApiBaseRepair {
     
     @Test(groups={"fast"}, enabled=false)
     public void testENT_REPAIR_MISSING_AO_DELETE_EVENT() throws Exception {
+        
+        log.info("Starting testENT_REPAIR_MISSING_AO_DELETE_EVENT");
+        
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
@@ -389,6 +423,10 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 
                 /*
                 // MOVE CLOCK -- JUST BEFORE END OF TRIAL
+                 *                 
+                Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(29));
+                clock.addDeltaFromReality(it.toDurationMillis());
+
                 clock.setDeltaFromReality(getDurationDay(29), 0);
                 
                 SubscriptionData aoSubscription = createSubscription("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);

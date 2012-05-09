@@ -18,6 +18,13 @@ package com.ning.billing.util.clock;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
+import org.joda.time.Months;
+import org.joda.time.MutablePeriod;
+import org.joda.time.Period;
+import org.joda.time.ReadablePeriod;
+import org.joda.time.Weeks;
+import org.joda.time.Years;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +32,10 @@ import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
 
 public class ClockMock implements Clock {
+    
+    private MutablePeriod delta = new MutablePeriod();
     private static final Logger log = LoggerFactory.getLogger(ClockMock.class);
-    DateTime currentTime = new DateTime(DateTimeZone.UTC);
+
      
     @Override
     public synchronized DateTime getNow(DateTimeZone tz) {
@@ -35,35 +44,37 @@ public class ClockMock implements Clock {
 
     @Override
     public synchronized DateTime getUTCNow() {
-        try {
-        return currentTime.plus(epsilon).minus(currentTime.getMillisOfSecond());
-        } catch(RuntimeException e) {
-            throw e;
-        }
+        return truncate(adjust(now()));
     }
     
+    private DateTime adjust(DateTime now) {
+        return now.plus(delta);
+    }
+
     public synchronized void setTime(DateTime time) {
-        adjustTo(time.toDateTime(DateTimeZone.UTC));
-   }
+        DateTime prev = getUTCNow();
+        delta = new MutablePeriod(now(), time);
+        logChange(prev);
+    }
     
     public synchronized void addDays(int days) {
-        adjustTo(currentTime.plusDays(days));
+        adjustTo(Days.days(days));
     }
     
     public synchronized void addWeeks(int weeks) {
-        adjustTo(currentTime.plusWeeks(weeks));
+        adjustTo(Weeks.weeks(weeks));
     }
     
     public synchronized void addMonths(int months) {
-        adjustTo(currentTime.plusMonths(months));
+        adjustTo(Months.months(months));
     }
     
     public synchronized void addYears(int years) {
-        adjustTo(currentTime.plusMonths(years));
+        adjustTo(Years.years(years));
     }
     
     public synchronized void reset() {
-        adjustTo(new DateTime(DateTimeZone.UTC));
+        delta = new MutablePeriod();
     }
     
     @Override
@@ -71,59 +82,66 @@ public class ClockMock implements Clock {
         return getUTCNow().toString();
     }
     
-    private void adjustTo(DateTime newTime) {
-        if(newTime == null) {
-            log.error("Attempting to adjust clock to a null value");
-            newTime = new DateTime(DateTimeZone.UTC);
-        }
-        logClockAdjustment(currentTime, newTime);
-        currentTime = newTime;
+    private void adjustTo(ReadablePeriod period) {
+        DateTime prev = getUTCNow();
+        delta.add(period);
+        logChange(prev);
     }
     
-    private void logClockAdjustment(DateTime prev, DateTime next) {
-        log.info(String.format("            ************      ADJUSTING CLOCK FROM %s to %s     ********************", prev, next));
+    private void logChange(DateTime prev) {     
+        DateTime now = getUTCNow();
+        log.info(String.format("            ************      ADJUSTING CLOCK FROM %s to %s     ********************", prev, now));
+    }
+    
+    private DateTime now() {
+        return new DateTime(DateTimeZone.UTC);
     }
 
+    private DateTime truncate(DateTime time) {
+        return time.minus(time.getMillisOfSecond());
+    }
+   
     //
     //Backward compatibility stuff
     //
-    long epsilon = 0;
-    
-    public synchronized void setDeltaFromReality(Duration delta, long epsilon) {
-        this.epsilon = epsilon;
-        addDeltaFromReality(delta);
+    public synchronized void setDeltaFromReality(Duration duration, long epsilon) {
+        DateTime prev = getUTCNow();
+        delta.addMillis((int)epsilon);
+        addDeltaFromReality(duration);
+        logChange(prev);
+        
     }
 
     public synchronized void addDeltaFromReality(Duration delta) {
-        adjustTo(addDurationToDateTime(delta,currentTime));
+        adjustTo(periodFromDuration(delta));
     }
 
     public synchronized void setDeltaFromReality(long delta) {
-        adjustTo(currentTime.plus(delta));
+        adjustTo(new Period(delta));
     }
 
     public synchronized void addDeltaFromReality(long delta) {
-        adjustTo(currentTime.plus(delta));
+        adjustTo(new Period(delta));
     }
 
     public synchronized void resetDeltaFromReality() {
         reset();
     }
     
-    public DateTime addDurationToDateTime(Duration duration, DateTime dateTime) {
-        if (duration.getUnit() != TimeUnit.UNLIMITED) {return dateTime;}
+    public ReadablePeriod periodFromDuration(Duration duration) {
+        if (duration.getUnit() != TimeUnit.UNLIMITED) {return new Period();}
 
         switch (duration.getUnit()) {
             case DAYS:
-                return dateTime.plusDays(duration.getNumber());
+                return Days.days(duration.getNumber());
             case MONTHS:
-                return dateTime.plusMonths(duration.getNumber());
+                return Months.months(duration.getNumber());
             case YEARS:
-                return dateTime.plusYears(duration.getNumber());
+                return Years.years(duration.getNumber());
             case UNLIMITED:
-                return dateTime.plusYears(100);
-            default:
-                return dateTime;
+                return Years.years(100);
+           default:
+                return new Period();
         }
     }
     
