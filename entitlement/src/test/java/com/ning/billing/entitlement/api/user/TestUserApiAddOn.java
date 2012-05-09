@@ -21,6 +21,8 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.testng.Assert;
@@ -42,6 +44,7 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -153,9 +156,9 @@ public class TestUserApiAddOn extends TestApiBase {
 
 
     @Test(enabled=true, groups={"slow"})
-    public void testChangeBPWithAddonNonIncluded() {
+    public void testChangeBPWithAddonIncluded() {
 
-        log.info("Starting testChangeBPWithAddonNonIncluded");
+        log.info("Starting testChangeBPWithAddonIncluded");
 
         try {
 
@@ -193,6 +196,15 @@ public class TestUserApiAddOn extends TestApiBase {
             BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
             String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
+            List<SubscriptionStatusDryRun> aoStatus = entitlementApi.getDryRunChangePlanStatus(baseSubscription.getId(), newBaseProduct, now);
+            assertEquals(aoStatus.size(), 1);
+            assertEquals(aoStatus.get(0).getId(), aoSubscription.getId());
+            assertEquals(aoStatus.get(0).getProductName(), aoProduct);
+            assertEquals(aoStatus.get(0).getBillingPeriod(), aoTerm);            
+            assertEquals(aoStatus.get(0).getPhaseType(), aoSubscription.getCurrentPhase().getPhaseType());                        
+            assertEquals(aoStatus.get(0).getPriceList(), aoSubscription.getCurrentPriceList().getName());
+            assertEquals(aoStatus.get(0).getReason(), DryRunChangeReason.AO_INCLUDED_IN_NEW_PLAN);            
+            
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
@@ -250,8 +262,16 @@ public class TestUserApiAddOn extends TestApiBase {
             BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
             String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
+            List<SubscriptionStatusDryRun> aoStatus = entitlementApi.getDryRunChangePlanStatus(baseSubscription.getId(), newBaseProduct, now);
+            assertEquals(aoStatus.size(), 1);
+            assertEquals(aoStatus.get(0).getId(), aoSubscription.getId());
+            assertEquals(aoStatus.get(0).getProductName(), aoProduct);
+            assertEquals(aoStatus.get(0).getBillingPeriod(), aoTerm);   
+            assertEquals(aoStatus.get(0).getPhaseType(), aoSubscription.getCurrentPhase().getPhaseType());                                    
+            assertEquals(aoStatus.get(0).getPriceList(), aoSubscription.getCurrentPriceList().getName());
+            assertEquals(aoStatus.get(0).getReason(), DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN);            
+            
             baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, context);
-
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());

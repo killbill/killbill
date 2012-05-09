@@ -46,6 +46,8 @@ public enum ErrorCode {
     /* Change plan */
     ENT_CHANGE_NON_ACTIVE(1021, "Subscription %s is in state %s: Failed to change plan"),
     ENT_CHANGE_FUTURE_CANCELLED(1022, "Subscription %s is future cancelled: Failed to change plan"),
+    ENT_CHANGE_DRY_RUN_NOT_BP(1022, "Change DryRun API is only available for BP"),
+    
     /* Cancellation */
     ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s: Failed to cancel"),
     /* Recreation */
