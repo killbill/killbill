@@ -86,7 +86,8 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
     }
     
     @Test(groups = {"fast"}, enabled=true)
-    public void testcalculateBillingStateForBundle() {
+    public void testcalculateBillingStateForBundle() throws Exception {
+        
        UUID thisBundleId = new UUID(0L,0L);
        UUID thatBundleId = new UUID(0L,1L);
        

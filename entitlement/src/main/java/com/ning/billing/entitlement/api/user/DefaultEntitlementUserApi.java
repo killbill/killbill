@@ -61,19 +61,32 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         this.subscriptionFactory = subscriptionFactory;
     }
 
+    
     @Override
-    public SubscriptionBundle getBundleFromId(UUID id) {
-        return dao.getSubscriptionBundleFromId(id);
+    public SubscriptionBundle getBundleFromId(UUID id) throws EntitlementUserApiException {
+        SubscriptionBundle result = dao.getSubscriptionBundleFromId(id);
+        if (result == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_ID, id.toString());
+        }
+        return result;
     }
 
     @Override
-    public Subscription getSubscriptionFromId(UUID id) {
-        return dao.getSubscriptionFromId(subscriptionFactory, id);
+    public Subscription getSubscriptionFromId(UUID id) throws EntitlementUserApiException {
+        Subscription result = dao.getSubscriptionFromId(subscriptionFactory, id);
+        if (result == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, id);
+        }
+        return result;
     }
 
     @Override
-    public SubscriptionBundle getBundleForKey(String bundleKey) {
-        return dao.getSubscriptionBundleFromKey(bundleKey);
+    public SubscriptionBundle getBundleForKey(String bundleKey) throws EntitlementUserApiException {
+        SubscriptionBundle result =  dao.getSubscriptionBundleFromKey(bundleKey);
+        if (result == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_KEY, bundleKey);
+        }
+        return result;
     }
 
     @Override
@@ -92,8 +105,12 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public Subscription getBaseSubscription(UUID bundleId) {
-        return dao.getBaseSubscription(subscriptionFactory, bundleId);
+    public Subscription getBaseSubscription(UUID bundleId) throws EntitlementUserApiException {
+        Subscription result =  dao.getBaseSubscription(subscriptionFactory, bundleId);
+        if (result == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
+        }
+        return result;
     }
     
 

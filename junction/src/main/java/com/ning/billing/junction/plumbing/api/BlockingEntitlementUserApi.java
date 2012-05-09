@@ -50,27 +50,17 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
 
     public SubscriptionBundle getBundleFromId(UUID id) throws EntitlementUserApiException {
         SubscriptionBundle bundle = entitlementUserApi.getBundleFromId(id);
-        if(bundle == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_ID, id);
-        }
         return new BlockingSubscriptionBundle(bundle, blockingApi);
     }
 
     public Subscription getSubscriptionFromId(UUID id) throws EntitlementUserApiException {
         Subscription subscription = entitlementUserApi.getSubscriptionFromId(id);
-        if(subscription == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, id);
-        }
         return new BlockingSubscription(subscription, blockingApi, checker);
     }
 
     
     public SubscriptionBundle getBundleForKey(String bundleKey) throws EntitlementUserApiException {
         SubscriptionBundle bundle = entitlementUserApi.getBundleForKey(bundleKey);
-        if(bundle == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_KEY, bundleKey);
-        }
-
         return new BlockingSubscriptionBundle(bundle, blockingApi);
     }
 
@@ -101,7 +91,7 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
         return result;
     }
 
-    public Subscription getBaseSubscription(UUID bundleId) {
+    public Subscription getBaseSubscription(UUID bundleId) throws EntitlementUserApiException {
         return new BlockingSubscription(entitlementUserApi.getBaseSubscription(bundleId), blockingApi, checker);
     }
 

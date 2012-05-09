@@ -92,7 +92,6 @@ public class SubscriptionResource implements BaseJaxrsResource {
         try {
             UUID uuid = UUID.fromString(subscriptionId);
             Subscription subscription = entitlementApi.getSubscriptionFromId(uuid);
-
             SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription);
             return Response.status(Status.OK).entity(json).build();
         } catch (EntitlementUserApiException e) {
@@ -101,7 +100,6 @@ public class SubscriptionResource implements BaseJaxrsResource {
             } else {
                 throw e;
             }
-
         }
     }
   
@@ -185,14 +183,13 @@ public class SubscriptionResource implements BaseJaxrsResource {
                     return operationResponse;
                 }
                 try {
-                return getSubscription(subscriptionId);
+                    return getSubscription(subscriptionId);
                 } catch (EntitlementUserApiException e) {
                     if (e.getCode() == ErrorCode.ENT_GET_INVALID_BUNDLE_ID.getCode()) {
                         return Response.status(Status.NO_CONTENT).build();
                     } else {
                         return Response.status(Status.INTERNAL_SERVER_ERROR).build();
                     }
-
                 }
             }
         };
@@ -333,13 +330,10 @@ public class SubscriptionResource implements BaseJaxrsResource {
                 return callback.doResponseOk(operationValue);
             } catch (EntitlementUserApiException e) {
                 log.info(String.format("Failed to complete operation"), e);
-                //throw new WebApplicationException(Response.Status.BAD_REQUEST);
                 return Response.status(Status.BAD_REQUEST).build();
             } catch (InterruptedException e) {
-                //throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);                
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             } catch (TimeoutException e) {
-                //throw new WebApplicationException(Response.Status.fromStatusCode(408));                
                 return Response.status(Status.fromStatusCode(408)).build();   
             } finally {
                 if (waiter != null) {

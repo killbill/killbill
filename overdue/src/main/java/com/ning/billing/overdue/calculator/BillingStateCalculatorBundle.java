@@ -29,6 +29,7 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
@@ -50,7 +51,7 @@ public class BillingStateCalculatorBundle  extends BillingStateCalculator<Subscr
     }
     
     @Override
-    public BillingStateBundle calculateBillingState(SubscriptionBundle bundle) {
+    public BillingStateBundle calculateBillingState(SubscriptionBundle bundle) throws EntitlementUserApiException {
         
         SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId());
  
