@@ -382,7 +382,7 @@ public abstract class TestApiBase implements TestListenerStatus {
 
             @Override
             public DateTime addToDateTime(DateTime dateTime) {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
+                return dateTime.plusYears(years);  
             }
             @Override
             public Period toJodaPeriod() {
