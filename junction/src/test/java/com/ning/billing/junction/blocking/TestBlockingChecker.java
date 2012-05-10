@@ -96,18 +96,19 @@ public class TestBlockingChecker {
     
     @BeforeClass(groups={"fast"})
     public void setup() {
-        subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
-        
-        bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl) bundle).addResult("getAccountId", new UUID(0L,0L));
-        ((ZombieControl) bundle).addResult("getId", UUID.randomUUID());
-        ((ZombieControl) bundle).addResult("getKey", "key");
-        ((ZombieControl) subscription).addResult("getBundleId", new UUID(0L,0L));
-
         account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
         ((ZombieControl) account).addResult("getId", UUID.randomUUID());
-       
+        
+        bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
+        ((ZombieControl) bundle).addResult("getAccountId", account.getId());
+        ((ZombieControl) bundle).addResult("getId", UUID.randomUUID());
+        ((ZombieControl) bundle).addResult("getKey", "key");
+
+        subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        ((ZombieControl) subscription).addResult("getBundleId", bundle.getId());
+
+        
         Injector i = Guice.createInjector(new AbstractModule() {
 
             @Override

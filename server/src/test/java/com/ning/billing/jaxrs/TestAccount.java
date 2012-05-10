@@ -113,8 +113,7 @@ public class TestAccount extends TestJaxrsBase {
 	@Test(groups="slow", enabled=true)
 	public void testAccountTimeline() throws Exception {
 	    
-	    DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
         
         
 	    AccountJson accountJson = createAccount("poney", "shdddqgfhwe", "poney@yahoo.com");
@@ -127,8 +126,7 @@ public class TestAccount extends TestJaxrsBase {
         assertNotNull(subscriptionJson);
         
         // MOVE AFTER TRIAL
-        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(3).plusDays(1));
-        clock.addDeltaFromReality(it.toDurationMillis());
+        clock.addMonths(3);
 
         crappyWaitForLackOfProperSynchonization();
         
@@ -142,7 +140,7 @@ public class TestAccount extends TestJaxrsBase {
         assertNotNull(objFromJson);
         log.info(baseJson);
         
-        Assert.assertEquals(objFromJson.getPayments().size(), 3);
+            Assert.assertEquals(objFromJson.getPayments().size(), 3);
         Assert.assertEquals(objFromJson.getInvoices().size(), 4);   
         Assert.assertEquals(objFromJson.getBundles().size(), 1); 
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().size(), 1);
