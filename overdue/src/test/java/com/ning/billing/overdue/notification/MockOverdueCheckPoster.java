@@ -17,7 +17,6 @@
 package com.ning.billing.overdue.notification;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
@@ -25,8 +24,14 @@ import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 public class MockOverdueCheckPoster implements OverdueCheckPoster {
     
     @Override
-    public void insertOverdueCheckNotification(Transmogrifier transactionalDao, Blockable overdueable,
+    public void insertOverdueCheckNotification(Blockable overdueable,
             DateTime futureNotificationTime) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void clearNotificationsFor(Blockable blockable) {
         // TODO Auto-generated method stub
         
     }

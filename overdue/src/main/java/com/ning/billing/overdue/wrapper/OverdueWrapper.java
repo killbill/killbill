@@ -16,9 +16,11 @@
 
 package com.ning.billing.overdue.wrapper;
 
-import com.ning.billing.catalog.api.CatalogApiException;
+import org.joda.time.Period;
+
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculator;
@@ -48,13 +50,14 @@ public class OverdueWrapper<T extends Blockable> {
         this.overdueStateApplicator = overdueStateApplicator;
     }
 
-    public OverdueState<T> refresh() throws OverdueError, CatalogApiException {
+    public OverdueState<T> refresh() throws OverdueError, OverdueApiException {
         OverdueState<T> nextOverdueState;
-        BillingState<T> billingState = billingStateCalcuator.calculateBillingState(overdueable);
+        BillingState<T> billingState    = billingStateCalcuator.calculateBillingState(overdueable);
         String previousOverdueStateName = api.getBlockingStateFor(overdueable).getStateName();
-        nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
+        nextOverdueState                = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
+
         if(!previousOverdueStateName.equals(nextOverdueState.getName())) {
-            overdueStateApplicator.apply(overdueable, nextOverdueState, nextOverdueState, overdueStateSet.dateOfNextCheck(billingState, clock.getUTCNow())); 
+            overdueStateApplicator.apply(overdueable, nextOverdueState, nextOverdueState); 
         }
 
         return nextOverdueState;

@@ -22,7 +22,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlID;
 
+import org.joda.time.DateTime;
+import org.joda.time.Period;
+
+import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.TimeUnit;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
@@ -54,6 +61,11 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     
     @XmlElement(required=false, name="isClearState")
     private Boolean isClearState = false;
+    
+    @XmlElement(required=false, name="autoReevaluationInterval")
+    private DefaultDuration autoReevaluationInterval;
+
+
     
 	//Other actions could include
 	// - send email
@@ -91,7 +103,14 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     public boolean disableEntitlementAndChangesBlocked() {
 		return disableEntitlement;
 	}
-	
+
+    @Override
+    public Period getReevaluationInterval() throws OverdueApiException {
+        if(autoReevaluationInterval == null || autoReevaluationInterval.getUnit() == TimeUnit.UNLIMITED || autoReevaluationInterval.getNumber() == 0) {
+            throw new OverdueApiException(ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL, name);
+        }
+        return autoReevaluationInterval.toJodaPeriod();       
+    }
 	
     protected DefaultCondition<T> getCondition() {
 		return condition;

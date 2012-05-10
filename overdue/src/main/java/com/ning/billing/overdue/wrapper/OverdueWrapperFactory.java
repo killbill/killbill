@@ -16,11 +16,19 @@
 
 package com.ning.billing.overdue.wrapper;
 
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -29,8 +37,10 @@ import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.util.clock.Clock;
 
 public class OverdueWrapperFactory {
+    private static final Logger log =  LoggerFactory.getLogger(OverdueWrapperFactory.class);
 
     private final OverdueConfig overdueConfig;
+    private final EntitlementUserApi entitlementApi;
     private final BillingStateCalculatorBundle billingStateCalcuatorBundle;
     private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
     private final BlockingApi api;
@@ -38,9 +48,12 @@ public class OverdueWrapperFactory {
 
     @Inject
     public OverdueWrapperFactory(BlockingApi api, ExtendedOverdueService service, Clock clock, 
-            BillingStateCalculatorBundle billingStateCalcuatorBundle, OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle) {
+            BillingStateCalculatorBundle billingStateCalcuatorBundle, 
+            OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle,
+            EntitlementUserApi entitlementApi) {
         this.billingStateCalcuatorBundle = billingStateCalcuatorBundle;
         this.overdueStateApplicatorBundle = overdueStateApplicatorBundle;
+        this.entitlementApi = entitlementApi;
         this.overdueConfig = service.getOverdueConfig();
         this.api = api;
         this.clock = clock;
@@ -53,6 +66,27 @@ public class OverdueWrapperFactory {
                     clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle );
         } else {
             throw new OverdueError(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, bloackable.getId(), bloackable.getClass());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(UUID id) throws OverdueError {
+        BlockingState state = api.getBlockingStateFor(id);
+
+        try {
+            switch (state.getType()) {
+            case SUBSCRIPTION_BUNDLE : {
+                SubscriptionBundle bundle = entitlementApi.getBundleFromId(id);
+                return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>(bundle, api, overdueConfig.getBundleStateSet(), 
+                        clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle );
+            }
+            default : {
+                throw new OverdueError(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, id, state.getType());
+            }
+                
+            }  
+        } catch (EntitlementUserApiException e) {
+            throw new OverdueError(e);
         }
     }
 

@@ -29,11 +29,11 @@ public interface BlockingStateDao {
     //Read
     public BlockingState getBlockingStateFor(Blockable blockable);
 
-    public BlockingState getBlockingStateFor(UUID blockableId, Type type);
+    public BlockingState getBlockingStateFor(UUID blockableId);
 
     public SortedSet<BlockingState> getBlockingHistoryFor(Blockable blockable);
 
-    public SortedSet<BlockingState> getBlockingHistoryForIdAndType(UUID blockableId, Type type);
+    public SortedSet<BlockingState> getBlockingHistoryFor(UUID blockableId);
 
     //Write
     <T extends Blockable> void  setBlockingState(BlockingState state, Clock clock);

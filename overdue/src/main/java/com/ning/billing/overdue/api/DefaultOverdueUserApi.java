@@ -20,11 +20,11 @@ import org.apache.commons.lang.NotImplementedException;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -56,13 +56,13 @@ public class DefaultOverdueUserApi implements OverdueUserApi{
             String stateName = accessApi.getBlockingStateFor(overdueable).getStateName();
             OverdueStateSet<SubscriptionBundle> states = overdueConfig.getBundleStateSet();
             return (OverdueState<T>) states.findState(stateName);
-        } catch (CatalogApiException e) {
+        } catch (OverdueApiException e) {
             throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED,overdueable.getId(), overdueable.getClass().getSimpleName());
         }
     }
     
     @Override
-    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError, CatalogApiException {
+    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError, OverdueApiException {
         OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(overdueable);
         return wrapper.refresh();
     } 

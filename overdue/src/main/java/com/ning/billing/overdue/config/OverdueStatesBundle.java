@@ -18,7 +18,14 @@ package com.ning.billing.overdue.config;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import org.joda.time.DateTime;
+
+import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.overdue.OverdueApiException;
+import com.ning.billing.overdue.OverdueState;
 
 public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBundle>{
 

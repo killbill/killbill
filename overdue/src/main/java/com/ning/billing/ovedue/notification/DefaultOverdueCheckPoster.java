@@ -42,14 +42,14 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
 	}
 
 	@Override
-	public void insertOverdueCheckNotification(final Transmogrifier transactionalDao, final Blockable overdueable, final DateTime futureNotificationTime) {
+	public void insertOverdueCheckNotification(final Blockable overdueable, final DateTime futureNotificationTime) {
     	NotificationQueue checkOverdueQueue;
 		try {
 			checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
 					DefaultOverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE);
 			 log.info("Queuing overdue check notification. id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
 
-	            checkOverdueQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
+	            checkOverdueQueue.recordFutureNotification(futureNotificationTime, new NotificationKey(){
 	                @Override
 	                public String toString() {
 	                    return overdueable.getId().toString();
@@ -58,9 +58,12 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
 		} catch (NoSuchNotificationQueue e) {
 			log.error("Attempting to put items on a non-existent queue (DefaultOverdueCheck).", e);
 		}
+		
     }
 	
-	public void clearNotificationEventsFor(final Blockable overdueable) {
+	
+	@Override
+	public void clearNotificationsFor(final Blockable overdueable) {
 	    NotificationQueue checkOverdueQueue;
         try {
             checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
@@ -70,4 +73,5 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
             log.error("Attempting to clear items from a non-existent queue (DefaultOverdueCheck).", e);
         }
 	}
+
 }
