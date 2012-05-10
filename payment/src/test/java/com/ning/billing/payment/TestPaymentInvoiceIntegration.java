@@ -149,7 +149,7 @@ public class TestPaymentInvoiceIntegration {
         PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(payments.get(0).getPaymentId());
         Assert.assertNotNull(paymentAttempt);
 
-        Invoice invoiceForPayment = invoicePaymentApi.getInvoiceForPaymentAttemptId(paymentAttempt.getPaymentAttemptId());
+        Invoice invoiceForPayment = invoicePaymentApi.getInvoiceForPaymentAttemptId(paymentAttempt.getId());
 
         Assert.assertNotNull(invoiceForPayment);
         Assert.assertEquals(invoiceForPayment.getId(), invoice.getId());

@@ -357,7 +357,7 @@ public class TestAnalyticsDao
         Assert.assertEquals("PayPal", account.getPaymentMethod());
         Assert.assertTrue(account.getUpdatedDt().compareTo(previousUpdatedDt) > 0);
 
-        // Account not found
+        // ACCOUNT not found
         Assert.assertNull(businessAccountDao.getAccount("Doesn't exist"));
     }
 }

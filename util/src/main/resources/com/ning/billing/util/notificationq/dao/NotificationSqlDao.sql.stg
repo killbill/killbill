@@ -1,98 +1,98 @@
 group NotificationSqlDao;
 
-getReadyNotifications(now, max) ::= <<
+getReadyNotifications() ::= <<
     select
-      id
-      ,  notification_id
+      record_id
+      , id
       , notification_key
-      , created_dt
-      , effective_dt
+      , created_date
+      , effective_date
       , queue_name
       , processing_owner
-      , processing_available_dt
+      , processing_available_date
       , processing_state
     from notifications
     where
-      effective_dt \<= :now
-      and queue_name = :queue_name
+      effective_date \<= :now
+      and queue_name = :queueName
       and processing_state != 'PROCESSED'
       and processing_state != 'REMOVED'
-      and (processing_owner IS NULL OR processing_available_dt \<= :now)
+      and (processing_owner IS NULL OR processing_available_date \<= :now)
     order by
-      effective_dt asc
-      , created_dt asc
-      , id
+      effective_date asc
+      , created_date asc
+      , record_id
     limit :max
     ;
 >>
 
 
-claimNotification(owner, next_available, id, now) ::= <<
+claimNotification() ::= <<
     update notifications
     set
       processing_owner = :owner
-      , processing_available_dt = :next_available
+      , processing_available_date = :nextAvailable
       , processing_state = 'IN_PROCESSING'
     where
-      id = :id
+      record_id = :recordId
       and processing_state != 'PROCESSED'
       and processing_state != 'REMOVED'
-      and (processing_owner IS NULL OR processing_available_dt \<= :now)
+      and (processing_owner IS NULL OR processing_available_date \<= :now)
     ;
 >>
 
-clearNotification(id, owner) ::= <<
+clearNotification() ::= <<
     update notifications
     set
       processing_state = 'PROCESSED'
     where
-      id = :id
+      record_id = :recordId
     ;
 >>
 
-removeNotificationsByKey(notification_key) ::= <<
+removeNotificationsByKey() ::= <<
     update notifications
     set
       processing_state = 'REMOVED'
     where
-      notification_key = :notification_key
+      notification_key = :notificationKey
     ;
 >>
 
 
 insertNotification() ::= <<
     insert into notifications (
-      notification_id
-    , notification_key
-      , created_dt
-      , effective_dt
+      id
+      , notification_key
+      , created_date
+      , effective_date
       , queue_name
       , processing_owner
-      , processing_available_dt
+      , processing_available_date
       , processing_state
     ) values (
-      :notification_id
-      , :notification_key
-      , :created_dt
-      , :effective_dt
-      , :queue_name
-      , :processing_owner
-      , :processing_available_dt
-      , :processing_state
+      :id
+      , :notificationKey
+      , :createdDate
+      , :effectiveDate
+      , :queueName
+      , :processingOwner
+      , :processingAvailableDate
+      , :processingState
     );   
 >>
 
 
-insertClaimedHistory(sequence_id, owner, hostname, claimed_dt, notification_id) ::= <<
+insertClaimedHistory() ::= <<
     insert into claimed_notifications (
         sequence_id
         , owner_id
-        , claimed_dt
+        , claimed_date
         , notification_id
       ) values (
-        :sequence_id
+        :sequenceId
         , :owner
-        , :claimed_dt
-        , :notification_id
+        , :claimedDate
+        , :notificationId
       );
 >>

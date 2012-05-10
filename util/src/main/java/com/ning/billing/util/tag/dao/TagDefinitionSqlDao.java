@@ -27,10 +27,9 @@ import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.EntityDao;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -45,7 +44,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
-public interface TagDefinitionSqlDao extends EntityDao<TagDefinition> {
+public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition> {
     @Override
     @SqlUpdate
     public void create(@TagDefinitionBinder final TagDefinition entity, @CallContextBinder final CallContext context);
@@ -68,9 +67,7 @@ public interface TagDefinitionSqlDao extends EntityDao<TagDefinition> {
             UUID id = UUID.fromString(result.getString("id"));
             String name = result.getString("name");
             String description = result.getString("description");
-            String createdBy = result.getString("created_by");
-            DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
-            return new DefaultTagDefinition(id, createdBy, createdDate, name, description);
+            return new DefaultTagDefinition(id, name, description);
         }
     }
 

@@ -240,7 +240,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
 	}
 
 
-	// Account balance should reflect total of migration and non-migration invoices
+	// ACCOUNT balance should reflect total of migration and non-migration invoices
 	@Test(groups={"slow"},enabled=true)
 	public void testBalance(){
 		Invoice migrationInvoice = invoiceDao.getById(migrationInvoiceId);
@@ -248,7 +248,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
 		BigDecimal balanceOfAllInvoices = migrationInvoice.getBalance().add(regularInvoice.getBalance());
 
 		BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId);
-		System.out.println("Account balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);
+		System.out.println("ACCOUNT balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);
 		Assert.assertEquals(accountBalance.compareTo(balanceOfAllInvoices), 0);
 
 

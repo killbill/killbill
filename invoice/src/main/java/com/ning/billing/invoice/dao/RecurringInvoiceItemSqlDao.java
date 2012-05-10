@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.dao.EntityDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -46,7 +47,6 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(RecurringInvoiceItemSqlDao.RecurringInvoiceItemMapper.class)
@@ -113,11 +113,9 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
             Currency currency = Currency.valueOf(result.getString("currency"));
             String reversedItemString = result.getString("reversed_item_id");
             UUID reversedItemId = (reversedItemString == null) ? null : UUID.fromString(reversedItemString);
-            String createdBy = result.getString("created_by");
-            DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
             return new RecurringInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
-                    amount, rate, currency, reversedItemId, createdBy, createdDate);
+                    amount, rate, currency, reversedItemId);
 
         }
     }

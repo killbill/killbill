@@ -52,7 +52,8 @@ public interface PaymentApi {
 
     PaymentAttempt getPaymentAttemptForPaymentId(String id);
 
-    List<PaymentInfoEvent> getPaymentInfo(List<String> invoiceIds);
+    List<PaymentInfoEvent> getPaymentInfoList(List<String> invoiceIds);
+    PaymentInfoEvent getLastPaymentInfo(List<String> invoiceIds);
 
     List<PaymentAttempt> getPaymentAttemptsForInvoiceId(String invoiceId);
 

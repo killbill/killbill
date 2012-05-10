@@ -34,11 +34,6 @@ public class AccountEmailMapper extends MapperBase implements ResultSetMapper<Ac
         UUID accountId = UUID.fromString(result.getString("account_id"));
         String email = result.getString("email");
 
-        String createdBy = result.getString("created_by");
-        DateTime createdDate = getDate(result, "created_date");
-        String updatedBy = result.getString("updated_by");
-        DateTime updatedDate = getDate(result, "updated_date");
-
-        return new DefaultAccountEmail(id, accountId, email, createdBy, createdDate, updatedBy, updatedDate);
+        return new DefaultAccountEmail(id, accountId, email);
     }
 }

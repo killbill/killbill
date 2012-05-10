@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
@@ -147,7 +148,7 @@ public class TestRetryService {
         List<PaymentAttempt> paymentAttempts = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId().toString());
 
         assertNotNull(paymentAttempts);
-        assertEquals(notification.getNotificationKey(), paymentAttempts.get(0).getPaymentAttemptId().toString());
+        assertEquals(notification.getNotificationKey(), paymentAttempts.get(0).getId().toString());
 
         DateTime expectedRetryDate = paymentAttempts.get(0).getPaymentAttemptDate().plusDays(paymentConfig.getPaymentRetryDays().get(0));
 
@@ -177,7 +178,7 @@ public class TestRetryService {
 
         int numberOfDays = paymentConfig.getPaymentRetryDays().get(0);
         DateTime nextRetryDate = now.plusDays(numberOfDays);
-        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice).cloner()
+        PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice).cloner()
                                                                                       .setRetryCount(1)
                                                                                       .setPaymentAttemptDate(now)
                                                                                       .build();
@@ -190,7 +191,7 @@ public class TestRetryService {
         List<Notification> pendingNotifications = mockNotificationQueue.getPendingEvents();
         assertEquals(pendingNotifications.size(), 0);
 
-        List<PaymentInfoEvent> paymentInfoList = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        List<PaymentInfoEvent> paymentInfoList = paymentApi.getPaymentInfoList(Arrays.asList(invoice.getId().toString()));
         assertEquals(paymentInfoList.size(), 1);
 
         PaymentInfoEvent paymentInfo = paymentInfoList.get(0);

@@ -21,6 +21,7 @@ import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.Customizable;
 import com.ning.billing.util.customfield.DefaultFieldStore;
 import com.ning.billing.util.customfield.FieldStore;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DefaultTagStore;
@@ -29,9 +30,7 @@ import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.TagStore;
 import com.ning.billing.util.tag.Taggable;
-import org.joda.time.DateTime;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -42,14 +41,14 @@ public abstract class ExtendedEntityBase extends EntityBase implements Customiza
 
     public ExtendedEntityBase() {
         super();
-        this.fields = DefaultFieldStore.create(getId(), getObjectName());
-        this.tagStore = new DefaultTagStore(id, getObjectName());
+        this.fields = DefaultFieldStore.create(getId(), getObjectType());
+        this.tagStore = new DefaultTagStore(id, getObjectType());
     }
 
-    public ExtendedEntityBase(final UUID id, @Nullable final String createdBy, @Nullable final DateTime createdDate) {
-        super(id, createdBy, createdDate);
-        this.fields = DefaultFieldStore.create(getId(), getObjectName());
-        this.tagStore = new DefaultTagStore(id, getObjectName());
+    public ExtendedEntityBase(final UUID id) {
+        super(id);
+        this.fields = DefaultFieldStore.create(getId(), getObjectType());
+        this.tagStore = new DefaultTagStore(id, getObjectType());
     }
 
     @Override
@@ -145,7 +144,7 @@ public abstract class ExtendedEntityBase extends EntityBase implements Customiza
 	}
 
     @Override
-    public abstract String getObjectName();
+    public abstract ObjectType getObjectType();
 
     @Override
     public abstract void saveFieldValue(String fieldName, String fieldValue, CallContext context);

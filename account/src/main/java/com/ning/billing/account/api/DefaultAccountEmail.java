@@ -17,7 +17,6 @@
 package com.ning.billing.account.api;
 
 import com.ning.billing.util.entity.UpdatableEntityBase;
-import org.joda.time.DateTime;
 
 import java.util.UUID;
 
@@ -32,12 +31,11 @@ public class DefaultAccountEmail extends UpdatableEntityBase implements AccountE
     }
 
     public DefaultAccountEmail(AccountEmail source, String newEmail) {
-        this(source.getId(), source.getAccountId(), newEmail,
-             source.getCreatedBy(), source.getCreatedDate(), source.getUpdatedBy(), source.getUpdatedDate());
+        this(source.getId(), source.getAccountId(), newEmail);
     }
 
-    public DefaultAccountEmail(UUID id, UUID accountId, String email, String createdBy, DateTime createdDate, String updatedBy, DateTime updatedDate) {
-        super(id, createdBy, createdDate, updatedBy, updatedDate);
+    public DefaultAccountEmail(UUID id, UUID accountId, String email) {
+        super(id);
         this.accountId = accountId;
         this.email = email;
     }
@@ -50,5 +48,22 @@ public class DefaultAccountEmail extends UpdatableEntityBase implements AccountE
     @Override
     public String getEmail() {
         return email;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DefaultAccountEmail that = (DefaultAccountEmail) o;
+
+        if (!id.equals(that.id)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
     }
 }

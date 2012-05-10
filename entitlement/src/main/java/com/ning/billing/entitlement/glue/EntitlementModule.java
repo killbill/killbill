@@ -42,7 +42,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
+import com.ning.billing.entitlement.engine.dao.AuditedEntitlementDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.util.glue.RealImplementation;
 
@@ -56,7 +56,7 @@ public class EntitlementModule extends AbstractModule {
     }
 
     protected void installEntitlementDao() {
-        bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
+        bind(EntitlementDao.class).to(AuditedEntitlementDao.class).asEagerSingleton();
         bind(EntitlementDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
         bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
         bind(RepairEntitlementDao.class).asEagerSingleton();

@@ -202,8 +202,13 @@ public abstract class TestApiBase {
 
     @AfterMethod(alwaysRun = true)
     public void cleanupTest() throws Exception {
-        busService.getBus().unregister(testListener);
-        ((Engine)entitlementService).stop();
+        if (busService != null) {
+            busService.getBus().unregister(testListener);
+        }
+
+        if (entitlementService != null) {
+            ((Engine)entitlementService).stop();
+        }
         log.warn("DONE WITH TEST\n");
     }
 

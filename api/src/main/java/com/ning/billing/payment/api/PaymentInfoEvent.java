@@ -16,19 +16,19 @@
 package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
+
+import com.ning.billing.util.entity.Entity;
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.bus.BusEvent;
 
-public interface PaymentInfoEvent extends BusEvent {
+public interface PaymentInfoEvent extends Entity, BusEvent {
 
     public String getPaymentId();
 
     public BigDecimal getAmount();
 
     public String getBankIdentificationNumber();
-
-    public DateTime getCreatedDate();
 
     public DateTime getEffectiveDate();
 
@@ -50,5 +50,4 @@ public interface PaymentInfoEvent extends BusEvent {
 
     public String getType();
 
-    public DateTime getUpdatedDate();
 }

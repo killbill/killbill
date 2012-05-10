@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import com.ning.billing.util.tag.TagDefinition;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -79,7 +80,6 @@ import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentAttempt;
@@ -107,8 +107,8 @@ public class TestAnalyticsService {
     private static final String KEY = "12345";
     private static final String ACCOUNT_KEY = "pierre-12345";
     private static final Currency ACCOUNT_CURRENCY = Currency.EUR;
-    private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something");
-    private static final DefaultTagDefinition TAG_TWO = new DefaultTagDefinition("awesome", "something");
+    private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something", false);
+    private static final DefaultTagDefinition TAG_TWO = new DefaultTagDefinition("awesome", "something", false);
     private static final BigDecimal INVOICE_AMOUNT = BigDecimal.valueOf(1243.11);
     private static final String PAYMENT_METHOD = "Paypal";
     private static final String CARD_COUNTRY = "France";
@@ -271,7 +271,7 @@ public class TestAnalyticsService {
         final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCNow(), clock.getUTCNow(), ACCOUNT_CURRENCY);
         final FixedPriceInvoiceItem invoiceItem = new FixedPriceInvoiceItem(
                 UUID.randomUUID(), invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCNow(), clock.getUTCNow().plusDays(1),
-                INVOICE_AMOUNT, ACCOUNT_CURRENCY, context.getUserName(), clock.getUTCNow());
+                INVOICE_AMOUNT, ACCOUNT_CURRENCY);
         invoice.addInvoiceItem(invoiceItem);
 
         invoiceDao.create(invoice, context);
@@ -284,11 +284,11 @@ public class TestAnalyticsService {
                 INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow(), null);
 
         paymentInfoNotification = new DefaultPaymentInfoEvent.Builder().setPaymentId(UUID.randomUUID().toString()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
-        final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
+        final PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
                 ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getPaymentId(), 1);
         paymentDao.createPaymentAttempt(paymentAttempt, context);
         paymentDao.savePaymentInfo(paymentInfoNotification, context);
-        Assert.assertEquals(paymentDao.getPaymentInfo(Arrays.asList(invoice.getId().toString())).size(), 1);
+        Assert.assertEquals(paymentDao.getPaymentInfoList(Arrays.asList(invoice.getId().toString())).size(), 1);
     }
 
     @AfterClass(groups = "slow")

@@ -1,55 +1,55 @@
 group PersistentBusSqlDao;
           
-getNextBusEventEntry(max, now) ::= <<
+getNextBusEventEntry() ::= <<
     select
-      id
+      record_id
       , class_name
       , event_json
-      , created_dt
+      , created_date
       , processing_owner
-      , processing_available_dt
+      , processing_available_date
       , processing_state
     from bus_events
     where
       processing_state != 'PROCESSED'
       and processing_state != 'REMOVED'
-      and (processing_owner IS NULL OR processing_available_dt \<= :now)
+      and (processing_owner IS NULL OR processing_available_date \<= :now)
     order by
-      id asc
+      record_id asc
     limit :max
     ;
 >>
 
 
-claimBusEvent(owner, next_available, id, now) ::= <<
+claimBusEvent() ::= <<
     update bus_events
     set
       processing_owner = :owner
-      , processing_available_dt = :next_available
+      , processing_available_date = :nextAvailable
       , processing_state = 'IN_PROCESSING'
     where
-      id = :id
+      record_id = :recordId
       and processing_state != 'PROCESSED'
       and processing_state != 'REMOVED'
-      and (processing_owner IS NULL OR processing_available_dt \<= :now)
+      and (processing_owner IS NULL OR processing_available_date \<= :now)
     ;
 >>
 
-clearBusEvent(id, owner) ::= <<
+clearBusEvent() ::= <<
     update bus_events
     set
       processing_state = 'PROCESSED'
     where
-      id = :id
+      record_id = :recordId
     ;
 >>
 
-removeBusEventsById(id) ::= <<
+removeBusEventsById() ::= <<
     update bus_events
     set
       processing_state = 'REMOVED'
     where
-      id = :id
+      record_id = :recordId
     ;
 >>
 
@@ -58,29 +58,28 @@ insertBusEvent() ::= <<
     insert into bus_events (
       class_name
     , event_json
-    , created_dt
+    , created_date
     , processing_owner
-    , processing_available_dt
+    , processing_available_date
     , processing_state
     ) values (
-      :class_name
-    , :event_json
-    , :created_dt
-    , :processing_owner
-    , :processing_available_dt
-    , :processing_state
+      :className
+    , :eventJson
+    , :createdDate
+    , :processingOwner
+    , :processingAvailableDate
+    , :processingState
     );   
 >>
 
-
-insertClaimedHistory(owner_id, claimed_dt, bus_event_id) ::= <<
+insertClaimedHistory() ::= <<
     insert into claimed_bus_events (
           owner_id
-        , claimed_dt
+        , claimed_date
         , bus_event_id
       ) values (
-          :owner_id
-        , :claimed_dt
-        , :bus_event_id
+          :ownerId
+        , :claimedDate
+        , :busEventId
       );
 >>

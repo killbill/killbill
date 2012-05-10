@@ -58,7 +58,7 @@ import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
+import com.ning.billing.entitlement.engine.dao.AuditedEntitlementDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.entitlement.glue.EntitlementModule;
 import com.ning.billing.invoice.InvoiceDispatcher;
@@ -158,7 +158,7 @@ public class TestNextBillingDateNotifier {
                 }
                 
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
-                bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
+                bind(EntitlementDao.class).to(AuditedEntitlementDao.class).asEagerSingleton();
                 bind(EntitlementDao.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);
                 bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(EntitlementModule.REPAIR_NAMED)).to(RepairEntitlementDao.class);
                 bind(RepairEntitlementDao.class).asEagerSingleton();

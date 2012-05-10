@@ -24,6 +24,6 @@ import java.util.UUID;
 
 public class MigrationInvoice extends DefaultInvoice {
     public MigrationInvoice(UUID accountId, DateTime invoiceDate, DateTime targetDate, Currency currency) {
-        super(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, true, null, null);
+        super(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, true);
     }
 }

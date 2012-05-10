@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import com.ning.billing.util.callcontext.CallContext;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -49,24 +50,23 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public PaymentAttempt createPaymentAttempt(Invoice invoice, CallContext context) {
-        PaymentAttempt updatedPaymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice.getId(), invoice.getAccountId(),
+        PaymentAttempt updatedPaymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice.getId(), invoice.getAccountId(),
                 invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(),
-                null, null, null, context.getCreatedDate(), context.getUpdatedDate());
+                null, null, null);
 
-        paymentAttempts.put(updatedPaymentAttempt.getPaymentAttemptId(), updatedPaymentAttempt);
+        paymentAttempts.put(updatedPaymentAttempt.getId(), updatedPaymentAttempt);
         return updatedPaymentAttempt;
     }
 
     @Override
     public PaymentAttempt createPaymentAttempt(PaymentAttempt paymentAttempt, CallContext context) {
-        PaymentAttempt updatedPaymentAttempt = new PaymentAttempt(paymentAttempt.getPaymentAttemptId(),
+        PaymentAttempt updatedPaymentAttempt = new DefaultPaymentAttempt(paymentAttempt.getId(),
                 paymentAttempt.getInvoiceId(),
                 paymentAttempt.getAccountId(), paymentAttempt.getAmount(), paymentAttempt.getCurrency(),
                 paymentAttempt.getInvoiceDate(), paymentAttempt.getPaymentAttemptDate(),
-                paymentAttempt.getPaymentId(), paymentAttempt.getRetryCount(),
-                context.getCreatedDate(), context.getUpdatedDate());
+                paymentAttempt.getPaymentId(), paymentAttempt.getRetryCount());
 
-        paymentAttempts.put(updatedPaymentAttempt.getPaymentAttemptId(), updatedPaymentAttempt);
+        paymentAttempts.put(updatedPaymentAttempt.getId(), updatedPaymentAttempt);
         return updatedPaymentAttempt;
     }
 
@@ -80,8 +80,8 @@ public class MockPaymentDao implements PaymentDao {
         PaymentAttempt existingPaymentAttempt = paymentAttempts.get(paymentAttemptId);
 
         if (existingPaymentAttempt != null) {
-            paymentAttempts.put(existingPaymentAttempt.getPaymentAttemptId(),
-                                existingPaymentAttempt.cloner().setPaymentId(paymentId).build());
+            paymentAttempts.put(existingPaymentAttempt.getId(),
+                                ((DefaultPaymentAttempt) existingPaymentAttempt).cloner().setPaymentId(paymentId).build());
         }
     }
 
@@ -104,14 +104,13 @@ public class MockPaymentDao implements PaymentDao {
                     .setPaymentMethod(paymentMethodType)
                     .setCardType(cardType)
                     .setCardCountry(cardCountry)
-                    .setUpdatedDate(context.getUpdatedDate())
                     .build();
             payments.put(paymentId, payment);
         }
     }
 
     @Override
-    public List<PaymentInfoEvent> getPaymentInfo(List<String> invoiceIds) {
+    public List<PaymentInfoEvent> getPaymentInfoList(List<String> invoiceIds) {
         List<PaymentAttempt> attempts = getPaymentAttemptsForInvoiceIds(invoiceIds);
         List<PaymentInfoEvent> paymentsToReturn = new ArrayList<PaymentInfoEvent>(invoiceIds.size());
 
@@ -124,6 +123,20 @@ public class MockPaymentDao implements PaymentDao {
             }));
         }
         return paymentsToReturn;
+    }
+
+    @Override
+    public PaymentInfoEvent getLastPaymentInfo(List<String> invoiceIds) {
+        List<PaymentInfoEvent> payments = getPaymentInfoList(invoiceIds);
+        PaymentInfoEvent lastPayment = null;
+
+        for (PaymentInfoEvent payment : payments) {
+            if ((lastPayment == null) || (payment.getEffectiveDate().isAfter(lastPayment.getEffectiveDate()))) {
+                lastPayment = payment;
+            }
+        }
+
+        return lastPayment;
     }
 
     @Override

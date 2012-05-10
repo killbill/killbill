@@ -231,7 +231,7 @@ public class AccountResource implements BaseJaxrsResource {
                 List<String> invoicesId = new ArrayList<String>();
                 invoicesId.addAll(tmp);
 
-                payments = paymentApi.getPaymentInfo(invoicesId);
+                payments = paymentApi.getPaymentInfoList(invoicesId);
             }
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());

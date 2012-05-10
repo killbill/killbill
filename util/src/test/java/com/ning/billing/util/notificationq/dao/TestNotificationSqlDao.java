@@ -149,18 +149,18 @@ public class TestNotificationSqlDao {
             @Override
             public Notification withHandle(Handle handle) throws Exception {
                 Notification res = handle.createQuery("   select" +
-                        " id " +
-                		", notification_id" +
+                        " record_id " +
+                		", id" +
                 		", notification_key" +
-                		", created_dt" +
-                		", effective_dt" +
+                		", created_date" +
+                		", effective_date" +
                 		", queue_name" +
                 		", processing_owner" +
-                		", processing_available_dt" +
+                		", processing_available_date" +
                 		", processing_state" +
                 		"    from notifications " +
                 		" where " +
-                		" notification_id = '" + notificationId + "';")
+                		" id = '" + notificationId + "';")
                 		.map(new NotificationSqlMapper())
                 		.first();
                 return res;

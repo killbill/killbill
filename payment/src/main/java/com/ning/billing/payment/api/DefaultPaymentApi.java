@@ -155,7 +155,6 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Either<PaymentErrorEvent, PaymentInfoEvent> createPaymentForPaymentAttempt(UUID paymentAttemptId, CallContext context) {
-
         PaymentAttempt paymentAttempt = paymentDao.getPaymentAttemptById(paymentAttemptId);
         if (paymentAttempt != null) {
             try {
@@ -173,7 +172,7 @@ public class DefaultPaymentApi implements PaymentApi {
                                 context.getUserToken()));
                     }
                     else {
-                        PaymentAttempt newPaymentAttempt = new PaymentAttempt.Builder(paymentAttempt)
+                        PaymentAttempt newPaymentAttempt = new DefaultPaymentAttempt.Builder(paymentAttempt)
                         .setRetryCount(paymentAttempt.getRetryCount() + 1)
                         .setPaymentAttemptId(UUID.randomUUID())
                         .build();
@@ -264,11 +263,11 @@ public class DefaultPaymentApi implements PaymentApi {
             }
 
             if (paymentInfo.getPaymentId() != null) {
-                paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), paymentInfo.getPaymentId(), context);
+                paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfo.getPaymentId(), context);
             }
         }
 
-        invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getPaymentAttemptId(),
+        invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getId(),
                 invoice.getId(),
                 paymentAttempt.getPaymentAttemptDate(),
                 paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
@@ -346,8 +345,13 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public List<PaymentInfoEvent> getPaymentInfo(List<String> invoiceIds) {
-        return paymentDao.getPaymentInfo(invoiceIds);
+    public List<PaymentInfoEvent> getPaymentInfoList(List<String> invoiceIds) {
+        return paymentDao.getPaymentInfoList(invoiceIds);
+    }
+
+    @Override
+    public PaymentInfoEvent getLastPaymentInfo(List<String> invoiceIds) {
+        return paymentDao.getLastPaymentInfo(invoiceIds);
     }
 
     @Override

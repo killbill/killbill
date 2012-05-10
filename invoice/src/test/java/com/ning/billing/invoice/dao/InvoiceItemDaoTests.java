@@ -47,7 +47,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
                 rate, rate, Currency.USD);
         recurringInvoiceItemDao.create(item, context);
 
-        RecurringInvoiceItem thisItem = (RecurringInvoiceItem) recurringInvoiceItemDao.getById(item.getId().toString());
+        RecurringInvoiceItem thisItem = (RecurringInvoiceItem) recurringInvoiceItemDao.getById(item.getId());
         assertNotNull(thisItem);
         assertEquals(thisItem.getId(), item.getId());
         assertEquals(thisItem.getInvoiceId(), item.getInvoiceId());

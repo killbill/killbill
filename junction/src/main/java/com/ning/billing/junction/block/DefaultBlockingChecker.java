@@ -65,7 +65,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
 
     private static final Object TYPE_SUBSCRIPTION = "Subscription";
     private static final Object TYPE_BUNDLE = "Bundle";
-    private static final Object TYPE_ACCOUNT = "Account";
+    private static final Object TYPE_ACCOUNT = "ACCOUNT";
 
     private static final Object ACTION_CHANGE = "Change";
     private static final Object ACTION_ENTITLEMENT = "Entitlement";

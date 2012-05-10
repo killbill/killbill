@@ -49,34 +49,36 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     //
     @SqlQuery
     @Mapper(NotificationSqlMapper.class)
-    public List<Notification> getReadyNotifications(@Bind("now") Date now, @Bind("max") int max, @Bind("queue_name") String queueName);
+    public List<Notification> getReadyNotifications(@Bind("now") Date now, @Bind("max") int max, @Bind("queueName") String queueName);
 
     @SqlUpdate
-    public int claimNotification(@Bind("owner") String owner, @Bind("next_available") Date nextAvailable, @Bind("id") long id, @Bind("now") Date now);
+    public int claimNotification(@Bind("owner") String owner, @Bind("nextAvailable") Date nextAvailable,
+                                 @Bind("recordId") long id, @Bind("now") Date now);
 
     @SqlUpdate
-    public void clearNotification(@Bind("id") long id, @Bind("owner") String owner);
+    public void clearNotification(@Bind("recordId") long id, @Bind("owner") String owner);
 
     @SqlUpdate
-    public void removeNotificationsByKey(@Bind("notification_key") String key);
+    public void removeNotificationsByKey(@Bind("notificationKey") String key);
     
     @SqlUpdate
     public void insertNotification(@Bind(binder = NotificationSqlDaoBinder.class) Notification evt);
 
     @SqlUpdate
-    public void insertClaimedHistory(@Bind("sequence_id") int sequenceId, @Bind("owner") String owner, @Bind("claimed_dt") Date clainedDate, @Bind("notification_id") String notificationId);
+    public void insertClaimedHistory(@Bind("sequenceId") int sequenceId, @Bind("owner") String owner,
+                                     @Bind("claimedDate") Date claimedDate, @Bind("notificationId") String notificationId);
 
     public static class NotificationSqlDaoBinder extends BinderBase implements Binder<Bind, Notification> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, Notification evt) {
-            stmt.bind("notification_id", evt.getUUID().toString());
-            stmt.bind("created_dt", getDate(new DateTime()));
-            stmt.bind("notification_key", evt.getNotificationKey());
-            stmt.bind("effective_dt", getDate(evt.getEffectiveDate()));
-            stmt.bind("queue_name", evt.getQueueName());
-            stmt.bind("processing_available_dt", getDate(evt.getNextAvailableDate()));
-            stmt.bind("processing_owner", evt.getOwner());
-            stmt.bind("processing_state", NotificationLifecycleState.AVAILABLE.toString());
+            stmt.bind("id", evt.getUUID().toString());
+            stmt.bind("createdDate", getDate(new DateTime()));
+            stmt.bind("notificationKey", evt.getNotificationKey());
+            stmt.bind("effectiveDate", getDate(evt.getEffectiveDate()));
+            stmt.bind("queueName", evt.getQueueName());
+            stmt.bind("processingAvailableDate", getDate(evt.getNextAvailableDate()));
+            stmt.bind("processingOwner", evt.getOwner());
+            stmt.bind("processingState", NotificationLifecycleState.AVAILABLE.toString());
         }
     }
 
@@ -86,16 +88,16 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
         public Notification map(int index, ResultSet r, StatementContext ctx)
         throws SQLException {
 
-            final long id = r.getLong("id");
-            final UUID uuid = UUID.fromString(r.getString("notification_id"));
+            final Long recordId = r.getLong("record_id");
+            final UUID id = getUUID(r, "id");
             final String notificationKey = r.getString("notification_key");
             final String queueName = r.getString("queue_name");
-            final DateTime effectiveDate = getDate(r, "effective_dt");
-            final DateTime nextAvailableDate = getDate(r, "processing_available_dt");
+            final DateTime effectiveDate = getDate(r, "effective_date");
+            final DateTime nextAvailableDate = getDate(r, "processing_available_date");
             final String processingOwner = r.getString("processing_owner");
             final NotificationLifecycleState processingState = NotificationLifecycleState.valueOf(r.getString("processing_state"));
 
-            return new DefaultNotification(id, uuid, processingOwner, queueName, nextAvailableDate,
+            return new DefaultNotification(recordId, id, processingOwner, queueName, nextAvailableDate,
                     processingState, notificationKey, effectiveDate);
 
         }

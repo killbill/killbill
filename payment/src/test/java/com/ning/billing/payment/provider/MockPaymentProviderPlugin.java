@@ -68,7 +68,6 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
                                                  .setAmount(invoice.getBalance())
                                                  .setStatus("Processed")
                                                  .setBankIdentificationNumber("1234")
-                                                 .setCreatedDate(clock.getUTCNow())
                                                  .setEffectiveDate(clock.getUTCNow())
                                                  .setPaymentNumber("12345")
                                                  .setReferenceId("12345")

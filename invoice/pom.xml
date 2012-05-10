@@ -39,7 +39,7 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-            <dependency>
+        <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-entitlement</artifactId>
             <scope>test</scope>

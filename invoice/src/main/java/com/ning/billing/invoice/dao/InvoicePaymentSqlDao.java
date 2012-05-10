@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.MapperBase;
@@ -51,7 +52,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(InvoicePaymentSqlDao.InvoicePaymentMapper.class)
-public interface InvoicePaymentSqlDao extends Transactional<InvoicePaymentSqlDao>, Transmogrifier {
+public interface InvoicePaymentSqlDao extends Transactional<InvoicePaymentSqlDao>, AuditSqlDao, Transmogrifier {
     @SqlQuery
     public InvoicePayment getByPaymentAttemptId(@Bind("paymentAttempt") final String paymentAttemptId);
 
@@ -88,8 +89,6 @@ public interface InvoicePaymentSqlDao extends Transactional<InvoicePaymentSqlDao
             final BigDecimal amount = result.getBigDecimal("amount");
             final String currencyString = result.getString("currency");
             final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
-            final String createdBy = result.getString("created_by");
-            final DateTime createdDate = getDate(result, "created_date");
 
             return new InvoicePayment() {
                 @Override
@@ -115,14 +114,6 @@ public interface InvoicePaymentSqlDao extends Transactional<InvoicePaymentSqlDao
                 @Override
                 public Currency getCurrency() {
                     return currency;
-                }
-                @Override
-                public String getCreatedBy() {
-                    return createdBy;
-                }
-                @Override
-                public DateTime getCreatedDate() {
-                    return createdDate ;
                 }
             };
         }

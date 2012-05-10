@@ -20,6 +20,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.util.UUID;
 
+import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -84,16 +85,16 @@ public class TestNotifyInvoicePaymentApi {
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
-        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
+        PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice);
 
         invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
                                      invoice.getBalance(),
                                      invoice.getCurrency(),
-                                     paymentAttempt.getPaymentAttemptId(),
+                                     paymentAttempt.getId(),
                                      paymentAttempt.getPaymentAttemptDate(),
                                      context);
 
-        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getPaymentAttemptId());
+        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getId());
 
         assertNotNull(invoicePayment);
     }
@@ -103,13 +104,13 @@ public class TestNotifyInvoicePaymentApi {
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
-        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
+        PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice);
         invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
-                                                 paymentAttempt.getPaymentAttemptId(),
+                                                 paymentAttempt.getId(),
                                                  paymentAttempt.getPaymentAttemptDate(),
                                                  context);
 
-        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getPaymentAttemptId());
+        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getId());
 
         assertNotNull(invoicePayment);
     }

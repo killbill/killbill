@@ -32,9 +32,8 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     }
 
     public FixedPriceInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-                                 DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                                 String createdBy, DateTime createdDate) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdBy, createdDate);
+                                 DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
+        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
     }
 
     @Override

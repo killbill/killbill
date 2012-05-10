@@ -37,10 +37,11 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.user.AccountBuilder;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -109,7 +110,7 @@ public abstract class TestPaymentApi {
 
         PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
         assertNotNull(paymentAttempt);
-        assertNotNull(paymentAttempt.getPaymentAttemptId());
+        assertNotNull(paymentAttempt.getId());
         assertEquals(paymentAttempt.getInvoiceId(), invoice.getId());
         assertTrue(paymentAttempt.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
         assertEquals(paymentAttempt.getCurrency(), Currency.USD);
@@ -118,7 +119,7 @@ public abstract class TestPaymentApi {
         DateTime paymentAttemptDateTruncated = paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0);
         assertEquals(paymentAttemptDateTruncated.compareTo(nowTruncated), 0);
 
-        List<PaymentInfoEvent> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        List<PaymentInfoEvent> paymentInfos = paymentApi.getPaymentInfoList(Arrays.asList(invoice.getId().toString()));
         assertNotNull(paymentInfos);
         assertTrue(paymentInfos.size() > 0);
 
@@ -178,20 +179,18 @@ public abstract class TestPaymentApi {
         final Account account = testHelper.createTestPayPalAccount();
         paymentApi.createPaymentProviderAccount(account, context);
 
-        String newName = "Tester " + RandomStringUtils.randomAlphanumeric(10);
-        String newNumber = "888-888-" + RandomStringUtils.randomNumeric(4);
+        Account updatedAccount = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        ZombieControl zombieAccount = (ZombieControl) updatedAccount;
+        zombieAccount.addResult("getId", account.getId());
+        zombieAccount.addResult("getName", "Tester " + RandomStringUtils.randomAlphanumeric(10));
+        zombieAccount.addResult("getFirstNameLength", 6);
+        zombieAccount.addResult("getExternalKey", account.getExternalKey());
+        zombieAccount.addResult("getPhone", "888-888-" + RandomStringUtils.randomNumeric(4));
+        zombieAccount.addResult("getEmail", account.getEmail());
+        zombieAccount.addResult("getCurrency", account.getCurrency());
+        zombieAccount.addResult("getBillCycleDay", account.getBillCycleDay());
 
-        final Account accountToUpdate = new AccountBuilder(account.getId())
-                                                                  .name(newName)
-                                                                  .firstNameLength(newName.length())
-                                                                  .externalKey(account.getExternalKey())
-                                                                  .phone(newNumber)
-                                                                  .email(account.getEmail())
-                                                                  .currency(account.getCurrency())
-                                                                  .billingCycleDay(account.getBillCycleDay())
-                                                                  .build();
-
-        Either<PaymentErrorEvent, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(accountToUpdate.getExternalKey(), context);
+        Either<PaymentErrorEvent, Void> voidOrError = paymentApi.updatePaymentProviderAccountContact(account.getExternalKey(), context);
         assertTrue(voidOrError.isRight());
     }
 

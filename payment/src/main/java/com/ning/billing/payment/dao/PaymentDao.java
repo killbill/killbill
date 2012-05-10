@@ -40,7 +40,9 @@ public interface PaymentDao {
 
     void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry, CallContext context);
 
-    List<PaymentInfoEvent> getPaymentInfo(List<String> invoiceIds);
+    List<PaymentInfoEvent> getPaymentInfoList(List<String> invoiceIds);
+
+    PaymentInfoEvent getLastPaymentInfo(List<String> invoiceIds);
 
     PaymentAttempt getPaymentAttemptById(UUID paymentAttemptId);
     PaymentInfoEvent getPaymentInfoForPaymentAttemptId(String paymentAttemptId);

@@ -231,7 +231,7 @@ public class TestDefaultEntitlementBillingApi {
 		checkFirstEvent(events, nextPlan, 32, subId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
-    @Test(enabled=true, groups="fast")
+    @Test(enabled=false, groups="fast")
 	public void testBillingEventsAnnual() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);
@@ -291,7 +291,7 @@ public class TestDefaultEntitlementBillingApi {
 		checkFirstEvent(events, nextPlan, 32, subId, now, nextPhase, ApiEventType.CREATE.toString());
 	}
 
-    @Test(enabled=true, groups="fast")
+    @Test(enabled=false, groups="fast")
 	public void testBillingEventsAddOn() throws CatalogApiException {
 		DateTime now = clock.getUTCNow();
 		DateTime then = now.minusDays(1);

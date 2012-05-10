@@ -69,7 +69,7 @@ public class BusinessAccountRecorder {
    }
 
     /**
-     * Notification handler for Account changes
+     * Notification handler for ACCOUNT changes
      *
      * @param accountId     account id changed
      * @param changedFields list of changed fields
@@ -173,21 +173,12 @@ public class BusinessAccountRecorder {
             }
 
             // Retrieve payments information for these invoices
-            DateTime lastPaymentDate = null;
-            final List<PaymentInfoEvent> payments = paymentApi.getPaymentInfo(invoiceIds);
-            if (payments != null) {
-                for (final PaymentInfoEvent payment : payments) {
-                    // Use the last payment method/type/country as the default one for the account
-                    if (lastPaymentDate == null || payment.getCreatedDate().isAfter(lastPaymentDate)) {
-                        lastPaymentDate = payment.getCreatedDate();
+            final PaymentInfoEvent payment = paymentApi.getLastPaymentInfo(invoiceIds);
 
-                        lastPaymentStatus = payment.getStatus();
-                        paymentMethod = payment.getPaymentMethod();
-                        creditCardType = payment.getCardType();
-                        billingAddressCountry = payment.getCardCountry();
-                    }
-                }
-            }
+            lastPaymentStatus = payment.getStatus();
+            paymentMethod = payment.getPaymentMethod();
+            creditCardType = payment.getCardType();
+            billingAddressCountry = payment.getCardCountry();
         }
 
         bac.setLastPaymentStatus(lastPaymentStatus);

@@ -62,7 +62,7 @@ public class TestAccount extends TestJaxrsBase {
 		AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
 		Assert.assertTrue(objFromJson.equals(input));
 		
-		// Update Account
+		// Update ACCOUNT
 		AccountJson newInput = new AccountJson(objFromJson.getAcountId(),
 				"zozo", 4, objFromJson.getExternalKey(), "rr@google.com", 18, "EUR", "none", "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
 		baseJson = mapper.writeValueAsString(newInput);
