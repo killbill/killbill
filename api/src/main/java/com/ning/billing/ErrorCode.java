@@ -201,7 +201,25 @@ public enum ErrorCode {
     BLOCK_BLOCKED_ACTION(6000, "The action %s is block on this %s with id=%s"),
     BLOCK_TYPE_NOT_SUPPORTED(6001, "The Blockable type '%s' is not supported"),
     
-   /*
+    
+    /*
+     * Range 7000 : Payment
+     */
+    PAYMENT_NO_SUCH_PAYMENT_METHOD(7001, "Payment method for account %s, and paymentId %s does not exist"),
+    PAYMENT_NO_PAYMENT_METHODS(7002, "Payment methods for account %s don't exist"),
+    PAYMENT_UPD_GATEWAY_FAILED(7003, "Failed to update payment gateway for account %s : %s"),
+    PAYMENT_GET_PAYMENT_PROVIDER(7004, "Failed to retrieve payment provider for account %s : %s"),    
+    PAYMENT_ADD_PAYMENT_METHOD(7005, "Failed to add payment method for account %s : %s"),        
+    PAYMENT_DEL_PAYMENT_METHOD(7006, "Failed to delete payment method for account %s : %s"),        
+    PAYMENT_UPD_PAYMENT_METHOD(7007, "Failed to update payment method for account %s : %s"),            
+    PAYMENT_CREATE_PAYMENT(7008, "Failed to create payment for account %s : %s"),                
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT(7009, "Failed to create payment for account %s and attempt %s : %s"),                    
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_WITH_NON_POSITIVE_INV(70010, "Got payment attempt with negative or null invoice for account %s"),                        
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD(7011, "Failed to create payment for attempts %s "),                    
+    PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT(7012, "Failed to create payment provider account for account %s : %s"),                
+    PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT(7013, "Failed to update payment provider account for account %s : %s"),                    
+    PAYMENT_CREATE_REFUND(7014, "Failed to create refund for account %s : %s"),                
+    /*
     *
     * Range 9000: Miscellaneous
     *
