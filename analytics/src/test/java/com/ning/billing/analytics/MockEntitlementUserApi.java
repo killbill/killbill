@@ -28,6 +28,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.callcontext.CallContext;
@@ -134,6 +135,13 @@ public class MockEntitlementUserApi implements EntitlementUserApi
 
     @Override
     public Subscription getBaseSubscription(UUID bundleId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(
+            UUID subscriptionId, String productName, DateTime requestedDate)
+            throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
     }
 }

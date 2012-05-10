@@ -527,8 +527,8 @@ public class EntitlementSqlDao implements EntitlementDao {
 
                         boolean createCancelEvent = (futureBaseEvent != null) &&
                         ((futureBaseEvent instanceof ApiEventCancel) ||
-                                ((! addonUtils.isAddonAvailable(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan)) ||
-                                        (addonUtils.isAddonIncluded(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan))));
+                                ((! addonUtils.isAddonAvailableFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan)) ||
+                                        (addonUtils.isAddonIncludedFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan))));
 
                         if (createCancelEvent) {
                             DateTime now = clock.getUTCNow();

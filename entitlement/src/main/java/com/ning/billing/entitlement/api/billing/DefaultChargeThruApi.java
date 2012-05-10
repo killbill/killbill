@@ -16,11 +16,9 @@ w * Copyright 2010-2011 Ning, Inc.
 
 package com.ning.billing.entitlement.api.billing;
 
-import java.util.Date;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,19 +28,16 @@ import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.engine.dao.SubscriptionSqlDao;
-import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 
 public class DefaultChargeThruApi implements ChargeThruApi {
-	private static final Logger log = LoggerFactory.getLogger(DefaultChargeThruApi.class);
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultChargeThruApi.class);
 
     private final EntitlementDao entitlementDao;
     private final SubscriptionFactory subscriptionFactory;
   
-    private static final String SUBSCRIPTION_TABLE_NAME = "subscriptions";
 
     @Inject
     public DefaultChargeThruApi(final CallContextFactory factory, final SubscriptionFactory subscriptionFactory, final EntitlementDao dao, final AccountUserApi accountApi) {
@@ -64,24 +59,5 @@ public class DefaultChargeThruApi implements ChargeThruApi {
             .setChargedThroughDate(ctd)
             .setPaidThroughDate(subscription.getPaidThroughDate());
         entitlementDao.updateChargedThroughDate(new SubscriptionData(builder), context);
-    }
-
-    @Override
-    public void setChargedThroughDateFromTransaction(final Transmogrifier transactionalDao, final UUID subscriptionId,
-                                                     final DateTime ctd, final CallContext context) {
-        SubscriptionSqlDao subscriptionSqlDao = transactionalDao.become(SubscriptionSqlDao.class);
-        SubscriptionData subscription = (SubscriptionData) subscriptionSqlDao.getSubscriptionFromId(subscriptionId.toString());
-
-        if (subscription == null) {
-            log.warn("Subscription not found when setting CTD.");
-        } else {
-            DateTime chargedThroughDate = subscription.getChargedThroughDate();
-            if (chargedThroughDate == null || chargedThroughDate.isBefore(ctd)) {
-                subscriptionSqlDao.updateChargedThroughDate(subscriptionId.toString(),
-                        ctd.toDate(), context);
-                AuditSqlDao auditSqlDao = transactionalDao.become(AuditSqlDao.class);
-                auditSqlDao.insertAuditFromTransaction(SUBSCRIPTION_TABLE_NAME, subscriptionId.toString(), ChangeType.UPDATE, context);
-            }
-        }
     }
 }

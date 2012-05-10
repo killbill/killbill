@@ -200,7 +200,6 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
         return apiService.recreatePlan(this, spec, requestedDate, context);
     }
 
-
     @Override
     public SubscriptionEvent getPendingTransition() {
         SubscriptionTransitionData data = getPendingTransitionData();
@@ -208,6 +207,11 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
             return null;
         }
         return new DefaultSubscriptionEvent(data, startDate);
+    }
+    
+    @Override
+    public BlockingState getBlockingState() {
+        throw new UnsupportedOperationException();
     }
 
     protected SubscriptionTransitionData getPendingTransitionData() {
@@ -520,10 +524,4 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
             previousPriceList = nextPriceList;
         }
     }
-
-    @Override
-    public BlockingState getBlockingState() {
-        throw new UnsupportedOperationException();
-    }
-
 }

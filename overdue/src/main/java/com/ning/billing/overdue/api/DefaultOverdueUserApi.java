@@ -21,6 +21,7 @@ import org.apache.commons.lang.NotImplementedException;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
@@ -35,7 +36,7 @@ import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 
-public class DefaultOverdueUserApi implements OverdueUserApi{
+public class DefaultOverdueUserApi implements OverdueUserApi { 
 
     
     private final OverdueWrapperFactory factory;

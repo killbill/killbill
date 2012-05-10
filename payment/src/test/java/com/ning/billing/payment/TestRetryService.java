@@ -44,6 +44,7 @@ import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
@@ -139,11 +140,13 @@ public class TestRetryService {
                                                        Currency.USD));
 
         mockPaymentProviderPlugin.makeNextInvoiceFail();
-
-        List<Either<PaymentErrorEvent, PaymentInfoEvent>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
-
-        assertEquals(results.size(), 1);
-        assertTrue(results.get(0).isLeft());
+        boolean failed = false;
+        try {
+            paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
+        } catch (PaymentApiException e) {
+            failed = true;
+        }
+        assertTrue(failed);
 
         List<Notification> pendingNotifications = mockNotificationQueue.getPendingEvents();
 

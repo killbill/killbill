@@ -29,6 +29,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingApiException;
@@ -40,7 +41,7 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
     private final EntitlementUserApi entitlementUserApi;
     private final BlockingApi blockingApi;
     private final BlockingChecker checker;
-    
+
     @Inject
     public BlockingEntitlementUserApi(@RealImplementation EntitlementUserApi userApi, BlockingApi blockingApi, BlockingChecker checker) {
         this.entitlementUserApi = userApi;
@@ -48,32 +49,25 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
         this.checker = checker;
     }
 
+    @Override
     public SubscriptionBundle getBundleFromId(UUID id) throws EntitlementUserApiException {
         SubscriptionBundle bundle = entitlementUserApi.getBundleFromId(id);
-        if(bundle == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_ID, id);
-        }
         return new BlockingSubscriptionBundle(bundle, blockingApi);
     }
 
+    @Override
     public Subscription getSubscriptionFromId(UUID id) throws EntitlementUserApiException {
         Subscription subscription = entitlementUserApi.getSubscriptionFromId(id);
-        if(subscription == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, id);
-        }
         return new BlockingSubscription(subscription, blockingApi, checker);
     }
 
-    
+    @Override
     public SubscriptionBundle getBundleForKey(String bundleKey) throws EntitlementUserApiException {
         SubscriptionBundle bundle = entitlementUserApi.getBundleForKey(bundleKey);
-        if(bundle == null) {
-            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_KEY, bundleKey);
-        }
-
         return new BlockingSubscriptionBundle(bundle, blockingApi);
     }
 
+    @Override
     public List<SubscriptionBundle> getBundlesForAccount(UUID accountId) {
         List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>();
         List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
@@ -83,6 +77,7 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
         return result;
     }
 
+    @Override
     public List<Subscription> getSubscriptionsForBundle(UUID bundleId) {
         List<Subscription> result = new ArrayList<Subscription>();
         List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundleId);
@@ -92,6 +87,7 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
         return result;
     }
 
+    @Override
     public List<Subscription> getSubscriptionsForKey(String bundleKey) {
         List<Subscription> result = new ArrayList<Subscription>();
         List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForKey(bundleKey);
@@ -101,20 +97,30 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
         return result;
     }
 
-    public Subscription getBaseSubscription(UUID bundleId) {
+    @Override
+    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(
+            UUID subscriptionId, String productName, DateTime requestedDate)
+            throws EntitlementUserApiException {
+        return entitlementUserApi.getDryRunChangePlanStatus(subscriptionId, productName, requestedDate);
+    }
+
+    @Override
+    public Subscription getBaseSubscription(UUID bundleId) throws EntitlementUserApiException {
         return new BlockingSubscription(entitlementUserApi.getBaseSubscription(bundleId), blockingApi, checker);
     }
 
+    @Override
     public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleKey, CallContext context)
-            throws EntitlementUserApiException {
+    throws EntitlementUserApiException {
         try {
-           checker.checkBlockedChange(accountId, Blockable.Type.ACCOUNT);
-           return new BlockingSubscriptionBundle(entitlementUserApi.createBundleForAccount(accountId, bundleKey, context), blockingApi);
+            checker.checkBlockedChange(accountId, Blockable.Type.ACCOUNT);
+            return new BlockingSubscriptionBundle(entitlementUserApi.createBundleForAccount(accountId, bundleKey, context), blockingApi);
         }catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
         }
-   }
+    }
 
+    @Override
     public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate,
             CallContext context) throws EntitlementUserApiException {
         try {
@@ -125,8 +131,8 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
         }
     }
 
+    @Override
     public DateTime getNextBillingDate(UUID account) {
         return entitlementUserApi.getNextBillingDate(account);
     }
-
 }

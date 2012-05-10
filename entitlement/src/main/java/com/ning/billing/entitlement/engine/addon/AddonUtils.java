@@ -63,7 +63,16 @@ public class AddonUtils {
         }
     }
 
-    public boolean isAddonAvailable(final String basePlanName, final DateTime requestedDate, final Plan targetAddOnPlan) {
+    public boolean isAddonAvailableFromProdName(final String baseProductName, final DateTime requestedDate, final Plan targetAddOnPlan) {
+        try {
+            Product product = catalogService.getFullCatalog().findProduct(baseProductName, requestedDate);
+            return isAddonAvailable(product, targetAddOnPlan);
+        } catch (CatalogApiException e) {
+            throw new EntitlementError(e);
+        }
+    }
+
+    public boolean isAddonAvailableFromPlanName(final String basePlanName, final DateTime requestedDate, final Plan targetAddOnPlan) {
         try {
             Plan plan = catalogService.getFullCatalog().findPlan(basePlanName, requestedDate);
             Product product = plan.getProduct();
@@ -84,9 +93,19 @@ public class AddonUtils {
         }
         return false;
     }
+    
+    public boolean isAddonIncludedFromProdName(final String baseProductName, final DateTime requestedDate, final Plan targetAddOnPlan) {
+        try {            
+            Product product = catalogService.getFullCatalog().findProduct(baseProductName, requestedDate);
+            return isAddonIncluded(product, targetAddOnPlan);
+        } catch (CatalogApiException e) {
+            throw new EntitlementError(e);
+        }
 
-    public boolean isAddonIncluded(final String basePlanName,  final DateTime requestedDate, final Plan targetAddOnPlan) {
-        try {
+    }
+
+    public boolean isAddonIncludedFromPlanName(final String basePlanName, final DateTime requestedDate, final Plan targetAddOnPlan) {
+        try {            
             Plan plan = catalogService.getFullCatalog().findPlan(basePlanName, requestedDate);
             Product product = plan.getProduct();
             return isAddonIncluded(product, targetAddOnPlan);

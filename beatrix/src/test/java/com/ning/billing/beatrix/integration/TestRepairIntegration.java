@@ -54,13 +54,13 @@ import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 public class TestRepairIntegration extends TestIntegrationBase {
 
     
-    @Test(groups={"slow"}, enabled=true)
+    @Test(groups={"slow"}, enabled=false)
     public void testRepairChangeBPWithAddonIncludedIntrial() throws Exception {
         log.info("Starting testRepairChangeBPWithAddonIncludedIntrial");
         testRepairChangeBPWithAddonIncluded(true);
     }
     
-    @Test(groups={"slow"}, enabled=true)
+    @Test(groups={"slow"}, enabled=false)
     public void testRepairChangeBPWithAddonIncludedOutOfTrial() throws Exception {
         log.info("Starting testRepairChangeBPWithAddonIncludedOutOfTrial");
         testRepairChangeBPWithAddonIncluded(false);

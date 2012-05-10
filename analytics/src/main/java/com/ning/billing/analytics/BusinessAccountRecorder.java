@@ -35,6 +35,7 @@ import com.ning.billing.analytics.dao.BusinessAccountDao;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.tag.Tag;
@@ -59,14 +60,14 @@ public class BusinessAccountRecorder {
         Account account;
         try {
             account = accountApi.getAccountByKey(data.getExternalKey());
-        final BusinessAccount bac = createBusinessAccountFromAccount(account);
+            final BusinessAccount bac = createBusinessAccountFromAccount(account);
 
-        log.info("ACCOUNT CREATION " + bac);
-        dao.createAccount(bac);
+            log.info("ACCOUNT CREATION " + bac);
+            dao.createAccount(bac);
         } catch (AccountApiException e) {
-           log.warn("Error encountered creating BusinessAccount",e);
+            log.warn("Error encountered creating BusinessAccount",e);
         }
-   }
+    }
 
     /**
      * Notification handler for Account changes
@@ -85,17 +86,19 @@ public class BusinessAccountRecorder {
      * @param paymentInfo payment object (from the payment plugin)
      */
     public void accountUpdated(final PaymentInfoEvent paymentInfo) {
-        final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
-        if (paymentAttempt == null) {
-            return;
-        }
         try {
+            final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
+            if (paymentAttempt == null) {
+                return;
+            }
+
             final Account account = accountApi.getAccountById(paymentAttempt.getAccountId());
             accountUpdated(account.getId());
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount",e);
+        } catch (PaymentApiException e) {
+            log.warn("Error encountered creating BusinessAccount",e);            
         }
-
     }
 
     /**
@@ -152,51 +155,56 @@ public class BusinessAccountRecorder {
     }
 
     private void updateBusinessAccountFromAccount(final Account account, final BusinessAccount bac) {
-        DateTime lastInvoiceDate = null;
-        BigDecimal totalInvoiceBalance = BigDecimal.ZERO;
-        String lastPaymentStatus = null;
-        String paymentMethod = null;
-        String creditCardType = null;
-        String billingAddressCountry = null;
 
-        // Retrieve invoices information
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId());
-        if (invoices != null && invoices.size() > 0) {
-            final List<String> invoiceIds = new ArrayList<String>();
-            for (final Invoice invoice : invoices) {
-                invoiceIds.add(invoice.getId().toString());
-                totalInvoiceBalance = totalInvoiceBalance.add(invoice.getBalance());
+        try {
+            DateTime lastInvoiceDate = null;
+            BigDecimal totalInvoiceBalance = BigDecimal.ZERO;
+            String lastPaymentStatus = null;
+            String paymentMethod = null;
+            String creditCardType = null;
+            String billingAddressCountry = null;
 
-                if (lastInvoiceDate == null || invoice.getInvoiceDate().isAfter(lastInvoiceDate)) {
-                    lastInvoiceDate = invoice.getInvoiceDate();
+            // Retrieve invoices information
+            final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId());
+            if (invoices != null && invoices.size() > 0) {
+                final List<String> invoiceIds = new ArrayList<String>();
+                for (final Invoice invoice : invoices) {
+                    invoiceIds.add(invoice.getId().toString());
+                    totalInvoiceBalance = totalInvoiceBalance.add(invoice.getBalance());
+
+                    if (lastInvoiceDate == null || invoice.getInvoiceDate().isAfter(lastInvoiceDate)) {
+                        lastInvoiceDate = invoice.getInvoiceDate();
+                    }
                 }
-            }
 
-            // Retrieve payments information for these invoices
-            DateTime lastPaymentDate = null;
-            final List<PaymentInfoEvent> payments = paymentApi.getPaymentInfo(invoiceIds);
-            if (payments != null) {
-                for (final PaymentInfoEvent payment : payments) {
-                    // Use the last payment method/type/country as the default one for the account
-                    if (lastPaymentDate == null || payment.getCreatedDate().isAfter(lastPaymentDate)) {
-                        lastPaymentDate = payment.getCreatedDate();
+                // Retrieve payments information for these invoices
+                DateTime lastPaymentDate = null;
+                final List<PaymentInfoEvent> payments = paymentApi.getPaymentInfo(invoiceIds);
+                if (payments != null) {
+                    for (final PaymentInfoEvent payment : payments) {
+                        // Use the last payment method/type/country as the default one for the account
+                        if (lastPaymentDate == null || payment.getCreatedDate().isAfter(lastPaymentDate)) {
+                            lastPaymentDate = payment.getCreatedDate();
 
-                        lastPaymentStatus = payment.getStatus();
-                        paymentMethod = payment.getPaymentMethod();
-                        creditCardType = payment.getCardType();
-                        billingAddressCountry = payment.getCardCountry();
+                            lastPaymentStatus = payment.getStatus();
+                            paymentMethod = payment.getPaymentMethod();
+                            creditCardType = payment.getCardType();
+                            billingAddressCountry = payment.getCardCountry();
+                        }
                     }
                 }
             }
+
+            bac.setLastPaymentStatus(lastPaymentStatus);
+            bac.setPaymentMethod(paymentMethod);
+            bac.setCreditCardType(creditCardType);
+            bac.setBillingAddressCountry(billingAddressCountry);
+            bac.setLastInvoiceDate(lastInvoiceDate);
+            bac.setTotalInvoiceBalance(totalInvoiceBalance);
+
+            bac.setBalance(invoiceUserApi.getAccountBalance(account.getId()));
+        } catch (PaymentApiException e) {
+            log.error("Failed to update Business account", e);
         }
-
-        bac.setLastPaymentStatus(lastPaymentStatus);
-        bac.setPaymentMethod(paymentMethod);
-        bac.setCreditCardType(creditCardType);
-        bac.setBillingAddressCountry(billingAddressCountry);
-        bac.setLastInvoiceDate(lastInvoiceDate);
-        bac.setTotalInvoiceBalance(totalInvoiceBalance);
-
-        bac.setBalance(invoiceUserApi.getAccountBalance(account.getId()));
     }
 }

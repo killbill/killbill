@@ -67,6 +67,7 @@ import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -268,6 +269,9 @@ public class AccountResource implements BaseJaxrsResource {
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
             return Response.status(Status.NO_CONTENT).build();
+        } catch (PaymentApiException e) {
+            log.error(e.getMessage());
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (EntitlementRepairException e) {
             log.error(e.getMessage());
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();

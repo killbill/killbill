@@ -153,11 +153,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
     @Override
     public void create(final Invoice invoice, final CallContext context) {
         
-        final InvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                invoice.getBalance(), invoice.getCurrency(),
-                invoice.getInvoiceDate(),
-                context.getUserToken());
-
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
@@ -178,9 +173,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = transactional.become(FixedPriceInvoiceItemSqlDao.class);
                     fixedPriceInvoiceItemDao.batchCreateFromTransaction(fixedPriceInvoiceItems, context);
 
-                    setChargedThroughDates(transactional, fixedPriceInvoiceItems, recurringInvoiceItems, context);
-
-                    // STEPH Why do we need that? Are the payments not always null at this point?
                     List<InvoicePayment> invoicePayments = invoice.getPayments();
                     InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
                     invoicePaymentSqlDao.batchCreateFromTransaction(invoicePayments, context);
@@ -190,18 +182,10 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     auditSqlDao.insertAuditFromTransaction("recurring_invoice_items", getIdsFromInvoiceItems(recurringInvoiceItems), ChangeType.INSERT, context);
                     auditSqlDao.insertAuditFromTransaction("fixed_invoice_items", getIdsFromInvoiceItems(fixedPriceInvoiceItems), ChangeType.INSERT, context);
                     auditSqlDao.insertAuditFromTransaction("invoice_payments", getIdsFromInvoicePayments(invoicePayments), ChangeType.INSERT, context);
-
-                }
-                try {
-                    eventBus.postFromTransaction(event, transactional);
-                } catch (EventBusException e) {
-                    log.warn("Failed to post invoice event for invoiceId " + invoice.getId(), e);
                 }
                 return null;
             }
         });
-
-
     }
 
     private List<String> getIdsFromInvoiceItems(List<InvoiceItem> invoiceItems) {
@@ -374,36 +358,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
                                 recurringInvoiceItem.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
                 	nextBillingDatePoster.insertNextBillingNotification(dao, item.getSubscriptionId(), recurringInvoiceItem.getEndDate());
                 }
-            }
-        }
-    }
-    
-    private void setChargedThroughDates(final InvoiceSqlDao dao, final Collection<InvoiceItem> fixedPriceItems,
-                                        final Collection<InvoiceItem> recurringItems, CallContext context) {
-        Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
-        addInvoiceItemsToChargeThroughDates(chargeThroughDates, fixedPriceItems);
-        addInvoiceItemsToChargeThroughDates(chargeThroughDates, recurringItems);
-
-        for (UUID subscriptionId : chargeThroughDates.keySet()) {
-            if(subscriptionId != null) {
-                DateTime chargeThroughDate = chargeThroughDates.get(subscriptionId);
-                log.info("Setting CTD for subscription {} to {}", subscriptionId.toString(), chargeThroughDate.toString());
-                billingApi.setChargedThroughDateFromTransaction(dao, subscriptionId, chargeThroughDate, context);
-            }
-        }
-    }
-
-    private void addInvoiceItemsToChargeThroughDates(Map<UUID, DateTime> chargeThroughDates, Collection<InvoiceItem> items) {
-        for (InvoiceItem item : items) {
-            UUID subscriptionId = item.getSubscriptionId();
-            DateTime endDate = item.getEndDate();
-
-            if (chargeThroughDates.containsKey(subscriptionId)) {
-                if (chargeThroughDates.get(subscriptionId).isBefore(endDate)) {
-                    chargeThroughDates.put(subscriptionId, endDate);
-                }
-            } else {
-                chargeThroughDates.put(subscriptionId, endDate);
             }
         }
     }

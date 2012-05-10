@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
@@ -35,6 +36,7 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -108,27 +110,22 @@ public class DefaultBillingApi implements BillingApi {
         } catch (AccountApiException e) {
             log.warn("Failed while getting BillingEvent", e);
         }
-
         blockCalculator.insertBlockingEvents(result);
-
         return result;
     }
 
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) {
-        return chargeThruApi.getAccountIdFromSubscriptionId(subscriptionId);
+    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) throws EntitlementBillingApiException {
+        UUID result = chargeThruApi.getAccountIdFromSubscriptionId(subscriptionId);
+        if (result == null) {
+            throw new EntitlementBillingApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, subscriptionId.toString());
+        }
+        return result;
     }
 
     @Override
     public void setChargedThroughDate(UUID subscriptionId, DateTime ctd, CallContext context) {
         chargeThruApi.setChargedThroughDate(subscriptionId, ctd, context);
     }
-
-    @Override
-    public void setChargedThroughDateFromTransaction(Transmogrifier transactionalDao, UUID subscriptionId,
-            DateTime ctd, CallContext context) {
-        chargeThruApi.setChargedThroughDateFromTransaction(transactionalDao, subscriptionId, ctd, context);
-    }
-
 }

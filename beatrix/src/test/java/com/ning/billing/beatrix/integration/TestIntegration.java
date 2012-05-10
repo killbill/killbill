@@ -185,7 +185,7 @@ public class TestIntegration extends TestIntegrationBase {
         // TODO: Jeff implement repair
     }
 
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow", enabled = true)
     public void testWithRecreatePlan() throws Exception {
 
         log.info("Starting testWithRecreatePlan");
@@ -250,7 +250,7 @@ public class TestIntegration extends TestIntegrationBase {
         term = BillingPeriod.MONTHLY;
         planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
+        busHandler.pushExpectedEvent(NextEvent.RE_CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         subscription.recreate(new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), endDate, context);
