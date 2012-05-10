@@ -31,6 +31,9 @@ import com.ning.billing.payment.api.PaymentInfoEvent;
 public class OverdueListener {
     OverdueDispatcher dispatcher;
     
+    //
+    //TODO disabled overdue for prod deployment - comments should be removed
+    //
     
     private final static Logger log = LoggerFactory.getLogger(OverdueListener.class);
     private final PaymentApi paymentApi;
@@ -43,20 +46,20 @@ public class OverdueListener {
 
     @Subscribe
     public void handlePaymentInfoEvent(final PaymentInfoEvent event) {
-       String paymentId = event.getPaymentId();
-       PaymentAttempt attempt = paymentApi.getPaymentAttemptForPaymentId(paymentId);
-       UUID accountId = attempt.getAccountId();
-       dispatcher.processOverdueForAccount(accountId);
+//       String paymentId = event.getPaymentId();
+//       PaymentAttempt attempt = paymentApi.getPaymentAttemptForPaymentId(paymentId);
+//       UUID accountId = attempt.getAccountId();
+//       dispatcher.processOverdueForAccount(accountId);
     }
     
     @Subscribe
     public void handlePaymentErrorEvent(final PaymentErrorEvent event) {
-       UUID accountId = event.getAccountId();
-       dispatcher.processOverdueForAccount(accountId);
+//       UUID accountId = event.getAccountId();
+//       dispatcher.processOverdueForAccount(accountId);
     }
 
     public void handleNextOverdueCheck(UUID overdueableId) { 
-       dispatcher.processOverdue(overdueableId);
+//       dispatcher.processOverdue(overdueableId);
     }
     
  
