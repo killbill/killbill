@@ -244,6 +244,7 @@ public class AccountResource implements BaseJaxrsResource {
             Account account = accountApi.getAccountById(UUID.fromString(accountId));
            
             List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
+
             List<PaymentAttempt> payments = new LinkedList<PaymentAttempt>();
 
             if (invoices.size() > 0) {

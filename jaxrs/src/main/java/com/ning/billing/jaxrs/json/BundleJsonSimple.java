@@ -16,6 +16,7 @@
 package com.ning.billing.jaxrs.json;
 
 import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonView;
 
 public class BundleJsonSimple {
@@ -27,7 +28,8 @@ public class BundleJsonSimple {
     protected final String externalKey;
 
     @JsonCreator
-    public BundleJsonSimple(String bundleId, String externalKey) {
+    public BundleJsonSimple(@JsonProperty("bundleId") String bundleId,
+            @JsonProperty("externalKey") String externalKey) {
         super();
         this.bundleId = bundleId;
         this.externalKey = externalKey;
@@ -38,10 +40,12 @@ public class BundleJsonSimple {
         this.externalKey = null;
     }
 
+    @JsonProperty("bundleId")
     public String getBundleId() {
         return bundleId;
     }
 
+    @JsonProperty("externalKey")
     public String getExternalKey() {
         return externalKey;
     }

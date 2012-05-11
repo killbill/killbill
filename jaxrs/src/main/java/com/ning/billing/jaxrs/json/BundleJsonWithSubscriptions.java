@@ -33,13 +33,14 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
     private final List<SubscriptionJsonWithEvents> subscriptions;
 
     @JsonCreator
-    public BundleJsonWithSubscriptions(@JsonProperty("bundle_id") String bundleId,
-            @JsonProperty("external_key") String externalKey,
+    public BundleJsonWithSubscriptions(@JsonProperty("bundleId") String bundleId,
+            @JsonProperty("externalKey") String externalKey,
             @JsonProperty("subscriptions") List<SubscriptionJsonWithEvents> subscriptions) {
         super(bundleId, externalKey);
         this.subscriptions = subscriptions;
     }
 
+    @JsonProperty("subscriptions")
     public List<SubscriptionJsonWithEvents> getSubscriptions() {
         return subscriptions;
     }

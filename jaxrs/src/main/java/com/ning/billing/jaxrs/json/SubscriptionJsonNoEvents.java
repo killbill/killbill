@@ -57,14 +57,14 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
 
 
     @JsonCreator
-    public SubscriptionJsonNoEvents(@JsonProperty("subscription_id") String subscriptionId,
-            @JsonProperty("bundle_id") String bundleId,
-            @JsonProperty("start_date") DateTime startDate,
-            @JsonProperty("product_name") String productName,
-            @JsonProperty("product_category") String productCategory,
-            @JsonProperty("billing_period") String billingPeriod,
-            @JsonProperty("price_list") String priceList,
-            @JsonProperty("charged_through_date") DateTime chargedThroughDate) {
+    public SubscriptionJsonNoEvents(@JsonProperty("subscriptionId") String subscriptionId,
+            @JsonProperty("bundleId") String bundleId,
+            @JsonProperty("startDate") DateTime startDate,
+            @JsonProperty("productName") String productName,
+            @JsonProperty("productCategory") String productCategory,
+            @JsonProperty("billingPeriod") String billingPeriod,
+            @JsonProperty("priceList") String priceList,
+            @JsonProperty("chargedThroughDate") DateTime chargedThroughDate) {
         super(subscriptionId);
         this.bundleId = bundleId;
         this.startDate = startDate;

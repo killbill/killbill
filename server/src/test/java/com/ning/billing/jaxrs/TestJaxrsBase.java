@@ -91,7 +91,7 @@ public class TestJaxrsBase {
 
     private final static String PLUGIN_NAME = "noop";
 
-    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 5;
+    protected static final int DEFAULT_HTTP_TIMEOUT_SEC =  500000; // 5;
 
     protected static final Map<String, String> DEFAULT_EMPTY_QUERY = new HashMap<String, String>();
 
@@ -235,7 +235,7 @@ public class TestJaxrsBase {
         mapper.registerModule(new JodaModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());        
+        //mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());        
 
         busHandler = new TestApiListener(null);
         this.helper = listener.getMysqlTestingHelper();

@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.util.clock.DefaultClock;
 
-public class PaymentJson {
+public class PaymentJsonSimple {
 
     private final BigDecimal paidAmount;
 
@@ -45,7 +45,7 @@ public class PaymentJson {
     
     private final String status;
       
-    public PaymentJson() {
+    public PaymentJsonSimple() {
         this.amount = null;
         this.paidAmount = null;
         this.invoiceId = null;
@@ -58,13 +58,13 @@ public class PaymentJson {
     }
 
     @JsonCreator
-    public PaymentJson(@JsonProperty("amount") BigDecimal amount,
-            @JsonProperty("paid_amount") BigDecimal paidAmount,
-            @JsonProperty("invoice_id") String invoiceId,
-            @JsonProperty("payment_id") String paymentId,
-            @JsonProperty("requested_dt") DateTime requestedDate,
-            @JsonProperty("effective_dt") DateTime effectiveDate,
-            @JsonProperty("retry_count") Integer retryCount,
+    public PaymentJsonSimple(@JsonProperty("amount") BigDecimal amount,
+            @JsonProperty("paidAmount") BigDecimal paidAmount,
+            @JsonProperty("invoiceId") String invoiceId,
+            @JsonProperty("paymentId") String paymentId,
+            @JsonProperty("requestedDt") DateTime requestedDate,
+            @JsonProperty("effectiveDt") DateTime effectiveDate,
+            @JsonProperty("retryCount") Integer retryCount,
             @JsonProperty("currency") String currency,            
             @JsonProperty("status") String status) {
         super();

@@ -44,7 +44,7 @@ public class TestBundle extends TestJaxrsBase {
 	public void testBundleOk() throws Exception {
 
 		AccountJson accountJson = createAccount("xlxl", "shdgfhkkl", "xlxl@yahoo.com");
-		BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAcountId(), "12345");
+		BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAccountId(), "12345");
 		
 		// Retrieves by external key
 		Map<String, String> queryParams = new HashMap<String, String>();
@@ -61,10 +61,10 @@ public class TestBundle extends TestJaxrsBase {
 	public void testBundleFromAccount() throws Exception {
 
 		AccountJson accountJson = createAccount("xaxa", "saagfhkkl", "xaxa@yahoo.com");
-		BundleJsonNoSubsciptions bundleJson1 = createBundle(accountJson.getAcountId(), "156567");
-		BundleJsonNoSubsciptions bundleJson2 = createBundle(accountJson.getAcountId(), "265658");
+		BundleJsonNoSubsciptions bundleJson1 = createBundle(accountJson.getAccountId(), "156567");
+		BundleJsonNoSubsciptions bundleJson2 = createBundle(accountJson.getAccountId(), "265658");
 
-		String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAcountId().toString() + "/" + BaseJaxrsResource.BUNDLES;
+		String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId().toString() + "/" + BaseJaxrsResource.BUNDLES;
 		Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 		String baseJson = response.getResponseBody();
@@ -96,7 +96,7 @@ public class TestBundle extends TestJaxrsBase {
 		Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
 		
 		
-		uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAcountId().toString() + "/" + BaseJaxrsResource.BUNDLES;
+		uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId().toString() + "/" + BaseJaxrsResource.BUNDLES;
 		response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 		String baseJson = response.getResponseBody();

@@ -28,7 +28,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.ning.billing.jaxrs.json.PaymentJson;
+import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 
 
 @Path("/1.0/payment")
@@ -53,7 +53,7 @@ public class PaymentResource {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}")
-    public Response createInstantPayment(PaymentJson payment,
+    public Response createInstantPayment(PaymentJsonSimple payment,
             @PathParam("invoiceId") String invoiceId,
             @QueryParam("last4CC") String last4CC,
             @QueryParam("nameOnCC") String nameOnCC) {

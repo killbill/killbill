@@ -404,7 +404,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
             }
             @Override
             public String getExternalKey() {
-                return null;
+                return externalKey;
             }
         };
 

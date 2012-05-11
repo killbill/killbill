@@ -58,13 +58,13 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
         }
  
         @JsonCreator
-        public SubscriptionReadEventJson(@JsonProperty("event_id") String eventId,
-                @JsonProperty("billing_period") String billingPeriod,
-                @JsonProperty("requested_dt") DateTime requestedDate,
-                @JsonProperty("effective_dt") DateTime effectiveDate,
+        public SubscriptionReadEventJson(@JsonProperty("eventId") String eventId,
+                @JsonProperty("billingPeriod") String billingPeriod,
+                @JsonProperty("requestedDt") DateTime requestedDate,
+                @JsonProperty("effectiveDt") DateTime effectiveDate,
                 @JsonProperty("product") String product,
-                @JsonProperty("price_list") String priceList,
-                @JsonProperty("event_type") String eventType,
+                @JsonProperty("priceList") String priceList,
+                @JsonProperty("eventType") String eventType,
                 @JsonProperty("phase") String phase) {
             super(billingPeriod, requestedDate, product, priceList, eventType, phase);
             this.eventId = eventId;
