@@ -26,6 +26,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.PaymentResponse;
@@ -90,4 +92,13 @@ public class DefaultCondition<T extends Blockable> extends ValidatingConfig<Over
 	@Override
 	public void initialize(OverdueConfig root, URI uri) {
 	}
+
+    public Duration getTimeOffset() {
+        if (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null) {
+            return timeSinceEarliestUnpaidInvoiceEqualsOrExceeds;
+        } else { 
+            return new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(0); // zero time
+        }
+        
+    }
 }

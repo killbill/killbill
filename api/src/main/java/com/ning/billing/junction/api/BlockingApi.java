@@ -25,11 +25,11 @@ public interface BlockingApi {
 
     public BlockingState getBlockingStateFor(Blockable overdueable);
 
-    public BlockingState getBlockingStateFor(UUID overdueableId, Blockable.Type type);
+    public BlockingState getBlockingStateFor(UUID overdueableId);
     
     public SortedSet<BlockingState> getBlockingHistory(Blockable overdueable);
 
-    public SortedSet<BlockingState> getBlockingHistory(UUID overdueableId, Blockable.Type type);
+    public SortedSet<BlockingState> getBlockingHistory(UUID overdueableId);
     
     public <T extends Blockable> void  setBlockingState(BlockingState state);
     

@@ -18,18 +18,15 @@ package com.ning.billing.overdue.config.api;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 
 public interface OverdueStateSet<T extends Blockable> {
 
-    public abstract OverdueState<T> findClearState() throws CatalogApiException;
+    public abstract OverdueState<T> findClearState() throws OverdueApiException;
 
-    public abstract OverdueState<T> findState(String stateName) throws CatalogApiException;
+    public abstract OverdueState<T> findState(String stateName) throws OverdueApiException;
 
-    public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) throws CatalogApiException;
-
-    public abstract DateTime dateOfNextCheck(BillingState<T> billingState, DateTime now);
-
+    public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) throws OverdueApiException;
 }

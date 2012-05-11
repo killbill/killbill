@@ -28,8 +28,6 @@ import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -54,9 +52,9 @@ import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckPoster;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
-import com.ning.billing.ovedue.notification.OverdueListener;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.glue.OverdueModule;
+import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.CallContextFactory;
@@ -68,7 +66,6 @@ import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
-import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
@@ -77,7 +74,7 @@ import com.ning.billing.util.tag.dao.TagDao;
 public class TestOverdueCheckNotifier {
 	private Clock clock;
 	private DefaultOverdueCheckNotifier notifier;
-	private DummySqlTest dao;
+
 	private Bus eventBus;
 	private MysqlTestingHelper helper;
 	private OverdueListenerMock listener;
@@ -88,11 +85,11 @@ public class TestOverdueCheckNotifier {
 		UUID latestSubscriptionId = null;
 
 		public OverdueListenerMock() {
-			super();
+			super(null,null);
 		}
 
 		@Override
-		public void handleNextOverdueCheck(UUID subscriptionId, DateTime eventDateTime) {
+		public void handleNextOverdueCheck(UUID subscriptionId) {
 			eventCount++;
 			latestSubscriptionId=subscriptionId;
 		}
@@ -158,7 +155,6 @@ public class TestOverdueCheckNotifier {
         eventBus.start();
         notifier.initialize();
         notifier.start();
-        dao = dbi.onDemand(DummySqlTest.class);
 	}
 
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {
@@ -180,16 +176,7 @@ public class TestOverdueCheckNotifier {
 		final OverdueCheckPoster poster = new DefaultOverdueCheckPoster(notificationQueueService);
 
 
-
-		dao.inTransaction(new Transaction<Void, DummySqlTest>() {
-			@Override
-			public Void inTransaction(DummySqlTest transactional,
-					TransactionStatus status) throws Exception {
-
-				poster.insertOverdueCheckNotification(transactional, blockable, readyTime);
-				return null;
-			}
-		});
+		poster.insertOverdueCheckNotification(blockable, readyTime);
 
 
 		// Move time in the future after the notification effectiveDate

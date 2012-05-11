@@ -16,10 +16,10 @@
 
 package com.ning.billing.overdue.wrapper;
 
-import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculator;
@@ -49,15 +49,20 @@ public class OverdueWrapper<T extends Blockable> {
         this.overdueStateApplicator = overdueStateApplicator;
     }
 
-    public OverdueState<T> refresh() throws OverdueError, CatalogApiException, EntitlementUserApiException {
-        OverdueState<T> nextOverdueState;
-        BillingState<T> billingState = billingStateCalcuator.calculateBillingState(overdueable);
-        String previousOverdueStateName = api.getBlockingStateFor(overdueable).getStateName();
-        nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
-        if (!previousOverdueStateName.equals(nextOverdueState.getName())) {
-            overdueStateApplicator.apply(overdueable, nextOverdueState, nextOverdueState, overdueStateSet.dateOfNextCheck(billingState, clock.getUTCNow())); 
-        }
+    public OverdueState<T> refresh() throws OverdueError, OverdueApiException {
+        try {
+            OverdueState<T> nextOverdueState;
+            BillingState<T> billingState    = billingStateCalcuator.calculateBillingState(overdueable);
+            String previousOverdueStateName = api.getBlockingStateFor(overdueable).getStateName();
+            nextOverdueState                = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
 
-        return nextOverdueState;
+            if(!previousOverdueStateName.equals(nextOverdueState.getName())) {
+                overdueStateApplicator.apply(overdueable, nextOverdueState, nextOverdueState); 
+            }
+
+            return nextOverdueState;
+        } catch (EntitlementUserApiException e) {
+            throw new OverdueError(e);
+        }
     }
 }

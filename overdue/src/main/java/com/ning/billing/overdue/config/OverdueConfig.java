@@ -38,7 +38,6 @@ public class OverdueConfig  extends ValidatingConfig<OverdueConfig> {
         return bundleOverdueStates;
     }
 
-
     @Override
     public ValidationErrors validate(OverdueConfig root,
             ValidationErrors errors) {

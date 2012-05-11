@@ -23,8 +23,6 @@ import org.joda.time.DateTime;
 
 public class DefaultBlockingState implements BlockingState{
 
-    private static final String CLEAR_STATE = "clear";
-
     private static BlockingState clearState= null;
     
     private final UUID blockingId;
@@ -38,7 +36,7 @@ public class DefaultBlockingState implements BlockingState{
     
     public static BlockingState getClearState() {
         if(clearState == null) {
-            clearState = new DefaultBlockingState(null, CLEAR_STATE, null, null, false, false, false);
+            clearState = new DefaultBlockingState(null, BlockingApi.CLEAR_STATE_NAME, null, null, false, false, false);
         }
         return clearState;
     }    
@@ -92,6 +90,7 @@ public class DefaultBlockingState implements BlockingState{
         return stateName;
     }
 
+    @Override
     public Blockable.Type getType() {
         return type;
     }

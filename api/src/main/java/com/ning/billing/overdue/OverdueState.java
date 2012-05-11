@@ -16,6 +16,8 @@
 
 package com.ning.billing.overdue;
 
+import org.joda.time.Period;
+
 import com.ning.billing.junction.api.Blockable;
 
 
@@ -33,4 +35,6 @@ public interface OverdueState<T extends Blockable> {
     public boolean blockChanges();
     
     public boolean isClearState();
+
+    public Period getReevaluationInterval() throws OverdueApiException;
 }

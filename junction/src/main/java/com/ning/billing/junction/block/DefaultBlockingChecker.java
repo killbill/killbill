@@ -116,7 +116,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
     public BlockingAggregator getBlockedStateAccountId(UUID accountId)  {
         BlockingAggregator result = new BlockingAggregator();
         if(accountId != null) {
-            BlockingState accountState = dao.getBlockingStateFor(accountId, Blockable.Type.ACCOUNT);
+            BlockingState accountState = dao.getBlockingStateFor(accountId);
             result.or(accountState);
         }
         return result;

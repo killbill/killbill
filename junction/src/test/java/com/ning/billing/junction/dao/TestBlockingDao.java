@@ -93,7 +93,7 @@ public class TestBlockingDao {
         ((ZombieControl)bundle).addResult("getId", uuid);
         
         Assert.assertEquals(dao.getBlockingStateFor(bundle).getStateName(), state2.getStateName());
-        Assert.assertEquals(dao.getBlockingStateFor(bundle.getId(), Blockable.Type.SUBSCRIPTION_BUNDLE).getStateName(), overdueStateName2);
+        Assert.assertEquals(dao.getBlockingStateFor(bundle.getId()).getStateName(), overdueStateName2);
         
     }
     
@@ -121,7 +121,7 @@ public class TestBlockingDao {
         
      
         SortedSet<BlockingState> history1 = dao.getBlockingHistoryFor(bundle);
-        SortedSet<BlockingState> history2 = dao.getBlockingHistoryForIdAndType(bundle.getId(), Blockable.Type.get(bundle));
+        SortedSet<BlockingState> history2 = dao.getBlockingHistoryFor(bundle.getId());
         
         Assert.assertEquals(history1.size(), 2);
         Assert.assertEquals(history1.first().getStateName(), overdueStateName);

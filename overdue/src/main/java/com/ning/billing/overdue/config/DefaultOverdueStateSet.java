@@ -19,12 +19,14 @@ package com.ning.billing.overdue.config;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
+import org.joda.time.MutablePeriod;
+import org.joda.time.Period;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
@@ -33,57 +35,52 @@ import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class DefaultOverdueStateSet<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements OverdueStateSet<T> {
+    private static final Period ZERO_PERIOD = new Period();
     private DefaultOverdueState<T> clearState;
-    
+
     protected abstract DefaultOverdueState<T>[] getStates();
-    
-    private DefaultOverdueState<T> getClearState() throws CatalogApiException {
+
+    private DefaultOverdueState<T> getClearState() throws OverdueApiException {
         for(DefaultOverdueState<T> overdueState : getStates()) {
             if(overdueState.isClearState()) {   
                 return overdueState;
             }
         }
-        throw new CatalogApiException(ErrorCode.CAT_MISSING_CLEAR_STATE);
+        throw new OverdueApiException(ErrorCode.CAT_MISSING_CLEAR_STATE);
     }
-    
+
     @Override
-    public OverdueState<T> findState(String stateName) throws CatalogApiException {
+    public OverdueState<T> findState(String stateName) throws OverdueApiException {
         for(DefaultOverdueState<T> state: getStates()) {
             if(state.getName().equals(stateName) ) { return state; }
         }
-        throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_OVEDUE_STATE, stateName);
+        throw new OverdueApiException(ErrorCode.CAT_NO_SUCH_OVEDUE_STATE, stateName);
     }
-    
-    
+
+
     /* (non-Javadoc)
      * @see com.ning.billing.catalog.overdue.OverdueBillingState#findClearState()
      */
     @Override
-    public DefaultOverdueState<T> findClearState() throws CatalogApiException {
+    public DefaultOverdueState<T> findClearState() throws OverdueApiException {
         if (clearState != null) {
             clearState = getClearState();
         }
         return clearState;
     }
-    
+
     /* (non-Javadoc)
      * @see com.ning.billing.catalog.overdue.OverdueBillingState#calculateOverdueState(com.ning.billing.catalog.api.overdue.BillingState, org.joda.time.DateTime)
      */
     @Override
-    public DefaultOverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) throws CatalogApiException {         
-            for(DefaultOverdueState<T> overdueState : getStates()) {
-                if(overdueState.getCondition().evaluate(billingState, now)) {   
-                    return overdueState;
-                }
+    public DefaultOverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) throws OverdueApiException {         
+        for(DefaultOverdueState<T> overdueState : getStates()) {
+            if(overdueState.getCondition().evaluate(billingState, now)) {   
+                return overdueState;
             }
-            return  findClearState();
+        }
+        return  findClearState();
     }
-
-    @Override
-    public DateTime dateOfNextCheck(BillingState<T> billingState, DateTime now) {
-        throw new NotImplementedException();
-    }
-        
 
     @Override
     public ValidationErrors validate(OverdueConfig root,
@@ -93,13 +90,13 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
         }
         try {
             getClearState();
-        } catch (CatalogApiException e) {
+        } catch (OverdueApiException e) {
             if(e.getCode() == ErrorCode.CAT_MISSING_CLEAR_STATE.getCode()) {
                 errors.add("Overdue state set is missing a clear state.", 
                         root.getURI(), this.getClass(), "");
-                }
+            }
         }
-        
+
         return errors;
     }
 }

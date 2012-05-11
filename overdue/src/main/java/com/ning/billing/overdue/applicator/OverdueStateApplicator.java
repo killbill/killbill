@@ -18,44 +18,57 @@ package com.ning.billing.overdue.applicator;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.DefaultBlockingState;
-
+import com.ning.billing.ovedue.notification.OverdueCheckPoster;
+import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.util.clock.Clock;
 
 public class OverdueStateApplicator<T extends Blockable>{
 
     private final BlockingApi blockingApi;
+    private final Clock clock;
+    private final OverdueCheckPoster poster;
 
 
     @Inject
-    public OverdueStateApplicator(BlockingApi accessApi) {
+    public OverdueStateApplicator(BlockingApi accessApi, Clock clock, OverdueCheckPoster poster) {
         this.blockingApi = accessApi;
+        this.clock = clock;
+        this.poster = poster;
     }
 
-    public void apply(T overdueable, OverdueState<T> previousOverdueState, OverdueState<T> nextOverdueState, DateTime timeOfNextCheck) throws OverdueError {
+    public void apply(T overdueable, OverdueState<T> previousOverdueState, OverdueState<T> nextOverdueState) throws OverdueError {
         if(previousOverdueState.getName().equals(nextOverdueState.getName())) {
             return; // nothing to do
         }
-        
+
         storeNewState(overdueable, nextOverdueState);
-  
-        if(timeOfNextCheck != null && !nextOverdueState.isClearState()) {
-            createFutureNotification(overdueable, timeOfNextCheck);
+        try {
+            Period reevaluationInterval     = nextOverdueState.getReevaluationInterval();
+            if(!nextOverdueState.isClearState()) {
+                createFutureNotification(overdueable, clock.getUTCNow().plus(reevaluationInterval));
+            }
+        } catch(OverdueApiException e) {
+            if(e.getCode() != ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
+                new OverdueError(e);
+            }
         }
 
         if(nextOverdueState.isClearState()) {
             clear(overdueable);
         }
-        
-        //If new state is clear state reset next events and override table
-        throw new NotImplementedException();
+
+
+
     }
 
 
@@ -82,17 +95,13 @@ public class OverdueStateApplicator<T extends Blockable>{
 
     protected void createFutureNotification(T overdueable,
             DateTime timeOfNextCheck) {
-        // TODO MDW
-        
+        poster.insertOverdueCheckNotification(overdueable, timeOfNextCheck);
+
     }
 
-
-    
-    protected void clear(T overdueable) {
-        //TODO MDW
-        // Clear future notification checks
-        // Clear any overrides
-        
+    protected void clear(T blockable) {
+        //Need to clear the overrride table here too (when we add it)
+        poster.clearNotificationsFor(blockable);
     }
 
 }

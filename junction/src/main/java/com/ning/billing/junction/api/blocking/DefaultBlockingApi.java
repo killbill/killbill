@@ -21,7 +21,6 @@ import java.util.UUID;
 
 import com.google.inject.Inject;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
@@ -49,8 +48,8 @@ public class DefaultBlockingApi implements BlockingApi {
     }
 
     @Override
-    public BlockingState getBlockingStateFor(UUID overdueableId, Type type) {
-        return dao.getBlockingStateFor(overdueableId, type);
+    public BlockingState getBlockingStateFor(UUID overdueableId) {
+        return dao.getBlockingStateFor(overdueableId);
     }
 
     @Override
@@ -59,9 +58,8 @@ public class DefaultBlockingApi implements BlockingApi {
     }
 
     @Override
-    public SortedSet<BlockingState> getBlockingHistory(UUID overdueableId,
-            Type type) {
-        return dao.getBlockingHistoryForIdAndType(overdueableId, type);
+    public SortedSet<BlockingState> getBlockingHistory(UUID overdueableId) {
+        return dao.getBlockingHistoryFor(overdueableId);
     }
 
     @Override
