@@ -34,7 +34,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
-import com.ning.billing.util.notificationq.NotificationLifecycle.NotificationLifecycleState;
+import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>, CloseMe {
@@ -70,7 +70,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
             stmt.bind("creating_owner", evt.getCreatedOwner());
             stmt.bind("processing_available_dt", getDate(evt.getNextAvailableDate()));
             stmt.bind("processing_owner", evt.getOwner());
-            stmt.bind("processing_state", NotificationLifecycleState.AVAILABLE.toString());
+            stmt.bind("processing_state", PersistentQueueEntryLifecycleState.AVAILABLE.toString());
         }
     }
     
@@ -86,7 +86,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
             final String eventJson = r.getString("event_json"); 
             final DateTime nextAvailableDate = getDate(r, "processing_available_dt");
             final String processingOwner = r.getString("processing_owner");
-            final NotificationLifecycleState processingState = NotificationLifecycleState.valueOf(r.getString("processing_state"));
+            final PersistentQueueEntryLifecycleState processingState = PersistentQueueEntryLifecycleState.valueOf(r.getString("processing_state"));
             
             return new BusEventEntry(id, createdOwner, processingOwner, nextAvailableDate, processingState, className, eventJson);
         }

@@ -491,7 +491,7 @@ public class TestJaxrsBase {
      * but until we have a strong need for it, this is in the TODO list...
      */
     protected void crappyWaitForLackOfProperSynchonization() throws Exception {
-        Thread.sleep(7000);
+        Thread.sleep(5000);
     }
 
 }

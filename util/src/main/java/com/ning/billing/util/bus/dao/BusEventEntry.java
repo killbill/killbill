@@ -17,19 +17,19 @@ package com.ning.billing.util.bus.dao;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.notificationq.NotificationLifecycle;
+import com.ning.billing.util.queue.PersistentQueueEntryLifecycle;
 
-public class BusEventEntry implements NotificationLifecycle  {
+public class BusEventEntry implements PersistentQueueEntryLifecycle  {
     
     private final long id;
     private final String owner;
     private final String createdOwner;
     private final DateTime nextAvailable;
-    private final NotificationLifecycleState processingState;
+    private final PersistentQueueEntryLifecycleState processingState;
     private final String busEventClass;
     private final String busEventJson;
 
-    public BusEventEntry(final long id, final String createdOwner, final String owner, final DateTime nextAvailable, NotificationLifecycleState processingState, final String busEventClass, final String busEventJson) {
+    public BusEventEntry(final long id, final String createdOwner, final String owner, final DateTime nextAvailable, PersistentQueueEntryLifecycleState processingState, final String busEventClass, final String busEventJson) {
         this.id = id;
         this.createdOwner = createdOwner;
         this.owner = owner;
@@ -73,7 +73,7 @@ public class BusEventEntry implements NotificationLifecycle  {
     }
 
     @Override
-    public NotificationLifecycleState getProcessingState() {
+    public PersistentQueueEntryLifecycleState getProcessingState() {
         return processingState;
     }
 

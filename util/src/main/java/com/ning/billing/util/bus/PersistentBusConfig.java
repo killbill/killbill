@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,29 +13,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.util.bus;
 
-package com.ning.billing.util.notificationq;
+import org.skife.config.Config;
+import org.skife.config.Default;
 
-import org.joda.time.DateTime;
+import com.ning.billing.config.PersistentQueueConfig;
 
+public interface PersistentBusConfig extends PersistentQueueConfig {
 
-public interface NotificationLifecycle {
-
-    public enum NotificationLifecycleState {
-        AVAILABLE,
-        IN_PROCESSING,
-        PROCESSED,
-        REMOVED
-    }
-
-    public String getOwner();
+    @Override
+    @Config("killbill.billing.util.persistent.bus.sleep")
+    @Default("500")
+    public long getSleepTimeMs();
     
-    public String getCreatedOwner();
-
-    public DateTime getNextAvailableDate();
-
-    public NotificationLifecycleState getProcessingState();
-
-
-    public boolean isAvailableForProcessing(DateTime now);
+    @Config("killbill.billing.util.persistent.bus.nbThreads")
+    @Default("3")
+    public int getNbThreads();
 }

@@ -88,9 +88,9 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     private List<Notification> getReadyNotifications() {
 
         final Date now = clock.getUTCNow().toDate();
-        final Date nextAvailable = clock.getUTCNow().plus(config.getDaoClaimTimeMs()).toDate();
+        final Date nextAvailable = clock.getUTCNow().plus(CLAIM_TIME_MS).toDate();
 
-        List<Notification> input = dao.getReadyNotifications(now, hostname, config.getDaoMaxReadyEvents(), getFullQName());
+        List<Notification> input = dao.getReadyNotifications(now, hostname, CLAIM_TIME_MS, getFullQName());
 
         List<Notification> claimedNotifications = new ArrayList<Notification>();
         for (Notification cur : input) {

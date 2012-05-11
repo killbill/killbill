@@ -75,16 +75,8 @@ public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier {
                     return config.isNotificationProcessingOff();
                 }
                 @Override
-                public long getNotificationSleepTimeMs() {
-                    return config.getNotificationSleepTimeMs();
-                }
-                @Override
-                public int getDaoMaxReadyEvents() {
-                    return config.getDaoMaxReadyEvents();
-                }
-                @Override
-                public long getDaoClaimTimeMs() {
-                    return config.getDaoClaimTimeMs();
+                public long getSleepTimeMs() {
+                    return config.getSleepTimeMs();
                 }
             });
         } catch (NotificationQueueAlreadyExists e) {

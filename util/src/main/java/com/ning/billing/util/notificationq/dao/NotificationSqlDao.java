@@ -39,7 +39,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.util.notificationq.DefaultNotification;
 import com.ning.billing.util.notificationq.Notification;
-import com.ning.billing.util.notificationq.NotificationLifecycle.NotificationLifecycleState;
+import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, CloseMe {
@@ -77,7 +77,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             stmt.bind("queue_name", evt.getQueueName());
             stmt.bind("processing_available_dt", getDate(evt.getNextAvailableDate()));
             stmt.bind("processing_owner", evt.getOwner());
-            stmt.bind("processing_state", NotificationLifecycleState.AVAILABLE.toString());
+            stmt.bind("processing_state", PersistentQueueEntryLifecycleState.AVAILABLE.toString());
         }
     }
 
@@ -95,7 +95,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             final DateTime effectiveDate = getDate(r, "effective_dt");
             final DateTime nextAvailableDate = getDate(r, "processing_available_dt");
             final String processingOwner = r.getString("processing_owner");
-            final NotificationLifecycleState processingState = NotificationLifecycleState.valueOf(r.getString("processing_state"));
+            final PersistentQueueEntryLifecycleState processingState = PersistentQueueEntryLifecycleState.valueOf(r.getString("processing_state"));
 
             return new DefaultNotification(id, uuid, createdOwner, processingOwner, queueName, nextAvailableDate,
                     processingState, notificationKey, effectiveDate);

@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,23 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.config;
 
-import org.skife.config.Config;
-import org.skife.config.Default;
-
-import com.google.common.annotations.VisibleForTesting;
-
-public interface EntitlementConfig extends NotificationConfig, KillbillConfig  {
-
-	@Override
-    @Config("killbill.entitlement.engine.notifications.sleep")
-    @Default("500")
-    public long getSleepTimeMs();    
-
-	@Override
-    @Config("killbill.notifications.off")
-    @Default("false")
-    public boolean isNotificationProcessingOff();
+public interface PersistentQueueConfig {
+    public long getSleepTimeMs();
 }

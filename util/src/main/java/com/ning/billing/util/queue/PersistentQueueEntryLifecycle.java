@@ -14,22 +14,28 @@
  * under the License.
  */
 
-package com.ning.billing.config;
+package com.ning.billing.util.queue;
 
-import org.skife.config.Config;
-import org.skife.config.Default;
+import org.joda.time.DateTime;
 
-import com.google.common.annotations.VisibleForTesting;
 
-public interface EntitlementConfig extends NotificationConfig, KillbillConfig  {
+public interface PersistentQueueEntryLifecycle {
 
-	@Override
-    @Config("killbill.entitlement.engine.notifications.sleep")
-    @Default("500")
-    public long getSleepTimeMs();    
+    public enum PersistentQueueEntryLifecycleState {
+        AVAILABLE,
+        IN_PROCESSING,
+        PROCESSED,
+        REMOVED
+    }
 
-	@Override
-    @Config("killbill.notifications.off")
-    @Default("false")
-    public boolean isNotificationProcessingOff();
+    public String getOwner();
+    
+    public String getCreatedOwner();
+
+    public DateTime getNextAvailableDate();
+
+    public PersistentQueueEntryLifecycleState getProcessingState();
+
+
+    public boolean isAvailableForProcessing(DateTime now);
 }

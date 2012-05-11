@@ -85,7 +85,7 @@ public class TestIntegrationBase implements TestListenerStatus {
     protected static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
     protected static long AT_LEAST_ONE_MONTH_MS =  31L * 24L * 3600L * 1000L;
 
-    protected static final long DELAY = 10000;
+    protected static final long DELAY = 5000;
 
     @Inject
     protected IDBI dbi;
