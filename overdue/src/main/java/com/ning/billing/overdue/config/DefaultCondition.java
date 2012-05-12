@@ -68,8 +68,8 @@ public class DefaultCondition<T extends Blockable> extends ValidatingConfig<Over
 		return 
 				(numberOfUnpaidInvoicesEqualsOrExceeds == null || state.getNumberOfUnpaidInvoices() >= numberOfUnpaidInvoicesEqualsOrExceeds.intValue() ) &&
 				(totalUnpaidInvoiceBalanceEqualsOrExceeds == null || totalUnpaidInvoiceBalanceEqualsOrExceeds.compareTo(state.getBalanceOfUnpaidInvoices()) <= 0) &&
-				(unpaidInvoiceTriggerDate == null ||
-				 (state.getDateOfEarliestUnpaidInvoice() != null && !unpaidInvoiceTriggerDate.isAfter(now))) &&
+				(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds == null ||
+				    (unpaidInvoiceTriggerDate != null && !unpaidInvoiceTriggerDate.isAfter(now))) &&
 				(responseForLastFailedPayment == null || responseIsIn(state.getResponseForLastFailedPayment(), responseForLastFailedPayment)) &&
 				(controlTag == null || isTagIn(controlTag, state.getTags()));
 	}
