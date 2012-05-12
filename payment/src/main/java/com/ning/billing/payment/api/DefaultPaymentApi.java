@@ -41,6 +41,9 @@ import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 
 public class DefaultPaymentApi implements PaymentApi {
@@ -50,6 +53,7 @@ public class DefaultPaymentApi implements PaymentApi {
     private final RetryService retryService;
     private final PaymentDao paymentDao;
     private final PaymentConfig config;
+    private final Bus eventBus;
 
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentApi.class);
@@ -60,13 +64,16 @@ public class DefaultPaymentApi implements PaymentApi {
             InvoicePaymentApi invoicePaymentApi,
             RetryService retryService,
             PaymentDao paymentDao,
-            PaymentConfig config) {
+            PaymentConfig config,
+            Bus eventBus) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.retryService = retryService;
         this.paymentDao = paymentDao;
         this.config = config;
+        this.eventBus = eventBus;
+
     }
 
     @Override
@@ -274,6 +281,7 @@ public class DefaultPaymentApi implements PaymentApi {
             log.info("Could not process a payment for " + paymentAttempt + " error was " + error);
 
             scheduleRetry(paymentAttempt, error);
+            postPaymentEvent(paymentOrError.getLeft(), account.getId());
         }
         else {
             paymentInfo = paymentOrError.getRight();
@@ -301,7 +309,8 @@ public class DefaultPaymentApi implements PaymentApi {
             if (paymentInfo.getPaymentId() != null) {
                 paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), paymentInfo.getPaymentId(), context);
             }
-        }
+            postPaymentEvent(paymentInfo, account.getId());
+       }
 
         invoicePaymentApi.notifyOfPaymentAttempt(
                 invoice.getId(),
@@ -313,6 +322,17 @@ public class DefaultPaymentApi implements PaymentApi {
                                 context);
 
         return paymentOrError;
+    }
+    
+    private void postPaymentEvent(BusEvent ev, UUID accountId) {
+        if (ev == null) {
+            return;
+        }
+        try {
+            eventBus.post(ev);
+        } catch (EventBusException e) {
+            log.error("Failed to post Payment event event for account {} ", accountId, e);
+        }
     }
 
     private void scheduleRetry(PaymentAttempt paymentAttempt, String error) {

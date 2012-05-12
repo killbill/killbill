@@ -48,7 +48,6 @@ public class RequestProcessor {
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
     private final AccountUserApi accountUserApi;
     private final PaymentApi paymentApi;
-    private final Bus eventBus;
     private final Clock clock;
 
     private static final Logger log = LoggerFactory.getLogger(RequestProcessor.class);
@@ -57,25 +56,13 @@ public class RequestProcessor {
     public RequestProcessor(Clock clock,
             AccountUserApi accountUserApi,
             PaymentApi paymentApi,
-            PaymentProviderPluginRegistry pluginRegistry,
-            Bus eventBus) {
+            PaymentProviderPluginRegistry pluginRegistry) {
         this.clock = clock;
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
-        this.eventBus = eventBus;
     }
 
-    private void postPaymentEvent(BusEvent ev, UUID accountId) {
-        if (ev == null) {
-            return;
-        }
-        try {
-            eventBus.post(ev);
-        } catch (EventBusException e) {
-            log.error("Failed to post Payment event event for account {} ", accountId, e);
-        }
-    }
-
+ 
     @Subscribe
     public void receiveInvoice(InvoiceCreationEvent event) {
 
@@ -88,7 +75,6 @@ public class RequestProcessor {
                 CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
                 List<PaymentInfoEvent> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()), context);
                 PaymentInfoEvent infoEvent = (!results.isEmpty()) ?  results.get(0) : null;
-                postPaymentEvent(infoEvent, account.getId());
                 return;
             } else {
                 errorEvent = new DefaultPaymentErrorEvent(null, "Failed to retrieve account", event.getAccountId(), event.getInvoiceId(), event.getUserToken());
@@ -100,6 +86,5 @@ public class RequestProcessor {
             log.info("Failed to process invoice payment for account: " + event.getAccountId()); // Removed stack trace log here and changed to info - this an expected flow
             errorEvent = new DefaultPaymentErrorEvent(null, e.getMessage(), event.getAccountId(), event.getInvoiceId(), event.getUserToken());                        
         }
-        postPaymentEvent(errorEvent, event.getAccountId());
     }
 }

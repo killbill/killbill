@@ -23,6 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -218,19 +219,11 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         paymentPlugin.makeAllInvoicesFail(false);
         Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCNow());
         List<String> invoiceIds = new ArrayList<String>();
-        List<PaymentAttempt> paymentAttempts = new ArrayList<PaymentAttempt>();
         for(Invoice invoice : invoices) {
-//            paymentAttempts.addAll(paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId().toString()));
-//            for(PaymentAttempt pa : paymentAttempts) {
-//                busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-//                try {
-//                paymentApi.createPaymentForPaymentAttempt(pa.getPaymentAttemptId(), new DefaultCallContext("test", null, null, clock));
-//                } catch(PaymentApiException e) {
-//                    log.info("",e);
-//                }
-//            }
-            invoiceIds.add(invoice.getId().toString());
-            
+            invoiceIds.add(invoice.getId().toString()); 
+            if(invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
+                busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+            }
         }
         paymentApi.createPayment(account, invoiceIds, new DefaultCallContext("test", null, null, clock));
        
