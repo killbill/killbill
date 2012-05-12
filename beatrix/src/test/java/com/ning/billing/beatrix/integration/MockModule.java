@@ -30,6 +30,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.ning.billing.account.glue.AccountModule;
+import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.CatalogService;
@@ -44,6 +45,7 @@ import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.lifecycle.KillbillService;
+import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.payment.setup.PaymentModule;
@@ -99,6 +101,7 @@ public class MockModule extends AbstractModule {
         install(new TemplateModule());
         install(new PaymentMockModule());
         install(new DefaultJunctionModule());
+        install(new IntegrationTestOverdueModule());
     }
 
     private static final class PaymentMockModule extends PaymentModule {
@@ -133,6 +136,7 @@ public class MockModule extends AbstractModule {
                             .add(injector.getInstance(EntitlementService.class))
                             .add(injector.getInstance(InvoiceService.class))
                             .add(injector.getInstance(PaymentService.class))
+                            .add(injector.getInstance(OverdueService.class))
                             .build();
             return services;
         }

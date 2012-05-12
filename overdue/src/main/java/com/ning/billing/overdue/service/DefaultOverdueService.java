@@ -18,28 +18,48 @@ package com.ning.billing.overdue.service;
 
 import java.net.URI;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
+import com.ning.billing.overdue.listener.OverdueListener;
+import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.config.XMLLoader;
 
 public class DefaultOverdueService implements ExtendedOverdueService {
+    private static final Logger log = LoggerFactory.getLogger(DefaultOverdueService.class);
+    
     public static final String OVERDUE_SERVICE_NAME = "overdue-service";
     private OverdueUserApi userApi;
     private OverdueConfig overdueConfig;
     private OverdueProperties properties;
+    private OverdueCheckNotifier notifier;
+    private BusService busService;
+    OverdueListener listener;
 
     private boolean isInitialized;
 
     @Inject
-    public DefaultOverdueService(OverdueUserApi userApi, OverdueProperties properties){
+    public DefaultOverdueService(
+            OverdueUserApi userApi, 
+            OverdueProperties properties, 
+            OverdueCheckNotifier notifier, 
+            BusService busService,
+            OverdueListener listener){
         this.userApi = userApi;
         this.properties = properties;
+        this.notifier = notifier;
+        this.busService = busService;
+        this.listener = listener;
     }
-    
+
     @Override
     public String getName() {
         return OVERDUE_SERVICE_NAME;
@@ -51,7 +71,7 @@ public class DefaultOverdueService implements ExtendedOverdueService {
     }
 
     @Override
-   public OverdueConfig getOverdueConfig() {
+    public OverdueConfig getOverdueConfig() {
         return overdueConfig;
     }
 
@@ -70,4 +90,36 @@ public class DefaultOverdueService implements ExtendedOverdueService {
         }
     }
 
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.INIT_SERVICE)
+    public void initialize() {
+        notifier.initialize();
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
+    public void start() {
+        notifier.start();
+    }
+
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
+    public void registerForBus() {
+        try {
+            busService.getBus().register(listener);
+        } catch (EventBusException e) {
+           log.error("Problem encountered registering OverdueListener on the Event Bus", e);
+        }
+    }
+
+    @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.UNREGISTER_EVENTS)
+    public void unregisterForBus() {
+        try {
+            busService.getBus().unregister(listener);
+        } catch (EventBusException e) {
+            log.error("Problem encountered registering OverdueListener on the Event Bus", e);
+        }
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    public void stop() {
+        notifier.stop();
+    }
 }

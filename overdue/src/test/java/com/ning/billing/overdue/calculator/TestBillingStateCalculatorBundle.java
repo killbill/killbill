@@ -135,7 +135,48 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
     }
     
     
-    
+    @Test(groups = {"fast"}, enabled=true)
+    public void testcalculateBillingStateForBundleNoOverdueInvoices() throws Exception {
+        
+       UUID thisBundleId = new UUID(0L,0L);
+       UUID thatBundleId = new UUID(0L,1L);
+       
+       now = new DateTime();
+       List<Invoice> invoices = new ArrayList<Invoice>(5);
+      
+       Clock clock = new ClockMock();
+       InvoiceUserApi invoiceApi = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class);
+       ((ZombieControl)invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
+       
+       SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
+       ((ZombieControl)bundle).addResult("getId", thisBundleId);
+       ((ZombieControl)bundle).addResult("getAccountId", UUID.randomUUID());
+       
+       EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+       Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+       ((ZombieControl)entitlementApi).addResult("getBaseSubscription",subscription);
+       
+       Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
+       PriceList pricelist = new MockPriceList();
+       ((ZombieControl)subscription).addResult("getCurrentPlan", plan);
+       ((ZombieControl)subscription).addResult("getCurrentPriceList", pricelist);
+       ((ZombieControl)subscription).addResult("getCurrentPhase", plan.getFinalPhase());
+      
+       BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(entitlementApi, invoiceApi, clock);
+            
+       BillingStateBundle state = calc.calculateBillingState(bundle); 
+       
+       Assert.assertEquals(state.getNumberOfUnpaidInvoices(),0);
+       Assert.assertEquals(state.getBalanceOfUnpaidInvoices().intValue(), 0);
+       Assert.assertEquals(state.getDateOfEarliestUnpaidInvoice(), null);
+       Assert.assertEquals(state.getResponseForLastFailedPayment(),PaymentResponse.INSUFFICIENT_FUNDS); //TODO needs more when implemented
+       Assert.assertEquals(state.getTags().length,0);//TODO needs more when implemented
+       Assert.assertEquals(state.getBasePlanBillingPeriod(), plan.getBillingPeriod());
+       Assert.assertEquals(state.getBasePlanPhaseType(), plan.getFinalPhase().getPhaseType());
+       Assert.assertEquals(state.getBasePlanPriceList(), pricelist);
+       Assert.assertEquals(state.getBasePlanProduct(), plan.getProduct());
+       
+    }
     
     
     

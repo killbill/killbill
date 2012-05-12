@@ -139,13 +139,20 @@ public class TestApiListener {
     @Subscribe
     public void handlePaymentErrorEvents(PaymentErrorEvent event) {
         log.info(String.format("TestApiListener Got PaymentError event %s", event.toString()));
-    }
+        assertEqualsNicely(NextEvent.PAYMENT_ERROR);
+        notifyIfStackEmpty();   }
 
     public void reset() {
         synchronized(this) {
             nextExpectedEvent.clear();
             completed = true;
             nonExpectedMode = false;
+        }
+    }
+
+    public void pushExpectedEvents(NextEvent ... events) {
+        for(NextEvent event : events) {
+            pushExpectedEvent(event);
         }
     }
 

@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -60,7 +61,11 @@ public abstract class BillingStateCalculator<T extends Blockable> {
     public abstract BillingState<T> calculateBillingState(T overdueable) throws EntitlementUserApiException;
     
     protected DateTime earliest(SortedSet<Invoice> unpaidInvoices) {
-        return unpaidInvoices.first().getInvoiceDate();
+        try {
+            return unpaidInvoices.first().getInvoiceDate();
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     protected BigDecimal sumBalance(SortedSet<Invoice> unpaidInvoices) {

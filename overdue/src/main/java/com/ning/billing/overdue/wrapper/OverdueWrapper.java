@@ -56,8 +56,8 @@ public class OverdueWrapper<T extends Blockable> {
             String previousOverdueStateName = api.getBlockingStateFor(overdueable).getStateName();
             nextOverdueState                = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
 
-            if(!previousOverdueStateName.equals(nextOverdueState.getName())) {
-                overdueStateApplicator.apply(overdueable, nextOverdueState, nextOverdueState); 
+            if(nextOverdueState != null && !previousOverdueStateName.equals(nextOverdueState.getName())) {
+                overdueStateApplicator.apply(overdueable, previousOverdueStateName, nextOverdueState); 
             }
 
             return nextOverdueState;

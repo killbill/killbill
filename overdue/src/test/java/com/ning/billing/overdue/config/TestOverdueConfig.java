@@ -36,6 +36,9 @@ public class TestOverdueConfig {
                     "           <externalMessage>Reached OD1</externalMessage>" +
                     "           <blockChanges>true</blockChanges>" +
                     "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
+                    "           <autoReevaluationInterval>" +
+                    "               <unit>DAYS</unit><number>15</number>" +
+                    "           </autoReevaluationInterval>" +
                     "       </state>" +
                     "       <state name=\"OD2\">" +
                     "           <condition>" +
@@ -46,6 +49,9 @@ public class TestOverdueConfig {
                     "           <externalMessage>Reached OD1</externalMessage>" +
                     "           <blockChanges>true</blockChanges>" +
                     "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
+                    "           <autoReevaluationInterval>" +
+                    "               <unit>DAYS</unit><number>15</number>" +
+                    "           </autoReevaluationInterval>" +
                     "       </state>" +
                     "   </bundleOverdueStates>" +
                     "</overdueConfig>";

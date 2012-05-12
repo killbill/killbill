@@ -16,15 +16,13 @@
 
 package com.ning.billing.overdue.listener;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -36,29 +34,25 @@ import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 
 public class OverdueDispatcher {
     Logger log = LoggerFactory.getLogger(OverdueDispatcher.class);
-    
+
     private final EntitlementUserApi entitlementUserApi;
-    private final AccountUserApi accountUserApi;
     private final OverdueWrapperFactory factory;
-    
+
     @Inject
-    public OverdueDispatcher(AccountUserApi accountUserApi, 
+    public OverdueDispatcher(
             EntitlementUserApi entitlementUserApi, 
             OverdueWrapperFactory factory) {
-        this.accountUserApi = accountUserApi;
         this.entitlementUserApi = entitlementUserApi;
         this.factory = factory;
     }
-    
+
     public void processOverdueForAccount(UUID accountId) {
-        try {
-            Account account = accountUserApi.getAccountById(accountId);
-            processOverdue(account);
-        } catch (AccountApiException e) {
-            log.error("Error processing Overdue for Account with id: " + accountId.toString(), e);
+        List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
+        for(SubscriptionBundle bundle : bundles) {
+            processOverdue(bundle);
         }
     }
-    
+
     public void processOverdueForBundle(UUID bundleId) {
         try {
             SubscriptionBundle bundle        = entitlementUserApi.getBundleFromId(bundleId);
@@ -68,20 +62,24 @@ public class OverdueDispatcher {
         }
     }
 
-    public void processOverdue(Blockable bloackable) {
+    public void processOverdue(Blockable blockable) {
         try {
-            OverdueWrapper<?> wrapper = factory.createOverdueWrapperFor(bloackable);
-            wrapper.refresh();
+            factory.createOverdueWrapperFor(blockable).refresh();
         } catch (OverdueError e) {
-            log.error("Error processing Overdue for Blockable with id: " + bloackable.getId().toString(), e);
+            log.error("Error processing Overdue for Blockable with id: " + blockable.getId().toString(), e);
         } catch (OverdueApiException e) {
-            log.error("Error processing Overdue for Blockable with id: " + bloackable.getId().toString(), e);
+            log.error("Error processing Overdue for Blockable with id: " + blockable.getId().toString(), e);
         }
     }
 
     public void processOverdue(UUID blockableId) {
-        
-        
+        try {
+        factory.createOverdueWrapperFor(blockableId).refresh();
+        } catch (OverdueError e) {
+            log.error("Error processing Overdue for Blockable with id: " + blockableId.toString(), e);
+        } catch (OverdueApiException e) {
+            log.error("Error processing Overdue for Blockable with id: " + blockableId.toString(), e);
+        }
     }
 
 }

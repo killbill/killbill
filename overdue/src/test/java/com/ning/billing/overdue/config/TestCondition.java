@@ -89,7 +89,7 @@ public class TestCondition {
 		
 		DateTime now = new DateTime();
 		
-		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, null, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 		

@@ -39,7 +39,7 @@ import com.ning.billing.util.clock.Clock;
 public class OverdueWrapperFactory {
     private static final Logger log =  LoggerFactory.getLogger(OverdueWrapperFactory.class);
 
-    private final OverdueConfig overdueConfig;
+    protected  OverdueConfig overdueConfig; //protected and not final so it can be set in testing
     private final EntitlementUserApi entitlementApi;
     private final BillingStateCalculatorBundle billingStateCalcuatorBundle;
     private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
@@ -47,14 +47,14 @@ public class OverdueWrapperFactory {
     private final Clock clock;
 
     @Inject
-    public OverdueWrapperFactory(BlockingApi api, ExtendedOverdueService service, Clock clock, 
+    public OverdueWrapperFactory(BlockingApi api, OverdueConfig config, Clock clock, 
             BillingStateCalculatorBundle billingStateCalcuatorBundle, 
             OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle,
             EntitlementUserApi entitlementApi) {
         this.billingStateCalcuatorBundle = billingStateCalcuatorBundle;
         this.overdueStateApplicatorBundle = overdueStateApplicatorBundle;
         this.entitlementApi = entitlementApi;
-        this.overdueConfig = service.getOverdueConfig();
+        this.overdueConfig = config;
         this.api = api;
         this.clock = clock;
     }

@@ -121,6 +121,10 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
 		return this;
 	}
 
+	protected DefaultOverdueState<T> setClearState(boolean isClearState) {
+        this.isClearState = isClearState;
+        return this;
+    }
 	protected DefaultOverdueState<T> setExternalMessage(String externalMessage) {
 		this.externalMessage = externalMessage;
 		return this;

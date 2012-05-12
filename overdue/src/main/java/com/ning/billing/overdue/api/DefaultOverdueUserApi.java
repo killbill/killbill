@@ -17,11 +17,12 @@
 package com.ning.billing.overdue.api;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
@@ -32,22 +33,21 @@ import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueError;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
-import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 
 public class DefaultOverdueUserApi implements OverdueUserApi { 
-
+    Logger log = LoggerFactory.getLogger(DefaultOverdueUserApi.class);
     
     private final OverdueWrapperFactory factory;
     private final BlockingApi accessApi; 
     private final OverdueConfig overdueConfig;
    
     @Inject
-    public DefaultOverdueUserApi(OverdueWrapperFactory factory,BlockingApi accessApi, ExtendedOverdueService service,  CatalogService catalogService) {
+    public DefaultOverdueUserApi(OverdueWrapperFactory factory,BlockingApi accessApi, OverdueConfig config,  CatalogService catalogService) {
         this.factory = factory;
         this.accessApi = accessApi;
-        this.overdueConfig = service.getOverdueConfig();
+        this.overdueConfig = config;
     }
     
     @SuppressWarnings("unchecked")
@@ -63,8 +63,9 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     }
     
     @Override
-    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError, OverdueApiException {
-        OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(overdueable);
+    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(T blockable) throws OverdueError, OverdueApiException {
+        log.info(String.format("Refresh of %s requested", blockable.getId()));
+        OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(blockable);
         return wrapper.refresh();
     } 
  

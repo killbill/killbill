@@ -26,6 +26,8 @@ import org.joda.time.Period;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
@@ -36,21 +38,15 @@ import com.ning.billing.util.config.ValidationErrors;
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class DefaultOverdueStateSet<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements OverdueStateSet<T> {
     private static final Period ZERO_PERIOD = new Period();
-    private DefaultOverdueState<T> clearState;
+    private DefaultOverdueState<T> clearState = new DefaultOverdueState<T>().setName(BlockingApi.CLEAR_STATE_NAME).setClearState(true);
 
     protected abstract DefaultOverdueState<T>[] getStates();
 
-    private DefaultOverdueState<T> getClearState() throws OverdueApiException {
-        for(DefaultOverdueState<T> overdueState : getStates()) {
-            if(overdueState.isClearState()) {   
-                return overdueState;
-            }
-        }
-        throw new OverdueApiException(ErrorCode.CAT_MISSING_CLEAR_STATE);
-    }
-
     @Override
     public OverdueState<T> findState(String stateName) throws OverdueApiException {
+        if(stateName.equals( BlockingApi.CLEAR_STATE_NAME)) {
+            return clearState;
+        }
         for(DefaultOverdueState<T> state: getStates()) {
             if(state.getName().equals(stateName) ) { return state; }
         }
@@ -62,11 +58,8 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
      * @see com.ning.billing.catalog.overdue.OverdueBillingState#findClearState()
      */
     @Override
-    public DefaultOverdueState<T> findClearState() throws OverdueApiException {
-        if (clearState != null) {
-            clearState = getClearState();
-        }
-        return clearState;
+    public DefaultOverdueState<T> getClearState() throws OverdueApiException {
+       return clearState;
     }
 
     /* (non-Javadoc)
@@ -79,7 +72,7 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
                 return overdueState;
             }
         }
-        return  findClearState();
+        return  getClearState();
     }
 
     @Override

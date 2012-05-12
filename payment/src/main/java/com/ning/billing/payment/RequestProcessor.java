@@ -23,7 +23,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
@@ -31,7 +30,6 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
-import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -39,7 +37,6 @@ import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.bus.BusEvent.BusEventType;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -67,7 +64,7 @@ public class RequestProcessor {
         this.paymentApi = paymentApi;
         this.eventBus = eventBus;
     }
-    
+
     private void postPaymentEvent(BusEvent ev, UUID accountId) {
         if (ev == null) {
             return;
@@ -94,14 +91,14 @@ public class RequestProcessor {
                 postPaymentEvent(infoEvent, account.getId());
                 return;
             } else {
-                errorEvent = new DefaultPaymentErrorEvent(null, "Failed to retrieve account", event.getAccountId(), null, null);
+                errorEvent = new DefaultPaymentErrorEvent(null, "Failed to retrieve account", event.getAccountId(), event.getInvoiceId(), event.getUserToken());
             }
         } catch(AccountApiException e) {
             log.error("Failed to process invoice payment", e);
-            errorEvent = new DefaultPaymentErrorEvent(null, e.getMessage(), event.getAccountId(), null, null);            
+            errorEvent = new DefaultPaymentErrorEvent(null, e.getMessage(), event.getAccountId(), event.getInvoiceId(), event.getUserToken());            
         } catch (PaymentApiException e) {
-            log.error("Failed to process invoice payment", e);
-            errorEvent = new DefaultPaymentErrorEvent(null, e.getMessage(), event.getAccountId(), null, null);                        
+            log.info("Failed to process invoice payment for account: " + event.getAccountId()); // Removed stack trace log here and changed to info - this an expected flow
+            errorEvent = new DefaultPaymentErrorEvent(null, e.getMessage(), event.getAccountId(), event.getInvoiceId(), event.getUserToken());                        
         }
         postPaymentEvent(errorEvent, event.getAccountId());
     }

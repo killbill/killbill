@@ -53,7 +53,7 @@ import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckPoster;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueProperties;
-import com.ning.billing.overdue.glue.OverdueModule;
+import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
@@ -108,7 +108,7 @@ public class TestOverdueCheckNotifier {
 	@BeforeClass(groups={"slow"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION,  new OverdueModule() {
+        final Injector g = Guice.createInjector(Stage.PRODUCTION,  new DefaultOverdueModule() {
 			
             protected void configure() {
                 super.configure();

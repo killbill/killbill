@@ -35,10 +35,11 @@
 <xs:sequence>
 <xs:element minOccurs="0" name="condition" type="defaultCondition"/>
 <xs:element minOccurs="0" name="externalMessage" type="xs:string"/>
-<xs:element minOccurs="0" name="disableEntitlementAndChangesBlocked" type="xs:boolean"/>
 <xs:element minOccurs="0" name="blockChanges" type="xs:boolean"/>
+<xs:element minOccurs="0" name="disableEntitlementAndChangesBlocked" type="xs:boolean"/>
 <xs:element minOccurs="0" name="daysBetweenPaymentRetries" type="xs:int"/>
 <xs:element minOccurs="0" name="isClearState" type="xs:boolean"/>
+<xs:element minOccurs="0" name="autoReevaluationInterval" type="defaultDuration"/>
 </xs:sequence>
 <xs:attribute name="name" type="xs:ID" use="required"/>
 </xs:extension>
