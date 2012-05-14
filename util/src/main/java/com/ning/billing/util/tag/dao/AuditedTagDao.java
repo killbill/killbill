@@ -72,7 +72,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag> implements TagD
                 List<Mapper<Long, Long>> historyRecordIds = tagSqlDao.getHistoryRecordIds(maxHistoryRecordId);
                 Map<Long, Long> historyRecordIdMap = convertToAuditMap(historyRecordIds);
                 List<EntityAudit> entityAudits = convertToAudits(entityHistories, historyRecordIdMap);
-                tagSqlDao.insertAuditFromTransaction(getTableName(), entityAudits, context);
+                tagSqlDao.insertAuditFromTransaction(entityAudits, context);
 
                 return null;
             }
@@ -108,7 +108,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag> implements TagD
                 List<Mapper<Long, Long>> historyRecordIds = tagSqlDao.getHistoryRecordIds(maxHistoryRecordId);
                 Map<Long, Long> historyRecordIdMap = convertToAuditMap(historyRecordIds);
                 List<EntityAudit> entityAudits = convertToAudits(entityHistories, historyRecordIdMap);
-                tagSqlDao.insertAuditFromTransaction(getTableName(), entityAudits, context);
+                tagSqlDao.insertAuditFromTransaction(entityAudits, context);
 
                 return null;
             }

@@ -132,7 +132,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
 
 		busService.getBus().start();
 
-        ((ZombieControl)billingApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
+        ((ZombieControl)billingApi).addResult("setChargedThroughDate", BrainDeadProxyFactory.ZOMBIE_VOID);
 		migrationInvoiceId = createAndCheckMigrationInvoice();
 		regularInvoiceId = generateRegularInvoice();
 
@@ -189,11 +189,10 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
                 fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
                 BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-		BillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
-        ((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
+		((ZombieControl)billingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
 
         InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi,
+		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi,
                                                              invoiceDao, invoiceNotifier, locker, busService.getBus(), clock);
 
         CallContext context = new DefaultCallContextFactory(clock).createCallContext("Migration test", CallOrigin.TEST, UserType.TEST);

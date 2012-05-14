@@ -16,26 +16,23 @@
 
 package com.ning.billing.invoice.glue;
 
-import com.ning.billing.invoice.api.InvoiceNotifier;
-import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
-import com.ning.billing.invoice.notification.EmailInvoiceNotifier;
-import com.ning.billing.invoice.notification.NullInvoiceNotifier;
-import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
-import com.ning.billing.util.email.templates.MustacheTemplateEngine;
-import com.ning.billing.util.email.templates.TemplateEngine;
-import com.ning.billing.util.template.translation.TranslatorConfig;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import com.ning.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
+import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
+import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
 import com.ning.billing.invoice.dao.DefaultInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -45,18 +42,36 @@ import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.DefaultNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.util.glue.GlobalLockerModule;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 
-public class InvoiceModule extends AbstractModule {
+public class DefaultInvoiceModule extends AbstractModule implements InvoiceModule {
     protected void installInvoiceDao() {
         bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
     }
 
-    protected void installInvoiceUserApi() {
+    /* (non-Javadoc)
+     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceUserApi()
+     */
+    @Override
+    public void installInvoiceUserApi() {
         bind(InvoiceUserApi.class).to(DefaultInvoiceUserApi.class).asEagerSingleton();
     }
+    
+    /* (non-Javadoc)
+     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceUserApi()
+     */
+    @Override
+    public void installInvoiceTestApi() {
+        bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
+    }
 
-    protected void installInvoicePaymentApi() {
+    /* (non-Javadoc)
+     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoicePaymentApi()
+     */
+    @Override
+    public void installInvoicePaymentApi() {
         bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
     }
 
@@ -69,7 +84,11 @@ public class InvoiceModule extends AbstractModule {
         bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
     }
     
-    protected void installInvoiceMigrationApi() {
+    /* (non-Javadoc)
+     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceMigrationApi()
+     */
+    @Override
+    public void installInvoiceMigrationApi() {
     	bind(InvoiceMigrationApi.class).to(DefaultInvoiceMigrationApi.class).asEagerSingleton();
 	}
 
@@ -79,7 +98,6 @@ public class InvoiceModule extends AbstractModule {
         TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
         bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
-        bind(TemplateEngine.class).to(MustacheTemplateEngine.class).asEagerSingleton();
         bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
     }
 
@@ -102,5 +120,6 @@ public class InvoiceModule extends AbstractModule {
         installInvoiceUserApi();
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
+        installInvoiceTestApi();
     }
 }

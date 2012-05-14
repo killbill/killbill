@@ -20,25 +20,43 @@ import com.google.inject.AbstractModule;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
+import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.glue.RealImplementation;
 
-public class MockEntitlementModule extends AbstractModule {
-   
+public class MockEntitlementModule extends AbstractModule implements EntitlementModule {
     
-    protected void installEntitlementService() {
+    /* (non-Javadoc)
+     * @see com.ning.billing.mock.glue.EntitlementModule#installEntitlementService()
+     */
+    @Override
+    public void installEntitlementService() {
         bind(EntitlementService.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementService.class));
     }
-    protected void installEntitlementUserApi() {
+    
+    /* (non-Javadoc)
+     * @see com.ning.billing.mock.glue.EntitlementModule#installEntitlementUserApi()
+     */
+    @Override
+    public void installEntitlementUserApi() {
         bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class));
     }
     
-    protected void installEntitlementMigrationApi() {
+    /* (non-Javadoc)
+     * @see com.ning.billing.mock.glue.EntitlementModule#installEntitlementMigrationApi()
+     */
+    @Override
+    public void installEntitlementMigrationApi() {
         bind(EntitlementMigrationApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementMigrationApi.class));
     }
     
-    protected void installChargeThruApi() {
+    /* (non-Javadoc)
+     * @see com.ning.billing.mock.glue.EntitlementModule#installChargeThruApi()
+     */
+    @Override
+    public void installChargeThruApi() {
         bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
     }
 
@@ -48,5 +66,11 @@ public class MockEntitlementModule extends AbstractModule {
         installEntitlementUserApi();
         installEntitlementMigrationApi();
         installChargeThruApi();
+        installEntitlementTimelineApi();
+    }
+
+    @Override
+    public void installEntitlementTimelineApi() {
+        bind(EntitlementTimelineApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementTimelineApi.class));
     }
 }

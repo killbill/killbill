@@ -77,7 +77,7 @@ public abstract class AuditedCollectionDaoBase<T extends Entity> implements Audi
         Map<Long, Long> historyRecordIdMap = convertToAuditMap(historyRecordIds);
         List<EntityAudit> entityAudits = convertToAudits(entityHistories, historyRecordIdMap);
 
-        dao.insertAuditFromTransaction(getTableName(), entityAudits, context);
+        dao.insertAuditFromTransaction(entityAudits, context);
     }
 
     @Override
@@ -109,7 +109,7 @@ public abstract class AuditedCollectionDaoBase<T extends Entity> implements Audi
         for (EntityHistory<T> history : histories) {
             Long recordId = history.getValue();
             Long historyRecordId = historyRecordIds.get(recordId);
-            audits.add(new EntityAudit(historyRecordId, history.getChangeType()));
+            audits.add(new EntityAudit(getTableName(), historyRecordId, history.getChangeType()));
         }
 
         return audits;

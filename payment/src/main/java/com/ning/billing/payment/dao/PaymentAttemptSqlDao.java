@@ -21,12 +21,10 @@ import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.BinderBase;
-import com.ning.billing.util.dao.HistorySqlDao;
+import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
-import com.ning.billing.util.entity.dao.EntityDao;
-import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -49,7 +47,7 @@ import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(PaymentAttemptSqlDao.PaymentAttemptMapper.class)
-public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao>, EntitySqlDao, HistorySqlDao<PaymentAttempt>, AuditSqlDao, CloseMe {
+public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao>, UpdatableEntitySqlDao<PaymentAttempt>, CloseMe {
     @SqlUpdate
     void insertPaymentAttempt(@Bind(binder = PaymentAttemptBinder.class) PaymentAttempt paymentAttempt,
                               @CallContextBinder CallContext context);
@@ -58,7 +56,7 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
     PaymentAttempt getPaymentAttemptForPaymentId(@Bind("payment_id") String paymentId);
 
     @SqlQuery
-    PaymentAttempt getPaymentAttemptById(@Bind("payment_attempt_id") String paymentAttemptId);
+    PaymentAttempt getPaymentAttemptById(@Bind("id") String paymentAttemptId);
 
     @SqlQuery
     List<PaymentAttempt> getPaymentAttemptsForInvoiceId(@Bind("invoice_id") String invoiceId);
@@ -68,28 +66,35 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
 
 
     @SqlUpdate
-    void updatePaymentAttemptWithPaymentId(@Bind("payment_attempt_id") String paymentAttemptId,
+    void updatePaymentAttemptWithPaymentId(@Bind("id") String paymentAttemptId,
                                            @Bind("payment_id") String paymentId,
                                            @CallContextBinder CallContext context);
 
     @SqlUpdate
-    void updatePaymentAttemptWithRetryInfo(@Bind("payment_attempt_id") String paymentAttemptId,
+    void updatePaymentAttemptWithRetryInfo(@Bind("id") String paymentAttemptId,
                                            @Bind("retry_count") int retryCount,
                                            @CallContextBinder CallContext context);
+    
+    @Override
+    @SqlUpdate
+    public void insertHistoryFromTransaction(@PaymentAttemptHistoryBinder final EntityHistory<PaymentAttempt> account,
+                                            @CallContextBinder final CallContext context);
 
     public static class PaymentAttemptMapper extends MapperBase implements ResultSetMapper<PaymentAttempt> {
         @Override
         public PaymentAttempt map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
 
-            UUID paymentAttemptId = UUID.fromString(rs.getString("id"));
-            UUID invoiceId = UUID.fromString(rs.getString("invoice_id"));
-            UUID accountId = UUID.fromString(rs.getString("account_id"));
+            UUID paymentAttemptId = getUUID(rs, "id");
+            UUID invoiceId = getUUID(rs, "invoice_id");
+            UUID accountId = getUUID(rs, "account_id");
             BigDecimal amount = rs.getBigDecimal("amount");
             Currency currency = Currency.valueOf(rs.getString("currency"));
             DateTime invoiceDate = getDate(rs, "invoice_date");
             DateTime paymentAttemptDate = getDate(rs, "payment_attempt_date");
-            String paymentId = rs.getString("payment_id");
+            UUID paymentId = getUUID(rs, "payment_id");
             Integer retryCount = rs.getInt("retry_count");
+            DateTime createdDate = getDate(rs, "created_date");
+            DateTime updatedDate = getDate(rs, "updated_date");
 
             return new DefaultPaymentAttempt(paymentAttemptId,
                                       invoiceId,
@@ -99,21 +104,22 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
                                       invoiceDate,
                                       paymentAttemptDate,
                                       paymentId,
-                                      retryCount);
+                                      retryCount,
+                                      createdDate, updatedDate);
         }
     }
 
     public static final class PaymentAttemptBinder extends BinderBase implements Binder<Bind, PaymentAttempt> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentAttempt paymentAttempt) {
-            stmt.bind("id", paymentAttempt.getId() == null ? null : paymentAttempt.getId().toString());
+            stmt.bind("id", paymentAttempt.getId().toString());
             stmt.bind("invoice_id", paymentAttempt.getInvoiceId().toString());
             stmt.bind("account_id", paymentAttempt.getAccountId().toString());
             stmt.bind("amount", paymentAttempt.getAmount());
             stmt.bind("currency", paymentAttempt.getCurrency().toString());
             stmt.bind("invoice_date", getDate(paymentAttempt.getInvoiceDate()));
             stmt.bind("payment_attempt_date", getDate(paymentAttempt.getPaymentAttemptDate()));
-            stmt.bind("payment_id", paymentAttempt.getPaymentId());
+            stmt.bind("payment_id", paymentAttempt.getPaymentId().toString());
             stmt.bind("retry_count", paymentAttempt.getRetryCount());
         }
     }

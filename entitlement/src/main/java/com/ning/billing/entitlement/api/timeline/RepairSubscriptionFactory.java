@@ -29,7 +29,7 @@ import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.Subscrip
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.glue.EntitlementModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.util.clock.Clock;
 
 public class RepairSubscriptionFactory extends DefaultSubscriptionFactory implements SubscriptionFactory {
@@ -38,8 +38,8 @@ public class RepairSubscriptionFactory extends DefaultSubscriptionFactory implem
     private final EntitlementDao repairDao;
     
     @Inject
-    public RepairSubscriptionFactory(@Named(EntitlementModule.REPAIR_NAMED) SubscriptionApiService apiService,
-            @Named(EntitlementModule.REPAIR_NAMED) EntitlementDao dao,
+    public RepairSubscriptionFactory(@Named(DefaultEntitlementModule.REPAIR_NAMED) SubscriptionApiService apiService,
+            @Named(DefaultEntitlementModule.REPAIR_NAMED) EntitlementDao dao,
             Clock clock, CatalogService catalogService, AddonUtils addonUtils) {
         super(apiService, clock, catalogService);
         this.addonUtils = addonUtils;

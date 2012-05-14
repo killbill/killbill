@@ -158,10 +158,14 @@ public class MysqlTestingHelper
     
     public void stopMysql()
     {
-        if (mysqldResource != null) {
-            mysqldResource.shutdown();
-            FileUtils.deleteQuietly(dbDir);
-            log.info("MySQLd stopped");
+        try {
+            if (mysqldResource != null) {
+                mysqldResource.shutdown();
+                FileUtils.deleteQuietly(dbDir);
+                log.info("MySQLd stopped");
+            }
+        } catch (Exception ex) {
+            //fail silently
         }
     }
 

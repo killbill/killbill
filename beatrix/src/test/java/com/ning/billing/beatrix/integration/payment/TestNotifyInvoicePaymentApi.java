@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.beatrix.integration.payment;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -39,8 +39,8 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockJunctionModule;
+import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -48,7 +48,7 @@ import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
 @Test
-@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class})
+@Guice(modules = { PaymentTestModule.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class})
 public class TestNotifyInvoicePaymentApi {
     @Inject
     private Bus eventBus;

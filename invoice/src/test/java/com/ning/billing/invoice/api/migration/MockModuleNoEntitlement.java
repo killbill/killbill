@@ -16,16 +16,15 @@
 
 package com.ning.billing.invoice.api.migration;
 
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.invoice.MockModule;
 import com.ning.billing.invoice.api.InvoiceNotifier;
-import com.ning.billing.invoice.glue.InvoiceModule;
+import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
-import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.util.email.templates.TemplateModule;
 
 public class MockModuleNoEntitlement extends MockModule {
 //	@Override
@@ -42,7 +41,7 @@ public class MockModuleNoEntitlement extends MockModule {
 
 	@Override
 	protected void installInvoiceModule() {
-		install(new InvoiceModule(){
+		install(new DefaultInvoiceModule(){
 
 			@Override
 			protected void installNotifiers() {
@@ -55,7 +54,8 @@ public class MockModuleNoEntitlement extends MockModule {
 			
 			
 		});
-		
+        install(new TemplateModule());
+
 		
 	}
 

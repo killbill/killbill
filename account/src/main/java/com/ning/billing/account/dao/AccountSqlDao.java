@@ -37,7 +37,7 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTempla
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper({UuidMapper.class, AccountMapper.class})
-public interface AccountSqlDao extends UpdatableEntitySqlDao<Account>, Transactional<AccountSqlDao>, Transmogrifier, AuditSqlDao {
+public interface AccountSqlDao extends UpdatableEntitySqlDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
     @SqlQuery
     public Account getAccountByKey(@Bind("externalKey") final String key);
 

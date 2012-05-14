@@ -35,7 +35,7 @@ public interface EntitySqlDao<T extends Entity> {
     public T getById(@Bind("id") final String id);
 
     @SqlQuery
-    public Long getRecordId(@Bind("objectId") final String objectId);
+    public Long getRecordId(@Bind("id") final String id);
 
     @SqlQuery
     public Long getHistoryRecordId(@Bind("recordId") final Long recordId);

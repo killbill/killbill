@@ -24,13 +24,14 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.testng.annotations.Test;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -38,9 +39,6 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.api.timeline.BundleTimeline;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
@@ -59,6 +57,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
     @Test(groups={"slow"})
     public void testRepairChangeBPWithAddonIncluded() throws Exception {
         
+        log.info("Starting testRepairChangeBPWithAddonIncluded");
+        
         String baseProduct = "Shotgun";
         BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -67,15 +67,16 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         
         SubscriptionData aoSubscription2 = createSubscription("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
-        clock.addDeltaFromReality(someTimeLater);
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -165,8 +166,11 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         
-        dryRun = false;
+        dryRun = false;        
+        testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         BundleTimeline realRunBundleRepair = repairApi.repairBundle(bundleRepair, dryRun, context);
+        assertTrue(testListener.isCompleted(5000));
+
         
         
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
@@ -210,6 +214,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
     @Test(groups={"slow"})
     public void testRepairChangeBPWithAddonNonAvailable() throws Exception {
         
+        log.info("Starting testRepairChangeBPWithAddonNonAvailable");
+        
         String baseProduct = "Shotgun";
         BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -218,17 +224,18 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         
         // MOVE CLOCK A LITTLE BIT MORE -- AFTER TRIAL
-        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-        someTimeLater = getDurationDay(32);
-        clock.addDeltaFromReality(someTimeLater);
-        assertTrue(testListener.isApiCompleted(7000));        
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
+        clock.addDeltaFromReality(it.toDurationMillis());
+        assertTrue(testListener.isCompleted(7000));        
 
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -295,8 +302,10 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         
         dryRun = false;
+        testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         BundleTimeline realRunBundleRepair = repairApi.repairBundle(bundleRepair, dryRun, context);
-        
+        assertTrue(testListener.isCompleted(5000));
+
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 3);
 
@@ -327,6 +336,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
     @Test(groups={"slow"})
     public void testRepairCancelBP_EOT_WithAddons() throws Exception {
         
+        log.info("Starting testRepairCancelBP_EOT_WithAddons");
+        
         String baseProduct = "Shotgun";
         BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -335,17 +346,19 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+        clock.addDeltaFromReality(it.toDurationMillis());
+
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         
         // MOVE CLOCK A LITTLE BIT MORE -- AFTER TRIAL
-        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-        someTimeLater = getDurationDay(40);
-        clock.addDeltaFromReality(someTimeLater);
-        assertTrue(testListener.isApiCompleted(7000));
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(40));
+        clock.addDeltaFromReality(it.toDurationMillis());
+        assertTrue(testListener.isCompleted(7000));
         
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
@@ -414,7 +427,9 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         
         dryRun = false;
+        testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         BundleTimeline realRunBundleRepair = repairApi.repairBundle(bundleRepair, dryRun, context);
+        assertTrue(testListener.isCompleted(5000));
         
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 3);
@@ -443,11 +458,12 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         
         // MOVE CLOCK AFTER CANCEL DATE
-        testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
-        testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
-        someTimeLater = getDurationDay(32);
-        clock.addDeltaFromReality(someTimeLater);
-        assertTrue(testListener.isApiCompleted(7000));
+        testListener.pushExpectedEvent(NextEvent.CANCEL);
+        testListener.pushExpectedEvent(NextEvent.CANCEL);
+        
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
+        clock.addDeltaFromReality(it.toDurationMillis());
+        assertTrue(testListener.isCompleted(7000));
 
         newAoSubscription = (SubscriptionData)  entitlementApi.getSubscriptionFromId(aoSubscription.getId());
         assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
@@ -464,6 +480,9 @@ public class TestRepairWithAO extends TestApiBaseRepair {
     
     @Test(groups={"slow"})
     public void testRepairCancelAO() throws Exception {
+        
+        log.info("Starting testRepairCancelAO");
+        
         String baseProduct = "Shotgun";
         BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -472,13 +491,14 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
-        clock.addDeltaFromReality(someTimeLater);
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -530,7 +550,10 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         
         dryRun = false;
+        testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        assertTrue(testListener.isCompleted(5000));
+
         
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
@@ -553,6 +576,9 @@ public class TestRepairWithAO extends TestApiBaseRepair {
     
     @Test(groups={"slow"})
     public void testRepairRecreateAO() throws Exception {
+        
+        log.info("Starting testRepairRecreateAO");
+        
         String baseProduct = "Shotgun";
         BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -561,13 +587,14 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
-        clock.addDeltaFromReality(someTimeLater);
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -616,7 +643,9 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         
         // NOW COMMIT
         dryRun = false;
+        testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        assertTrue(testListener.isCompleted(5000));
         
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
@@ -644,6 +673,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
     @Test(groups={"slow"})
     public void testRepairChangeAOOK() throws Exception {
         
+        log.info("Starting testRepairChangeAOOK");
+        
         String baseProduct = "Shotgun";
         BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -652,13 +683,14 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-        Duration someTimeLater = getDurationDay(3);
-        clock.setDeltaFromReality(someTimeLater, DAY_IN_MS);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
+        clock.addDeltaFromReality(it.toDurationMillis());
 
         SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         // MOVE CLOCK A LITTLE BIT MORE -- STILL IN TRIAL
-        clock.addDeltaFromReality(someTimeLater);
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+        clock.addDeltaFromReality(it.toDurationMillis());
         
         BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
@@ -706,7 +738,9 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         
         // AND NOW COMMIT
         dryRun = false;
+        testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        assertTrue(testListener.isCompleted(5000));
         
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 3);
@@ -734,10 +768,11 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
         
-        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-        someTimeLater = getDurationDay(60);
-        clock.addDeltaFromReality(someTimeLater);
-        assertTrue(testListener.isApiCompleted(5000));
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(60));
+        clock.addDeltaFromReality(it.toDurationMillis());
+        assertTrue(testListener.isCompleted(5000));
         
         newAoSubscription = (SubscriptionData)  entitlementApi.getSubscriptionFromId(aoSubscription.getId());
         currentPhase = newAoSubscription.getCurrentPhase();

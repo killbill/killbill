@@ -31,9 +31,9 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.Response.Status;
 
 import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
@@ -45,11 +45,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.inject.Module;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
+import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
-import com.ning.billing.beatrix.integration.TestBusHandler;
 import com.ning.billing.beatrix.integration.TestIntegration;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -57,13 +61,13 @@ import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.glue.EntitlementModule;
-import com.ning.billing.invoice.glue.InvoiceModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
+import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
-import com.ning.billing.junction.glue.JunctionModule;
+import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
@@ -87,7 +91,7 @@ public class TestJaxrsBase {
 
     private final static String PLUGIN_NAME = "noop";
 
-    protected static final int DEFAULT_HTTP_TIMEOUT_SEC =  5;
+    protected static final int DEFAULT_HTTP_TIMEOUT_SEC = 5;
 
     protected static final Map<String, String> DEFAULT_EMPTY_QUERY = new HashMap<String, String>();
 
@@ -106,8 +110,13 @@ public class TestJaxrsBase {
     protected AsyncHttpClient httpClient;	
     protected ObjectMapper mapper;
     protected ClockMock clock;
-    protected TestBusHandler busHandler;
+    protected TestApiListener busHandler;
 
+    // Context informtation to be passed around
+    private static final String createdBy = "Toto";
+    private static final String reason = "i am god";
+    private static final String comment = "no comment";    
+    
     public static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestJaxrsBase.class.getResource(resource);
         assertNotNull(url);
@@ -188,12 +197,13 @@ public class TestJaxrsBase {
             install(new NotificationQueueModule());
             install(new CallContextModule());
             install(new AccountModule());
-            install(new InvoiceModule());
-            install(new EntitlementModule());
+            install(new DefaultInvoiceModule());
+            install(new TemplateModule());
+            install(new DefaultEntitlementModule());
             install(new AnalyticsModule());
             install(new PaymentMockModule());
             install(new BeatrixModule());
-            install(new JunctionModule());
+            install(new DefaultJunctionModule());
             installClock();
         }
 
@@ -222,7 +232,12 @@ public class TestJaxrsBase {
         loadConfig();
         httpClient = new AsyncHttpClient();
         mapper = new ObjectMapper();
-        busHandler = new TestBusHandler(null);
+        mapper.registerModule(new JodaModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());        
+
+        busHandler = new TestApiListener(null);
         this.helper = listener.getMysqlTestingHelper();
         this.clock =  (ClockMock) listener.getClock();
     }
@@ -372,8 +387,10 @@ public class TestJaxrsBase {
         BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("POST", getUrlFromUri(uri), queryParams);
         if (body != null) {
             builder.setBody(body);
+        } else {
+            builder.setBody("{}");
         }
-        return executeAndWait(builder, timeoutSec);
+        return executeAndWait(builder, timeoutSec, true);
     }
 
     protected Response doPut(final String uri, final String body, final Map<String, String> queryParams, final int timeoutSec) {
@@ -381,14 +398,16 @@ public class TestJaxrsBase {
         BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("PUT", url, queryParams);
         if (body != null) {
             builder.setBody(body);
+        } else {
+            builder.setBody("{}");
         }
-        return executeAndWait(builder, timeoutSec);
+        return executeAndWait(builder, timeoutSec, true);
     }
 
     protected Response doDelete(final String uri, final Map<String, String> queryParams, final int timeoutSec) {
         final String url = String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
         BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("DELETE", url, queryParams);
-        return executeAndWait(builder, timeoutSec);
+        return executeAndWait(builder, timeoutSec, true);
     }
 
     protected Response doGet(final String uri, final Map<String, String> queryParams, final int timeoutSec) {
@@ -398,10 +417,17 @@ public class TestJaxrsBase {
 
     protected Response doGetWithUrl(final String url, final Map<String, String> queryParams, final int timeoutSec) {
         BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("GET", url, queryParams);
-        return executeAndWait(builder, timeoutSec);
+        return executeAndWait(builder, timeoutSec, false);
     }
 
-    private Response executeAndWait(final BoundRequestBuilder builder, final int timeoutSec) {
+    private Response executeAndWait(final BoundRequestBuilder builder, final int timeoutSec, final boolean addContextHeader) {
+        
+        if (addContextHeader) {
+            builder.addHeader(BaseJaxrsResource.HDR_CREATED_BY, createdBy);
+            builder.addHeader(BaseJaxrsResource.HDR_REASON, reason);
+            builder.addHeader(BaseJaxrsResource.HDR_COMMENT, comment);            
+        }
+        
         Response response = null;
         try {
             ListenableFuture<Response> futureStatus = 
@@ -465,7 +491,7 @@ public class TestJaxrsBase {
      * but until we have a strong need for it, this is in the TODO list...
      */
     protected void crappyWaitForLackOfProperSynchonization() throws Exception {
-        Thread.sleep(5000);
+        Thread.sleep(7000);
     }
 
 }

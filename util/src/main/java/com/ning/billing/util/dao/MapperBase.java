@@ -31,6 +31,7 @@ public abstract class MapperBase {
     }
 
     protected UUID getUUID(ResultSet resultSet, String fieldName) throws SQLException {
-        return UUID.fromString(resultSet.getString(fieldName));
+        String result = resultSet.getString(fieldName);
+        return result == null ? null : UUID.fromString(result);
     }
 }

@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,10 +31,11 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
@@ -61,19 +63,32 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         this.subscriptionFactory = subscriptionFactory;
     }
 
+    
     @Override
-    public SubscriptionBundle getBundleFromId(UUID id) {
-        return dao.getSubscriptionBundleFromId(id);
+    public SubscriptionBundle getBundleFromId(UUID id) throws EntitlementUserApiException {
+        SubscriptionBundle result = dao.getSubscriptionBundleFromId(id);
+        if (result == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_ID, id.toString());
+        }
+        return result;
     }
 
     @Override
-    public Subscription getSubscriptionFromId(UUID id) {
-        return dao.getSubscriptionFromId(subscriptionFactory, id);
+    public Subscription getSubscriptionFromId(UUID id) throws EntitlementUserApiException {
+        Subscription result = dao.getSubscriptionFromId(subscriptionFactory, id);
+        if (result == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, id);
+        }
+        return result;
     }
 
     @Override
-    public SubscriptionBundle getBundleForKey(String bundleKey) {
-        return dao.getSubscriptionBundleFromKey(bundleKey);
+    public SubscriptionBundle getBundleForKey(String bundleKey) throws EntitlementUserApiException {
+        SubscriptionBundle result =  dao.getSubscriptionBundleFromKey(bundleKey);
+        if (result == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_KEY, bundleKey);
+        }
+        return result;
     }
 
     @Override
@@ -92,8 +107,12 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public Subscription getBaseSubscription(UUID bundleId) {
-        return dao.getBaseSubscription(subscriptionFactory, bundleId);
+    public Subscription getBaseSubscription(UUID bundleId) throws EntitlementUserApiException {
+        Subscription result =  dao.getBaseSubscription(subscriptionFactory, bundleId);
+        if (result == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
+        }
+        return result;
     }
     
 
@@ -194,6 +213,44 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                     result = subscription.getChargedThroughDate();
                 }
             }
+        }
+        return result;
+    }
+
+
+    @Override
+    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(UUID subscriptionId, String baseProductName, DateTime requestedDate)
+            throws EntitlementUserApiException {
+
+        Subscription subscription = dao.getSubscriptionFromId(subscriptionFactory, subscriptionId);
+        if (subscription == null) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, subscriptionId);
+        }
+        if (subscription.getCategory() != ProductCategory.BASE) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CHANGE_DRY_RUN_NOT_BP);
+        }
+        
+        List<SubscriptionStatusDryRun> result = new LinkedList<SubscriptionStatusDryRun>();
+        
+        List<Subscription> bundleSubscriptions = dao.getSubscriptions(subscriptionFactory, subscription.getBundleId());
+        for (Subscription cur : bundleSubscriptions) {
+            if (cur.getId().equals(subscriptionId)) {
+                continue;
+            }
+            
+            DryRunChangeReason reason = null;
+            if (addonUtils.isAddonIncludedFromProdName(baseProductName, requestedDate, cur.getCurrentPlan())) {
+                reason = DryRunChangeReason.AO_INCLUDED_IN_NEW_PLAN;
+            } else if (addonUtils.isAddonAvailableFromProdName(baseProductName, requestedDate, cur.getCurrentPlan())) {
+                reason = DryRunChangeReason.AO_AVAILABLE_IN_NEW_PLAN;
+            } else {
+                reason = DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN;
+            }
+            SubscriptionStatusDryRun status = new DefaultSubscriptionStatusDryRun(cur.getId(), 
+                    cur.getCurrentPlan().getProduct().getName(), cur.getCurrentPhase().getPhaseType(),
+                    cur.getCurrentPlan().getBillingPeriod(),
+                    cur.getCurrentPriceList().getName(), reason);
+            result.add(status);
         }
         return result;
     }

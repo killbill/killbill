@@ -33,7 +33,6 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -157,15 +156,7 @@ public class TestAnalyticsService {
     private  CatalogService catalogService;
     
     private Catalog catalog;
-    
-    @BeforeMethod(groups = "slow")
-    public void cleanup() throws Exception
-    {
-        helper.cleanupTable("bst");
-        helper.cleanupTable("bac");        
-    }
-
-
+ 
     @BeforeClass(groups = "slow")
     public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
 
@@ -176,6 +167,8 @@ public class TestAnalyticsService {
         // Killbill generic setup
         setupBusAndMySQL();
 
+        helper.cleanupAllTables();
+        
         tagDao.create(TAG_ONE, context);
         tagDao.create(TAG_TWO, context);
 
@@ -197,7 +190,6 @@ public class TestAnalyticsService {
     }
 
     private void setupBusAndMySQL() throws IOException {
-        bus.start();
 
         final String analyticsDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
         final String accountDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
@@ -216,7 +208,9 @@ public class TestAnalyticsService {
         helper.initDb(utilDdl);
         helper.initDb(junctionDdl);
 
-    	helper.cleanupAllTables();
+        helper.cleanupAllTables();
+    	
+        bus.start();
     }
 
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {
@@ -283,9 +277,9 @@ public class TestAnalyticsService {
         invoiceCreationNotification = new DefaultInvoiceCreationEvent(invoice.getId(), account.getId(),
                 INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow(), null);
 
-        paymentInfoNotification = new DefaultPaymentInfoEvent.Builder().setPaymentId(UUID.randomUUID().toString()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
+        paymentInfoNotification = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
         final PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
-                ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getPaymentId(), 1);
+                ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getId(), 1, null, null);
         paymentDao.createPaymentAttempt(paymentAttempt, context);
         paymentDao.savePaymentInfo(paymentInfoNotification, context);
         Assert.assertEquals(paymentDao.getPaymentInfoList(Arrays.asList(invoice.getId().toString())).size(), 1);
@@ -296,7 +290,7 @@ public class TestAnalyticsService {
         helper.stopMysql();
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled=true)
     public void testRegisterForNotifications() throws Exception {
         // Make sure the service has been instantiated
         Assert.assertEquals(service.getName(), "analytics-service");
@@ -312,9 +306,8 @@ public class TestAnalyticsService {
 
         // Send events and wait for the async part...
         bus.post(transition);
-
         bus.post(accountCreationNotification);
-        Thread.sleep(1000);
+        Thread.sleep(5000);
 
         Assert.assertEquals(subscriptionDao.getTransitions(KEY).size(), 1);
         Assert.assertEquals(subscriptionDao.getTransitions(KEY).get(0), expectedTransition);
@@ -329,12 +322,12 @@ public class TestAnalyticsService {
 
         // Post the same invoice event again - the invoice balance shouldn't change
         bus.post(invoiceCreationNotification);
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
 
         // Test payment integration - the fields have already been populated, just make sure the code is exercised
         bus.post(paymentInfoNotification);
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         Assert.assertEquals(accountDao.getAccount(ACCOUNT_KEY).getPaymentMethod(), PAYMENT_METHOD);
         Assert.assertEquals(accountDao.getAccount(ACCOUNT_KEY).getBillingAddressCountry(), CARD_COUNTRY);
 

@@ -42,12 +42,12 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
 
 	@XmlElement(required=false, name="externalMessage")
 	private String externalMessage = "";
-
-    @XmlElement(required=false, name="disableEntitlementAndChangesBlocked")
-    private Boolean disableEntitlement = false;
     
     @XmlElement(required=false, name="blockChanges")
     private Boolean blockChanges = false;
+
+    @XmlElement(required=false, name="disableEntitlementAndChangesBlocked")
+    private Boolean disableEntitlement = false;
     
     @XmlElement(required=false, name="daysBetweenPaymentRetries")
     private Integer daysBetweenPaymentRetries = 8;

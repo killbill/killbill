@@ -32,6 +32,9 @@ import com.ning.billing.util.tag.dao.TagDao;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
@@ -43,9 +46,12 @@ import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.tag.Tag;
 
 public class AuditedAccountDao implements AccountDao {
+    private final static Logger log = LoggerFactory.getLogger(AuditedAccountDao.class);
+    
     private final AccountSqlDao accountSqlDao;
     private final TagDao tagDao;
     private final CustomFieldDao customFieldDao;
@@ -127,19 +133,23 @@ public class AuditedAccountDao implements AccountDao {
                     transactionalDao.create(account, context);
 
                     // insert history
-                    Long recordId = accountSqlDao.getRecordId(TableName.ACCOUNT, account.getId().toString());
+                    Long recordId = accountSqlDao.getRecordId(account.getId().toString());
                     EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
                     accountSqlDao.insertHistoryFromTransaction(history, context);
 
                     // insert audit
-                    Long historyRecordId = accountSqlDao.getHistoryRecordId(TableName.ACCOUNT_HISTORY, recordId);
-                    EntityAudit audit = new EntityAudit(historyRecordId, ChangeType.INSERT);
-                    accountSqlDao.insertAuditFromTransaction(TableName.ACCOUNT_HISTORY, audit, context);
+                    Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
+                    accountSqlDao.insertAuditFromTransaction(audit, context);
 
                     saveTagsFromWithinTransaction(account, transactionalDao, context);
                     saveCustomFieldsFromWithinTransaction(account, transactionalDao, context);
                     AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, context.getUserToken());
-                    eventBus.post(creationEvent);
+                    try {
+                        eventBus.postFromTransaction(creationEvent, transactionalDao);
+                    } catch (EventBusException e) {
+                        log.warn("Failed to post account creation event for account " + account.getId(), e);
+                    }
                     return null;
                 }
             });
@@ -159,9 +169,9 @@ public class AuditedAccountDao implements AccountDao {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
+                public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
                     String accountId = account.getId().toString();
-                    Account currentAccount = accountSqlDao.getById(accountId);
+                    Account currentAccount = transactional.getById(accountId);
                     if (currentAccount == null) {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                     }
@@ -171,22 +181,26 @@ public class AuditedAccountDao implements AccountDao {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY, currentKey);
                     }
 
-                    accountSqlDao.update(account, context);
+                    transactional.update(account, context);
 
-                    Long recordId = accountSqlDao.getRecordId(TableName.ACCOUNT, account.getId().toString());
+                    Long recordId = accountSqlDao.getRecordId(account.getId().toString());
                     EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
                     accountSqlDao.insertHistoryFromTransaction(history, context);
 
-                    Long historyRecordId = accountSqlDao.getHistoryRecordId(TableName.ACCOUNT_HISTORY, recordId);
-                    EntityAudit audit = new EntityAudit(historyRecordId, ChangeType.INSERT);
-                    accountSqlDao.insertAuditFromTransaction(TableName.ACCOUNT_HISTORY, audit, context);
+                    Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
+                    accountSqlDao.insertAuditFromTransaction(audit, context);
 
-                    saveTagsFromWithinTransaction(account, accountSqlDao, context);
-                    saveCustomFieldsFromWithinTransaction(account, accountSqlDao, context);
+                    saveTagsFromWithinTransaction(account, transactional, context);
+                    saveCustomFieldsFromWithinTransaction(account, transactional, context);
 
                     AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
-                        eventBus.post(changeEvent);
+                        try {
+                            eventBus.postFromTransaction(changeEvent, transactional);
+                        } catch (EventBusException e) {
+                            log.warn("Failed to post account change event for account " + account.getId(), e);
+                        }
                     }
                     return null;
                 }

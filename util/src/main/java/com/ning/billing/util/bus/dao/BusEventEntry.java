@@ -23,13 +23,15 @@ public class BusEventEntry implements NotificationLifecycle  {
     
     private final long id;
     private final String owner;
+    private final String createdOwner;
     private final DateTime nextAvailable;
     private final NotificationLifecycleState processingState;
     private final String busEventClass;
     private final String busEventJson;
 
-    public BusEventEntry(final long id, final String owner, final DateTime nextAvailable, NotificationLifecycleState processingState, final String busEventClass, final String busEventJson) {
+    public BusEventEntry(final long id, final String createdOwner, final String owner, final DateTime nextAvailable, NotificationLifecycleState processingState, final String busEventClass, final String busEventJson) {
         this.id = id;
+        this.createdOwner = createdOwner;
         this.owner = owner;
         this.nextAvailable = nextAvailable;
         this.processingState = processingState;
@@ -37,8 +39,8 @@ public class BusEventEntry implements NotificationLifecycle  {
         this.busEventJson = busEventJson;
     }
 
-    public BusEventEntry(final String busEventClass, final String busEventJson) {
-        this(0, null, null, null, busEventClass, busEventJson);
+    public BusEventEntry(final String createdOwner, final String busEventClass, final String busEventJson) {
+        this(0, createdOwner, null, null, null, busEventClass, busEventJson);
     }
 
     
@@ -58,6 +60,11 @@ public class BusEventEntry implements NotificationLifecycle  {
     @Override
     public String getOwner() {
         return owner;
+    }
+
+    @Override
+    public String getCreatedOwner() {
+        return createdOwner;
     }
 
     @Override

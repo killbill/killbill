@@ -25,8 +25,8 @@ import com.ning.billing.util.globallocker.MockGlobalLocker;
 import com.ning.billing.util.glue.FieldStoreModule;
 
 
-public class InvoiceModuleWithMocks extends InvoiceModule {
-    @Override
+public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
+    @Override 
     protected void installInvoiceDao() {
         bind(MockInvoiceDao.class).asEagerSingleton();
         bind(InvoiceDao.class).to(MockInvoiceDao.class);
@@ -49,7 +49,7 @@ public class InvoiceModuleWithMocks extends InvoiceModule {
     }
 
     @Override
-    protected void installInvoiceMigrationApi() {
+    public void installInvoiceMigrationApi() {
 
     }
 

@@ -19,11 +19,8 @@ package com.ning.billing.util.bus;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -40,11 +37,12 @@ import com.ning.billing.util.Hostname;
 import com.ning.billing.util.bus.dao.BusEventEntry;
 import com.ning.billing.util.bus.dao.PersistentBusSqlDao;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.queue.PersistentQueueBase;
 
 
-public class PersistentBus implements Bus  {
+public class PersistentBus extends PersistentQueueBase implements Bus {
 
-    private final static int NB_BUS_THREADS = 3;
+    private final static int NB_BUS_THREADS = 1;
     private final static long TIMEOUT_MSEC = 15L * 1000L; // 15 sec
     private final static long DELTA_IN_PROCESSING_TIME_MS = 1000L * 60L * 5L; // 5 minutes
     private final static long SLEEP_TIME_MS = 1000; // 1 sec
@@ -53,16 +51,13 @@ public class PersistentBus implements Bus  {
     private static final Logger log = LoggerFactory.getLogger(PersistentBus.class);
     
     private final PersistentBusSqlDao dao;
-    private final ExecutorService executor;
     
     private final ObjectMapper objectMapper;
     private final EventBusDelegate eventBusDelegate;
     private final Clock clock;
     private final String hostname;
     
-    protected boolean isProcessingEvents;
-    private int curActiveThreads;
-    
+
     
     private static final class EventBusDelegate extends EventBus {
         public EventBusDelegate(String busName) {
@@ -86,99 +81,51 @@ public class PersistentBus implements Bus  {
     
     @Inject
     public PersistentBus(final IDBI dbi, final Clock clock) {
+        super("Bus", Executors.newFixedThreadPool(NB_BUS_THREADS, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(new ThreadGroup(DefaultBusService.EVENT_BUS_GROUP_NAME),
+                        r,
+                        DefaultBusService.EVENT_BUS_TH_NAME);
+            }
+        }), NB_BUS_THREADS, TIMEOUT_MSEC, SLEEP_TIME_MS);
         this.dao = dbi.onDemand(PersistentBusSqlDao.class);
         this.clock = clock;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.disable(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS);
         this.eventBusDelegate = new EventBusDelegate("Killbill EventBus");
-        final ThreadGroup group = new ThreadGroup(DefaultBusService.EVENT_BUS_GROUP_NAME);
-        this.executor = Executors.newFixedThreadPool(NB_BUS_THREADS, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(group, r, DefaultBusService.EVENT_BUS_TH_NAME);
-            }
-        });
         this.hostname = Hostname.get();
-        this.isProcessingEvents = false;
     }
-
-    
     
     @Override
     public void start() {
-        
-        isProcessingEvents = true;
-        curActiveThreads = 0;
-        
-        final PersistentBus thePersistentBus = this;
-        
-        final CountDownLatch doneInitialization = new CountDownLatch(NB_BUS_THREADS);
-        
-        for (int i = 0; i < NB_BUS_THREADS; i++) {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-
-                    log.info(String.format("PersistentBus thread %s [%d] started",
-                            Thread.currentThread().getName(),
-                            Thread.currentThread().getId()));
-                    
-                    synchronized(thePersistentBus) {
-                        curActiveThreads++;
-                    }
-                    
-                    doneInitialization.countDown();
-                    
-                    try {
-                        while (true) {
-                            
-                            synchronized(thePersistentBus) {
-                                if (!isProcessingEvents) {
-                                    thePersistentBus.notify();
-                                    break;
-                                }
-                            }
-
-                            try {
-                                doProcessEvents();
-                            } catch (Exception e) {
-                                log.error(String.format("PersistentBus thread  %s  [%d] got an exception..",
-                                        Thread.currentThread().getName(),
-                                        Thread.currentThread().getId()), e);
-                            }
-                            sleepALittle();
-                        }
-                    } catch (InterruptedException e) {
-                        log.info(Thread.currentThread().getName() + " got interrupted, exting...");
-                    } catch (Throwable e) {
-                        log.error(Thread.currentThread().getName() + " got an exception exiting...", e);
-                        // Just to make it really obvious in the log
-                        e.printStackTrace();
-                    } finally {
-                        
-                        log.info(String.format("PersistentBus thread %s [%d] exited",
-                                Thread.currentThread().getName(),
-                                Thread.currentThread().getId()));
-                    
-                        synchronized(thePersistentBus) {
-                            curActiveThreads--;
-                        }
-                    }
-                }
-                
-                private void sleepALittle() throws InterruptedException {
-                    Thread.sleep(SLEEP_TIME_MS);
-                }
-            });
-        }
-        try {
-            doneInitialization.await(TIMEOUT_MSEC, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            log.warn("PersistentBus start sequence got interrupted...");
-        }
+        startQueue();
     }
-    
-    
+
+    @Override
+    public void stop() {
+        stopQueue();
+    }
+
+    @Override
+    public int doProcessEvents() {
+
+        List<BusEventEntry> events = getNextBusEvent();
+        if (events.size() == 0) {
+            return 0;
+        }
+
+        int result = 0;
+        for (final BusEventEntry cur : events) {
+            BusEvent evt = deserializeBusEvent(cur.getBusEventClass(), cur.getBusEventJson());
+            result++;
+            // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
+            eventBusDelegate.post(evt);
+            dao.clearBusEvent(cur.getId(), hostname);
+        }
+        return result;
+    }
+
     private BusEvent deserializeBusEvent(final String className, final String json) {
         try {
             Class<?> claz = Class.forName(className);
@@ -188,24 +135,6 @@ public class PersistentBus implements Bus  {
             return null;
         }
     }
-    
-    private int doProcessEvents() {
-
-        List<BusEventEntry> events = getNextBusEvent();
-        if (events.size() == 0) {
-            return 0;
-        }
-
-        int result = 0;
-        for (final BusEventEntry cur : events) {
-            BusEvent e = deserializeBusEvent(cur.getBusEventClass(), cur.getBusEventJson());
-            result++;
-            // STEPH need to look at failure cases
-            eventBusDelegate.post(e);
-            dao.clearBusEvent(cur.getId(), hostname);
-        }
-        return result;
-    }
 
     
     private List<BusEventEntry> getNextBusEvent() {
@@ -213,7 +142,7 @@ public class PersistentBus implements Bus  {
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(DELTA_IN_PROCESSING_TIME_MS).toDate();
 
-        BusEventEntry input = dao.getNextBusEventEntry(MAX_BUS_EVENTS, now);
+        BusEventEntry input = dao.getNextBusEventEntry(MAX_BUS_EVENTS, hostname, now);
         if (input == null) {
             return Collections.emptyList();
         }
@@ -224,34 +153,6 @@ public class PersistentBus implements Bus  {
             return Collections.singletonList(input);
         }
         return Collections.emptyList();
-    }
-
-
-    @Override
-    public void stop() {
-        int remaining = 0;
-        try {
-            synchronized(this) {
-                isProcessingEvents = false;
-                long ini = System.currentTimeMillis();
-                long remainingWaitTimeMs = TIMEOUT_MSEC;
-                while (curActiveThreads > 0 && remainingWaitTimeMs > 0) {
-                    wait(1000);
-                    remainingWaitTimeMs = TIMEOUT_MSEC - (System.currentTimeMillis() - ini);
-                }
-                remaining = curActiveThreads;
-            }
-            
-        } catch (InterruptedException ignore) {
-            log.info("PersistentBus has been interrupted during stop sequence");
-        } finally {
-            if (remaining > 0) {
-                log.error(String.format("PersistentBus stopped with %d active remaing threads", remaining));
-            } else {
-                log.info("PersistentBus completed sucesfully shutdown sequence");
-            }
-            curActiveThreads = 0;
-        }
     }
 
     @Override
@@ -286,7 +187,7 @@ public class PersistentBus implements Bus  {
     private void postFromTransaction(BusEvent event, PersistentBusSqlDao transactional) {
         try {
             String json = objectMapper.writeValueAsString(event);
-            BusEventEntry entry  =  new BusEventEntry(event.getClass().getName(), json);
+            BusEventEntry entry  =  new BusEventEntry(hostname, event.getClass().getName(), json);
             transactional.insertBusEvent(entry);
         } catch (Exception e) {
             log.error("Failed to post BusEvent " + event.toString(), e);

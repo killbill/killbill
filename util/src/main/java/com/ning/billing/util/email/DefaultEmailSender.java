@@ -16,16 +16,16 @@
 
 package com.ning.billing.util.email;
 
-import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
+import java.util.List;
+
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.inject.Inject;
 
-public class DefaultEmailSender implements EmailSender {
+public class DefaultEmailSender implements EmailSender { 
     private final Logger log = LoggerFactory.getLogger(EmailSender.class);
     private final EmailConfig config;
 

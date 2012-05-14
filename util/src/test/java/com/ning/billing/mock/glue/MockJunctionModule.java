@@ -19,11 +19,12 @@ package com.ning.billing.mock.glue;
 import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.glue.JunctionModule;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 
-public class MockJunctionModule extends AbstractModule {
+public class MockJunctionModule extends AbstractModule implements JunctionModule {
     private BillingApi billingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
     private BlockingApi blockingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingApi.class);
     private AccountUserApi userApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
@@ -37,20 +38,24 @@ public class MockJunctionModule extends AbstractModule {
         installEntitlementUserApi();
     }
 
-    protected void installBillingApi() {
+    @Override
+    public void installBillingApi() {
         bind(BillingApi.class).toInstance(billingApi);
     }
     
     
-    protected void installAccountUserApi() {
+    @Override
+    public void installAccountUserApi() {
         bind(AccountUserApi.class).toInstance(userApi);
     }
     
-    protected void installBlockingApi() {
+    @Override
+    public void installBlockingApi() {
         bind(BlockingApi.class).toInstance(blockingApi);
     }
     
-    protected void installEntitlementUserApi() {
+    @Override
+    public void installEntitlementUserApi() {
         bind(EntitlementUserApi.class).toInstance(entUserApi);
     }
 }

@@ -50,7 +50,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
 
     @Override
     public void recordFutureNotification(DateTime futureNotificationTime, NotificationKey notificationKey) {
-        Notification notification = new DefaultNotification("MockQueue", notificationKey.toString(), futureNotificationTime);
+        Notification notification = new DefaultNotification("MockQueue", hostname, notificationKey.toString(), futureNotificationTime);
         synchronized(notifications) {
             notifications.add(notification);
         }
@@ -75,7 +75,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    protected int doProcessEvents(int sequenceId) {
+    public int doProcessEvents() {
 
         int result = 0;
 
@@ -96,7 +96,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
         result = readyNotifications.size();
         for (Notification cur : readyNotifications) {
             handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
-            DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getUUID(), hostname, "MockQueue", clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
+            DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), hostname, hostname, "MockQueue", clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
             oldNotifications.add(cur);
             processedNotifications.add(processedNotification);
         }

@@ -103,6 +103,7 @@ CREATE TABLE notifications (
     id char(36) NOT NULL,
     created_date datetime NOT NULL,
 	notification_key varchar(256) NOT NULL,
+	creating_owner char(50) NOT NULL,
     effective_date datetime NOT NULL,
     queue_name char(64) NOT NULL,
     processing_owner char(50) DEFAULT NULL,
@@ -118,7 +119,6 @@ CREATE INDEX  `idx_get_ready` ON notifications (`effective_date`,`created_date`,
 DROP TABLE IF EXISTS claimed_notifications;
 CREATE TABLE claimed_notifications (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
-    sequence_id int(11) unsigned NOT NULL,
     owner_id varchar(64) NOT NULL,
     claimed_date datetime NOT NULL,
     notification_id char(36) NOT NULL,
@@ -145,8 +145,9 @@ DROP TABLE IF EXISTS bus_events;
 CREATE TABLE bus_events (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     class_name varchar(128) NOT NULL, 
-    event_json varchar(1024) NOT NULL,     
+    event_json varchar(2048) NOT NULL,     
     created_date datetime NOT NULL,
+    creating_owner char(50) NOT NULL,
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',

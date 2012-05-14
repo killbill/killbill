@@ -21,6 +21,7 @@ public enum ObjectType {
     ACCOUNT_EMAIL("account email"),
     BUNDLE("subscription bundle"),
     INVOICE("invoice"),
+    RECURRING_INVOICE_ITEM("recurring_invoice_item"),
     SUBSCRIPTION("subscription");
 
     private final String objectName;

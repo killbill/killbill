@@ -19,6 +19,7 @@ package com.ning.billing.payment.api;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityBase;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -26,8 +27,7 @@ import org.joda.time.DateTime;
 
 import com.google.common.base.Objects;
 
-public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
-    private final String paymentId;
+public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEvent {
     private final BigDecimal amount;
     private final BigDecimal refundAmount;
     private final String paymentNumber;
@@ -43,7 +43,7 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
     private final DateTime effectiveDate;
 
     @JsonCreator
-    public DefaultPaymentInfoEvent(@JsonProperty("paymentId") String paymentId,
+    public DefaultPaymentInfoEvent(@JsonProperty("id") UUID id,
                        @JsonProperty("amount") BigDecimal amount,
                        @JsonProperty("refundAmount") BigDecimal refundAmount,
                        @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
@@ -57,7 +57,7 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
                        @JsonProperty("cardCountry") String cardCountry,
                        @JsonProperty("userToken") UUID userToken,
                        @JsonProperty("effectiveDate") DateTime effectiveDate) {
-        this.paymentId = paymentId;
+        super(id);
         this.amount = amount;
         this.refundAmount = refundAmount;
         this.bankIdentificationNumber = bankIdentificationNumber;
@@ -74,7 +74,7 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
     }
 
     public DefaultPaymentInfoEvent(DefaultPaymentInfoEvent src) {
-        this(src.paymentId,
+        this(src.id,
              src.amount,
              src.refundAmount,
              src.bankIdentificationNumber,
@@ -103,11 +103,6 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
 
     public Builder cloner() {
         return new Builder(this);
-    }
-
-    @Override
-    public String getPaymentId() {
-        return paymentId;
     }
 
     @Override
@@ -170,13 +165,8 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
         return type;
     }
 
-    @Override
-    public UUID getId() {
-        return UUID.fromString(paymentId);
-    }
-
     public static class Builder {
-        private String paymentId;
+        private UUID id;
         private BigDecimal amount;
         private BigDecimal refundAmount;
         private String paymentNumber;
@@ -195,7 +185,7 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
         }
 
         public Builder(DefaultPaymentInfoEvent src) {
-            this.paymentId = src.paymentId;
+            this.id = src.id;
             this.amount = src.amount;
             this.refundAmount = src.refundAmount;
             this.paymentNumber = src.paymentNumber;
@@ -211,8 +201,8 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
             this.userToken = src.userToken;
         }
 
-        public Builder setPaymentId(String paymentId) {
-            this.paymentId = paymentId;
+        public Builder setId(UUID id) {
+            this.id = id;
             return this;
         }
 
@@ -282,7 +272,7 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
         }
 
         public PaymentInfoEvent build() {
-            return new DefaultPaymentInfoEvent(paymentId,
+            return new DefaultPaymentInfoEvent(id,
                                    amount,
                                    refundAmount,
                                    bankIdentificationNumber,
@@ -301,7 +291,7 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(paymentId,
+        return Objects.hashCode(id,
                                 amount,
                                 refundAmount,
                                 bankIdentificationNumber,
@@ -329,7 +319,7 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
         if (cardCountry != null ? !cardCountry.equals(that.cardCountry) : that.cardCountry != null) return false;
         if (cardType != null ? !cardType.equals(that.cardType) : that.cardType != null) return false;
         if (effectiveDate == null ? that.effectiveDate != null : effectiveDate.compareTo(that.effectiveDate) != 0) return false;
-        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) return false;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
             return false;
         if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null)
@@ -346,6 +336,6 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
 
     @Override
     public String toString() {
-        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethod=" + paymentMethod + ", cardType=" + cardType + ", cardCountry=" + cardCountry + ", effectiveDate=" + effectiveDate + "]";
+        return "PaymentInfo [id=" + id + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethod=" + paymentMethod + ", cardType=" + cardType + ", cardCountry=" + cardCountry + ", effectiveDate=" + effectiveDate + "]";
     }
 }

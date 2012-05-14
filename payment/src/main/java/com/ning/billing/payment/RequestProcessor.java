@@ -18,23 +18,29 @@ package com.ning.billing.payment;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
 import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.bus.BusEvent.BusEventType;
+import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
@@ -52,39 +58,51 @@ public class RequestProcessor {
 
     @Inject
     public RequestProcessor(Clock clock,
-                            AccountUserApi accountUserApi,
-                            PaymentApi paymentApi,
-                            PaymentProviderPluginRegistry pluginRegistry,
-                            Bus eventBus) {
+            AccountUserApi accountUserApi,
+            PaymentApi paymentApi,
+            PaymentProviderPluginRegistry pluginRegistry,
+            Bus eventBus) {
         this.clock = clock;
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
         this.eventBus = eventBus;
     }
+    
+    private void postPaymentEvent(BusEvent ev, UUID accountId) {
+        if (ev == null) {
+            return;
+        }
+        try {
+            eventBus.post(ev);
+        } catch (EventBusException e) {
+            log.error("Failed to post Payment event event for account {} ", accountId, e);
+        }
+    }
 
     @Subscribe
     public void receiveInvoice(InvoiceCreationEvent event) {
+
+
         log.info("Received invoice creation notification for account {} and invoice {}", event.getAccountId(), event.getInvoiceId());
+        PaymentErrorEvent errorEvent = null;
         try {
             final Account account = accountUserApi.getAccountById(event.getAccountId());
-
-            if (account == null) {
-                log.info("could not process invoice payment: could not find a valid account for event {}", event);
-            }
-            else {
+            if (account != null) {
                 CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
-                List<Either<PaymentErrorEvent, PaymentInfoEvent>> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()), context);
-                if (!results.isEmpty()) {
-                    Either<PaymentErrorEvent, PaymentInfoEvent> result = results.get(0);
-                    eventBus.post(result.isLeft() ? result.getLeft() : result.getRight());
-                }
+                List<PaymentInfoEvent> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()), context);
+                PaymentInfoEvent infoEvent = (!results.isEmpty()) ?  results.get(0) : null;
+                postPaymentEvent(infoEvent, account.getId());
+                return;
+            } else {
+                errorEvent = new DefaultPaymentErrorEvent(null, "Failed to retrieve account", event.getAccountId(), null, null);
             }
+        } catch(AccountApiException e) {
+            log.error("Failed to process invoice payment", e);
+            errorEvent = new DefaultPaymentErrorEvent(null, e.getMessage(), event.getAccountId(), null, null);            
+        } catch (PaymentApiException e) {
+            log.error("Failed to process invoice payment", e);
+            errorEvent = new DefaultPaymentErrorEvent(null, e.getMessage(), event.getAccountId(), null, null);                        
         }
-        catch(AccountApiException e) {
-            log.warn("could not process invoice payment", e);
-        }
-        catch (EventBusException ex) {
-            throw new RuntimeException(ex);
-        }
+        postPaymentEvent(errorEvent, event.getAccountId());
     }
 }

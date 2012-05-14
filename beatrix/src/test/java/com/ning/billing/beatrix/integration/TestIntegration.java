@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.beatrix.integration.TestBusHandler.NextEvent;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
@@ -49,31 +49,31 @@ import com.ning.billing.invoice.api.Invoice;
 public class TestIntegration extends TestIntegrationBase {
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
+        log.info("Starting testBasePlanCompleteWithBillingDayInPast");
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 31, false);
     }
 
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
+        log.info("Starting testBasePlanCompleteWithBillingDayPresent");
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 1, false);
     }
 
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
+        log.info("Starting testBasePlanCompleteWithBillingDayAlignedWithTrial");
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 2, false);
     }
 
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
+        log.info("Starting testBasePlanCompleteWithBillingDayInFuture");
         DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         testBasePlanComplete(startDate, 3, true);
     }
-
-//    private void waitForDebug() throws Exception {
-//        Thread.sleep(600000);
-//    }
 
     @Test(groups = {"slow", "stress"}, enabled = false)
     public void stressTest() throws Exception {
@@ -95,8 +95,11 @@ public class TestIntegration extends TestIntegrationBase {
         }
     }
 
-    @Test(groups = "slow", enabled = true)
+    // STEPH set to disabled until test written properly and fixed
+    @Test(groups = "slow", enabled = false)
     public void testRepairChangeBPWithAddonIncluded() throws Exception {
+        
+        log.info("Starting testRepairChangeBPWithAddonIncluded");
         
         DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
@@ -146,10 +149,13 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(busHandler.isCompleted(DELAY));
+        
+        assertListenerStatus();
     }
    
     @Test(groups = {"slow"})
     public void testRepairForInvoicing() throws AccountApiException, EntitlementUserApiException {
+
         log.info("Starting testRepairForInvoicing");
 
         Account account = accountUserApi.createAccount(getAccountData(1), null, null, context);
@@ -179,8 +185,10 @@ public class TestIntegration extends TestIntegrationBase {
         // TODO: Jeff implement repair
     }
 
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow", enabled = true)
     public void testWithRecreatePlan() throws Exception {
+
+        log.info("Starting testWithRecreatePlan");
 
         DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         int billingDay = 2;
@@ -242,13 +250,13 @@ public class TestIntegration extends TestIntegrationBase {
         term = BillingPeriod.MONTHLY;
         planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
+        busHandler.pushExpectedEvent(NextEvent.RE_CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         subscription.recreate(new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), endDate, context);
         assertTrue(busHandler.isCompleted(DELAY));
 
-
+        assertListenerStatus();
     }
      
     private void testBasePlanComplete(DateTime initialCreationDate, int billingDay,
@@ -444,12 +452,18 @@ public class TestIntegration extends TestIntegrationBase {
 
         // The invoice system is still working to verify there is nothing to do
         Thread.sleep(DELAY);
+        
+        assertListenerStatus();
+        
         log.info("TEST PASSED !");
     }
 
 
     @Test(groups = "slow")
     public void testForMultipleRecurringPhases() throws AccountApiException, EntitlementUserApiException, InterruptedException {
+
+        log.info("Starting testForMultipleRecurringPhases");
+        
         DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialCreationDate.getMillis() - clock.getUTCNow().getMillis());
 
@@ -509,5 +523,7 @@ public class TestIntegration extends TestIntegrationBase {
         invoices = invoiceUserApi.getInvoicesByAccount(accountId);
         assertNotNull(invoices);
         assertEquals(invoices.size(),14);
+
+        assertListenerStatus();
     }
 }

@@ -17,7 +17,6 @@
 package com.ning.billing.entitlement.events;
 
 import com.ning.billing.entitlement.events.user.ApiEvent;
-import com.ning.billing.entitlement.exceptions.EntitlementError;
 import org.joda.time.DateTime;
 
 import java.util.UUID;

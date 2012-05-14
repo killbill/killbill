@@ -40,17 +40,16 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockJunctionModule;
-import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.PaymentDao;
@@ -60,11 +59,13 @@ import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.notificationq.MockNotificationQueue;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
-@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class })
+@Guice(modules = { PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class })
 @Test(groups = "fast")
 public class TestRetryService {
     @Inject
@@ -73,6 +74,8 @@ public class TestRetryService {
     private Bus eventBus;
     @Inject
     private PaymentApi paymentApi;
+    @Inject
+    private InvoicePaymentApi invoicePaymentApi;
     @Inject
     private TestHelper testHelper;
     @Inject
@@ -104,6 +107,8 @@ public class TestRetryService {
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin)registry.getPlugin(null);
         mockNotificationQueue = (MockNotificationQueue)notificationQueueService.getNotificationQueue(RetryService.SERVICE_NAME, RetryService.QUEUE_NAME);
         context = new DefaultCallContext("RetryServiceTests", CallOrigin.INTERNAL, UserType.TEST, clock);
+        ((ZombieControl)invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
+
     }
 
     @AfterMethod(alwaysRun = true)
@@ -122,7 +127,7 @@ public class TestRetryService {
 
         final DateTime startDate = clock.getUTCNow();
         final DateTime endDate = startDate.plusMonths(1);
-        invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+        invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(),
                                                        account.getId(),
                                                        subscriptionId,
                                                        bundleId,
@@ -134,11 +139,13 @@ public class TestRetryService {
                                                        Currency.USD));
 
         mockPaymentProviderPlugin.makeNextInvoiceFail();
-
-        List<Either<PaymentErrorEvent, PaymentInfoEvent>> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
-
-        assertEquals(results.size(), 1);
-        assertTrue(results.get(0).isLeft());
+        boolean failed = false;
+        try {
+            paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
+        } catch (PaymentApiException e) {
+            failed = true;
+        }
+        assertTrue(failed);
 
         List<Notification> pendingNotifications = mockNotificationQueue.getPendingEvents();
 
@@ -165,7 +172,7 @@ public class TestRetryService {
 
         final DateTime now = clock.getUTCNow();
 
-        invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+        invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(),
                                                        account.getId(),
                                                        subscriptionId,
                                                        bundleId,
@@ -198,7 +205,7 @@ public class TestRetryService {
         assertEquals(paymentInfo.getStatus(), PaymentStatus.Processed.toString());
 
         List<PaymentAttempt> updatedAttempts = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId().toString());
-        assertEquals(paymentInfo.getPaymentId(), updatedAttempts.get(0).getPaymentId());
+        assertEquals(paymentInfo.getId(), updatedAttempts.get(0).getPaymentId());
 
     }
 }

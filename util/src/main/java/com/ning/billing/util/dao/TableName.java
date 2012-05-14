@@ -23,11 +23,13 @@ public enum TableName {
     BUNDLES("bundles"),
     CUSTOM_FIELD_HISTORY("custom_field_history"),
     ENTITLEMENT_EVENTS("entitlement_events"),
+    FIXED_INVOICE_ITEMS("fixed_invoice_items"),
     INVOICE_PAYMENTS("invoice_payments"),
     INVOICES("invoices"),
     PAYMENT_ATTEMPTS("payment_attempts"),
     PAYMENT_HISTORY("payment_history"),
     PAYMENTS("payments"),
+    RECURRING_INVOICE_ITEMS("recurring_invoice_items"),
     SUBSCRIPTIONS("subscriptions"),
     TAG_HISTORY("tag_history");
     

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.beatrix.integration.payment;
 
 import java.util.ArrayList;
 import java.util.Collections;

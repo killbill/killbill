@@ -38,7 +38,6 @@ import org.testng.annotations.Test;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
@@ -47,9 +46,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
@@ -141,7 +138,7 @@ public class TestOverdueCheckNotifier {
 
         clock = g.getInstance(Clock.class);
         IDBI dbi = g.getInstance(IDBI.class);
-        dao = dbi.onDemand(DummySqlTest.class);
+
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
@@ -161,7 +158,7 @@ public class TestOverdueCheckNotifier {
         eventBus.start();
         notifier.initialize();
         notifier.start();
-
+        dao = dbi.onDemand(DummySqlTest.class);
 	}
 
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {

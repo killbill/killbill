@@ -17,7 +17,9 @@
 package com.ning.billing.account.glue;
 
 import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.MockAccountDao;
+import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.FieldStoreModule;
@@ -27,6 +29,8 @@ public class AccountModuleWithMocks extends AccountModule {
     @Override
     protected void installAccountDao() {
         bind(MockAccountDao.class).asEagerSingleton();
+        AccountEmailDao accountEmailDao = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountEmailDao.class);
+        bind(AccountEmailDao.class).toInstance(accountEmailDao);
         bind(AccountDao.class).to(MockAccountDao.class);
     }
 

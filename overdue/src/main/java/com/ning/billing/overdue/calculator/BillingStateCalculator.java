@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.Blockable;
@@ -56,7 +57,7 @@ public abstract class BillingStateCalculator<T extends Blockable> {
         this.clock = clock;
     }
     
-    public abstract BillingState<T> calculateBillingState(T overdueable);
+    public abstract BillingState<T> calculateBillingState(T overdueable) throws EntitlementUserApiException;
     
     protected DateTime earliest(SortedSet<Invoice> unpaidInvoices) {
         return unpaidInvoices.first().getInvoiceDate();

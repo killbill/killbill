@@ -26,7 +26,7 @@ import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 public class JaxrsUriBuilder {
 
 	
-	public Response buildResponse(final Class<? extends BaseJaxrsResource> theClass, final String getMethodName, final UUID objectId) {
+	public Response buildResponse(final Class<? extends BaseJaxrsResource> theClass, final String getMethodName, final Object objectId) {
 		URI uri = UriBuilder.fromPath(objectId.toString()).build();
 		Response.ResponseBuilder ri = Response.created(uri);
 		return ri.entity(new Object() {

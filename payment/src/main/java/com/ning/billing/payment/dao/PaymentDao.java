@@ -31,14 +31,14 @@ public interface PaymentDao {
 
     void savePaymentInfo(PaymentInfoEvent right, CallContext context);
 
-    PaymentAttempt getPaymentAttemptForPaymentId(String paymentId);
+    PaymentAttempt getPaymentAttemptForPaymentId(UUID paymentId);
     List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<String> invoiceIds);
 
-    void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String paymentId, CallContext context);
+    void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, UUID paymentId, CallContext context);
 
     List<PaymentAttempt> getPaymentAttemptsForInvoiceId(String invoiceId);
 
-    void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry, CallContext context);
+    void updatePaymentInfo(String paymentMethodType, UUID paymentId, String cardType, String cardCountry, CallContext context);
 
     List<PaymentInfoEvent> getPaymentInfoList(List<String> invoiceIds);
 

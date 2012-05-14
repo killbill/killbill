@@ -23,13 +23,12 @@ import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 
-public class MockEngineModule extends EntitlementModule {
+public class MockEngineModule extends DefaultEntitlementModule {
 
    
     @Override
     protected void configure() {
         super.configure();
-        install(new BusModule());
         install(new CatalogModule());
         bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
         install(new MockClockModule());

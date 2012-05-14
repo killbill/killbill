@@ -26,37 +26,57 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface PaymentApi {
 
-    Either<PaymentErrorEvent, Void> updatePaymentGateway(String accountKey, CallContext context);
+    public void updatePaymentGateway(final String accountKey, final CallContext context)
+        throws PaymentApiException;
 
-    Either<PaymentErrorEvent, PaymentMethodInfo> getPaymentMethod(@Nullable String accountKey, String paymentMethodId);
+    public PaymentMethodInfo getPaymentMethod(final String accountKey, final String paymentMethodId)
+        throws PaymentApiException;
 
-    Either<PaymentErrorEvent, List<PaymentMethodInfo>> getPaymentMethods(String accountKey);
+    public List<PaymentMethodInfo> getPaymentMethods(final String accountKey)
+        throws PaymentApiException;
 
-    Either<PaymentErrorEvent, String> addPaymentMethod(@Nullable String accountKey, PaymentMethodInfo paymentMethod, CallContext context);
+    public String addPaymentMethod(final String accountKey, final PaymentMethodInfo paymentMethod, final CallContext context)
+        throws PaymentApiException;
 
-    Either<PaymentErrorEvent, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo, CallContext context);
+    public PaymentMethodInfo updatePaymentMethod(final String accountKey, final PaymentMethodInfo paymentMethodInfo, final CallContext context)
+        throws PaymentApiException;
 
-    Either<PaymentErrorEvent, Void> deletePaymentMethod(String accountKey, String paymentMethodId, CallContext context);
+    public void deletePaymentMethod(final String accountKey, final String paymentMethodId, final CallContext context)
+        throws PaymentApiException;
 
-    List<Either<PaymentErrorEvent, PaymentInfoEvent>> createPayment(String accountKey, List<String> invoiceIds, CallContext context);
-    List<Either<PaymentErrorEvent, PaymentInfoEvent>> createPayment(Account account, List<String> invoiceIds, CallContext context);
-    Either<PaymentErrorEvent, PaymentInfoEvent> createPaymentForPaymentAttempt(UUID paymentAttemptId, CallContext context);
+    public List<PaymentInfoEvent> createPayment(final String accountKey, final List<String> invoiceIds, final CallContext context)
+        throws PaymentApiException;
+    
+    public List<PaymentInfoEvent> createPayment(final Account account, final List<String> invoiceIds, final CallContext context)
+        throws PaymentApiException;
+    
+    public PaymentInfoEvent createPaymentForPaymentAttempt(final UUID paymentAttemptId, final CallContext context)
+        throws PaymentApiException;
 
-    List<Either<PaymentErrorEvent, PaymentInfoEvent>> createRefund(Account account, List<String> invoiceIds, CallContext context); //TODO
+    public List<PaymentInfoEvent> createRefund(final Account account, final List<String> invoiceIds, final CallContext context)
+        throws PaymentApiException;
 
-    Either<PaymentErrorEvent, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
+    public PaymentProviderAccount getPaymentProviderAccount(final String accountKey)
+        throws PaymentApiException;
 
-    Either<PaymentErrorEvent, String> createPaymentProviderAccount(Account account, CallContext context);
+    public String createPaymentProviderAccount(final Account account, final CallContext context)
+        throws PaymentApiException;
 
-    Either<PaymentErrorEvent, Void> updatePaymentProviderAccountContact(String accountKey, CallContext context);
+    public void updatePaymentProviderAccountContact(String accountKey, CallContext context)
+        throws PaymentApiException;
 
-    PaymentAttempt getPaymentAttemptForPaymentId(String id);
+    public PaymentAttempt getPaymentAttemptForPaymentId(final UUID id)
+        throws PaymentApiException;
 
-    List<PaymentInfoEvent> getPaymentInfoList(List<String> invoiceIds);
-    PaymentInfoEvent getLastPaymentInfo(List<String> invoiceIds);
+    public List<PaymentInfoEvent> getPaymentInfoList(final List<String> invoiceIds)
+        throws PaymentApiException;
 
-    List<PaymentAttempt> getPaymentAttemptsForInvoiceId(String invoiceId);
+    public PaymentInfoEvent getLastPaymentInfo(final List<String> invoiceIds)
+        throws PaymentApiException;
 
-    PaymentInfoEvent getPaymentInfoForPaymentAttemptId(String paymentAttemptId);
+    public List<PaymentAttempt> getPaymentAttemptsForInvoiceId(final String invoiceId)
+        throws PaymentApiException;
 
+    public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(final String paymentAttemptId)
+        throws PaymentApiException;
 }

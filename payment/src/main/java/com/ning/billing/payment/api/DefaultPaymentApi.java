@@ -18,10 +18,9 @@ package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
@@ -29,13 +28,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.PaymentProviderPlugin;
@@ -69,9 +68,14 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentMethodInfo> getPaymentMethod(@Nullable String accountKey, String paymentMethodId) {
+    public PaymentMethodInfo getPaymentMethod(final String accountKey, final String paymentMethodId) 
+    throws PaymentApiException {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        return plugin.getPaymentMethodInfo(paymentMethodId);
+        Either<PaymentErrorEvent, PaymentMethodInfo> result = plugin.getPaymentMethodInfo(paymentMethodId);
+        if (result.isLeft()) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, accountKey, paymentMethodId);
+        }
+        return result.getRight();
     }
 
     private PaymentProviderPlugin getPaymentProviderPlugin(String accountKey) {
@@ -101,60 +105,87 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentErrorEvent, List<PaymentMethodInfo>> getPaymentMethods(String accountKey) {
+    public List<PaymentMethodInfo> getPaymentMethods(String accountKey)
+    throws PaymentApiException {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        return plugin.getPaymentMethods(accountKey);
+        Either<PaymentErrorEvent, List<PaymentMethodInfo>> result =  plugin.getPaymentMethods(accountKey);
+        if (result.isLeft()) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_PAYMENT_METHODS, accountKey);
+        }
+        return result.getRight();
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> updatePaymentGateway(String accountKey, CallContext context) {
+    public void updatePaymentGateway(String accountKey, CallContext context) 
+    throws PaymentApiException {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        return plugin.updatePaymentGateway(accountKey);
+        Either<PaymentErrorEvent, Void> result =  plugin.updatePaymentGateway(accountKey);
+        if (result.isLeft()) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_UPD_GATEWAY_FAILED, accountKey, result.getLeft().getMessage());
+        }
+        return;
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
+    public PaymentProviderAccount getPaymentProviderAccount(String accountKey)
+    throws PaymentApiException {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        return plugin.getPaymentProviderAccount(accountKey);
+        Either<PaymentErrorEvent, PaymentProviderAccount> result = plugin.getPaymentProviderAccount(accountKey);
+        if (result.isLeft()) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_PROVIDER, accountKey, result.getLeft().getMessage());
+        }
+        return result.getRight();
     }
 
     @Override
-    public Either<PaymentErrorEvent, String> addPaymentMethod(@Nullable String accountKey, PaymentMethodInfo paymentMethod, CallContext context) {
+    public String addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod, CallContext context) 
+    throws PaymentApiException {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        return plugin.addPaymentMethod(accountKey, paymentMethod);
+        Either<PaymentErrorEvent, String> result =  plugin.addPaymentMethod(accountKey, paymentMethod);
+        if (result.isLeft()) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, accountKey, result.getLeft().getMessage());
+        }
+        return result.getRight();
+    }
+
+
+    @Override
+    public void deletePaymentMethod(String accountKey, String paymentMethodId, CallContext context) 
+    throws PaymentApiException {
+        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+        Either<PaymentErrorEvent, Void> result =  plugin.deletePaymentMethod(accountKey, paymentMethodId);
+        if (result.isLeft()) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_DEL_PAYMENT_METHOD, accountKey, result.getLeft().getMessage());
+        }
+        return;
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> deletePaymentMethod(String accountKey, String paymentMethodId, CallContext context) {
+    public PaymentMethodInfo updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo, CallContext context) 
+    throws PaymentApiException {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        return plugin.deletePaymentMethod(accountKey, paymentMethodId);
+        Either<PaymentErrorEvent, PaymentMethodInfo> result = plugin.updatePaymentMethod(accountKey, paymentMethodInfo);
+        if (result.isLeft()) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_UPD_PAYMENT_METHOD, accountKey, result.getLeft().getMessage());
+        }
+        return result.getRight();
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo, CallContext context) {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        return plugin.updatePaymentMethod(accountKey, paymentMethodInfo);
-    }
-
-    @Override
-    public List<Either<PaymentErrorEvent, PaymentInfoEvent>> createPayment(String accountKey, List<String> invoiceIds, CallContext context) {
+    public List<PaymentInfoEvent> createPayment(String accountKey, List<String> invoiceIds, CallContext context) 
+    throws PaymentApiException {
         try {
             final Account account = accountUserApi.getAccountByKey(accountKey);
             return createPayment(account, invoiceIds, context);
         } catch (AccountApiException e) {
-            log.error("Error getting payment provider plugin.", e);
-            List<Either<PaymentErrorEvent, PaymentInfoEvent>> result = new ArrayList<Either<PaymentErrorEvent, PaymentInfoEvent>>();
-            result.add(new Either.Left<PaymentErrorEvent, PaymentInfoEvent>((PaymentErrorEvent) new DefaultPaymentErrorEvent("createPaymentError", e.getMessage(),
-                    null,
-                    null,
-                    context.getUserToken())));
-            return result;
+            throw new PaymentApiException(e);
         }
-
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentInfoEvent> createPaymentForPaymentAttempt(UUID paymentAttemptId, CallContext context) {
+    public PaymentInfoEvent createPaymentForPaymentAttempt(UUID paymentAttemptId, CallContext context) 
+    throws PaymentApiException {
+
         PaymentAttempt paymentAttempt = paymentDao.getPaymentAttemptById(paymentAttemptId);
         if (paymentAttempt != null) {
             try {
@@ -165,40 +196,35 @@ public class DefaultPaymentApi implements PaymentApi {
                     if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
                         // TODO: send a notification that invoice was ignored?
                         log.info("Received invoice for payment with outstanding amount of 0 {} ", invoice);
-                        return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("invoice_balance_0",
-                                "Invoice balance was 0 or less",
-                                paymentAttempt.getAccountId(),
-                                paymentAttempt.getInvoiceId(),
-                                context.getUserToken()));
-                    }
-                    else {
+                        throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_WITH_NON_POSITIVE_INV, account.getId());
+
+                    } else {
+                        
                         PaymentAttempt newPaymentAttempt = new DefaultPaymentAttempt.Builder(paymentAttempt)
-                        .setRetryCount(paymentAttempt.getRetryCount() + 1)
-                        .setPaymentAttemptId(UUID.randomUUID())
-                        .build();
+                                                                                    .setRetryCount(paymentAttempt.getRetryCount() + 1)
+                                                                                    .setPaymentAttemptId(UUID.randomUUID())
+                                                                                    .build();
 
                         paymentDao.createPaymentAttempt(newPaymentAttempt, context);
-                        return processPayment(getPaymentProviderPlugin(account), account, invoice, newPaymentAttempt, context);
+                        Either<PaymentErrorEvent, PaymentInfoEvent> result =  processPayment(getPaymentProviderPlugin(account), account, invoice, newPaymentAttempt, context);
+                        if (result.isLeft()) {
+                            throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT, account.getId(),  paymentAttemptId, result.getLeft().getMessage());                            
+                        }
+                        return result.getRight();
+
                     }
                 }
             } catch (AccountApiException e) {
-                log.error("Error creating payment attempt.", e);
-                return new Either.Left<PaymentErrorEvent, PaymentInfoEvent>((PaymentErrorEvent) new DefaultPaymentErrorEvent("createPaymentError", e.getMessage(),
-                        null,
-                        null,
-                        context.getUserToken()));
-
+                throw new PaymentApiException(e);
             }
         }
-        return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("retry_payment_error",
-                "Could not load payment attempt, invoice or account for id " + paymentAttemptId,
-                paymentAttempt.getAccountId(),
-                paymentAttempt.getInvoiceId(),
-                context.getUserToken()));
+        throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD, paymentAttemptId);
     }
 
     @Override
-    public List<Either<PaymentErrorEvent, PaymentInfoEvent>> createPayment(Account account, List<String> invoiceIds, CallContext context) {
+    public List<PaymentInfoEvent> createPayment(Account account, List<String> invoiceIds, CallContext context) 
+        throws PaymentApiException {
+        
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
 
         List<Either<PaymentErrorEvent, PaymentInfoEvent>> processedPaymentsOrErrors = new ArrayList<Either<PaymentErrorEvent, PaymentInfoEvent>>(invoiceIds.size());
@@ -225,7 +251,15 @@ public class DefaultPaymentApi implements PaymentApi {
             }
         }
 
-        return processedPaymentsOrErrors;
+        List<Either<PaymentErrorEvent, PaymentInfoEvent>> result =  processedPaymentsOrErrors;
+        List<PaymentInfoEvent> info = new LinkedList<PaymentInfoEvent>();
+        for (Either<PaymentErrorEvent, PaymentInfoEvent> cur : result) {
+            if (cur.isLeft()) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), cur.getLeft().getMessage());
+            }
+            info.add(cur.getRight());
+        }
+        return info;
     }
 
     private Either<PaymentErrorEvent, PaymentInfoEvent> processPayment(PaymentProviderPlugin plugin, Account account, Invoice invoice,
@@ -252,28 +286,29 @@ public class DefaultPaymentApi implements PaymentApi {
 
                 if (paymentMethodInfo instanceof CreditCardPaymentMethodInfo) {
                     CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethodInfo;
-                    paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getPaymentId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
+                    paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
                 }
                 else if (paymentMethodInfo instanceof PaypalPaymentMethodInfo) {
                     PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
-                    paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getPaymentId(), null, null, context);
+                    paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getId(), null, null, context);
                 }
             } else {
                 log.info(paymentMethodInfoOrError.getLeft().getMessage());
             }
 
-            if (paymentInfo.getPaymentId() != null) {
-                paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfo.getPaymentId(), context);
+            if (paymentInfo.getId() != null) {
+                paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfo.getId(), context);
             }
         }
 
-        invoicePaymentApi.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttempt.getId(),
+        invoicePaymentApi.notifyOfPaymentAttempt(
                 invoice.getId(),
-                paymentAttempt.getPaymentAttemptDate(),
                 paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
                         //                                                                         paymentInfo.getRefundAmount(), TODO
-                        paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency()),
-                        context);
+                        paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency(),
+                                paymentAttempt.getId(),
+                                paymentAttempt.getPaymentAttemptDate(),
+                                context);
 
         return paymentOrError;
     }
@@ -310,38 +345,51 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Either<PaymentErrorEvent, String> createPaymentProviderAccount(Account account, CallContext context) {
+    public String createPaymentProviderAccount(Account account, CallContext context) 
+        throws PaymentApiException {
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin((Account)null);
-        return plugin.createPaymentProviderAccount(account);
+        Either<PaymentErrorEvent, String> result =  plugin.createPaymentProviderAccount(account);
+        if (result.isLeft()) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT, account.getId(), result.getLeft().getMessage());
+        }
+        return result.getRight();
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> updatePaymentProviderAccountContact(String externalKey, CallContext context) {
+    public void updatePaymentProviderAccountContact(String externalKey, CallContext context) 
+        throws PaymentApiException {
         try {
             Account account = accountUserApi.getAccountByKey(externalKey);
             final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
-            return plugin.updatePaymentProviderAccountExistingContact(account);
+            Either<PaymentErrorEvent, Void> result = plugin.updatePaymentProviderAccountExistingContact(account);
+            if (result.isLeft()) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT, account.getId(), result.getLeft().getMessage());
+            }
+            return;
         } catch (AccountApiException e) {
-            log.error("Error updating payment provider account contact.", e);
-            return new Either.Left<PaymentErrorEvent, Void>((PaymentErrorEvent) new DefaultPaymentErrorEvent("updatePaymentProviderAccountContactError", e.getMessage(),
-                    null,
-                    null,
-                    context.getUserToken()));
-
+            throw new PaymentApiException(e);
         }
     }
 
     @Override
-    public PaymentAttempt getPaymentAttemptForPaymentId(String id) {
+    public PaymentAttempt getPaymentAttemptForPaymentId(UUID id) {
         return paymentDao.getPaymentAttemptForPaymentId(id);
     }
 
     @Override
-    public List<Either<PaymentErrorEvent, PaymentInfoEvent>> createRefund(Account account,
-            List<String> invoiceIds,
-            CallContext context) {
+    public List<PaymentInfoEvent> createRefund(Account account, List<String> invoiceIds, CallContext context)
+        throws PaymentApiException {
+            
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
-        return plugin.processRefund(account);
+        List<Either<PaymentErrorEvent, PaymentInfoEvent>> result = plugin.processRefund(account);
+        List<PaymentInfoEvent> info =  new LinkedList<PaymentInfoEvent>();
+        for (Either<PaymentErrorEvent, PaymentInfoEvent> cur : result) {
+            if (cur.isLeft()) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), cur.getLeft().getMessage());
+            }
+            info.add(cur.getRight());
+        }
+        return info;
     }
 
     @Override

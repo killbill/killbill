@@ -46,6 +46,8 @@ public enum ErrorCode {
     /* Change plan */
     ENT_CHANGE_NON_ACTIVE(1021, "Subscription %s is in state %s: Failed to change plan"),
     ENT_CHANGE_FUTURE_CANCELLED(1022, "Subscription %s is future cancelled: Failed to change plan"),
+    ENT_CHANGE_DRY_RUN_NOT_BP(1022, "Change DryRun API is only available for BP"),
+    
     /* Cancellation */
     ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s: Failed to cancel"),
     /* Recreation */
@@ -59,6 +61,7 @@ public enum ErrorCode {
     ENT_GET_INVALID_BUNDLE_ID(1081, "Could not find a bundle matching id %s"),
     ENT_INVALID_SUBSCRIPTION_ID(1082, "Unknown subscription %s"),
     ENT_GET_INVALID_BUNDLE_KEY(1083, "Could not find a bundle matching key %s"),
+    ENT_GET_NO_SUCH_BASE_SUBSCRIPTION(1084, "Could not base subscription for bundle %s"),
 
     /* Repair */
     ENT_REPAIR_INVALID_DELETE_SET(1091, "Event %s is not deleted for subscription %s but prior events were"),
@@ -80,6 +83,8 @@ public enum ErrorCode {
     
     ENT_BUNDLE_IS_OVERDUE_BLOCKED(1090, "Changes to this bundle are blocked by overdue enforcement (%s :  %s)"),
     ENT_ACCOUNT_IS_OVERDUE_BLOCKED(1091, "Changes to this account are blocked by overdue enforcement (%s)"),
+ 
+    
     /*
     *
     * Range 2000 : CATALOG
@@ -196,7 +201,25 @@ public enum ErrorCode {
     BLOCK_BLOCKED_ACTION(6000, "The action %s is block on this %s with id=%s"),
     BLOCK_TYPE_NOT_SUPPORTED(6001, "The Blockable type '%s' is not supported"),
     
-   /*
+    
+    /*
+     * Range 7000 : Payment
+     */
+    PAYMENT_NO_SUCH_PAYMENT_METHOD(7001, "Payment method for account %s, and paymentId %s does not exist"),
+    PAYMENT_NO_PAYMENT_METHODS(7002, "Payment methods for account %s don't exist"),
+    PAYMENT_UPD_GATEWAY_FAILED(7003, "Failed to update payment gateway for account %s : %s"),
+    PAYMENT_GET_PAYMENT_PROVIDER(7004, "Failed to retrieve payment provider for account %s : %s"),    
+    PAYMENT_ADD_PAYMENT_METHOD(7005, "Failed to add payment method for account %s : %s"),        
+    PAYMENT_DEL_PAYMENT_METHOD(7006, "Failed to delete payment method for account %s : %s"),        
+    PAYMENT_UPD_PAYMENT_METHOD(7007, "Failed to update payment method for account %s : %s"),            
+    PAYMENT_CREATE_PAYMENT(7008, "Failed to create payment for account %s : %s"),                
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT(7009, "Failed to create payment for account %s and attempt %s : %s"),                    
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_WITH_NON_POSITIVE_INV(70010, "Got payment attempt with negative or null invoice for account %s"),                        
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD(7011, "Failed to create payment for attempts %s "),                    
+    PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT(7012, "Failed to create payment provider account for account %s : %s"),                
+    PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT(7013, "Failed to update payment provider account for account %s : %s"),                    
+    PAYMENT_CREATE_REFUND(7014, "Failed to create refund for account %s : %s"),                
+    /*
     *
     * Range 9000: Miscellaneous
     *

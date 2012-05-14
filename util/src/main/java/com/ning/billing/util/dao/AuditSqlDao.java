@@ -29,18 +29,16 @@ import java.util.List;
 @ExternalizedSqlViaStringTemplate3
 public interface AuditSqlDao {
     @SqlUpdate
-    public void insertAuditFromTransaction(@TableNameBinder final TableName tableName,
-                                           @AuditBinder final EntityAudit audit,
+    public void insertAuditFromTransaction(@AuditBinder final EntityAudit audit,
                                            @CallContextBinder final CallContext context);
 
     @SqlBatch(transactional = false)
-    public void insertAuditFromTransaction(@TableNameBinder final TableName tableName,
-                                           @AuditBinder final List<EntityAudit> audit,
+    public void insertAuditFromTransaction(@AuditBinder final List<EntityAudit> audit,
                                            @CallContextBinder final CallContext context);
 
     @SqlQuery
-    public Long getRecordId(@TableNameBinder final TableName tableName, @Bind("id") final String id);
+    public Long getRecordId(@Bind("id") final String id);
 
     @SqlQuery
-    public Long getHistoryRecordId(@TableNameBinder final TableName tableName, @Bind("recordId") final Long recordId);
+    public Long getHistoryRecordId(@Bind("recordId") final Long recordId);
 }

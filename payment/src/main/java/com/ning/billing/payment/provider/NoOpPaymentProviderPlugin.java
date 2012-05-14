@@ -38,7 +38,7 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
     @Override
     public Either<PaymentErrorEvent, PaymentInfoEvent> processInvoice(Account account, Invoice invoice) {
         PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder()
-                                             .setPaymentId(UUID.randomUUID().toString())
+                                             .setId(UUID.randomUUID())
                                              .setAmount(invoice.getBalance())
                                              .setStatus("Processed")
                                              .setEffectiveDate(new DateTime(DateTimeZone.UTC))

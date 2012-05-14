@@ -23,13 +23,13 @@ import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.glue.EntitlementModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.util.clock.Clock;
 
 public class RepairSubscriptionApiService extends DefaultSubscriptionApiService implements SubscriptionApiService {
 
     @Inject
-    public RepairSubscriptionApiService(Clock clock, @Named(EntitlementModule.REPAIR_NAMED) EntitlementDao dao,
+    public RepairSubscriptionApiService(Clock clock, @Named(DefaultEntitlementModule.REPAIR_NAMED) EntitlementDao dao,
             CatalogService catalogService, PlanAligner planAligner) {
         super(clock, dao, catalogService, planAligner);
     }

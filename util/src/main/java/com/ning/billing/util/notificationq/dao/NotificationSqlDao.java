@@ -49,14 +49,14 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     //
     @SqlQuery
     @Mapper(NotificationSqlMapper.class)
-    public List<Notification> getReadyNotifications(@Bind("now") Date now, @Bind("max") int max, @Bind("queueName") String queueName);
+    public List<Notification> getReadyNotifications(@Bind("now") Date now, @Bind("owner") String owner, @Bind("max") int max, @Bind("queueName") String queueName);
 
     @SqlUpdate
     public int claimNotification(@Bind("owner") String owner, @Bind("nextAvailable") Date nextAvailable,
-                                 @Bind("recordId") long id, @Bind("now") Date now);
+                                 @Bind("id") String id, @Bind("now") Date now);
 
     @SqlUpdate
-    public void clearNotification(@Bind("recordId") long id, @Bind("owner") String owner);
+    public void clearNotification(@Bind("id") String id, @Bind("owner") String owner);
 
     @SqlUpdate
     public void removeNotificationsByKey(@Bind("notificationKey") String key);
@@ -65,14 +65,14 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     public void insertNotification(@Bind(binder = NotificationSqlDaoBinder.class) Notification evt);
 
     @SqlUpdate
-    public void insertClaimedHistory(@Bind("sequenceId") int sequenceId, @Bind("owner") String owner,
-                                     @Bind("claimedDate") Date claimedDate, @Bind("notificationId") String notificationId);
+    public void insertClaimedHistory(@Bind("ownerId") String ownerId, @Bind("claimedDate") Date claimedDate, @Bind("notificationId") String notificationId);
 
     public static class NotificationSqlDaoBinder extends BinderBase implements Binder<Bind, Notification> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, Notification evt) {
-            stmt.bind("id", evt.getUUID().toString());
+            stmt.bind("id", evt.getId().toString());
             stmt.bind("createdDate", getDate(new DateTime()));
+            stmt.bind("creatingOwner", evt.getCreatedOwner());            
             stmt.bind("notificationKey", evt.getNotificationKey());
             stmt.bind("effectiveDate", getDate(evt.getEffectiveDate()));
             stmt.bind("queueName", evt.getQueueName());
@@ -88,8 +88,9 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
         public Notification map(int index, ResultSet r, StatementContext ctx)
         throws SQLException {
 
-            final Long recordId = r.getLong("record_id");
+            final Long ordering = r.getLong("record_id");
             final UUID id = getUUID(r, "id");
+            final String createdOwner = r.getString("creating_owner");            
             final String notificationKey = r.getString("notification_key");
             final String queueName = r.getString("queue_name");
             final DateTime effectiveDate = getDate(r, "effective_date");
@@ -97,7 +98,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             final String processingOwner = r.getString("processing_owner");
             final NotificationLifecycleState processingState = NotificationLifecycleState.valueOf(r.getString("processing_state"));
 
-            return new DefaultNotification(recordId, id, processingOwner, queueName, nextAvailableDate,
+            return new DefaultNotification(ordering, id, createdOwner, processingOwner, queueName, nextAvailableDate,
                     processingState, notificationKey, effectiveDate);
 
         }

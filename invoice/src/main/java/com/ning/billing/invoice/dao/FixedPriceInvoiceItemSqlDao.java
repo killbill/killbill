@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -46,11 +47,13 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.dao.EntityDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(FixedPriceInvoiceItemSqlDao.FixedPriceInvoiceItemMapper.class)
-public interface FixedPriceInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
+public interface FixedPriceInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
+    @SqlQuery
+    List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
+
     @SqlQuery
     List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
 

@@ -32,10 +32,12 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
     private final UUID accountId;
     private final BigDecimal amount;
     private final Currency currency;
-    private final String paymentId;
+    private final UUID paymentId;
     private final DateTime invoiceDate;
     private final DateTime paymentAttemptDate;
     private final Integer retryCount;
+    private final DateTime createdDate;
+    private final DateTime updatedDate;
 
     public DefaultPaymentAttempt(UUID id,
                           UUID invoiceId,
@@ -44,8 +46,9 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
                           Currency currency,
                           DateTime invoiceDate,
                           DateTime paymentAttemptDate,
-                          String paymentId,
-                          Integer retryCount) {
+                          UUID paymentId,
+                          Integer retryCount,
+                          DateTime createdDate, DateTime updatedDate) {
         super(id);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -55,18 +58,20 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
         this.paymentAttemptDate = paymentAttemptDate == null ? new DateTime(DateTimeZone.UTC) : paymentAttemptDate;
         this.paymentId = paymentId;
         this.retryCount = retryCount == null ? 0 : retryCount;
+        this.createdDate = createdDate;
+        this.updatedDate = updatedDate;
     }
 
     public DefaultPaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, BigDecimal amount, Currency currency, DateTime invoiceDate, DateTime paymentAttemptDate) {
-        this(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, null, null);
+        this(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, null, null, null, null);
     }
 
     public DefaultPaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, DateTime invoiceDate, DateTime paymentAttemptDate) {
-        this(paymentAttemptId, invoiceId, accountId, null, null, invoiceDate, paymentAttemptDate, null, null);
+        this(paymentAttemptId, invoiceId, accountId, null, null, invoiceDate, paymentAttemptDate, null, null, null, null);
     }
 
     public DefaultPaymentAttempt(UUID paymentAttemptId, Invoice invoice) {
-        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null);
+        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null, null, null);
     }
 
     @Override public DateTime getInvoiceDate() {
@@ -77,7 +82,7 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
         return id;
     }
 
-    @Override public String getPaymentId() {
+    @Override public UUID getPaymentId() {
         return paymentId;
     }
 
@@ -105,6 +110,14 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
         return retryCount;
     }
 
+    @Override public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    @Override public DateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
     @Override
     public String toString() {
         return "PaymentAttempt [paymentAttemptId=" + id + ", invoiceId=" + invoiceId + ", accountId=" + accountId + ", amount=" + amount + ", currency=" + currency + ", paymentId=" + paymentId + ", invoiceDate=" + invoiceDate + ", paymentAttemptDate=" + paymentAttemptDate + ", retryCount=" + retryCount + "]";
@@ -124,7 +137,8 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
                                 invoiceDate,
                                 paymentAttemptDate,
                                 paymentId,
-                                retryCount);
+                                retryCount,
+                                createdDate, updatedDate);
     }
 
     @Override
@@ -144,11 +158,13 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
             return false;
         if (paymentId != null ? !paymentId.equals(that.getPaymentId()) : that.getPaymentId() != null) return false;
         if (retryCount != null ? !retryCount.equals(that.getRetryCount()) : that.getRetryCount() != null) return false;
+        if (createdDate.compareTo(that.getCreatedDate()) != 0) return false;
+        if (updatedDate.compareTo(that.getUpdatedDate()) != 0) return false;
 
         return true;
     }
 
-        public static class Builder {
+    public static class Builder {
         private UUID id;
         private UUID invoiceId;
         private UUID accountId;
@@ -156,8 +172,10 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
         private Currency currency;
         private DateTime invoiceDate;
         private DateTime paymentAttemptDate;
-        private String paymentId;
+        private UUID paymentId;
         private Integer retryCount;
+        private DateTime createdDate;
+        private DateTime updatedDate;
 
         public Builder() {
         }
@@ -172,6 +190,8 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
             this.paymentAttemptDate = src.getPaymentAttemptDate();
             this.paymentId = src.getPaymentId();
             this.retryCount = src.getRetryCount();
+            this.createdDate = src.getCreatedDate();
+            this.updatedDate = src.getUpdatedDate();
         }
 
         public Builder setPaymentAttemptId(UUID paymentAttemptId) {
@@ -209,13 +229,23 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
             return this;
         }
 
-        public Builder setPaymentId(String paymentId) {
+        public Builder setPaymentId(UUID paymentId) {
             this.paymentId = paymentId;
             return this;
         }
 
         public Builder setRetryCount(Integer retryCount) {
             this.retryCount = retryCount;
+            return this;
+        }
+
+        public Builder setCreatedDate(DateTime createdDate) {
+            this.createdDate = createdDate;
+            return this;
+        }
+
+        public Builder setUpdateDate(DateTime updateDate) {
+            this.updatedDate = updateDate;
             return this;
         }
 
@@ -228,8 +258,8 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
                                       invoiceDate,
                                       paymentAttemptDate,
                                       paymentId,
-                                      retryCount);
+                                      retryCount,
+                                      createdDate, updatedDate);
         }
-
     }
 }

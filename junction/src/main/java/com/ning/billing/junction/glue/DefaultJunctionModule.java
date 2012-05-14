@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.glue.JunctionModule;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.blocking.DefaultBlockingApi;
@@ -35,7 +36,7 @@ import com.ning.billing.junction.plumbing.api.BlockingEntitlementUserApi;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
 
-public class JunctionModule extends AbstractModule {
+public class DefaultJunctionModule extends AbstractModule implements JunctionModule {
 
     @Override
     protected void configure() {
@@ -51,32 +52,32 @@ public class JunctionModule extends AbstractModule {
         installBlockingStateDao();
      }
 
-    protected void installBlockingChecker() {
+    public void installBlockingChecker() {
         bind(BlockingChecker.class).to(DefaultBlockingChecker.class).asEagerSingleton();
         
     }
 
-    protected void installBillingApi() {
+    public void installBillingApi() {
         bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
     }
     
-    protected void installBlockingStateDao() {
+    public void installBlockingStateDao() {
         bind(BlockingStateDao.class).toProvider(BlockingDaoProvider.class);
     }
     
-    protected void installAccountUserApi() {
+    public void installAccountUserApi() {
         bind(AccountUserApi.class).to(BlockingAccountUserApi.class).asEagerSingleton();
     }
     
-    protected void installEntitlementUserApi() {
+    public void installEntitlementUserApi() {
         bind(EntitlementUserApi.class).to(BlockingEntitlementUserApi.class).asEagerSingleton();
     }
     
-    protected void installBlockingApi() {
+    public void installBlockingApi() {
         bind(BlockingApi.class).to(DefaultBlockingApi.class).asEagerSingleton();
     }
     
-    protected void installBlockingCalculator() {
+    public void installBlockingCalculator() {
         bind(BlockingCalculator.class).asEagerSingleton();
     }
 

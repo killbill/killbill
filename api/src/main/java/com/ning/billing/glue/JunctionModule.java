@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,11 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.beatrix.integration;
 
-public interface TestFailure {
+package com.ning.billing.glue;
 
-    public void failed(String msg);
 
-    public void reset();
+public interface JunctionModule {
+
+    public void installBillingApi();
+   
+    public void installAccountUserApi() ;
+    
+    public void installBlockingApi() ;
+
+    public void installEntitlementUserApi();
+
 }

@@ -53,7 +53,7 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
     }
     
     public BundleJsonWithSubscriptions(SubscriptionBundle bundle) {
-        super(bundle.getId().toString(), bundle.getKey());        
+        super(bundle.getId().toString(), bundle.getKey());
         this.subscriptions = null;
     }
     

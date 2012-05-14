@@ -21,6 +21,8 @@ import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 
 
@@ -38,7 +40,7 @@ public interface EntitlementUserApi {
 
     public List<Subscription> getSubscriptionsForKey(String bundleKey);
     
-    public Subscription getBaseSubscription(UUID bundleId);
+    public Subscription getBaseSubscription(UUID bundleId) throws EntitlementUserApiException;
 
     public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleKey, CallContext context)
         throws EntitlementUserApiException;
@@ -46,5 +48,8 @@ public interface EntitlementUserApi {
     public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
         throws EntitlementUserApiException;
 
+    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(UUID subscriptionId, String productName, DateTime requestedDate)
+    throws EntitlementUserApiException;
+    
     public DateTime getNextBillingDate(UUID account);
 }

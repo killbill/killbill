@@ -16,22 +16,15 @@
 
 package com.ning.billing.util.notificationq;
 
-import java.util.UUID;
-
+import com.ning.billing.util.entity.Entity;
 import org.joda.time.DateTime;
 
-
-public interface Notification extends NotificationLifecycle {
-
-    public long getId();
-
-    public UUID getUUID();
+public interface Notification extends NotificationLifecycle, Entity {
+    public Long getOrdering();
 
     public String getNotificationKey();
 
     public DateTime getEffectiveDate();
 
     public String getQueueName();
-
-
 }

@@ -42,7 +42,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
     
     @SqlQuery
     @Mapper(PersistentBusSqlMapper.class)
-    public BusEventEntry getNextBusEventEntry(@Bind("max") int max, @Bind("now") Date now);
+    public BusEventEntry getNextBusEventEntry(@Bind("max") int max, @Bind("owner") String owner, @Bind("now") Date now);
     
     @SqlUpdate
     public int claimBusEvent(@Bind("owner") String owner, @Bind("nextAvailable") Date nextAvailable,
@@ -69,6 +69,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
             stmt.bind("className", evt.getBusEventClass());
             stmt.bind("eventJson", evt.getBusEventJson());
             stmt.bind("createdDate", getDate(new DateTime()));
+            stmt.bind("creatingOwner", evt.getCreatedOwner());
             stmt.bind("processingAvailableDate", getDate(evt.getNextAvailableDate()));
             stmt.bind("processingOwner", evt.getOwner());
             stmt.bind("processingState", NotificationLifecycleState.AVAILABLE.toString());
@@ -83,12 +84,13 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
 
             final Long recordId = r.getLong("record_id");
             final String className = r.getString("class_name"); 
+            final String createdOwner = r.getString("creating_owner");
             final String eventJson = r.getString("event_json"); 
             final DateTime nextAvailableDate = getDate(r, "processing_available_date");
             final String processingOwner = r.getString("processing_owner");
             final NotificationLifecycleState processingState = NotificationLifecycleState.valueOf(r.getString("processing_state"));
             
-            return new BusEventEntry(recordId, processingOwner, nextAvailableDate, processingState, className, eventJson);
+            return new BusEventEntry(recordId, createdOwner, processingOwner, nextAvailableDate, processingState, className, eventJson);
         }
     }
 }

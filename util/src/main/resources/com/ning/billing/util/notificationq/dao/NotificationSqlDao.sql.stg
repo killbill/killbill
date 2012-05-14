@@ -6,6 +6,7 @@ getReadyNotifications() ::= <<
       , id
       , notification_key
       , created_date
+      , creating_owner
       , effective_date
       , queue_name
       , processing_owner
@@ -26,7 +27,6 @@ getReadyNotifications() ::= <<
     ;
 >>
 
-
 claimNotification() ::= <<
     update notifications
     set
@@ -34,7 +34,7 @@ claimNotification() ::= <<
       , processing_available_date = :nextAvailable
       , processing_state = 'IN_PROCESSING'
     where
-      record_id = :recordId
+      id = :id
       and processing_state != 'PROCESSED'
       and processing_state != 'REMOVED'
       and (processing_owner IS NULL OR processing_available_date \<= :now)
@@ -46,7 +46,7 @@ clearNotification() ::= <<
     set
       processing_state = 'PROCESSED'
     where
-      record_id = :recordId
+      id = :id
     ;
 >>
 
@@ -59,12 +59,12 @@ removeNotificationsByKey() ::= <<
     ;
 >>
 
-
 insertNotification() ::= <<
     insert into notifications (
       id
       , notification_key
       , created_date
+      , creating_owner
       , effective_date
       , queue_name
       , processing_owner
@@ -74,6 +74,7 @@ insertNotification() ::= <<
       :id
       , :notificationKey
       , :createdDate
+      , :creatingOwner
       , :effectiveDate
       , :queueName
       , :processingOwner
@@ -82,16 +83,13 @@ insertNotification() ::= <<
     );   
 >>
 
-
 insertClaimedHistory() ::= <<
     insert into claimed_notifications (
-        sequence_id
-        , owner_id
+          owner_id
         , claimed_date
         , notification_id
       ) values (
-        :sequenceId
-        , :owner
+          :ownerId
         , :claimedDate
         , :notificationId
       );

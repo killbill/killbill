@@ -229,7 +229,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                 subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
                 return true;
     }
-
+    
     public boolean changePlan(SubscriptionData subscription, String productName, BillingPeriod term,
             String priceList, DateTime requestedDate, CallContext context)
 

@@ -41,7 +41,7 @@ public interface Subscription extends ExtendedEntity, Blockable {
     throws EntitlementUserApiException;
 
     public boolean changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate, CallContext context)
-        throws EntitlementUserApiException;
+    throws EntitlementUserApiException;
 
     public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
         throws EntitlementUserApiException;

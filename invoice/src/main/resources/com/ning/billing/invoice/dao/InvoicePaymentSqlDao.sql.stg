@@ -49,6 +49,28 @@ getInvoicePayment() ::= <<
     WHERE payment_id = :payment_id;
 >>
 
+getRecordIds() ::= <<
+    SELECT record_id, id
+    FROM invoice_payments
+    WHERE invoice_id = :invoiceId;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL, NULL);
+>>
+
 test() ::= <<
   SELECT 1 FROM invoice_payments;
 >>

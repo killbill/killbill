@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.beatrix.integration.payment;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -24,7 +24,6 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import com.ning.billing.invoice.api.Invoice;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -33,15 +32,17 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.glue.AccountModuleWithMocks;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.mock.glue.MockJunctionModule;
+import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 
-@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class })
+@Guice(modules = { PaymentTestModule.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class })
 public class TestPaymentProvider {
     @Inject
     private Bus eventBus;

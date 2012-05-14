@@ -1,0 +1,106 @@
+group paymentAttemptSqlDao;
+
+paymentAttemptFields(prefix) ::= <<
+    <prefix>id,
+    <prefix>invoice_id,
+    <prefix>account_id,
+    <prefix>amount,
+    <prefix>currency,
+    <prefix>payment_id,
+    <prefix>payment_attempt_date,
+    <prefix>invoice_date,
+    <prefix>retry_count,
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date
+>>
+
+insertPaymentAttempt() ::= <<
+    INSERT INTO payment_attempts (<paymentAttemptFields()>)
+    VALUES (:id, :invoice_id, :account_id, :amount, :currency, :payment_id,
+            :payment_attempt_date, :invoice_date, :retry_count, :userName, :createdDate, :userName, :createdDate);
+>>
+
+getPaymentAttemptForPaymentId() ::= <<
+    SELECT <paymentAttemptFields()>
+      FROM payment_attempts
+     WHERE id = :id;
+>>
+
+getPaymentAttemptById() ::= <<
+    SELECT <paymentAttemptFields()>
+      FROM payment_attempts
+     WHERE id = :id;
+>>
+
+getPaymentAttemptsForInvoiceIds(invoiceIds) ::= <<
+    SELECT <paymentAttemptFields()>
+      FROM payment_attempts
+     WHERE invoice_id in (<invoiceIds>);
+>>
+
+getPaymentAttemptsForInvoiceId() ::= <<
+    SELECT <paymentAttemptFields()>
+      FROM payment_attempts
+     WHERE invoice_id = :invoice_id;
+>>
+
+updatePaymentAttemptWithPaymentId() ::= <<
+    UPDATE payment_attempts
+       SET payment_id = :payment_id,
+           updated_by = :userName,
+           updated_date = :updatedDate
+     WHERE id = :id;
+>>
+
+historyFields(prefix) ::= <<
+    record_id,
+    id,
+    account_id,
+    invoice_id,
+    amount,
+    currency,
+    payment_attempt_date,
+    payment_id,
+    retry_count,
+    invoice_date,
+    created_by,
+    created_date,
+    updated_by,
+    updated_date
+>>
+
+insertHistoryFromTransaction() ::= <<
+    INSERT INTO payment_attempt_history (<historyFields()>)
+    VALUES (:recordId, :id, :account_id, :invoice_id, :amount, :currency, :payment_attempt_date, :payment_id,
+            :retry_count, :invoice_date, :userName, :createdDate, :userName, :updatedDate);
+>>
+
+getRecordId() ::= <<
+    SELECT record_id
+    FROM payment_attempts
+    WHERE id = :id;
+>>
+
+getHistoryRecordId() ::= <<
+    SELECT MAX(history_record_id)
+    FROM payment_attempt_history
+    WHERE record_id = :recordId;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL, NULL);
+>>

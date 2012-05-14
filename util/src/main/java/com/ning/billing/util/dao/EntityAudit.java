@@ -19,12 +19,18 @@ package com.ning.billing.util.dao;
 import com.ning.billing.util.ChangeType;
 
 public class EntityAudit {
+    private final TableName tableName;
     private final Long recordId;
     private final ChangeType changeType;
 
-    public EntityAudit(Long recordId, ChangeType changeType) {
+    public EntityAudit(TableName tableName, Long recordId, ChangeType changeType) {
+        this.tableName = tableName;
         this.recordId = recordId;
         this.changeType = changeType;
+    }
+
+    public TableName getTableName() {
+        return tableName;
     }
 
     public Long getRecordId() {

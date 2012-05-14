@@ -65,4 +65,5 @@ public interface SubscriptionEvent extends BusEvent {
     Integer getRemainingEventsForUserOperation();
     
     Long getTotalOrdering();
+    
 }

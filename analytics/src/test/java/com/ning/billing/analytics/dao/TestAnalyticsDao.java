@@ -263,10 +263,8 @@ public class TestAnalyticsDao
         Assert.assertEquals(transitions.get(0).getKey(), transition.getKey());
         Assert.assertEquals(transitions.get(0).getRequestedTimestamp(), transition.getRequestedTimestamp());
         Assert.assertEquals(transitions.get(0).getEvent(), transition.getEvent());
-        // Null Plan and Phase doesn't make sense so we turn the subscription into a null
-        // STEPH not sure why that fails ?
-        //Assert.assertNull(transitions.get(0).getPreviousSubscription());
-        //Assert.assertNull(transitions.get(0).getNextSubscription());
+        Assert.assertNull(transitions.get(0).getPreviousSubscription());
+        Assert.assertNull(transitions.get(0).getNextSubscription());
     }
 
     @Test(groups = "slow")

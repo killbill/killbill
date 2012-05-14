@@ -22,8 +22,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
-import com.ning.billing.util.email.EmailConfig;
-import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.account.api.AccountService;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -41,10 +40,10 @@ import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.glue.EntitlementModule;
+import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceService;
-import com.ning.billing.invoice.glue.InvoiceModule;
-import com.ning.billing.junction.glue.JunctionModule;
+import com.ning.billing.invoice.glue.DefaultInvoiceModule;
+import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
@@ -52,6 +51,8 @@ import com.ning.billing.payment.setup.PaymentModule;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.FieldStoreModule;
@@ -61,8 +62,6 @@ import com.ning.billing.util.glue.TagStoreModule;
 
 
 public class MockModule extends AbstractModule {
-
-
     public static final String PLUGIN_NAME = "yoyo";
 
     @Override
@@ -94,10 +93,11 @@ public class MockModule extends AbstractModule {
         install(new FieldStoreModule());
         install(new AccountModule());
         install(new CatalogModule());
-        install(new EntitlementModule());
-        install(new InvoiceModule());
+        install(new DefaultEntitlementModule());
+        install(new DefaultInvoiceModule());
+        install(new TemplateModule());
         install(new PaymentMockModule());
-        install(new JunctionModule());
+        install(new DefaultJunctionModule());
     }
 
     private static final class PaymentMockModule extends PaymentModule {
@@ -127,6 +127,7 @@ public class MockModule extends AbstractModule {
         @Override
         protected Set<? extends KillbillService> findServices() {
             ImmutableSet<? extends KillbillService> services = new ImmutableSet.Builder<KillbillService>()
+                            .add(injector.getInstance(AccountService.class))
                             .add(injector.getInstance(BusService.class))
                             .add(injector.getInstance(CatalogService.class))
                             .add(injector.getInstance(EntitlementService.class))

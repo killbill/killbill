@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,9 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.api;
 
-package com.ning.billing.overdue.config;
+public interface TestListenerStatus {
+    
+    public void failed(String msg);
 
-public class TestOverdue {
-
+    public void resetTestListenerStatus();
 }

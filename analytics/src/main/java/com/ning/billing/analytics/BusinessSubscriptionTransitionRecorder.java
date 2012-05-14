@@ -98,13 +98,13 @@ public class BusinessSubscriptionTransitionRecorder
         final SubscriptionBundle bundle = entitlementApi.getBundleFromId(transition.getBundleId());
         if (bundle != null) {
             transitionKey = bundle.getKey();
-
+            
             final Account account = accountApi.getAccountById(bundle.getAccountId());
             if (account != null) {
                 accountKey = account.getExternalKey();
                 currency = account.getCurrency();
             }
-        }
+        }   
 
         // The ISubscriptionTransition interface gives us all the prev/next information we need but the start date
         // of the previous plan. We need to retrieve it from our own transitions table

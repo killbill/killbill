@@ -33,7 +33,7 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(enabled= true, groups={"stress"})
+    @Test(enabled= false, groups={"stress"})
     public void stressTest() throws Exception {
         for (int i = 0; i < MAX_STRESS_ITERATIONS; i++) {
             cleanupTest();

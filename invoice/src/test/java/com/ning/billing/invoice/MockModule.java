@@ -16,9 +16,6 @@
 
 package com.ning.billing.invoice;
 
-import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
-import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
-import com.ning.billing.util.email.EmailModule;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -27,12 +24,16 @@ import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.invoice.glue.InvoiceModule;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
+import com.ning.billing.invoice.glue.DefaultInvoiceModule;
+import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
@@ -68,9 +69,11 @@ public class MockModule extends AbstractModule {
         install(new BusModule());
         installInvoiceModule();
         install(new MockJunctionModule());
+        install(new TemplateModule());
+
     }
 
     protected void installInvoiceModule() {
-    	install(new InvoiceModule());
+    	install(new DefaultInvoiceModule());
     }
 }

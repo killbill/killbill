@@ -26,7 +26,7 @@ import java.util.UUID;
 public interface PaymentAttempt extends Entity {
     DateTime getInvoiceDate();
 
-    String getPaymentId();
+    UUID getPaymentId();
 
     DateTime getPaymentAttemptDate();
 
@@ -39,4 +39,8 @@ public interface PaymentAttempt extends Entity {
     Currency getCurrency();
 
     Integer getRetryCount();
+
+    DateTime getCreatedDate();
+
+    DateTime getUpdatedDate();
 }

@@ -101,6 +101,8 @@ public abstract class AccountDaoTestBase {
             public Void inTransaction(Handle h, TransactionStatus status) throws Exception {
                 h.execute("truncate table accounts");
                 h.execute("truncate table notifications");
+                h.execute("truncate table bus_events");
+                h.execute("truncate table claimed_bus_events");                              
                 h.execute("truncate table claimed_notifications");
                 h.execute("truncate table tag_definitions");
                 h.execute("truncate table tags");

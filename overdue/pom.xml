@@ -55,19 +55,7 @@
             <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Check if we need this one -->
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-junction</artifactId>
-            <scope>test</scope>
-         </dependency>
-         <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-junction</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        
+                
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-util</artifactId>
@@ -115,13 +103,6 @@
     </dependencies>
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <groups>fast,slow, stress</groups>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>

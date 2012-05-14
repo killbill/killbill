@@ -20,11 +20,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -49,8 +48,8 @@ import static org.testng.Assert.assertNotNull;
 @Guice(modules = TestNotificationSqlDao.TestNotificationSqlDaoModule.class)
 public class TestNotificationSqlDao {
 
-    private static AtomicInteger sequenceId = new AtomicInteger();
-
+    private final static String hostname = "Yop";
+    
     @Inject
     private IDBI dbi;
 
@@ -104,12 +103,12 @@ public class TestNotificationSqlDao {
 
         String notificationKey = UUID.randomUUID().toString();
         DateTime effDt = new DateTime();
-        Notification notif = new DefaultNotification("testBasic",notificationKey, effDt);
+        Notification notif = new DefaultNotification("testBasic", hostname, notificationKey, effDt);
         dao.insertNotification(notif);
 
         Thread.sleep(1000);
         DateTime now = new DateTime();
-        List<Notification> notifications = dao.getReadyNotifications(now.toDate(), 3, "testBasic");
+        List<Notification> notifications = dao.getReadyNotifications(now.toDate(), hostname, 3, "testBasic");
         assertNotNull(notifications);
         assertEquals(notifications.size(), 1);
 
@@ -121,20 +120,20 @@ public class TestNotificationSqlDao {
         assertEquals(notification.getNextAvailableDate(), null);
 
         DateTime nextAvailable = now.plusMinutes(5);
-        int res = dao.claimNotification(ownerId, nextAvailable.toDate(), notification.getId(), now.toDate());
+        int res = dao.claimNotification(ownerId, nextAvailable.toDate(), notification.getId().toString(), now.toDate());
         assertEquals(res, 1);
-        dao.insertClaimedHistory(sequenceId.incrementAndGet(), ownerId, now.toDate(), notification.getUUID().toString());
+        dao.insertClaimedHistory(ownerId, now.toDate(), notification.getId().toString());
 
-        notification = fetchNotification(notification.getUUID().toString());
+        notification = fetchNotification(notification.getId().toString());
         assertEquals(notification.getNotificationKey(), notificationKey);
         validateDate(notification.getEffectiveDate(), effDt);
         assertEquals(notification.getOwner().toString(), ownerId);
         assertEquals(notification.getProcessingState(), NotificationLifecycleState.IN_PROCESSING);
         validateDate(notification.getNextAvailableDate(), nextAvailable);
 
-        dao.clearNotification(notification.getId(), ownerId);
+        dao.clearNotification(notification.getId().toString(), ownerId);
 
-        notification = fetchNotification(notification.getUUID().toString());
+        notification = fetchNotification(notification.getId().toString());
         assertEquals(notification.getNotificationKey(), notificationKey);
         validateDate(notification.getEffectiveDate(), effDt);
         //assertEquals(notification.getOwner(), null);
@@ -153,6 +152,7 @@ public class TestNotificationSqlDao {
                 		", id" +
                 		", notification_key" +
                 		", created_date" +
+                		", creating_owner" +
                 		", effective_date" +
                 		", queue_name" +
                 		", processing_owner" +
@@ -197,12 +197,6 @@ public class TestNotificationSqlDao {
             bind(MysqlTestingHelper.class).toInstance(helper);
             IDBI dbi = helper.getDBI();
             bind(IDBI.class).toInstance(dbi);
-
-            /*
-            bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
-            final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-            bind(DbiConfig.class).toInstance(config);
-            */
         }
     }
 }

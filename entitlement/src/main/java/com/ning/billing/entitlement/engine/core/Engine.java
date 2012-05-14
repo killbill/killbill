@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
-import com.google.inject.name.Named;
-
 
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;

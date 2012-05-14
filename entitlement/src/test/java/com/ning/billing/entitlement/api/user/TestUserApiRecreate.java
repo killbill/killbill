@@ -25,9 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.api.TestApiBase;
 
 public abstract class TestUserApiRecreate extends TestApiBase {
@@ -36,9 +36,10 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
 
     protected void testRecreateWithBPCanceledThroughSubscription() {
-        log.info("Starting testRecreateWithBPCanceled");
+        log.info("Starting testRecreateWithBPCanceledThroughSubscription");
         try {
             testCreateAndRecreate(false);
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             log.error("Unexpected exception",e);
             Assert.fail(e.getMessage());
@@ -46,9 +47,10 @@ public abstract class TestUserApiRecreate extends TestApiBase {
     }
 
     protected void testCreateWithBPCanceledFromUserApi() {
-        log.info("Starting testCreateWithBPCanceled");
+        log.info("Starting testCreateWithBPCanceledFromUserApi");
         try {
             testCreateAndRecreate(true);
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             log.error("Unexpected exception",e);
             Assert.fail(e.getMessage());
@@ -65,8 +67,8 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         BillingPeriod term = BillingPeriod.MONTHLY;
         String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-        testListener.pushNextApiExpectedEvent(NextEvent.CREATE);
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                 getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
         assertNotNull(subscription);
@@ -75,7 +77,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         assertEquals(subscription.getStartDate(), requestedDate);
         assertEquals(productName, subscription.getCurrentPlan().getProduct().getName());
 
-        assertTrue(testListener.isApiCompleted(5000));
+        assertTrue(testListener.isCompleted(5000));
 
         // CREATE (AGAIN) WITH NEW PRODUCT
         productName = "Pistol";
@@ -95,11 +97,11 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         }
 
         // NOW CANCEL ADN THIS SHOULD WORK
-        testListener.pushNextApiExpectedEvent(NextEvent.CANCEL);
+        testListener.pushExpectedEvent(NextEvent.CANCEL);
         subscription.cancel(null, false, context);
 
-        testListener.pushNextApiExpectedEvent(NextEvent.PHASE);
-        testListener.pushNextApiExpectedEvent(NextEvent.RE_CREATE);
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        testListener.pushExpectedEvent(NextEvent.RE_CREATE);
 
         // Avoid ordering issue for events at exact same date; this is actually a real good test, we
         // we test it at Beatrix level. At this level that would work for sql tests but not for in memory.

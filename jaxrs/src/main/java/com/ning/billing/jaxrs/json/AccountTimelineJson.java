@@ -15,6 +15,7 @@
  */
 package com.ning.billing.jaxrs.json;
 
+import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,7 +26,7 @@ import org.codehaus.jackson.map.annotate.JsonView;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.payment.api.PaymentAttempt;
 
 public class AccountTimelineJson {
 
@@ -52,7 +53,7 @@ public class AccountTimelineJson {
         this.payments = payments;
     }
     
-    public AccountTimelineJson(Account account, List<Invoice> invoices, List<PaymentInfoEvent> payments, List<BundleTimeline> bundles) {
+    public AccountTimelineJson(Account account, List<Invoice> invoices, List<PaymentAttempt> payments, List<BundleTimeline> bundles) {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
         this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
         for (BundleTimeline cur : bundles) {
@@ -63,10 +64,13 @@ public class AccountTimelineJson {
             this.invoices.add(new InvoiceJson(cur.getTotalAmount(), cur.getId().toString(), cur.getInvoiceDate(), Integer.toString(cur.getInvoiceNumber()), cur.getBalance()));
         }
         this.payments = new LinkedList<PaymentJson>();
-        for (PaymentInfoEvent cur : payments) {
-            // STEPH how to link that payment with the invoice ??
-            this.payments.add(new PaymentJson(cur.getAmount(), null , cur.getPaymentNumber(), null, cur.getEffectiveDate(), cur.getStatus()));
-        }
+        for (PaymentAttempt cur : payments) {
+            String status = cur.getPaymentId() != null ? "Success" : "Failed";
+            BigDecimal paidAmount = cur.getPaymentId() != null ? cur.getAmount() : BigDecimal.ZERO;
+            
+            this.payments.add(new PaymentJson(cur.getAmount(), paidAmount, cur.getInvoiceId(), cur.getPaymentId(), cur.getCreatedDate(), cur.getUpdatedDate(),
+                    cur.getRetryCount(), cur.getCurrency().toString(), status));
+          }
     }
     
     public AccountTimelineJson() {

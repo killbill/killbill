@@ -20,9 +20,10 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.dao.EntityDao;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -53,7 +54,7 @@ import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(InvoiceSqlDao.InvoiceMapper.class)
-public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<InvoiceSqlDao>, Transmogrifier, CloseMe {
+public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Transactional<InvoiceSqlDao>, Transmogrifier, CloseMe {
     @Override
     @SqlUpdate
     void create(@InvoiceBinder Invoice invoice, @CallContextBinder final CallContext context);

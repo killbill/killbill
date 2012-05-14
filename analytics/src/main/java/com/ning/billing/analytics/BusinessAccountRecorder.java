@@ -35,6 +35,7 @@ import com.ning.billing.analytics.dao.BusinessAccountDao;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.tag.Tag;
@@ -59,17 +60,17 @@ public class BusinessAccountRecorder {
         Account account;
         try {
             account = accountApi.getAccountByKey(data.getExternalKey());
-        final BusinessAccount bac = createBusinessAccountFromAccount(account);
+            final BusinessAccount bac = createBusinessAccountFromAccount(account);
 
-        log.info("ACCOUNT CREATION " + bac);
-        dao.createAccount(bac);
+            log.info("ACCOUNT CREATION " + bac);
+            dao.createAccount(bac);
         } catch (AccountApiException e) {
-           log.warn("Error encountered creating BusinessAccount",e);
+            log.warn("Error encountered creating BusinessAccount",e);
         }
-   }
+    }
 
     /**
-     * Notification handler for ACCOUNT changes
+     * Notification handler for Account changes
      *
      * @param accountId     account id changed
      * @param changedFields list of changed fields
@@ -85,17 +86,19 @@ public class BusinessAccountRecorder {
      * @param paymentInfo payment object (from the payment plugin)
      */
     public void accountUpdated(final PaymentInfoEvent paymentInfo) {
-        final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
-        if (paymentAttempt == null) {
-            return;
-        }
         try {
+            final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getId());
+            if (paymentAttempt == null) {
+                return;
+            }
+
             final Account account = accountApi.getAccountById(paymentAttempt.getAccountId());
             accountUpdated(account.getId());
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount",e);
+        } catch (PaymentApiException e) {
+            log.warn("Error encountered creating BusinessAccount",e);            
         }
-
     }
 
     /**
@@ -173,21 +176,25 @@ public class BusinessAccountRecorder {
             }
 
             // Retrieve payments information for these invoices
-            final PaymentInfoEvent payment = paymentApi.getLastPaymentInfo(invoiceIds);
+            try {
+                final PaymentInfoEvent payment = paymentApi.getLastPaymentInfo(invoiceIds);
 
-            lastPaymentStatus = payment.getStatus();
-            paymentMethod = payment.getPaymentMethod();
-            creditCardType = payment.getCardType();
-            billingAddressCountry = payment.getCardCountry();
+                lastPaymentStatus = payment.getStatus();
+                paymentMethod = payment.getPaymentMethod();
+                creditCardType = payment.getCardType();
+                billingAddressCountry = payment.getCardCountry();
+
+                bac.setLastPaymentStatus(lastPaymentStatus);
+                bac.setPaymentMethod(paymentMethod);
+                bac.setCreditCardType(creditCardType);
+                bac.setBillingAddressCountry(billingAddressCountry);
+                bac.setLastInvoiceDate(lastInvoiceDate);
+                bac.setTotalInvoiceBalance(totalInvoiceBalance);
+
+                bac.setBalance(invoiceUserApi.getAccountBalance(account.getId()));
+            } catch (PaymentApiException ex) {
+                // TODO: handle this exception
+            }
         }
-
-        bac.setLastPaymentStatus(lastPaymentStatus);
-        bac.setPaymentMethod(paymentMethod);
-        bac.setCreditCardType(creditCardType);
-        bac.setBillingAddressCountry(billingAddressCountry);
-        bac.setLastInvoiceDate(lastInvoiceDate);
-        bac.setTotalInvoiceBalance(totalInvoiceBalance);
-
-        bac.setBalance(invoiceUserApi.getAccountBalance(account.getId()));
     }
 }

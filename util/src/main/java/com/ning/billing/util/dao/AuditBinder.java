@@ -37,6 +37,7 @@ public @interface AuditBinder {
             return new Binder<AuditBinder, EntityAudit>() {
                 @Override
                 public void bind(SQLStatement q, AuditBinder bind, EntityAudit audit) {
+                    q.bind("tableName", audit.getTableName().toString());
                     q.bind("recordId", audit.getRecordId());
                     q.bind("changeType", audit.getChangeType().toString());
                 }

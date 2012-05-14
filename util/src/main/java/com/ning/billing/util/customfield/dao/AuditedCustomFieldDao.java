@@ -28,7 +28,7 @@ public class AuditedCustomFieldDao extends AuditedCollectionDaoBase<CustomField>
     private final CustomFieldSqlDao dao;
 
     @Inject
-    public AuditedCustomFieldDao(IDBI dbi) {
+    public AuditedCustomFieldDao(final IDBI dbi) {
         dao = dbi.onDemand(CustomFieldSqlDao.class);
     }
 

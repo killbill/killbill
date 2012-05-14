@@ -29,7 +29,7 @@ public interface ChargeThruApi {
      * @param subscriptionId
      * @return UUID of
      */
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId);
+    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) throws EntitlementBillingApiException;
     
     /**
      * Sets the charged through date for the subscription with that Id.
@@ -39,16 +39,4 @@ public interface ChargeThruApi {
      * @param context
      */
     public void setChargedThroughDate(UUID subscriptionId, DateTime ctd, CallContext context);
-
-    /**
-     * Sets the charged through date for the subscription with that Id. Within the context of a SQL Transaction
-     * 
-     * @param transactionalDao
-     * @param subscriptionId
-     * @param ctd
-     * @param context
-     */
-    public void setChargedThroughDateFromTransaction(Transmogrifier transactionalDao, UUID subscriptionId,
-                                                     DateTime ctd, CallContext context);
-
 }
