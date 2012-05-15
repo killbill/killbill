@@ -86,21 +86,15 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
                 }
             },
             new NotificationConfig() {
+                
+                @Override
+                public long getSleepTimeMs() {
+                    return config.getSleepTimeMs();
+                }
+                
                 @Override
                 public boolean isNotificationProcessingOff() {
                     return config.isNotificationProcessingOff();
-                }
-                @Override
-                public long getNotificationSleepTimeMs() {
-                    return config.getNotificationSleepTimeMs();
-                }
-                @Override
-                public int getDaoMaxReadyEvents() {
-                    return config.getDaoMaxReadyEvents();
-                }
-                @Override
-                public long getDaoClaimTimeMs() {
-                    return config.getDaoClaimTimeMs();
                 }
             });
         } catch (NotificationQueueAlreadyExists e) {

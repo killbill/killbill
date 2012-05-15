@@ -63,7 +63,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
     @Override
     @SqlQuery
     @Mapper(BlockingHistorySqlMapper.class)
-    public abstract BlockingState getBlockingStateFor(@Bind(binder = UUIDBinder.class) UUID overdueableId, @Bind(binder = BlockableTypeBinder.class)  Type type);
+    public abstract BlockingState getBlockingStateFor(@Bind(binder = UUIDBinder.class) UUID overdueableId);
 
     @Override
     @SqlQuery
@@ -73,7 +73,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
     @Override
     @SqlQuery
     @Mapper(BlockingHistorySqlMapper.class)
-    public abstract SortedSet<BlockingState> getBlockingHistoryForIdAndType(@Bind(binder = UUIDBinder.class) UUID blockableId, @Bind(binder = BlockableTypeBinder.class)  Type type);
+    public abstract SortedSet<BlockingState> getBlockingHistoryFor(@Bind(binder = UUIDBinder.class) UUID blockableId);
 
 
     public class BlockingHistorySqlMapper extends MapperBase implements ResultSetMapper<BlockingState> {

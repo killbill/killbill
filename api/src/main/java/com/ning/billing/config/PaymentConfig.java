@@ -35,19 +35,9 @@ public interface PaymentConfig extends NotificationConfig, KillbillConfig  {
     public List<Integer> getPaymentRetryDays();
 
 	@Override
-    @Config("killbill.payment.dao.claim.time")
-    @Default("60000")
-    public long getDaoClaimTimeMs();
-
-	@Override
-    @Config("killbill.payment.dao.ready.max")
-    @Default("10")
-    public int getDaoMaxReadyEvents();
-
-	@Override
     @Config("killbill.payment.engine.notifications.sleep")
     @Default("500")
-    public long getNotificationSleepTimeMs();
+    public long getSleepTimeMs();
 
 	@Override
     @Config("killbill.payment.engine.events.off")

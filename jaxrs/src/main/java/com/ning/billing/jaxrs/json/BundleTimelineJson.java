@@ -31,20 +31,20 @@ public class BundleTimelineJson {
     private final BundleJsonWithSubscriptions bundle;
 
     @JsonView(BundleTimelineViews.ReadTimeline.class)
-    private final List<PaymentJson> payments;
+    private final List<PaymentJsonSimple> payments;
 
     @JsonView(BundleTimelineViews.ReadTimeline.class)
-    private final List<InvoiceJson> invoices;
+    private final List<InvoiceJsonSimple> invoices;
 
     @JsonView(BundleTimelineViews.WriteTimeline.class)
     private final String resonForChange;
 
     @JsonCreator
-    public BundleTimelineJson(@JsonProperty("view_id") String viewId,
+    public BundleTimelineJson(@JsonProperty("viewId") String viewId,
             @JsonProperty("bundle") BundleJsonWithSubscriptions bundle,
-            @JsonProperty("payments") List<PaymentJson> payments,
-            @JsonProperty("invoices") List<InvoiceJson> invoices,
-            @JsonProperty("reason_for_change") String reason) {
+            @JsonProperty("payments") List<PaymentJsonSimple> payments,
+            @JsonProperty("invoices") List<InvoiceJsonSimple> invoices,
+            @JsonProperty("reasonForChange") String reason) {
         this.viewId = viewId;
         this.bundle = bundle;
         this.payments = payments;
@@ -60,11 +60,11 @@ public class BundleTimelineJson {
         return bundle;
     }
 
-    public List<PaymentJson> getPayments() {
+    public List<PaymentJsonSimple> getPayments() {
         return payments;
     }
 
-    public List<InvoiceJson> getInvoices() {
+    public List<InvoiceJsonSimple> getInvoices() {
         return invoices;
     }
 

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.overdue.OverdueProperties;
+import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -75,16 +76,8 @@ public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier {
                     return config.isNotificationProcessingOff();
                 }
                 @Override
-                public long getNotificationSleepTimeMs() {
-                    return config.getNotificationSleepTimeMs();
-                }
-                @Override
-                public int getDaoMaxReadyEvents() {
-                    return config.getDaoMaxReadyEvents();
-                }
-                @Override
-                public long getDaoClaimTimeMs() {
-                    return config.getDaoClaimTimeMs();
+                public long getSleepTimeMs() {
+                    return config.getSleepTimeMs();
                 }
             });
         } catch (NotificationQueueAlreadyExists e) {
@@ -105,7 +98,7 @@ public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier {
     }
 
     private void processEvent(UUID overdueableId, DateTime eventDateTime) {
-        listener.handleNextOverdueCheck(overdueableId, eventDateTime); 
+        listener.handleNextOverdueCheck(overdueableId); 
     }
 
 

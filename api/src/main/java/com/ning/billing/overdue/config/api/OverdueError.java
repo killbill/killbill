@@ -20,6 +20,15 @@ import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 
 public class OverdueError extends BillingExceptionBase {
+
+    public OverdueError(BillingExceptionBase cause) {
+        super(cause);
+     }
+
+    public OverdueError(Throwable cause, int code, String msg) {
+        super(cause, code, msg);
+    }
+
     private static final long serialVersionUID = 1L;
 
     public OverdueError(Throwable cause, ErrorCode code, Object... args) {

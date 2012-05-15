@@ -389,7 +389,7 @@ public class TestDefaultEntitlementBillingApi {
             public <T extends Blockable> void setBlockingState(BlockingState state) {}
             
             @Override
-            public BlockingState getBlockingStateFor(UUID overdueableId, Type type) {
+            public BlockingState getBlockingStateFor(UUID overdueableId) {
                 return null;
             }
             
@@ -399,8 +399,8 @@ public class TestDefaultEntitlementBillingApi {
             }
             
             @Override
-            public SortedSet<BlockingState> getBlockingHistory(UUID overdueableId, Type type) {
-                if(type == Type.SUBSCRIPTION_BUNDLE) {
+            public SortedSet<BlockingState> getBlockingHistory(UUID overdueableId) {
+                if(overdueableId == bunId) {
                     return blockingStates;
                 }
                 return new TreeSet<BlockingState>();

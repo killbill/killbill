@@ -29,7 +29,7 @@ public class SubscriptionJsonSimple {
     }
 
     @JsonCreator
-    public SubscriptionJsonSimple(@JsonProperty("subscription_id") String subscriptionId) {
+    public SubscriptionJsonSimple(@JsonProperty("subscriptionId") String subscriptionId) {
         this.subscriptionId = subscriptionId;
     }
 

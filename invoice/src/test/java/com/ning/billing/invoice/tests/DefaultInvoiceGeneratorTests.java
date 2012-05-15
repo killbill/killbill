@@ -68,17 +68,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Clock clock = new DefaultClock();
         InvoiceConfig invoiceConfig = new InvoiceConfig() {
             @Override
-            public long getDaoClaimTimeMs() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int getDaoMaxReadyEvents() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public long getNotificationSleepTimeMs() {
+            public long getSleepTimeMs() {
                 throw new UnsupportedOperationException();
             }
 

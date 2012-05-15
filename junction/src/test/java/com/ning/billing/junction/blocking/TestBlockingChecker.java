@@ -32,7 +32,6 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
@@ -54,9 +53,9 @@ public class TestBlockingChecker {
 
         @Override
         public BlockingState getBlockingStateFor(Blockable blockable) {
-            if(blockable instanceof Account) {
+            if(blockable.getId() == account.getId()) {
                 return accountState;
-            } else  if(blockable instanceof Subscription) {
+            } else  if(blockable.getId() == subscription.getId()) {
                 return subscriptionState;
             } else {
                 return bundleState;
@@ -64,10 +63,10 @@ public class TestBlockingChecker {
         }
 
         @Override
-        public BlockingState getBlockingStateFor(UUID blockableId, Type type) {
-            if(type == Blockable.Type.ACCOUNT) {
+        public BlockingState getBlockingStateFor(UUID blockableId) {
+            if(blockableId == account.getId()) {
                 return accountState;
-            } else  if(type == Blockable.Type.SUBSCRIPTION) {
+            } else  if(blockableId == subscription.getId()) {
                 return subscriptionState;
             } else {
                 return bundleState;
@@ -80,7 +79,7 @@ public class TestBlockingChecker {
         }
 
         @Override
-        public SortedSet<BlockingState> getBlockingHistoryForIdAndType(UUID overdueableId, Type type) {
+        public SortedSet<BlockingState> getBlockingHistoryFor(UUID overdueableId) {
             throw new NotImplementedException();
         }
 
@@ -97,18 +96,19 @@ public class TestBlockingChecker {
     
     @BeforeClass(groups={"fast"})
     public void setup() {
-        subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", new UUID(0L,0L));
+        account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        ((ZombieControl) account).addResult("getId", UUID.randomUUID());
         
         bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl) bundle).addResult("getAccountId", new UUID(0L,0L));
-        ((ZombieControl) bundle).addResult("getId", new UUID(0L,0L));
+        ((ZombieControl) bundle).addResult("getAccountId", account.getId());
+        ((ZombieControl) bundle).addResult("getId", UUID.randomUUID());
         ((ZombieControl) bundle).addResult("getKey", "key");
-        ((ZombieControl) subscription).addResult("getBundleId", new UUID(0L,0L));
 
-        account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) account).addResult("getId", new UUID(0L,0L));
-       
+        subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
+        ((ZombieControl) subscription).addResult("getBundleId", bundle.getId());
+
+        
         Injector i = Guice.createInjector(new AbstractModule() {
 
             @Override

@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,30 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.config;
 
-package com.ning.billing.junction.api;
-
-import org.joda.time.DateTime;
-
-public interface BlockingState extends Comparable<BlockingState> {
-
-    public abstract String getStateName();
-    
-    public abstract Blockable.Type getType();
-
-    public abstract DateTime getTimestamp();
-
-    public abstract boolean isBlockChange();
-
-    public abstract boolean isBlockEntitlement();
-
-    public abstract boolean isBlockBilling();
-
-    public abstract int compareTo(BlockingState arg0);
-
-    public abstract int hashCode();
-
-    public abstract String getDescription();
-
-    public abstract String toString();
+public interface PersistentQueueConfig {
+    public long getSleepTimeMs();
 }

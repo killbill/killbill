@@ -24,7 +24,8 @@ import com.ning.billing.junction.api.Blockable;
 
 public interface OverdueCheckPoster {
 
-	void insertOverdueCheckNotification(Transmogrifier transactionalDao,
-			Blockable overdueable, DateTime futureNotificationTime);
+	void insertOverdueCheckNotification(Blockable blockable, DateTime futureNotificationTime);
+	
+    void clearNotificationsFor(Blockable blockable);
 
 }

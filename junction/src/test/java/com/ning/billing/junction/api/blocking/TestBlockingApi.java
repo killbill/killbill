@@ -103,7 +103,7 @@ public class TestBlockingApi {
         ((ZombieControl)bundle).addResult("getId", uuid);
         
         Assert.assertEquals(api.getBlockingStateFor(bundle).getStateName(), overdueStateName2);
-        Assert.assertEquals(api.getBlockingStateFor(bundle.getId(), Blockable.Type.SUBSCRIPTION_BUNDLE).getStateName(), overdueStateName2);
+        Assert.assertEquals(api.getBlockingStateFor(bundle.getId()).getStateName(), overdueStateName2);
         
     }
     
@@ -131,7 +131,7 @@ public class TestBlockingApi {
         
      
         SortedSet<BlockingState> history1 = api.getBlockingHistory(bundle);
-        SortedSet<BlockingState> history2 = api.getBlockingHistory(bundle.getId(), Blockable.Type.get(bundle));
+        SortedSet<BlockingState> history2 = api.getBlockingHistory(bundle.getId());
         
         Assert.assertEquals(history1.size(), 2);
         Assert.assertEquals(history1.first().getStateName(), overdueStateName);

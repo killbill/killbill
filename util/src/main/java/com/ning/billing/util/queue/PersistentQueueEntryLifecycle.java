@@ -14,17 +14,28 @@
  * under the License.
  */
 
-package com.ning.billing.ovedue.notification;
-
-import java.util.UUID;
+package com.ning.billing.util.queue;
 
 import org.joda.time.DateTime;
 
-public class OverdueListener {
 
-    public void handleNextOverdueCheck(UUID subscriptionId, DateTime eventDateTime) {
-        //TODO
-        
+public interface PersistentQueueEntryLifecycle {
+
+    public enum PersistentQueueEntryLifecycleState {
+        AVAILABLE,
+        IN_PROCESSING,
+        PROCESSED,
+        REMOVED
     }
 
+    public String getOwner();
+    
+    public String getCreatedOwner();
+
+    public DateTime getNextAvailableDate();
+
+    public PersistentQueueEntryLifecycleState getProcessingState();
+
+
+    public boolean isAvailableForProcessing(DateTime now);
 }

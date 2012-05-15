@@ -3,8 +3,8 @@ group BusinessAccount;
 getAccount(account_key) ::= <<
   select
     account_key
-  , created_dt
-  , updated_dt
+  , created_date
+  , updated_date
   , balance
   , tags
   , last_invoice_date
@@ -22,8 +22,8 @@ getAccount(account_key) ::= <<
 createAccount() ::= <<
   insert into bac(
     account_key
-  , created_dt
-  , updated_dt
+  , created_date
+  , updated_date
   , balance
   , tags
   , last_invoice_date
@@ -34,8 +34,8 @@ createAccount() ::= <<
   , billing_address_country
   ) values (
     :account_key
-  , :created_dt
-  , :updated_dt
+  , :created_date
+  , :updated_date
   , :balance
   , :tags
   , :last_invoice_date
@@ -49,7 +49,7 @@ createAccount() ::= <<
 
 saveAccount() ::= <<
   update bac set
-    updated_dt=:updated_dt
+    updated_date=:updated_date
   , balance=:balance
   , tags=:tags
   , last_invoice_date=:last_invoice_date

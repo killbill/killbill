@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.invoice.api.Invoice;
 
-public class InvoiceJson {
+public class InvoiceJsonSimple {
 
     @JsonView(BundleTimelineViews.Base.class)
     private final BigDecimal amount;
@@ -35,7 +35,10 @@ public class InvoiceJson {
     
     @JsonView(BundleTimelineViews.Base.class)
     private final DateTime invoiceDate;
-    
+
+    @JsonView(BundleTimelineViews.Base.class)
+    private final DateTime targetDate;
+
     @JsonView(BundleTimelineViews.Base.class)
     private final String invoiceNumber;
     
@@ -43,32 +46,36 @@ public class InvoiceJson {
     private final BigDecimal balance;
 
     
-    public InvoiceJson() {
+    public InvoiceJsonSimple() {
         this.amount = null;
         this.invoiceId = null;
         this.invoiceDate = null;
+        this.targetDate = null;        
         this.invoiceNumber = null;
         this.balance = null;
     }
     
     @JsonCreator
-    public InvoiceJson(@JsonProperty("amount") BigDecimal amount,
-            @JsonProperty("invoice_id") String invoiceId,
-            @JsonProperty("invoice_date") DateTime invoiceDate,
-            @JsonProperty("invoice_number") String invoiceNumber,
+    public InvoiceJsonSimple(@JsonProperty("amount") BigDecimal amount,
+            @JsonProperty("invoiceId") String invoiceId,
+            @JsonProperty("invoiceDate") DateTime invoiceDate,
+            @JsonProperty("targetDate") DateTime targetDate,            
+            @JsonProperty("invoiceNumber") String invoiceNumber,
             @JsonProperty("balance") BigDecimal balance) {
         super();
         this.amount = amount;
         this.invoiceId = invoiceId;
         this.invoiceDate = invoiceDate;
+        this.targetDate = targetDate;
         this.invoiceNumber = invoiceNumber;
         this.balance = balance;
     }
 
-    public InvoiceJson(Invoice input) {
+    public InvoiceJsonSimple(Invoice input) {
         this.amount = input.getTotalAmount();
         this.invoiceId = input.getId().toString();
         this.invoiceDate = input.getInvoiceDate();
+        this.targetDate = input.getTargetDate();
         this.invoiceNumber = String.valueOf(input.getInvoiceNumber());
         this.balance = input.getBalance();
     }
@@ -83,6 +90,10 @@ public class InvoiceJson {
 
     public DateTime getInvoiceDate() {
         return invoiceDate;
+    }
+
+    public DateTime getTargetDate() {
+        return targetDate;
     }
 
     public String getInvoiceNumber() {
@@ -116,7 +127,7 @@ public class InvoiceJson {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        InvoiceJson other = (InvoiceJson) obj;
+        InvoiceJsonSimple other = (InvoiceJsonSimple) obj;
         if (amount == null) {
             if (other.amount != null)
                 return false;

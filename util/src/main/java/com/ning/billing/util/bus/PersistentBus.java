@@ -33,19 +33,19 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.ning.billing.config.PersistentQueueConfig;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.bus.dao.BusEventEntry;
 import com.ning.billing.util.bus.dao.PersistentBusSqlDao;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.queue.PersistentQueueBase;
 
 
 public class PersistentBus extends PersistentQueueBase implements Bus {
 
-    private final static int NB_BUS_THREADS = 1;
-    private final static long TIMEOUT_MSEC = 15L * 1000L; // 15 sec
     private final static long DELTA_IN_PROCESSING_TIME_MS = 1000L * 60L * 5L; // 5 minutes
-    private final static long SLEEP_TIME_MS = 1000; // 1 sec
     private final static int MAX_BUS_EVENTS = 1;
     
     private static final Logger log = LoggerFactory.getLogger(PersistentBus.class);
@@ -80,15 +80,16 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     }
     
     @Inject
-    public PersistentBus(final IDBI dbi, final Clock clock) {
-        super("Bus", Executors.newFixedThreadPool(NB_BUS_THREADS, new ThreadFactory() {
+    public PersistentBus(final IDBI dbi, final Clock clock, final PersistentBusConfig config) {
+        
+        super("Bus", Executors.newFixedThreadPool(config.getNbThreads(), new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
                 return new Thread(new ThreadGroup(DefaultBusService.EVENT_BUS_GROUP_NAME),
                         r,
                         DefaultBusService.EVENT_BUS_TH_NAME);
             }
-        }), NB_BUS_THREADS, TIMEOUT_MSEC, SLEEP_TIME_MS);
+        }), config.getNbThreads(), config);
         this.dao = dbi.onDemand(PersistentBusSqlDao.class);
         this.clock = clock;
         this.objectMapper = new ObjectMapper();

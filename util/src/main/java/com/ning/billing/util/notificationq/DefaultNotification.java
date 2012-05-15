@@ -27,13 +27,13 @@ public class DefaultNotification extends EntityBase implements Notification {
     private final String createdOwner;
     private final String queueName;
     private final DateTime nextAvailableDate;
-    private final NotificationLifecycleState lifecycleState;
+    private final PersistentQueueEntryLifecycleState lifecycleState;
     private final String notificationKey;
     private final DateTime effectiveDate;
 
 
     public DefaultNotification(long ordering, UUID id, String createdOwner, String owner, String queueName, DateTime nextAvailableDate,
-            NotificationLifecycleState lifecycleState,
+            PersistentQueueEntryLifecycleState lifecycleState,
             String notificationKey, DateTime effectiveDate) {
         super(id);
         this.ordering = ordering;
@@ -47,7 +47,7 @@ public class DefaultNotification extends EntityBase implements Notification {
     }
 
     public DefaultNotification(String queueName, String createdOwner, String notificationKey, DateTime effectiveDate) {
-        this(-1L, UUID.randomUUID(), createdOwner, null, queueName, null, NotificationLifecycleState.AVAILABLE, notificationKey, effectiveDate);
+        this(-1L, UUID.randomUUID(), createdOwner, null, queueName, null, PersistentQueueEntryLifecycleState.AVAILABLE, notificationKey, effectiveDate);
     }
     @Override
     public Long getOrdering() {
@@ -65,7 +65,7 @@ public class DefaultNotification extends EntityBase implements Notification {
     }
 
     @Override
-    public NotificationLifecycleState getProcessingState() {
+    public PersistentQueueEntryLifecycleState getProcessingState() {
         return lifecycleState;
     }
 

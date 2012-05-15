@@ -53,7 +53,7 @@ public class TestSubscription extends TestJaxrsBase {
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
         
         AccountJson accountJson = createAccount("xil", "shdxilhkkl", "xil@yahoo.com");
-        BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAcountId(), "99999");
+        BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAccountId(), "99999");
 
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;

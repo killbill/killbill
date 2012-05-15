@@ -55,11 +55,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
     private final InvoiceConfig invoiceConfig = new InvoiceConfig() {
         @Override
-        public long getDaoClaimTimeMs() {throw new UnsupportedOperationException();}
-        @Override
-        public int getDaoMaxReadyEvents() {throw new UnsupportedOperationException();}
-        @Override
-        public long getNotificationSleepTimeMs() {throw new UnsupportedOperationException();}
+        public long getSleepTimeMs() {throw new UnsupportedOperationException();}
         @Override
         public boolean isNotificationProcessingOff() {throw new UnsupportedOperationException();}
         @Override

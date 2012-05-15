@@ -31,9 +31,9 @@ public class BundleJsonNoSubsciptions  extends BundleJsonSimple {
 
 
     @JsonCreator
-    public BundleJsonNoSubsciptions(@JsonProperty("bundle_id") String bundleId,
-            @JsonProperty("account_id") String accountId,
-            @JsonProperty("external_key") String externalKey,
+    public BundleJsonNoSubsciptions(@JsonProperty("bundleId") String bundleId,
+            @JsonProperty("accountId") String accountId,
+            @JsonProperty("externalKey") String externalKey,
             @JsonProperty("subscriptions") List<SubscriptionJsonWithEvents> subscriptions) {
         super(bundleId, externalKey);
         this.accountId = accountId;

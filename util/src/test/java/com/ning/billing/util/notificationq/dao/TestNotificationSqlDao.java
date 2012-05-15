@@ -38,8 +38,8 @@ import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.notificationq.DefaultNotification;
 import com.ning.billing.util.notificationq.Notification;
-import com.ning.billing.util.notificationq.NotificationLifecycle.NotificationLifecycleState;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao.NotificationSqlMapper;
+import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -116,7 +116,7 @@ public class TestNotificationSqlDao {
         assertEquals(notification.getNotificationKey(), notificationKey);
         validateDate(notification.getEffectiveDate(), effDt);
         assertEquals(notification.getOwner(), null);
-        assertEquals(notification.getProcessingState(), NotificationLifecycleState.AVAILABLE);
+        assertEquals(notification.getProcessingState(), PersistentQueueEntryLifecycleState.AVAILABLE);
         assertEquals(notification.getNextAvailableDate(), null);
 
         DateTime nextAvailable = now.plusMinutes(5);
@@ -128,7 +128,7 @@ public class TestNotificationSqlDao {
         assertEquals(notification.getNotificationKey(), notificationKey);
         validateDate(notification.getEffectiveDate(), effDt);
         assertEquals(notification.getOwner().toString(), ownerId);
-        assertEquals(notification.getProcessingState(), NotificationLifecycleState.IN_PROCESSING);
+        assertEquals(notification.getProcessingState(), PersistentQueueEntryLifecycleState.IN_PROCESSING);
         validateDate(notification.getNextAvailableDate(), nextAvailable);
 
         dao.clearNotification(notification.getId().toString(), ownerId);
@@ -137,7 +137,7 @@ public class TestNotificationSqlDao {
         assertEquals(notification.getNotificationKey(), notificationKey);
         validateDate(notification.getEffectiveDate(), effDt);
         //assertEquals(notification.getOwner(), null);
-        assertEquals(notification.getProcessingState(), NotificationLifecycleState.PROCESSED);
+        assertEquals(notification.getProcessingState(), PersistentQueueEntryLifecycleState.PROCESSED);
         validateDate(notification.getNextAvailableDate(), nextAvailable);
 
     }
