@@ -61,7 +61,9 @@ public class DefaultOverdueService implements ExtendedOverdueService {
             try {
                 System.out.println("Overdue config URI" + properties.getConfigURI());
                 URI u = new URI(properties.getConfigURI());
-                overdueConfig = XMLLoader.getObjectFromUri(u, OverdueConfig.class);
+                if(u != null) {
+                    overdueConfig = XMLLoader.getObjectFromUri(u, OverdueConfig.class);
+                }
 
                 isInitialized = true;
             } catch (Exception e) {
