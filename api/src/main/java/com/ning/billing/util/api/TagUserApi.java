@@ -67,7 +67,11 @@ public interface TagUserApi {
 	 */
 	public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
 
-	public List<Tag> createControlTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDescriptions) throws TagDefinitionApiException;
+	public List<Tag> createControlTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException;
 
-	public List<Tag> createDescriptiveTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDescriptions) throws TagDefinitionApiException;
+    public Tag createControlTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException;
+
+	public List<Tag> createDescriptiveTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException;
+
+	public Tag createDescriptiveTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException;
 }

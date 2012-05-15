@@ -18,14 +18,14 @@ paymentAttemptFields(prefix) ::= <<
 
 insertPaymentAttempt() ::= <<
     INSERT INTO payment_attempts (<paymentAttemptFields()>)
-    VALUES (:id, :invoice_id, :account_id, :amount, :currency, :payment_id,
-            :payment_attempt_date, :invoice_date, :retry_count, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :invoiceId, :accountId, :amount, :currency, :paymentId,
+            :paymentAttemptDate, :invoiceDate, :retryCount, :userName, :createdDate, :userName, :createdDate);
 >>
 
 getPaymentAttemptForPaymentId() ::= <<
     SELECT <paymentAttemptFields()>
       FROM payment_attempts
-     WHERE id = :id;
+     WHERE payment_id = :paymentId;
 >>
 
 getPaymentAttemptById() ::= <<
@@ -43,7 +43,7 @@ getPaymentAttemptsForInvoiceIds(invoiceIds) ::= <<
 getPaymentAttemptsForInvoiceId() ::= <<
     SELECT <paymentAttemptFields()>
       FROM payment_attempts
-     WHERE invoice_id = :invoice_id;
+     WHERE invoice_id = :invoiceId;
 >>
 
 updatePaymentAttemptWithPaymentId() ::= <<
@@ -73,8 +73,8 @@ historyFields(prefix) ::= <<
 
 insertHistoryFromTransaction() ::= <<
     INSERT INTO payment_attempt_history (<historyFields()>)
-    VALUES (:recordId, :id, :account_id, :invoice_id, :amount, :currency, :payment_attempt_date, :payment_id,
-            :retry_count, :invoice_date, :userName, :createdDate, :userName, :updatedDate);
+    VALUES (:recordId, :id, :accountId, :invoiceId, :amount, :currency, :paymentAttemptDate, :paymentId,
+            :retryCount, :invoiceDate, :userName, :createdDate, :userName, :updatedDate);
 >>
 
 getRecordId() ::= <<

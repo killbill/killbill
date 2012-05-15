@@ -82,6 +82,7 @@ public class TestHelper {
         zombie.addResult("getEmail", email);
         zombie.addResult("getCurrency", Currency.USD);
         zombie.addResult("getBillCycleDay", 1);
+        zombie.addResult("getPaymentProviderName", "");
 
         return account;
     }

@@ -104,7 +104,7 @@ public class TestPaymentInvoiceIntegration {
                                                  new MockJunctionModule(),
                                                  new AbstractModule()
                                             
-                                                  {
+                                                 {
                                                     @Override
                                                     protected void configure() {
                                                         bind(IDBI.class).toInstance(dbi);

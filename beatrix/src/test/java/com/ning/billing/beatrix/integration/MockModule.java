@@ -23,7 +23,11 @@ import java.net.URL;
 import java.util.Set;
 
 import com.ning.billing.account.api.AccountService;
+import com.ning.billing.account.glue.AccountModuleWithMocks;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import org.skife.config.ConfigurationObjectFactory;
+import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.collect.ImmutableSet;
@@ -75,14 +79,15 @@ public class MockModule extends AbstractModule {
 
         final MysqlTestingHelper helper = new MysqlTestingHelper();
         bind(MysqlTestingHelper.class).toInstance(helper);
+        final IDBI dbi;
         if (helper.isUsingLocalInstance()) {
-            bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-            bind(DbiConfig.class).toInstance(config);
+            DBIProvider provider = new DBIProvider(config);
+            dbi = provider.get();
         } else {
-            final IDBI dbi = helper.getDBI();
-            bind(IDBI.class).toInstance(dbi);
+            dbi = helper.getDBI();
         }
+        bind(IDBI.class).toInstance(dbi);
 
         install(new EmailModule());
         install(new CallContextModule());
@@ -90,8 +95,11 @@ public class MockModule extends AbstractModule {
         install(new BusModule());
         install(new NotificationQueueModule());
         install(new TagStoreModule());
-        install(new FieldStoreModule());
-        install(new AccountModule());
+
+        CustomFieldDao customFieldDao = BrainDeadProxyFactory.createBrainDeadProxyFor(CustomFieldDao.class);
+        bind(CustomFieldDao.class).toInstance(customFieldDao);
+
+        install(new AccountModuleWithMocks());
         install(new CatalogModule());
         install(new DefaultEntitlementModule());
         install(new DefaultInvoiceModule());

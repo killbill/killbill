@@ -53,13 +53,13 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
                               @CallContextBinder CallContext context);
 
     @SqlQuery
-    PaymentAttempt getPaymentAttemptForPaymentId(@Bind("payment_id") String paymentId);
+    PaymentAttempt getPaymentAttemptForPaymentId(@Bind("paymentId") String paymentId);
 
     @SqlQuery
     PaymentAttempt getPaymentAttemptById(@Bind("id") String paymentAttemptId);
 
     @SqlQuery
-    List<PaymentAttempt> getPaymentAttemptsForInvoiceId(@Bind("invoice_id") String invoiceId);
+    List<PaymentAttempt> getPaymentAttemptsForInvoiceId(@Bind("invoiceId") String invoiceId);
 
     @SqlQuery
     List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(@BindIn("invoiceIds") List<String> invoiceIds);
@@ -113,14 +113,14 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentAttempt paymentAttempt) {
             stmt.bind("id", paymentAttempt.getId().toString());
-            stmt.bind("invoice_id", paymentAttempt.getInvoiceId().toString());
-            stmt.bind("account_id", paymentAttempt.getAccountId().toString());
+            stmt.bind("invoiceId", paymentAttempt.getInvoiceId().toString());
+            stmt.bind("accountId", paymentAttempt.getAccountId().toString());
             stmt.bind("amount", paymentAttempt.getAmount());
             stmt.bind("currency", paymentAttempt.getCurrency().toString());
-            stmt.bind("invoice_date", getDate(paymentAttempt.getInvoiceDate()));
-            stmt.bind("payment_attempt_date", getDate(paymentAttempt.getPaymentAttemptDate()));
-            stmt.bind("payment_id", paymentAttempt.getPaymentId().toString());
-            stmt.bind("retry_count", paymentAttempt.getRetryCount());
+            stmt.bind("invoiceDate", getDate(paymentAttempt.getInvoiceDate()));
+            stmt.bind("paymentAttemptDate", getDate(paymentAttempt.getPaymentAttemptDate()));
+            stmt.bind("paymentId", paymentAttempt.getPaymentId() == null ? null : paymentAttempt.getPaymentId().toString());
+            stmt.bind("retryCount", paymentAttempt.getRetryCount());
         }
     }
 }

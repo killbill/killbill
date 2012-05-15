@@ -45,14 +45,14 @@ public @interface PaymentAttemptHistoryBinder {
 
                     PaymentAttempt paymentAttempt = history.getEntity();
                     q.bind("id", paymentAttempt.getId().toString());
-                    q.bind("invoice_id", paymentAttempt.getInvoiceId().toString());
-                    q.bind("account_id", paymentAttempt.getAccountId().toString());
+                    q.bind("invoiceId", paymentAttempt.getInvoiceId().toString());
+                    q.bind("accountId", paymentAttempt.getAccountId().toString());
                     q.bind("amount", paymentAttempt.getAmount());
                     q.bind("currency", paymentAttempt.getCurrency().toString());
-                    q.bind("invoice_date", getDate(paymentAttempt.getInvoiceDate()));
-                    q.bind("payment_attempt_date", getDate(paymentAttempt.getPaymentAttemptDate()));
-                    q.bind("payment_id", paymentAttempt.getPaymentId().toString());
-                    q.bind("retry_count", paymentAttempt.getRetryCount());
+                    q.bind("invoiceDate", getDate(paymentAttempt.getInvoiceDate()));
+                    q.bind("paymentAttemptDate", getDate(paymentAttempt.getPaymentAttemptDate()));
+                    q.bind("paymentId", paymentAttempt.getPaymentId() == null ? null : paymentAttempt.getPaymentId().toString());
+                    q.bind("retryCount", paymentAttempt.getRetryCount());
                 }
             };
         }

@@ -49,6 +49,12 @@ getInvoicePayment() ::= <<
     WHERE payment_id = :payment_id;
 >>
 
+getRecordId() ::= <<
+    SELECT record_id
+    FROM invoice_payments
+    WHERE id = :id;
+>>
+
 getRecordIds() ::= <<
     SELECT record_id, id
     FROM invoice_payments

@@ -70,12 +70,22 @@ public class DefaultTagDefinitionUserApi implements TagUserApi {
 	}
 
     @Override
-    public List<Tag> createControlTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDescriptions) throws TagDefinitionApiException {
+    public List<Tag> createControlTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    public List<Tag> createDescriptiveTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDescriptions) throws TagDefinitionApiException {
+    public Tag createControlTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List<Tag> createDescriptiveTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Tag createDescriptiveTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
