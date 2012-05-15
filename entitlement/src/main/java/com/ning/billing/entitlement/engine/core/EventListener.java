@@ -22,6 +22,6 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface EventListener {
 
-    public void processEventReady(EntitlementEvent event, CallContext context);
+    public void processEventReady(final EntitlementEvent event, final int seqId, final CallContext context);
 
 }

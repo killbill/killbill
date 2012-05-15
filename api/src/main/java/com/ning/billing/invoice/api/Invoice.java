@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.UUID;
 
 public interface Invoice extends ExtendedEntity {
-    public static String ObjectType = "invoice";
-
     boolean addInvoiceItem(InvoiceItem item);
 
     boolean addInvoiceItems(List<InvoiceItem> items);

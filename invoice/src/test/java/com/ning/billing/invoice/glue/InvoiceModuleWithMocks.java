@@ -16,26 +16,20 @@
 
 package com.ning.billing.invoice.glue;
 
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
-import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.FieldStoreModule;
-import com.ning.billing.util.glue.TagStoreModule;
-import org.skife.jdbi.v2.Call;
 
 
-public class InvoiceModuleWithMocks extends InvoiceModule {
-    @Override
+public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
+    @Override 
     protected void installInvoiceDao() {
         bind(MockInvoiceDao.class).asEagerSingleton();
         bind(InvoiceDao.class).to(MockInvoiceDao.class);
-        bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
-    }
-
-    @Override
-    protected void installGlobalLocker() {
         bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
     }
 
@@ -45,8 +39,8 @@ public class InvoiceModuleWithMocks extends InvoiceModule {
     }
 
     @Override
-    protected void installNotifier() {
-
+    protected void installNotifiers() {
+        bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
     }
 
     @Override
@@ -55,15 +49,7 @@ public class InvoiceModuleWithMocks extends InvoiceModule {
     }
 
     @Override
-    protected void installInvoiceMigrationApi() {
+    public void installInvoiceMigrationApi() {
 
-    }
-
-    @Override
-    public void configure() {
-        super.configure();
-
-        install(new FieldStoreModule());
-        //install(new TagStoreModule());
     }
 }

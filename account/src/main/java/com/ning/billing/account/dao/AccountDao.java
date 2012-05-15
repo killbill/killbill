@@ -16,11 +16,13 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.List;
 import java.util.UUID;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.entity.UpdatableEntityDao;
+import com.ning.billing.util.entity.dao.UpdatableEntityDao;
 
 public interface AccountDao extends UpdatableEntityDao<Account> {
     public Account getAccountByKey(String key);

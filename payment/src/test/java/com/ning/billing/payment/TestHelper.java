@@ -16,83 +16,70 @@
 
 package com.ning.billing.payment;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.entity.EntityPersistenceException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.user.AccountBuilder;
-import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.entity.EntityPersistenceException;
 
 public class TestHelper {
-    protected final AccountDao accountDao;
-    protected final InvoiceDao invoiceDao;
+    protected final AccountUserApi accountUserApi;
+    protected final InvoicePaymentApi invoicePaymentApi;
     private final CallContext context;
+    private final Bus eventBus;
 
     @Inject
-    public TestHelper(CallContextFactory factory, AccountDao accountDao, InvoiceDao invoiceDao) {
-        this.accountDao = accountDao;
-        this.invoiceDao = invoiceDao;
+    public TestHelper(CallContextFactory factory, AccountUserApi accountUserApi, InvoicePaymentApi invoicePaymentApi, Bus eventBus) {
+        this.eventBus = eventBus;
+        this.accountUserApi = accountUserApi;
+        this.invoicePaymentApi = invoicePaymentApi;
         context = factory.createCallContext("Princess Buttercup", CallOrigin.TEST, UserType.TEST);
     }
 
     // These helper methods can be overridden in a plugin implementation
     public Account createTestCreditCardAccount() throws EntityPersistenceException {
-        final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
-        final String externalKey = RandomStringUtils.randomAlphanumeric(10);
-        final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
-                                                                     .firstNameLength(name.length())
-                                                                     .externalKey(externalKey)
-                                                                     .phone("123-456-7890")
-                                                                     .email("ccuser" + RandomStringUtils.randomAlphanumeric(8) + "@example.com")
-                                                                     .currency(Currency.USD)
-                                                                     .billingCycleDay(1)
-                                                                     .build();
-        accountDao.create(account, context);
+        final Account account = createTestAccount("ccuser" + RandomStringUtils.randomAlphanumeric(8) + "@example.com");
+        ((ZombieControl)accountUserApi).addResult("getAccountById", account);
+        ((ZombieControl)accountUserApi).addResult("getAccountByKey", account);
         return account;
     }
 
     public Account createTestPayPalAccount() throws EntityPersistenceException {
-        final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
-        final String externalKey = RandomStringUtils.randomAlphanumeric(10);
-        final Account account = new AccountBuilder(UUID.randomUUID()).name(name)
-                                                                     .firstNameLength(name.length())
-                                                                     .externalKey(externalKey)
-                                                                     .phone("123-456-7890")
-                                                                     .email("ppuser@example.com")
-                                                                     .currency(Currency.USD)
-                                                                     .billingCycleDay(1)
-                                                                     .build();
-        accountDao.create(account, context);
+        final Account account = createTestAccount("ppuser@example.com");
+        ((ZombieControl)accountUserApi).addResult("getAccountById", account);
+        ((ZombieControl)accountUserApi).addResult("getAccountByKey", account);
         return account;
     }
 
     public Invoice createTestInvoice(Account account,
                                      DateTime targetDate,
                                      Currency currency,
-                                     InvoiceItem... items) {
-        Invoice invoice = new DefaultInvoice(account.getId(), new DateTime(), targetDate, currency);
+                                     InvoiceItem... items) throws EventBusException {
+        Invoice invoice = new MockInvoice(account.getId(), new DateTime(), targetDate, currency);
 
         for (InvoiceItem item : items) {
-            if (item instanceof RecurringInvoiceItem) {
-                RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
-                invoice.addInvoiceItem(new RecurringInvoiceItem(invoice.getId(),
+            if (item instanceof MockRecurringInvoiceItem) {
+                MockRecurringInvoiceItem recurringInvoiceItem = (MockRecurringInvoiceItem) item;
+                invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(),
                                                                account.getId(),
+                                                               recurringInvoiceItem.getBundleId(),
                                                                recurringInvoiceItem.getSubscriptionId(),
                                                                recurringInvoiceItem.getPlanName(),
                                                                recurringInvoiceItem.getPhaseName(),
@@ -103,17 +90,34 @@ public class TestHelper {
                                                                recurringInvoiceItem.getCurrency()));
             }
         }
-        invoiceDao.create(invoice, context);
+
+ //       invoiceTestApi.create(invoice, context);
+        ((ZombieControl)invoicePaymentApi).addResult("getInvoice", invoice);
+        InvoiceCreationEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
+                invoice.getBalance(), invoice.getCurrency(),
+                invoice.getInvoiceDate(),
+                context.getUserToken());
+        
+        eventBus.post(event);
         return invoice;
     }
 
-    public Invoice createTestInvoice(Account account) {
-        final DateTime now = new DateTime(DateTimeZone.UTC);
-        final UUID subscriptionId = UUID.randomUUID();
-        final BigDecimal amount = new BigDecimal("10.00");
-        final InvoiceItem item = new RecurringInvoiceItem(null, account.getId(), subscriptionId, "test plan", "test phase", now, now.plusMonths(1),
-                amount, new BigDecimal("1.0"), Currency.USD);
+    public Account createTestAccount(String email) {
+        final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
+        final String externalKey = RandomStringUtils.randomAlphanumeric(10);
 
-        return createTestInvoice(account, now, Currency.USD, item);
+        Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        ZombieControl zombie = (ZombieControl) account;
+        zombie.addResult("getId", UUID.randomUUID());
+        zombie.addResult("getExternalKey", externalKey);
+        zombie.addResult("getName", name);
+        zombie.addResult("getFirstNameLength", 10);
+        zombie.addResult("getPhone", "123-456-7890");
+        zombie.addResult("getEmail", email);
+        zombie.addResult("getCurrency", Currency.USD);
+        zombie.addResult("getBillCycleDay", 1);
+        zombie.addResult("getPaymentProviderName", "");
+
+        return account;
     }
 }

@@ -21,6 +21,7 @@ import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -52,7 +53,7 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
 
     @Override
     public DateTime addToDateTime(DateTime dateTime) {
-        if (number == null) {return dateTime;}
+        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {return dateTime;}
 
         switch (unit) {
             case DAYS:
@@ -84,5 +85,21 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
 		return this;
 	}
 	
-	
+    @Override
+    public Period toJodaPeriod() {
+        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {return new Period();}
+
+        switch (unit) {
+            case DAYS:
+                return new Period().withDays(number);
+            case MONTHS:
+                return new Period().withMonths(number);
+            case YEARS:
+                return new Period().withYears(number);
+            case UNLIMITED:
+                return new Period().withYears(100);
+            default:
+                return new Period();
+        }
+    }
 }

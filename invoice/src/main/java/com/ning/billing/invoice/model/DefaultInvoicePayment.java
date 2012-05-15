@@ -33,18 +33,17 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     private final Currency currency;
 
     public DefaultInvoicePayment(final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate) {
-        this(UUID.randomUUID(), paymentAttemptId, invoiceId, paymentDate, null, null, null, null);
+        this(UUID.randomUUID(), paymentAttemptId, invoiceId, paymentDate, null, null);
     }
 
     public DefaultInvoicePayment(final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
                                  final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), paymentAttemptId, invoiceId, paymentDate, amount, currency, null, null);
+        this(UUID.randomUUID(), paymentAttemptId, invoiceId, paymentDate, amount, currency);
     }
 
     public DefaultInvoicePayment(final UUID id, final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
-                                 @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                                 @Nullable final String createdBy, @Nullable final DateTime createdDate) {
-        super(id, createdBy, createdDate);
+                                 @Nullable final BigDecimal amount, @Nullable final Currency currency) {
+        super(id);
         this.paymentAttemptId = paymentAttemptId;
         this.amount = amount;
         this.invoiceId = invoiceId;

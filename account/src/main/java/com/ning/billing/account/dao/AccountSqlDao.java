@@ -16,17 +16,17 @@
 
 package com.ning.billing.account.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.UUID;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.dao.MapperBase;
-import com.ning.billing.util.entity.UpdatableEntityDao;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.StatementContext;
+import com.ning.billing.util.dao.ChangeTypeBinder;
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.UuidMapper;
+import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -34,16 +34,10 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.user.AccountBuilder;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.UuidMapper;
 
 @ExternalizedSqlViaStringTemplate3
-@RegisterMapper({UuidMapper.class, AccountSqlDao.AccountMapper.class})
-public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
+@RegisterMapper({UuidMapper.class, AccountMapper.class})
+public interface AccountSqlDao extends UpdatableEntitySqlDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
     @SqlQuery
     public Account getAccountByKey(@Bind("externalKey") final String key);
 
@@ -58,53 +52,8 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
     @SqlUpdate
     public void update(@AccountBinder Account account, @CallContextBinder final CallContext context);
 
-    public static class AccountMapper extends MapperBase implements ResultSetMapper<Account> {
-        @Override
-        public Account map(int index, ResultSet result, StatementContext context) throws SQLException {
-            UUID id = UUID.fromString(result.getString("id"));
-            String externalKey = result.getString("external_key");
-            String email = result.getString("email");
-            String name = result.getString("name");
-            int firstNameLength = result.getInt("first_name_length");
-            int billingCycleDay = result.getInt("billing_cycle_day");
-
-            String currencyString = result.getString("currency");
-            Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
-
-            String paymentProviderName = result.getString("payment_provider_name");
-
-            String timeZoneId = result.getString("time_zone");
-            DateTimeZone timeZone = (timeZoneId == null) ? null : DateTimeZone.forID(timeZoneId);
-
-            String locale = result.getString("locale");
-
-            String address1 = result.getString("address1");
-            String address2 = result.getString("address2");
-            String companyName = result.getString("company_name");
-            String city = result.getString("city");
-            String stateOrProvince = result.getString("state_or_province");
-            String postalCode = result.getString("postal_code");
-            String country = result.getString("country");
-            String phone = result.getString("phone");
-
-            String createdBy = result.getString("created_by");
-            DateTime createdDate = getDate(result, "created_date");
-            String updatedBy = result.getString("updated_by");
-            DateTime updatedDate = getDate(result, "updated_date");
-
-            return new AccountBuilder(id).externalKey(externalKey).email(email)
-                                         .name(name).firstNameLength(firstNameLength)
-                                         .phone(phone).currency(currency)
-                                         .billingCycleDay(billingCycleDay)
-                                         .paymentProviderName(paymentProviderName)
-                                         .timeZone(timeZone).locale(locale)
-                                         .address1(address1).address2(address2)
-                                         .companyName(companyName)
-                                         .city(city).stateOrProvince(stateOrProvince)
-                                         .postalCode(postalCode).country(country)
-                                         .createdBy(createdBy).createdDate(createdDate)
-                                         .updatedBy(updatedBy).updatedDate(updatedDate)
-                                         .build();
-        }
-    }
+    @Override
+    @SqlUpdate
+    public void insertHistoryFromTransaction(@AccountHistoryBinder final EntityHistory<Account> account,
+                                            @CallContextBinder final CallContext context);
 }

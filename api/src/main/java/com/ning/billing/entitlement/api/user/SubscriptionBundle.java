@@ -16,17 +16,23 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import org.joda.time.DateTime;
-
 import java.util.UUID;
 
-public interface SubscriptionBundle {
+import com.ning.billing.util.entity.Entity;
+import org.joda.time.DateTime;
+
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.overdue.OverdueState;
+
+public interface SubscriptionBundle extends Blockable, Entity {
 
     public UUID getAccountId();
-
-    public UUID getId();
 
     public DateTime getStartDate();
 
     public String getKey();
+
+    public OverdueState<SubscriptionBundle> getOverdueState();
+    
 }

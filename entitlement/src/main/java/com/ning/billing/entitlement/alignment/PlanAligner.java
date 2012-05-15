@@ -21,7 +21,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.*;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
@@ -119,7 +119,7 @@ public class PlanAligner  {
     public TimedPhase getNextTimedPhase(final SubscriptionData subscription, final DateTime requestedDate, final DateTime effectiveDate) {
         try {
 
-            SubscriptionTransition lastPlanTransition = subscription.getInitialTransitionForCurrentPlan();
+            SubscriptionTransitionData lastPlanTransition = subscription.getInitialTransitionForCurrentPlan();
             if (effectiveDate.isBefore(lastPlanTransition.getEffectiveTransitionTime())) {
                 throw new EntitlementError(String.format("Cannot specify an effectiveDate prior to last Plan Change, subscription = %s, effectiveDate = %s",
                         subscription.getId(), effectiveDate));
@@ -129,11 +129,12 @@ public class PlanAligner  {
             // If we never had any Plan change, borrow the logics for createPlan alignment
             case MIGRATE_ENTITLEMENT:
             case CREATE:
+            case RE_CREATE:                
                 List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getStartDate(),
                         subscription.getBundleStartDate(),
                         lastPlanTransition.getNextPlan(),
                         lastPlanTransition.getNextPhase().getPhaseType(),
-                        lastPlanTransition.getNextPriceList(),
+                        lastPlanTransition.getNextPriceList().getName(),
                         requestedDate);
                 return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
             // If we went through Plan changes, borrow the logics for changePlan alignement
@@ -142,9 +143,9 @@ public class PlanAligner  {
                         subscription.getBundleStartDate(),
                         lastPlanTransition.getPreviousPhase(),
                         lastPlanTransition.getPreviousPlan(),
-                        lastPlanTransition.getPreviousPriceList(),
+                        lastPlanTransition.getPreviousPriceList().getName(),
                         lastPlanTransition.getNextPlan(),
-                        lastPlanTransition.getNextPriceList(),
+                        lastPlanTransition.getNextPriceList().getName(),
                         requestedDate,
                         effectiveDate,
                         WhichPhase.NEXT);
@@ -192,7 +193,7 @@ public class PlanAligner  {
                 subscription.getBundleStartDate(),
                 subscription.getCurrentPhase(),
                 subscription.getCurrentPlan(),
-                subscription.getCurrentPriceList(),
+                subscription.getCurrentPriceList().getName(),
                 nextPlan,
                 nextPriceList,
                 requestedDate,
@@ -211,11 +212,6 @@ public class PlanAligner  {
 
         Catalog catalog = catalogService.getFullCatalog();
         ProductCategory currentCategory = currentPlan.getProduct().getCategory();
-        // STEPH tiered ADDON not implemented yet
-        if (currentCategory != ProductCategory.BASE) {
-            throw new EntitlementError(String.format("Only implemented changePlan for BasePlan"));
-        }
-
         PlanPhaseSpecifier fromPlanPhaseSpecifier = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
                 currentCategory,
                 currentPlan.getBillingPeriod(),

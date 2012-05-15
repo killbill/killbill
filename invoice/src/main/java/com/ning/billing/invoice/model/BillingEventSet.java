@@ -28,7 +28,10 @@ public class BillingEventSet extends ArrayList<BillingEvent> {
 
     public BillingEventSet(Collection<BillingEvent> events) {
         super();
-        addAll(events);
+        if(events != null) {
+            addAll(events);
+            
+        }
     }
 
     public boolean isLast(final BillingEvent event) {

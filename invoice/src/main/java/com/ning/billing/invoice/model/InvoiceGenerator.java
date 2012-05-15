@@ -19,6 +19,7 @@ package com.ning.billing.invoice.model;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
 import org.joda.time.DateTime;
 
 import javax.annotation.Nullable;
@@ -26,5 +27,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface InvoiceGenerator {
-    public Invoice generateInvoice(UUID accountId, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices, DateTime targetDate, Currency targetCurrency) throws InvoiceApiException;
+    public Invoice generateInvoice(UUID accountId, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
+                                   DateTime targetDate, Currency targetCurrency) throws InvoiceApiException;
+
+    public void distributeItems(List<Invoice> invoices);
 }

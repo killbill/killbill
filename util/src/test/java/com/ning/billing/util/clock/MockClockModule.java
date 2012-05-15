@@ -23,7 +23,9 @@ public class MockClockModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(Clock.class).to(ClockMock.class).asEagerSingleton();
+	    bind(Clock.class).to(ClockMock.class).asEagerSingleton();
+        bind(ClockMock.class).asEagerSingleton();
 	}
 
 }
+ 

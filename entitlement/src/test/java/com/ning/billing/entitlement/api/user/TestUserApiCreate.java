@@ -22,19 +22,21 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.List;
+
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
-import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.TestApiBase;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.util.clock.DefaultClock;
@@ -70,6 +72,8 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
             assertTrue(testListener.isCompleted(5000));
 
+            assertListenerStatus();
+            
         } catch (EntitlementUserApiException e) {
         	log.error("Unexpected exception",e);
             Assert.fail(e.getMessage());
@@ -110,6 +114,8 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
+            assertListenerStatus();
+            
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -160,14 +166,15 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertEquals(nextPhaseChange, nextExpectedPhaseChange);
 
             testListener.pushExpectedEvent(NextEvent.PHASE);
-
-            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
 
             DateTime futureNow = clock.getUTCNow();
             assertTrue(futureNow.isAfter(nextPhaseChange));
 
             assertTrue(testListener.isCompleted(5000));
 
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -197,23 +204,26 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
             // MOVE TO DISCOUNT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
-            assertTrue(testListener.isCompleted(2000));
+            
 
             // MOVE TO EVERGREEN PHASE + RE-READ SUBSCRIPTION
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.addDeltaFromReality(currentPhase.getDuration());
-            assertTrue(testListener.isCompleted(2000));
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusYears(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
-
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -234,11 +244,9 @@ public abstract class TestUserApiCreate extends TestApiBase {
                     getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
             assertNotNull(subscription);
 
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
     }
-
-
-
 }

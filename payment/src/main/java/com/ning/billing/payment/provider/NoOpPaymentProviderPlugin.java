@@ -25,21 +25,22 @@ import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
+import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.Either;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
 
 public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
-    public Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice) {
-        PaymentInfo payment = new PaymentInfo.Builder()
-                                             .setPaymentId(UUID.randomUUID().toString())
+    public Either<PaymentErrorEvent, PaymentInfoEvent> processInvoice(Account account, Invoice invoice) {
+        PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder()
+                                             .setId(UUID.randomUUID())
                                              .setAmount(invoice.getBalance())
                                              .setStatus("Processed")
-                                             .setCreatedDate(new DateTime(DateTimeZone.UTC))
                                              .setEffectiveDate(new DateTime(DateTimeZone.UTC))
                                              .setType("Electronic")
                                              .build();
@@ -47,25 +48,25 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId) {
+    public Either<PaymentErrorEvent, PaymentInfoEvent> getPaymentInfo(String paymentId) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, String> createPaymentProviderAccount(Account account) {
-        return Either.left(new PaymentError("unsupported",
-                                            "Account creation not supported in this plugin",
+    public Either<PaymentErrorEvent, String> createPaymentProviderAccount(Account account) {
+        return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unsupported",
+                                            "ACCOUNT creation not supported in this plugin",
                                             account.getId(),
-                                            null));
+                                            null, null));
     }
 
     @Override
-    public Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
+    public Either<PaymentErrorEvent, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
+    public Either<PaymentErrorEvent, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
         return Either.right(null);
     }
 
@@ -74,38 +75,44 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
+    public Either<PaymentErrorEvent, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
         return Either.right(paymentMethod);
     }
 
     @Override
-    public Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId) {
+    public Either<PaymentErrorEvent, Void> deletePaymentMethod(String accountKey, String paymentMethodId) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
+    public Either<PaymentErrorEvent, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(final String accountKey) {
+    public Either<PaymentErrorEvent, List<PaymentMethodInfo>> getPaymentMethods(final String accountKey) {
         return Either.right(Arrays.<PaymentMethodInfo>asList());
     }
 
     @Override
-    public Either<PaymentError, Void> updatePaymentGateway(String accountKey) {
+    public Either<PaymentErrorEvent, Void> updatePaymentGateway(String accountKey) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, Void> updatePaymentProviderAccountExistingContact(Account account) {
+    public Either<PaymentErrorEvent, Void> updatePaymentProviderAccountExistingContact(Account account) {
         return Either.right(null);
     }
 
     @Override
-    public Either<PaymentError, Void> updatePaymentProviderAccountWithNewContact(Account account) {
+    public Either<PaymentErrorEvent, Void> updatePaymentProviderAccountWithNewContact(Account account) {
         return Either.right(null);
+    }
+
+    @Override
+    public List<Either<PaymentErrorEvent, PaymentInfoEvent>> processRefund(Account account) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

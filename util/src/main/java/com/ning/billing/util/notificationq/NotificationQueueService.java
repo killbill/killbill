@@ -18,6 +18,8 @@ package com.ning.billing.util.notificationq;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.config.NotificationConfig;
+
 
 public interface NotificationQueueService {
 

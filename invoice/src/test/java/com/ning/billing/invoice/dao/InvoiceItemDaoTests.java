@@ -16,19 +16,20 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import org.joda.time.DateTime;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import org.joda.time.DateTime;
+import org.testng.annotations.Test;
+
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.RecurringInvoiceItem;
 
 @Test(groups = {"invoicing", "invoicing-invoiceDao"})
 public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
@@ -36,12 +37,13 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
     public void testInvoiceItemCreation() {
         UUID accountId = UUID.randomUUID();
         UUID invoiceId = UUID.randomUUID();
+        UUID bundleId = UUID.randomUUID();
         UUID subscriptionId = UUID.randomUUID();
         DateTime startDate = new DateTime(2011, 10, 1, 0, 0, 0, 0);
         DateTime endDate = new DateTime(2011, 11, 1, 0, 0, 0, 0);
         BigDecimal rate = new BigDecimal("20.00");
 
-        RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, subscriptionId, "test plan", "test phase", startDate, endDate,
+        RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "test plan", "test phase", startDate, endDate,
                 rate, rate, Currency.USD);
         recurringInvoiceItemDao.create(item, context);
 
@@ -63,12 +65,14 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
     public void testGetInvoiceItemsBySubscriptionId() {
         UUID accountId = UUID.randomUUID();
         UUID subscriptionId = UUID.randomUUID();
+        UUID bundleId = UUID.randomUUID();
         DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
         BigDecimal rate = new BigDecimal("20.00");
 
         for (int i = 0; i < 3; i++) {
             UUID invoiceId = UUID.randomUUID();
-            RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, subscriptionId,
+
+            RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,
                     "test plan", "test phase", startDate.plusMonths(i), startDate.plusMonths(i + 1),
                     rate, rate, Currency.USD);
             recurringInvoiceItemDao.create(item, context);
@@ -82,13 +86,15 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
     public void testGetInvoiceItemsByInvoiceId() {
         UUID accountId = UUID.randomUUID();
         UUID invoiceId = UUID.randomUUID();
+        UUID bundleId = UUID.randomUUID();
         DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
         BigDecimal rate = new BigDecimal("20.00");
 
         for (int i = 0; i < 5; i++) {
             UUID subscriptionId = UUID.randomUUID();
             BigDecimal amount = rate.multiply(new BigDecimal(i + 1));
-            RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, subscriptionId,
+
+            RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,
                     "test plan", "test phase", startDate, startDate.plusMonths(1),
                     amount, amount, Currency.USD);
             recurringInvoiceItemDao.create(item, context);
@@ -101,6 +107,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
     @Test(groups = "slow")
     public void testGetInvoiceItemsByAccountId() {
         UUID accountId = UUID.randomUUID();
+        UUID bundleId = UUID.randomUUID();
         DateTime targetDate = new DateTime(2011, 5, 23, 0, 0, 0, 0);
         DefaultInvoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, Currency.USD);
 
@@ -111,7 +118,8 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         BigDecimal rate = new BigDecimal("20.00");
 
         UUID subscriptionId = UUID.randomUUID();
-        RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, subscriptionId,
+
+        RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId,
                 "test plan", "test phase", startDate, startDate.plusMonths(1),
                 rate, rate, Currency.USD);
         recurringInvoiceItemDao.create(item, context);

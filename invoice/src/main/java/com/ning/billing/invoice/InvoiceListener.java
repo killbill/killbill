@@ -28,7 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.InvoiceApiException;
 
 public class InvoiceListener {
@@ -43,9 +45,26 @@ public class InvoiceListener {
     }
 
     @Subscribe
-    public void handleSubscriptionTransition(final SubscriptionTransition transition) {
+    public void handleRepairEntitlementEvent(final RepairEntitlementEvent repairEvent) {
         try {
-            CallContext context = factory.createCallContext("Transition", CallOrigin.INTERNAL, UserType.SYSTEM);
+            CallContext context = factory.createCallContext("RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, repairEvent.getUserToken());
+            dispatcher.processAccount(repairEvent.getAccountId(), repairEvent.getEffectiveDate(), false, context);
+        } catch (InvoiceApiException e) {
+            log.error(e.getMessage());
+        }
+    }
+    
+    @Subscribe
+    public void handleSubscriptionTransition(final SubscriptionEvent transition) {
+        try {
+            //  Skip future uncancel event
+            //  Skip events which are marked as not being the last one
+            if (transition.getTransitionType() == SubscriptionTransitionType.UNCANCEL 
+                    || transition.getRemainingEventsForUserOperation() > 0) {
+                return;
+            }
+
+            CallContext context = factory.createCallContext("Transition", CallOrigin.INTERNAL, UserType.SYSTEM, transition.getUserToken());
         	dispatcher.processSubscription(transition, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());

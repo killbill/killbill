@@ -17,8 +17,13 @@
 package com.ning.billing.entitlement.glue;
 
 
+import com.google.inject.name.Names;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.MockEntitlementDaoMemory;
+import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
+import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
@@ -27,6 +32,9 @@ public class MockEngineModuleMemory extends MockEngineModule {
     @Override
     protected void installEntitlementDao() {
         bind(EntitlementDao.class).to(MockEntitlementDaoMemory.class).asEagerSingleton();
+        bind(EntitlementDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
+        bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
+        bind(RepairEntitlementDao.class).asEagerSingleton();
     }
 
     private void installNotificationQueue() {
@@ -36,6 +44,7 @@ public class MockEngineModuleMemory extends MockEngineModule {
     @Override
     protected void configure() {
         super.configure();
+        install(new BusModule(BusType.MEMORY));
         installNotificationQueue();
     }
 }

@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.callcontext;
 
+import java.util.UUID;
+
 import com.google.inject.Inject;
 import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
@@ -29,8 +31,13 @@ public class DefaultCallContextFactory implements CallContextFactory {
     }
 
     @Override
+    public CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType, UUID userToken) {
+        return new DefaultCallContext(userName, callOrigin, userType, userToken, clock);
+    }
+
+    @Override
     public CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType) {
-        return new DefaultCallContext(userName, callOrigin, userType, clock);
+    	return createCallContext(userName, callOrigin, userType, null);
     }
 
     @Override

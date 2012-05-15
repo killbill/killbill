@@ -16,123 +16,26 @@
 
 package com.ning.billing.util.bus;
 
-import com.google.common.eventbus.Subscribe;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class TestEventBus {
-
-    private static final Logger log = LoggerFactory.getLogger(TestEventBus.class);
-
-    private Bus eventBus;
+@Test(groups={"slow"})
+public class TestEventBus extends TestEventBusBase {
 
 
     @BeforeClass(groups = "slow")
-    public void setup() {
+    public void setup() throws Exception {
         eventBus = new InMemoryBus();
-        eventBus.start();
+        super.setup();
     }
-
-    @AfterClass(groups = "slow")
-    public void tearDown() {
-        eventBus.stop();
-    }
-
-    public static final class MyEvent implements BusEvent {
-        String name;
-        Long value;
-
-        public MyEvent(String name, Long value) {
-            this.name = name;
-            this.value = value;
-        }
-    }
-
-    public static final class MyOtherEvent implements BusEvent {
-        String name;
-        Long value;
-
-        public MyOtherEvent(String name, Long value) {
-            this.name = name;
-            this.value = value;
-        }
-    }
-
-    public static class MyEventHandler {
-
-        private final int expectedEvents;
-
-        private int gotEvents;
-
-
-        public MyEventHandler(int exp) {
-            this.expectedEvents = exp;
-            this.gotEvents = 0;
-        }
-
-        public synchronized int getEvents() {
-            return gotEvents;
-        }
-
-        @Subscribe
-        public synchronized void processEvent(MyEvent event) {
-            gotEvents++;
-            //log.debug("Got event {} {}", event.name, event.value);
-        }
-
-        public synchronized boolean waitForCompletion(long timeoutMs) {
-
-            while (gotEvents < expectedEvents) {
-                try {
-                    wait(timeoutMs);
-                    break;
-                } catch (InterruptedException ignore) {
-                }
-            }
-            return (gotEvents == expectedEvents);
-        }
-    }
-
+    
     @Test(groups = "slow")
     public void testSimple() {
-        try {
-
-            int nbEvents = 127;
-            MyEventHandler handler = new MyEventHandler(nbEvents);
-            eventBus.register(handler);
-
-            for (int i = 0; i < nbEvents; i++) {
-                eventBus.post(new MyEvent("my-event", (long) i));
-            }
-
-            boolean completed = handler.waitForCompletion(3000);
-            Assert.assertEquals(completed, true);
-        } catch (Exception e) {
-            Assert.fail("",e);
-        }
+        super.testSimple();
     }
 
     @Test(groups = "slow")
     public void testDifferentType() {
-        try {
-
-            MyEventHandler handler = new MyEventHandler(1);
-            eventBus.register(handler);
-
-            for (int i = 0; i < 10; i++) {
-                eventBus.post(new MyOtherEvent("my-other-event", (long) i));
-            }
-            eventBus.post(new MyEvent("my-event", 11l));
-
-            boolean completed = handler.waitForCompletion(3000);
-            Assert.assertEquals(completed, true);
-        } catch (Exception e) {
-            Assert.fail("",e);
-        }
-
+        super.testDifferentType();
     }
 }

@@ -16,9 +16,5 @@
 
 package com.ning.billing.util.entity;
 
-import org.joda.time.DateTime;
-
 public interface UpdatableEntity extends Entity {
-    public String getUpdatedBy();
-    public DateTime getUpdatedDate();
 }

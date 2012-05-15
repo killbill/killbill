@@ -16,59 +16,58 @@
 
 package com.ning.billing.util.notificationq;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
+import com.ning.billing.util.queue.QueueLifecycle;
 
-public interface NotificationQueue {
+public interface NotificationQueue extends QueueLifecycle {
 
-   /**
-    *
-    * Record the need to be called back when the notification is ready
-    *
-    * @param futureNotificationTime the time at which the notification is ready
-    * @param notificationKey the key for that notification
-    */
-   public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey);
+    /**
+     *
+     * Record the need to be called back when the notification is ready
+     *
+     * @param futureNotificationTime the time at which the notification is ready
+     * @param notificationKey the key for that notification
+     */
+    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey);
 
-   /**
-    *
-    * Record from within a transaction the need to be called back when the notification is ready
-    *
-    * @param transactionalDao the transactionalDao
-    * @param futureNotificationTime the time at which the notification is ready
-    * @param notificationKey the key for that notification
-    */
-   public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
-           final DateTime futureNotificationTime, final NotificationKey notificationKey);
+    /**
+     *
+     * Record from within a transaction the need to be called back when the notification is ready
+     *
+     * @param transactionalDao the transactionalDao
+     * @param futureNotificationTime the time at which the notification is ready
+     * @param notificationKey the key for that notification
+     */
+    public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
+            final DateTime futureNotificationTime, final NotificationKey notificationKey);
 
-   /**
-    * This is only valid when the queue has been configured with isNotificationProcessingOff is true
-    * In which case, it will callback users for all the ready notifications.
-    *
-    * @return the number of entries we processed
-    */
-   public int processReadyNotification();
+  
+    /**
+     * Remove all notifications associated with this key   
+     * 
+     * @param key
+     */
+    public void removeNotificationsByKey(UUID key);
 
-   /**
-    * Stops the queue. Blocks until queue is completely stopped.
-    *
-    * @see NotificationQueueHandler.completedQueueStop to be notified when the notification thread exited
-    */
-   public void stopQueue();
+    /**
+     * This is only valid when the queue has been configured with isNotificationProcessingOff is true
+     * In which case, it will callback users for all the ready notifications.
+     *
+     * @return the number of entries we processed
+     */
+    public int processReadyNotification();
 
-   /**
-    * Starts the queue. Blocks until queue has completely started.
-    *
-    * @see NotificationQueueHandler.completedQueueStart to be notified when the notification thread started
-    */
-   public void startQueue();
+    /**
+     *
+     * @return the name of that queue
+     */
+    public String getFullQName();
 
-   /**
-    *
-    * @return the name of that queue
-    */
-   public String getFullQName();
+
 
 }

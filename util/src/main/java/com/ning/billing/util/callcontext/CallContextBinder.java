@@ -37,9 +37,10 @@ public @interface CallContextBinder {
             return new Binder<CallContextBinder, CallContext>() {
                 @Override
                 public void bind(SQLStatement q, CallContextBinder bind, CallContext callContext) {
-                    q.bind("userName", callContext.getUserName());
+                	q.bind("userName", callContext.getUserName());
                     q.bind("createdDate", callContext.getCreatedDate().toDate());
                     q.bind("updatedDate", callContext.getUpdatedDate().toDate());
+                	q.bind("userToken", (callContext.getUserToken() != null) ? callContext.getUserToken().toString() : null);                	
                 }
             };
         }

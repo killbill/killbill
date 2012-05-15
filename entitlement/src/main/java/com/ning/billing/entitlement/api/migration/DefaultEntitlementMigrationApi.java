@@ -31,12 +31,12 @@ import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.TimedMigration;
+import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
@@ -72,11 +72,11 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
     @Override
     public void migrate(EntitlementAccountMigration toBeMigrated, CallContext context)
     throws EntitlementMigrationApiException {
-        AccountMigrationData accountMigrationData = createAccountMigrationData(toBeMigrated);
+        AccountMigrationData accountMigrationData = createAccountMigrationData(toBeMigrated, context);
         dao.migrate(toBeMigrated.getAccountKey(), accountMigrationData, context);
     }
 
-    private AccountMigrationData createAccountMigrationData(EntitlementAccountMigration toBeMigrated)
+    private AccountMigrationData createAccountMigrationData(EntitlementAccountMigration toBeMigrated, CallContext context)
     throws EntitlementMigrationApiException  {
 
         final UUID accountId = toBeMigrated.getAccountKey();
@@ -86,7 +86,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
 
         for (final EntitlementBundleMigration curBundle : toBeMigrated.getBundles()) {
 
-            SubscriptionBundleData bundleData = new SubscriptionBundleData(curBundle.getBundleKey(), accountId);
+            SubscriptionBundleData bundleData = new SubscriptionBundleData(curBundle.getBundleKey(), accountId, clock.getUTCNow());
             List<SubscriptionMigrationData> bundleSubscriptionData = new LinkedList<AccountMigrationData.SubscriptionMigrationData>();
 
 
@@ -118,10 +118,11 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             for (EntitlementSubscriptionMigration curSub : sortedSubscriptions) {
                 SubscriptionMigrationData data = null;
                 if (bundleStartDate == null) {
-                    data = createInitialSubscription(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now, curSub.getChargedThroughDate());
+                    data = createInitialSubscription(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now, curSub.getChargedThroughDate(), context);
                     bundleStartDate = data.getInitialEvents().get(0).getEffectiveDate();
                 } else {
-                    data = createSubscriptionMigrationDataWithBundleDate(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now, bundleStartDate, curSub.getChargedThroughDate());
+                    data = createSubscriptionMigrationDataWithBundleDate(bundleData.getId(), curSub.getCategory(), curSub.getSubscriptionCases(), now,
+                    		bundleStartDate, curSub.getChargedThroughDate(), context);
                 }
                 if (data != null) {
                     bundleSubscriptionData.add(data);
@@ -135,7 +136,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
     }
 
     private SubscriptionMigrationData createInitialSubscription(UUID bundleId, ProductCategory productCategory,
-            EntitlementSubscriptionMigrationCase [] input, DateTime now, DateTime ctd)
+            EntitlementSubscriptionMigrationCase [] input, DateTime now, DateTime ctd, CallContext context)
         throws EntitlementMigrationApiException {
 
         TimedMigration [] events = migrationAligner.getEventsMigration(input, now);
@@ -148,11 +149,11 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             .setBundleStartDate(migrationStartDate)
             .setStartDate(migrationStartDate),
             emptyEvents);
-        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events));
+        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context));
     }
 
     private SubscriptionMigrationData createSubscriptionMigrationDataWithBundleDate(UUID bundleId, ProductCategory productCategory,
-            EntitlementSubscriptionMigrationCase [] input, DateTime now, DateTime bundleStartDate, DateTime ctd)
+            EntitlementSubscriptionMigrationCase [] input, DateTime now, DateTime bundleStartDate, DateTime ctd, CallContext context)
     throws EntitlementMigrationApiException {
         TimedMigration [] events = migrationAligner.getEventsMigration(input, now);
         DateTime migrationStartDate= events[0].getEventTime();
@@ -164,10 +165,10 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             .setBundleStartDate(bundleStartDate)
             .setStartDate(migrationStartDate),
             emptyEvents);
-        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events));
+        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context));
     }
 
-    private List<EntitlementEvent> toEvents(SubscriptionData subscriptionData, DateTime now, DateTime ctd, TimedMigration [] migrationEvents) {
+    private List<EntitlementEvent> toEvents(SubscriptionData subscriptionData, DateTime now, DateTime ctd, TimedMigration [] migrationEvents, CallContext context) {
 
 
         ApiEventMigrateEntitlement creationEvent = null;
@@ -189,6 +190,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                 .setEffectiveDate(cur.getEventTime())
                 .setProcessedDate(now)
                 .setRequestedDate(now)
+                .setUserToken(context.getUserToken())
                 .setFromDisk(true);
 
                 switch(cur.getApiEventType()) {

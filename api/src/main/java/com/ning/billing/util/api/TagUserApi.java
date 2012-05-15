@@ -17,13 +17,15 @@
 package com.ning.billing.util.api;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
-import org.joda.time.DateTime;
 
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
+// TODO: add ability to create, update and remove tags
 public interface TagUserApi {
     /***
      *
@@ -33,13 +35,13 @@ public interface TagUserApi {
 
     /***
      *
-     * @param name Identifies the definition.
+     * @param definitionName Identifies the definition.
      * @param description Describes the use of the definition.
      * @param context The call context, for auditing purposes
      * @return the newly created tag definition
      * @throws TagDefinitionApiException
      */
-    public TagDefinition create(String name, String description, CallContext context) throws TagDefinitionApiException;
+    public TagDefinition create(String definitionName, String description, CallContext context) throws TagDefinitionApiException;
 
     /***
      *
@@ -57,7 +59,6 @@ public interface TagUserApi {
      */
     public void deleteTagDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
 
-    
 	/**
 	 * 
 	 * @param name
@@ -65,18 +66,12 @@ public interface TagUserApi {
      * @throws TagDefinitionApiException
 	 */
 	public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
-	
-	/**
-	 * @param controlTagName
-	 * @throws TagDefinitionApiException
-	 */
-	public Tag createControlTag(String controlTagName) throws TagDefinitionApiException;
-	
-	
-	/**
-	 * @param tagDefinitionName
-	 * @return
-	 */
-	public Tag createDescriptiveTag(String tagDefinitionName) throws TagDefinitionApiException;
-	
+
+	public List<Tag> createControlTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException;
+
+    public Tag createControlTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException;
+
+	public List<Tag> createDescriptiveTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException;
+
+	public Tag createDescriptiveTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException;
 }

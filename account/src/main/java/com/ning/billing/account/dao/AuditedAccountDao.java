@@ -21,28 +21,37 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.dao.EntityAudit;
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.dao.TagDao;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountChangeNotification;
-import com.ning.billing.account.api.AccountCreationNotification;
-import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
+import com.ning.billing.account.api.AccountChangeEvent;
+import com.ning.billing.account.api.AccountCreationEvent;
+import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.tag.Tag;
 
 public class AuditedAccountDao implements AccountDao {
+    private final static Logger log = LoggerFactory.getLogger(AuditedAccountDao.class);
+    
     private final AccountSqlDao accountSqlDao;
     private final TagDao tagDao;
     private final CustomFieldDao customFieldDao;
@@ -80,11 +89,11 @@ public class AuditedAccountDao implements AccountDao {
     }
 
     @Override
-    public Account getById(final String id) {
+    public Account getById(final UUID id) {
         return accountSqlDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
             @Override
             public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
-                Account account = accountSqlDao.getById(id);
+                Account account = accountSqlDao.getById(id.toString());
                 if (account != null) {
                     setCustomFieldsFromWithinTransaction(account, accountSqlDao);
                     setTagsFromWithinTransaction(account, accountSqlDao);
@@ -122,20 +131,25 @@ public class AuditedAccountDao implements AccountDao {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
                     }
                     transactionalDao.create(account, context);
-                    UUID historyId = UUID.randomUUID();
 
-                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
-                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(),
-                            ChangeType.INSERT.toString(), context);
+                    // insert history
+                    Long recordId = accountSqlDao.getRecordId(account.getId().toString());
+                    EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
+                    accountSqlDao.insertHistoryFromTransaction(history, context);
 
-                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
-                    auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
-                                                         ChangeType.INSERT, context);
+                    // insert audit
+                    Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
+                    accountSqlDao.insertAuditFromTransaction(audit, context);
 
                     saveTagsFromWithinTransaction(account, transactionalDao, context);
                     saveCustomFieldsFromWithinTransaction(account, transactionalDao, context);
-                    AccountCreationNotification creationEvent = new DefaultAccountCreationEvent(account);
-                    eventBus.post(creationEvent);
+                    AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, context.getUserToken());
+                    try {
+                        eventBus.postFromTransaction(creationEvent, transactionalDao);
+                    } catch (EventBusException e) {
+                        log.warn("Failed to post account creation event for account " + account.getId(), e);
+                    }
                     return null;
                 }
             });
@@ -155,9 +169,9 @@ public class AuditedAccountDao implements AccountDao {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
-                public Void inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
+                public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
                     String accountId = account.getId().toString();
-                    Account currentAccount = accountSqlDao.getById(accountId);
+                    Account currentAccount = transactional.getById(accountId);
                     if (currentAccount == null) {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                     }
@@ -167,22 +181,26 @@ public class AuditedAccountDao implements AccountDao {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY, currentKey);
                     }
 
-                    accountSqlDao.update(account, context);
+                    transactional.update(account, context);
 
-                    UUID historyId = UUID.randomUUID();
-                    AccountHistorySqlDao historyDao = accountSqlDao.become(AccountHistorySqlDao.class);
-                    historyDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.UPDATE.toString(), context);
+                    Long recordId = accountSqlDao.getRecordId(account.getId().toString());
+                    EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
+                    accountSqlDao.insertHistoryFromTransaction(history, context);
 
-                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
-                    auditDao.insertAuditFromTransaction("account_history" ,historyId.toString(),
-                                                        ChangeType.INSERT, context);
+                    Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
+                    accountSqlDao.insertAuditFromTransaction(audit, context);
 
-                    saveTagsFromWithinTransaction(account, accountSqlDao, context);
-                    saveCustomFieldsFromWithinTransaction(account, accountSqlDao, context);
+                    saveTagsFromWithinTransaction(account, transactional, context);
+                    saveCustomFieldsFromWithinTransaction(account, transactional, context);
 
-                    AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
+                    AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
-                        eventBus.post(changeEvent);
+                        try {
+                            eventBus.postFromTransaction(changeEvent, transactional);
+                        } catch (EventBusException e) {
+                            log.warn("Failed to post account change event for account " + account.getId(), e);
+                        }
                     }
                     return null;
                 }
@@ -203,7 +221,7 @@ public class AuditedAccountDao implements AccountDao {
 
     private void setCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
         CustomFieldSqlDao customFieldSqlDao = transactionalDao.become(CustomFieldSqlDao.class);
-        List<CustomField> fields = customFieldSqlDao.load(account.getId().toString(), account.getObjectName());
+        List<CustomField> fields = customFieldSqlDao.load(account.getId().toString(), account.getObjectType());
 
         account.clearFields();
         if (fields != null) {
@@ -212,7 +230,7 @@ public class AuditedAccountDao implements AccountDao {
     }
 
     private void setTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
-        List<Tag> tags = tagDao.loadTagsFromTransaction(transactionalDao, account.getId(), Account.ObjectType);
+        List<Tag> tags = tagDao.loadEntitiesFromTransaction(transactionalDao, account.getId(), ObjectType.ACCOUNT);
         account.clearTags();
 
         if (tags != null) {
@@ -222,11 +240,11 @@ public class AuditedAccountDao implements AccountDao {
 
     private void saveTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
                                                final CallContext context) {
-        tagDao.saveTagsFromTransaction(transactionalDao, account.getId(), account.getObjectName(), account.getTagList(), context);
+        tagDao.saveEntitiesFromTransaction(transactionalDao, account.getId(), account.getObjectType(), account.getTagList(), context);
     }
 
     private void saveCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
                                                        final CallContext context) {
-        customFieldDao.saveFields(transactionalDao, account.getId(), account.getObjectName(), account.getFieldList(), context);
+        customFieldDao.saveEntitiesFromTransaction(transactionalDao, account.getId(), account.getObjectType(), account.getFieldList(), context);
     }
 }

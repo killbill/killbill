@@ -16,6 +16,8 @@
 
 package com.ning.billing.analytics;
 
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
@@ -23,7 +25,11 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -35,7 +41,7 @@ public class TestBusinessSubscription
 {
     private final Duration MONTHLY = MockDuration.MONHTLY();
     private final Duration YEARLY = MockDuration.YEARLY();
-    final Object[][] catalog = {
+    final Object[][] catalogMapping = {
         {MONTHLY, 229.0000, 229.0000},
         {MONTHLY, 19.9500, 19.9500},
         {MONTHLY, 14.9500, 14.9500},
@@ -53,21 +59,30 @@ public class TestBusinessSubscription
     private Subscription isubscription;
     private BusinessSubscription subscription;
 
+    private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
+    private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
+    
+
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
     {
         product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         plan = new MockPlan("platinum-monthly", product);
         phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
+
+        ((ZombieControl) catalog).addResult("findPlan", plan);
+        ((ZombieControl) catalog).addResult("findPhase", phase);        
+        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);        
+
         isubscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
-        subscription = new BusinessSubscription(isubscription, USD);
+        subscription = new BusinessSubscription(isubscription, USD, catalog);
     }
 
     @Test(groups = "fast")
     public void testMrrComputation() throws Exception
     {
         int i = 0;
-        for (final Object[] object : catalog) {
+        for (final Object[] object : catalogMapping) {
             final Duration duration = (Duration) object[0];
             final double price = (Double) object[1];
             final double expectedMrr = (Double) object[2];
@@ -100,6 +115,6 @@ public class TestBusinessSubscription
         Assert.assertTrue(subscription.equals(subscription));
 
         final Subscription otherSubscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
-        Assert.assertTrue(!subscription.equals(new BusinessSubscription(otherSubscription, USD)));
+        Assert.assertTrue(!subscription.equals(new BusinessSubscription(otherSubscription, USD, catalog)));
     }
 }

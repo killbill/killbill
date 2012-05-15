@@ -25,6 +25,5 @@ public interface Clock {
 
     public DateTime getUTCNow();
 
-
     //public DateTime addDuration(DateTime input, IDuration duration);
 }

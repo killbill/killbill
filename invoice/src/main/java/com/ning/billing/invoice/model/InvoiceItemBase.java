@@ -29,6 +29,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     protected final UUID invoiceId;
     protected final UUID accountId;
     protected final UUID subscriptionId;
+    protected final UUID bundleId;
     protected final String planName;
     protected final String phaseName;
     protected final DateTime startDate;
@@ -36,19 +37,20 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     protected final BigDecimal amount;
     protected final Currency currency;
 
-    public InvoiceItemBase(UUID invoiceId, UUID accountId, @Nullable UUID subscriptionId, String planName, String phaseName,
-                           DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
-        this(UUID.randomUUID(), invoiceId, accountId,  subscriptionId, planName, phaseName,
-                startDate, endDate, amount, currency, null, null);
+    public InvoiceItemBase(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
+            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
+        this(UUID.randomUUID(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
+                startDate, endDate, amount, currency);
     }
 
-    public InvoiceItemBase(UUID id, UUID invoiceId, UUID accountId, @Nullable UUID subscriptionId, String planName, String phaseName,
-                           DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                           @Nullable String createdBy, @Nullable DateTime createdDate) {
-        super(id, createdBy, createdDate);
+    public InvoiceItemBase(UUID id, UUID invoiceId, UUID accountId, @Nullable UUID bundleId,
+                           @Nullable UUID subscriptionId, String planName, String phaseName,
+                           DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
+        super(id);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.subscriptionId = subscriptionId;
+        this.bundleId = bundleId;
         this.planName = planName;
         this.phaseName = phaseName;
         this.startDate = startDate;
@@ -57,21 +59,16 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         this.currency = currency;
     }
 
-    public DateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    @Override
-    public UUID getId() {
-        return id;
-    }
-
     @Override
     public UUID getInvoiceId() {
         return invoiceId;
     }
 
     @Override
+    public UUID getBundleId() {
+        return bundleId;
+    }
+    
     public UUID getAccountId() {
         return accountId;
     }
@@ -112,7 +109,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public abstract InvoiceItem asCredit();
+    public abstract InvoiceItem asReversingItem();
 
     @Override
     public abstract String getDescription();

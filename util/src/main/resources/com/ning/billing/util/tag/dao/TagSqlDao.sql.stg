@@ -9,17 +9,12 @@ fields(prefix) ::= <<
     <prefix>created_date
 >>
 
-batchInsertFromTransaction() ::= <<
+insertFromTransaction() ::= <<
   INSERT INTO tags(<fields()>)
   VALUES (:id, :tagDefinitionName, :objectId, :objectType, :userName, :createdDate);
 >>
 
-batchInsertHistoryFromTransaction() ::= <<
-    INSERT INTO tag_history (history_record_id, id, tag_definition_name, object_id, object_type, change_type, updated_by, date)
-    VALUES (:historyRecordId, :id, :tagDefinitionName, :objectId, :objectType, :changeType, :userName, :updatedDate);
->>
-
-batchDeleteFromTransaction() ::= <<
+deleteFromTransaction() ::= <<
     DELETE FROM tags
     WHERE tag_definition_name = :tagDefinitionName
         AND object_id = :objectId AND object_type = :objectType;
@@ -51,6 +46,55 @@ load() ::= <<
     FROM tags t
     LEFT JOIN tag_definitions td ON t.tag_definition_name = td.name
     WHERE t.object_id = :objectId AND t.object_type = :objectType;
+>>
+
+getRecordIds() ::= <<
+    SELECT record_id, id
+    FROM tags
+    WHERE object_id = :objectId AND object_type = :objectType;
+>>
+
+historyFields(prefix) ::= <<
+  <prefix>record_id,
+  <prefix>id,
+  <prefix>object_id,
+  <prefix>object_type,
+  <prefix>tag_definition_name,
+  <prefix>updated_by,
+  <prefix>date,
+  <prefix>change_type
+>>
+
+addHistoryFromTransaction() ::= <<
+    INSERT INTO tag_history(<historyFields()>)
+    VALUES(:recordId, :id, :objectId, :objectType, :tagDefinitionName, :userName, :updatedDate, :changeType);
+>>
+
+getMaxHistoryRecordId() ::= <<
+    SELECT MAX(history_record_id)
+    FROM tag_history;
+>>
+
+getHistoryRecordIds() ::= <<
+    SELECT history_record_id, record_id
+    FROM tag_history
+    WHERE history_record_id > :maxHistoryRecordId;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL, NULL);
 >>
 
 test() ::= <<

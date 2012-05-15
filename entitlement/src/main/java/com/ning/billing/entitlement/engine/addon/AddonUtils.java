@@ -28,8 +28,9 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 
 public class AddonUtils {
@@ -43,8 +44,35 @@ public class AddonUtils {
         this.catalogService = catalogService;
     }
 
+    public void checkAddonCreationRights(SubscriptionData baseSubscription, Plan targetAddOnPlan)
+    throws EntitlementUserApiException, CatalogApiException {
 
-    public boolean isAddonAvailable(final String basePlanName, final DateTime requestedDate, final Plan targetAddOnPlan) {
+        if (baseSubscription.getState() != SubscriptionState.ACTIVE) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
+        }
+
+        Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
+        if (isAddonIncluded(baseProduct, targetAddOnPlan)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED,
+                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
+        }
+
+        if (!isAddonAvailable(baseProduct, targetAddOnPlan)) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE,
+                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
+        }
+    }
+
+    public boolean isAddonAvailableFromProdName(final String baseProductName, final DateTime requestedDate, final Plan targetAddOnPlan) {
+        try {
+            Product product = catalogService.getFullCatalog().findProduct(baseProductName, requestedDate);
+            return isAddonAvailable(product, targetAddOnPlan);
+        } catch (CatalogApiException e) {
+            throw new EntitlementError(e);
+        }
+    }
+
+    public boolean isAddonAvailableFromPlanName(final String basePlanName, final DateTime requestedDate, final Plan targetAddOnPlan) {
         try {
             Plan plan = catalogService.getFullCatalog().findPlan(basePlanName, requestedDate);
             Product product = plan.getProduct();
@@ -65,9 +93,19 @@ public class AddonUtils {
         }
         return false;
     }
+    
+    public boolean isAddonIncludedFromProdName(final String baseProductName, final DateTime requestedDate, final Plan targetAddOnPlan) {
+        try {            
+            Product product = catalogService.getFullCatalog().findProduct(baseProductName, requestedDate);
+            return isAddonIncluded(product, targetAddOnPlan);
+        } catch (CatalogApiException e) {
+            throw new EntitlementError(e);
+        }
 
-    public boolean isAddonIncluded(final String basePlanName,  final DateTime requestedDate, final Plan targetAddOnPlan) {
-        try {
+    }
+
+    public boolean isAddonIncludedFromPlanName(final String basePlanName, final DateTime requestedDate, final Plan targetAddOnPlan) {
+        try {            
             Plan plan = catalogService.getFullCatalog().findPlan(basePlanName, requestedDate);
             Product product = plan.getProduct();
             return isAddonIncluded(product, targetAddOnPlan);

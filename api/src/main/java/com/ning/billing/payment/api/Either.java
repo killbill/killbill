@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.api;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonValue;
 
 public abstract class Either<T, V> {
@@ -29,9 +30,12 @@ public abstract class Either<T, V> {
     private Either() {
     }
 
+    @JsonIgnore
     public boolean isLeft() {
         return false;
     }
+
+    @JsonIgnore
     public boolean isRight() {
         return false;
     }
@@ -49,6 +53,7 @@ public abstract class Either<T, V> {
             this.value = value;
         }
         @Override
+        @JsonIgnore
         public boolean isLeft() {
             return true;
         }
@@ -66,6 +71,7 @@ public abstract class Either<T, V> {
             this.value = value;
         }
         @Override
+        @JsonIgnore
         public boolean isRight() {
             return true;
         }

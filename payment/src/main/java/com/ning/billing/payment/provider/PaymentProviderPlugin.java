@@ -21,26 +21,27 @@ import java.util.List;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.Either;
-import com.ning.billing.payment.api.PaymentError;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentErrorEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
 
 public interface PaymentProviderPlugin {
-    Either<PaymentError, PaymentInfo> processInvoice(Account account, Invoice invoice);
-    Either<PaymentError, String> createPaymentProviderAccount(Account account);
+    Either<PaymentErrorEvent, PaymentInfoEvent> processInvoice(Account account, Invoice invoice);
+    Either<PaymentErrorEvent, String> createPaymentProviderAccount(Account account);
 
-    Either<PaymentError, PaymentInfo> getPaymentInfo(String paymentId);
-    Either<PaymentError, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
-    Either<PaymentError, Void> updatePaymentGateway(String accountKey);
+    Either<PaymentErrorEvent, PaymentInfoEvent> getPaymentInfo(String paymentId);
+    Either<PaymentErrorEvent, PaymentProviderAccount> getPaymentProviderAccount(String accountKey);
+    Either<PaymentErrorEvent, Void> updatePaymentGateway(String accountKey);
 
-    Either<PaymentError, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId);
-    Either<PaymentError, List<PaymentMethodInfo>> getPaymentMethods(String accountKey);
-    Either<PaymentError, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod);
-    Either<PaymentError, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo);
-    Either<PaymentError, Void> deletePaymentMethod(String accountKey, String paymentMethodId);
+    Either<PaymentErrorEvent, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId);
+    Either<PaymentErrorEvent, List<PaymentMethodInfo>> getPaymentMethods(String accountKey);
+    Either<PaymentErrorEvent, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod);
+    Either<PaymentErrorEvent, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo);
+    Either<PaymentErrorEvent, Void> deletePaymentMethod(String accountKey, String paymentMethodId);
 
-    Either<PaymentError, Void> updatePaymentProviderAccountExistingContact(Account account);
-    Either<PaymentError, Void> updatePaymentProviderAccountWithNewContact(Account account);
 
+    Either<PaymentErrorEvent, Void> updatePaymentProviderAccountExistingContact(Account account);
+    Either<PaymentErrorEvent, Void> updatePaymentProviderAccountWithNewContact(Account account);
+    List<Either<PaymentErrorEvent, PaymentInfoEvent>> processRefund(Account account);
 }

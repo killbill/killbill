@@ -31,7 +31,8 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
 public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
-    private final static Logger log = LoggerFactory.getLogger(DefaultNextBillingDateNotifier.class);
+    
+    private final static Logger log = LoggerFactory.getLogger(DefaultNextBillingDatePoster.class);
 
 	private final NotificationQueueService notificationQueueService;
 

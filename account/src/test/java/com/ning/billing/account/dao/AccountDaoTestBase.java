@@ -20,11 +20,19 @@ import static org.testng.Assert.fail;
 
 import java.io.IOException;
 
+import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -33,17 +41,15 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
-import com.ning.billing.account.glue.AccountModuleWithEmbeddedDb;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.BusService;
 import org.testng.annotations.BeforeMethod;
 
 public abstract class AccountDaoTestBase {
-    protected AccountModuleWithEmbeddedDb module;
+    private final MysqlTestingHelper helper = new MysqlTestingHelper();
+
     protected AccountDao accountDao;
+    protected AccountEmailDao accountEmailDao;
     protected IDBI dbi;
 
     protected CallContext context;
@@ -52,26 +58,30 @@ public abstract class AccountDaoTestBase {
     protected void setup() throws IOException {
         // Health check test to make sure MySQL is setup properly
         try {
-            module = new AccountModuleWithEmbeddedDb();
             final String accountDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
             final String utilDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
-            module.startDb();
-            module.initDb(accountDdl);
-            module.initDb(utilDdl);
+            helper.startMysql();
+            helper.initDb(accountDdl);
+            helper.initDb(utilDdl);
 
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
-            dbi = injector.getInstance(IDBI.class);
+            dbi = helper.getDBI();
 
-            accountDao = injector.getInstance(AccountDao.class);
+            Bus bus = new InMemoryBus();
+            BusService busService = new DefaultBusService(bus);
+            ((DefaultBusService) busService).startBus();
+
+            TagDao tagDao = new AuditedTagDao(dbi);
+            CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi);
+
+            accountDao = new AuditedAccountDao(dbi, bus, tagDao, customFieldDao);
             accountDao.test();
 
-            Clock clock = injector.getInstance(Clock.class);
-            context = new DefaultCallContextFactory(clock).createCallContext("Vizzini", CallOrigin.TEST, UserType.TEST);
+            accountEmailDao = new AuditedAccountEmailDao(dbi);
+            accountEmailDao.test();
 
-
-            BusService busService = injector.getInstance(BusService.class);
-            ((DefaultBusService) busService).startBus();
+            Clock clock = new ClockMock();
+            context = new DefaultCallContextFactory(clock).createCallContext("Account Dao Tests", CallOrigin.TEST, UserType.TEST);
         }
         catch (Throwable t) {
             fail(t.toString());
@@ -81,7 +91,7 @@ public abstract class AccountDaoTestBase {
     @AfterClass(alwaysRun = true)
     public void stopMysql()
     {
-        module.stopDb();
+        helper.stopMysql();
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -91,6 +101,8 @@ public abstract class AccountDaoTestBase {
             public Void inTransaction(Handle h, TransactionStatus status) throws Exception {
                 h.execute("truncate table accounts");
                 h.execute("truncate table notifications");
+                h.execute("truncate table bus_events");
+                h.execute("truncate table claimed_bus_events");                              
                 h.execute("truncate table claimed_notifications");
                 h.execute("truncate table tag_definitions");
                 h.execute("truncate table tags");

@@ -16,16 +16,17 @@
 
 package com.ning.billing.payment.api;
 
-import com.google.inject.Inject;
-import com.ning.billing.util.clock.Clock;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.ning.billing.account.glue.AccountModuleWithMocks;
-import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
+import com.google.inject.Inject;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.util.glue.CallContextModule;
 
-@Guice(modules = { PaymentTestModuleWithMocks.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class })
+@Guice(modules = { PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class })
 @Test(groups = "fast")
 public class TestMockPaymentApi extends TestPaymentApi {
     @Inject

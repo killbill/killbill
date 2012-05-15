@@ -16,12 +16,13 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import org.testng.annotations.Test;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
-import org.testng.annotations.Test;
 
 public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
 
@@ -32,46 +33,38 @@ public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
 
 
     @Override
-    @Test(enabled=true, groups={"fast-disabled"})
+    @Test(enabled=true, groups={"fast"})
     public void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
          super.testChangePlanBundleAlignEOTWithNoChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast-disabled"})
+    @Test(enabled=true, groups={"fast"})
     public void testChangePlanBundleAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testChangePlanBundleAlignEOTWithChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast-disabled"})
+    @Test(enabled=true, groups={"fast"})
     public void testChangePlanBundleAlignIMM() {
         super.testChangePlanBundleAlignIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast-disabled"})
+    @Test(enabled=true, groups={"fast"})
     public void testMultipleChangeLastIMM() throws EntitlementBillingApiException {
         super.testMultipleChangeLastIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast-disabled"})
+    @Test(enabled=true, groups={"fast"})
     public void testMultipleChangeLastEOT() throws EntitlementBillingApiException {
         super.testMultipleChangeLastEOT();
     }
 
-    /*
-    // Set to false until we implement rescue example.
-    @Override
-    @Test(enabled=false, groups={"fast"})
-    public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
-        super.testChangePlanChangePlanAlignEOTWithChargeThroughDate();
-    }
-    */
 
     @Override
-    @Test(enabled=true, groups={"fast-disabled"})
+    @Test(enabled=true, groups={"fast"})
     public void testCorrectPhaseAlignmentOnChange() {
         super.testCorrectPhaseAlignmentOnChange();
     }

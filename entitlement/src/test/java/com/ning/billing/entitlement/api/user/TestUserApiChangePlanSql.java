@@ -16,12 +16,13 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import org.testng.annotations.Test;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
-import org.testng.annotations.Test;
 
 public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
 
@@ -32,8 +33,8 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(enabled= true, groups={"stress"})
-    public void stressTest() throws EntitlementBillingApiException {
+    @Test(enabled= false, groups={"stress"})
+    public void stressTest() throws Exception {
         for (int i = 0; i < MAX_STRESS_ITERATIONS; i++) {
             cleanupTest();
             setupTest();

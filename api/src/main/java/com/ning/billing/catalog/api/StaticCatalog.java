@@ -48,10 +48,15 @@ public interface StaticCatalog {
     //
     // Find a phase
     //
-    public abstract PlanPhase findCurrentPhase(String name) throws CatalogApiException;
+    public abstract  PlanPhase findCurrentPhase(String name) throws CatalogApiException;
     
     //
-    // Rules
+    // Find a pricelist
+    //
+    public abstract PriceList findCurrentPricelist(String name) throws CatalogApiException;
+    
+    //
+    //  
     //
 	public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
 			PlanSpecifier to) throws CatalogApiException;
@@ -71,6 +76,4 @@ public interface StaticCatalog {
 
     public abstract boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException;
 
-
-	
 }

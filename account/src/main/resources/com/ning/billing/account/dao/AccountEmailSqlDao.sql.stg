@@ -1,0 +1,85 @@
+group account_emails;
+
+fields(prefix) ::= <<
+    <prefix>id,
+    <prefix>account_id,
+    <prefix>email,
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date
+>>
+
+insertFromTransaction() ::= <<
+    INSERT INTO account_emails(<fields()>)
+    VALUES (:id, :accountId, :email, :userName, :createdDate, :userName, :updatedDate);
+>>
+
+updateFromTransaction() ::= <<
+    UPDATE account_emails
+    SET email = :email, updated_by = :userName, updated_date = :updatedDate
+    WHERE id = :id;
+>>
+
+deleteFromTransaction() ::= <<
+    DELETE FROM account_emails
+    WHERE id = :id;
+>>
+
+addHistoryFromTransaction() ::= <<
+    INSERT INTO account_email_history(record_id, id, account_id, email, change_type, updated_by, date)
+    VALUES (:recordId, :id, :accountId, :email, :changeType, :userName, :updatedDate);
+>>
+
+load() ::= <<
+    SELECT <fields()> FROM account_emails WHERE account_id = :objectId;
+>>
+
+getRecordIds() ::= <<
+    SELECT record_id, id
+    FROM account_emails
+    WHERE account_id = :objectId;
+>>
+
+getMaxHistoryRecordId() ::= <<
+    SELECT MAX(history_record_id)
+    FROM account_email_history;
+>>
+
+getHistoryRecordIds() ::= <<
+    SELECT history_record_id, record_id
+    FROM account_email_history
+    WHERE history_record_id > :maxHistoryRecordId;
+>>
+
+getById() ::= <<
+    SELECT <fields()> FROM account_emails WHERE id = :id;
+>>
+
+get() ::= <<
+    SELECT <fields()> FROM account_emails;
+>>
+
+getByAccountId() ::= <<
+    SELECT <fields()> FROM account_emails WHERE account_id = :accountId;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL, NULL);
+>>
+
+test() ::= <<
+    SELECT 1 FROM account_emails;
+>>

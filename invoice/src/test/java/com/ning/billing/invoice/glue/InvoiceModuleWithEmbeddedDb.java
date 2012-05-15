@@ -16,38 +16,43 @@
 
 package com.ning.billing.invoice.glue;
 
+import static org.testng.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.net.URL;
 
-import com.ning.billing.invoice.api.test.InvoiceTestApi;
+import org.skife.jdbi.v2.IDBI;
+
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.catalog.glue.CatalogModule;
+import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
+import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
 import com.ning.billing.invoice.notification.MockNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.TagStoreModule;
-import org.skife.jdbi.v2.IDBI;
-
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.glue.EntitlementModule;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
-import static org.testng.Assert.assertNotNull;
-
-public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
+public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private IDBI dbi;
 
@@ -80,9 +85,10 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
     }
 
     @Override
-    protected void installNotifier() {
+    protected void installNotifiers() {
         bind(NextBillingDateNotifier.class).to(MockNextBillingDateNotifier.class).asEagerSingleton();
         bind(NextBillingDatePoster.class).to(MockNextBillingDatePoster.class).asEagerSingleton();
+        bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
     }
 
     @Override
@@ -94,20 +100,27 @@ public class InvoiceModuleWithEmbeddedDb extends InvoiceModule {
 
         bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
         bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
-                install(new FieldStoreModule());
+        install(new FieldStoreModule());
         install(new TagStoreModule());
 
         installNotificationQueue();
 //      install(new AccountModule());
         bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
+
+        BillingApi billingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
+        ((ZombieControl) billingApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
+        bind(BillingApi.class).toInstance(billingApi);
+
         install(new CatalogModule());
-        install(new EntitlementModule());
+        install(new MockEntitlementModule());
         install(new GlobalLockerModule());
 
         super.configure();
 
         bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
         install(new BusModule());
+        install(new TemplateModule());
+
     }
 
     private static void loadSystemPropertiesFromClasspath(final String resource) {

@@ -16,12 +16,18 @@
 
 package com.ning.billing.invoice.dao;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.EntityDao;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
+
+import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -36,20 +42,19 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(RecurringInvoiceItemSqlDao.RecurringInvoiceItemMapper.class)
-public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
+public interface RecurringInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
+    @SqlQuery
+    List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
+
     @SqlQuery
     List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
 
@@ -79,7 +84,8 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("accountId", item.getAccountId().toString());
-                        q.bind("subscriptionId", item.getSubscriptionId().toString());
+                        q.bind("bundleId", item.getBundleId() == null ? null : item.getBundleId().toString());
+                        q.bind("subscriptionId", item.getSubscriptionId() == null ? null : item.getSubscriptionId().toString());
                         q.bind("planName", item.getPlanName());
                         q.bind("phaseName", item.getPhaseName());
                         q.bind("startDate", item.getStartDate().toDate());
@@ -94,27 +100,26 @@ public interface RecurringInvoiceItemSqlDao extends EntityDao<InvoiceItem> {
         }
     }
 
-    public static class RecurringInvoiceItemMapper implements ResultSetMapper<InvoiceItem> {
+    public static class RecurringInvoiceItemMapper extends MapperBase implements ResultSetMapper<InvoiceItem> {
         @Override
         public InvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
-            UUID id = UUID.fromString(result.getString("id"));
-            UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
-            UUID accountId = UUID.fromString(result.getString("account_id"));
-            UUID subscriptionId = UUID.fromString(result.getString("subscription_id"));
+            UUID id = getUUID(result, "id");
+            UUID invoiceId = getUUID(result, "invoice_id");
+            UUID accountId = getUUID(result, "account_id");
+            UUID subscriptionId = getUUID(result, "subscription_id");
+            UUID bundleId = getUUID(result, "bundle_id");
             String planName = result.getString("plan_name");
             String phaseName = result.getString("phase_name");
-            DateTime startDate = new DateTime(result.getTimestamp("start_date"));
-            DateTime endDate = new DateTime(result.getTimestamp("end_date"));
+            DateTime startDate = getDate(result, "start_date");
+            DateTime endDate = getDate(result, "end_date");
             BigDecimal amount = result.getBigDecimal("amount");
             BigDecimal rate = result.getBigDecimal("rate");
             Currency currency = Currency.valueOf(result.getString("currency"));
-            String reversedItemString = result.getString("reversed_item_id");
-            UUID reversedItemId = (reversedItemString == null) ? null : UUID.fromString(reversedItemString);
-            String createdBy = result.getString("created_by");
-            DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
+            UUID reversedItemId = getUUID(result, "reversed_item_id");
 
-            return new RecurringInvoiceItem(id, invoiceId, accountId, subscriptionId, planName, phaseName, startDate, endDate,
-                    amount, rate, currency, reversedItemId, createdBy, createdDate);
+            return new RecurringInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
+                    amount, rate, currency, reversedItemId);
+
         }
     }
 }

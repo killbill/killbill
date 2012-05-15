@@ -16,6 +16,22 @@
 
 package com.ning.billing.util.bus;
 
-public interface BusEvent {
+import java.util.UUID;
 
+public interface BusEvent {
+	
+	public enum BusEventType {
+		ACCOUNT_CREATE,
+		ACCOUNT_CHANGE,
+		SUBSCRIPTION_TRANSITION,
+		BUNDLE_REPAIR,
+		INVOICE_EMPTY,
+		INVOICE_CREATION,
+		PAYMENT_INFO,
+		PAYMENT_ERROR
+	}
+
+	public BusEventType getBusEventType();
+	
+	public UUID getUserToken();
 }

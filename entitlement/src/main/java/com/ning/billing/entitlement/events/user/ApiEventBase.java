@@ -17,7 +17,6 @@
 package com.ning.billing.entitlement.events.user;
 
 import com.ning.billing.entitlement.events.EventBase;
-import org.joda.time.DateTime;
 
 import java.util.UUID;
 
@@ -28,6 +27,7 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     private final String eventPlan;
     private final String eventPlanPhase;
     private final String eventPriceList;
+    private final UUID userToken;
     private final boolean fromDisk;
 
     public ApiEventBase(ApiEventBuilder builder) {
@@ -37,27 +37,8 @@ public class ApiEventBase extends EventBase implements ApiEvent {
         this.eventPlan = builder.getEventPlan();
         this.eventPlanPhase = builder.getEventPlanPhase();
         this.fromDisk = builder.isFromDisk();
+        this.userToken = builder.getUserToken();
     }
-
-/*
-    public ApiEventBase(UUID subscriptionId, DateTime bundleStartDate, DateTime processed, String planName, String phaseName,
-            String priceList, DateTime requestedDate,  ApiEventType eventType, DateTime effectiveDate, long activeVersion) {
-        super(subscriptionId, requestedDate, effectiveDate, processed, activeVersion, true);
-        this.eventType = eventType;
-        this.eventPriceList = priceList;
-        this.eventPlan = planName;
-        this.eventPlanPhase = phaseName;
-    }
-
-    public ApiEventBase(UUID subscriptionId, DateTime bundleStartDate, DateTime processed,
-            DateTime requestedDate,  ApiEventType eventType, DateTime effectiveDate, long activeVersion) {
-        super(subscriptionId, requestedDate, effectiveDate, processed, activeVersion, true);
-        this.eventType = eventType;
-        this.eventPriceList = null;
-        this.eventPlan = null;
-        this.eventPlanPhase = null;
-    }
-*/
 
     @Override
     public ApiEventType getEventType() {
@@ -83,6 +64,12 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     public String getPriceList() {
         return eventPriceList;
     }
+    
+	@Override
+	public UUID getUserToken() {
+		return userToken;
+	}
+
 
     @Override
     public boolean isFromDisk() {
@@ -105,6 +92,7 @@ public class ApiEventBase extends EventBase implements ApiEvent {
                 + ", getActiveVersion()=" + getActiveVersion()
                 + ", getProcessedDate()=" + getProcessedDate()
                 + ", getSubscriptionId()=" + getSubscriptionId()
+                + ", evetnToken()=" + getUserToken()
                 + ", isActive()=" + isActive() + "]";
     }
 }

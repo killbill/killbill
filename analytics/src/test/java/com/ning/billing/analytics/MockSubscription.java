@@ -16,24 +16,28 @@
 
 package com.ning.billing.analytics;
 
+import java.util.List;
+import java.util.UUID;
+
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.ControlTagType;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
-
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-
-import java.util.List;
-import java.util.UUID;
 
 public class MockSubscription implements Subscription
 {
@@ -53,13 +57,13 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public void cancel(DateTime requestedDate, boolean eot, CallContext context)
+    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void changePlan(final String productName, final BillingPeriod term, final String planSet, DateTime requestedDate, CallContext context)
+    public boolean changePlan(final String productName, final BillingPeriod term, final String planSet, DateTime requestedDate, CallContext context)
     {
         throw new UnsupportedOperationException();
     }
@@ -68,16 +72,6 @@ public class MockSubscription implements Subscription
     public UUID getId()
     {
         return ID;
-    }
-
-    @Override
-    public String getCreatedBy() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DateTime getCreatedDate() {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -112,13 +106,13 @@ public class MockSubscription implements Subscription
 
 
     @Override
-    public void uncancel(CallContext context) throws EntitlementUserApiException
+    public boolean uncancel(CallContext context) throws EntitlementUserApiException
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String getCurrentPriceList()
+    public PriceList getCurrentPriceList()
     {
         return null;
     }
@@ -129,7 +123,7 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public SubscriptionTransition getPendingTransition() {
+    public SubscriptionEvent getPendingTransition() {
         throw new UnsupportedOperationException();
     }
 
@@ -144,7 +138,7 @@ public class MockSubscription implements Subscription
 	}
 
     @Override
-    public SubscriptionTransition getPreviousTransition() {
+    public SubscriptionEvent getPreviousTransition() {
         return null;
     }
 
@@ -154,7 +148,7 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public void recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
+    public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
             throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
     }
@@ -200,7 +194,7 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public String getObjectName() {
+    public ObjectType getObjectType() {
         throw new UnsupportedOperationException();
     }
 
@@ -210,7 +204,12 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public boolean hasTag(String tagName) {
+    public boolean hasTag(TagDefinition tagDefinition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasTag(ControlTagType controlTagType) {
         throw new UnsupportedOperationException();
     }
 
@@ -221,6 +220,11 @@ public class MockSubscription implements Subscription
 
     @Override
     public void addTags(List<Tag> tags) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
         throw new UnsupportedOperationException();
     }
 
@@ -243,4 +247,15 @@ public class MockSubscription implements Subscription
     public boolean processPayment() {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public List<SubscriptionEvent> getBillingTransitions() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BlockingState getBlockingState() {
+        throw new UnsupportedOperationException();
+    }
+
 }

@@ -16,11 +16,9 @@
 
 package com.ning.billing.util.tag.dao;
 
-import com.google.inject.Inject;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import java.util.HashMap;
@@ -31,39 +29,27 @@ import java.util.UUID;
 
 public class MockTagDao implements TagDao {
     private Map<UUID, List<Tag>> tagStore = new HashMap<UUID, List<Tag>>();
-    private final Clock clock;
-
-    @Inject
-    public MockTagDao(Clock clock) {
-        this.clock = clock;
-    }
 
     @Override
-    public void saveTagsFromTransaction(final Transmogrifier dao, final UUID objectId, final String objectType,
+    public void saveEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType,
                                         final List<Tag> tags, final CallContext context) {
         tagStore.put(objectId, tags);
     }
 
     @Override
-    public void saveTags(UUID objectId, String objectType, List<Tag> tags, CallContext context) {
-        tagStore.put(objectId, tags);
-    }
-
-    @Override
-    public List<Tag> loadTags(UUID objectId, String objectType) {
+    public List<Tag> loadEntities(UUID objectId, ObjectType objectType) {
         return tagStore.get(objectId);
     }
 
     @Override
-    public List<Tag> loadTagsFromTransaction(Transmogrifier dao, UUID objectId, String objectType) {
+    public List<Tag> loadEntitiesFromTransaction(Transmogrifier dao, UUID objectId, ObjectType objectType) {
         return tagStore.get(objectId);
     }
 
     @Override
-    public void addTag(final String tagName, final UUID objectId, final String objectType, final CallContext context) {
+    public void addTag(final String tagName, final UUID objectId, final ObjectType objectType, final CallContext context) {
         Tag tag = new Tag() {
             private UUID id = UUID.randomUUID();
-            private DateTime createdDate = clock.getUTCNow();
 
             @Override
             public String getTagDefinitionName() {
@@ -74,24 +60,13 @@ public class MockTagDao implements TagDao {
             public UUID getId() {
                 return id;
             }
-
-            @Override
-            public String getCreatedBy() {
-                return context.getUserName();
-            }
-
-            @Override
-            public DateTime getCreatedDate() {
-                return createdDate;
-            }
         };
-
 
         tagStore.get(objectId).add(tag);
     }
 
     @Override
-    public void removeTag(String tagName, UUID objectId, String objectType, CallContext context) {
+    public void removeTag(String tagName, UUID objectId, ObjectType objectType, CallContext context) {
         List<Tag> tags = tagStore.get(objectId);
         if (tags != null) {
             Iterator<Tag> tagIterator = tags.iterator();

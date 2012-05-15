@@ -16,20 +16,25 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.util.UUID;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import org.joda.time.DateTime;
 
-import java.util.UUID;
-
-public class SubscriptionTransitionData implements SubscriptionTransition {
+public class SubscriptionTransitionData /* implements SubscriptionEvent */ {
 
 
-    private final long totalOrdering;
+    private final Long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;
     private final UUID eventId;
@@ -38,20 +43,36 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     private final DateTime requestedTransitionTime;
     private final DateTime effectiveTransitionTime;
     private final SubscriptionState previousState;
-    private final String previousPriceList;
+    private final PriceList previousPriceList;
     private final Plan previousPlan;
     private final PlanPhase previousPhase;
     private final SubscriptionState nextState;
-    private final String nextPriceList;
+    private final PriceList nextPriceList;
     private final Plan nextPlan;
     private final PlanPhase nextPhase;
-    private final boolean isFromDisk;
+    private final Boolean isFromDisk;
+    private final Integer remainingEventsForUserOperation;
+    private final UUID userToken;
 
-    public SubscriptionTransitionData(UUID eventId, UUID subscriptionId, UUID bundleId, EventType eventType,
-            ApiEventType apiEventType, DateTime requestedTransitionTime, DateTime effectiveTransitionTime,
-            SubscriptionState previousState, Plan previousPlan, PlanPhase previousPhase, String previousPriceList,
-            SubscriptionState nextState, Plan nextPlan, PlanPhase nextPhase, String nextPriceList,
-            long totalOrdering, boolean isFromDisk) {
+
+    public SubscriptionTransitionData(UUID eventId,
+            UUID subscriptionId,
+            UUID bundleId,
+            EventType eventType,
+            ApiEventType apiEventType,
+            DateTime requestedTransitionTime,
+            DateTime effectiveTransitionTime,
+            SubscriptionState previousState,
+            Plan previousPlan,
+            PlanPhase previousPhase,
+            PriceList previousPriceList,
+            SubscriptionState nextState,
+            Plan nextPlan,
+            PlanPhase nextPhase,
+            PriceList nextPriceList,
+            Long totalOrdering,
+            UUID userToken,
+            Boolean isFromDisk) {
         super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
@@ -70,67 +91,93 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
         this.nextPhase = nextPhase;
         this.totalOrdering = totalOrdering;
         this.isFromDisk = isFromDisk;
+        this.userToken = userToken;
+        this.remainingEventsForUserOperation = 0;
+    }
+    
+    public SubscriptionTransitionData(final SubscriptionTransitionData input, final int remainingEventsForUserOperation) {
+        super();
+        this.eventId = input.getId();
+        this.subscriptionId = input.getSubscriptionId();
+        this.bundleId = input.getBundleId();
+        this.eventType = input.getEventType();
+        this.apiEventType = input.getApiEventType();
+        this.requestedTransitionTime = input.getRequestedTransitionTime();
+        this.effectiveTransitionTime = input.getEffectiveTransitionTime();
+        this.previousState = input.getPreviousState();
+        this.previousPriceList = input.getPreviousPriceList();
+        this.previousPlan = input.getPreviousPlan();
+        this.previousPhase = input.getPreviousPhase();
+        this.nextState = input.getNextState();
+        this.nextPlan = input.getNextPlan();
+        this.nextPriceList = input.getNextPriceList();
+        this.nextPhase = input.getNextPhase();
+        this.totalOrdering = input.getTotalOrdering();
+        this.isFromDisk = input.isFromDisk();
+        this.userToken = input.getUserToken();
+        this.remainingEventsForUserOperation = remainingEventsForUserOperation;
     }
 
-    @Override
+
     public UUID getId() {
         return eventId;
     }
 
-    @Override
     public UUID getSubscriptionId() {
         return subscriptionId;
     }
 
-    @Override
     public UUID getBundleId() {
         return bundleId;
     }
 
-
-    @Override
     public SubscriptionState getPreviousState() {
         return previousState;
     }
 
-    @Override
     public Plan getPreviousPlan() {
         return previousPlan;
     }
 
-    @Override
     public PlanPhase getPreviousPhase() {
         return previousPhase;
     }
 
-    @Override
     public Plan getNextPlan() {
         return nextPlan;
     }
 
-    @Override
     public PlanPhase getNextPhase() {
         return nextPhase;
     }
 
-    @Override
     public SubscriptionState getNextState() {
         return nextState;
     }
 
 
-    @Override
-    public String getPreviousPriceList() {
+    public PriceList getPreviousPriceList() {
         return previousPriceList;
     }
 
-    @Override
-    public String getNextPriceList() {
+    public PriceList getNextPriceList() {
         return nextPriceList;
     }
+    
+	public UUID getUserToken() {
+		return userToken;
+	}
+	
+	public Integer getRemainingEventsForUserOperation() {
+		return remainingEventsForUserOperation;
+	}
 
-    @Override
+
     public SubscriptionTransitionType getTransitionType() {
+        return toSubscriptionTransitionType(eventType, apiEventType);
+    }
+    
+    public static SubscriptionTransitionType toSubscriptionTransitionType(EventType eventType, ApiEventType apiEventType) {
         switch(eventType) {
         case API_USER:
             return apiEventType.getSubscriptionTransitionType();
@@ -141,21 +188,20 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
         }
     }
 
-    @Override
     public DateTime getRequestedTransitionTime() {
         return requestedTransitionTime;
     }
 
-    @Override
     public DateTime getEffectiveTransitionTime() {
         return effectiveTransitionTime;
     }
 
-    public long getTotalOrdering() {
+
+    public Long getTotalOrdering() {
         return totalOrdering;
     }
 
-    public boolean isFromDisk() {
+    public Boolean isFromDisk() {
         return isFromDisk;
     }
 
@@ -166,7 +212,6 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
     public EventType getEventType() {
         return eventType;
     }
-
 
 
     @Override
@@ -185,5 +230,4 @@ public class SubscriptionTransitionData implements SubscriptionTransition {
             + ", nextPriceList " + nextPriceList
             + ", nextPhase=" + ((nextPhase != null) ? nextPhase.getName() : null) + "]";
     }
-
 }

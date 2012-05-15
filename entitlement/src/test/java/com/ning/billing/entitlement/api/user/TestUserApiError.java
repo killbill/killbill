@@ -16,28 +16,31 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+import org.joda.time.Interval;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.TestApiBase;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 import com.ning.billing.util.clock.DefaultClock;
-import org.joda.time.DateTime;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-import javax.annotation.Nullable;
-import java.util.UUID;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
 
 public class TestUserApiError extends TestApiBase {
 
@@ -50,6 +53,9 @@ public class TestUserApiError extends TestApiBase {
 
     @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionBadCatalog() {
+        
+        log.info("Starting testCreateSubscriptionBadCatalog");
+        
         // WRONG PRODUCTS
         tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NULL_PRODUCT_NAME);
         tCreateSubscriptionInternal(bundle.getId(), "Whatever", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
@@ -66,16 +72,19 @@ public class TestUserApiError extends TestApiBase {
 
     @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionNoBundle() {
+        log.info("Starting testCreateSubscriptionNoBundle");
         tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BUNDLE);
     }
 
     @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionNoBP() {
+        log.info("Starting testCreateSubscriptionNoBP");
         tCreateSubscriptionInternal(bundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_NO_BP);
     }
 
     @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionBPExists() {
+        log.info("Starting testCreateSubscriptionBPExists");
         try {
             createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
             tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_BP_EXISTS);
@@ -87,6 +96,7 @@ public class TestUserApiError extends TestApiBase {
 
     @Test(enabled=true, groups={"fast"})
     public void testRecreateSubscriptionBPNotCancelled() {
+        log.info("Starting testRecreateSubscriptionBPNotCancelled");
         try {
             SubscriptionData subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
             try {
@@ -103,10 +113,11 @@ public class TestUserApiError extends TestApiBase {
 
     @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionAddOnNotAvailable() {
+        log.info("Starting testCreateSubscriptionAddOnNotAvailable");
         try {
             UUID accountId = UUID.randomUUID();
             SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", context);
-            createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE);
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,10 +127,11 @@ public class TestUserApiError extends TestApiBase {
 
     @Test(enabled=true, groups={"fast"})
     public void testCreateSubscriptionAddOnIncluded() {
+        log.info("Starting testCreateSubscriptionAddOnIncluded");
         try {
             UUID accountId = UUID.randomUUID();
             SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", context);
-            createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED);
         } catch (Exception e) {
             e.printStackTrace();
@@ -148,6 +160,7 @@ public class TestUserApiError extends TestApiBase {
 
     @Test(enabled=true, groups={"fast"})
     public void testChangeSubscriptionNonActive() {
+        log.info("Starting testChangeSubscriptionNonActive");
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
@@ -172,6 +185,7 @@ public class TestUserApiError extends TestApiBase {
 
     @Test(enabled=true, groups={"fast"})
     public void testChangeSubscriptionFutureCancelled() {
+        log.info("Starting testChangeSubscriptionFutureCancelled");
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
             PlanPhase trialPhase = subscription.getCurrentPhase();
@@ -179,8 +193,9 @@ public class TestUserApiError extends TestApiBase {
             // MOVE TO NEXT PHASE
             PlanPhase currentPhase = subscription.getCurrentPhase();
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(currentPhase.getDuration(), DAY_IN_MS);
-            assertTrue(testListener.isCompleted(3000));
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
 
             // SET CTD TO CANCEL IN FUTURE
@@ -202,6 +217,8 @@ public class TestUserApiError extends TestApiBase {
                     assertFalse(true);
                 }
             }
+            
+            assertListenerStatus();
         } catch (Exception e) {
             e.printStackTrace();
             Assert.assertFalse(true);
@@ -211,10 +228,12 @@ public class TestUserApiError extends TestApiBase {
 
     @Test(enabled=false, groups={"fast"})
     public void testCancelBadState() {
+        log.info("Starting testCancelBadState");
     }
 
     @Test(enabled=true, groups={"fast"})
     public void testUncancelBadState() {
+        log.info("Starting testUncancelBadState");
         try {
             Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
@@ -228,7 +247,7 @@ public class TestUserApiError extends TestApiBase {
                     assertFalse(true);
                 }
             }
-
+            assertListenerStatus();
         } catch (Exception e) {
             e.printStackTrace();
             Assert.assertFalse(true);

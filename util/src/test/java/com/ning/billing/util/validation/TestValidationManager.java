@@ -67,7 +67,9 @@ public class TestValidationManager {
     }
 
     private void stopDatabase() {
-        helper.stopMysql();
+        if (helper != null) {
+            helper.stopMysql();
+        }
     }
 
     @Test(groups = "slow")

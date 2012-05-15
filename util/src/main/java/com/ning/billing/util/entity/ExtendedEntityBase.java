@@ -21,32 +21,34 @@ import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.Customizable;
 import com.ning.billing.util.customfield.DefaultFieldStore;
 import com.ning.billing.util.customfield.FieldStore;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DefaultTagStore;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.TagStore;
 import com.ning.billing.util.tag.Taggable;
-import org.joda.time.DateTime;
 
-import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public abstract class ExtendedEntityBase extends EntityBase implements Customizable, Taggable {
     protected final FieldStore fields;
-    protected final TagStore tags;
+    protected final TagStore tagStore;
 
     public ExtendedEntityBase() {
         super();
-        this.fields = DefaultFieldStore.create(getId(), getObjectName());
-        this.tags = new DefaultTagStore(id, getObjectName());
+        this.fields = DefaultFieldStore.create(getId(), getObjectType());
+        this.tagStore = new DefaultTagStore(id, getObjectType());
     }
 
-    public ExtendedEntityBase(final UUID id, @Nullable final String createdBy, @Nullable final DateTime createdDate) {
-        super(id, createdBy, createdDate);
-        this.fields = DefaultFieldStore.create(getId(), getObjectName());
-        this.tags = new DefaultTagStore(id, getObjectName());
+    public ExtendedEntityBase(final UUID id) {
+        super(id);
+        this.fields = DefaultFieldStore.create(getId(), getObjectType());
+        this.tagStore = new DefaultTagStore(id, getObjectType());
     }
 
     @Override
@@ -78,49 +80,71 @@ public abstract class ExtendedEntityBase extends EntityBase implements Customiza
 
     @Override
 	public List<Tag> getTagList() {
-		return tags.getEntityList();
+		return tagStore.getEntityList();
 	}
 
 	@Override
-	public boolean hasTag(final String tagName) {
-		return tags.containsTag(tagName);
+	public boolean hasTag(final TagDefinition tagDefinition) {
+		return tagStore.containsTagForDefinition(tagDefinition);
 	}
+
+    @Override
+    public boolean hasTag(ControlTagType controlTagType) {
+        return tagStore.containsTagForControlTagType(controlTagType);
+    }
 
 	@Override
 	public void addTag(final TagDefinition definition) {
 		Tag tag = new DescriptiveTag(definition);
-		tags.add(tag) ;
+		tagStore.add(tag) ;
 	}
 
+    @Override
+    public void addTags(final List<Tag> tags) {
+        this.tagStore.add(tags);
+    }
+
 	@Override
-	public void addTags(final List<Tag> tags) {
-		if (tags != null) {
-			this.tags.add(tags);
+	public void addTagsFromDefinitions(final List<TagDefinition> tagDefinitions) {
+		if (tagStore != null) {
+            List<Tag> tags = new ArrayList<Tag>();
+            if (tagDefinitions != null) {
+                for (TagDefinition tagDefinition : tagDefinitions) {
+                    try {
+                        ControlTagType controlTagType = ControlTagType.valueOf(tagDefinition.getName());
+                        tags.add(new DefaultControlTag(controlTagType));
+                    } catch (IllegalArgumentException ex) {
+                        tags.add(new DescriptiveTag(tagDefinition));
+                    }
+                }
+            }
+
+			this.tagStore.add(tags);
 		}
 	}
 
 	@Override
 	public void clearTags() {
-		this.tags.clear();
+		this.tagStore.clear();
 	}
 
 	@Override
-	public void removeTag(final TagDefinition definition) {
-		tags.remove(definition.getName());
+	public void removeTag(final TagDefinition tagDefinition) {
+		tagStore.remove(tagDefinition);
 	}
 
 	@Override
 	public boolean generateInvoice() {
-		return tags.generateInvoice();
+		return tagStore.generateInvoice();
 	}
 
 	@Override
 	public boolean processPayment() {
-		return tags.processPayment();
+		return tagStore.processPayment();
 	}
 
     @Override
-    public abstract String getObjectName();
+    public abstract ObjectType getObjectType();
 
     @Override
     public abstract void saveFieldValue(String fieldName, String fieldValue, CallContext context);

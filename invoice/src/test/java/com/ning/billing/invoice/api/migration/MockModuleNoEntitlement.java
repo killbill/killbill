@@ -16,43 +16,46 @@
 
 package com.ning.billing.invoice.api.migration;
 
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.invoice.MockModule;
-import com.ning.billing.invoice.glue.InvoiceModule;
-import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
-import com.ning.billing.invoice.notification.DefaultNextBillingDatePoster;
+import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.util.email.templates.TemplateModule;
 
 public class MockModuleNoEntitlement extends MockModule {
-
-	@Override
-	protected void installEntitlementModule() {
-		EntitlementBillingApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
-		((ZombieControl)entitlementApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
-		bind(EntitlementBillingApi.class).toInstance(entitlementApi);
-		bind(EntitlementDao.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementDao.class));
-
-	}
+//	@Override
+//	protected void installEntitlementModule() {
+//		BillingApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
+//        ((ZombieControl)entitlementApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
+//        ((ZombieControl)entitlementApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", BrainDeadProxyFactory.ZOMBIE_VOID);
+//		//bind(BillingApi.class).toInstance(entitlementApi);
+////        bind(EntitlementUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class));
+//        ChargeThruApi cta = BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class);
+//        bind(ChargeThruApi.class).toInstance(cta);
+//        ((ZombieControl)cta).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
+//	}
 
 	@Override
 	protected void installInvoiceModule() {
-		install(new InvoiceModule(){
+		install(new DefaultInvoiceModule(){
 
 			@Override
-			protected void installNotifier() {
+			protected void installNotifiers() {
 				 bind(NextBillingDateNotifier.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(NextBillingDateNotifier.class));
 				 NextBillingDatePoster poster = BrainDeadProxyFactory.createBrainDeadProxyFor(NextBillingDatePoster.class);
 				 ((ZombieControl)poster).addResult("insertNextBillingNotification",BrainDeadProxyFactory.ZOMBIE_VOID);
 			     bind(NextBillingDatePoster.class).toInstance(poster);
+                bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
 			}
 			
 			
 		});
-		
+        install(new TemplateModule());
+
 		
 	}
 

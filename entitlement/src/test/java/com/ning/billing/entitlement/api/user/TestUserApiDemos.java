@@ -16,31 +16,34 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
-
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.TestApiBase;
-
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
-import com.ning.billing.entitlement.glue.MockEngineModuleSql;
-import com.ning.billing.util.clock.DefaultClock;
-import org.joda.time.DateTime;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.testng.Assert.*;
+import org.joda.time.DateTime;
+import org.joda.time.Interval;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
+import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
+import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestUserApiDemos extends TestApiBase {
 
@@ -67,6 +70,7 @@ public class TestUserApiDemos extends TestApiBase {
     @Test(enabled=true, groups="demos")
     public void testDemo1() throws EntitlementBillingApiException {
 
+        log.info("Starting testSubscriptionWithAddOn");
         try {
             System.out.println("DEMO 1 START");
 
@@ -80,14 +84,15 @@ public class TestUserApiDemos extends TestApiBase {
             /* STEP 2. CHANGE PLAN WHILE IN TRIAL */
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
-            assertTrue(testListener.isCompleted(3000));
+            assertTrue(testListener.isCompleted(5000));
 
             displayState(subscription.getId(), "STEP 2. CHANGED PLAN WHILE IN TRIAL");
 
             /* STEP 3. MOVE TO DISCOUNT PHASE */
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.setDeltaFromReality(trialPhase.getDuration(), DAY_IN_MS);
-            assertTrue(testListener.isCompleted(3000));
+            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
             displayState(subscription.getId(), "STEP 3. MOVE TO DISCOUNT PHASE");
 
@@ -101,25 +106,28 @@ public class TestUserApiDemos extends TestApiBase {
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
+            testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
-            assertFalse(testListener.isCompleted(2000));
+            assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
             displayState(subscription.getId(), "STEP 4. SET CTD AND CHANGE PLAN EOT (Shotgun)");
 
             /* STEP 5. CHANGE AGAIN */
+            testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
-            assertFalse(testListener.isCompleted(2000));
+            assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
             displayState(subscription.getId(), "STEP 5. CHANGE AGAIN EOT (Pistol)");
 
             /* STEP 6. MOVE TO EOT AND CHECK CHANGE OCCURED */
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            clock.addDeltaFromReality(ctd);
-            assertTrue(testListener.isCompleted(2000));
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
+            clock.addDeltaFromReality(it.toDurationMillis());
+            assertTrue(testListener.isCompleted(5000));
 
             Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
@@ -135,7 +143,8 @@ public class TestUserApiDemos extends TestApiBase {
 
             /* STEP 7.  MOVE TO NEXT PHASE */
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            clock.addDeltaFromReality(currentPhase.getDuration());
+            it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(6));
+            clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
@@ -157,6 +166,7 @@ public class TestUserApiDemos extends TestApiBase {
 
             displayState(subscription.getId(), "STEP 8.  CANCELLATION");
 
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -168,29 +178,33 @@ public class TestUserApiDemos extends TestApiBase {
 
         System.out.println("");
         System.out.println("******\t STEP " + stepMsg + " **************");
+        try {
+            SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscriptionId);
 
-        SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscriptionId);
 
+            Plan currentPlan = subscription.getCurrentPlan();
+            PlanPhase currentPhase = subscription.getCurrentPhase();
+            String priceList = subscription.getCurrentPriceList().getName();
 
-        Plan currentPlan = subscription.getCurrentPlan();
-        PlanPhase currentPhase = subscription.getCurrentPhase();
-        String priceList = subscription.getCurrentPriceList();
-        System.out.println("");
-        System.out.println("\t CURRENT TIME = " + clock.getUTCNow());
-        System.out.println("");
-        System.out.println("\t CURRENT STATE = " +  subscription.getState());
-        System.out.println("\t CURRENT PRODUCT = " +  ((currentPlan == null) ? "NONE" : currentPlan.getProduct().getName()));
-        System.out.println("\t CURRENT TERM = " +  ((currentPlan == null) ? "NONE" : currentPlan.getBillingPeriod().toString()));
-        System.out.println("\t CURRENT PHASE = " +  ((currentPhase == null) ? "NONE" : currentPhase.getPhaseType()));
-        System.out.println("\t CURRENT PRICE LIST = " + ((priceList == null) ? "NONE" : priceList));
-        System.out.println("\t CURRENT \'SLUG\' = " +  ((currentPhase == null) ? "NONE" : currentPhase.getName()));
+            System.out.println("");
+            System.out.println("\t CURRENT TIME = " + clock.getUTCNow());
+            System.out.println("");
+            System.out.println("\t CURRENT STATE = " +  subscription.getState());
+            System.out.println("\t CURRENT PRODUCT = " +  ((currentPlan == null) ? "NONE" : currentPlan.getProduct().getName()));
+            System.out.println("\t CURRENT TERM = " +  ((currentPlan == null) ? "NONE" : currentPlan.getBillingPeriod().toString()));
+            System.out.println("\t CURRENT PHASE = " +  ((currentPhase == null) ? "NONE" : currentPhase.getPhaseType()));
+            System.out.println("\t CURRENT PRICE LIST = " + ((priceList == null) ? "NONE" : priceList));
+            System.out.println("\t CURRENT \'SLUG\' = " +  ((currentPhase == null) ? "NONE" : currentPhase.getName()));
 
+        } catch (EntitlementUserApiException e) {
+            System.out.println("No subscription found for id:"  + subscriptionId );
+        }
         System.out.println("");
 
     }
 
     @Test(enabled= true, groups={"stress"})
-    public void stressTest() throws EntitlementBillingApiException {
+    public void stressTest() throws Exception {
         for (int i = 0; i < 100; i++) {
             cleanupTest();
             setupTest();

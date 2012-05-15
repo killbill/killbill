@@ -17,7 +17,9 @@
 package com.ning.billing.util.tag.api;
 
 import java.util.List;
+import java.util.UUID;
 
+import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -46,8 +48,8 @@ public class DefaultTagDefinitionUserApi implements TagUserApi {
     }
 
     @Override
-    public TagDefinition create(final String name, final String description, final CallContext context) throws TagDefinitionApiException {
-        return dao.create(name, description, context);
+    public TagDefinition create(final String definitionName, final String description, final CallContext context) throws TagDefinitionApiException {
+        return dao.create(definitionName, description, context);
     }
 
     @Override
@@ -68,24 +70,44 @@ public class DefaultTagDefinitionUserApi implements TagUserApi {
 	}
 
     @Override
-    public Tag createControlTag(String controlTagName) throws TagDefinitionApiException {
-        ControlTagType type = null;
-        for(ControlTagType t : ControlTagType.values()) {
-            if(t.toString().equals(controlTagName)) {
-                type = t;
-            }
-        }
-        
-        if(type == null) {
-            throw new TagDefinitionApiException(ErrorCode.CONTROL_TAG_DOES_NOT_EXIST, controlTagName);
-        }
-        return new DefaultControlTag(type);
+    public List<Tag> createControlTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    public Tag createDescriptiveTag(String tagDefinitionName) throws TagDefinitionApiException {
-        TagDefinition tagDefinition = getTagDefinition(tagDefinitionName);
-        
-        return new DescriptiveTag(tagDefinition);
+    public Tag createControlTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    @Override
+    public List<Tag> createDescriptiveTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Tag createDescriptiveTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+//    @Override
+//    public Tag createControlTags(String controlTagName) throws TagDefinitionApiException {
+//        ControlTagType type = null;
+//        for(ControlTagType t : ControlTagType.values()) {
+//            if(t.toString().equals(controlTagName)) {
+//                type = t;
+//            }
+//        }
+//
+//        if(type == null) {
+//            throw new TagDefinitionApiException(ErrorCode.CONTROL_TAG_DOES_NOT_EXIST, controlTagName);
+//        }
+//        return new DefaultControlTag(type);
+//    }
+//
+//    @Override
+//    public Tag createDescriptiveTags(List) throws TagDefinitionApiException {
+//        TagDefinition tagDefinition = getTagDefinition(tagDefinitionName);
+//
+//        return new DescriptiveTag(tagDefinition);
+//    }
 }

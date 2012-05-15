@@ -23,11 +23,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.invoice.tests.InvoicingTestBase;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -48,29 +44,35 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
-import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.TestInvoiceDispatcher;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
 @Guice(modules = {MockModuleNoEntitlement.class})
-public class TestDefaultInvoiceMigrationApi {
+public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
 	Logger log = LoggerFactory.getLogger(TestDefaultInvoiceMigrationApi.class);
 
 	@Inject
@@ -94,8 +96,9 @@ public class TestDefaultInvoiceMigrationApi {
 
 	@Inject
 	private InvoiceMigrationApi migrationApi;
-
-
+	
+	@Inject
+	private BillingApi billingApi;
 
 	private UUID accountId ;
 	private UUID subscriptionId ;
@@ -110,7 +113,7 @@ public class TestDefaultInvoiceMigrationApi {
 
     private final Clock clock = new ClockMock();
 
-	@BeforeClass(alwaysRun = true)
+	@BeforeClass(groups={"slow"})
 	public void setup() throws Exception
 	{
 		log.info("Starting set up");
@@ -129,11 +132,13 @@ public class TestDefaultInvoiceMigrationApi {
 
 		busService.getBus().start();
 
+        ((ZombieControl)billingApi).addResult("setChargedThroughDate", BrainDeadProxyFactory.ZOMBIE_VOID);
 		migrationInvoiceId = createAndCheckMigrationInvoice();
 		regularInvoiceId = generateRegularInvoice();
+
 	}
 
-	@AfterClass(alwaysRun = true)
+	@AfterClass(groups={"slow"})
 	public void tearDown() {
 		try {
 			((DefaultBusService) busService).stopBus();
@@ -169,23 +174,26 @@ public class TestDefaultInvoiceMigrationApi {
 		((ZombieControl)accountUserApi).addResult("getAccountById", account);
 		((ZombieControl)account).addResult("getCurrency", Currency.USD);
 		((ZombieControl)account).addResult("getId", accountId);
+        ((ZombieControl)account).addResult("isNotifiedForInvoices", true);
 
 		Subscription subscription =  BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-		((ZombieControl)subscription).addResult("getId", subscriptionId);
+        ((ZombieControl)subscription).addResult("getId", subscriptionId);
+        ((ZombieControl)subscription).addResult("getBundleId", new UUID(0L,0L));
 		SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
 		Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
 		PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();
 		DateTime effectiveDate = new DateTime().minusDays(1);
 		Currency currency = Currency.USD;
 		BigDecimal fixedPrice = null;
-		events.add(new DefaultBillingEvent(subscription, effectiveDate,plan, planPhase,
-				fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
-				BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
+		events.add(createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
+                fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
+                BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-		EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
-		((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccount", events);
+		((ZombieControl)billingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
 
-		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);
+        InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
+		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi,
+                                                             invoiceDao, invoiceNotifier, locker, busService.getBus(), clock);
 
         CallContext context = new DefaultCallContextFactory(clock).createCallContext("Migration test", CallOrigin.TEST, UserType.TEST);
 		Invoice invoice = dispatcher.processAccount(accountId, date_regular, true, context);
@@ -204,7 +212,7 @@ public class TestDefaultInvoiceMigrationApi {
 	}
 
 	// Check migration invoice is NOT returned for all user api invoice calls
-	@Test(groups={"slow"},enabled=true)
+	@Test(groups={"slow"}, enabled=true)
 	public void testUserApiAccess(){
 		List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId);
 		Assert.assertEquals(byAccount.size(),1);
@@ -231,7 +239,7 @@ public class TestDefaultInvoiceMigrationApi {
 	}
 
 
-	// Account balance should reflect total of migration and non-migration invoices
+	// ACCOUNT balance should reflect total of migration and non-migration invoices
 	@Test(groups={"slow"},enabled=true)
 	public void testBalance(){
 		Invoice migrationInvoice = invoiceDao.getById(migrationInvoiceId);
@@ -239,7 +247,7 @@ public class TestDefaultInvoiceMigrationApi {
 		BigDecimal balanceOfAllInvoices = migrationInvoice.getBalance().add(regularInvoice.getBalance());
 
 		BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId);
-		System.out.println("Account balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);
+		System.out.println("ACCOUNT balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);
 		Assert.assertEquals(accountBalance.compareTo(balanceOfAllInvoices), 0);
 
 

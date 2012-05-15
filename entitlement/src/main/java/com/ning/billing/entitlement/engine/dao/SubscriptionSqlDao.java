@@ -19,7 +19,8 @@ package com.ning.billing.entitlement.engine.dao;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.BinderBase;
@@ -45,7 +46,7 @@ import java.util.List;
 import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
-public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, CloseMe, Transmogrifier {
+public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, AuditSqlDao, CloseMe, Transmogrifier {
 	@SqlUpdate
     public void insertSubscription(@Bind(binder = SubscriptionBinder.class) SubscriptionData sub,
                                    @CallContextBinder final CallContext context);
@@ -56,24 +57,32 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
 
     @SqlQuery
     @Mapper(SubscriptionMapper.class)
-    public List<Subscription> getSubscriptionsFromBundleId(@Bind("bundle_id") String bundleId);
+    public List<Subscription> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId);
 
     @SqlUpdate
-    public void updateSubscription(@Bind("id") String id, @Bind("active_version") long activeVersion,
-                                   @Bind("ctd_dt") Date ctd, @Bind("ptd_dt") Date ptd,
-                                   @CallContextBinder final CallContext context);
-   
+    public void updateChargedThroughDate(@Bind("id") String id, @Bind("chargedThroughDate") Date chargedThroughDate,
+                                        @CallContextBinder final CallContext context);
+
+    @SqlUpdate void updateActiveVersion(@Bind("id") String id, @Bind("activeVersion") long activeVersion,
+            @CallContextBinder final CallContext context);
+    
+    @SqlUpdate
+    public void updateForRepair(@Bind("id") String id, @Bind("activeVersion") long activeVersion,
+            @Bind("startDate") Date startDate,
+            @Bind("bundleStartDate") Date bundleStartDate,
+            @CallContextBinder final CallContext context);
+
     public static class SubscriptionBinder extends BinderBase implements Binder<Bind, SubscriptionData> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, SubscriptionData sub) {
             stmt.bind("id", sub.getId().toString());
-            stmt.bind("bundle_id", sub.getBundleId().toString());
+            stmt.bind("bundleId", sub.getBundleId().toString());
             stmt.bind("category", sub.getCategory().toString());
-            stmt.bind("start_dt", getDate(sub.getStartDate()));
-            stmt.bind("bundle_start_dt", getDate(sub.getBundleStartDate()));
-            stmt.bind("active_version", sub.getActiveVersion());
-            stmt.bind("ctd_dt", getDate(sub.getChargedThroughDate()));
-            stmt.bind("ptd_dt", getDate(sub.getPaidThroughDate()));
+            stmt.bind("startDate", getDate(sub.getStartDate()));
+            stmt.bind("bundleStartDate", getDate(sub.getBundleStartDate()));
+            stmt.bind("activeVersion", sub.getActiveVersion());
+            stmt.bind("chargedThroughDate", getDate(sub.getChargedThroughDate()));
+            stmt.bind("paidThroughDate", getDate(sub.getPaidThroughDate()));
         }
     }
 
@@ -85,10 +94,10 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, C
             UUID id = UUID.fromString(r.getString("id"));
             UUID bundleId = UUID.fromString(r.getString("bundle_id"));
             ProductCategory category = ProductCategory.valueOf(r.getString("category"));
-            DateTime bundleStartDate = getDate(r, "bundle_start_dt");
-            DateTime startDate = getDate(r, "start_dt");
-            DateTime ctd = getDate(r, "ctd_dt");
-            DateTime ptd = getDate(r, "ptd_dt");
+            DateTime bundleStartDate = getDate(r, "bundle_start_date");
+            DateTime startDate = getDate(r, "start_date");
+            DateTime ctd = getDate(r, "charged_through_date");
+            DateTime ptd = getDate(r, "paid_through_date");
             long activeVersion = r.getLong("active_version");
 
             return new SubscriptionData(new SubscriptionBuilder()

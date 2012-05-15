@@ -24,9 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountChangeNotification;
-import com.ning.billing.account.api.user.DefaultAccountChangeNotification;
+import com.ning.billing.account.api.AccountChangeEvent;
+import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.bus.Bus;
@@ -34,7 +33,7 @@ import com.ning.billing.util.bus.Bus.EventBusException;
 
 public class MockAccountDao implements AccountDao {
     private final Bus eventBus;
-    private final Map<String, Account> accounts = new ConcurrentHashMap<String, Account>();
+    private final Map<UUID, Account> accounts = new ConcurrentHashMap<UUID, Account>();
 
     @Inject
     public MockAccountDao(Bus eventBus) {
@@ -43,10 +42,10 @@ public class MockAccountDao implements AccountDao {
 
     @Override
     public void create(Account account, CallContext context) {
-        accounts.put(account.getId().toString(), account);
+        accounts.put(account.getId(), account);
 
         try {
-            eventBus.post(new DefaultAccountCreationEvent(account));
+            eventBus.post(new DefaultAccountCreationEvent(account, null));
         }
         catch (EventBusException ex) {
             throw new RuntimeException(ex);
@@ -54,7 +53,7 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public Account getById(String id) {
+    public Account getById(UUID id) {
         return accounts.get(id);
     }
 
@@ -85,9 +84,9 @@ public class MockAccountDao implements AccountDao {
 
     @Override
     public void update(Account account, CallContext context) {
-        Account currentAccount = accounts.put(account.getId().toString(), account);
+        Account currentAccount = accounts.put(account.getId(), account);
 
-        AccountChangeNotification changeEvent = new DefaultAccountChangeNotification(account.getId(), currentAccount, account);
+        AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account);
         if (changeEvent.hasChanges()) {
             try {
                 eventBus.post(changeEvent);

@@ -21,6 +21,7 @@ import com.ning.billing.util.api.TagDefinitionService;
 import com.ning.billing.util.api.TagUserApi;
 
 public class DefaultTagDefinitionService implements TagDefinitionService {
+    
     private static final String TAG_DEFINITION_SERVICE_NAME = "tag-service";
     private final TagUserApi api;
 

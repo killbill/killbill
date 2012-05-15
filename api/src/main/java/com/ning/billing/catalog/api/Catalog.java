@@ -56,6 +56,11 @@ public interface Catalog {
     public abstract PlanPhase findPhase(String name, DateTime requestedDate, DateTime subscriptionStartDate) throws CatalogApiException;
 
     //
+    // Find a priceList
+    //  
+    public abstract PriceList findPriceList(String name, DateTime requestedDate) throws CatalogApiException;
+
+    //
     // Rules
     //
 	public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
@@ -74,7 +79,5 @@ public interface Catalog {
 			PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
 
     public abstract boolean canCreatePlan(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException;
-	
-	
-	
+		
 }

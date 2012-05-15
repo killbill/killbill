@@ -25,11 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import com.google.inject.Injector;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.TestApiBase;
-import com.ning.billing.entitlement.api.ApiTestListener.NextEvent;
 
 public abstract class TestUserApiRecreate extends TestApiBase {
 
@@ -37,9 +36,10 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
 
     protected void testRecreateWithBPCanceledThroughSubscription() {
-        log.info("Starting testRecreateWithBPCanceled");
+        log.info("Starting testRecreateWithBPCanceledThroughSubscription");
         try {
             testCreateAndRecreate(false);
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             log.error("Unexpected exception",e);
             Assert.fail(e.getMessage());
@@ -47,9 +47,10 @@ public abstract class TestUserApiRecreate extends TestApiBase {
     }
 
     protected void testCreateWithBPCanceledFromUserApi() {
-        log.info("Starting testCreateWithBPCanceled");
+        log.info("Starting testCreateWithBPCanceledFromUserApi");
         try {
             testCreateAndRecreate(true);
+            assertListenerStatus();
         } catch (EntitlementUserApiException e) {
             log.error("Unexpected exception",e);
             Assert.fail(e.getMessage());

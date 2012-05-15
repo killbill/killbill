@@ -16,13 +16,20 @@
 
 package com.ning.billing.analytics;
 
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+
+import org.joda.time.DateTime;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -33,12 +40,20 @@ public class TestBusinessSubscriptionEvent
     private PlanPhase phase;
     private Subscription subscription;
 
+    private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
+    private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
+    
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
     {
         product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         plan = new MockPlan("platinum-monthly", product);
         phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
+
+        ((ZombieControl) catalog).addResult("findPlan", plan);
+        ((ZombieControl) catalog).addResult("findPhase", phase);        
+        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);        
+
         subscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
     }
 
@@ -65,29 +80,31 @@ public class TestBusinessSubscriptionEvent
     {
         BusinessSubscriptionEvent event;
 
-        event = BusinessSubscriptionEvent.subscriptionCreated(subscription.getCurrentPlan());
+        DateTime now = new DateTime();
+        
+        event = BusinessSubscriptionEvent.subscriptionCreated(subscription.getCurrentPlan().getName(), catalog, now, now);
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.ADD);
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "ADD_BASE");
 
-        event = BusinessSubscriptionEvent.subscriptionCancelled(subscription.getCurrentPlan());
+        event = BusinessSubscriptionEvent.subscriptionCancelled(subscription.getCurrentPlan().getName(), catalog, now, now);
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.CANCEL);
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "CANCEL_BASE");
 
-        event = BusinessSubscriptionEvent.subscriptionChanged(subscription.getCurrentPlan());
+        event = BusinessSubscriptionEvent.subscriptionChanged(subscription.getCurrentPlan().getName(), catalog, now, now);
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.CHANGE);
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "CHANGE_BASE");
 
-        event = BusinessSubscriptionEvent.subscriptionPhaseChanged(subscription.getCurrentPlan(), subscription.getState());
+        event = BusinessSubscriptionEvent.subscriptionPhaseChanged(subscription.getCurrentPlan().getName(), subscription.getState(), catalog, now, now);
         // The subscription is still active, it's a system change
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CHANGE);
         Assert.assertEquals(event.getCategory(), product.getCategory());
         Assert.assertEquals(event.toString(), "SYSTEM_CHANGE_BASE");
 
         subscription = new MockSubscription(Subscription.SubscriptionState.CANCELLED, plan, phase);
-        event = BusinessSubscriptionEvent.subscriptionPhaseChanged(subscription.getCurrentPlan(), subscription.getState());
+        event = BusinessSubscriptionEvent.subscriptionPhaseChanged(subscription.getCurrentPlan().getName(), subscription.getState(), catalog, now, now);
         // The subscription is cancelled, it's a system cancellation
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL);
         Assert.assertEquals(event.getCategory(), product.getCategory());
@@ -97,7 +114,8 @@ public class TestBusinessSubscriptionEvent
     @Test(groups = "fast")
     public void testEquals() throws Exception
     {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(subscription.getCurrentPlan());
+        DateTime now = new DateTime();
+        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(subscription.getCurrentPlan().getName(), catalog, now, now);
         Assert.assertSame(event, event);
         Assert.assertEquals(event, event);
         Assert.assertTrue(event.equals(event));

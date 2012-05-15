@@ -16,33 +16,14 @@
 
 package com.ning.billing.util.entity;
 
-import org.joda.time.DateTime;
-
 import java.util.UUID;
 
 public abstract class UpdatableEntityBase extends EntityBase implements UpdatableEntity {
-    private final String updatedBy;
-    private final DateTime updatedDate;
-
     public UpdatableEntityBase() {
         super();
-        this.updatedBy = null;
-        this.updatedDate = null;
     }
 
-    public UpdatableEntityBase(UUID id, String createdBy, DateTime createdDate, String updatedBy, DateTime updatedDate) {
-        super(id, createdBy, createdDate);
-        this.updatedBy = updatedBy;
-        this.updatedDate = updatedDate;
-    }
-
-    @Override
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    @Override
-    public DateTime getUpdatedDate() {
-        return updatedDate;
+    public UpdatableEntityBase(UUID id) {
+        super(id);
     }
 }

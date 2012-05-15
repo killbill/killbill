@@ -16,19 +16,65 @@
 
 package com.ning.billing.util.glue;
 
+import org.skife.config.ConfigurationObjectFactory;
+
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
+import com.ning.billing.config.EntitlementConfig;
+import com.ning.billing.config.PersistentQueueConfig;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.bus.PersistentBusConfig;
 import com.ning.billing.util.bus.InMemoryBus;
+import com.ning.billing.util.bus.PersistentBus;
 
 public class BusModule extends AbstractModule {
 
+    private final BusType type;
+    
+    public BusModule() {
+        super();
+        type = BusType.PERSISTENT;        
+    }
+
+    public BusModule(BusType type) {
+        super();
+        this.type = type;
+    }
+
+    public enum BusType {
+        MEMORY,
+        PERSISTENT
+    }
+    
     @Override
     protected void configure() {
         bind(BusService.class).to(DefaultBusService.class);
-        bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
-
+        switch(type) {
+        case MEMORY:
+            configureInMemoryEventBus();
+            break;
+        case PERSISTENT:
+            configurePersistentEventBus();
+            break;
+        default:
+            new RuntimeException("Unrecognized EventBus type " + type);
+        }
+        
     }
 
+    protected void configurePersistentBusConfig() {
+        final PersistentBusConfig config = new ConfigurationObjectFactory(System.getProperties()).build(PersistentBusConfig.class);
+        bind(PersistentBusConfig.class).toInstance(config);
+    }
+    
+    private void configurePersistentEventBus() {
+        configurePersistentBusConfig();        
+        bind(Bus.class).to(PersistentBus.class).asEagerSingleton();
+    }
+    
+    private void configureInMemoryEventBus() {
+        bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
+    }
 }

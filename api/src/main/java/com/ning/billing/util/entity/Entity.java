@@ -16,12 +16,8 @@
 
 package com.ning.billing.util.entity;
 
-import org.joda.time.DateTime;
-
 import java.util.UUID;
 
-public interface Entity<T> {
+public interface Entity {
     public UUID getId();
-    public String getCreatedBy();
-    public DateTime getCreatedDate();
 }

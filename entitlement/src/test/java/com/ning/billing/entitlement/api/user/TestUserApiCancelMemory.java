@@ -16,12 +16,13 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import org.testng.annotations.Test;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
-import org.testng.annotations.Test;
 
 public class TestUserApiCancelMemory extends TestUserApiCancel {
 
@@ -32,25 +33,25 @@ public class TestUserApiCancelMemory extends TestUserApiCancel {
     }
 
     @Override
-    @Test(enabled=true, groups={"fast-disabled"})
+    @Test(enabled=true, groups={"fast"})
     public void testCancelSubscriptionIMM() {
         super.testCancelSubscriptionIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast-disabled"})
+    @Test(enabled=true, groups={"fast"})
     public void testCancelSubscriptionEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testCancelSubscriptionEOTWithChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast-disabled"})
+    @Test(enabled=true, groups={"fast"})
     public void testCancelSubscriptionEOTWithNoChargeThroughDate() {
         super.testCancelSubscriptionEOTWithNoChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast-disabled"})
+    @Test(enabled=true, groups={"fast"})
     public void testUncancel() throws EntitlementBillingApiException {
         super.testUncancel();
     }

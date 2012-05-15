@@ -19,19 +19,17 @@ package com.ning.billing.invoice.notification;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.notificationq.NotificationConfig;
-import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
@@ -68,15 +66,19 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
                     new NotificationQueueHandler() {
                 @Override
                 public void handleReadyNotification(String notificationKey, DateTime eventDate) {
-                	try {
-                 		UUID key = UUID.fromString(notificationKey);
-                        Subscription subscription = entitlementUserApi.getSubscriptionFromId(key);
-                        if (subscription == null) {
-                            log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")" );
-                        } else {
-                            processEvent(key , eventDate);
+                    try {
+                        UUID key = UUID.fromString(notificationKey);
+                        try {
+                            Subscription subscription = entitlementUserApi.getSubscriptionFromId(key);
+                            if (subscription == null) {
+                                log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")" );
+                            } else {
+                                processEvent(key , eventDate);
+                            }
+                        } catch (EntitlementUserApiException e) {
+                            log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")", e );
                         }
-                	} catch (IllegalArgumentException e) {
+                    } catch (IllegalArgumentException e) {
                 		log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
                 		return;
                 	}
@@ -84,21 +86,15 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
                 }
             },
             new NotificationConfig() {
+                
+                @Override
+                public long getSleepTimeMs() {
+                    return config.getSleepTimeMs();
+                }
+                
                 @Override
                 public boolean isNotificationProcessingOff() {
-                    return config.isEventProcessingOff();
-                }
-                @Override
-                public long getNotificationSleepTimeMs() {
-                    return config.getNotificationSleepTimeMs();
-                }
-                @Override
-                public int getDaoMaxReadyEvents() {
-                    return config.getDaoMaxReadyEvents();
-                }
-                @Override
-                public long getDaoClaimTimeMs() {
-                    return config.getDaoClaimTimeMs();
+                    return config.isNotificationProcessingOff();
                 }
             });
         } catch (NotificationQueueAlreadyExists e) {

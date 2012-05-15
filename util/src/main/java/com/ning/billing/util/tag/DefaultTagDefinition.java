@@ -18,20 +18,21 @@ package com.ning.billing.util.tag;
 
 import java.util.UUID;
 import com.ning.billing.util.entity.EntityBase;
-import org.joda.time.DateTime;
 
 public class DefaultTagDefinition extends EntityBase implements TagDefinition {
     private String name;
     private String description;
+    private Boolean isControlTag;
 
-    public DefaultTagDefinition(String name, String description) {
+    public DefaultTagDefinition(String name, String description, Boolean isControlTag) {
         super();
         this.name = name;
         this.description = description;
+        this.isControlTag = isControlTag;
     }
 
-    public DefaultTagDefinition(UUID id, String createdBy, DateTime createdDate, String name, String description) {
-        super(id, createdBy, createdDate);
+    public DefaultTagDefinition(UUID id, String name, String description) {
+        super(id);
         this.name = name;
         this.description = description;
     }
@@ -44,5 +45,10 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
     @Override
     public String getDescription() {
         return description;
+    }
+
+    @Override
+    public Boolean isControlTag() {
+        return isControlTag;
     }
 }

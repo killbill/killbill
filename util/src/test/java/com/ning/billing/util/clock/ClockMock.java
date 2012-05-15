@@ -16,141 +16,134 @@
 
 package com.ning.billing.util.clock;
 
-import com.ning.billing.catalog.api.Duration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
+import org.joda.time.Months;
+import org.joda.time.MutablePeriod;
+import org.joda.time.Period;
+import org.joda.time.ReadablePeriod;
+import org.joda.time.Weeks;
+import org.joda.time.Years;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.TimeUnit;
 
-// STEPH should really be in tests but not accessible from other sub modules
-public class ClockMock extends DefaultClock {
-
+public class ClockMock implements Clock {
+    
+    private MutablePeriod delta = new MutablePeriod();
     private static final Logger log = LoggerFactory.getLogger(ClockMock.class);
 
-    private enum DeltaType {
-        DELTA_NONE,
-        DELTA_DURATION,
-        DELTA_ABS
-    }
-
-    private long deltaFromRealityMs;
-    private List<Duration> deltaFromRealityDuration;
-    private long deltaFromRealityDurationEpsilon;
-    private DeltaType deltaType;
-
-    public ClockMock() {
-        deltaType = DeltaType.DELTA_NONE;
-        deltaFromRealityMs = 0;
-        deltaFromRealityDurationEpsilon = 0;
-        deltaFromRealityDuration = null;
-    }
-
+     
     @Override
     public synchronized DateTime getNow(DateTimeZone tz) {
-        return adjust(super.getNow(tz));
+        return getUTCNow().toDateTime(tz);
     }
 
     @Override
     public synchronized DateTime getUTCNow() {
-        return getNow(DateTimeZone.UTC);
+        return truncate(adjust(now()));
+    }
+    
+    private DateTime adjust(DateTime now) {
+        return now.plus(delta);
     }
 
-    private void logClockAdjustment(DateTime prev, DateTime next) {
-        log.info(String.format("            ************      ADJUSTING CLOCK FROM %s to %s     ********************", prev, next));
-    }
-
-    public synchronized void setDeltaFromReality(Duration delta, long epsilon) {
+    public synchronized void setTime(DateTime time) {
         DateTime prev = getUTCNow();
-        deltaType = DeltaType.DELTA_DURATION;
-        deltaFromRealityDuration = new ArrayList<Duration>();
-        deltaFromRealityDuration.add(delta);
-        deltaFromRealityDurationEpsilon = epsilon;
-        deltaFromRealityMs = 0;
-        logClockAdjustment(prev, getUTCNow());
+        delta = new MutablePeriod(now(), time);
+        logChange(prev);
+    }
+    
+    public synchronized void addDays(int days) {
+        adjustTo(Days.days(days));
+    }
+    
+    public synchronized void addWeeks(int weeks) {
+        adjustTo(Weeks.weeks(weeks));
+    }
+    
+    public synchronized void addMonths(int months) {
+        adjustTo(Months.months(months));
+    }
+    
+    public synchronized void addYears(int years) {
+        adjustTo(Years.years(years));
+    }
+    
+    public synchronized void reset() {
+        delta = new MutablePeriod();
+    }
+    
+    @Override
+    public String toString() {
+        return getUTCNow().toString();
+    }
+    
+    private void adjustTo(ReadablePeriod period) {
+        DateTime prev = getUTCNow();
+        delta.add(period);
+        logChange(prev);
+    }
+    
+    private void logChange(DateTime prev) {     
+        DateTime now = getUTCNow();
+        log.info(String.format("            ************      ADJUSTING CLOCK FROM %s to %s     ********************", prev, now));
+    }
+    
+    private DateTime now() {
+        return new DateTime(DateTimeZone.UTC);
+    }
+
+    private DateTime truncate(DateTime time) {
+        return time.minus(time.getMillisOfSecond());
+    }
+   
+    //
+    //Backward compatibility stuff
+    //
+    public synchronized void setDeltaFromReality(Duration duration, long epsilon) {
+        DateTime prev = getUTCNow();
+        delta.addMillis((int)epsilon);
+        addDeltaFromReality(duration);
+        logChange(prev);
+        
     }
 
     public synchronized void addDeltaFromReality(Duration delta) {
-        DateTime prev = getUTCNow();
-        if (deltaType != DeltaType.DELTA_DURATION) {
-            throw new RuntimeException("ClockMock should be set with type DELTA_DURATION");
-        }
-        deltaFromRealityDuration.add(delta);
-        logClockAdjustment(prev, getUTCNow());
+        adjustTo(periodFromDuration(delta));
     }
 
     public synchronized void setDeltaFromReality(long delta) {
-        DateTime prev = getUTCNow();
-        deltaType = DeltaType.DELTA_ABS;
-        deltaFromRealityDuration = null;
-        deltaFromRealityDurationEpsilon = 0;
-        deltaFromRealityMs = delta;
-        logClockAdjustment(prev, getUTCNow());
+        adjustTo(new Period(delta));
     }
 
     public synchronized void addDeltaFromReality(long delta) {
-        DateTime prev = getUTCNow();
-        if (deltaType != DeltaType.DELTA_ABS) {
-            throw new RuntimeException("ClockMock should be set with type DELTA_ABS");
-        }
-        deltaFromRealityDuration = null;
-        deltaFromRealityDurationEpsilon = 0;
-        deltaFromRealityMs += delta;
-        logClockAdjustment(prev, getUTCNow());
+        adjustTo(new Period(delta));
     }
 
     public synchronized void resetDeltaFromReality() {
-        deltaType = DeltaType.DELTA_NONE;
-        deltaFromRealityDuration = null;
-        deltaFromRealityDurationEpsilon = 0;
-        deltaFromRealityMs = 0;
+        reset();
     }
+    
+    public ReadablePeriod periodFromDuration(Duration duration) {
+        if (duration.getUnit() != TimeUnit.UNLIMITED) {return new Period();}
 
-    private DateTime adjust(DateTime realNow) {
-        switch(deltaType) {
-            case DELTA_NONE:
-                return realNow;
-            case DELTA_ABS:
-                return adjustFromAbsolute(realNow);
-            case DELTA_DURATION:
-                return adjustFromDuration(realNow);
-            default:
-                return null;
-        }
-    }
-
-    private DateTime adjustFromDuration(DateTime input) {
-
-        DateTime result = input;
-        for (Duration cur : deltaFromRealityDuration) {
-            switch (cur.getUnit()) {
+        switch (duration.getUnit()) {
             case DAYS:
-                result = result.plusDays(cur.getNumber());
-                break;
-
+                return Days.days(duration.getNumber());
             case MONTHS:
-                result = result.plusMonths(cur.getNumber());
-                break;
-
+                return Months.months(duration.getNumber());
             case YEARS:
-                result = result.plusYears(cur.getNumber());
-                break;
-
+                return Years.years(duration.getNumber());
             case UNLIMITED:
-            default:
-                throw new RuntimeException("ClockMock is adjusting an unlimited time period");
-            }
+                return Years.years(100);
+           default:
+                return new Period();
         }
-        if (deltaFromRealityDurationEpsilon != 0) {
-            result = result.plus(deltaFromRealityDurationEpsilon);
-        }
-        return result;
     }
-
-    private DateTime adjustFromAbsolute(DateTime input) {
-        return truncateMs(input.plus(deltaFromRealityMs));
-    }
+    
 
 }

@@ -107,8 +107,18 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         return count;
     }
 	
-	public DefaultPriceList setRetired(boolean retired) {
+	protected DefaultPriceList setRetired(boolean retired) {
 		this.retired = retired;
+		return this;
+	}
+
+	public DefaultPriceList setName(String name) {
+		this.name = name;
+		return this;
+	}
+
+	public DefaultPriceList setPlans(DefaultPlan[] plans) {
+		this.plans = plans;
 		return this;
 	}
 

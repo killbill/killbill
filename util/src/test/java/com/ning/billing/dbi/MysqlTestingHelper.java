@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -27,6 +28,7 @@ import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.skife.jdbi.v2.util.StringMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -44,10 +46,12 @@ public class MysqlTestingHelper
 
     private static final Logger log = LoggerFactory.getLogger(MysqlTestingHelper.class);
 
-    private static final String DB_NAME = "test_killbill";
+    private static final String DB_NAME = "killbill";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
+    // Discover dynamically list of all tables in that database;
+    private List<String> allTables;    
     private File dbDir;
     private MysqldResource mysqldResource;
     private int port;
@@ -122,13 +126,46 @@ public class MysqlTestingHelper
             }
         });
     }
+    
+    public void cleanupAllTables() {
+    	final List<String> tablesToCleanup = fetchAllTables();
+    	for (String tableName : tablesToCleanup) {
+    		cleanupTable(tableName);
+    	}
+    }
 
+    public synchronized List<String> fetchAllTables() {
+
+    	if (allTables == null) {
+    		final String dbiString = "jdbc:mysql://localhost:" + port + "/information_schema";
+    		IDBI cleanupDbi = new DBI(dbiString, USERNAME, PASSWORD);
+
+    		final List<String> tables=  cleanupDbi.withHandle(new HandleCallback<List<String>>() {
+
+    			@Override
+    			public List<String> withHandle(Handle h) throws Exception {
+    				return h.createQuery("select table_name from tables where table_schema = :table_schema and table_type = 'BASE TABLE';")
+    				.bind("table_schema", DB_NAME)
+    				.map(new StringMapper())
+    				.list();
+    			}
+    		});
+    		allTables = tables;
+    	}
+    	return allTables;
+    }
+
+    
     public void stopMysql()
     {
-        if (mysqldResource != null) {
-            mysqldResource.shutdown();
-            FileUtils.deleteQuietly(dbDir);
-            log.info("MySQLd stopped");
+        try {
+            if (mysqldResource != null) {
+                mysqldResource.shutdown();
+                FileUtils.deleteQuietly(dbDir);
+                log.info("MySQLd stopped");
+            }
+        } catch (Exception ex) {
+            //fail silently
         }
     }
 

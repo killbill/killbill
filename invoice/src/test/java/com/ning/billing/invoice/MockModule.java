@@ -16,32 +16,31 @@
 
 package com.ning.billing.invoice;
 
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.glue.FieldStoreModule;
-import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.glue.EntitlementModule;
-import com.ning.billing.invoice.glue.InvoiceModule;
-import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
+import com.ning.billing.invoice.glue.DefaultInvoiceModule;
+import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
+import com.ning.billing.mock.glue.MockJunctionModule;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.FieldStoreModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
-
+import com.ning.billing.util.glue.TagStoreModule;
 
 public class MockModule extends AbstractModule {
-    public static final String PLUGIN_NAME = "yoyo";
-
     @Override
     protected void configure() {
         bind(Clock.class).to(ClockMock.class).asEagerSingleton();
@@ -61,24 +60,20 @@ public class MockModule extends AbstractModule {
             bind(IDBI.class).toInstance(dbi);
         }
 
+        bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
+
+        install(new EmailModule());
         install(new GlobalLockerModule());
         install(new NotificationQueueModule());
-//        install(new AccountModule());
-        bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
-
-        installEntitlementModule();
         install(new CatalogModule());
         install(new BusModule());
         installInvoiceModule();
+        install(new MockJunctionModule());
+        install(new TemplateModule());
 
-    }
-    
-    protected void installEntitlementModule() {
-    	install(new EntitlementModule());
     }
 
     protected void installInvoiceModule() {
-    	install(new InvoiceModule());
+    	install(new DefaultInvoiceModule());
     }
-
 }

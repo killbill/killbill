@@ -48,7 +48,7 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
 		this.childPriceLists = childPriceLists;
 	}
 
-	public DefaultPlan getPlanListFrom(String priceListName, Product product,
+	public DefaultPlan getPlanFrom(String priceListName, Product product,
 			BillingPeriod period) throws CatalogApiException {
 		DefaultPlan result = null;
 		DefaultPriceList pl = findPriceListFrom(priceListName);

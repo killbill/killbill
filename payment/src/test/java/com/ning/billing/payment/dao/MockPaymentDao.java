@@ -23,21 +23,23 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import com.ning.billing.util.callcontext.CallContext;
 import org.apache.commons.collections.CollectionUtils;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfo;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class MockPaymentDao implements PaymentDao {
-    private final Map<String, PaymentInfo> payments = new ConcurrentHashMap<String, PaymentInfo>();
+    private final Map<UUID, PaymentInfoEvent> payments = new ConcurrentHashMap<UUID, PaymentInfoEvent>();
     private final Map<UUID, PaymentAttempt> paymentAttempts = new ConcurrentHashMap<UUID, PaymentAttempt>();
 
     @Override
-    public PaymentAttempt getPaymentAttemptForPaymentId(String paymentId) {
+    public PaymentAttempt getPaymentAttemptForPaymentId(UUID paymentId) {
         for (PaymentAttempt paymentAttempt : paymentAttempts.values()) {
             if (paymentId.equals(paymentAttempt.getPaymentId())) {
                 return paymentAttempt;
@@ -48,39 +50,39 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public PaymentAttempt createPaymentAttempt(Invoice invoice, CallContext context) {
-        PaymentAttempt updatedPaymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice.getId(), invoice.getAccountId(),
+        PaymentAttempt updatedPaymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice.getId(), invoice.getAccountId(),
                 invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(),
-                null, null, null, context.getCreatedDate(), context.getUpdatedDate());
+                null, null, null, null, null);
 
-        paymentAttempts.put(updatedPaymentAttempt.getPaymentAttemptId(), updatedPaymentAttempt);
+        paymentAttempts.put(updatedPaymentAttempt.getId(), updatedPaymentAttempt);
         return updatedPaymentAttempt;
     }
 
     @Override
     public PaymentAttempt createPaymentAttempt(PaymentAttempt paymentAttempt, CallContext context) {
-        PaymentAttempt updatedPaymentAttempt = new PaymentAttempt(paymentAttempt.getPaymentAttemptId(),
+        PaymentAttempt updatedPaymentAttempt = new DefaultPaymentAttempt(paymentAttempt.getId(),
                 paymentAttempt.getInvoiceId(),
                 paymentAttempt.getAccountId(), paymentAttempt.getAmount(), paymentAttempt.getCurrency(),
                 paymentAttempt.getInvoiceDate(), paymentAttempt.getPaymentAttemptDate(),
                 paymentAttempt.getPaymentId(), paymentAttempt.getRetryCount(),
-                context.getCreatedDate(), context.getUpdatedDate());
+                paymentAttempt.getCreatedDate(), paymentAttempt.getUpdatedDate());
 
-        paymentAttempts.put(updatedPaymentAttempt.getPaymentAttemptId(), updatedPaymentAttempt);
+        paymentAttempts.put(updatedPaymentAttempt.getId(), updatedPaymentAttempt);
         return updatedPaymentAttempt;
     }
 
     @Override
-    public void savePaymentInfo(PaymentInfo paymentInfo, CallContext context) {
-        payments.put(paymentInfo.getPaymentId(), paymentInfo);
+    public void savePaymentInfo(PaymentInfoEvent paymentInfo, CallContext context) {
+        payments.put(paymentInfo.getId(), paymentInfo);
     }
 
     @Override
-    public void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, String paymentId, CallContext context) {
+    public void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, UUID paymentId, CallContext context) {
         PaymentAttempt existingPaymentAttempt = paymentAttempts.get(paymentAttemptId);
 
         if (existingPaymentAttempt != null) {
-            paymentAttempts.put(existingPaymentAttempt.getPaymentAttemptId(),
-                                existingPaymentAttempt.cloner().setPaymentId(paymentId).build());
+            paymentAttempts.put(existingPaymentAttempt.getId(),
+                                ((DefaultPaymentAttempt) existingPaymentAttempt).cloner().setPaymentId(paymentId).build());
         }
     }
 
@@ -96,33 +98,46 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentInfo(String paymentMethodType, String paymentId, String cardType, String cardCountry, CallContext context) {
-        PaymentInfo existingPayment = payments.get(paymentId);
+    public void updatePaymentInfo(String paymentMethodType, UUID paymentId, String cardType, String cardCountry, CallContext context) {
+        DefaultPaymentInfoEvent existingPayment = (DefaultPaymentInfoEvent) payments.get(paymentId);
         if (existingPayment != null) {
-            PaymentInfo payment = existingPayment.cloner()
+            PaymentInfoEvent payment = existingPayment.cloner()
                     .setPaymentMethod(paymentMethodType)
                     .setCardType(cardType)
                     .setCardCountry(cardCountry)
-                    .setUpdatedDate(context.getUpdatedDate())
                     .build();
             payments.put(paymentId, payment);
         }
     }
 
     @Override
-    public List<PaymentInfo> getPaymentInfo(List<String> invoiceIds) {
+    public List<PaymentInfoEvent> getPaymentInfoList(List<String> invoiceIds) {
         List<PaymentAttempt> attempts = getPaymentAttemptsForInvoiceIds(invoiceIds);
-        List<PaymentInfo> paymentsToReturn = new ArrayList<PaymentInfo>(invoiceIds.size());
+        List<PaymentInfoEvent> paymentsToReturn = new ArrayList<PaymentInfoEvent>(invoiceIds.size());
 
         for (final PaymentAttempt attempt : attempts) {
-            paymentsToReturn.addAll(Collections2.filter(payments.values(), new Predicate<PaymentInfo>() {
+            paymentsToReturn.addAll(Collections2.filter(payments.values(), new Predicate<PaymentInfoEvent>() {
                 @Override
-                public boolean apply(PaymentInfo input) {
-                    return input.getPaymentId().equals(attempt.getPaymentId());
+                public boolean apply(PaymentInfoEvent input) {
+                    return input.getId().equals(attempt.getPaymentId());
                 }
             }));
         }
         return paymentsToReturn;
+    }
+
+    @Override
+    public PaymentInfoEvent getLastPaymentInfo(List<String> invoiceIds) {
+        List<PaymentInfoEvent> payments = getPaymentInfoList(invoiceIds);
+        PaymentInfoEvent lastPayment = null;
+
+        for (PaymentInfoEvent payment : payments) {
+            if ((lastPayment == null) || (payment.getEffectiveDate().isAfter(lastPayment.getEffectiveDate()))) {
+                lastPayment = payment;
+            }
+        }
+
+        return lastPayment;
     }
 
     @Override
@@ -143,7 +158,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentInfo getPaymentInfoForPaymentAttemptId(String paymentAttemptId) {
+    public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(String paymentAttemptId) {
         // TODO Auto-generated method stub
         return null;
     }

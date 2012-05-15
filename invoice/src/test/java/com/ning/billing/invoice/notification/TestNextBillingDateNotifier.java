@@ -24,23 +24,6 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.MockAccountUserApi;
-import com.ning.billing.entitlement.api.billing.DefaultEntitlementBillingApi;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
-import com.ning.billing.invoice.InvoiceDispatcher;
-import com.ning.billing.invoice.dao.DefaultInvoiceDao;
-import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
-import com.ning.billing.invoice.model.InvoiceGenerator;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.MySqlGlobalLocker;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
@@ -50,31 +33,36 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.ning.billing.catalog.DefaultCatalogService;
-import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.config.CatalogConfig;
+import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.dbi.DBIProvider;
+import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
-import com.ning.billing.entitlement.engine.dao.EntitlementSqlDao;
+import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.InvoiceListener;
-import com.ning.billing.lifecycle.KillbillService.ServiceException;
+import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
+import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.InMemoryBus;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
+import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.glue.BusModule.BusType;
+import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
@@ -88,6 +76,7 @@ public class TestNextBillingDateNotifier {
 	private InvoiceListenerMock listener;
 	private NotificationQueueService notificationQueueService;
 
+	
 	private static final class InvoiceListenerMock extends InvoiceListener {
 		int eventCount = 0;
 		UUID latestSubscriptionId = null;
@@ -113,37 +102,37 @@ public class TestNextBillingDateNotifier {
 
 	}
 
+	@BeforeMethod(groups={"slow"})
+    public void cleanDb() {
+	    helper.cleanupAllTables();
+	}
 
 	@BeforeClass(groups={"slow"})
-	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
+	public void setup() throws KillbillService.ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION,  new AbstractModule() {
-			@Override
+			
             protected void configure() {
-                bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-                bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
-                bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
-                bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
-                final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
-                bind(InvoiceConfig.class).toInstance(invoiceConfig);
-                final CatalogConfig catalogConfig = new ConfigurationObjectFactory(System.getProperties()).build(CatalogConfig.class);
-                bind(CatalogConfig.class).toInstance(catalogConfig);
-                bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
+                install(new MockClockModule());
+                install(new BusModule(BusType.MEMORY));
+                install(new InvoiceModuleWithMocks());
+                install(new MockJunctionModule());
+                install(new MockCatalogModule());
+                install(new NotificationQueueModule());
+                
                 final MysqlTestingHelper helper = new MysqlTestingHelper();
                 bind(MysqlTestingHelper.class).toInstance(helper);
-                IDBI dbi = helper.getDBI();
-                bind(IDBI.class).toInstance(dbi);
-                bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
-                bind(EntitlementDao.class).to(EntitlementSqlDao.class).asEagerSingleton();
-                bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
-                bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
-                bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
-                bind(InvoiceDao.class).to(DefaultInvoiceDao.class);
-                bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-                bind(AccountUserApi.class).to(MockAccountUserApi.class).asEagerSingleton();
-                bind(EntitlementBillingApi.class).to(DefaultEntitlementBillingApi.class).asEagerSingleton();
-                bind(EntitlementUserApi.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();                
-			}
+                if (helper.isUsingLocalInstance()) {
+                    bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
+                    final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
+                    bind(DbiConfig.class).toInstance(config);
+                } else {
+                    final IDBI dbi = helper.getDBI();
+                    bind(IDBI.class).toInstance(dbi);
+                }
+                
+            
+            }
         });
 
         clock = g.getInstance(Clock.class);
@@ -167,16 +156,14 @@ public class TestNextBillingDateNotifier {
 	private void startMysql() throws IOException, ClassNotFoundException, SQLException {
 		final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 		final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
-		final String entitlementDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 		helper.startMysql();
 		helper.initDb(ddl);
 		helper.initDb(testDdl);
-        helper.initDb(entitlementDdl);
 	}
 
 
 	@Test(enabled=true, groups="slow")
-	public void test() throws Exception {
+	public void testInvoiceNotifier() throws Exception {
 		final UUID subscriptionId = new UUID(0L,1L);
 		final DateTime now = new DateTime();
 		final DateTime readyTime = now.plusMillis(2000);
@@ -213,8 +200,9 @@ public class TestNextBillingDateNotifier {
 		Assert.assertEquals(listener.getLatestSubscriptionId(), subscriptionId);
 	}
 
-	@AfterClass(alwaysRun = true)
+	@AfterClass(groups="slow")
     public void tearDown() {
+	    notifier.stop();
     	helper.stopMysql();
     }
 

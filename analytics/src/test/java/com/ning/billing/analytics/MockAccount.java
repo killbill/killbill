@@ -19,13 +19,15 @@ package com.ning.billing.analytics;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import org.joda.time.DateTime;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
@@ -58,6 +60,16 @@ public class MockAccount implements Account
     public String getPhone()
     {
         return "408-555-6665";
+    }
+
+    @Override
+    public boolean isMigrated() {
+        return false;
+    }
+
+    @Override
+    public boolean isNotifiedForInvoices() {
+        return false;
     }
 
     @Override
@@ -140,16 +152,6 @@ public class MockAccount implements Account
     }
 
     @Override
-    public String getCreatedBy() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DateTime getCreatedDate() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getFieldValue(String fieldName) {
         throw new UnsupportedOperationException();
     }
@@ -190,7 +192,7 @@ public class MockAccount implements Account
     }
 
     @Override
-    public String getObjectName() {
+    public ObjectType getObjectType() {
         throw new UnsupportedOperationException();
     }
 
@@ -200,7 +202,12 @@ public class MockAccount implements Account
     }
 
     @Override
-    public boolean hasTag(String tagName) {
+    public boolean hasTag(TagDefinition tagDefinition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasTag(ControlTagType controlTagType) {
         throw new UnsupportedOperationException();
     }
 
@@ -211,6 +218,11 @@ public class MockAccount implements Account
 
     @Override
     public void addTags(List<Tag> tags) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
         throw new UnsupportedOperationException();
     }
 
@@ -235,17 +247,12 @@ public class MockAccount implements Account
     }
 
     @Override
-    public String getUpdatedBy() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DateTime getUpdatedDate() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public MutableAccountData toMutableAccountData() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BlockingState getBlockingState() {
         throw new UnsupportedOperationException();
     }
 

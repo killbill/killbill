@@ -23,11 +23,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.invoice.tests.InvoicingTestBase;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -48,31 +46,32 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
-import com.ning.billing.entitlement.api.billing.DefaultBillingEvent;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApi;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionTransition.SubscriptionTransitionType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
+import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
 @Test(groups = "slow")
 @Guice(modules = {MockModule.class})
-public class TestInvoiceDispatcher {
+public class TestInvoiceDispatcher extends InvoicingTestBase {
 	private Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
-
-	@Inject
-	private InvoiceUserApi invoiceUserApi;
 
 	@Inject
 	private InvoiceGenerator generator;
@@ -89,8 +88,11 @@ public class TestInvoiceDispatcher {
 	@Inject
 	private NextBillingDateNotifier notifier;
 
-	@Inject
-	private BusService busService;
+    @Inject
+    private BusService busService;
+
+    @Inject
+    private BillingApi billingApi;
 
     @Inject
     private Clock clock;
@@ -100,13 +102,11 @@ public class TestInvoiceDispatcher {
     @BeforeSuite(groups = "slow")
     public void setup() throws IOException
     {
-		final String entitlementDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
 		final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
 		final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
 		helper.startMysql();
 
-		helper.initDb(entitlementDdl);
 		helper.initDb(invoiceDdl);
 		helper.initDb(utilDdl);
 		notifier.initialize();
@@ -115,6 +115,7 @@ public class TestInvoiceDispatcher {
         context = new DefaultCallContextFactory(clock).createCallContext("Miracle Max", CallOrigin.TEST, UserType.TEST);
 
 		busService.getBus().start();
+		((ZombieControl)billingApi).addResult("setChargedThroughDate", BrainDeadProxyFactory.ZOMBIE_VOID);
 	}
 
 	@AfterClass(alwaysRun = true)
@@ -139,25 +140,28 @@ public class TestInvoiceDispatcher {
 		((ZombieControl)accountUserApi).addResult("getAccountById", account);
 		((ZombieControl)account).addResult("getCurrency", Currency.USD);
 		((ZombieControl)account).addResult("getId", accountId);
+        ((ZombieControl)account).addResult(("isNotifiedForInvoices"), true);
 
 		Subscription subscription =  BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-		((ZombieControl)subscription).addResult("getId", subscriptionId);
+        ((ZombieControl)subscription).addResult("getId", subscriptionId);
+        ((ZombieControl)subscription).addResult("getBundleId", new UUID(0L,0L));
 		SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
 		Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
 		PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();
 		DateTime effectiveDate = new DateTime().minusDays(1);
 		Currency currency = Currency.USD;
 		BigDecimal fixedPrice = null;
-		events.add(new DefaultBillingEvent(subscription, effectiveDate,plan, planPhase,
-				fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
-				BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
+		events.add(createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
+                fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
+                BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-		EntitlementBillingApi entitlementBillingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementBillingApi.class);
-		((ZombieControl)entitlementBillingApi).addResult("getBillingEventsForAccount", events);
+		((ZombieControl) billingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
 
 		DateTime target = new DateTime();
 
-		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, entitlementBillingApi, invoiceDao, locker);
+        InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
+		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi, invoiceDao,
+                                                             invoiceNotifier, locker, busService.getBus(), clock);
 
 		Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
 		Assert.assertNotNull(invoice);

@@ -35,6 +35,13 @@ public class BillingExceptionBase extends Exception {
         this.code = code;
         this.cause = cause;
     }
+    
+    public BillingExceptionBase(BillingExceptionBase cause) {
+        this.formattedMsg = cause.getMessage();
+        this.code = cause.getCode();
+        this.cause = cause;
+    }
+
 
     public BillingExceptionBase(Throwable cause, ErrorCode code, final Object... args) {
         String tmp = null;

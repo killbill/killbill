@@ -169,8 +169,8 @@ Use Cases to do:
 				<toPriceList>DEFAULT</toPriceList>
 			</priceListCase>
 		</priceList>
-	</rules>
-
+	</rules> 
+	
 	<plans>
 		<plan name="pistol-monthly">
 			<product>Pistol</product>

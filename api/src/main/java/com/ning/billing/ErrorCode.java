@@ -18,6 +18,8 @@ package com.ning.billing;
 
 public enum ErrorCode {
 
+
+    
     /*
      * Range 0 : COMMON EXCEPTIONS
      */
@@ -44,6 +46,8 @@ public enum ErrorCode {
     /* Change plan */
     ENT_CHANGE_NON_ACTIVE(1021, "Subscription %s is in state %s: Failed to change plan"),
     ENT_CHANGE_FUTURE_CANCELLED(1022, "Subscription %s is future cancelled: Failed to change plan"),
+    ENT_CHANGE_DRY_RUN_NOT_BP(1022, "Change DryRun API is only available for BP"),
+    
     /* Cancellation */
     ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s: Failed to cancel"),
     /* Recreation */
@@ -56,6 +60,31 @@ public enum ErrorCode {
     ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION(1080, "Could not find a bundle for subscription %s"),
     ENT_GET_INVALID_BUNDLE_ID(1081, "Could not find a bundle matching id %s"),
     ENT_INVALID_SUBSCRIPTION_ID(1082, "Unknown subscription %s"),
+    ENT_GET_INVALID_BUNDLE_KEY(1083, "Could not find a bundle matching key %s"),
+    ENT_GET_NO_SUCH_BASE_SUBSCRIPTION(1084, "Could not base subscription for bundle %s"),
+
+    /* Repair */
+    ENT_REPAIR_INVALID_DELETE_SET(1091, "Event %s is not deleted for subscription %s but prior events were"),
+    ENT_REPAIR_NON_EXISTENT_DELETE_EVENT(1092, "Event %s does not exist for subscription %s"),    
+    ENT_REPAIR_MISSING_AO_DELETE_EVENT(1093, "Event %s should be in deleted set for subscription %s because BP events got deleted earlier"),
+    ENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING(1094, "New event %s for subscription %s is before last remaining event for BP"),
+    ENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING(1095, "New event %s for subscription %s is before last remaining event"),
+    ENT_REPAIR_UNKNOWN_TYPE(1096, "Unknown new event type %s for subscription %s"),
+    ENT_REPAIR_UNKNOWN_BUNDLE(1097, "Unknown bundle %s"), 
+    ENT_REPAIR_UNKNOWN_SUBSCRIPTION(1098, "Unknown subscription %s"),     
+    ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS(1099, "No active subscriptions on bundle %s"),         
+    ENT_REPAIR_VIEW_CHANGED(1100, "View for bundle %s has changed from %s to %s"),             
+    ENT_REPAIR_SUB_RECREATE_NOT_EMPTY(1101, "Subscription %s with recreation for bundle %s should specify all existing events to be deleted"),    
+    ENT_REPAIR_SUB_EMPTY(1102, "Subscription %s with recreation for bundle %s should specify all existing events to be deleted"),    
+    ENT_REPAIR_BP_RECREATE_MISSING_AO(1103, "BP recreation for bundle %s implies repair all subscriptions"),    
+    ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE(1104, "BP recreation for bundle %s implies that all AO should be start also with a CREATE"),        
+    ENT_REPAIR_AO_CREATE_BEFORE_BP_START(1105, "Can't recreate AO %s for bundle %s before BP starts"),    
+    
+    
+    ENT_BUNDLE_IS_OVERDUE_BLOCKED(1090, "Changes to this bundle are blocked by overdue enforcement (%s :  %s)"),
+    ENT_ACCOUNT_IS_OVERDUE_BLOCKED(1091, "Changes to this account are blocked by overdue enforcement (%s)"),
+ 
+    
     /*
     *
     * Range 2000 : CATALOG
@@ -107,7 +136,12 @@ public enum ErrorCode {
      * Billing Alignment
      */
     CAT_INVALID_BILLING_ALIGNMENT(2060, "Invalid billing alignment '%s'"),
-
+    /*
+     * Overdue
+     */
+    CAT_NO_SUCH_OVEDUE_STATE(2070, "No such overdue state '%s'"),
+    CAT_MISSING_CLEAR_STATE(2071, "Missing a clear state"),
+    CAT_NO_OVERDUEABLE_TYPE(2072, "No such overdueable type: "),
    /*
     *
     * Range 3000 : ACCOUNT
@@ -150,9 +184,53 @@ public enum ErrorCode {
     INVOICE_INVALID_TRANSITION(4002, "Transition did not contain a subscription id."),
     INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID(4003, "No account id was retrieved for subscription id %s"),
     INVOICE_INVALID_DATE_SEQUENCE(4004, "Date sequence was invalid. Start Date: %s; End Date: %s; Target Date: %s"),
-    INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s")
-    ;
+    INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s"),
+    
+    /*
+     * 
+     * Range 5000: Overdue system
+     * 
+     */
+    OVERDUE_CAT_ERROR_ENCOUNTERED(5001,"Catalog error encountered on Overdueable: id='%s', type='%s'"),  
+    OVERDUE_TYPE_NOT_SUPPORTED(5002,"Overdue of this type is not supported: id='%s', type='%s'"),  
+    OVERDUE_NO_REEVALUATION_INTERVAL(5003,"No valid reevaluation interval for state (name: %s)"),
+    /*
+     * 
+     * Range 6000: Blocking system
+     * 
+     */
+    BLOCK_BLOCKED_ACTION(6000, "The action %s is block on this %s with id=%s"),
+    BLOCK_TYPE_NOT_SUPPORTED(6001, "The Blockable type '%s' is not supported"),
+    
+    
+    /*
+     * Range 7000 : Payment
+     */
+    PAYMENT_NO_SUCH_PAYMENT_METHOD(7001, "Payment method for account %s, and paymentId %s does not exist"),
+    PAYMENT_NO_PAYMENT_METHODS(7002, "Payment methods for account %s don't exist"),
+    PAYMENT_UPD_GATEWAY_FAILED(7003, "Failed to update payment gateway for account %s : %s"),
+    PAYMENT_GET_PAYMENT_PROVIDER(7004, "Failed to retrieve payment provider for account %s : %s"),    
+    PAYMENT_ADD_PAYMENT_METHOD(7005, "Failed to add payment method for account %s : %s"),        
+    PAYMENT_DEL_PAYMENT_METHOD(7006, "Failed to delete payment method for account %s : %s"),        
+    PAYMENT_UPD_PAYMENT_METHOD(7007, "Failed to update payment method for account %s : %s"),            
+    PAYMENT_CREATE_PAYMENT(7008, "Failed to create payment for account %s : %s"),                
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT(7009, "Failed to create payment for account %s and attempt %s : %s"),                    
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_WITH_NON_POSITIVE_INV(70010, "Got payment attempt with negative or null invoice for account %s"),                        
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD(7011, "Failed to create payment for attempts %s "),                    
+    PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT(7012, "Failed to create payment provider account for account %s : %s"),                
+    PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT(7013, "Failed to update payment provider account for account %s : %s"),                    
+    PAYMENT_CREATE_REFUND(7014, "Failed to create refund for account %s : %s"),                
+    /*
+    *
+    * Range 9000: Miscellaneous
+    *
+    */
+    EMAIL_SENDING_FAILED(9000, "Sending email failed"),
+    EMAIL_PROPERTIES_FILE_MISSING(9001, "The properties file for email configuration could not be found."),
+    MISSING_TRANSLATION_RESOURCE(9010, "The resources for %s translation could not be found."),
+    MISSING_DEFAULT_TRANSLATION_RESOURCE(9011, "The default resource for %s translation could not be found.");
 
+    
     private int code;
     private String format;
 

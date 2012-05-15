@@ -22,35 +22,19 @@ import java.util.UUID;
 
 public abstract class EntityBase implements Entity {
     protected final UUID id;
-    protected final String createdBy;
-    protected final DateTime createdDate;
 
     // used to hydrate objects
-    public EntityBase(UUID id, String createdBy, DateTime createdDate) {
+    public EntityBase(UUID id) {
         this.id = id;
-        this.createdBy = createdBy;
-        this.createdDate = createdDate;
     }
 
     // used to create new objects
     public EntityBase() {
         this.id = UUID.randomUUID();
-        this.createdBy = null;
-        this.createdDate = null;
     }
 
     @Override
     public UUID getId() {
         return id;
-    }
-
-    @Override
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    @Override
-    public DateTime getCreatedDate() {
-        return createdDate;
     }
 }
