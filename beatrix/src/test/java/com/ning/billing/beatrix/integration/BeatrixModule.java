@@ -65,7 +65,7 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
 
-public class MockModule extends AbstractModule {
+public class BeatrixModule extends AbstractModule {
     public static final String PLUGIN_NAME = "yoyo";
 
     @Override
@@ -95,10 +95,7 @@ public class MockModule extends AbstractModule {
         install(new BusModule());
         install(new NotificationQueueModule());
         install(new TagStoreModule());
-
-        CustomFieldDao customFieldDao = BrainDeadProxyFactory.createBrainDeadProxyFor(CustomFieldDao.class);
-        bind(CustomFieldDao.class).toInstance(customFieldDao);
-
+        install(new FieldStoreModule());
         install(new AccountModuleWithMocks());
         install(new CatalogModule());
         install(new DefaultEntitlementModule());

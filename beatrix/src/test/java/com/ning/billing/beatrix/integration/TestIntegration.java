@@ -45,7 +45,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 
 @Test(groups = "slow")
-@Guice(modules = {MockModule.class})
+@Guice(modules = {BeatrixModule.class})
 public class TestIntegration extends TestIntegrationBase {
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
