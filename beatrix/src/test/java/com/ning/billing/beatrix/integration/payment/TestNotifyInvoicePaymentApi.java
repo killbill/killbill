@@ -40,6 +40,7 @@ import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -85,7 +86,7 @@ public class TestNotifyInvoicePaymentApi {
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
-        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
+        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice, PaymentAttemptStatus.COMPLETED_SUCCESS);
 
         invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
                                      invoice.getBalance(),
@@ -104,7 +105,7 @@ public class TestNotifyInvoicePaymentApi {
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
-        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
+        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice, PaymentAttemptStatus.COMPLETED_SUCCESS);
         invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
                                                  paymentAttempt.getPaymentAttemptId(),
                                                  paymentAttempt.getPaymentAttemptDate(),

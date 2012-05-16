@@ -19,11 +19,13 @@ package com.ning.billing.payment;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
@@ -31,57 +33,64 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
-import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.bus.BusEvent.BusEventType;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.globallocker.GlobalLock;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.LockFailedException;
+import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
 
 public class RequestProcessor {
+    
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
+    
+    private final static int NB_PAYMENT_THREADS = 3; // STEPH
+    private final static String PAYMENT_GROUP_NAME = "payment-grp";
+    private final static String PAYMENT_TH_NAME = "payment-th";
+
+    
     private final AccountUserApi accountUserApi;
     private final PaymentApi paymentApi;
     private final Bus eventBus;
     private final Clock clock;
-
+    private final ExecutorService executor;
+    
     private static final Logger log = LoggerFactory.getLogger(RequestProcessor.class);
 
     @Inject
-    public RequestProcessor(Clock clock,
-            AccountUserApi accountUserApi,
-            PaymentApi paymentApi,
-            PaymentProviderPluginRegistry pluginRegistry,
-            Bus eventBus) {
+    public RequestProcessor(final Clock clock,
+            final AccountUserApi accountUserApi,
+            final PaymentApi paymentApi,
+            final Bus eventBus,
+            final GlobalLocker locker) {
         this.clock = clock;
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
         this.eventBus = eventBus;
+        this.executor = Executors.newFixedThreadPool(NB_PAYMENT_THREADS, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(new ThreadGroup(PAYMENT_GROUP_NAME),
+                        r,
+                        PAYMENT_TH_NAME);
+            }
+        });
     }
     
-    private void postPaymentEvent(BusEvent ev, UUID accountId) {
-        if (ev == null) {
-            return;
-        }
-        try {
-            eventBus.post(ev);
-        } catch (EventBusException e) {
-            log.error("Failed to post Payment event event for account {} ", accountId, e);
-        }
-    }
 
     @Subscribe
-    public void receiveInvoice(InvoiceCreationEvent event) {
-
+    public void processInvoiceEvent(InvoiceCreationEvent event) {
 
         log.info("Received invoice creation notification for account {} and invoice {}", event.getAccountId(), event.getInvoiceId());
         PaymentErrorEvent errorEvent = null;
@@ -89,9 +98,8 @@ public class RequestProcessor {
             final Account account = accountUserApi.getAccountById(event.getAccountId());
             if (account != null) {
                 CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
-                List<PaymentInfoEvent> results = paymentApi.createPayment(account, Arrays.asList(event.getInvoiceId().toString()), context);
-                PaymentInfoEvent infoEvent = (!results.isEmpty()) ?  results.get(0) : null;
-                postPaymentEvent(infoEvent, account.getId());
+                PaymentInfoEvent result = paymentApi.createPayment(account, event.getInvoiceId(), context);
+                postPaymentEvent(result, account.getId());
                 return;
             } else {
                 errorEvent = new DefaultPaymentErrorEvent(null, "Failed to retrieve account", event.getAccountId(), null, null);
@@ -105,4 +113,16 @@ public class RequestProcessor {
         }
         postPaymentEvent(errorEvent, event.getAccountId());
     }
+    
+    private void postPaymentEvent(BusEvent ev, UUID accountId) {
+        if (ev == null) {
+            return;
+        }
+        try {
+            eventBus.post(ev);
+        } catch (EventBusException e) {
+            log.error("Failed to post Payment event event for account {} ", accountId, e);
+        }
+    }
+
 }

@@ -19,6 +19,7 @@ import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 
 public class PaymentApiException extends BillingExceptionBase {
     
@@ -29,12 +30,6 @@ public class PaymentApiException extends BillingExceptionBase {
         super(e, e.getCode(), e.getMessage());
     }
 
-    /*
-    public PaymentApiException(CatalogApiException e) {
-        super(e, e.getCode(), e.getMessage());
-    }
-    */
-    
     public PaymentApiException(Throwable e, ErrorCode code, Object...args) {
         super(e, code, args);
     }

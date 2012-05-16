@@ -44,16 +44,16 @@ public interface PaymentApi {
     public void deletePaymentMethod(final String accountKey, final String paymentMethodId, final CallContext context)
         throws PaymentApiException;
 
-    public List<PaymentInfoEvent> createPayment(final String accountKey, final List<String> invoiceIds, final CallContext context)
+    public PaymentInfoEvent createPayment(final String accountKey, final UUID invoiceId, final CallContext context)
         throws PaymentApiException;
     
-    public List<PaymentInfoEvent> createPayment(final Account account, final List<String> invoiceIds, final CallContext context)
+    public PaymentInfoEvent createPayment(final Account account, final UUID invoiceId, final CallContext context)
         throws PaymentApiException;
     
-    public PaymentInfoEvent createPaymentForPaymentAttempt(final UUID paymentAttemptId, final CallContext context)
+    public PaymentInfoEvent createPaymentForPaymentAttempt(final String accountKey, final UUID paymentAttemptId, final CallContext context)
         throws PaymentApiException;
 
-    public List<PaymentInfoEvent> createRefund(final Account account, final List<String> invoiceIds, final CallContext context)
+    public PaymentInfoEvent createRefund(final Account account, final UUID paymentId, final CallContext context)
         throws PaymentApiException;
 
     public PaymentProviderAccount getPaymentProviderAccount(final String accountKey)
@@ -68,7 +68,7 @@ public interface PaymentApi {
     public PaymentAttempt getPaymentAttemptForPaymentId(final String id)
         throws PaymentApiException;
 
-    public List<PaymentInfoEvent> getPaymentInfo(final List<String> invoiceIds)
+    public List<PaymentInfoEvent> getPaymentInfo(final List<UUID> invoiceIds)
         throws PaymentApiException;
 
     public List<PaymentAttempt> getPaymentAttemptsForInvoiceId(final String invoiceId)

@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -52,7 +53,7 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentAttempt createPaymentAttempt(final PaymentAttempt paymentAttempt, final CallContext context) {
+    public PaymentAttempt createPaymentAttempt(final PaymentAttempt paymentAttempt, final PaymentAttemptStatus paymentAttemptStatus, final CallContext context) {
         return sqlDao.inTransaction(new Transaction<PaymentAttempt, PaymentSqlDao>() {
             @Override
             public PaymentAttempt inTransaction(PaymentSqlDao transactional, TransactionStatus status) throws Exception {
@@ -69,11 +70,11 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentAttempt createPaymentAttempt(final Invoice invoice, final CallContext context) {
+    public PaymentAttempt createPaymentAttempt(final Invoice invoice, final PaymentAttemptStatus paymentAttemptStatus, final CallContext context) {
         return sqlDao.inTransaction(new Transaction<PaymentAttempt, PaymentSqlDao>() {
             @Override
             public PaymentAttempt inTransaction(PaymentSqlDao transactional, TransactionStatus status) throws Exception {
-                final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice);
+                final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice, paymentAttemptStatus);
                 transactional.insertPaymentAttempt(paymentAttempt, context);
                 UUID historyRecordId = UUID.randomUUID();
                 transactional.insertPaymentAttemptHistory(historyRecordId.toString(), paymentAttempt, context);

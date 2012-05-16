@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,28 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.payment.retry;
 
-package com.ning.billing.util.globallocker;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
-public interface GlobalLocker {
+public interface RetryService {
+    
+    public void initialize(final String svcName)
+        throws NotificationQueueAlreadyExists;
+    
+    public void start();
+    
+    public void stop();
 
-    GlobalLock lockWithNumberOfTries(final LockerService service, final String lockKey, final int retry);
-    Boolean isFree(final LockerService service, final String lockKey);
-
-    public enum LockerService {
-
-        INVOICE("invoice"),
-        PAYMENT("payment");        
-
-        private final String svcName;
-
-        LockerService(String svcName) {
-            this.svcName = svcName;
-        }
-
-        @Override
-        public String toString() {
-            return svcName;
-        }
-    }
 }

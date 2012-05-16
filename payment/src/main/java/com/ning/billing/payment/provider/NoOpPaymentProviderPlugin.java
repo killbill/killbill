@@ -16,7 +16,7 @@
 
 package com.ning.billing.payment.provider;
 
-import java.util.Arrays;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,94 +25,152 @@ import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
-import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
-import com.ning.billing.payment.api.Either;
-import com.ning.billing.payment.api.PaymentErrorEvent;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
+import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
+import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 
 public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
-    public Either<PaymentErrorEvent, PaymentInfoEvent> processInvoice(Account account, Invoice invoice) {
-        PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder()
-                                             .setPaymentId(UUID.randomUUID().toString())
-                                             .setAmount(invoice.getBalance())
-                                             .setStatus("Processed")
-                                             .setCreatedDate(new DateTime(DateTimeZone.UTC))
-                                             .setEffectiveDate(new DateTime(DateTimeZone.UTC))
-                                             .setType("Electronic")
-                                             .build();
-        return Either.right(payment);
+    public PaymentInfoPlugin processInvoice(final Account account, final Invoice invoice)
+            throws PaymentPluginApiException {
+        PaymentInfoPlugin payment = new PaymentInfoPlugin() {
+            @Override
+            public DateTime getUpdatedDate() {
+                return new DateTime(DateTimeZone.UTC);
+            }
+            @Override
+            public String getType() {
+                return "Electronic";
+            }
+            @Override
+            public String getStatus() {
+                return "Processed";
+            }
+            @Override
+            public BigDecimal getRefundAmount() {
+                return null;
+            }
+            @Override
+            public String getReferenceId() {
+                return null;
+            }
+            @Override
+            public String getPaymentNumber() {
+                return null;
+            }
+            @Override
+            public String getPaymentMethodId() {
+                return null;
+            }
+            @Override
+            public String getPaymentMethod() {
+                return null;
+            }
+            @Override
+            public String getPaymentId() {
+                return UUID.randomUUID().toString();
+            }
+            @Override
+            public DateTime getEffectiveDate() {
+                return null;
+            }
+            @Override
+            public DateTime getCreatedDate() {
+                return new DateTime(DateTimeZone.UTC);
+            }
+            @Override
+            public String getCardType() {
+                return null;
+            }
+            @Override
+            public String getCardCountry() {
+                return null;
+            }
+            @Override
+            public String getBankIdentificationNumber() {
+                return null;
+            }
+            @Override
+            public BigDecimal getAmount() {
+                return invoice.getBalance();
+            }
+        };
+        return payment;
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentInfoEvent> getPaymentInfo(String paymentId) {
-        return Either.right(null);
+    public String createPaymentProviderAccount(Account account)
+            throws PaymentPluginApiException {
+        
+        return null;
     }
 
     @Override
-    public Either<PaymentErrorEvent, String> createPaymentProviderAccount(Account account) {
-        return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unsupported",
-                                            "Account creation not supported in this plugin",
-                                            account.getId(),
-                                            null, null));
+    public PaymentInfoPlugin getPaymentInfo(String paymentId)
+            throws PaymentPluginApiException {
+        
+        return null;
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
-        return Either.right(null);
+    public PaymentProviderAccount getPaymentProviderAccount(String accountKey)
+            throws PaymentPluginApiException {
+        return null;
     }
 
     @Override
-    public Either<PaymentErrorEvent, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
-        return Either.right(null);
-    }
-
-    public void setDefaultPaymentMethodOnAccount(PaymentProviderAccount account, String paymentMethodId) {
-        // NO-OP
+    public void updatePaymentGateway(String accountKey)
+            throws PaymentPluginApiException {
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
-        return Either.right(paymentMethod);
+    public PaymentMethodInfo getPaymentMethodInfo(String paymentMethodId)
+            throws PaymentPluginApiException {
+        return null;
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> deletePaymentMethod(String accountKey, String paymentMethodId) {
-        return Either.right(null);
+    public List<PaymentMethodInfo> getPaymentMethods(String accountKey)
+            throws PaymentPluginApiException {
+        return null;
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
-        return Either.right(null);
+    public String addPaymentMethod(String accountKey,
+            PaymentMethodInfo paymentMethod) throws PaymentPluginApiException {
+        return null;
     }
 
     @Override
-    public Either<PaymentErrorEvent, List<PaymentMethodInfo>> getPaymentMethods(final String accountKey) {
-        return Either.right(Arrays.<PaymentMethodInfo>asList());
+    public PaymentMethodInfo updatePaymentMethod(String accountKey,
+            PaymentMethodInfo paymentMethodInfo)
+            throws PaymentPluginApiException {
+        return null;
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> updatePaymentGateway(String accountKey) {
-        return Either.right(null);
+    public void deletePaymentMethod(String accountKey, String paymentMethodId)
+    throws PaymentPluginApiException {
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> updatePaymentProviderAccountExistingContact(Account account) {
-        return Either.right(null);
+    public void updatePaymentProviderAccountExistingContact(Account account)
+            throws PaymentPluginApiException {
+
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> updatePaymentProviderAccountWithNewContact(Account account) {
-        return Either.right(null);
+    public void updatePaymentProviderAccountWithNewContact(Account account)
+            throws PaymentPluginApiException {
+
     }
 
     @Override
-    public List<Either<PaymentErrorEvent, PaymentInfoEvent>> processRefund(Account account) {
-        // TODO Auto-generated method stub
+    public List<PaymentInfoPlugin> processRefund(Account account)
+            throws PaymentPluginApiException {
         return null;
     }
 

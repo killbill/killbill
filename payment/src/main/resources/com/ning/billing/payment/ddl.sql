@@ -8,6 +8,7 @@ CREATE TABLE payment_attempts (
       payment_attempt_dt datetime NOT NULL,
       payment_id varchar(36) COLLATE utf8_bin,
       retry_count tinyint,
+      processing_status varchar(20),
       invoice_dt datetime NOT NULL,
       created_by varchar(50) NOT NULL,
       created_dt datetime NOT NULL,

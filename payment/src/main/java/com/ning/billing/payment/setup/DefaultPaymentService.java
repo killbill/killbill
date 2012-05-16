@@ -16,16 +16,26 @@
 
 package com.ning.billing.payment.setup;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
+import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
+import com.ning.billing.payment.retry.FailedPaymentRetryService;
+import com.ning.billing.payment.retry.TimedoutPaymentRetryService;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public class DefaultPaymentService implements PaymentService {
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentService.class);
@@ -35,12 +45,17 @@ public class DefaultPaymentService implements PaymentService {
     private final RequestProcessor requestProcessor;
     private final Bus eventBus;
     private final PaymentApi api;
+    private final FailedPaymentRetryService failedRetryService;
+    private final TimedoutPaymentRetryService timedoutRetryService;
 
     @Inject
-    public DefaultPaymentService(final RequestProcessor requestProcessor, final PaymentApi api, final Bus eventBus) {
+    public DefaultPaymentService(final RequestProcessor requestProcessor, final PaymentApi api, final Bus eventBus,
+            final FailedPaymentRetryService failedRetryService, final TimedoutPaymentRetryService timedoutRetryService) {
         this.requestProcessor = requestProcessor;
         this.eventBus = eventBus;
         this.api = api;
+        this.failedRetryService = failedRetryService;
+        this.timedoutRetryService = timedoutRetryService;
     }
 
     @Override
@@ -48,6 +63,12 @@ public class DefaultPaymentService implements PaymentService {
         return SERVICE_NAME;
     }
 
+    @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
+    public void initialize() throws NotificationQueueAlreadyExists {
+        failedRetryService.initialize(SERVICE_NAME);
+        timedoutRetryService.initialize(SERVICE_NAME);
+    }
+    
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
     public void registerForNotifications() {
         try {
@@ -57,10 +78,21 @@ public class DefaultPaymentService implements PaymentService {
             log.error("Unable to register with the EventBus!", e);
         }
     }
+    
+    @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
+    public void start() {
+        failedRetryService.start();
+        timedoutRetryService.start();
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    public void stop() {
+        failedRetryService.stop();
+        timedoutRetryService.stop();
+    }
 
     @Override
     public PaymentApi getPaymentApi() {
         return api;
     }
-
 }

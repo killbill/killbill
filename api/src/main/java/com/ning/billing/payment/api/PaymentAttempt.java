@@ -38,6 +38,7 @@ public class PaymentAttempt {
     private final Integer retryCount;
     private final DateTime createdDate;
     private final DateTime updatedDate;
+    private final PaymentAttemptStatus paymentAttemptStatus;
 
     public PaymentAttempt(UUID paymentAttemptId,
                           UUID invoiceId,
@@ -48,6 +49,7 @@ public class PaymentAttempt {
                           DateTime paymentAttemptDate,
                           String paymentId,
                           Integer retryCount,
+                          PaymentAttemptStatus paymentAttemptStatus,
                           DateTime createdDate,
                           DateTime updatedDate) {
         this.paymentAttemptId = paymentAttemptId;
@@ -59,6 +61,7 @@ public class PaymentAttempt {
         this.paymentAttemptDate = paymentAttemptDate == null ? new DateTime(DateTimeZone.UTC) : paymentAttemptDate;
         this.paymentId = paymentId;
         this.retryCount = retryCount == null ? 0 : retryCount;
+        this.paymentAttemptStatus = paymentAttemptStatus;
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
     }
@@ -71,7 +74,8 @@ public class PaymentAttempt {
                           DateTime invoiceDate,
                           DateTime paymentAttemptDate,
                           String paymentId,
-                          Integer retryCount) {
+                          Integer retryCount,
+                          PaymentAttemptStatus paymentAttemptStatus) {
         this(paymentAttemptId,
              invoiceId,
              accountId,
@@ -81,10 +85,12 @@ public class PaymentAttempt {
              paymentAttemptDate,
              paymentId,
              retryCount,
+             paymentAttemptStatus,
              null,
              null);
     }
 
+    /*
     public PaymentAttempt(UUID paymentAttemptId, UUID invoiceId, UUID accountId, BigDecimal amount, Currency currency, DateTime invoiceDate, DateTime paymentAttemptDate) {
         this(paymentAttemptId, invoiceId, accountId, amount, currency, invoiceDate, paymentAttemptDate, null, null);
     }
@@ -93,8 +99,17 @@ public class PaymentAttempt {
         this(paymentAttemptId, invoiceId, accountId, null, null, invoiceDate, paymentAttemptDate, null, null);
     }
 
-    public PaymentAttempt(UUID paymentAttemptId, Invoice invoice) {
-        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null);
+*/
+    public PaymentAttempt(UUID paymentAttemptId, Invoice invoice, PaymentAttemptStatus paymentAttemptStatus) {
+        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null, paymentAttemptStatus);
+    }
+    
+    public enum PaymentAttemptStatus {
+        IN_PROCESSING,
+        COMPLETED_SUCCESS,
+        COMPLETED_FAILED,
+        COMPLETED_ABORTED,
+        PENDING
     }
 
     public DateTime getInvoiceDate() {
@@ -140,10 +155,15 @@ public class PaymentAttempt {
     public Integer getRetryCount() {
         return retryCount;
     }
+    
+    public PaymentAttemptStatus getPaymentAttemptStatus() {
+        return paymentAttemptStatus;
+    }
 
     @Override
     public String toString() {
-        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", invoiceId=" + invoiceId + ", accountId=" + accountId + ", amount=" + amount + ", currency=" + currency + ", paymentId=" + paymentId + ", invoiceDate=" + invoiceDate + ", paymentAttemptDate=" + paymentAttemptDate + ", retryCount=" + retryCount + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
+        return "PaymentAttempt [paymentAttemptId=" + paymentAttemptId + ", invoiceId=" + invoiceId + ", accountId=" + accountId + ", amount=" + amount + ", currency=" + currency + ", paymentId=" + paymentId + ", invoiceDate=" + invoiceDate + ", paymentAttemptDate=" + paymentAttemptDate +
+        ", retryCount=" + retryCount + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
     }
 
     public Builder cloner() {
@@ -162,7 +182,8 @@ public class PaymentAttempt {
         private Integer retryCount;
         private DateTime createdDate;
         private DateTime updatedDate;
-
+        private PaymentAttemptStatus paymentAttemptStatus;
+        
         public Builder() {
         }
 
@@ -176,6 +197,7 @@ public class PaymentAttempt {
             this.paymentAttemptDate = src.paymentAttemptDate;
             this.paymentId = src.paymentId;
             this.retryCount = src.retryCount;
+            this.paymentAttemptStatus = paymentAttemptStatus;
             this.createdDate = src.createdDate;
             this.updatedDate = src.updatedDate;
         }
@@ -235,6 +257,11 @@ public class PaymentAttempt {
             return this;
         }
 
+        public Builder setPaymentAttemptStatus(PaymentAttemptStatus status) {
+         this.paymentAttemptStatus = paymentAttemptStatus; 
+         return this;
+        }
+        
         public PaymentAttempt build() {
             return new PaymentAttempt(paymentAttemptId,
                                       invoiceId,
@@ -245,6 +272,7 @@ public class PaymentAttempt {
                                       paymentAttemptDate,
                                       paymentId,
                                       retryCount,
+                                      paymentAttemptStatus,
                                       createdDate,
                                       updatedDate);
         }

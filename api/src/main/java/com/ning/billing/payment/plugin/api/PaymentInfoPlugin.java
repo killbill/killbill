@@ -13,20 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.payment.api;
+package com.ning.billing.payment.plugin.api;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.util.bus.BusEvent;
-
-public interface PaymentInfoEvent extends BusEvent {
-
-    public UUID getInvoiceId();
-
-    public UUID getAccountId();
+public interface PaymentInfoPlugin {
     
     public String getPaymentId();
 
@@ -57,5 +50,4 @@ public interface PaymentInfoEvent extends BusEvent {
     public String getType();
 
     public DateTime getUpdatedDate();
-    
 }

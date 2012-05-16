@@ -36,6 +36,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public abstract class TestPaymentDao {
@@ -89,7 +90,7 @@ public abstract class TestPaymentDao {
                 .setInvoiceDate(context.getCreatedDate())
                 .build();
 
-        paymentDao.createPaymentAttempt(paymentAttempt, context);
+        paymentDao.createPaymentAttempt(paymentAttempt, PaymentAttemptStatus.IN_PROCESSING, context);
     }
 
     @Test
@@ -104,8 +105,8 @@ public abstract class TestPaymentDao {
         ClockMock clock = new ClockMock();
         CallContext thisContext = new DefaultCallContext("Payment Tests", CallOrigin.TEST, UserType.TEST, clock);
 
-        PaymentAttempt originalPaymentAttempt = new PaymentAttempt(paymentAttemptId, invoiceId, accountId, invoiceAmount, Currency.USD, clock.getUTCNow(), clock.getUTCNow(), paymentId, 0);
-        PaymentAttempt attempt = paymentDao.createPaymentAttempt(originalPaymentAttempt, thisContext);
+        PaymentAttempt originalPaymentAttempt = new PaymentAttempt(paymentAttemptId, invoiceId, accountId, invoiceAmount, Currency.USD, clock.getUTCNow(), clock.getUTCNow(), paymentId, 0, PaymentAttemptStatus.IN_PROCESSING);
+        PaymentAttempt attempt = paymentDao.createPaymentAttempt(originalPaymentAttempt, PaymentAttemptStatus.IN_PROCESSING, thisContext);
 
         List<PaymentAttempt> attemptsFromGet = paymentDao.getPaymentAttemptsForInvoiceId(invoiceId.toString());
 

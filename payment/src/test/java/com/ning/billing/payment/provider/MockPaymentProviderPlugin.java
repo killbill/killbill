@@ -40,9 +40,13 @@ import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
 import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
+import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
+import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 import com.ning.billing.util.clock.Clock;
 
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
+    
     private final AtomicBoolean makeNextInvoiceFail = new AtomicBoolean(false);
     private final Map<String, PaymentInfoEvent> payments = new ConcurrentHashMap<String, PaymentInfoEvent>();
     private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
@@ -59,66 +63,63 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentInfoEvent> processInvoice(Account account, Invoice invoice) {
+    public PaymentInfoPlugin processInvoice(Account account, Invoice invoice) throws PaymentPluginApiException {
         if (makeNextInvoiceFail.getAndSet(false)) {
-            return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "test error", account.getId(), invoice.getId(), null));
+            throw new PaymentPluginApiException("", "test error");
         }
-        else {
-            PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setPaymentId(UUID.randomUUID().toString())
-                                                 .setAmount(invoice.getBalance())
-                                                 .setStatus("Processed")
-                                                 .setBankIdentificationNumber("1234")
-                                                 .setCreatedDate(clock.getUTCNow())
-                                                 .setEffectiveDate(clock.getUTCNow())
-                                                 .setPaymentNumber("12345")
-                                                 .setReferenceId("12345")
-                                                 .setType("Electronic")
-                                                 .build();
-            payments.put(payment.getPaymentId(), payment);
-            return Either.right(payment);
-        }
+        PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setPaymentId(UUID.randomUUID().toString())
+        .setAmount(invoice.getBalance())
+        .setStatus("Processed")
+        .setBankIdentificationNumber("1234")
+        .setCreatedDate(clock.getUTCNow())
+        .setEffectiveDate(clock.getUTCNow())
+        .setPaymentNumber("12345")
+        .setReferenceId("12345")
+        .setType("Electronic")
+        .build();
+        // STEPH
+        //return payment;
+        return null;
     }
 
+
     @Override
-    public Either<PaymentErrorEvent, PaymentInfoEvent> getPaymentInfo(String paymentId) {
+    public PaymentInfoPlugin getPaymentInfo(String paymentId) throws PaymentPluginApiException {
         PaymentInfoEvent payment = payments.get(paymentId);
-
         if (payment == null) {
-            return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("notfound", "No payment found for id " + paymentId, null, null, null));
+            throw new PaymentPluginApiException("", "No payment found for id " + paymentId);
         }
-        else {
-            return Either.right(payment);
-        }
+        // STEPH
+        return null;
     }
 
     @Override
-    public Either<PaymentErrorEvent, String> createPaymentProviderAccount(Account account) {
+    public String createPaymentProviderAccount(Account account)  throws PaymentPluginApiException {
         if (account != null) {
             String id = String.valueOf(RandomStringUtils.randomAlphanumeric(10));
             accounts.put(account.getExternalKey(),
                          new PaymentProviderAccount.Builder().setAccountKey(account.getExternalKey())
                                                              .setId(id)
                                                              .build());
-
-            return Either.right(id);
+            return id;
         }
         else {
-            return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("unknown", "Did not get account to create payment provider account", null, null, null));
+            throw new PaymentPluginApiException("", "Did not get account to create payment provider account");
         }
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentProviderAccount> getPaymentProviderAccount(String accountKey) {
+    public PaymentProviderAccount getPaymentProviderAccount(String accountKey)  throws PaymentPluginApiException {
         if (accountKey != null) {
-            return Either.right(accounts.get(accountKey));
+            return accounts.get(accountKey);
         }
         else {
-            return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "Did not get account for accountKey " + accountKey, null, null, null));
+            throw new PaymentPluginApiException("", "Did not get account for accountKey " + accountKey);
         }
     }
 
     @Override
-    public Either<PaymentErrorEvent, String> addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
+    public String addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod)  throws PaymentPluginApiException {
         if (paymentMethod != null) {
             PaymentProviderAccount account = accounts.get(accountKey);
 
@@ -133,34 +134,34 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
                     PaypalPaymentMethodInfo paypalPaymentMethod = (PaypalPaymentMethodInfo)paymentMethod;
 
                     realPaymentMethod = new PaypalPaymentMethodInfo.Builder(paypalPaymentMethod)
-                                                                   .setId(paymentMethodId)
-                                                                   .setAccountId(accountKey)
-                                                                   .setDefaultMethod(shouldBeDefault)
-                                                                   .setBaid(paypalPaymentMethod.getBaid())
-                                                                   .setEmail(paypalPaymentMethod.getEmail())
-                                                                   .build();
+                    .setId(paymentMethodId)
+                    .setAccountId(accountKey)
+                    .setDefaultMethod(shouldBeDefault)
+                    .setBaid(paypalPaymentMethod.getBaid())
+                    .setEmail(paypalPaymentMethod.getEmail())
+                    .build();
                 }
                 else if (paymentMethod instanceof CreditCardPaymentMethodInfo) {
                     CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethod;
                     realPaymentMethod = new CreditCardPaymentMethodInfo.Builder(ccPaymentMethod).setId(paymentMethodId).build();
                 }
                 if (realPaymentMethod == null) {
-                    return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("unsupported", "Payment method " + paymentMethod.getType() + " not supported by the plugin", null, null, null));
+                    throw new PaymentPluginApiException("", "Payment method " + paymentMethod.getType() + " not supported by the plugin");                    
                 }
                 else {
                     if (shouldBeDefault) {
                         setDefaultPaymentMethodOnAccount(account, paymentMethodId);
                     }
                     paymentMethods.put(paymentMethodId, realPaymentMethod);
-                    return Either.right(paymentMethodId);
+                    return paymentMethodId;
                 }
             }
-                else {
-                    return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("noaccount", "Could not retrieve account for accountKey " + accountKey, null, null, null));
-                }
+            else {
+                throw new PaymentPluginApiException("", "Could not retrieve account for accountKey " + accountKey);                    
+            }
         }
         else {
-            return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("unknown", "Could not create add payment method " + paymentMethod + " for " + accountKey, null, null, null));
+            throw new PaymentPluginApiException("", "Could not create add payment method " + paymentMethod + " for " + accountKey);
         }
     }
 
@@ -191,7 +192,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentMethodInfo> updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethod) {
+    public PaymentMethodInfo updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethod)  throws PaymentPluginApiException {
         if (paymentMethod != null) {
             PaymentMethodInfo realPaymentMethod = null;
 
@@ -204,45 +205,43 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
                 realPaymentMethod = new CreditCardPaymentMethodInfo.Builder(ccPaymentMethod).build();
             }
             if (realPaymentMethod == null) {
-                return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("unsupported", "Payment method " + paymentMethod.getType() + " not supported by the plugin", null, null, null));
+                throw new PaymentPluginApiException("", "Payment method " + paymentMethod.getType() + " not supported by the plugin");
             }
             else {
                 paymentMethods.put(paymentMethod.getId(), paymentMethod);
-                return Either.right(realPaymentMethod);
+                return realPaymentMethod;
             }
         }
         else {
-            return Either.left((PaymentErrorEvent)  new DefaultPaymentErrorEvent("unknown", "Could not create add payment method " + paymentMethod + " for " + accountKey, null, null, null));
+            throw new PaymentPluginApiException("", "Could not create add payment method " + paymentMethod + " for " + accountKey);            
         }
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> deletePaymentMethod(String accountKey, String paymentMethodId) {
+    public void deletePaymentMethod(String accountKey, String paymentMethodId)  throws PaymentPluginApiException {
         PaymentMethodInfo paymentMethodInfo = paymentMethods.get(paymentMethodId);
         if (paymentMethodInfo != null) {
             if (Boolean.FALSE.equals(paymentMethodInfo.getDefaultMethod()) || paymentMethodInfo.getDefaultMethod() == null) {
                 if (paymentMethods.remove(paymentMethodId) == null) {
-                    return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "Did not get any result back", null, null, null));
+                    throw new PaymentPluginApiException("", "Did not get any result back");
                 }
-            }
-            else {
-                return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("error", "Cannot delete default payment method", null, null, null));
+        } else {
+                throw new PaymentPluginApiException("", "Cannot delete default payment method");                
             }
         }
-        return Either.right(null);
+        return;
     }
 
     @Override
-    public Either<PaymentErrorEvent, PaymentMethodInfo> getPaymentMethodInfo(String paymentMethodId) {
+    public PaymentMethodInfo getPaymentMethodInfo(String paymentMethodId)  throws PaymentPluginApiException {
         if (paymentMethodId == null) {
-            return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "Could not retrieve payment method for paymentMethodId " + paymentMethodId, null, null, null));
+            throw new PaymentPluginApiException("", "Could not retrieve payment method for paymentMethodId " + paymentMethodId);
         }
-
-        return Either.right(paymentMethods.get(paymentMethodId));
+        return paymentMethods.get(paymentMethodId);
     }
 
     @Override
-    public Either<PaymentErrorEvent, List<PaymentMethodInfo>> getPaymentMethods(final String accountKey) {
+    public List<PaymentMethodInfo> getPaymentMethods(final String accountKey) throws PaymentPluginApiException {
 
         Collection<PaymentMethodInfo> filteredPaymentMethods = Collections2.filter(paymentMethods.values(), new Predicate<PaymentMethodInfo>() {
             @Override
@@ -251,27 +250,23 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
             }
         });
         List<PaymentMethodInfo> result = new ArrayList<PaymentMethodInfo>(filteredPaymentMethods);
-        return Either.right(result);
+        return result;
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> updatePaymentGateway(String accountKey) {
-        return Either.right(null);
+    public void updatePaymentGateway(String accountKey)  throws PaymentPluginApiException {
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> updatePaymentProviderAccountExistingContact(Account account) {
-        // nothing to do here
-        return Either.right(null);
+    public void updatePaymentProviderAccountExistingContact(Account account)  throws PaymentPluginApiException {
     }
 
     @Override
-    public Either<PaymentErrorEvent, Void> updatePaymentProviderAccountWithNewContact(Account account) {
-        return Either.right(null);
+    public void updatePaymentProviderAccountWithNewContact(Account account)  throws PaymentPluginApiException {
     }
 
     @Override
-    public List<Either<PaymentErrorEvent, PaymentInfoEvent>> processRefund(Account account) {
+    public List<PaymentInfoPlugin> processRefund(Account account)  throws PaymentPluginApiException {
         return null;
     }
 }

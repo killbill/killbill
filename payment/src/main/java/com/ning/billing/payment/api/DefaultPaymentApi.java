@@ -18,13 +18,10 @@ package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.LinkedList;
+
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,285 +34,299 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.payment.RetryService;
+import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.dao.PaymentDao;
-import com.ning.billing.payment.provider.PaymentProviderPlugin;
+
+import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
+import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.globallocker.GlobalLock;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.LockFailedException;
+import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
 
 public class DefaultPaymentApi implements PaymentApi {
+    
+    private final static int NB_LOCK_TRY = 5;
+    
     private final PaymentProviderPluginRegistry pluginRegistry;
     private final AccountUserApi accountUserApi;
     private final InvoicePaymentApi invoicePaymentApi;
-    private final RetryService retryService;
+    private final FailedPaymentRetryService retryService;
     private final PaymentDao paymentDao;
     private final PaymentConfig config;
-
-
+    private final GlobalLocker locker;
+    
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentApi.class);
 
     @Inject
-    public DefaultPaymentApi(PaymentProviderPluginRegistry pluginRegistry,
-            AccountUserApi accountUserApi,
-            InvoicePaymentApi invoicePaymentApi,
-            RetryService retryService,
-            PaymentDao paymentDao,
-            PaymentConfig config) {
+    public DefaultPaymentApi(final PaymentProviderPluginRegistry pluginRegistry,
+            final AccountUserApi accountUserApi,
+            final InvoicePaymentApi invoicePaymentApi,
+            final FailedPaymentRetryService retryService,
+            final PaymentDao paymentDao,
+            final PaymentConfig config,
+            final GlobalLocker locker) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.retryService = retryService;
         this.paymentDao = paymentDao;
         this.config = config;
+        this.locker = locker;
     }
 
     @Override
     public PaymentMethodInfo getPaymentMethod(final String accountKey, final String paymentMethodId) 
     throws PaymentApiException {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        Either<PaymentErrorEvent, PaymentMethodInfo> result = plugin.getPaymentMethodInfo(paymentMethodId);
-        if (result.isLeft()) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, accountKey, paymentMethodId);
+        try {
+            final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+            return plugin.getPaymentMethodInfo(paymentMethodId);
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, accountKey, paymentMethodId);            
         }
-        return result.getRight();
-    }
-
-    private PaymentProviderPlugin getPaymentProviderPlugin(String accountKey) {
-        String paymentProviderName = null;
-
-        if (accountKey != null) {
-            Account account;
-            try {
-                account = accountUserApi.getAccountByKey(accountKey);
-                return getPaymentProviderPlugin(account);
-            } catch (AccountApiException e) {
-                log.error("Error getting payment provider plugin.", e);
-            }
-        }
-
-        return pluginRegistry.getPlugin(paymentProviderName);
-    }
-
-    private PaymentProviderPlugin getPaymentProviderPlugin(Account account) {
-        String paymentProviderName = null;
-
-        if (account != null) {
-            paymentProviderName = account.getPaymentProviderName();
-        }
-
-        return pluginRegistry.getPlugin(paymentProviderName);
     }
 
     @Override
     public List<PaymentMethodInfo> getPaymentMethods(String accountKey)
     throws PaymentApiException {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        Either<PaymentErrorEvent, List<PaymentMethodInfo>> result =  plugin.getPaymentMethods(accountKey);
-        if (result.isLeft()) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_PAYMENT_METHODS, accountKey);
+        try {
+            final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+            return plugin.getPaymentMethods(accountKey);
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_NO_PAYMENT_METHODS, accountKey);
         }
-        return result.getRight();
     }
 
     @Override
-    public void updatePaymentGateway(String accountKey, CallContext context) 
+    public void updatePaymentGateway(final String accountKey, final CallContext context) 
     throws PaymentApiException {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        Either<PaymentErrorEvent, Void> result =  plugin.updatePaymentGateway(accountKey);
-        if (result.isLeft()) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_UPD_GATEWAY_FAILED, accountKey, result.getLeft().getMessage());
-        }
-        return;
+
+        new WithAccountLock<Void>().processAccountWithLock(locker, accountKey, new WithAccountLockCallback<Void>() {
+            @Override
+            public Void doOperation() throws PaymentApiException {
+
+                try {
+                    final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+                    plugin.updatePaymentGateway(accountKey);
+                    return null;
+                } catch (PaymentPluginApiException e) {
+                    throw new PaymentApiException(e, ErrorCode.PAYMENT_UPD_GATEWAY_FAILED, accountKey, e.getMessage());
+                }
+            }
+        });
     }
 
     @Override
     public PaymentProviderAccount getPaymentProviderAccount(String accountKey)
     throws PaymentApiException {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        Either<PaymentErrorEvent, PaymentProviderAccount> result = plugin.getPaymentProviderAccount(accountKey);
-        if (result.isLeft()) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_GET_PAYMENT_PROVIDER, accountKey, result.getLeft().getMessage());
-        }
-        return result.getRight();
-    }
-
-    @Override
-    public String addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod, CallContext context) 
-    throws PaymentApiException {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        Either<PaymentErrorEvent, String> result =  plugin.addPaymentMethod(accountKey, paymentMethod);
-        if (result.isLeft()) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, accountKey, result.getLeft().getMessage());
-        }
-        return result.getRight();
-    }
-
-
-    @Override
-    public void deletePaymentMethod(String accountKey, String paymentMethodId, CallContext context) 
-    throws PaymentApiException {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        Either<PaymentErrorEvent, Void> result =  plugin.deletePaymentMethod(accountKey, paymentMethodId);
-        if (result.isLeft()) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_DEL_PAYMENT_METHOD, accountKey, result.getLeft().getMessage());
-        }
-        return;
-    }
-
-    @Override
-    public PaymentMethodInfo updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo, CallContext context) 
-    throws PaymentApiException {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
-        Either<PaymentErrorEvent, PaymentMethodInfo> result = plugin.updatePaymentMethod(accountKey, paymentMethodInfo);
-        if (result.isLeft()) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_UPD_PAYMENT_METHOD, accountKey, result.getLeft().getMessage());
-        }
-        return result.getRight();
-    }
-
-    @Override
-    public List<PaymentInfoEvent> createPayment(String accountKey, List<String> invoiceIds, CallContext context) 
-    throws PaymentApiException {
         try {
-            final Account account = accountUserApi.getAccountByKey(accountKey);
-            return createPayment(account, invoiceIds, context);
-        } catch (AccountApiException e) {
-            throw new PaymentApiException(e);
+            final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+            return plugin.getPaymentProviderAccount(accountKey);
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_GET_PAYMENT_PROVIDER, accountKey, e.getMessage());
         }
     }
 
     @Override
-    public PaymentInfoEvent createPaymentForPaymentAttempt(UUID paymentAttemptId, CallContext context) 
+    public String addPaymentMethod(final String accountKey, final PaymentMethodInfo paymentMethod, final CallContext context) 
+    throws PaymentApiException {
+        
+        return new WithAccountLock<String>().processAccountWithLock(locker, accountKey, new WithAccountLockCallback<String>() {
+
+            @Override
+            public String doOperation() throws PaymentApiException {
+                try {
+                final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+                return plugin.addPaymentMethod(accountKey, paymentMethod);
+                } catch (PaymentPluginApiException e) {
+                    throw new PaymentApiException(e, ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, accountKey, e.getMessage());
+                }
+            }
+        });
+    }
+
+
+    @Override
+    public void deletePaymentMethod(final String accountKey, final String paymentMethodId, final CallContext context) 
+    throws PaymentApiException {
+        
+        new WithAccountLock<Void>().processAccountWithLock(locker, accountKey, new WithAccountLockCallback<Void>() {
+
+            @Override
+            public Void doOperation() throws PaymentApiException {
+                try {
+                final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+                plugin.deletePaymentMethod(accountKey, paymentMethodId);
+                return null;
+                } catch (PaymentPluginApiException e) {
+                    throw new PaymentApiException(e, ErrorCode.PAYMENT_DEL_PAYMENT_METHOD, accountKey, e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public PaymentMethodInfo updatePaymentMethod(final String accountKey, final PaymentMethodInfo paymentMethodInfo, final CallContext context) 
     throws PaymentApiException {
 
-        PaymentAttempt paymentAttempt = paymentDao.getPaymentAttemptById(paymentAttemptId);
-        if (paymentAttempt != null) {
-            try {
-                Invoice invoice = invoicePaymentApi.getInvoice(paymentAttempt.getInvoiceId());
-                Account account = accountUserApi.getAccountById(paymentAttempt.getAccountId());
+        return new WithAccountLock<PaymentMethodInfo>().processAccountWithLock(locker, accountKey, new WithAccountLockCallback<PaymentMethodInfo>() {
 
-                if (invoice != null && account != null) {
+            @Override
+            public PaymentMethodInfo doOperation() throws PaymentApiException {
+                try {
+                    final PaymentProviderPlugin plugin = getPaymentProviderPlugin(accountKey);
+                    return plugin.updatePaymentMethod(accountKey, paymentMethodInfo);
+                }  catch (PaymentPluginApiException e) {
+                    throw new PaymentApiException(e, ErrorCode.PAYMENT_UPD_PAYMENT_METHOD, accountKey, e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public PaymentInfoEvent createPayment(final String accountKey, final UUID invoiceId, final CallContext context) 
+        throws PaymentApiException {
+
+        return new WithAccountLock<PaymentInfoEvent>().processAccountWithLock(locker, accountKey, new WithAccountLockCallback<PaymentInfoEvent>() {
+
+            @Override
+            public PaymentInfoEvent doOperation() throws PaymentApiException {
+                try {
+                    final Account account = accountUserApi.getAccountByKey(accountKey);
+                    return createPayment(account, invoiceId, context);
+                } catch (AccountApiException e) {
+                    throw new PaymentApiException(e);
+                }
+            }
+        });
+    }
+
+    @Override
+    public PaymentInfoEvent createPaymentForPaymentAttempt(final String accountKey, final UUID paymentAttemptId, final CallContext context) 
+    throws PaymentApiException {
+
+        return new WithAccountLock<PaymentInfoEvent>().processAccountWithLock(locker, accountKey, new WithAccountLockCallback<PaymentInfoEvent>() {
+
+            @Override
+            public PaymentInfoEvent doOperation() throws PaymentApiException {
+                PaymentAttempt paymentAttempt = paymentDao.getPaymentAttemptById(paymentAttemptId);
+                try {
+
+                    Invoice invoice = paymentAttempt != null ? invoicePaymentApi.getInvoice(paymentAttempt.getInvoiceId()) : null;
+                    Account account = paymentAttempt != null ? accountUserApi.getAccountById(paymentAttempt.getAccountId()) : null;
+                    if (invoice == null || account == null) {
+                        throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD, paymentAttemptId);                            
+                    }
+
                     if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
-                        // TODO: send a notification that invoice was ignored?
                         log.info("Received invoice for payment with outstanding amount of 0 {} ", invoice);
                         throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_WITH_NON_POSITIVE_INV, account.getId());
+                    }
 
-                    } else {
-                        
+                    try {
                         PaymentAttempt newPaymentAttempt = new PaymentAttempt.Builder(paymentAttempt)
                         .setRetryCount(paymentAttempt.getRetryCount() + 1)
                         .setPaymentAttemptId(UUID.randomUUID())
                         .build();
 
-                        paymentDao.createPaymentAttempt(newPaymentAttempt, context);
-                        Either<PaymentErrorEvent, PaymentInfoEvent> result =  processPayment(getPaymentProviderPlugin(account), account, invoice, newPaymentAttempt, context);
-                        if (result.isLeft()) {
-                            throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT, account.getId(),  paymentAttemptId, result.getLeft().getMessage());                            
-                        }
-                        return result.getRight();
+                        paymentDao.createPaymentAttempt(newPaymentAttempt, PaymentAttemptStatus.IN_PROCESSING, context);
+                        PaymentInfoEvent result = processPaymentWithAccountLocked(getPaymentProviderPlugin(account), account, invoice, newPaymentAttempt, context);
 
+                        return result;
+                    } catch (PaymentPluginApiException e) {
+                        throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT, account.getId(),  paymentAttemptId, e.getMessage());                            
                     }
+                } catch (AccountApiException e) {
+                    throw new PaymentApiException(e);
                 }
-            } catch (AccountApiException e) {
-                throw new PaymentApiException(e);
             }
-        }
-        throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD, paymentAttemptId);
+        });
     }
 
     @Override
-    public List<PaymentInfoEvent> createPayment(Account account, List<String> invoiceIds, CallContext context) 
-        throws PaymentApiException {
-        
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+    public PaymentInfoEvent createPayment(final Account account, final UUID invoiceId, final CallContext context) 
+    throws PaymentApiException {
 
-        List<Either<PaymentErrorEvent, PaymentInfoEvent>> processedPaymentsOrErrors = new ArrayList<Either<PaymentErrorEvent, PaymentInfoEvent>>(invoiceIds.size());
+        return new WithAccountLock<PaymentInfoEvent>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<PaymentInfoEvent>() {
 
-        for (String invoiceId : invoiceIds) {
-            Invoice invoice = invoicePaymentApi.getInvoice(UUID.fromString(invoiceId));
+            @Override
+            public PaymentInfoEvent doOperation()
+            throws PaymentApiException {
 
-            if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0 ) {
-                log.debug("Received invoice for payment with balance of 0 {} ", invoice);
+                try {
+                    final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+
+
+
+                    Invoice invoice = invoicePaymentApi.getInvoice(invoiceId);
+
+                        if (invoice.isMigrationInvoice()) {
+                            log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
+                            return null;
+                        }
+
+                        PaymentInfoEvent result = null;
+                        if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0 ) {
+                            // STEPH null
+                            PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice, null, context);
+                            result = processPaymentWithAccountLocked(plugin, account, invoice, paymentAttempt, context);
+                        }
+
+                    return result;
+                } catch (PaymentPluginApiException e) {
+                    throw new PaymentApiException(e, ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), e.getMessage());
+                }
             }
-            else if (invoice.isMigrationInvoice()) {
-                log.info("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
-                Either<PaymentErrorEvent, PaymentInfoEvent> result = Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("migration invoice",
-                        "Invoice balance was a migration invoice",
-                        account.getId(),
-                        UUID.fromString(invoiceId),
-                        context.getUserToken()));
-                processedPaymentsOrErrors.add(result);
-            }
-            else {
-                PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice, context);
-
-                processedPaymentsOrErrors.add(processPayment(plugin, account, invoice, paymentAttempt, context));
-            }
-        }
-
-        List<Either<PaymentErrorEvent, PaymentInfoEvent>> result =  processedPaymentsOrErrors;
-        List<PaymentInfoEvent> info = new LinkedList<PaymentInfoEvent>();
-        for (Either<PaymentErrorEvent, PaymentInfoEvent> cur : result) {
-            if (cur.isLeft()) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), cur.getLeft().getMessage());
-            }
-            info.add(cur.getRight());
-        }
-        return info;
+        });
     }
 
-    private Either<PaymentErrorEvent, PaymentInfoEvent> processPayment(PaymentProviderPlugin plugin, Account account, Invoice invoice,
-            PaymentAttempt paymentAttempt, CallContext context) {
-        Either<PaymentErrorEvent, PaymentInfoEvent> paymentOrError = plugin.processInvoice(account, invoice);
+
+    private PaymentInfoEvent processPaymentWithAccountLocked(PaymentProviderPlugin plugin, Account account, Invoice invoice,
+            PaymentAttempt paymentAttempt, CallContext context) throws PaymentPluginApiException {
+
         PaymentInfoEvent paymentInfo = null;
-
-        if (paymentOrError.isLeft()) {
-            String error = StringUtils.substring(paymentOrError.getLeft().getMessage() + paymentOrError.getLeft().getBusEventType(), 0, 100);
-            log.info("Could not process a payment for " + paymentAttempt + " error was " + error);
-
-            scheduleRetry(paymentAttempt, error);
-        }
-        else {
-            paymentInfo = paymentOrError.getRight();
-            paymentDao.savePaymentInfo(paymentInfo, context);
-
-            final String paymentMethodId = paymentInfo.getPaymentMethodId();
-            log.debug("Fetching payment method info for payment method id " + ((paymentMethodId == null) ? "null" : paymentMethodId));
-            Either<PaymentErrorEvent, PaymentMethodInfo> paymentMethodInfoOrError = plugin.getPaymentMethodInfo(paymentMethodId);
-
-            if (paymentMethodInfoOrError.isRight()) {
-                PaymentMethodInfo paymentMethodInfo = paymentMethodInfoOrError.getRight();
-
-                if (paymentMethodInfo instanceof CreditCardPaymentMethodInfo) {
-                    CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethodInfo;
-                    paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getPaymentId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
-                }
-                else if (paymentMethodInfo instanceof PaypalPaymentMethodInfo) {
-                    PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
-                    paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getPaymentId(), null, null, context);
-                }
-            } else {
-                log.info(paymentMethodInfoOrError.getLeft().getMessage());
-            }
-
-            if (paymentInfo.getPaymentId() != null) {
-                paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), paymentInfo.getPaymentId(), context);
-            }
+        try {
+            paymentInfo = new DefaultPaymentInfoEvent(plugin.processInvoice(account, invoice), account.getId(), invoice.getId());
+        } catch (PaymentPluginApiException e) {
+            log.info("Could not process a payment for " + paymentAttempt + ", error was " + e.getMessage());
+            scheduleRetry(paymentAttempt);
+            throw e;
         }
 
-        invoicePaymentApi.notifyOfPaymentAttempt(
-                invoice.getId(),
-                paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
-                        //                                                                         paymentInfo.getRefundAmount(), TODO
-                        paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency(),
-                                paymentAttempt.getPaymentAttemptId(),
-                                paymentAttempt.getPaymentAttemptDate(),
-                                context);
+        paymentDao.savePaymentInfo(paymentInfo, context);
 
-        return paymentOrError;
+        final String paymentMethodId = paymentInfo.getPaymentMethodId();
+        log.debug("Fetching payment method info for payment method id " + ((paymentMethodId == null) ? "null" : paymentMethodId));
+        PaymentMethodInfo paymentMethodInfo = plugin.getPaymentMethodInfo(paymentMethodId);
+
+        if (paymentMethodInfo instanceof CreditCardPaymentMethodInfo) {
+            CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethodInfo;
+            paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getPaymentId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
+
+        } else if (paymentMethodInfo instanceof PaypalPaymentMethodInfo) {
+            PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
+            paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getPaymentId(), null, null, context);
+        }
+        if (paymentInfo.getPaymentId() != null) {
+            paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), paymentInfo.getPaymentId(), context);
+        }
+
+        invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
+                    paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
+                      /*paymentInfo.getRefundAmount(), */
+                      paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency(),
+                        paymentAttempt.getPaymentAttemptId(),
+                          paymentAttempt.getPaymentAttemptDate(),
+                            context);
+
+        return paymentInfo;
+
     }
 
-    private void scheduleRetry(PaymentAttempt paymentAttempt, String error) {
+    private void scheduleRetry(PaymentAttempt paymentAttempt) {
         final List<Integer> retryDays = config.getPaymentRetryDays();
 
         int retryCount = 0;
@@ -348,28 +359,28 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public String createPaymentProviderAccount(Account account, CallContext context) 
-        throws PaymentApiException {
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin((Account)null);
-        Either<PaymentErrorEvent, String> result =  plugin.createPaymentProviderAccount(account);
-        if (result.isLeft()) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT, account.getId(), result.getLeft().getMessage());
+    throws PaymentApiException {
+        try {
+            final PaymentProviderPlugin plugin = getPaymentProviderPlugin((Account)null);
+            return plugin.createPaymentProviderAccount(account);
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT, account.getId(), e.getMessage());
         }
-        return result.getRight();
     }
 
     @Override
     public void updatePaymentProviderAccountContact(String externalKey, CallContext context) 
         throws PaymentApiException {
+        
+        Account account = null;
         try {
-            Account account = accountUserApi.getAccountByKey(externalKey);
+            account = accountUserApi.getAccountByKey(externalKey);
             final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
-            Either<PaymentErrorEvent, Void> result = plugin.updatePaymentProviderAccountExistingContact(account);
-            if (result.isLeft()) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT, account.getId(), result.getLeft().getMessage());
-            }
-            return;
+            plugin.updatePaymentProviderAccountExistingContact(account);
         } catch (AccountApiException e) {
             throw new PaymentApiException(e);
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT, account.getId(), e.getMessage());
         }
     }
 
@@ -379,24 +390,37 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public List<PaymentInfoEvent> createRefund(Account account, List<String> invoiceIds, CallContext context)
+    public PaymentInfoEvent createRefund(Account account, UUID paymentId, CallContext context)
         throws PaymentApiException {
+
+        /*
+        try {
             
         final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
-        List<Either<PaymentErrorEvent, PaymentInfoEvent>> result = plugin.processRefund(account);
+        List<PaymentInfoPlugin> result = plugin.processRefund(account);
         List<PaymentInfoEvent> info =  new LinkedList<PaymentInfoEvent>();
-        for (Either<PaymentErrorEvent, PaymentInfoEvent> cur : result) {
-            if (cur.isLeft()) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), cur.getLeft().getMessage());
-            }
-            info.add(cur.getRight());
+        int i = 0;
+        for (PaymentInfoPlugin cur : result) {
+            // STEPH
+            //info.add(new DefaultPaymentInfoEvent(cur, account.getId(), invoiceIds.get(i)));
         }
         return info;
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), e.getMessage());
+        }
+        */
+        // STEPH
+        return null;
     }
 
     @Override
-    public List<PaymentInfoEvent> getPaymentInfo(List<String> invoiceIds) {
-        return paymentDao.getPaymentInfo(invoiceIds);
+    public List<PaymentInfoEvent> getPaymentInfo(List<UUID> invoiceIds) {
+        // STEPH until DAO is changed:
+        List<String> invoiceIdStrings = new ArrayList<String>();
+        for (UUID cur : invoiceIds) {
+            invoiceIdStrings.add(cur.toString());
+        }
+        return paymentDao.getPaymentInfo(invoiceIdStrings);
     }
 
     @Override
@@ -409,4 +433,59 @@ public class DefaultPaymentApi implements PaymentApi {
         return paymentDao.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
     }
 
+    
+
+    private PaymentProviderPlugin getPaymentProviderPlugin(String accountKey) {
+
+        String paymentProviderName = null;
+        if (accountKey != null) {
+            Account account;
+            try {
+                account = accountUserApi.getAccountByKey(accountKey);
+                return getPaymentProviderPlugin(account);
+            } catch (AccountApiException e) {
+                log.error("Error getting payment provider plugin.", e);
+            }
+        }
+        return pluginRegistry.getPlugin(paymentProviderName);
+    }
+    
+    private PaymentProviderPlugin getPaymentProviderPlugin(Account account) {
+        String paymentProviderName = null;
+
+        if (account != null) {
+            paymentProviderName = account.getPaymentProviderName();
+        }
+
+        return pluginRegistry.getPlugin(paymentProviderName);
+    }
+
+
+
+    public interface WithAccountLockCallback<T> {
+        public T doOperation() throws PaymentApiException;
+    }
+    
+    public static class WithAccountLock<T> {
+        public T processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<T> callback)
+         throws PaymentApiException {
+            GlobalLock lock = null;
+            try {
+                lock = locker.lockWithNumberOfTries(LockerService.PAYMENT, accountExternalKey, NB_LOCK_TRY);
+                return callback.doOperation();
+            } catch (LockFailedException e) {
+                // Not good!
+                log.error(String.format("Failed to lock account %s",
+                        accountExternalKey), e);
+                // STEPH or throws
+                return null;
+            } finally {
+                if (lock != null) {
+                    lock.release();
+                }        
+            }
+        }
+    }
+    
+    
 }

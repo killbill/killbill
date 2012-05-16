@@ -167,9 +167,9 @@ public class BusinessAccountRecorder {
             // Retrieve invoices information
             final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId());
             if (invoices != null && invoices.size() > 0) {
-                final List<String> invoiceIds = new ArrayList<String>();
+                final List<UUID> invoiceIds = new ArrayList<UUID>();
                 for (final Invoice invoice : invoices) {
-                    invoiceIds.add(invoice.getId().toString());
+                    invoiceIds.add(invoice.getId());
                     totalInvoiceBalance = totalInvoiceBalance.add(invoice.getBalance());
 
                     if (lastInvoiceDate == null || invoice.getInvoiceDate().isAfter(lastInvoiceDate)) {

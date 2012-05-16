@@ -23,14 +23,15 @@ import org.apache.commons.lang.StringUtils;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.PaymentConfig;
+import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 
 
-public class PaymentProviderPluginRegistry {
+public class DefaultPaymentProviderPluginRegistry implements PaymentProviderPluginRegistry {
     private final String defaultPlugin;
     private final Map<String, PaymentProviderPlugin> pluginsByName = new ConcurrentHashMap<String, PaymentProviderPlugin>();
 
     @Inject
-    public PaymentProviderPluginRegistry(PaymentConfig config) {
+    public DefaultPaymentProviderPluginRegistry(PaymentConfig config) {
         this.defaultPlugin = config.getDefaultPaymentProvider();
     }
 

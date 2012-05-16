@@ -102,11 +102,7 @@ public abstract class TestPaymentApi {
                                                        new BigDecimal("1.0"),
                                                        Currency.USD));
 
-        List<PaymentInfoEvent> results = paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
-
-        assertEquals(results.size(), 1);
-
-        PaymentInfoEvent paymentInfo = results.get(0);
+        PaymentInfoEvent paymentInfo = paymentApi.createPayment(account.getExternalKey(), invoice.getId(), context);
 
         assertNotNull(paymentInfo.getPaymentId());
         assertTrue(paymentInfo.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
@@ -124,7 +120,7 @@ public abstract class TestPaymentApi {
         DateTime paymentAttemptDateTruncated = paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0);
         assertEquals(paymentAttemptDateTruncated.compareTo(nowTruncated), 0);
 
-        List<PaymentInfoEvent> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        List<PaymentInfoEvent> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId()));
         assertNotNull(paymentInfos);
         assertTrue(paymentInfos.size() > 0);
 

@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,28 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.payment.plugin.api;
 
-package com.ning.billing.util.globallocker;
+public class PaymentPluginApiException extends Exception {
 
-public interface GlobalLocker {
+    private static final long serialVersionUID = 15642965L;
+    
+    private final String errorType;
+    private final String errorMessage;
+    
+    public PaymentPluginApiException(final String errorType, final String errorMessage) {
+        this.errorMessage = errorMessage;
+        this.errorType = errorType;
+    }
 
-    GlobalLock lockWithNumberOfTries(final LockerService service, final String lockKey, final int retry);
-    Boolean isFree(final LockerService service, final String lockKey);
+    public String getErrorType() {
+        return errorType;
+    }
 
-    public enum LockerService {
-
-        INVOICE("invoice"),
-        PAYMENT("payment");        
-
-        private final String svcName;
-
-        LockerService(String svcName) {
-            this.svcName = svcName;
-        }
-
-        @Override
-        public String toString() {
-            return svcName;
-        }
+    public String getErrorMessage() {
+        return errorMessage;
     }
 }

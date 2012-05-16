@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 public class NoOpPaymentProviderPluginProvider implements Provider<NoOpPaymentProviderPlugin> {
+
     private PaymentProviderPluginRegistry registry;
     private final String instanceName;
 

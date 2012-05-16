@@ -21,6 +21,7 @@ import com.google.inject.Provider;
 import com.ning.billing.util.clock.Clock;
 
 public class MockPaymentProviderPluginProvider implements Provider<MockPaymentProviderPlugin> {
+
     private PaymentProviderPluginRegistry registry;
     private final String instanceName;
 

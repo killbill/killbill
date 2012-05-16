@@ -26,12 +26,15 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Objects;
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
 	
 
+    private final UUID invoiceId;
+    private final UUID accountId;
     private final String paymentId;
     private final BigDecimal amount;
     private final BigDecimal refundAmount;
@@ -50,22 +53,27 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
     private final DateTime updatedDate;
 
     @JsonCreator
-    public DefaultPaymentInfoEvent(@JsonProperty("paymentId") String paymentId,
-                       @JsonProperty("amount") BigDecimal amount,
-                       @JsonProperty("refundAmount") BigDecimal refundAmount,
-                       @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
-                       @JsonProperty("paymentNumber") String paymentNumber,
-                       @JsonProperty("status") String status,
-                       @JsonProperty("type") String type,
-                       @JsonProperty("referenceId") String referenceId,
-                       @JsonProperty("paymentMethodId") String paymentMethodId,
-                       @JsonProperty("paymentMethod") String paymentMethod,
-                       @JsonProperty("cardType") String cardType,
-                       @JsonProperty("cardCountry") String cardCountry,
-                       @JsonProperty("userToken") UUID userToken,
-                       @JsonProperty("effectiveDate") DateTime effectiveDate,
-                       @JsonProperty("createdDate") DateTime createdDate,
-                       @JsonProperty("updatedDate") DateTime updatedDate) {
+    public DefaultPaymentInfoEvent(@JsonProperty("accountId") UUID accountId,
+            @JsonProperty("invoiceId") UUID invoiceId,            
+            @JsonProperty("paymentId") String paymentId,
+            @JsonProperty("amount") BigDecimal amount,
+            @JsonProperty("refundAmount") BigDecimal refundAmount,
+            @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
+            @JsonProperty("paymentNumber") String paymentNumber,
+            @JsonProperty("status") String status,
+            @JsonProperty("type") String type,
+            @JsonProperty("referenceId") String referenceId,
+            @JsonProperty("paymentMethodId") String paymentMethodId,
+            @JsonProperty("paymentMethod") String paymentMethod,
+            @JsonProperty("cardType") String cardType,
+            @JsonProperty("cardCountry") String cardCountry,
+            @JsonProperty("userToken") UUID userToken,
+            @JsonProperty("effectiveDate") DateTime effectiveDate,
+            @JsonProperty("createdDate") DateTime createdDate,
+            @JsonProperty("updatedDate") DateTime updatedDate) {
+
+        this.accountId = accountId;
+        this.invoiceId = invoiceId;
         this.paymentId = paymentId;
         this.amount = amount;
         this.refundAmount = refundAmount;
@@ -85,22 +93,30 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
     }
 
     public DefaultPaymentInfoEvent(DefaultPaymentInfoEvent src) {
-        this(src.paymentId,
-             src.amount,
-             src.refundAmount,
-             src.bankIdentificationNumber,
-             src.paymentNumber,
-             src.status,
-             src.type,
-             src.referenceId,
-             src.paymentMethodId,
-             src.paymentMethod,
-             src.cardType,
-             src.cardCountry,
-             src.userToken,
-             src.effectiveDate,
-             src.createdDate,
-             src.updatedDate);
+        this(src.accountId,
+                src.invoiceId,
+                src.paymentId,
+                src.amount,
+                src.refundAmount,
+                src.bankIdentificationNumber,
+                src.paymentNumber,
+                src.status,
+                src.type,
+                src.referenceId,
+                src.paymentMethodId,
+                src.paymentMethod,
+                src.cardType,
+                src.cardCountry,
+                src.userToken,
+                src.effectiveDate,
+                src.createdDate,
+                src.updatedDate);
+    }
+    
+    public DefaultPaymentInfoEvent(PaymentInfoPlugin info, UUID accountId, UUID invoiceId) {
+        this(accountId, invoiceId, info.getPaymentId(), info.getAmount(), info.getRefundAmount(), info.getBankIdentificationNumber(), info.getPaymentNumber(),
+                info.getStatus(), info.getCardType(), info.getReferenceId(), info.getPaymentMethodId(), info.getPaymentMethod(), info.getCardType(), info.getCardCountry(),
+                null, info.getEffectiveDate(), info.getCreatedDate(), info.getUpdatedDate());
     }
     
     @JsonIgnore
@@ -121,6 +137,16 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
     @Override
     public String getPaymentId() {
         return paymentId;
+    }
+
+    @Override
+    public UUID getInvoiceId() {
+        return invoiceId;
+    }
+
+    @Override
+    public UUID getAccountId() {
+        return accountId;
     }
 
     @Override
@@ -194,6 +220,9 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
     }
 
     public static class Builder {
+        
+        private UUID invoiceId;
+        private UUID accountId;
         private String paymentId;
         private BigDecimal amount;
         private BigDecimal refundAmount;
@@ -215,6 +244,8 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
         }
 
         public Builder(DefaultPaymentInfoEvent src) {
+            this.accountId = src.accountId;
+            this.invoiceId = src.invoiceId;
             this.paymentId = src.paymentId;
             this.amount = src.amount;
             this.refundAmount = src.refundAmount;
@@ -233,6 +264,17 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
             this.updatedDate = src.updatedDate;
         }
 
+
+        public Builder setAccountId(UUID accountId) {
+            this.accountId = accountId;
+            return this;
+        }
+
+        public Builder setInvoiceId(UUID invoiceId) {
+            this.invoiceId = invoiceId;
+            return this;
+        }
+        
         public Builder setPaymentId(String paymentId) {
             this.paymentId = paymentId;
             return this;
@@ -314,22 +356,24 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
         }
 
         public PaymentInfoEvent build() {
-            return new DefaultPaymentInfoEvent(paymentId,
-                                   amount,
-                                   refundAmount,
-                                   bankIdentificationNumber,
-                                   paymentNumber,
-                                   status,
-                                   type,
-                                   referenceId,
-                                   paymentMethodId,
-                                   paymentMethod,
-                                   cardType,
-                                   cardCountry,
-                                   userToken,
-                                   effectiveDate,
-                                   createdDate,
-                                   updatedDate);
+            return new DefaultPaymentInfoEvent(accountId,
+                    invoiceId,
+                    paymentId,
+                    amount,
+                    refundAmount,
+                    bankIdentificationNumber,
+                    paymentNumber,
+                    status,
+                    type,
+                    referenceId,
+                    paymentMethodId,
+                    paymentMethod,
+                    cardType,
+                    cardCountry,
+                    userToken,
+                    effectiveDate,
+                    createdDate,
+                    updatedDate);
         }
     }
 

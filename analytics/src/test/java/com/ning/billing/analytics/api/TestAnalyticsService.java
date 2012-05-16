@@ -83,6 +83,7 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.util.bus.Bus;
@@ -280,8 +281,8 @@ public class TestAnalyticsService {
 
         paymentInfoNotification = new DefaultPaymentInfoEvent.Builder().setPaymentId(UUID.randomUUID().toString()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
         final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
-                ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getPaymentId(), 1);
-        paymentDao.createPaymentAttempt(paymentAttempt, context);
+                ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getPaymentId(), 1, PaymentAttemptStatus.COMPLETED_SUCCESS);
+        paymentDao.createPaymentAttempt(paymentAttempt, PaymentAttemptStatus.COMPLETED_SUCCESS, context);
         paymentDao.savePaymentInfo(paymentInfoNotification, context);
         Assert.assertEquals(paymentDao.getPaymentInfo(Arrays.asList(invoice.getId().toString())).size(), 1);
     }

@@ -49,9 +49,12 @@ import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
+import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -84,7 +87,7 @@ public class TestRetryService {
     @Inject
     private PaymentDao paymentDao;
     @Inject
-    private RetryService retryService;
+    private FailedPaymentRetryService retryService;
     @Inject
     private NotificationQueueService notificationQueueService;
 
@@ -97,7 +100,7 @@ public class TestRetryService {
 
     @BeforeClass(alwaysRun = true)
     public void initialize() throws Exception {
-        retryService.initialize();
+        retryService.initialize("payment-service");
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -106,7 +109,7 @@ public class TestRetryService {
         retryService.start();
 
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin)registry.getPlugin(null);
-        mockNotificationQueue = (MockNotificationQueue)notificationQueueService.getNotificationQueue(RetryService.SERVICE_NAME, RetryService.QUEUE_NAME);
+        mockNotificationQueue = (MockNotificationQueue)notificationQueueService.getNotificationQueue("payment-service", FailedPaymentRetryService.QUEUE_NAME);
         context = new DefaultCallContext("RetryServiceTests", CallOrigin.INTERNAL, UserType.TEST, clock);
         ((ZombieControl)invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
 
@@ -142,7 +145,7 @@ public class TestRetryService {
         mockPaymentProviderPlugin.makeNextInvoiceFail();
         boolean failed = false;
         try {
-            paymentApi.createPayment(account.getExternalKey(), Arrays.asList(invoice.getId().toString()), context);
+            paymentApi.createPayment(account.getExternalKey(), invoice.getId(), context);
         } catch (PaymentApiException e) {
             failed = true;
         }
@@ -186,12 +189,12 @@ public class TestRetryService {
 
         int numberOfDays = paymentConfig.getPaymentRetryDays().get(0);
         DateTime nextRetryDate = now.plusDays(numberOfDays);
-        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice).cloner()
+        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice, PaymentAttemptStatus.COMPLETED_FAILED).cloner()
                                                                                       .setRetryCount(1)
                                                                                       .setPaymentAttemptDate(now)
                                                                                       .build();
 
-        paymentDao.createPaymentAttempt(paymentAttempt, context);
+        paymentDao.createPaymentAttempt(paymentAttempt, PaymentAttemptStatus.COMPLETED_FAILED,  context);
         retryService.scheduleRetry(paymentAttempt, nextRetryDate);
         ((ClockMock)clock).setDeltaFromReality(Days.days(numberOfDays).toStandardSeconds().getSeconds() * 1000);
         Thread.sleep(2000);
@@ -199,7 +202,7 @@ public class TestRetryService {
         List<Notification> pendingNotifications = mockNotificationQueue.getPendingEvents();
         assertEquals(pendingNotifications.size(), 0);
 
-        List<PaymentInfoEvent> paymentInfoList = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId().toString()));
+        List<PaymentInfoEvent> paymentInfoList = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId()));
         assertEquals(paymentInfoList.size(), 1);
 
         PaymentInfoEvent paymentInfo = paymentInfoList.get(0);

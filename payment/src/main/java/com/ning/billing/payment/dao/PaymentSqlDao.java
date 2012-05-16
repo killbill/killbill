@@ -44,6 +44,7 @@ import org.skife.jdbi.v2.unstable.BindIn;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
 @ExternalizedSqlViaStringTemplate3()
@@ -117,6 +118,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             stmt.bind("payment_attempt_dt", getDate(paymentAttempt.getPaymentAttemptDate()));
             stmt.bind("payment_id", paymentAttempt.getPaymentId());
             stmt.bind("retry_count", paymentAttempt.getRetryCount());
+            stmt.bind("processing_status", paymentAttempt.getPaymentAttemptStatus().toString());
             stmt.bind("created_dt", getDate(paymentAttempt.getCreatedDate()));
             stmt.bind("updated_dt", getDate(paymentAttempt.getUpdatedDate()));
         }
@@ -135,6 +137,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             DateTime paymentAttemptDate = getDate(rs, "payment_attempt_dt");
             String paymentId = rs.getString("payment_id");
             Integer retryCount = rs.getInt("retry_count");
+            PaymentAttemptStatus paymentAttemptStatus = PaymentAttemptStatus.valueOf(rs.getString("processing_status"));
             DateTime createdDate = getDate(rs, "created_dt");
             DateTime updatedDate = getDate(rs, "updated_dt");
 
@@ -147,6 +150,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
                                       paymentAttemptDate,
                                       paymentId,
                                       retryCount,
+                                      paymentAttemptStatus,
                                       createdDate,
                                       updatedDate);
         }
@@ -177,6 +181,8 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
         @Override
         public PaymentInfoEvent map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
 
+            UUID accountId = null;
+            UUID invoiceId = null;
             String paymentId = rs.getString("payment_id");
             BigDecimal amount = rs.getBigDecimal("amount");
             BigDecimal refundAmount = rs.getBigDecimal("refund_amount");
@@ -193,24 +199,26 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, CloseMe, Tr
             DateTime createdDate = getDate(rs, "created_dt");
             DateTime updatedDate = getDate(rs, "updated_dt");
 
-            UUID userToken = null; //rs.getString("user_token") != null ? UUID.fromString(rs.getString("user_token")) : null;
+            UUID userToken = rs.getString("user_token") != null ? UUID.fromString(rs.getString("user_token")) : null;
             
-            return new DefaultPaymentInfoEvent(paymentId,
-                                   amount,
-                                   refundAmount,
-                                   bankIdentificationNumber,
-                                   paymentNumber,
-                                   status,
-                                   type,
-                                   referenceId,
-                                   paymentMethodId,
-                                   paymentMethod,
-                                   cardType,
-                                   cardCountry,
-                                   userToken,
-                                   effectiveDate,
-                                   createdDate,
-                                   updatedDate);
+            return new DefaultPaymentInfoEvent(accountId,
+                    invoiceId,
+                    paymentId,
+                    amount,
+                    refundAmount,
+                    bankIdentificationNumber,
+                    paymentNumber,
+                    status,
+                    type,
+                    referenceId,
+                    paymentMethodId,
+                    paymentMethod,
+                    cardType,
+                    cardCountry,
+                    userToken,
+                    effectiveDate,
+                    createdDate,
+                    updatedDate);
         }
     }
 

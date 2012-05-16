@@ -31,6 +31,7 @@ import com.google.common.collect.Collections2;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class MockPaymentDao implements PaymentDao {
@@ -48,22 +49,23 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentAttempt createPaymentAttempt(Invoice invoice, CallContext context) {
+    public PaymentAttempt createPaymentAttempt(Invoice invoice, PaymentAttemptStatus paymentAttemptStatus, CallContext context) {
         PaymentAttempt updatedPaymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice.getId(), invoice.getAccountId(),
                 invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(),
-                null, null, null, context.getCreatedDate(), context.getUpdatedDate());
+                null, null, null, paymentAttemptStatus, context.getCreatedDate(), context.getUpdatedDate());
 
         paymentAttempts.put(updatedPaymentAttempt.getPaymentAttemptId(), updatedPaymentAttempt);
         return updatedPaymentAttempt;
     }
 
     @Override
-    public PaymentAttempt createPaymentAttempt(PaymentAttempt paymentAttempt, CallContext context) {
+    public PaymentAttempt createPaymentAttempt(PaymentAttempt paymentAttempt, PaymentAttemptStatus paymentAttemptStatus, CallContext context) {
         PaymentAttempt updatedPaymentAttempt = new PaymentAttempt(paymentAttempt.getPaymentAttemptId(),
                 paymentAttempt.getInvoiceId(),
                 paymentAttempt.getAccountId(), paymentAttempt.getAmount(), paymentAttempt.getCurrency(),
                 paymentAttempt.getInvoiceDate(), paymentAttempt.getPaymentAttemptDate(),
                 paymentAttempt.getPaymentId(), paymentAttempt.getRetryCount(),
+                paymentAttemptStatus,
                 context.getCreatedDate(), context.getUpdatedDate());
 
         paymentAttempts.put(updatedPaymentAttempt.getPaymentAttemptId(), updatedPaymentAttempt);

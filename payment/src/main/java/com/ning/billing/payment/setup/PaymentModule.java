@@ -23,13 +23,14 @@ import org.skife.config.ConfigurationObjectFactory;
 import com.google.inject.AbstractModule;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.RequestProcessor;
-import com.ning.billing.payment.RetryService;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.dao.AuditedPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
+import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.payment.retry.FailedPaymentRetryService;
 
 public class PaymentModule extends AbstractModule {
     private final Properties props;
@@ -50,7 +51,7 @@ public class PaymentModule extends AbstractModule {
     }
 
     protected void installRetryEngine() {
-        bind(RetryService.class).asEagerSingleton();
+        bind(FailedPaymentRetryService.class).asEagerSingleton();
     }
 
     @Override
@@ -59,7 +60,7 @@ public class PaymentModule extends AbstractModule {
         final PaymentConfig paymentConfig = factory.build(PaymentConfig.class);
 
         bind(PaymentConfig.class).toInstance(paymentConfig);
-        bind(PaymentProviderPluginRegistry.class).asEagerSingleton();
+        bind(PaymentProviderPluginRegistry.class).to(DefaultPaymentProviderPluginRegistry.class).asEagerSingleton();
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(RequestProcessor.class).asEagerSingleton();
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();

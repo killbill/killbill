@@ -10,6 +10,7 @@ paymentAttemptFields(prefix) ::= <<
     <prefix>payment_attempt_dt,
     <prefix>invoice_dt,
     <prefix>retry_count,
+    <prefix>processing_status,
     <prefix>created_by,
     <prefix>created_dt,
     <prefix>updated_by,
@@ -39,13 +40,13 @@ paymentInfoFields(prefix) ::= <<
 insertPaymentAttempt() ::= <<
     INSERT INTO payment_attempts (<paymentAttemptFields()>)
     VALUES (:payment_attempt_id, :invoice_id, :account_id, :amount, :currency, :payment_id,
-            :payment_attempt_dt, :invoice_dt, :retry_count, :userName, :createdDate, :userName, :createdDate);
+            :payment_attempt_dt, :invoice_dt, :retry_count, :processing_status, :userName, :createdDate, :userName, :createdDate);
 >>
 
 insertPaymentAttemptHistory() ::= <<
     INSERT INTO payment_attempt_history (history_record_id, <paymentAttemptFields()>)
     VALUES (:historyRecordId, :payment_attempt_id, :invoice_id, :account_id, :amount, :currency, :payment_id,
-            :payment_attempt_dt, :invoice_dt, :retry_count, :userName, :createdDate, :userName, :createdDate);
+            :payment_attempt_dt, :invoice_dt, :retry_count, :processing_status, :userName, :createdDate, :userName, :createdDate);
 >>
 
 getPaymentAttemptForPaymentId() ::= <<
@@ -112,7 +113,7 @@ getPaymentInfos(invoiceIds) ::= <<
 >>
 
 getPaymentInfoForPaymentAttemptId() ::= <<
-    SELECT <paymentInfoFields("p.")>
+    SELECT <paymentInfoFields("p.")>,
       FROM payments p, payment_attempts pa
      WHERE pa.payment_attempt_id = :payment_attempt_id
        AND pa.payment_id = p.payment_id
