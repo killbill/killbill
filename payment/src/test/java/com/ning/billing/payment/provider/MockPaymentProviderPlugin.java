@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -48,7 +49,7 @@ import com.ning.billing.util.clock.Clock;
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     
     private final AtomicBoolean makeNextInvoiceFail = new AtomicBoolean(false);
-    private final Map<String, PaymentInfoEvent> payments = new ConcurrentHashMap<String, PaymentInfoEvent>();
+    private final Map<UUID, PaymentInfoEvent> payments = new ConcurrentHashMap<UUID, PaymentInfoEvent>();
     private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
     private final Map<String, PaymentMethodInfo> paymentMethods = new ConcurrentHashMap<String, PaymentMethodInfo>();
     private final Clock clock;
@@ -67,7 +68,8 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         if (makeNextInvoiceFail.getAndSet(false)) {
             throw new PaymentPluginApiException("", "test error");
         }
-        PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setPaymentId(UUID.randomUUID().toString())
+
+        PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID())
         .setAmount(invoice.getBalance())
         .setStatus("Processed")
         .setBankIdentificationNumber("1234")
@@ -126,7 +128,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
             if (account != null && account.getId() != null) {
                 String existingDefaultMethod = account.getDefaultPaymentMethodId();
 
-                String paymentMethodId = RandomStringUtils.randomAlphanumeric(10);
+                String paymentMethodId = "5556-66-77-rr";
                 boolean shouldBeDefault = Boolean.TRUE.equals(paymentMethod.getDefaultMethod()) || existingDefaultMethod == null;
                 PaymentMethodInfo realPaymentMethod = null;
 
@@ -170,7 +172,8 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
             accounts.put(account.getAccountKey(),
                 new PaymentProviderAccount.Builder()
                                           .copyFrom(account)
-                                          .setDefaultPaymentMethod(paymentMethodId)
+                                          // STEPH
+                                          .setDefaultPaymentMethod("")
                                           .build());
             List<PaymentMethodInfo> paymentMethodsToUpdate = new ArrayList<PaymentMethodInfo>();
             for (PaymentMethodInfo paymentMethod : paymentMethods.values()) {

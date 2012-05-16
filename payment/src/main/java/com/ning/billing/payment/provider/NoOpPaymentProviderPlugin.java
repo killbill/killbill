@@ -34,6 +34,7 @@ import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
     @Override
+
     public PaymentInfoPlugin processInvoice(final Account account, final Invoice invoice)
             throws PaymentPluginApiException {
         PaymentInfoPlugin payment = new PaymentInfoPlugin() {
@@ -70,8 +71,8 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
                 return null;
             }
             @Override
-            public String getPaymentId() {
-                return UUID.randomUUID().toString();
+            public UUID getPaymentId() {
+                return UUID.randomUUID();
             }
             @Override
             public DateTime getEffectiveDate() {

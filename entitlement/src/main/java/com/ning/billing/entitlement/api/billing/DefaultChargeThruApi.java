@@ -19,28 +19,20 @@ package com.ning.billing.entitlement.api.billing;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextFactory;
 
 public class DefaultChargeThruApi implements ChargeThruApi {
-
-    private static final Logger log = LoggerFactory.getLogger(DefaultChargeThruApi.class);
-
     private final EntitlementDao entitlementDao;
     private final SubscriptionFactory subscriptionFactory;
   
-
     @Inject
-    public DefaultChargeThruApi(final CallContextFactory factory, final SubscriptionFactory subscriptionFactory, final EntitlementDao dao, final AccountUserApi accountApi) {
+    public DefaultChargeThruApi(final SubscriptionFactory subscriptionFactory, final EntitlementDao dao) {
         super();
         this.subscriptionFactory = subscriptionFactory;
         this.entitlementDao = dao;

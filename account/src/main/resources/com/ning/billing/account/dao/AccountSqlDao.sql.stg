@@ -48,14 +48,49 @@ update() ::= <<
     WHERE id = :id;
 >>
 
-insertAccountHistoryFromTransaction() ::= <<
-    INSERT INTO account_history
-    (history_record_id, id, external_key, email, name, first_name_length, currency,
-    billing_cycle_day, payment_provider_name, time_zone, locale,
-    address1, address2, company_name, city, state_or_province,
-    country, postal_code, phone, migrated, is_notified_for_invoices, change_type, updated_by, date)
+historyFields() ::= <<
+    record_id,
+    id,
+    external_key,
+    email,
+    name,
+    first_name_length,
+    currency,
+    billing_cycle_day,
+    payment_provider_name,
+    time_zone,
+    locale,
+    address1,
+    address2,
+    company_name,
+    city,
+    state_or_province,
+    country,
+    postal_code,
+    phone,
+    migrated,
+    is_notified_for_invoices,
+    change_type,
+    updated_by,
+    date
+>>
+
+getRecordId() ::= <<
+    SELECT record_id
+    FROM accounts
+    WHERE id = :id;
+>>
+
+getHistoryRecordId() ::= <<
+    SELECT MAX(history_record_id)
+    FROM account_history
+    WHERE record_id = :recordId;
+>>
+
+insertHistoryFromTransaction() ::= <<
+    INSERT INTO account_history(<historyFields()>)
     VALUES
-    (:historyRecordId, :id, :externalKey, :email, :name, :firstNameLength, :currency,
+    (:recordId, :id, :externalKey, :email, :name, :firstNameLength, :currency,
      :billingCycleDay, :paymentProviderName, :timeZone, :locale,
      :address1, :address2, :companyName, :city, :stateOrProvince,
      :country, :postalCode, :phone, :migrated, :isNotifiedForInvoices, :changeType, :userName, :createdDate);
@@ -82,6 +117,22 @@ getIdFromKey() ::= <<
     SELECT id
     FROM accounts
     WHERE external_key = :externalKey;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL, NULL);
 >>
 
 test() ::= <<

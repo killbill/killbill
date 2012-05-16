@@ -58,23 +58,23 @@ public class TestPlanPhase {
 		DefaultPlanPhase ppDiscount = MockPlanPhase.create1USDMonthlyEvergreen().setPhaseType(PhaseType.DISCOUNT).setPlan(p);
 		DefaultPlanPhase ppTrial = MockPlanPhase.create30DayTrial().setPhaseType(PhaseType.TRIAL).setPlan(p);
 		DefaultPlanPhase ppEvergreen = MockPlanPhase.create1USDMonthlyEvergreen().setPhaseType(PhaseType.EVERGREEN).setPlan(p);
-		DefaultPlanPhase ppFixedterm = MockPlanPhase.create1USDMonthlyEvergreen().setPhaseType(PhaseType.FIXEDTERM).setPlan(p);
+		DefaultPlanPhase ppFixedTerm = MockPlanPhase.create1USDMonthlyEvergreen().setPhaseType(PhaseType.FIXEDTERM).setPlan(p);
 		
 		String ppnDiscount = DefaultPlanPhase.phaseName(p.getName(), ppDiscount.getPhaseType());
 		String ppnTrial = DefaultPlanPhase.phaseName(p.getName(), ppTrial.getPhaseType());
 		String ppnEvergreen = DefaultPlanPhase.phaseName(p.getName(), ppEvergreen.getPhaseType());
-		String ppnFixedterm = DefaultPlanPhase.phaseName(p.getName(), ppFixedterm.getPhaseType());
+		String ppnFixedTerm = DefaultPlanPhase.phaseName(p.getName(), ppFixedTerm.getPhaseType());
 		
 		Assert.assertEquals(ppnTrial, planNameExt + "trial");
 		Assert.assertEquals(ppnEvergreen, planNameExt + "evergreen");
-		Assert.assertEquals(ppnFixedterm, planNameExt + "fixedterm");
+		Assert.assertEquals(ppnFixedTerm, planNameExt + "fixedterm");
 		Assert.assertEquals(ppnDiscount, planNameExt + "discount");
 		
 		
 		Assert.assertEquals(DefaultPlanPhase.planName(ppnDiscount),planName);
 		Assert.assertEquals(DefaultPlanPhase.planName(ppnTrial),planName);
 		Assert.assertEquals(DefaultPlanPhase.planName(ppnEvergreen), planName);
-		Assert.assertEquals(DefaultPlanPhase.planName(ppnFixedterm), planName);
+		Assert.assertEquals(DefaultPlanPhase.planName(ppnFixedTerm), planName);
 		
 		
 		

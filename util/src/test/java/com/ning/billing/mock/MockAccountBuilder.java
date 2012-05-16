@@ -29,6 +29,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
@@ -54,10 +55,6 @@ public class MockAccountBuilder {
     private String phone;
     private boolean migrated;
     private boolean isNotifiedForInvoices;
-    private String createdBy;
-    private DateTime createdDate;
-    private String updatedBy;
-    private DateTime updatedDate;
 
     public MockAccountBuilder() {
         this(UUID.randomUUID());
@@ -159,26 +156,6 @@ public class MockAccountBuilder {
 
     public MockAccountBuilder isNotifiedForInvoices(final boolean isNotifiedForInvoices) {
         this.isNotifiedForInvoices = isNotifiedForInvoices;
-        return this;
-    }
-
-    public MockAccountBuilder createdBy(final String createdBy) {
-        this.createdBy = createdBy;
-        return this;
-    }
-
-    public MockAccountBuilder createdDate(final DateTime createdDate) {
-        this.createdDate = createdDate;
-        return this;
-    }
-
-    public MockAccountBuilder updatedBy(final String updatedBy) {
-        this.updatedBy = updatedBy;
-        return this;
-    }
-
-    public MockAccountBuilder updatedDate(final DateTime updatedDate) {
-        this.updatedDate = updatedDate;
         return this;
     }
 
@@ -318,145 +295,89 @@ public class MockAccountBuilder {
 
             @Override
             public List<CustomField> getFieldList() {
-               
                 return null;
             }
 
             @Override
             public void setFields(List<CustomField> fields) {
-               
-                
             }
 
             @Override
             public void saveFields(List<CustomField> fields, CallContext context) {
-               
-                
             }
 
             @Override
             public void clearFields() {
-               
-                
             }
 
             @Override
             public void clearPersistedFields(CallContext context) {
-               
-                
             }
 
             @Override
-            public String getObjectName() {
-               
-                return null;
-            }
-
-            @Override
-            public String getUpdatedBy() {
-               
-                return updatedBy;
-            }
-
-            @Override
-            public DateTime getUpdatedDate() {
-               
-                return updatedDate;
+            public ObjectType getObjectType() {
+                throw new UnsupportedOperationException();
             }
 
             @Override
             public UUID getId() {
-               
                 return id;
             }
 
             @Override
-            public String getCreatedBy() {
-               
-                return createdBy;
-            }
-
-            @Override
-            public DateTime getCreatedDate() {
-               
-                return createdDate;
-            }
-
-            @Override
             public List<Tag> getTagList() {
-               
                 return null;
             }
 
             @Override
             public boolean hasTag(TagDefinition tagDefinition) {
-               
                 return false;
             }
 
             @Override
             public boolean hasTag(ControlTagType controlTagType) {
-               
                 return false;
             }
 
             @Override
             public void addTag(TagDefinition definition) {
-               
-                
             }
 
             @Override
             public void addTags(List<Tag> tags) {
-               
-                
             }
 
             @Override
             public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
-               
-                
             }
 
             @Override
             public void clearTags() {
-               
-                
             }
 
             @Override
             public void removeTag(TagDefinition definition) {
-               
-                
             }
 
             @Override
             public boolean generateInvoice() {
-               
                 return true;
             }
 
             @Override
             public boolean processPayment() {
-               
                 return true;
             }
 
             @Override
             public BlockingState getBlockingState() {
-               
                 return null;
             }
 
             @Override
             public MutableAccountData toMutableAccountData() {
-               
                 throw new NotImplementedException();
             }
-            
-            
         };
-        
-       
     }
 }

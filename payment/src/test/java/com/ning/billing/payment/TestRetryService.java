@@ -25,6 +25,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.payment.api.DefaultPaymentAttempt;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.UserType;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.testng.annotations.AfterMethod;
@@ -42,11 +47,9 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockJunctionModule;
-import com.ning.billing.payment.api.Either;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
@@ -57,10 +60,6 @@ import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.MockClockModule;
@@ -156,10 +155,10 @@ public class TestRetryService {
         assertEquals(pendingNotifications.size(), 1);
 
         Notification notification = pendingNotifications.get(0);
-        List<PaymentAttempt> paymentAttempts = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId().toString());
+        List<PaymentAttempt> paymentAttempts = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId());
 
         assertNotNull(paymentAttempts);
-        assertEquals(notification.getNotificationKey(), paymentAttempts.get(0).getPaymentAttemptId().toString());
+        assertEquals(notification.getNotificationKey(), paymentAttempts.get(0).getId().toString());
 
         DateTime expectedRetryDate = paymentAttempts.get(0).getPaymentAttemptDate().plusDays(paymentConfig.getPaymentRetryDays().get(0));
 
@@ -189,7 +188,8 @@ public class TestRetryService {
 
         int numberOfDays = paymentConfig.getPaymentRetryDays().get(0);
         DateTime nextRetryDate = now.plusDays(numberOfDays);
-        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice, PaymentAttemptStatus.COMPLETED_FAILED).cloner()
+
+        PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice, PaymentAttemptStatus.COMPLETED_FAILED).cloner()
                                                                                       .setRetryCount(1)
                                                                                       .setPaymentAttemptDate(now)
                                                                                       .build();
@@ -202,14 +202,15 @@ public class TestRetryService {
         List<Notification> pendingNotifications = mockNotificationQueue.getPendingEvents();
         assertEquals(pendingNotifications.size(), 0);
 
+
         List<PaymentInfoEvent> paymentInfoList = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId()));
         assertEquals(paymentInfoList.size(), 1);
 
         PaymentInfoEvent paymentInfo = paymentInfoList.get(0);
         assertEquals(paymentInfo.getStatus(), PaymentStatus.Processed.toString());
 
-        List<PaymentAttempt> updatedAttempts = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId().toString());
-        assertEquals(paymentInfo.getPaymentId(), updatedAttempts.get(0).getPaymentId());
+        List<PaymentAttempt> updatedAttempts = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId());
+        assertEquals(paymentInfo.getId(), updatedAttempts.get(0).getPaymentId());
 
     }
 }

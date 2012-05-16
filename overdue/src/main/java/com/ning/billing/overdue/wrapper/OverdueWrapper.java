@@ -51,6 +51,10 @@ public class OverdueWrapper<T extends Blockable> {
 
     public OverdueState<T> refresh() throws OverdueError, OverdueApiException {
         try {
+	    if(overdueStateSet == null) { // No configuration available
+		return null;
+	    } 
+
             OverdueState<T> nextOverdueState;
             BillingState<T> billingState    = billingStateCalcuator.calculateBillingState(overdueable);
             String previousOverdueStateName = api.getBlockingStateFor(overdueable).getStateName();

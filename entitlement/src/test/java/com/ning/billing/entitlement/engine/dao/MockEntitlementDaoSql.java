@@ -32,7 +32,7 @@ import com.ning.billing.util.clock.Clock;
 
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
-public class MockEntitlementDaoSql extends EntitlementSqlDao implements MockEntitlementDao {
+public class MockEntitlementDaoSql extends AuditedEntitlementDao implements MockEntitlementDao {
 
     private final ResetSqlDao resetDao;
 

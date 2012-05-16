@@ -88,7 +88,7 @@ public class BusinessSubscription
      * want the phase start date).
      *
      * @param subscription Subscription to use as a model
-     * @param currency     Account currency
+     * @param currency     ACCOUNT currency
      */
     BusinessSubscription(final Subscription subscription, final Currency currency, Catalog catalog)
     {

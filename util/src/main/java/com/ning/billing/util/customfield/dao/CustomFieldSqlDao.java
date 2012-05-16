@@ -20,9 +20,10 @@ import java.util.List;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.customfield.CustomFieldBinder;
-import com.ning.billing.util.customfield.CustomFieldMapper;
-import com.ning.billing.util.entity.UpdatableEntityCollectionDao;
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.dao.ObjectTypeBinder;
+import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -33,25 +34,33 @@ import com.ning.billing.util.customfield.CustomField;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(CustomFieldMapper.class)
-public interface CustomFieldSqlDao extends UpdatableEntityCollectionDao<CustomField>, Transactional<CustomFieldSqlDao>, Transmogrifier {
+public interface CustomFieldSqlDao extends UpdatableEntityCollectionSqlDao<CustomField>,
+                                           Transactional<CustomFieldSqlDao>, Transmogrifier {
     @Override
     @SqlBatch(transactional=false)
-    public void batchInsertFromTransaction(@Bind("objectId") final String objectId,
-                                           @Bind("objectType") final String objectType,
-                                           @CustomFieldBinder final List<CustomField> entities,
-                                           @CallContextBinder final CallContext context);
+    public void insertFromTransaction(@Bind("objectId") final String objectId,
+                                      @ObjectTypeBinder final ObjectType objectType,
+                                      @CustomFieldBinder final List<CustomField> entities,
+                                      @CallContextBinder final CallContext context);
 
     @Override
     @SqlBatch(transactional=false)
-    public void batchUpdateFromTransaction(@Bind("objectId") final String objectId,
-                                           @Bind("objectType") final String objectType,
-                                           @CustomFieldBinder final List<CustomField> entities,
-                                           @CallContextBinder final CallContext context);
+    public void updateFromTransaction(@Bind("objectId") final String objectId,
+                                      @ObjectTypeBinder final ObjectType objectType,
+                                      @CustomFieldBinder final List<CustomField> entities,
+                                      @CallContextBinder final CallContext context);
 
     @Override
     @SqlBatch(transactional=false)
-    public void batchDeleteFromTransaction(@Bind("objectId") final String objectId,
-                                           @Bind("objectType") final String objectType,
-                                           @CustomFieldBinder final List<CustomField> entities,
-                                           @CallContextBinder final CallContext context);
+    public void deleteFromTransaction(@Bind("objectId") final String objectId,
+                                      @ObjectTypeBinder final ObjectType objectType,
+                                      @CustomFieldBinder final List<CustomField> entities,
+                                      @CallContextBinder final CallContext context);
+
+    @Override
+    @SqlBatch(transactional=false)
+    public void addHistoryFromTransaction(@Bind("objectId") final String objectId,
+                                               @ObjectTypeBinder final ObjectType objectType,
+                                               @CustomFieldHistoryBinder final List<EntityHistory<CustomField>> entities,
+                                               @CallContextBinder final CallContext context);
 }

@@ -16,15 +16,15 @@
 
 package com.ning.billing.beatrix.integration.payment;
 
+import com.ning.billing.account.dao.MockAccountDao;
+import com.ning.billing.invoice.dao.MockInvoiceDao;
 import org.apache.commons.collections.MapUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Provider;
 import com.ning.billing.account.dao.AccountDao;
-import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.payment.dao.MockPaymentDao;
@@ -44,7 +44,6 @@ public class PaymentTestModule extends PaymentModule {
 		}
 
 	}
-
 
     public PaymentTestModule() {
         super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock",

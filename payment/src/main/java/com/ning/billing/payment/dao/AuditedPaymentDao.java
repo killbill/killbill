@@ -16,15 +16,20 @@
 
 package com.ning.billing.payment.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
-import org.apache.commons.lang.Validate;
+import com.ning.billing.util.dao.EntityAudit;
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.TableName;
 import org.skife.jdbi.v2.IDBI;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
@@ -35,35 +40,40 @@ import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
 public class AuditedPaymentDao implements PaymentDao {
-    private final PaymentSqlDao sqlDao;
+    private final PaymentSqlDao paymentSqlDao;
+    private final PaymentAttemptSqlDao paymentAttemptSqlDao;
 
     @Inject
     public AuditedPaymentDao(IDBI dbi) {
-        this.sqlDao = dbi.onDemand(PaymentSqlDao.class);
+        this.paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
+        this.paymentAttemptSqlDao = dbi.onDemand(PaymentAttemptSqlDao.class);
     }
 
     @Override
-    public PaymentAttempt getPaymentAttemptForPaymentId(String paymentId) {
-        return sqlDao.getPaymentAttemptForPaymentId(paymentId);
+    public PaymentAttempt getPaymentAttemptForPaymentId(UUID paymentId) {
+        return paymentAttemptSqlDao.getPaymentAttemptForPaymentId(paymentId.toString());
     }
 
     @Override
-    public List<PaymentAttempt> getPaymentAttemptsForInvoiceId(String invoiceId) {
-        return sqlDao.getPaymentAttemptsForInvoiceId(invoiceId);
+    public List<PaymentAttempt> getPaymentAttemptsForInvoiceId(UUID invoiceId) {
+        return paymentAttemptSqlDao.getPaymentAttemptsForInvoiceId(invoiceId.toString());
     }
 
     @Override
     public PaymentAttempt createPaymentAttempt(final PaymentAttempt paymentAttempt, final PaymentAttemptStatus paymentAttemptStatus, final CallContext context) {
-        return sqlDao.inTransaction(new Transaction<PaymentAttempt, PaymentSqlDao>() {
+        return paymentAttemptSqlDao.inTransaction(new Transaction<PaymentAttempt, PaymentAttemptSqlDao>() {
             @Override
-            public PaymentAttempt inTransaction(PaymentSqlDao transactional, TransactionStatus status) throws Exception {
+            public PaymentAttempt inTransaction(PaymentAttemptSqlDao transactional, TransactionStatus status) throws Exception {
                 transactional.insertPaymentAttempt(paymentAttempt, context);
-                PaymentAttempt savedPaymentAttempt = transactional.getPaymentAttemptById(paymentAttempt.getPaymentAttemptId().toString());
-                UUID historyRecordId = UUID.randomUUID();
-                transactional.insertPaymentAttemptHistory(historyRecordId.toString(), paymentAttempt, context);
-                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
-                auditSqlDao.insertAuditFromTransaction("payment_attempt", historyRecordId.toString(),
-                                                       ChangeType.INSERT, context);
+                PaymentAttempt savedPaymentAttempt = transactional.getPaymentAttemptById(paymentAttempt.getId().toString());
+
+                Long recordId = transactional.getRecordId(paymentAttempt.getId().toString());
+                EntityHistory<PaymentAttempt> history = new EntityHistory<PaymentAttempt>(paymentAttempt.getId(), recordId, paymentAttempt, ChangeType.INSERT);
+                transactional.insertHistoryFromTransaction(history, context);
+
+                Long historyRecordId = transactional.getHistoryRecordId(recordId);
+                EntityAudit audit = new EntityAudit(TableName.PAYMENT_ATTEMPTS, historyRecordId, ChangeType.INSERT);
+                transactional.insertAuditFromTransaction(audit, context);
                 return savedPaymentAttempt;
             }
         });
@@ -71,16 +81,20 @@ public class AuditedPaymentDao implements PaymentDao {
 
     @Override
     public PaymentAttempt createPaymentAttempt(final Invoice invoice, final PaymentAttemptStatus paymentAttemptStatus, final CallContext context) {
-        return sqlDao.inTransaction(new Transaction<PaymentAttempt, PaymentSqlDao>() {
+        return paymentAttemptSqlDao.inTransaction(new Transaction<PaymentAttempt, PaymentAttemptSqlDao>() {
             @Override
-            public PaymentAttempt inTransaction(PaymentSqlDao transactional, TransactionStatus status) throws Exception {
-                final PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice, paymentAttemptStatus);
+            public PaymentAttempt inTransaction(PaymentAttemptSqlDao transactional, TransactionStatus status) throws Exception {
+                final PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice, paymentAttemptStatus);
+
                 transactional.insertPaymentAttempt(paymentAttempt, context);
-                UUID historyRecordId = UUID.randomUUID();
-                transactional.insertPaymentAttemptHistory(historyRecordId.toString(), paymentAttempt, context);
-                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
-                auditSqlDao.insertAuditFromTransaction("payment_attempt", historyRecordId.toString(),
-                                                       ChangeType.INSERT, context);
+
+                Long recordId = transactional.getRecordId(paymentAttempt.getId().toString());
+                EntityHistory<PaymentAttempt> history = new EntityHistory<PaymentAttempt>(paymentAttempt.getId(), recordId, paymentAttempt, ChangeType.INSERT);
+                transactional.insertHistoryFromTransaction(history, context);
+
+                Long historyRecordId = transactional.getHistoryRecordId(recordId);
+                EntityAudit audit = new EntityAudit(TableName.PAYMENT_ATTEMPTS, historyRecordId, ChangeType.INSERT);
+                transactional.insertAuditFromTransaction(audit, context);
 
                 return paymentAttempt;
             }
@@ -89,15 +103,17 @@ public class AuditedPaymentDao implements PaymentDao {
 
     @Override
     public void savePaymentInfo(final PaymentInfoEvent info, final CallContext context) {
-        sqlDao.inTransaction(new Transaction<Void, PaymentSqlDao>() {
+        paymentSqlDao.inTransaction(new Transaction<Void, PaymentSqlDao>() {
             @Override
             public Void inTransaction(PaymentSqlDao transactional, TransactionStatus status) throws Exception {
                 transactional.insertPaymentInfo(info, context);
-                UUID historyRecordId = UUID.randomUUID();
-                transactional.insertPaymentInfoHistory(historyRecordId.toString(), info, context);
-                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
-                auditSqlDao.insertAuditFromTransaction("payment", historyRecordId.toString(),
-                                                       ChangeType.INSERT, context);
+                Long recordId = transactional.getRecordId(info.getId().toString());
+                EntityHistory<PaymentInfoEvent> history = new EntityHistory<PaymentInfoEvent>(info.getId(), recordId, info, ChangeType.INSERT);
+                transactional.insertHistoryFromTransaction(history, context);
+
+                Long historyRecordId = transactional.getHistoryRecordId(recordId);
+                EntityAudit audit = new EntityAudit(TableName.PAYMENTS, historyRecordId, ChangeType.INSERT);
+                transactional.insertAuditFromTransaction(audit, context);
 
                 return null;
             }
@@ -105,17 +121,19 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentAttemptWithPaymentId(final UUID paymentAttemptId, final String paymentId, final CallContext context) {
-        sqlDao.inTransaction(new Transaction<Void, PaymentSqlDao>() {
+    public void updatePaymentAttemptWithPaymentId(final UUID paymentAttemptId, final UUID id, final CallContext context) {
+        paymentAttemptSqlDao.inTransaction(new Transaction<Void, PaymentAttemptSqlDao>() {
             @Override
-            public Void inTransaction(PaymentSqlDao transactional, TransactionStatus status) throws Exception {
-                transactional.updatePaymentAttemptWithPaymentId(paymentAttemptId.toString(), paymentId, context);
+            public Void inTransaction(PaymentAttemptSqlDao transactional, TransactionStatus status) throws Exception {
+                transactional.updatePaymentAttemptWithPaymentId(paymentAttemptId.toString(), id.toString(), context);
                 PaymentAttempt paymentAttempt = transactional.getPaymentAttemptById(paymentAttemptId.toString());
-                UUID historyRecordId = UUID.randomUUID();
-                transactional.insertPaymentAttemptHistory(historyRecordId.toString(), paymentAttempt, context);
-                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
-                auditSqlDao.insertAuditFromTransaction("payment_attempt", historyRecordId.toString(),
-                                                       ChangeType.UPDATE, context);
+                Long recordId = transactional.getRecordId(paymentAttemptId.toString());
+                EntityHistory<PaymentAttempt> history = new EntityHistory<PaymentAttempt>(paymentAttemptId, recordId, paymentAttempt, ChangeType.UPDATE);
+                transactional.insertHistoryFromTransaction(history, context);
+
+                Long historyRecordId = transactional.getHistoryRecordId(recordId);
+                EntityAudit audit = new EntityAudit(TableName.PAYMENT_ATTEMPTS, historyRecordId, ChangeType.UPDATE);
+                transactional.insertAuditFromTransaction(audit, context);
 
                 return null;
             }
@@ -123,18 +141,21 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentInfo(final String type, final String paymentId, final String cardType,
+    public void updatePaymentInfo(final String type, final UUID paymentId, final String cardType,
                                   final String cardCountry, final CallContext context) {
-        sqlDao.inTransaction(new Transaction<Void, PaymentSqlDao>() {
+        paymentSqlDao.inTransaction(new Transaction<Void, PaymentSqlDao>() {
             @Override
             public Void inTransaction(PaymentSqlDao transactional, TransactionStatus status) throws Exception {
-                transactional.updatePaymentInfo(type, paymentId, cardType, cardCountry, context);
-                PaymentInfoEvent paymentInfo = transactional.getPaymentInfo(paymentId);
-                UUID historyRecordId = UUID.randomUUID();
-                transactional.insertPaymentInfoHistory(historyRecordId.toString(), paymentInfo, context);
-                AuditSqlDao auditSqlDao = transactional.become(AuditSqlDao.class);
-                auditSqlDao.insertAuditFromTransaction("payments", historyRecordId.toString(),
-                                                       ChangeType.UPDATE, context);
+                transactional.updatePaymentInfo(type, paymentId.toString(), cardType, cardCountry, context);
+                PaymentInfoEvent paymentInfo = transactional.getPaymentInfo(paymentId.toString());
+
+                Long recordId = transactional.getRecordId(paymentId.toString());
+                EntityHistory<PaymentInfoEvent> history = new EntityHistory<PaymentInfoEvent>(paymentInfo.getId(), recordId, paymentInfo, ChangeType.UPDATE);
+                transactional.insertHistoryFromTransaction(history, context);
+
+                Long historyRecordId = transactional.getHistoryRecordId(recordId);
+                EntityAudit audit = new EntityAudit(TableName.PAYMENT_HISTORY, historyRecordId, ChangeType.UPDATE);
+                transactional.insertAuditFromTransaction(audit, context);
 
                 return null;
             }
@@ -142,31 +163,49 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentInfoEvent> getPaymentInfo(List<String> invoiceIds) {
+    public List<PaymentInfoEvent> getPaymentInfoList(List<UUID> invoiceIds) {
         if (invoiceIds == null || invoiceIds.size() == 0) {
             return ImmutableList.<PaymentInfoEvent>of();
         } else {
-            return sqlDao.getPaymentInfos(invoiceIds);
+            return paymentSqlDao.getPaymentInfoList(toUUIDList(invoiceIds));
         }
     }
 
     @Override
-    public List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<String> invoiceIds) {
+    public PaymentInfoEvent getLastPaymentInfo(List<UUID> invoiceIds) {
+        if (invoiceIds == null || invoiceIds.size() == 0) {
+            return null;
+        } else {
+            return paymentSqlDao.getLastPaymentInfo(toUUIDList(invoiceIds));
+        }
+    }
+
+    @Override
+    public List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<UUID> invoiceIds) {
         if (invoiceIds == null || invoiceIds.size() == 0) {
             return ImmutableList.<PaymentAttempt>of();
         } else {
-            return sqlDao.getPaymentAttemptsForInvoiceIds(invoiceIds);
+            return paymentAttemptSqlDao.getPaymentAttemptsForInvoiceIds(toUUIDList(invoiceIds));
         }
     }
 
     @Override
     public PaymentAttempt getPaymentAttemptById(UUID paymentAttemptId) {
-        return sqlDao.getPaymentAttemptById(paymentAttemptId.toString());
+        return paymentAttemptSqlDao.getPaymentAttemptById(paymentAttemptId.toString());
     }
 
     @Override
-    public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(String paymentAttemptIdStr) {
-        return sqlDao.getPaymentInfoForPaymentAttemptId(paymentAttemptIdStr);
+    public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(UUID paymentAttemptIdStr) {
+        return paymentSqlDao.getPaymentInfoForPaymentAttemptId(paymentAttemptIdStr.toString());
+    }
+    
+    private static List<String> toUUIDList(List<UUID> input) {
+        return new ArrayList<String>(Collections2.transform(input, new Function<UUID, String>() {
+            @Override
+            public String apply(UUID uuid) {
+                return uuid.toString();
+            }
+        }));
     }
 
 }

@@ -25,15 +25,12 @@ import java.util.UUID;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonView;
-import org.joda.time.DateTime;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class AccountTimelineJson {
 
@@ -110,7 +107,7 @@ public class AccountTimelineJson {
             String status = cur.getPaymentId() != null ? "Success" : "Failed";
             BigDecimal paidAmount = cur.getPaymentId() != null ? cur.getAmount() : BigDecimal.ZERO;
             
-            this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(), paidAmount, cur.getInvoiceId().toString(), cur.getPaymentId(), cur.getCreatedDate(), cur.getUpdatedDate(),
+            this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(), paidAmount, cur.getInvoiceId(), cur.getPaymentId(), cur.getCreatedDate(), cur.getUpdatedDate(),
                     cur.getRetryCount(), cur.getCurrency().toString(), status,
                     getBundleExternalKey(cur.getInvoiceId(), invoices, bundles)));
           }

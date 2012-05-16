@@ -18,8 +18,11 @@ package com.ning.billing.util.tag;
 
 import com.ning.billing.util.entity.Entity;
 
+// TODO: needs to surface created date, created by, isControlTag
 public interface TagDefinition extends Entity {
     String getName();
 
     String getDescription();
+
+    Boolean isControlTag();
 }

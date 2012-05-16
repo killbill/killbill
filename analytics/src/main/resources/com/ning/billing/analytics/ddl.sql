@@ -40,8 +40,8 @@ create index bst_key_index on bst (event_key, requested_timestamp asc);
 drop table if exists bac;
 create table bac (
   account_key varchar(50) not null
-, created_dt bigint not null
-, updated_dt bigint not null
+, created_date bigint not null
+, updated_date bigint not null
 , balance numeric(10, 4) default 0
 , tags varchar(500) default null
 , last_invoice_date bigint default null

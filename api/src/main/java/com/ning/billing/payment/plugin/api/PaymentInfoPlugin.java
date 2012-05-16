@@ -16,12 +16,14 @@
 package com.ning.billing.payment.plugin.api;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 public interface PaymentInfoPlugin {
     
-    public String getPaymentId();
+    // STEPH How can plugin have paymentId?
+    public UUID getPaymentId();
 
     public BigDecimal getAmount();
 

@@ -20,11 +20,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -121,20 +120,20 @@ public class TestNotificationSqlDao {
         assertEquals(notification.getNextAvailableDate(), null);
 
         DateTime nextAvailable = now.plusMinutes(5);
-        int res = dao.claimNotification(ownerId, nextAvailable.toDate(), notification.getId(), now.toDate());
+        int res = dao.claimNotification(ownerId, nextAvailable.toDate(), notification.getId().toString(), now.toDate());
         assertEquals(res, 1);
-        dao.insertClaimedHistory(ownerId, now.toDate(), notification.getUUID().toString());
+        dao.insertClaimedHistory(ownerId, now.toDate(), notification.getId().toString());
 
-        notification = fetchNotification(notification.getUUID().toString());
+        notification = fetchNotification(notification.getId().toString());
         assertEquals(notification.getNotificationKey(), notificationKey);
         validateDate(notification.getEffectiveDate(), effDt);
         assertEquals(notification.getOwner().toString(), ownerId);
         assertEquals(notification.getProcessingState(), PersistentQueueEntryLifecycleState.IN_PROCESSING);
         validateDate(notification.getNextAvailableDate(), nextAvailable);
 
-        dao.clearNotification(notification.getId(), ownerId);
+        dao.clearNotification(notification.getId().toString(), ownerId);
 
-        notification = fetchNotification(notification.getUUID().toString());
+        notification = fetchNotification(notification.getId().toString());
         assertEquals(notification.getNotificationKey(), notificationKey);
         validateDate(notification.getEffectiveDate(), effDt);
         //assertEquals(notification.getOwner(), null);
@@ -149,19 +148,19 @@ public class TestNotificationSqlDao {
             @Override
             public Notification withHandle(Handle handle) throws Exception {
                 Notification res = handle.createQuery("   select" +
-                        " id " +
-                		", notification_id" +
+                        " record_id " +
+                		", id" +
                 		", notification_key" +
-                		", created_dt" +
+                		", created_date" +
                 		", creating_owner" +
-                		", effective_dt" +
+                		", effective_date" +
                 		", queue_name" +
                 		", processing_owner" +
-                		", processing_available_dt" +
+                		", processing_available_date" +
                 		", processing_state" +
                 		"    from notifications " +
                 		" where " +
-                		" notification_id = '" + notificationId + "';")
+                		" id = '" + notificationId + "';")
                 		.map(new NotificationSqlMapper())
                 		.first();
                 return res;

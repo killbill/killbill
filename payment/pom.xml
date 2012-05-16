@@ -34,6 +34,18 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-account</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-invoice</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <scope>provided</scope>

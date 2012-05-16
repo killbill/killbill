@@ -42,7 +42,7 @@ public class MockTagDefinitionDao implements TagDefinitionDao {
     @Override
     public TagDefinition create(final String definitionName, final String description,
                                 final CallContext context) throws TagDefinitionApiException {
-        TagDefinition tag = new DefaultTagDefinition(definitionName, description);
+        TagDefinition tag = new DefaultTagDefinition(definitionName, description, false);
 
         tags.put(definitionName, tag);
         return tag;

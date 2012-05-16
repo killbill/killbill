@@ -19,6 +19,7 @@ package com.ning.billing.analytics;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -71,16 +72,6 @@ public class MockSubscription implements Subscription
     public UUID getId()
     {
         return ID;
-    }
-
-    @Override
-    public String getCreatedBy() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public DateTime getCreatedDate() {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -203,7 +194,7 @@ public class MockSubscription implements Subscription
     }
 
     @Override
-    public String getObjectName() {
+    public ObjectType getObjectType() {
         throw new UnsupportedOperationException();
     }
 

@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +94,7 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
 
     public SubscriptionData(SubscriptionBuilder builder,
             @Nullable SubscriptionApiService apiService, @Nullable Clock clock) {
-        super(builder.getId(), null, null);
+        super(builder.getId());
         this.apiService = apiService;
         this.clock = clock;
         this.bundleId = builder.getBundleId();
@@ -107,8 +107,8 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
     }
 
     @Override
-    public String getObjectName() {
-        return "Subscription";
+    public ObjectType getObjectType() {
+        return ObjectType.SUBSCRIPTION;
     }
 
     @Override

@@ -18,11 +18,9 @@ package com.ning.billing.entitlement.api.timeline;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -34,27 +32,18 @@ import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.catalog.api.CatalogUserApi;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.timeline.BundleTimeline;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
-import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.util.callcontext.CallContext;
 
@@ -350,7 +339,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
             if (firstBPDeletedTime != null && 
                     ! cur.getEffectiveDate().isBefore(firstBPDeletedTime) &&
                     ! foundDeletedEvent) {
-                throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_MISSING_AO_DELETE_EVENT, cur.getId(), data.getId());                
+                throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_MISSING_AO_DELETE_EVENT, cur.getId(), data.getId());
             }
 
             if (nbDeleted == 0) {

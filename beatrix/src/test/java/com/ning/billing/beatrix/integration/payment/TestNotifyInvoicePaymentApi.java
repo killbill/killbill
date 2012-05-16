@@ -20,6 +20,9 @@ import static org.testng.Assert.assertNotNull;
 
 import java.util.UUID;
 
+import com.ning.billing.payment.api.DefaultPaymentAttempt;
+import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
+
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -40,8 +43,6 @@ import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
-import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -86,16 +87,16 @@ public class TestNotifyInvoicePaymentApi {
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
-        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice, PaymentAttemptStatus.COMPLETED_SUCCESS);
+        PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice, PaymentAttemptStatus.COMPLETED_SUCCESS);
 
         invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
                                      invoice.getBalance(),
                                      invoice.getCurrency(),
-                                     paymentAttempt.getPaymentAttemptId(),
+                                     paymentAttempt.getId(),
                                      paymentAttempt.getPaymentAttemptDate(),
                                      context);
 
-        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getPaymentAttemptId());
+        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getId());
 
         assertNotNull(invoicePayment);
     }
@@ -105,13 +106,14 @@ public class TestNotifyInvoicePaymentApi {
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
 
-        PaymentAttempt paymentAttempt = new PaymentAttempt(UUID.randomUUID(), invoice, PaymentAttemptStatus.COMPLETED_SUCCESS);
+
+        PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice, PaymentAttemptStatus.COMPLETED_SUCCESS);
         invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
-                                                 paymentAttempt.getPaymentAttemptId(),
+                                                 paymentAttempt.getId(),
                                                  paymentAttempt.getPaymentAttemptDate(),
                                                  context);
 
-        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getPaymentAttemptId());
+        InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttempt.getId());
 
         assertNotNull(invoicePayment);
     }

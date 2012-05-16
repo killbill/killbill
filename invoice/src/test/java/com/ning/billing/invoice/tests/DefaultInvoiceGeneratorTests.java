@@ -22,13 +22,11 @@ import static org.testng.Assert.assertNull;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;

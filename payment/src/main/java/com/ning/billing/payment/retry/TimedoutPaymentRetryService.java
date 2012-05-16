@@ -85,8 +85,12 @@ public class TimedoutPaymentRetryService implements RetryService {
     }
 
     public void scheduleRetry(PaymentAttempt paymentAttempt, DateTime timeOfRetry) {
+
         /*
         final String id = paymentAttempt.getPaymentAttemptId().toString();
+=======
+        final String id = paymentAttempt.getId().toString();
+>>>>>>> origin/integration:payment/src/main/java/com/ning/billing/payment/RetryService.java
 
         NotificationKey key = new NotificationKey() {
             @Override

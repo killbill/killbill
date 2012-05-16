@@ -17,6 +17,8 @@
 package com.ning.billing.util.tag.dao;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.dao.AuditedCollectionDao;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -24,16 +26,8 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import java.util.List;
 import java.util.UUID;
 
-public interface TagDao {
-    void saveTagsFromTransaction(Transmogrifier dao, UUID objectId, String objectType, List<Tag> tags, CallContext context);
+public interface TagDao extends AuditedCollectionDao<Tag> {
+    void addTag(String tagName, UUID objectId, ObjectType objectType, CallContext context);
 
-    void saveTags(UUID objectId, String objectType, List<Tag> tags, CallContext context);
-
-    List<Tag> loadTags(UUID objectId, String objectType);
-
-    List<Tag> loadTagsFromTransaction(Transmogrifier dao, UUID objectId, String objectType);
-
-    void addTag(String tagName, UUID objectId, String objectType, CallContext context);
-
-    void removeTag(String tagName, UUID objectId, String objectType, CallContext context);
+    void removeTag(String tagName, UUID objectId, ObjectType objectType, CallContext context);
 }

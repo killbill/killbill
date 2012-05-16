@@ -1,13 +1,4 @@
-package com.ning.billing.jaxrs.json;
-import java.math.BigDecimal;
-
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.joda.time.DateTime;
-
-import com.ning.billing.util.clock.DefaultClock;
-
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -23,6 +14,15 @@ import com.ning.billing.util.clock.DefaultClock;
  * under the License.
  */
 
+package com.ning.billing.jaxrs.json;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.joda.time.DateTime;
+
 public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
 
     private final String bundleKeys;
@@ -35,8 +35,8 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
     @JsonCreator
     public PaymentJsonWithBundleKeys(@JsonProperty("amount") BigDecimal amount,
             @JsonProperty("paidAmount") BigDecimal paidAmount,
-            @JsonProperty("invoiceId") String invoiceId,
-            @JsonProperty("paymentId") String paymentId,
+            @JsonProperty("invoiceId") UUID invoiceId,
+            @JsonProperty("paymentId") UUID paymentId,
             @JsonProperty("requestedDt") DateTime requestedDate,
             @JsonProperty("effectiveDt") DateTime effectiveDate,
             @JsonProperty("retryCount") Integer retryCount,

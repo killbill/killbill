@@ -69,7 +69,6 @@ import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.customfield.CustomField;
@@ -241,23 +240,14 @@ public class AccountResource implements BaseJaxrsResource {
     @Produces(APPLICATION_JSON)
     public Response getAccountTimeline(@PathParam("accountId") String accountId) {
         try {
+            
             Account account = accountApi.getAccountById(UUID.fromString(accountId));
            
             List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
-
-            List<PaymentAttempt> payments = new LinkedList<PaymentAttempt>();
-
+            List<PaymentAttempt> payments = new LinkedList<PaymentAttempt>();            
             if (invoices.size() > 0) {
-                Collection<String> tmp = Collections2.transform(invoices, new Function<Invoice, String>() {
-                    @Override
-                    public String apply(Invoice input) {
-                        return input.getId().toString();
-                    }
-                });
-                List<String> invoicesId = new ArrayList<String>();
-                invoicesId.addAll(tmp);
-                for (String curId : invoicesId) {
-                    payments.addAll(paymentApi.getPaymentAttemptsForInvoiceId(curId));
+                for (Invoice cur : invoices) {
+                    payments.addAll(paymentApi.getPaymentAttemptsForInvoiceId(cur.getId()));
                 }
             }
 

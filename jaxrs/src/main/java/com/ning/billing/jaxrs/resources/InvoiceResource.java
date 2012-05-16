@@ -43,11 +43,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -55,10 +52,6 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
-import com.ning.billing.jaxrs.util.TagHelper;
-import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.util.api.TagUserApi;
-
 
 
 @Path(BaseJaxrsResource.INVOICES_PATH)

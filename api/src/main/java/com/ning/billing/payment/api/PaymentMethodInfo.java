@@ -16,9 +16,12 @@
 
 package com.ning.billing.payment.api;
 
+import java.util.UUID;
+
 import com.google.common.base.Objects;
 
 public class PaymentMethodInfo {
+
     private final String id;
     private final String accountId;
     private final Boolean defaultMethod;

@@ -17,6 +17,7 @@
 package com.ning.billing.overdue.service;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import com.google.inject.Inject;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
@@ -64,6 +65,8 @@ public class DefaultOverdueService implements ExtendedOverdueService {
                 overdueConfig = XMLLoader.getObjectFromUri(u, OverdueConfig.class);
 
                 isInitialized = true;
+            } catch (URISyntaxException e) {
+		//                overdueConfig = new OverdueConfig();
             } catch (Exception e) {
                 throw new ServiceException(e);
             }

@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
@@ -45,13 +46,13 @@ public class MockInvoice extends ExtendedEntityBase implements Invoice {
 
     // used to create a new invoice
     public MockInvoice(UUID accountId, DateTime invoiceDate, DateTime targetDate, Currency currency) {
-        this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, null, null);
+        this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
     }
 
     // used to hydrate invoice from persistence layer
     public MockInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber, DateTime invoiceDate,
-                          DateTime targetDate, Currency currency, boolean isMigrationInvoice, @Nullable String createdBy, @Nullable DateTime createdDate) {
-        super(invoiceId, createdBy, createdDate);
+                          DateTime targetDate, Currency currency, boolean isMigrationInvoice) {
+        super(invoiceId);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
         this.invoiceDate = invoiceDate;
@@ -214,8 +215,8 @@ public class MockInvoice extends ExtendedEntityBase implements Invoice {
     }
 
     @Override
-    public String getObjectName() {
-        return Invoice.ObjectType;
+    public ObjectType getObjectType() {
+        return ObjectType.RECURRING_INVOICE_ITEM;
     }
 
     @Override

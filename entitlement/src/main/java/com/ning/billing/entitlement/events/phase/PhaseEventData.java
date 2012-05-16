@@ -17,7 +17,6 @@
 package com.ning.billing.entitlement.events.phase;
 
 
-import com.ning.billing.entitlement.alignment.TimedPhase;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.events.EventBase;
 import org.joda.time.DateTime;

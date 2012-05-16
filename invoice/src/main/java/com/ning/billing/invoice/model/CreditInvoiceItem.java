@@ -20,18 +20,16 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import org.joda.time.DateTime;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 public class CreditInvoiceItem extends InvoiceItemBase {
     public CreditInvoiceItem(UUID invoiceId, UUID accountId, DateTime date, BigDecimal amount, Currency currency) {
-        this(UUID.randomUUID(), invoiceId, accountId, date, amount, currency, null, null);
+        this(UUID.randomUUID(), invoiceId, accountId, date, amount, currency);
     }
 
-    public CreditInvoiceItem(UUID id, UUID invoiceId, UUID accountId, DateTime date, BigDecimal amount, Currency currency,
-                             @Nullable String createdBy, @Nullable DateTime createdDate) {
-        super(id, invoiceId, accountId, null, null, null, null, date, date, amount, currency, createdBy, createdDate);
+    public CreditInvoiceItem(UUID id, UUID invoiceId, UUID accountId, DateTime date, BigDecimal amount, Currency currency) {
+        super(id, invoiceId, accountId, null, null, null, null, date, date, amount, currency);
     }
 
     @Override

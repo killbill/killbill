@@ -18,12 +18,11 @@ package com.ning.billing.util.notificationq;
 
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityBase;
 import org.joda.time.DateTime;
 
-public class DefaultNotification implements Notification {
-
-    private final long id;
-    private final UUID uuid;
+public class DefaultNotification extends EntityBase implements Notification {
+    private final long ordering;
     private final String owner;
     private final String createdOwner;
     private final String queueName;
@@ -33,12 +32,11 @@ public class DefaultNotification implements Notification {
     private final DateTime effectiveDate;
 
 
-    public DefaultNotification(long id, UUID uuid, String createdOwner, String owner, String queueName, DateTime nextAvailableDate,
+    public DefaultNotification(long ordering, UUID id, String createdOwner, String owner, String queueName, DateTime nextAvailableDate,
             PersistentQueueEntryLifecycleState lifecycleState,
             String notificationKey, DateTime effectiveDate) {
-        super();
-        this.id = id;
-        this.uuid = uuid;
+        super(id);
+        this.ordering = ordering;
         this.owner = owner;
         this.createdOwner = createdOwner;
         this.queueName = queueName;
@@ -48,17 +46,12 @@ public class DefaultNotification implements Notification {
         this.effectiveDate = effectiveDate;
     }
 
-    @Override
-    public long getId() {
-        return id;
-    }
-
     public DefaultNotification(String queueName, String createdOwner, String notificationKey, DateTime effectiveDate) {
         this(-1L, UUID.randomUUID(), createdOwner, null, queueName, null, PersistentQueueEntryLifecycleState.AVAILABLE, notificationKey, effectiveDate);
     }
     @Override
-    public UUID getUUID() {
-        return uuid;
+    public Long getOrdering() {
+        return ordering;
     }
 
     @Override

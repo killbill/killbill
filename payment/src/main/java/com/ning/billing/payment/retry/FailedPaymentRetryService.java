@@ -70,7 +70,7 @@ public class FailedPaymentRetryService implements RetryService {
             @Override
             public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
                 CallContext context = new DefaultCallContext("FailedRetryService", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
-                retry(notificationKey, context);
+                retry(UUID.fromString(notificationKey), context);
             }
         },
         config);
@@ -89,7 +89,7 @@ public class FailedPaymentRetryService implements RetryService {
     }
 
     public void scheduleRetry(PaymentAttempt paymentAttempt, DateTime timeOfRetry) {
-        final String id = paymentAttempt.getPaymentAttemptId().toString();
+        final String id = paymentAttempt.getId().toString();
 
         NotificationKey key = new NotificationKey() {
             @Override
@@ -103,14 +103,14 @@ public class FailedPaymentRetryService implements RetryService {
         }
     }
 
-    private void retry(String paymentAttemptId, CallContext context) {
+    private void retry(UUID paymentAttemptId, CallContext context) {
         try {
             PaymentInfoEvent paymentInfo = paymentApi.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
             if (paymentInfo != null && PaymentStatus.Processed.equals(PaymentStatus.valueOf(paymentInfo.getStatus()))) {
                 return;
             }
             // STEPH
-            paymentApi.createPaymentForPaymentAttempt(null, UUID.fromString(paymentAttemptId), context);
+            paymentApi.createPaymentForPaymentAttempt(null, paymentAttemptId, context);
         } catch (PaymentApiException e) {
             log.error(String.format("Failed to retry payment for %s"), e);
         }

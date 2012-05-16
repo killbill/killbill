@@ -36,13 +36,11 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
-import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.util.bus.Bus;
@@ -52,7 +50,6 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.entity.EntityPersistenceException;
 
 public abstract class TestPaymentApi {
     @Inject
@@ -104,18 +101,18 @@ public abstract class TestPaymentApi {
 
         PaymentInfoEvent paymentInfo = paymentApi.createPayment(account.getExternalKey(), invoice.getId(), context);
 
-        assertNotNull(paymentInfo.getPaymentId());
+        assertNotNull(paymentInfo.getId());
         assertTrue(paymentInfo.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
         assertNotNull(paymentInfo.getPaymentNumber());
         assertFalse(paymentInfo.getStatus().equals("Error"));
 
-        PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
+        PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getId());
         assertNotNull(paymentAttempt);
-        assertNotNull(paymentAttempt.getPaymentAttemptId());
+        assertNotNull(paymentAttempt.getId());
         assertEquals(paymentAttempt.getInvoiceId(), invoice.getId());
         assertTrue(paymentAttempt.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
         assertEquals(paymentAttempt.getCurrency(), Currency.USD);
-        assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getPaymentId());
+        assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getId());
         DateTime nowTruncated = now.withMillisOfSecond(0).withSecondOfMinute(0);
         DateTime paymentAttemptDateTruncated = paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0);
         assertEquals(paymentAttemptDateTruncated.compareTo(nowTruncated), 0);
@@ -127,7 +124,7 @@ public abstract class TestPaymentApi {
         PaymentInfoEvent paymentInfoFromGet = paymentInfos.get(0);
         assertEquals(paymentInfo.getAmount(), paymentInfoFromGet.getAmount());
         assertEquals(paymentInfo.getRefundAmount(), paymentInfoFromGet.getRefundAmount());
-        assertEquals(paymentInfo.getPaymentId(), paymentInfoFromGet.getPaymentId());
+        assertEquals(paymentInfo.getId(), paymentInfoFromGet.getId());
         assertEquals(paymentInfo.getPaymentNumber(), paymentInfoFromGet.getPaymentNumber());
         assertEquals(paymentInfo.getStatus(), paymentInfoFromGet.getStatus());
         assertEquals(paymentInfo.getBankIdentificationNumber(), paymentInfoFromGet.getBankIdentificationNumber());
@@ -135,7 +132,7 @@ public abstract class TestPaymentApi {
         assertEquals(paymentInfo.getPaymentMethodId(), paymentInfoFromGet.getPaymentMethodId());
         assertEquals(paymentInfo.getEffectiveDate(), paymentInfoFromGet.getEffectiveDate());
 
-        List<PaymentAttempt> paymentAttemptsFromGet = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId().toString());
+        List<PaymentAttempt> paymentAttemptsFromGet = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId());
         assertEquals(paymentAttempt, paymentAttemptsFromGet.get(0));
 
     }
@@ -155,8 +152,7 @@ public abstract class TestPaymentApi {
 
         PaymentMethodInfo paymentMethodInfo = paymentApi.getPaymentMethod(accountKey, paymentMethodId);
 
-        PaymentProviderAccount accountResult = paymentApi.getPaymentProviderAccount(accountKey);
-        return accountResult;
+        return paymentApi.getPaymentProviderAccount(accountKey);
     }
 
     @Test(enabled=true)
@@ -171,20 +167,18 @@ public abstract class TestPaymentApi {
         final Account account = testHelper.createTestPayPalAccount();
         paymentApi.createPaymentProviderAccount(account, context);
 
-        String newName = "Tester " + RandomStringUtils.randomAlphanumeric(10);
-        String newNumber = "888-888-" + RandomStringUtils.randomNumeric(4);
+        Account updatedAccount = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        ZombieControl zombieAccount = (ZombieControl) updatedAccount;
+        zombieAccount.addResult("getId", account.getId());
+        zombieAccount.addResult("getName", "Tester " + RandomStringUtils.randomAlphanumeric(10));
+        zombieAccount.addResult("getFirstNameLength", 6);
+        zombieAccount.addResult("getExternalKey", account.getExternalKey());
+        zombieAccount.addResult("getPhone", "888-888-" + RandomStringUtils.randomNumeric(4));
+        zombieAccount.addResult("getEmail", account.getEmail());
+        zombieAccount.addResult("getCurrency", account.getCurrency());
+        zombieAccount.addResult("getBillCycleDay", account.getBillCycleDay());
 
-        final Account accountToUpdate = new MockAccountBuilder(account.getId())
-                                                                  .name(newName)
-                                                                  .firstNameLength(newName.length())
-                                                                  .externalKey(account.getExternalKey())
-                                                                  .phone(newNumber)
-                                                                  .email(account.getEmail())
-                                                                  .currency(account.getCurrency())
-                                                                  .billingCycleDay(account.getBillCycleDay())
-                                                                  .build();
-
-        paymentApi.updatePaymentProviderAccountContact(accountToUpdate.getExternalKey(), context);
+        paymentApi.updatePaymentProviderAccountContact(updatedAccount.getExternalKey(), context);
     }
 
     @Test(enabled=true)

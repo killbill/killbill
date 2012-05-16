@@ -56,12 +56,12 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
         for (final Notification cur : notifications) {
             nbProcessedEvents.incrementAndGet();
             logDebug("handling notification %s, key = %s for time %s",
-                    cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate());
+                    cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
             handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
             result++;
             clearNotification(cur);
             logDebug("done handling notification %s, key = %s for time %s",
-                    cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate());
+                    cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
         }
         return result;
     }
@@ -82,7 +82,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
 
 
     private void clearNotification(final Notification cleared) {
-        dao.clearNotification(cleared.getId(), hostname);
+        dao.clearNotification(cleared.getId().toString(), hostname);
     }
 
     private List<Notification> getReadyNotifications() {
@@ -95,13 +95,13 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
         List<Notification> claimedNotifications = new ArrayList<Notification>();
         for (Notification cur : input) {
             logDebug("about to claim notification %s,  key = %s for time %s",
-                    cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate());
-            final boolean claimed = (dao.claimNotification(hostname, nextAvailable, cur.getId(), now) == 1);
+                    cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
+            final boolean claimed = (dao.claimNotification(hostname, nextAvailable, cur.getId().toString(), now) == 1);
             logDebug("claimed notification %s, key = %s for time %s result = %s",
-                    cur.getUUID(), cur.getNotificationKey(), cur.getEffectiveDate(), Boolean.valueOf(claimed));
+                    cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate(), Boolean.valueOf(claimed));
             if (claimed) {
                 claimedNotifications.add(cur);
-                dao.insertClaimedHistory(hostname, now, cur.getUUID().toString());
+                dao.insertClaimedHistory(hostname, now, cur.getId().toString());
             }
         }
 

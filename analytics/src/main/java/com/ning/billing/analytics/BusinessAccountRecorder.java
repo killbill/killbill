@@ -87,7 +87,7 @@ public class BusinessAccountRecorder {
      */
     public void accountUpdated(final PaymentInfoEvent paymentInfo) {
         try {
-            final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
+            final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getId());
             if (paymentAttempt == null) {
                 return;
             }
@@ -156,6 +156,7 @@ public class BusinessAccountRecorder {
 
     private void updateBusinessAccountFromAccount(final Account account, final BusinessAccount bac) {
 
+        final List<UUID> invoiceIds = new ArrayList<UUID>();
         try {
             DateTime lastInvoiceDate = null;
             BigDecimal totalInvoiceBalance = BigDecimal.ZERO;
@@ -167,7 +168,7 @@ public class BusinessAccountRecorder {
             // Retrieve invoices information
             final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId());
             if (invoices != null && invoices.size() > 0) {
-                final List<UUID> invoiceIds = new ArrayList<UUID>();
+
                 for (final Invoice invoice : invoices) {
                     invoiceIds.add(invoice.getId());
                     totalInvoiceBalance = totalInvoiceBalance.add(invoice.getBalance());
@@ -192,8 +193,18 @@ public class BusinessAccountRecorder {
                             billingAddressCountry = payment.getCardCountry();
                         }
                     }
+
                 }
             }
+
+            // Retrieve payments information for these invoices
+
+            final PaymentInfoEvent payment = paymentApi.getLastPaymentInfo(invoiceIds);
+
+            lastPaymentStatus = payment.getStatus();
+            paymentMethod = payment.getPaymentMethod();
+            creditCardType = payment.getCardType();
+            billingAddressCountry = payment.getCardCountry();
 
             bac.setLastPaymentStatus(lastPaymentStatus);
             bac.setPaymentMethod(paymentMethod);
@@ -203,8 +214,9 @@ public class BusinessAccountRecorder {
             bac.setTotalInvoiceBalance(totalInvoiceBalance);
 
             bac.setBalance(invoiceUserApi.getAccountBalance(account.getId()));
-        } catch (PaymentApiException e) {
-            log.error("Failed to update Business account", e);
+
+        } catch (PaymentApiException ex) {
+            log.error(String.format("Failed to handle acount update for account %s", account.getId()), ex);
         }
     }
 }

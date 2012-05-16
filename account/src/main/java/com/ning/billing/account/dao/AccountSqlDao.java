@@ -18,11 +18,15 @@ package com.ning.billing.account.dao;
 
 import java.util.UUID;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.ChangeTypeBinder;
-import com.ning.billing.util.entity.UpdatableEntityDao;
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.UuidMapper;
+import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -31,12 +35,9 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.util.UuidMapper;
-
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper({UuidMapper.class, AccountMapper.class})
-public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
+public interface AccountSqlDao extends UpdatableEntitySqlDao<Account>, Transactional<AccountSqlDao>, Transmogrifier {
     @SqlQuery
     public Account getAccountByKey(@Bind("externalKey") final String key);
 
@@ -51,9 +52,8 @@ public interface AccountSqlDao extends UpdatableEntityDao<Account>, Transactiona
     @SqlUpdate
     public void update(@AccountBinder Account account, @CallContextBinder final CallContext context);
 
+    @Override
     @SqlUpdate
-    public void insertAccountHistoryFromTransaction(@AccountBinder final Account account,
-                                                    @Bind("historyRecordId") final String historyRecordId,
-                                                    @ChangeTypeBinder ChangeType changeType,
-                                                    @CallContextBinder CallContext context);
+    public void insertHistoryFromTransaction(@AccountHistoryBinder final EntityHistory<Account> account,
+                                            @CallContextBinder final CallContext context);
 }

@@ -43,7 +43,7 @@ public interface EntitlementDao {
 
     public Subscription getSubscriptionFromId(final SubscriptionFactory factory, final UUID subscriptionId);
 
-    // Account retrieval
+    // ACCOUNT retrieval
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId);
 
     // Subscription retrieval

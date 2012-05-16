@@ -18,7 +18,6 @@ package com.ning.billing.util.customfield;
 
 import java.util.UUID;
 import com.ning.billing.util.entity.UpdatableEntityBase;
-import org.joda.time.DateTime;
 
 public class StringCustomField extends UpdatableEntityBase implements CustomField {
     private String name;
@@ -30,9 +29,8 @@ public class StringCustomField extends UpdatableEntityBase implements CustomFiel
         this.value = value;
     }
 
-    public StringCustomField(UUID id, String createdBy, DateTime createdDate,
-                             String updatedBy, DateTime updatedDate, String name, String value) {
-        super(id, createdBy, createdDate, updatedBy, updatedDate);
+    public StringCustomField(UUID id, String name, String value) {
+        super(id);
         this.name = name;
         this.value = value;
     }
@@ -50,5 +48,25 @@ public class StringCustomField extends UpdatableEntityBase implements CustomFiel
     @Override
     public void setValue(String value) {
         this.value = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        StringCustomField that = (StringCustomField) o;
+
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        //if (value != null ? !value.equals(that.value) : that.value != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        return result;
     }
 }

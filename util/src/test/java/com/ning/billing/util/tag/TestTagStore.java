@@ -21,12 +21,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.account.api.Account;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.dao.TagDao;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -127,13 +127,13 @@ public class TestTagStore {
     public void testTagCreationAndRetrieval() {
         UUID accountId = UUID.randomUUID();
 
-        TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
+        TagStore tagStore = new DefaultTagStore(accountId, ObjectType.ACCOUNT);
         Tag tag = new DescriptiveTag(testTag);
         tagStore.add(tag);
 
-        tagDao.saveTagsFromTransaction(dao, accountId, Account.ObjectType, tagStore.getEntityList(), context);
+        tagDao.saveEntitiesFromTransaction(dao, accountId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
 
-        List<Tag> savedTags = tagDao.loadTags(accountId, Account.ObjectType);
+        List<Tag> savedTags = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         assertEquals(savedTags.size(), 1);
 
         Tag savedTag = savedTags.get(0);
@@ -145,19 +145,19 @@ public class TestTagStore {
     @Test(groups="slow")
     public void testControlTagCreation() {
         UUID accountId = UUID.randomUUID();
-        TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
+        TagStore tagStore = new DefaultTagStore(accountId, ObjectType.ACCOUNT);
 
         ControlTag tag = new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF);
         tagStore.add(tag);
         assertEquals(tagStore.generateInvoice(), false);
 
         List<Tag> tagList = tagStore.getEntityList();
-        tagDao.saveTagsFromTransaction(dao, accountId, Account.ObjectType, tagList, context);
+        tagDao.saveEntitiesFromTransaction(dao, accountId, ObjectType.ACCOUNT, tagList, context);
 
         tagStore.clear();
         assertEquals(tagStore.getEntityList().size(), 0);
 
-        tagList = tagDao.loadTags(accountId, Account.ObjectType);
+        tagList = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         tagStore.add(tagList);
         assertEquals(tagList.size(), 1);
 
@@ -167,7 +167,7 @@ public class TestTagStore {
     @Test(groups="slow")
     public void testDescriptiveTagCreation() {
         UUID accountId = UUID.randomUUID();
-        TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
+        TagStore tagStore = new DefaultTagStore(accountId, ObjectType.ACCOUNT);
 
         String definitionName = "SomeTestTag";
         TagDefinition tagDefinition = null;
@@ -181,12 +181,12 @@ public class TestTagStore {
         tagStore.add(tag);
         assertEquals(tagStore.generateInvoice(), true);
 
-        tagDao.saveTagsFromTransaction(dao, accountId, Account.ObjectType, tagStore.getEntityList(), context);
+        tagDao.saveEntitiesFromTransaction(dao, accountId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
 
         tagStore.clear();
         assertEquals(tagStore.getEntityList().size(), 0);
 
-        List<Tag> tagList = tagDao.loadTags(accountId, Account.ObjectType);
+        List<Tag> tagList = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         tagStore.add(tagList);
         assertEquals(tagList.size(), 1);
 
@@ -196,7 +196,7 @@ public class TestTagStore {
     @Test(groups="slow")
     public void testMixedTagCreation() {
         UUID accountId = UUID.randomUUID();
-        TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
+        TagStore tagStore = new DefaultTagStore(accountId, ObjectType.ACCOUNT);
 
         String definitionName = "MixedTagTest";
         TagDefinition tagDefinition = null;
@@ -214,12 +214,12 @@ public class TestTagStore {
         tagStore.add(controlTag);
         assertEquals(tagStore.generateInvoice(), false);
 
-        tagDao.saveTagsFromTransaction(dao, accountId, Account.ObjectType, tagStore.getEntityList(), context);
+        tagDao.saveEntitiesFromTransaction(dao, accountId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
 
         tagStore.clear();
         assertEquals(tagStore.getEntityList().size(), 0);
 
-        List<Tag> tagList = tagDao.loadTags(accountId, Account.ObjectType);
+        List<Tag> tagList = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         tagStore.add(tagList);
         assertEquals(tagList.size(), 2);
 
@@ -229,7 +229,7 @@ public class TestTagStore {
     @Test(groups="slow")
     public void testControlTags() {
         UUID accountId = UUID.randomUUID();
-        TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
+        TagStore tagStore = new DefaultTagStore(accountId, ObjectType.ACCOUNT);
         assertEquals(tagStore.generateInvoice(), true);
         assertEquals(tagStore.processPayment(), true);
 
@@ -272,13 +272,13 @@ public class TestTagStore {
         assertNotNull(tagDefinition);
 
         UUID objectId = UUID.randomUUID();
-        TagStore tagStore = new DefaultTagStore(objectId, Account.ObjectType);
+        TagStore tagStore = new DefaultTagStore(objectId, ObjectType.ACCOUNT);
         Tag tag = new DescriptiveTag(tagDefinition);
         tagStore.add(tag);
 
-        tagDao.saveTags(objectId, Account.ObjectType, tagStore.getEntityList(), context);
+        tagDao.saveEntitiesFromTransaction(dao, objectId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
 
-        List<Tag> tags = tagDao.loadTags(objectId, Account.ObjectType);
+        List<Tag> tags = tagDao.loadEntities(objectId, ObjectType.ACCOUNT);
         assertEquals(tags.size(), 1);
 
         tagDefinitionDao.deleteTagDefinition(definitionName, context);
@@ -297,13 +297,13 @@ public class TestTagStore {
         assertNotNull(tagDefinition);
 
         UUID objectId = UUID.randomUUID();
-        TagStore tagStore = new DefaultTagStore(objectId, Account.ObjectType);
+        TagStore tagStore = new DefaultTagStore(objectId, ObjectType.ACCOUNT);
         Tag tag = new DescriptiveTag(tagDefinition);
         tagStore.add(tag);
 
-        tagDao.saveTags(objectId, Account.ObjectType, tagStore.getEntityList(), context);
+        tagDao.saveEntitiesFromTransaction(dao, objectId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
 
-        List<Tag> tags = tagDao.loadTags(objectId, Account.ObjectType);
+        List<Tag> tags = tagDao.loadEntities(objectId, ObjectType.ACCOUNT);
         assertEquals(tags.size(), 1);
 
         try {
@@ -376,13 +376,13 @@ public class TestTagStore {
     public void testTagInsertAudit() {
         UUID accountId = UUID.randomUUID();
 
-        TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
+        TagStore tagStore = new DefaultTagStore(accountId, ObjectType.ACCOUNT);
         Tag tag = new DescriptiveTag(testTag);
         tagStore.add(tag);
 
-        tagDao.saveTagsFromTransaction(dao, accountId, Account.ObjectType, tagStore.getEntityList(), context);
+        tagDao.saveEntitiesFromTransaction(dao, accountId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
 
-        List<Tag> savedTags = tagDao.loadTags(accountId, Account.ObjectType);
+        List<Tag> savedTags = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         assertEquals(savedTags.size(), 1);
 
         Tag savedTag = savedTags.get(0);
@@ -408,16 +408,16 @@ public class TestTagStore {
     public void testTagDeleteAudit() {
         UUID accountId = UUID.randomUUID();
 
-        TagStore tagStore = new DefaultTagStore(accountId, Account.ObjectType);
+        TagStore tagStore = new DefaultTagStore(accountId, ObjectType.ACCOUNT);
         Tag tag = new DescriptiveTag(testTag);
         tagStore.add(tag);
 
-        tagDao.saveTags(accountId, Account.ObjectType, tagStore.getEntityList(), context);
+        tagDao.saveEntitiesFromTransaction(dao, accountId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
 
         tagStore.remove(tag);
-        tagDao.saveTags(accountId, Account.ObjectType, tagStore.getEntityList(), context);
+        tagDao.saveEntitiesFromTransaction(dao, accountId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
 
-        List<Tag> savedTags = tagDao.loadTags(accountId, Account.ObjectType);
+        List<Tag> savedTags = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         assertEquals(savedTags.size(), 0);
 
         Handle handle = dbi.open();

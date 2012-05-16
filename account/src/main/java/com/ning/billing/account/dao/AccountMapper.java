@@ -17,7 +17,7 @@
 package com.ning.billing.account.dao;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.user.AccountBuilder;
+import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
@@ -58,27 +58,12 @@ public class AccountMapper extends MapperBase implements ResultSetMapper<Account
         String country = result.getString("country");
         String phone = result.getString("phone");
 
-        Boolean migrated = result.getBoolean("migrated");
+        Boolean isMigrated = result.getBoolean("migrated");
         Boolean isNotifiedForInvoices = result.getBoolean("is_notified_for_invoices");
 
-        String createdBy = result.getString("created_by");
-        DateTime createdDate = getDate(result, "created_date");
-        String updatedBy = result.getString("updated_by");
-        DateTime updatedDate = getDate(result, "updated_date");
-
-        return new AccountBuilder(id).externalKey(externalKey).email(email)
-                                     .name(name).firstNameLength(firstNameLength)
-                                     .phone(phone).currency(currency)
-                                     .billingCycleDay(billingCycleDay)
-                                     .paymentProviderName(paymentProviderName)
-                                     .timeZone(timeZone).locale(locale)
-                                     .address1(address1).address2(address2)
-                                     .companyName(companyName)
-                                     .city(city).stateOrProvince(stateOrProvince)
-                                     .postalCode(postalCode).country(country)
-                                     .migrated(migrated).isNotifiedForInvoices(isNotifiedForInvoices)
-                                     .createdBy(createdBy).createdDate(createdDate)
-                                     .updatedBy(updatedBy).updatedDate(updatedDate)
-                                     .build();
+        return new DefaultAccount(id, externalKey, email, name,firstNameLength, currency,
+                billingCycleDay, paymentProviderName, timeZone, locale,
+                address1, address2, companyName, city, stateOrProvince, country, postalCode, phone,
+                isMigrated, isNotifiedForInvoices);
     }
 }

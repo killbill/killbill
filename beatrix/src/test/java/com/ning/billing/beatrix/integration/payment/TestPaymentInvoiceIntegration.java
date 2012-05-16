@@ -104,7 +104,7 @@ public class TestPaymentInvoiceIntegration {
                                                  new MockJunctionModule(),
                                                  new AbstractModule()
                                             
-                                                  {
+                                                 {
                                                     @Override
                                                     protected void configure() {
                                                         bind(IDBI.class).toInstance(dbi);
@@ -147,10 +147,10 @@ public class TestPaymentInvoiceIntegration {
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
 
         List<PaymentInfoEvent> payments = paymentInfoReceiver.getProcessedPayments();
-        PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(payments.get(0).getPaymentId());
+        PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(payments.get(0).getId());
         Assert.assertNotNull(paymentAttempt);
 
-        Invoice invoiceForPayment = invoicePaymentApi.getInvoiceForPaymentAttemptId(paymentAttempt.getPaymentAttemptId());
+        Invoice invoiceForPayment = invoicePaymentApi.getInvoiceForPaymentAttemptId(paymentAttempt.getId());
 
         Assert.assertNotNull(invoiceForPayment);
         Assert.assertEquals(invoiceForPayment.getId(), invoice.getId());

@@ -17,10 +17,12 @@
 package com.ning.billing.util.tag;
 
 import java.util.UUID;
-import com.ning.billing.util.entity.EntityCollectionBase;
+
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.entity.collection.EntityCollectionBase;
 
 public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagStore {
-    public DefaultTagStore(final UUID objectId, final String objectType) {
+    public DefaultTagStore(final UUID objectId, final ObjectType objectType) {
         super(objectId, objectType);
     }
 

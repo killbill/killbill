@@ -65,15 +65,18 @@ public interface PaymentApi {
     public void updatePaymentProviderAccountContact(String accountKey, CallContext context)
         throws PaymentApiException;
 
-    public PaymentAttempt getPaymentAttemptForPaymentId(final String id)
+    public PaymentAttempt getPaymentAttemptForPaymentId(final UUID id)
         throws PaymentApiException;
 
     public List<PaymentInfoEvent> getPaymentInfo(final List<UUID> invoiceIds)
         throws PaymentApiException;
 
-    public List<PaymentAttempt> getPaymentAttemptsForInvoiceId(final String invoiceId)
+    public PaymentInfoEvent getLastPaymentInfo(final List<UUID> invoiceIds)
+    throws PaymentApiException;
+
+    public List<PaymentAttempt> getPaymentAttemptsForInvoiceId(final UUID invoiceId)
         throws PaymentApiException;
 
-    public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(final String paymentAttemptId)
+    public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(final UUID paymentAttemptId)
         throws PaymentApiException;
 }

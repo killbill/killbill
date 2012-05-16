@@ -5,7 +5,9 @@ fields(prefix) ::= <<
     <prefix>name,
     <prefix>description,
     <prefix>created_by,
-    <prefix>created_date
+    <prefix>created_date ,
+    <prefix>updated_by,
+    <prefix>updated_date
 >>
 
 get() ::= <<
@@ -15,7 +17,7 @@ get() ::= <<
 
 create() ::= <<
   INSERT INTO tag_definitions(<fields()>)
-  VALUES(:id, :name, :description, :userName, :createdDate);
+  VALUES(:id, :name, :description, :userName, :createdDate, :userName, :updatedDate);
 >>
 
 load() ::= <<

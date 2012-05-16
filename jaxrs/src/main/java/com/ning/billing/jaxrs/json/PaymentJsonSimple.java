@@ -17,6 +17,7 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -31,9 +32,9 @@ public class PaymentJsonSimple {
 
     private final BigDecimal amount;
 
-    private final String invoiceId;
+    private final UUID invoiceId;
     
-    private final String paymentId;
+    private final UUID paymentId;
     
     private final DateTime requestedDate;
     
@@ -60,10 +61,10 @@ public class PaymentJsonSimple {
     @JsonCreator
     public PaymentJsonSimple(@JsonProperty("amount") BigDecimal amount,
             @JsonProperty("paidAmount") BigDecimal paidAmount,
-            @JsonProperty("invoiceId") String invoiceId,
-            @JsonProperty("paymentId") String paymentId,
-            @JsonProperty("requestedDt") DateTime requestedDate,
-            @JsonProperty("effectiveDt") DateTime effectiveDate,
+            @JsonProperty("invoiceId") UUID invoiceId,
+            @JsonProperty("paymentId") UUID paymentId,
+            @JsonProperty("requestedDate") DateTime requestedDate,
+            @JsonProperty("effectiveDate") DateTime effectiveDate,
             @JsonProperty("retryCount") Integer retryCount,
             @JsonProperty("currency") String currency,            
             @JsonProperty("status") String status) {
@@ -83,11 +84,11 @@ public class PaymentJsonSimple {
         return paidAmount;
     }
 
-    public String getInvoiceId() {
+    public UUID getInvoiceId() {
         return invoiceId;
     }
 
-    public String getPaymentId() {
+    public UUID getPaymentId() {
         return paymentId;
     }
 

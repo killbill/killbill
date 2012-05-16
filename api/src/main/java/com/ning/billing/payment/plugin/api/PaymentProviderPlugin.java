@@ -17,6 +17,7 @@
 package com.ning.billing.payment.plugin.api;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;

@@ -19,18 +19,14 @@ package com.ning.billing.util.customfield;
 import java.io.IOException;
 import java.util.UUID;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.glue.FieldStoreModule;
+import com.ning.billing.util.dao.ObjectType;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
@@ -62,13 +58,8 @@ public class TestFieldStore {
             helper.initDb(utilDdl);
 
             dbi = helper.getDBI();
-            customFieldDao = new AuditedCustomFieldDao();
-
-            FieldStoreModule module = new FieldStoreModule();
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module, new MockClockModule());
-            Clock clock = injector.getInstance(Clock.class);
-            context = new DefaultCallContextFactory(clock).createCallContext("Fezzik", CallOrigin.TEST, UserType.TEST);
-
+            customFieldDao = new AuditedCustomFieldDao(dbi);
+            context = new DefaultCallContextFactory(new ClockMock()).createCallContext("Fezzik", CallOrigin.TEST, UserType.TEST);
         }
         catch (Throwable t) {
             log.error("Setup failed", t);
@@ -87,7 +78,7 @@ public class TestFieldStore {
     @Test
     public void testFieldStore() {
         final UUID id = UUID.randomUUID();
-        final String objectType = "Test widget";
+        final ObjectType objectType = ObjectType.ACCOUNT;
 
         final FieldStore fieldStore1 = new DefaultFieldStore(id, objectType);
 
@@ -96,7 +87,7 @@ public class TestFieldStore {
         fieldStore1.setValue(fieldName, fieldValue);
 
         CustomFieldSqlDao customFieldSqlDao = dbi.onDemand(CustomFieldSqlDao.class);
-        customFieldDao.saveFields(customFieldSqlDao, id, objectType, fieldStore1.getEntityList(), context);
+        customFieldDao.saveEntitiesFromTransaction(customFieldSqlDao, id, objectType, fieldStore1.getEntityList(), context);
 
         final FieldStore fieldStore2 = DefaultFieldStore.create(id, objectType);
         fieldStore2.add(customFieldSqlDao.load(id.toString(), objectType));
@@ -106,7 +97,7 @@ public class TestFieldStore {
         fieldValue = "Cape Canaveral";
         fieldStore2.setValue(fieldName, fieldValue);
         assertEquals(fieldStore2.getValue(fieldName), fieldValue);
-        customFieldDao.saveFields(customFieldSqlDao, id, objectType, fieldStore2.getEntityList(), context);
+        customFieldDao.saveEntitiesFromTransaction(customFieldSqlDao, id, objectType, fieldStore2.getEntityList(), context);
 
         final FieldStore fieldStore3 = DefaultFieldStore.create(id, objectType);
         assertEquals(fieldStore3.getValue(fieldName), null);

@@ -18,21 +18,14 @@ package com.ning.billing.util.tag;
 
 import java.util.UUID;
 
-import com.google.inject.Inject;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.EntityBase;
-import com.ning.billing.util.entity.UpdatableEntityBase;
-import org.joda.time.DateTime;
 
 public class DescriptiveTag extends EntityBase implements Tag {
     private final String tagDefinitionName;
 
-    @Inject
-    private Clock clock;
-
     // use to hydrate objects from the persistence layer
-    public DescriptiveTag(UUID id, String createdBy, DateTime createdDate, String tagDefinitionName) {
-        super(id, createdBy, createdDate);
+    public DescriptiveTag(UUID id, String tagDefinitionName) {
+        super(id);
         this.tagDefinitionName = tagDefinitionName;
     }
 
@@ -51,5 +44,23 @@ public class DescriptiveTag extends EntityBase implements Tag {
     @Override
     public String getTagDefinitionName() {
         return tagDefinitionName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DescriptiveTag that = (DescriptiveTag) o;
+
+        if (tagDefinitionName != null ? !tagDefinitionName.equals(that.tagDefinitionName) : that.tagDefinitionName != null)
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return tagDefinitionName != null ? tagDefinitionName.hashCode() : 0;
     }
 }
