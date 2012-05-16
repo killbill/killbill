@@ -22,6 +22,8 @@ import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
 public class DefaultInvoiceService implements InvoiceService {
 
@@ -44,7 +46,7 @@ public class DefaultInvoiceService implements InvoiceService {
     }
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.INIT_SERVICE)
-    public void initialize() {
+    public void initialize() throws NotificationQueueAlreadyExists {
         dateNotifier.initialize();
     }
 
@@ -72,7 +74,7 @@ public class DefaultInvoiceService implements InvoiceService {
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
-    public void stop() {
+    public void stop() throws NoSuchNotificationQueue {
         dateNotifier.stop();
     }
 }

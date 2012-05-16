@@ -105,10 +105,19 @@ public abstract class NotificationQueueBase extends PersistentQueueBase implemen
         return getFullQName();
     }
 
+    @Override
+    public String getServiceName() {
+        return svcName;
+    }
 
     @Override
+    public String getQueueName() {
+        return queueName;
+    }
+
+
     public String getFullQName() {
-        return svcName + ":" +  queueName;
+        return NotificationQueueServiceBase.getCompositeName(svcName, queueName);
     }
 
     @Override

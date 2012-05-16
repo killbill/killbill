@@ -184,8 +184,7 @@ public abstract class TestApiBase implements TestListenerStatus {
 
         setupDao();
 
-        ((DefaultCatalogService) catalogService).loadCatalog();
-        ((Engine) entitlementService).initialize();
+        ((DefaultCatalogService) catalogService).loadCatalog();        
 
         accountData = getAccountData();
         assertNotNull(accountData);
@@ -230,6 +229,7 @@ public abstract class TestApiBase implements TestListenerStatus {
         busService.getBus().register(testListener);
         
         // START NOTIFICATION QUEUE FOR ENTITLEMENT
+        ((Engine) entitlementService).initialize();
         ((Engine)entitlementService).start();
         
         // SETUP START DATE

@@ -26,6 +26,7 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
+import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
@@ -52,5 +53,6 @@ public class PaymentTestModuleWithEmbeddedDb extends PaymentModule {
         super.configure();
         bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
         bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
+        install(new GlobalLockerModule());
     }
 }

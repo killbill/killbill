@@ -16,13 +16,16 @@
 
 package com.ning.billing.invoice.notification;
 
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+
 
 public interface NextBillingDateNotifier {
 
-    public void initialize();
+    public void initialize() throws NotificationQueueAlreadyExists;
 
     public void start();
 
-    public void stop();
+    public void stop() throws NoSuchNotificationQueue;
 
 }

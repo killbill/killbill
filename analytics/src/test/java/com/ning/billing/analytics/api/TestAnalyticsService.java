@@ -281,9 +281,10 @@ public class TestAnalyticsService {
 
         paymentInfoNotification = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
         final PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
-                ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getPaymentId(), 1, new DateTime(), new DateTime(), PaymentAttemptStatus.COMPLETED_SUCCESS);
+                ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getId(), 1, new DateTime(), new DateTime(), PaymentAttemptStatus.COMPLETED_SUCCESS);
         paymentDao.createPaymentAttempt(paymentAttempt, PaymentAttemptStatus.COMPLETED_SUCCESS, context);
         paymentDao.savePaymentInfo(paymentInfoNotification, context);
+        paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfoNotification.getId(), context);
         Assert.assertEquals(paymentDao.getPaymentInfoList(Arrays.asList(invoice.getId())).size(), 1);
     }
 

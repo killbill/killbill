@@ -10,6 +10,7 @@ paymentAttemptFields(prefix) ::= <<
     <prefix>payment_attempt_date,
     <prefix>invoice_date,
     <prefix>retry_count,
+    <prefix>processing_status,
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
@@ -19,7 +20,7 @@ paymentAttemptFields(prefix) ::= <<
 insertPaymentAttempt() ::= <<
     INSERT INTO payment_attempts (<paymentAttemptFields()>)
     VALUES (:id, :invoiceId, :accountId, :amount, :currency, :paymentId,
-            :paymentAttemptDate, :invoiceDate, :retryCount, :userName, :createdDate, :userName, :createdDate);
+            :paymentAttemptDate, :invoiceDate, :retryCount, :processingStatus, :userName, :createdDate, :userName, :createdDate);
 >>
 
 getPaymentAttemptForPaymentId() ::= <<
@@ -64,6 +65,7 @@ historyFields(prefix) ::= <<
     payment_attempt_date,
     payment_id,
     retry_count,
+    processing_status,
     invoice_date,
     created_by,
     created_date,
@@ -74,7 +76,7 @@ historyFields(prefix) ::= <<
 insertHistoryFromTransaction() ::= <<
     INSERT INTO payment_attempt_history (<historyFields()>)
     VALUES (:recordId, :id, :accountId, :invoiceId, :amount, :currency, :paymentAttemptDate, :paymentId,
-            :retryCount, :invoiceDate, :userName, :createdDate, :userName, :updatedDate);
+            :retryCount, :processingStatus, :invoiceDate, :userName, :createdDate, :userName, :updatedDate);
 >>
 
 getRecordId() ::= <<

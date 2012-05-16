@@ -93,7 +93,7 @@ public class MockPaymentDao implements PaymentDao {
         Collection<PaymentAttempt> attempts =  Collections2.filter(paymentAttempts.values(), new Predicate<PaymentAttempt>() {
                 @Override
                 public boolean apply(PaymentAttempt input) {
-                    return invoiceId.equals(input.getInvoiceId().toString());
+                    return invoiceId.equals(input.getInvoiceId());
                 }
             });
         return new ArrayList<PaymentAttempt>(attempts);

@@ -32,6 +32,7 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
@@ -78,9 +79,10 @@ public class TimedoutPaymentRetryService implements RetryService {
     }
 
     @Override
-    public void stop() {
+    public void stop() throws NoSuchNotificationQueue {
         if (retryQueue != null) {
             retryQueue.stopQueue();
+            notificationQueueService.deleteNotificationQueue(retryQueue.getServiceName(), retryQueue.getQueueName());
          }
     }
 

@@ -53,6 +53,7 @@ public @interface PaymentAttemptHistoryBinder {
                     q.bind("paymentAttemptDate", getDate(paymentAttempt.getPaymentAttemptDate()));
                     q.bind("paymentId", paymentAttempt.getPaymentId() == null ? null : paymentAttempt.getPaymentId().toString());
                     q.bind("retryCount", paymentAttempt.getRetryCount());
+                    q.bind("processingStatus", paymentAttempt.getPaymentAttemptStatus().toString());
                 }
             };
         }

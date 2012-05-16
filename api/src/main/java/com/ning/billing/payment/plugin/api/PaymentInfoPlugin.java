@@ -22,9 +22,6 @@ import org.joda.time.DateTime;
 
 public interface PaymentInfoPlugin {
     
-    // STEPH How can plugin have paymentId?
-    public UUID getPaymentId();
-
     public BigDecimal getAmount();
 
     public String getBankIdentificationNumber();

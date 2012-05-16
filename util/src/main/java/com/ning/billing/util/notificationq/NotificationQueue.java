@@ -67,6 +67,16 @@ public interface NotificationQueue extends QueueLifecycle {
      * @return the name of that queue
      */
     public String getFullQName();
+    
+    /**
+     * @return the service name associated to that queue
+     */
+    public String getServiceName();
+
+    /**
+     * @return the queue name associated
+     */
+    public String getQueueName();
 
 
 

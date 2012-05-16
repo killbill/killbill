@@ -201,7 +201,7 @@ public class TestNextBillingDateNotifier {
 	}
 
 	@AfterClass(groups="slow")
-    public void tearDown() {
+    public void tearDown() throws Exception {
 	    notifier.stop();
     	helper.stopMysql();
     }

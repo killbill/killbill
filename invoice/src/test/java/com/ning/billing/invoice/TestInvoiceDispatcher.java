@@ -100,7 +100,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     private CallContext context;
 
     @BeforeSuite(groups = "slow")
-    public void setup() throws IOException
+    public void setup() throws Exception
     {
 		final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
 		final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));

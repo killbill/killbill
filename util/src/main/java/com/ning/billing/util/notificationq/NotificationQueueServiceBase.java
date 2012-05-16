@@ -29,6 +29,7 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
 public abstract class NotificationQueueServiceBase implements NotificationQueueService {
 
@@ -44,6 +45,7 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         this.queues = new TreeMap<String, NotificationQueue>();
     }
 
+    
     @Override
     public NotificationQueue createNotificationQueue(String svcName,
             String queueName, NotificationQueueHandler handler,
@@ -80,6 +82,20 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
             }
         }
         return result;
+    }
+
+    
+    public void deleteNotificationQueue(final String svcName, final String queueName)
+        throws NoSuchNotificationQueue {
+        String compositeName = getCompositeName(svcName, queueName);
+        synchronized(queues) {
+            NotificationQueue result = queues.get(compositeName);
+            if (result == null) {
+                throw new NoSuchNotificationQueue(String.format("Queue for svc %s and name %s does not exist",
+                        svcName, queueName));
+            }
+            queues.remove(compositeName);
+        }
     }
 
 
@@ -130,7 +146,7 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
             NotificationConfig config);
 
 
-    private String getCompositeName(String svcName, String queueName) {
+    public static String getCompositeName(String svcName, String queueName) {
         return svcName + ":" + queueName;
     }
 }

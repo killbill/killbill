@@ -1,25 +1,5 @@
 group PaymentSqlDao;
 
-<<<<<<< HEAD
-paymentAttemptFields(prefix) ::= <<
-    <prefix>payment_attempt_id,
-    <prefix>invoice_id,
-    <prefix>account_id,
-    <prefix>amount,
-    <prefix>currency,
-    <prefix>payment_id,
-    <prefix>payment_attempt_dt,
-    <prefix>invoice_dt,
-    <prefix>retry_count,
-    <prefix>processing_status,
-    <prefix>created_by,
-    <prefix>created_dt,
-    <prefix>updated_by,
-    <prefix>updated_dt
->>
-
-=======
->>>>>>> origin/integration
 paymentInfoFields(prefix) ::= <<
     <prefix>id,
     <prefix>amount,
@@ -37,55 +17,7 @@ paymentInfoFields(prefix) ::= <<
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
-<<<<<<< HEAD
-    <prefix>updated_dt
->>
-
-insertPaymentAttempt() ::= <<
-    INSERT INTO payment_attempts (<paymentAttemptFields()>)
-    VALUES (:payment_attempt_id, :invoice_id, :account_id, :amount, :currency, :payment_id,
-            :payment_attempt_dt, :invoice_dt, :retry_count, :processing_status, :userName, :createdDate, :userName, :createdDate);
->>
-
-insertPaymentAttemptHistory() ::= <<
-    INSERT INTO payment_attempt_history (history_record_id, <paymentAttemptFields()>)
-    VALUES (:historyRecordId, :payment_attempt_id, :invoice_id, :account_id, :amount, :currency, :payment_id,
-            :payment_attempt_dt, :invoice_dt, :retry_count, :processing_status, :userName, :createdDate, :userName, :createdDate);
->>
-
-getPaymentAttemptForPaymentId() ::= <<
-    SELECT <paymentAttemptFields()>
-      FROM payment_attempts
-     WHERE payment_id = :payment_id
->>
-
-getPaymentAttemptById() ::= <<
-    SELECT <paymentAttemptFields()>
-      FROM payment_attempts
-     WHERE payment_attempt_id = :payment_attempt_id
->>
-
-getPaymentAttemptsForInvoiceIds(invoiceIds) ::= <<
-    SELECT <paymentAttemptFields()>
-      FROM payment_attempts
-     WHERE invoice_id in (<invoiceIds>)
->>
-
-getPaymentAttemptsForInvoiceId() ::= <<
-    SELECT <paymentAttemptFields()>
-      FROM payment_attempts
-     WHERE invoice_id = :invoice_id
->>
-
-updatePaymentAttemptWithPaymentId() ::= <<
-    UPDATE payment_attempts
-       SET payment_id = :payment_id,
-           updated_by = :userName,
-           updated_dt = :updatedDate
-     WHERE payment_attempt_id = :payment_attempt_id
-=======
     <prefix>updated_date
->>>>>>> origin/integration
 >>
 
 insertPaymentInfo() ::= <<
@@ -122,7 +54,7 @@ getLastPaymentInfo(invoiceIds) ::= <<
 >>
 
 getPaymentInfoForPaymentAttemptId() ::= <<
-    SELECT <paymentInfoFields("p.")>,
+    SELECT <paymentInfoFields("p.")>
       FROM payments p, payment_attempts pa
     WHERE pa.payment_attempt_id = :payment_attempt_id
        AND pa.payment_id = p.id

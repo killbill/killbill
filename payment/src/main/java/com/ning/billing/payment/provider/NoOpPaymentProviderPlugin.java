@@ -71,10 +71,6 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
                 return null;
             }
             @Override
-            public UUID getPaymentId() {
-                return UUID.randomUUID();
-            }
-            @Override
             public DateTime getEffectiveDate() {
                 return null;
             }

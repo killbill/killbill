@@ -34,7 +34,6 @@ import com.ning.billing.util.bus.BusEvent.BusEventType;
 public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEvent {
 
     private final UUID accountId;
-    private final UUID paymentId;
     private final BigDecimal amount;
     private final BigDecimal refundAmount;
     private final String paymentNumber;
@@ -54,7 +53,6 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     @JsonCreator
     public DefaultPaymentInfoEvent(@JsonProperty("id") UUID id,
             @JsonProperty("accountId") UUID accountId,
-            @JsonProperty("paymentId") UUID paymentId,
             @JsonProperty("amount") BigDecimal amount,
             @JsonProperty("refundAmount") BigDecimal refundAmount,
             @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
@@ -72,7 +70,6 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
             @JsonProperty("updatedDate") DateTime updatedDate) {
         super(id);
         this.accountId = accountId;
-        this.paymentId = paymentId;
         this.amount = amount;
         this.refundAmount = refundAmount;
         this.bankIdentificationNumber = bankIdentificationNumber;
@@ -93,7 +90,6 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     public DefaultPaymentInfoEvent(DefaultPaymentInfoEvent src) {
         this(src.id,
                 src.accountId,
-                src.paymentId,
                 src.amount,
                 src.refundAmount,
                 src.bankIdentificationNumber,
@@ -110,12 +106,15 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
                 src.createdDate,
                 src.updatedDate);
     }
+    
 
     public DefaultPaymentInfoEvent(PaymentInfoPlugin info, UUID accountId, UUID invoiceId) {
-        this(invoiceId, accountId, info.getPaymentId(), info.getAmount(), info.getRefundAmount(), info.getBankIdentificationNumber(), info.getPaymentNumber(),
+        this(UUID.randomUUID(), accountId, info.getAmount(), info.getRefundAmount(), info.getBankIdentificationNumber(), info.getPaymentNumber(),
                 info.getStatus(), info.getCardType(), info.getReferenceId(), info.getPaymentMethodId(), info.getPaymentMethod(), info.getCardType(), info.getCardCountry(),
                 null, info.getEffectiveDate(), info.getCreatedDate(), info.getUpdatedDate());
     }
+
+    
 
     @JsonIgnore
     @Override
@@ -130,11 +129,6 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
     public Builder cloner() {
         return new Builder(this);
-    }
-
-    @Override
-    public UUID getPaymentId() {
-        return paymentId;
     }
 
     @Override
@@ -243,9 +237,8 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         }
 
         public Builder(DefaultPaymentInfoEvent src) {
-            this.accountId = src.accountId;
             this.id = src.id;
-            this.paymentId = src.paymentId;
+            this.accountId = src.accountId;
             this.amount = src.amount;
             this.refundAmount = src.refundAmount;
             this.paymentNumber = src.paymentNumber;
@@ -358,7 +351,6 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         public PaymentInfoEvent build() {
             return new DefaultPaymentInfoEvent(id,
                     accountId,
-                    paymentId,
                     amount,
                     refundAmount,
                     bankIdentificationNumber,

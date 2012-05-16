@@ -76,6 +76,18 @@ public interface NotificationQueueService {
     public NotificationQueue getNotificationQueue(final String svcName, final String queueName)
         throws NoSuchNotificationQueue;
 
+    /**
+     * Delete notificationQueue
+     *
+     * @param svcName
+     * @param queueName
+     * @return
+     *
+     * @throws NoSuchNotificationQueue if queue does not exist
+     */
+    public void deleteNotificationQueue(final String svcName, final String queueName)
+    throws NoSuchNotificationQueue;
+            
 
     /**
      *

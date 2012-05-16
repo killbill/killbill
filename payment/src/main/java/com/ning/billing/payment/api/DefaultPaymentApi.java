@@ -270,8 +270,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
                         PaymentInfoEvent result = null;
                         if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0 ) {
-                            // STEPH null
-                            PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice, null, context);
+                            PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice, PaymentAttemptStatus.IN_PROCESSING, context);
                             result = processPaymentWithAccountLocked(plugin, account, invoice, paymentAttempt, context);
                         }
 
@@ -304,14 +303,14 @@ public class DefaultPaymentApi implements PaymentApi {
 
         if (paymentMethodInfo instanceof CreditCardPaymentMethodInfo) {
             CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethodInfo;
-            paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getPaymentId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
+            paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
 
         } else if (paymentMethodInfo instanceof PaypalPaymentMethodInfo) {
             PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
-            paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getPaymentId(), null, null, context);
+            paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getId(), null, null, context);
         }
-        if (paymentInfo.getPaymentId() != null) {
-            paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfo.getPaymentId(), context);
+        if (paymentInfo.getId() != null) {
+            paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfo.getId(), context);
         }
 
         invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
@@ -472,11 +471,9 @@ public class DefaultPaymentApi implements PaymentApi {
                 lock = locker.lockWithNumberOfTries(LockerService.PAYMENT, accountExternalKey, NB_LOCK_TRY);
                 return callback.doOperation();
             } catch (LockFailedException e) {
-                // Not good!
-                log.error(String.format("Failed to lock account %s",
-                        accountExternalKey), e);
-                // STEPH or throws
-                return null;
+                String format = String.format("Failed to lock account %s", accountExternalKey);
+                log.error(String.format(format), e);
+                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
             } finally {
                 if (lock != null) {
                     lock.release();

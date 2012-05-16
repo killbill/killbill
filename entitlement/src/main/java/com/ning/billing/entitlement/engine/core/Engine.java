@@ -64,6 +64,7 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
@@ -155,11 +156,13 @@ public class Engine implements EventListener, EntitlementService {
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
-    public void stop() {
+    public void stop() throws NoSuchNotificationQueue {
         if (subscriptionEventQueue != null) {
             subscriptionEventQueue.stopQueue();
+            notificationQueueService.deleteNotificationQueue(subscriptionEventQueue.getServiceName(), subscriptionEventQueue.getQueueName());
          }
     }
+    
 
     @Override
     public void processEventReady(final EntitlementEvent event, final int seqId, final CallContext context) {

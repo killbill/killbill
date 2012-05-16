@@ -38,6 +38,7 @@ import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
@@ -51,8 +52,9 @@ public class FailedPaymentRetryService implements RetryService {
     private final NotificationQueueService notificationQueueService;
     private final PaymentConfig config;
     private final PaymentApi paymentApi;
+    
     private NotificationQueue retryQueue;
-
+    
     @Inject
     public FailedPaymentRetryService(Clock clock,
                         NotificationQueueService notificationQueueService,
@@ -82,10 +84,11 @@ public class FailedPaymentRetryService implements RetryService {
     }
 
     @Override
-    public void stop() {
+    public void stop() throws NoSuchNotificationQueue {
         if (retryQueue != null) {
             retryQueue.stopQueue();
-         }
+            notificationQueueService.deleteNotificationQueue(retryQueue.getServiceName(), retryQueue.getQueueName());
+        }
     }
 
     public void scheduleRetry(PaymentAttempt paymentAttempt, DateTime timeOfRetry) {

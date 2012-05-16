@@ -332,6 +332,10 @@ public class TestIntegration extends TestIntegrationBase {
 
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
 
+        // STEPH
+        /*
+        Thread.sleep(6000000);
+        */
         assertTrue(busHandler.isCompleted(DELAY));
 
         startDate = subscription.getCurrentPhaseStart();

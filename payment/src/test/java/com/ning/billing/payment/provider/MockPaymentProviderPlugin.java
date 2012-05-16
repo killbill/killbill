@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -33,14 +32,12 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.CreditCardPaymentMethodInfo;
-import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
-import com.ning.billing.payment.api.Either;
-import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaymentProviderAccount;
 import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
+import com.ning.billing.payment.plugin.api.MockPaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
@@ -78,10 +75,10 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         .setPaymentNumber("12345")
         .setReferenceId("12345")
         .setType("Electronic")
+        .setPaymentMethodId("123-456-678-89")
         .build();
-        // STEPH
-        //return payment;
-        return null;
+        
+        return new MockPaymentInfoPlugin(payment);
     }
 
 
@@ -91,8 +88,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         if (payment == null) {
             throw new PaymentPluginApiException("", "No payment found for id " + paymentId);
         }
-        // STEPH
-        return null;
+        return new MockPaymentInfoPlugin(payment);
     }
 
     @Override
@@ -173,7 +169,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
                 new PaymentProviderAccount.Builder()
                                           .copyFrom(account)
                                           // STEPH
-                                          .setDefaultPaymentMethod("")
+                                          .setDefaultPaymentMethod("paypal")
                                           .build());
             List<PaymentMethodInfo> paymentMethodsToUpdate = new ArrayList<PaymentMethodInfo>();
             for (PaymentMethodInfo paymentMethod : paymentMethods.values()) {

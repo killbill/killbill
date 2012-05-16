@@ -29,8 +29,11 @@ import com.ning.billing.mock.glue.TestDbiModule;
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
+import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.globallocker.MockGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
+import com.ning.billing.util.glue.GlobalLockerModule;
 
 public class PaymentTestModuleWithMocks extends PaymentModule {
 	public static class MockProvider implements Provider<BillingApi> {
@@ -64,5 +67,6 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
         install(new MockNotificationQueueModule());
         install(new MockInvoiceModule());
         install(new TestDbiModule());
+        bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
     }
 }

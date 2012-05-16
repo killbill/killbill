@@ -26,8 +26,6 @@ public interface PaymentInfoEvent extends Entity, BusEvent {
 
     public UUID getAccountId();
 
-    public UUID getPaymentId();
-    
     public BigDecimal getAmount();
 
     public String getBankIdentificationNumber();

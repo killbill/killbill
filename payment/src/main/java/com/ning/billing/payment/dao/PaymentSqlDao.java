@@ -103,7 +103,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
 
             // STEPH
             UUID accountId = null;
-            UUID paymentId = getUUID(rs, "payment_id");
+            
             UUID id = getUUID(rs, "id");
             BigDecimal amount = rs.getBigDecimal("amount");
             BigDecimal refundAmount = rs.getBigDecimal("refund_amount");
@@ -119,11 +119,9 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
             DateTime effectiveDate = getDate(rs, "effective_date");
             DateTime createdDate = getDate(rs, "created_date");            
             DateTime updatedDate = getDate(rs, "updated_date");            
-            UUID userToken = rs.getString("user_token") != null ? UUID.fromString(rs.getString("user_token")) : null;
 
             return new DefaultPaymentInfoEvent(id,
                     accountId,
-                    paymentId,
                     amount,
                     refundAmount,
                     bankIdentificationNumber,
@@ -135,7 +133,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
                     paymentMethod,
                     cardType,
                     cardCountry,
-                    userToken,
+                    null,
                     effectiveDate,
                     createdDate,
                     updatedDate);

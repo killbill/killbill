@@ -25,7 +25,6 @@ public class PaymentApiException extends BillingExceptionBase {
     
     private static final long serialVersionUID = 39445033L;
 
-
     public PaymentApiException(AccountApiException e) {
         super(e, e.getCode(), e.getMessage());
     }

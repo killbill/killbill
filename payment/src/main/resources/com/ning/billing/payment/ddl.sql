@@ -1,22 +1,5 @@
 DROP TABLE IF EXISTS payment_attempts;
 CREATE TABLE payment_attempts (
-<<<<<<< HEAD
-      payment_attempt_id char(36) COLLATE utf8_bin NOT NULL,
-      account_id char(36) COLLATE utf8_bin NOT NULL,
-      invoice_id char(36) COLLATE utf8_bin NOT NULL,
-      amount decimal(8,2),
-      currency char(3),
-      payment_attempt_dt datetime NOT NULL,
-      payment_id varchar(36) COLLATE utf8_bin,
-      retry_count tinyint,
-      processing_status varchar(20),
-      invoice_dt datetime NOT NULL,
-      created_by varchar(50) NOT NULL,
-      created_dt datetime NOT NULL,
-      updated_by varchar(50) NOT NULL,
-      updated_dt datetime NOT NULL,
-      PRIMARY KEY (payment_attempt_id)
-=======
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
     account_id char(36) COLLATE utf8_bin NOT NULL,
@@ -26,13 +9,13 @@ CREATE TABLE payment_attempts (
     payment_attempt_date datetime NOT NULL,
     payment_id varchar(36) COLLATE utf8_bin,
     retry_count tinyint,
+    processing_status varchar(20),    
     invoice_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
     PRIMARY KEY (record_id)
->>>>>>> origin/integration
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_attempts_id ON payment_attempts(id);
 CREATE INDEX payment_attempts_account_id_invoice_id ON payment_attempts(account_id, invoice_id);
@@ -49,6 +32,7 @@ CREATE TABLE payment_attempt_history (
     payment_attempt_date datetime NOT NULL,
     payment_id varchar(36) COLLATE utf8_bin,
     retry_count tinyint,
+    processing_status varchar(20),        
     invoice_date datetime NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,

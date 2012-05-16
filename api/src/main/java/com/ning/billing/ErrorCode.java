@@ -206,6 +206,7 @@ public enum ErrorCode {
     /*
      * Range 7000 : Payment
      */
+    PAYMENT_INTERNAL_ERROR(7010, "Internal payment error : %s"),
     PAYMENT_NO_SUCH_PAYMENT_METHOD(7001, "Payment method for account %s, and paymentId %s does not exist"),
     PAYMENT_NO_PAYMENT_METHODS(7002, "Payment methods for account %s don't exist"),
     PAYMENT_UPD_GATEWAY_FAILED(7003, "Failed to update payment gateway for account %s : %s"),
@@ -220,6 +221,7 @@ public enum ErrorCode {
     PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT(7012, "Failed to create payment provider account for account %s : %s"),                
     PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT(7013, "Failed to update payment provider account for account %s : %s"),                    
     PAYMENT_CREATE_REFUND(7014, "Failed to create refund for account %s : %s"),                
+    
     /*
     *
     * Range 9000: Miscellaneous

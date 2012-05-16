@@ -32,6 +32,7 @@ import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
@@ -42,75 +43,73 @@ public class DefaultNextBillingDateNotifier implements  NextBillingDateNotifier 
     public static final String NEXT_BILLING_DATE_NOTIFIER_QUEUE = "next-billing-date-queue";
 
     private final NotificationQueueService notificationQueueService;
-	private final InvoiceConfig config;
-	private final EntitlementUserApi entitlementUserApi;
+    private final InvoiceConfig config;
+    private final EntitlementUserApi entitlementUserApi;
 
-	
+
     private NotificationQueue nextBillingQueue;
-	private final InvoiceListener listener;
+    private final InvoiceListener listener;
 
     @Inject
-	public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService,
-			InvoiceConfig config, EntitlementUserApi entitlementUserApi, InvoiceListener listener){
-		this.notificationQueueService = notificationQueueService;
-		this.config = config;
+    public DefaultNextBillingDateNotifier(NotificationQueueService notificationQueueService,
+            InvoiceConfig config, EntitlementUserApi entitlementUserApi, InvoiceListener listener){
+        this.notificationQueueService = notificationQueueService;
+        this.config = config;
         this.entitlementUserApi = entitlementUserApi;
         this.listener = listener;
-	}
+    }
 
     @Override
-    public void initialize() {
-		try {
-            nextBillingQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
-            		NEXT_BILLING_DATE_NOTIFIER_QUEUE,
-                    new NotificationQueueHandler() {
-                @Override
-                public void handleReadyNotification(String notificationKey, DateTime eventDate) {
+    public void initialize() throws NotificationQueueAlreadyExists {
+        nextBillingQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
+                NEXT_BILLING_DATE_NOTIFIER_QUEUE,
+                new NotificationQueueHandler() {
+            @Override
+            public void handleReadyNotification(String notificationKey, DateTime eventDate) {
+                try {
+                    UUID key = UUID.fromString(notificationKey);
                     try {
-                        UUID key = UUID.fromString(notificationKey);
-                        try {
-                            Subscription subscription = entitlementUserApi.getSubscriptionFromId(key);
-                            if (subscription == null) {
-                                log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")" );
-                            } else {
-                                processEvent(key , eventDate);
-                            }
-                        } catch (EntitlementUserApiException e) {
-                            log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")", e );
+                        Subscription subscription = entitlementUserApi.getSubscriptionFromId(key);
+                        if (subscription == null) {
+                            log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")" );
+                        } else {
+                            processEvent(key , eventDate);
                         }
-                    } catch (IllegalArgumentException e) {
-                		log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
-                		return;
-                	}
+                    } catch (EntitlementUserApiException e) {
+                        log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")", e );
+                    }
+                } catch (IllegalArgumentException e) {
+                    log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
+                    return;
+                }
 
-                }
-            },
-            new NotificationConfig() {
-                
-                @Override
-                public long getSleepTimeMs() {
-                    return config.getSleepTimeMs();
-                }
-                
-                @Override
-                public boolean isNotificationProcessingOff() {
-                    return config.isNotificationProcessingOff();
-                }
-            });
-        } catch (NotificationQueueAlreadyExists e) {
-            throw new RuntimeException(e);
-        }
+            }
+        },
+        new NotificationConfig() {
+
+            @Override
+            public long getSleepTimeMs() {
+                return config.getSleepTimeMs();
+            }
+
+            @Override
+            public boolean isNotificationProcessingOff() {
+                return config.isNotificationProcessingOff();
+            }
+        });
+
     }
 
     @Override
     public void start() {
-    	nextBillingQueue.startQueue();
+        nextBillingQueue.startQueue();
     }
 
     @Override
-    public void stop() {
+    public void stop() throws NoSuchNotificationQueue {
         if (nextBillingQueue != null) {
-        	nextBillingQueue.stopQueue();
+            nextBillingQueue.stopQueue();
+            notificationQueueService.deleteNotificationQueue(nextBillingQueue.getServiceName(), nextBillingQueue.getQueueName());
         }
     }
 
