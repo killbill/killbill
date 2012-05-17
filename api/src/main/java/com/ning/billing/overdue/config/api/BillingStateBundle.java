@@ -34,15 +34,19 @@ public class BillingStateBundle extends BillingState<SubscriptionBundle> {
     private final PriceList basePlanPriceList;
     private final PhaseType basePlanPhaseType;
     
-	public BillingStateBundle(UUID id, int numberOfUnpaidInvoices, BigDecimal unpaidInvoiceBalance,
+	public BillingStateBundle(UUID id, 
+	        int numberOfUnpaidInvoices, 
+	        BigDecimal unpaidInvoiceBalance,
 			DateTime dateOfEarliestUnpaidInvoice,
+			UUID idOfEarliestUnpaidInvoice,
 			PaymentResponse responseForLastFailedPayment,
 			Tag[] tags, 
 			Product basePlanProduct,
 			BillingPeriod basePlanBillingPeriod, 
 			PriceList basePlanPriceList, PhaseType basePlanPhaseType) {
 		super(id, numberOfUnpaidInvoices, unpaidInvoiceBalance, 
-				dateOfEarliestUnpaidInvoice, responseForLastFailedPayment, tags);
+				dateOfEarliestUnpaidInvoice, idOfEarliestUnpaidInvoice, 
+				responseForLastFailedPayment, tags);
 		
 		this.basePlanProduct = basePlanProduct;
 		this.basePlanBillingPeriod = basePlanBillingPeriod;

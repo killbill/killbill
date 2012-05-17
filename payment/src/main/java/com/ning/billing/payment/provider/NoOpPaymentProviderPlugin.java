@@ -35,8 +35,21 @@ import com.ning.billing.payment.api.PaymentProviderAccount;
 
 public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
+    private boolean makeAllInvoicesFail;
+
+    public boolean isMakeAllInvoicesFail() {
+        return makeAllInvoicesFail;
+    }
+
+    public void setMakeAllInvoicesFail(boolean makeAllInvoicesFail) {
+        this.makeAllInvoicesFail = makeAllInvoicesFail;
+    } 
+
     @Override
     public Either<PaymentErrorEvent, PaymentInfoEvent> processInvoice(Account account, Invoice invoice) {
+        if (makeAllInvoicesFail) {
+            return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "test error", account.getId(), invoice.getId(), null));
+        }
         PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder()
                                              .setPaymentId(UUID.randomUUID().toString())
                                              .setAmount(invoice.getBalance())

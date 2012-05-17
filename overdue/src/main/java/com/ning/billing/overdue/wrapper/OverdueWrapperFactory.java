@@ -39,28 +39,30 @@ import com.ning.billing.util.clock.Clock;
 public class OverdueWrapperFactory {
     private static final Logger log =  LoggerFactory.getLogger(OverdueWrapperFactory.class);
 
-    protected  OverdueConfig overdueConfig; //protected and not final so it can be set in testing
     private final EntitlementUserApi entitlementApi;
     private final BillingStateCalculatorBundle billingStateCalcuatorBundle;
     private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
     private final BlockingApi api;
     private final Clock clock;
+    private  OverdueConfig overdueConfig;
 
     @Inject
-    public OverdueWrapperFactory(BlockingApi api, OverdueConfig config, Clock clock, 
+    public OverdueWrapperFactory(BlockingApi api, Clock clock, 
             BillingStateCalculatorBundle billingStateCalcuatorBundle, 
             OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle,
             EntitlementUserApi entitlementApi) {
         this.billingStateCalcuatorBundle = billingStateCalcuatorBundle;
         this.overdueStateApplicatorBundle = overdueStateApplicatorBundle;
         this.entitlementApi = entitlementApi;
-        this.overdueConfig = config;
         this.api = api;
         this.clock = clock;
     }
 
     @SuppressWarnings("unchecked")
     public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(T bloackable) throws OverdueError {
+        if (overdueConfig == null) {
+            throw new OverdueError(ErrorCode.OVERDUE_NOT_CONFIGURED);
+        }
         if(bloackable instanceof SubscriptionBundle) {
             return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle)bloackable, api, overdueConfig.getBundleStateSet(), 
                     clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle );
@@ -89,6 +91,9 @@ public class OverdueWrapperFactory {
             throw new OverdueError(e);
         }
     }
-
+    
+    public void setOverdueConfig(OverdueConfig config) {
+        overdueConfig = config;
+    }
 
 }

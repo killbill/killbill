@@ -55,7 +55,7 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
     }
 
     protected void installOverdueWrapperFactory() {
-        bind(OverdueWrapperFactory.class).to(OverdueWrapperFactory.class).asEagerSingleton();    
+        bind(OverdueWrapperFactory.class).asEagerSingleton();    
     }
 
     /* (non-Javadoc)

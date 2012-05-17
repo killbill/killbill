@@ -20,16 +20,16 @@ import com.google.inject.Inject;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueUserApi;
-import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.service.DefaultOverdueService;
+import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.bus.BusService;
 
 public class MockOverdueService extends DefaultOverdueService {
     @Inject
     public MockOverdueService(OverdueUserApi userApi, OverdueProperties properties, OverdueCheckNotifier notifier,
-            BusService busService, OverdueListener listener) {
-        super(userApi, properties, notifier, busService, listener);
+            BusService busService, OverdueListener listener, OverdueWrapperFactory factory) {
+        super(userApi, properties, notifier, busService, listener, factory);
     }
 
     public synchronized void loadConfig() throws ServiceException {

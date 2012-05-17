@@ -194,6 +194,7 @@ public enum ErrorCode {
     OVERDUE_CAT_ERROR_ENCOUNTERED(5001,"Catalog error encountered on Overdueable: id='%s', type='%s'"),  
     OVERDUE_TYPE_NOT_SUPPORTED(5002,"Overdue of this type is not supported: id='%s', type='%s'"),  
     OVERDUE_NO_REEVALUATION_INTERVAL(5003,"No valid reevaluation interval for state (name: %s)"),
+    OVERDUE_NOT_CONFIGURED(5004, "No configuration was found for the overdue system"),
     /*
      * 
      * Range 6000: Blocking system

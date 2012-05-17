@@ -17,6 +17,7 @@
 package com.ning.billing.overdue.service;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,23 +28,26 @@ import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.ovedue.notification.OverdueCheckNotifier;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueUserApi;
+import com.ning.billing.overdue.api.DefaultOverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.listener.OverdueListener;
+import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.config.XMLLoader;
 
 public class DefaultOverdueService implements ExtendedOverdueService {
     private static final Logger log = LoggerFactory.getLogger(DefaultOverdueService.class);
-    
-    public static final String OVERDUE_SERVICE_NAME = "overdue-service";
-    private OverdueUserApi userApi;
-    private OverdueConfig overdueConfig;
-    private OverdueProperties properties;
-    private OverdueCheckNotifier notifier;
-    private BusService busService;
-    OverdueListener listener;
 
+    public static final String OVERDUE_SERVICE_NAME = "overdue-service";
+    private final OverdueUserApi userApi;
+    private final OverdueProperties properties;
+    private final OverdueCheckNotifier notifier;
+    private final BusService busService;
+    private final OverdueListener listener;
+    private final OverdueWrapperFactory factory;
+    
+    private OverdueConfig overdueConfig;
     private boolean isInitialized;
 
     @Inject
@@ -52,12 +56,14 @@ public class DefaultOverdueService implements ExtendedOverdueService {
             OverdueProperties properties, 
             OverdueCheckNotifier notifier, 
             BusService busService,
-            OverdueListener listener){
+            OverdueListener listener,
+            OverdueWrapperFactory factory){
         this.userApi = userApi;
         this.properties = properties;
         this.notifier = notifier;
         this.busService = busService;
         this.listener = listener;
+        this.factory = factory;
     }
 
     @Override
@@ -84,9 +90,16 @@ public class DefaultOverdueService implements ExtendedOverdueService {
                 overdueConfig = XMLLoader.getObjectFromUri(u, OverdueConfig.class);
 
                 isInitialized = true;
-            } catch (Exception e) {
+            } catch (URISyntaxException e) {
+                overdueConfig = new OverdueConfig();
+            } catch (IllegalArgumentException e) {
+                overdueConfig = new OverdueConfig();
+            }catch (Exception e) {
                 throw new ServiceException(e);
             }
+            
+            factory.setOverdueConfig(overdueConfig);
+            ((DefaultOverdueUserApi)userApi).setOverdueConfig(overdueConfig);
         }
     }
 
@@ -105,7 +118,7 @@ public class DefaultOverdueService implements ExtendedOverdueService {
         try {
             busService.getBus().register(listener);
         } catch (EventBusException e) {
-           log.error("Problem encountered registering OverdueListener on the Event Bus", e);
+            log.error("Problem encountered registering OverdueListener on the Event Bus", e);
         }
     }
 

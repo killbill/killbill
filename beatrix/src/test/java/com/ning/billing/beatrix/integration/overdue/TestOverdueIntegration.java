@@ -53,11 +53,8 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
-import com.ning.billing.overdue.wrapper.MockOverdueWrapperFactory;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.clock.ClockMock;
@@ -143,7 +140,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
     public void setupOverdue() throws Exception {
         InputStream is = new ByteArrayInputStream(configXml.getBytes());
         config = XMLLoader.getObjectFromStreamNoValidation(is,  OverdueConfig.class);
-        ((MockOverdueWrapperFactory)overdueWrapperFactory).setOverdueConfig(config);
+        overdueWrapperFactory.setOverdueConfig(config);
         
         account = accountUserApi.createAccount(getAccountData(25), null, null, context);
         assertNotNull(account);

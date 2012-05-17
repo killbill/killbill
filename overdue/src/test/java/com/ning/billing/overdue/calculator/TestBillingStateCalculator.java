@@ -66,6 +66,7 @@ public class TestBillingStateCalculator {
         ((ZombieControl)invoice).addResult("getInvoiceDate", date);
         ((ZombieControl)invoice).addResult("hashCode", hash++);
         ((ZombieControl)invoice).addResult("getInvoiceItems", invoiceItems);
+        ((ZombieControl)invoice).addResult("getId", UUID.randomUUID());
         
         return invoice;
     }
@@ -93,7 +94,7 @@ public class TestBillingStateCalculator {
         
         BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
         SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L,0L));
-        Assert.assertEquals(calc.earliest(invoices), now);
+        Assert.assertEquals(calc.earliest(invoices).getInvoiceDate(), now);
     }
 
     

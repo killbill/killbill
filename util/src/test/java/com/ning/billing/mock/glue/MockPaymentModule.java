@@ -14,17 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.beatrix.integration.overdue;
+package com.ning.billing.mock.glue;
 
-import com.ning.billing.overdue.OverdueService;
-import com.ning.billing.overdue.glue.DefaultOverdueModule;
+import com.google.inject.AbstractModule;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.payment.api.PaymentApi;
 
-public class IntegrationTestOverdueModule extends DefaultOverdueModule {
-   
-    
-    protected void installOverdueService() {
-        bind(OverdueService.class).to(MockOverdueService.class);    
+public class MockPaymentModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+       
+        bind(PaymentApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(PaymentApi.class));
+        
     }
-
-     
 }
