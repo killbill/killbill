@@ -87,7 +87,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
                 
-                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.<DeletedEvent>emptyList(), Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), Collections.<DeletedEvent>emptyList(), Collections.singletonList(ne));
                 
                 BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
@@ -125,7 +125,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
                 DeletedEvent de = createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId());                
 
-                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.singletonList(de), Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), Collections.singletonList(de), Collections.singletonList(ne));
                 BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                 repairApi.repairBundle(bRepair, true, context);
@@ -147,7 +147,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
                 DeletedEvent de = createDeletedEvent(UUID.randomUUID());
-                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.singletonList(de), Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), Collections.singletonList(de), Collections.singletonList(ne));
                 
                 BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
@@ -177,7 +177,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                    NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, baseSubscription.getStartDate().plusDays(10), spec);
                    List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
                    des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));                
-                   SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+                   SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
                    
                    BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
@@ -210,7 +210,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));                
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));                                
-                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
                 
                 BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
@@ -257,7 +257,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.DISCOUNT);
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, aoRecreateDate, spec);
                 
-                SubscriptionTimeline saoRepair = createSubscriptionReapir(aoSubscription.getId(), des, Collections.singletonList(ne));
+                SubscriptionTimeline saoRepair = createSubscriptionRepair(aoSubscription.getId(), des, Collections.singletonList(ne));
                 
                 BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
                 
@@ -303,7 +303,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 
                 NewEvent ne = createNewEvent(SubscriptionTransitionType.CANCEL, aoCancelDate, null);
                 
-                SubscriptionTimeline saoRepair = createSubscriptionReapir(aoSubscription.getId(), des, Collections.singletonList(ne));
+                SubscriptionTimeline saoRepair = createSubscriptionRepair(aoSubscription.getId(), des, Collections.singletonList(ne));
                 
                 bundleRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
                 
@@ -343,7 +343,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
 
-                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
                 
                 // FIRST ISSUE DRY RUN
                 BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));

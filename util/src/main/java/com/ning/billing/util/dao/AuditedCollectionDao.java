@@ -21,13 +21,16 @@ import com.ning.billing.util.entity.Entity;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface AuditedCollectionDao<T extends Entity> {
     void saveEntitiesFromTransaction(Transmogrifier transactionalDao, UUID objectId, ObjectType objectType,
                                      List<T> entities, CallContext context);
 
-    List<T> loadEntities(UUID objectId, ObjectType objectType);
+    void saveEntities(UUID objectId, ObjectType objectType, List<T> entities, CallContext context);
 
-    List<T> loadEntitiesFromTransaction(Transmogrifier dao, UUID objectId, ObjectType objectType);
+    Map<String, T> loadEntities(UUID objectId, ObjectType objectType);
+
+    Map<String, T> loadEntitiesFromTransaction(Transmogrifier dao, UUID objectId, ObjectType objectType);
 }

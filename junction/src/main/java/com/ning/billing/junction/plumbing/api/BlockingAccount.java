@@ -16,11 +16,8 @@
 
 package com.ning.billing.junction.plumbing.api;
 
-import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
@@ -28,10 +25,6 @@ import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 
 public class BlockingAccount implements Account {
     private final Account account;
@@ -43,113 +36,62 @@ public class BlockingAccount implements Account {
         this.blockingApi = blockingApi;
     }
 
-    public List<Tag> getTagList() {
-        return account.getTagList();
-    }
-
     @Override
-    public boolean hasTag(TagDefinition tagDefinition) {
-        return account.hasTag(tagDefinition);
-    }
-
     public UUID getId() {
         return account.getId();
     }
 
     @Override
-    public boolean hasTag(ControlTagType controlTagType) {
-        return account.hasTag(controlTagType);
-    }
-
-    public void addTag(TagDefinition definition) {
-        account.addTag(definition);
-    }
-
-    public String getFieldValue(String fieldName) {
-        return account.getFieldValue(fieldName);
-    }
-
     public String getExternalKey() {
         return account.getExternalKey();
     }
 
+    @Override
     public String getName() {
         return account.getName();
     }
 
-    public void addTags(List<Tag> tags) {
-        account.addTags(tags);
-    }
-
     @Override
-    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
-        account.addTagsFromDefinitions(tagDefinitions);
-    }
-
-    public void setFieldValue(String fieldName, String fieldValue) {
-        account.setFieldValue(fieldName, fieldValue);
-    }
-
     public int getFirstNameLength() {
         return account.getFirstNameLength();
     }
 
-    public void clearTags() {
-        account.clearTags();
-    }
-
+    @Override
     public String getEmail() {
         return account.getEmail();
     }
 
-    public void removeTag(TagDefinition definition) {
-        account.removeTag(definition);
-    }
-
-    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
-        account.saveFieldValue(fieldName, fieldValue, context);
-    }
-
+    @Override
     public int getBillCycleDay() {
         return account.getBillCycleDay();
     }
 
-    public boolean generateInvoice() {
-        return account.generateInvoice();
-    }
-
+    @Override
     public Currency getCurrency() {
         return account.getCurrency();
     }
 
-    public boolean processPayment() {
-        return account.processPayment();
-    }
-
-    public List<CustomField> getFieldList() {
-        return account.getFieldList();
-    }
-
+    @Override
     public String getPaymentProviderName() {
         return account.getPaymentProviderName();
     }
 
+    @Override
     public MutableAccountData toMutableAccountData() {
         return account.toMutableAccountData();
     }
 
-    public void setFields(List<CustomField> fields) {
-        account.setFields(fields);
-    }
-
+    @Override
     public DateTimeZone getTimeZone() {
         return account.getTimeZone();
     }
 
+    @Override
     public String getLocale() {
         return account.getLocale();
     }
 
+    @Override
     public BlockingState getBlockingState() {
         if(blockingState == null) {
             blockingState = blockingApi.getBlockingStateFor(account);
@@ -157,50 +99,42 @@ public class BlockingAccount implements Account {
         return blockingState;
     }
 
-    public void saveFields(List<CustomField> fields, CallContext context) {
-        account.saveFields(fields, context);
-    }
-
+    @Override
     public String getAddress1() {
         return account.getAddress1();
     }
 
+    @Override
     public String getAddress2() {
         return account.getAddress2();
     }
 
-    public void clearFields() {
-        account.clearFields();
-    }
-
+    @Override
     public String getCompanyName() {
         return account.getCompanyName();
     }
 
-    public void clearPersistedFields(CallContext context) {
-        account.clearPersistedFields(context);
-    }
-
+    @Override
     public String getCity() {
         return account.getCity();
     }
 
+    @Override
     public String getStateOrProvince() {
         return account.getStateOrProvince();
     }
 
-    public ObjectType getObjectType() {
-        return account.getObjectType();
-    }
-
+    @Override
     public String getPostalCode() {
         return account.getPostalCode();
     }
 
+    @Override
     public String getCountry() {
         return account.getCountry();
     }
 
+    @Override
     public String getPhone() {
         return account.getPhone();
     }

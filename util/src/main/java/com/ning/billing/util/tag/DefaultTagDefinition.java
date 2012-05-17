@@ -20,21 +20,19 @@ import java.util.UUID;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultTagDefinition extends EntityBase implements TagDefinition {
-    private String name;
-    private String description;
-    private Boolean isControlTag;
+    private final String name;
+    private final String description;
+    private final Boolean isControlTag;
 
     public DefaultTagDefinition(String name, String description, Boolean isControlTag) {
-        super();
-        this.name = name;
-        this.description = description;
-        this.isControlTag = isControlTag;
+        this(UUID.randomUUID(), name, description, isControlTag);
     }
 
-    public DefaultTagDefinition(UUID id, String name, String description) {
+    public DefaultTagDefinition(UUID id, String name, String description, Boolean isControlTag) {
         super(id);
         this.name = name;
         this.description = description;
+        this.isControlTag = isControlTag;
     }
     
     @Override

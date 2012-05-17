@@ -24,6 +24,8 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.ning.billing.util.customfield.MockCustomFieldModuleMemory;
+import com.ning.billing.util.tag.MockTagStoreModuleMemory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -42,7 +44,8 @@ import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 
-@Guice(modules = { PaymentTestModule.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class })
+@Guice(modules = {MockCustomFieldModuleMemory.class, MockTagStoreModuleMemory.class,
+        PaymentTestModule.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class })
 public class TestPaymentProvider {
     @Inject
     private Bus eventBus;

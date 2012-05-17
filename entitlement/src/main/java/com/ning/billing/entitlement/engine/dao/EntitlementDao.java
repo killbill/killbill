@@ -82,8 +82,5 @@ public interface EntitlementDao {
 
     // Repair
     public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context);
-    
-    // Custom Fields
-    public void saveCustomFields(final SubscriptionData subscription, final CallContext context);
 }
 

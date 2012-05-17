@@ -55,6 +55,16 @@ public class TestCallContext implements CallContext {
     }
 
     @Override
+    public String getReasonCode() {
+        return null;
+    }
+
+    @Override
+    public String getComment() {
+        return null;
+    }
+
+    @Override
     public DateTime getCreatedDate() {
         return createdDate;
     }

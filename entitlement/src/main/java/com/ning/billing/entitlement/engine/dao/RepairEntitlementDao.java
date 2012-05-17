@@ -236,12 +236,6 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public void saveCustomFields(SubscriptionData subscription,
-            CallContext context) {
-        throw new EntitlementError("Not implemented");
-    }
-
-    @Override
     public void repair(UUID accountId, UUID bundleId, List<SubscriptionDataRepair> inRepair,
             CallContext context) {
         throw new EntitlementError("Not implemented");

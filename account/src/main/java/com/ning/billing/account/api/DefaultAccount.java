@@ -16,19 +16,15 @@
 
 package com.ning.billing.account.api;
 
-import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.entity.ExtendedEntityBase;
+import com.ning.billing.util.entity.EntityBase;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
 
-public class DefaultAccount extends ExtendedEntityBase implements Account {
+public class DefaultAccount extends EntityBase implements Account {
     private final String externalKey;
 	private final String email;
 	private final String name;
@@ -99,26 +95,6 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 		this.phone = phone;
         this.isMigrated = isMigrated;
         this.isNotifiedForInvoices = isNotifiedForInvoices;
-	}
-
-    @Override
-    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void saveFields(List<CustomField> fields, CallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void clearPersistedFields(CallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-	public ObjectType getObjectType() {
-		return ObjectType.ACCOUNT;
 	}
 
 	@Override
@@ -240,8 +216,6 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 				", stateOrProvince=" + stateOrProvince +
 				", postalCode=" + postalCode +
 				", country=" + country +
-				", tags=" + tagStore +
-				", fields=" + fields +
 				"]";
 	}
 

@@ -47,6 +47,11 @@ public class AuditedCustomFieldDao extends AuditedCollectionDaoBase<CustomField>
         return dao;
     }
 
+    @Override
+    protected String getKey(CustomField entity) {
+        return entity.getName();
+    }
+
 //    @Override
 //    public void saveEntitiesFromTransaction(Transmogrifier dao, UUID objectId, ObjectType objectType, List<CustomField> fields, CallContext context) {
 //        CustomFieldSqlDao customFieldSqlDao = dao.become(CustomFieldSqlDao.class);

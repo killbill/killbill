@@ -13,5 +13,5 @@ fields(prefix) ::= <<
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<fields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
 >>

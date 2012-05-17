@@ -23,18 +23,15 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.entity.ExtendedEntityBase;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.entity.EntityBase;
 
-public class DefaultInvoice extends ExtendedEntityBase implements Invoice {
+public class DefaultInvoice extends EntityBase implements Invoice {
     private final InvoiceItemList invoiceItems = new InvoiceItemList();
     private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
     private final UUID accountId;
@@ -198,26 +195,6 @@ public class DefaultInvoice extends ExtendedEntityBase implements Invoice {
     @Override
     public String toString() {
         return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getAmountPaid() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
-    }
-
-    @Override
-    public ObjectType getObjectType() {
-        return ObjectType.INVOICE;
-    }
-
-    @Override
-    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void saveFields(List<CustomField> fields, CallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void clearPersistedFields(CallContext context) {
-        throw new UnsupportedOperationException();
     }
 }
 

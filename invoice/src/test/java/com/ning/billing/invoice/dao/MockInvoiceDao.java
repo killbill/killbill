@@ -32,7 +32,6 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.tag.ControlTagType;
 
 public class MockInvoiceDao implements InvoiceDao {
     private final Bus eventBus;
@@ -203,12 +202,12 @@ public class MockInvoiceDao implements InvoiceDao {
 	}
 
     @Override
-    public void addControlTag(ControlTagType controlTagType, UUID objectId, CallContext context) {
+    public void setWrittenOff(UUID objectId, CallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void removeControlTag(ControlTagType controlTagType, UUID objectId, CallContext context) {
+    public void removeWrittenOff(UUID objectId, CallContext context) {
         throw new UnsupportedOperationException();
     }
 }

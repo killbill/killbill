@@ -20,15 +20,6 @@ import java.sql.DataTruncation;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.dao.EntityAudit;
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.tag.dao.TagDao;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -43,41 +34,30 @@ import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.dao.EntityAudit;
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.TableName;
+import com.ning.billing.util.entity.EntityPersistenceException;
 
 public class AuditedAccountDao implements AccountDao {
     private final static Logger log = LoggerFactory.getLogger(AuditedAccountDao.class);
     
     private final AccountSqlDao accountSqlDao;
-    private final TagDao tagDao;
-    private final CustomFieldDao customFieldDao;
     private final Bus eventBus;
 
     @Inject
-    public AuditedAccountDao(IDBI dbi, Bus eventBus, TagDao tagDao, CustomFieldDao customFieldDao) {
+    public AuditedAccountDao(IDBI dbi, Bus eventBus) {
         this.eventBus = eventBus;
         this.accountSqlDao = dbi.onDemand(AccountSqlDao.class);
-        this.tagDao = tagDao;
-        this.customFieldDao = customFieldDao;
     }
 
     @Override
     public Account getAccountByKey(final String key) {
-        return accountSqlDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
-            @Override
-            public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
-                Account account = accountSqlDao.getAccountByKey(key);
-                if (account != null) {
-                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
-                    setTagsFromWithinTransaction(account, accountSqlDao);
-                }
-                return account;
-            }
-        });
+        return accountSqlDao.getAccountByKey(key);
     }
 
     @Override
@@ -90,33 +70,12 @@ public class AuditedAccountDao implements AccountDao {
 
     @Override
     public Account getById(final UUID id) {
-        return accountSqlDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
-            @Override
-            public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
-                Account account = accountSqlDao.getById(id.toString());
-                if (account != null) {
-                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
-                    setTagsFromWithinTransaction(account, accountSqlDao);
-                }
-                return account;
-            }
-        });
+        return accountSqlDao.getById(id.toString());
     }
 
     @Override
     public List<Account> get() {
-        return accountSqlDao.inTransaction(new Transaction<List<Account>, AccountSqlDao>() {
-            @Override
-            public List<Account> inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
-                List<Account> accounts = accountSqlDao.get();
-                for (Account account : accounts) {
-                    setCustomFieldsFromWithinTransaction(account, accountSqlDao);
-                    setTagsFromWithinTransaction(account, accountSqlDao);
-                }
-
-                return accounts;
-            }
-        });
+        return accountSqlDao.get();
     }
 
     @Override
@@ -142,8 +101,6 @@ public class AuditedAccountDao implements AccountDao {
                     EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
-                    saveTagsFromWithinTransaction(account, transactionalDao, context);
-                    saveCustomFieldsFromWithinTransaction(account, transactionalDao, context);
                     AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, context.getUserToken());
                     try {
                         eventBus.postFromTransaction(creationEvent, transactionalDao);
@@ -191,9 +148,6 @@ public class AuditedAccountDao implements AccountDao {
                     EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
-                    saveTagsFromWithinTransaction(account, transactional, context);
-                    saveCustomFieldsFromWithinTransaction(account, transactional, context);
-
                     AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         try {
@@ -217,34 +171,5 @@ public class AuditedAccountDao implements AccountDao {
     @Override
     public void test() {
         accountSqlDao.test();
-    }
-
-    private void setCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
-        CustomFieldSqlDao customFieldSqlDao = transactionalDao.become(CustomFieldSqlDao.class);
-        List<CustomField> fields = customFieldSqlDao.load(account.getId().toString(), account.getObjectType());
-
-        account.clearFields();
-        if (fields != null) {
-            account.setFields(fields);
-        }
-    }
-
-    private void setTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
-        List<Tag> tags = tagDao.loadEntitiesFromTransaction(transactionalDao, account.getId(), ObjectType.ACCOUNT);
-        account.clearTags();
-
-        if (tags != null) {
-            account.addTags(tags);
-        }
-    }
-
-    private void saveTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
-                                               final CallContext context) {
-        tagDao.saveEntitiesFromTransaction(transactionalDao, account.getId(), account.getObjectType(), account.getTagList(), context);
-    }
-
-    private void saveCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
-                                                       final CallContext context) {
-        customFieldDao.saveEntitiesFromTransaction(transactionalDao, account.getId(), account.getObjectType(), account.getFieldList(), context);
     }
 }

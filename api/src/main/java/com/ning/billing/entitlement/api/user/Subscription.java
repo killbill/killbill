@@ -29,10 +29,10 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.entity.ExtendedEntity;
+import com.ning.billing.util.entity.Entity;
 
 
-public interface Subscription extends ExtendedEntity, Blockable {
+public interface Subscription extends Entity, Blockable {
 
     public boolean cancel(DateTime requestedDate, boolean eot, CallContext context)
     throws EntitlementUserApiException;

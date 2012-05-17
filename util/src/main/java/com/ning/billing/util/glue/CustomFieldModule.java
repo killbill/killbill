@@ -17,24 +17,24 @@
 package com.ning.billing.util.glue;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.tag.api.DefaultTagUserApi;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.DefaultTagDefinitionDao;
-import com.ning.billing.util.tag.dao.TagDao;
-import com.ning.billing.util.tag.dao.TagDefinitionDao;
+import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.customfield.api.DefaultCustomFieldUserApi;
+import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 
-public class TagStoreModule extends AbstractModule
-{
-    protected void installDaos() {
-        bind(TagDefinitionDao.class).to(DefaultTagDefinitionDao.class).asEagerSingleton();
-        bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
-    }
-
+public class CustomFieldModule extends AbstractModule {
     @Override
-    protected void configure()
-    {
-        installDaos();
-        bind(TagUserApi.class).to(DefaultTagUserApi.class).asEagerSingleton();
+    protected void configure() {
+        installCustomFieldDao();
+        installCustomFieldUserApi();
     }
+
+    protected void installCustomFieldUserApi() {
+        bind(CustomFieldUserApi.class).to(DefaultCustomFieldUserApi.class).asEagerSingleton();
+    }
+
+    protected void installCustomFieldDao() {
+        bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
+    }
+
 }

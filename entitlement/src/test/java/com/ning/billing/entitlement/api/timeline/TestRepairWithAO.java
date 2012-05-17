@@ -99,7 +99,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
         NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, bpChangeDate, spec);
         
-        bpRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+        bpRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
         
         bundleRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(bpRepair));
         
@@ -252,7 +252,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
         NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, bpChangeDate, spec);
         
-        bpRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.<SubscriptionTimeline.DeletedEvent>emptyList(), Collections.singletonList(ne));
+        bpRepair = createSubscriptionRepair(baseSubscription.getId(), Collections.<SubscriptionTimeline.DeletedEvent>emptyList(), Collections.singletonList(ne));
         
         bundleRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(bpRepair));
         
@@ -377,7 +377,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
 
         DateTime bpCancelDate = clock.getUTCNow().minusDays(1);
         NewEvent ne = createNewEvent(SubscriptionTransitionType.CANCEL, bpCancelDate, null);
-        bpRepair = createSubscriptionReapir(baseSubscription.getId(), Collections.<SubscriptionTimeline.DeletedEvent>emptyList(), Collections.singletonList(ne));
+        bpRepair = createSubscriptionRepair(baseSubscription.getId(), Collections.<SubscriptionTimeline.DeletedEvent>emptyList(), Collections.singletonList(ne));
         bundleRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(bpRepair));
         
         boolean dryRun = true;
@@ -517,7 +517,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         
         NewEvent ne = createNewEvent(SubscriptionTransitionType.CANCEL, aoCancelDate, null);
         
-        SubscriptionTimeline saoRepair = createSubscriptionReapir(aoSubscription.getId(), des, Collections.singletonList(ne));
+        SubscriptionTimeline saoRepair = createSubscriptionRepair(aoSubscription.getId(), des, Collections.singletonList(ne));
         
         BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
         
@@ -615,7 +615,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.DISCOUNT);
         NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, aoRecreateDate, spec);
         
-        SubscriptionTimeline saoRepair = createSubscriptionReapir(aoSubscription.getId(), des, Collections.singletonList(ne));
+        SubscriptionTimeline saoRepair = createSubscriptionRepair(aoSubscription.getId(), des, Collections.singletonList(ne));
         
         BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
         
@@ -708,7 +708,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
         NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, aoChangeDate, spec);
         
-        SubscriptionTimeline saoRepair = createSubscriptionReapir(aoSubscription.getId(), des, Collections.singletonList(ne));
+        SubscriptionTimeline saoRepair = createSubscriptionRepair(aoSubscription.getId(), des, Collections.singletonList(ne));
         
         BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
         

@@ -40,6 +40,8 @@ public @interface CallContextBinder {
                 	q.bind("userName", callContext.getUserName());
                     q.bind("createdDate", callContext.getCreatedDate().toDate());
                     q.bind("updatedDate", callContext.getUpdatedDate().toDate());
+                    q.bind("reasonCode", callContext.getReasonCode());
+                    q.bind("comment", callContext.getComment());
                 	q.bind("userToken", (callContext.getUserToken() != null) ? callContext.getUserToken().toString() : null);                	
                 }
             };

@@ -16,23 +16,15 @@
 
 package com.ning.billing.mock;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 
 public class MockAccountBuilder {
     private final UUID id;
@@ -276,97 +268,8 @@ public class MockAccountBuilder {
             }
 
             @Override
-            public String getFieldValue(String fieldName) {
-               
-                return null;
-            }
-
-            @Override
-            public void setFieldValue(String fieldName, String fieldValue) {
-               
-                
-            }
-
-            @Override
-            public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
-               
-                
-            }
-
-            @Override
-            public List<CustomField> getFieldList() {
-                return null;
-            }
-
-            @Override
-            public void setFields(List<CustomField> fields) {
-            }
-
-            @Override
-            public void saveFields(List<CustomField> fields, CallContext context) {
-            }
-
-            @Override
-            public void clearFields() {
-            }
-
-            @Override
-            public void clearPersistedFields(CallContext context) {
-            }
-
-            @Override
-            public ObjectType getObjectType() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
             public UUID getId() {
                 return id;
-            }
-
-            @Override
-            public List<Tag> getTagList() {
-                return null;
-            }
-
-            @Override
-            public boolean hasTag(TagDefinition tagDefinition) {
-                return false;
-            }
-
-            @Override
-            public boolean hasTag(ControlTagType controlTagType) {
-                return false;
-            }
-
-            @Override
-            public void addTag(TagDefinition definition) {
-            }
-
-            @Override
-            public void addTags(List<Tag> tags) {
-            }
-
-            @Override
-            public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
-            }
-
-            @Override
-            public void clearTags() {
-            }
-
-            @Override
-            public void removeTag(TagDefinition definition) {
-            }
-
-            @Override
-            public boolean generateInvoice() {
-                return true;
-            }
-
-            @Override
-            public boolean processPayment() {
-                return true;
             }
 
             @Override

@@ -16,8 +16,16 @@
 
 package com.ning.billing.util.api;
 
-import com.ning.billing.lifecycle.KillbillService;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.dao.ObjectType;
 
-public interface TagDefinitionService extends KillbillService {
-    public TagUserApi getTagDefinitionUserApi();
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+public interface CustomFieldUserApi {
+    Map<String, CustomField> getCustomFields(UUID objectId, ObjectType objectType);
+
+    void saveCustomFields(UUID objectId, ObjectType objectType, List<CustomField> fields, CallContext context);
 }

@@ -19,8 +19,6 @@ package com.ning.billing.junction.plumbing.api;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -37,10 +35,6 @@ import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
-
 
 public class BlockingSubscription implements Subscription {
     private final Subscription subscription;
@@ -55,86 +49,8 @@ public class BlockingSubscription implements Subscription {
         this.checker = checker;
     }
 
-    public List<Tag> getTagList() {
-        return subscription.getTagList();
-    }
-
-    @Override
-    public boolean hasTag(TagDefinition tagDefinition) {
-        return subscription.hasTag(tagDefinition);
-    }
-
     public UUID getId() {
         return subscription.getId();
-    }
-
-    public boolean hasTag(ControlTagType controlTagType) {
-        return subscription.hasTag(controlTagType);
-    }
-
-    public void addTag(TagDefinition definition) {
-        subscription.addTag(definition);
-    }
-
-    public String getFieldValue(String fieldName) {
-        return subscription.getFieldValue(fieldName);
-    }
-
-    public void addTags(List<Tag> tags) {
-        subscription.addTags(tags);
-    }
-
-    @Override
-    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
-        subscription.addTagsFromDefinitions(tagDefinitions);
-    }
-
-    public void setFieldValue(String fieldName, String fieldValue) {
-        subscription.setFieldValue(fieldName, fieldValue);
-    }
-
-    public void clearTags() {
-        subscription.clearTags();
-    }
-
-    public void removeTag(TagDefinition definition) {
-        subscription.removeTag(definition);
-    }
-
-    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
-        subscription.saveFieldValue(fieldName, fieldValue, context);
-    }
-
-    public boolean generateInvoice() {
-        return subscription.generateInvoice();
-    }
-
-    public boolean processPayment() {
-        return subscription.processPayment();
-    }
-
-    public List<CustomField> getFieldList() {
-        return subscription.getFieldList();
-    }
-
-    public void setFields(List<CustomField> fields) {
-        subscription.setFields(fields);
-    }
-
-    public void saveFields(List<CustomField> fields, CallContext context) {
-        subscription.saveFields(fields, context);
-    }
-
-    public void clearFields() {
-        subscription.clearFields();
-    }
-
-    public void clearPersistedFields(CallContext context) {
-        subscription.clearPersistedFields(context);
-    }
-
-    public ObjectType getObjectType() {
-        return subscription.getObjectType();
     }
 
     public boolean cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException {

@@ -28,7 +28,14 @@ import java.util.UUID;
 
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccountEmail;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.StringCustomField;
+import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.Handle;
 import org.testng.annotations.Test;
@@ -122,17 +129,20 @@ public class TestAccountDao extends AccountDaoTestBase {
 
     @Test
     public void testCustomFields() throws EntityPersistenceException {
-        Account account = createTestAccount(1);
         String fieldName = "testField1";
         String fieldValue = "testField1_value";
-        account.setFieldValue(fieldName, fieldValue);
 
-        accountDao.create(account, context);
+        UUID accountId = UUID.randomUUID();
+        List<CustomField> customFields = new ArrayList<CustomField>();
+        customFields.add(new StringCustomField(fieldName, fieldValue));
+        CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi);
+        customFieldDao.saveEntities(accountId, ObjectType.ACCOUNT, customFields, context);
 
-        Account thisAccount = accountDao.getAccountByKey(account.getExternalKey());
-        assertNotNull(thisAccount);
-        assertEquals(thisAccount.getExternalKey(), account.getExternalKey());
-        assertEquals(thisAccount.getFieldValue(fieldName), fieldValue);
+        Map<String, CustomField> customFieldMap = customFieldDao.loadEntities(accountId, ObjectType.ACCOUNT);
+        assertEquals(customFieldMap.size(), 1);
+        CustomField customField = customFieldMap.get(fieldName);
+        assertEquals(customField.getName(), fieldName);
+        assertEquals(customField.getValue(), fieldValue);
     }
 
     @Test
@@ -142,14 +152,12 @@ public class TestAccountDao extends AccountDaoTestBase {
         TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
         tagDescriptionDao.create(definition, context);
 
-        account.addTag(definition);
-        assertEquals(account.getTagList().size(), 1);
-        accountDao.create(account, context);
+        TagDao tagDao = new AuditedTagDao(dbi);
+        tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition, context);
 
-        Account thisAccount = accountDao.getById(account.getId());
-        List<Tag> tagList = thisAccount.getTagList();
-        assertEquals(tagList.size(), 1);
-        Tag tag = tagList.get(0);
+        Map<String, Tag> tagMap = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT);
+        assertEquals(tagMap.size(), 1);
+        Tag tag = tagMap.get(definition.getName());
         assertEquals(tag.getTagDefinitionName(), definition.getName());
     }
 
@@ -411,16 +419,17 @@ public class TestAccountDao extends AccountDaoTestBase {
         emails = accountEmailDao.getEmails(accountId);
         assertEquals(emails.size(), 1);
 
-        // verify that history and audit contain two entries
-        verifyAccountEmailAuditAndHistoryCount(accountId, 2);
+        // verify that history and audit contain three entries
+        // two inserts and one delete
+        verifyAccountEmailAuditAndHistoryCount(accountId, 3);
 
         // delete e-mail
         accountEmailDao.saveEmails(accountId, new ArrayList<AccountEmail>(), context);
         emails = accountEmailDao.getEmails(accountId);
         assertEquals(emails.size(), 0);
 
-        // verify that history and audit contain three entries
-        verifyAccountEmailAuditAndHistoryCount(accountId, 3);
+        // verify that history and audit contain four entries
+        verifyAccountEmailAuditAndHistoryCount(accountId, 4);
     }
 
     private void verifyAccountEmailAuditAndHistoryCount(UUID accountId, int expectedCount) {
