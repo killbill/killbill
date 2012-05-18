@@ -19,20 +19,15 @@ package com.ning.billing.payment.api;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.ning.billing.util.entity.EntityBase;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Objects;
-import com.ning.billing.util.bus.BusEvent;
-import com.ning.billing.util.bus.BusEvent.BusEventType;
 
-public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
-	
-
-    private final String paymentId;
+public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEvent {
     private final BigDecimal amount;
     private final BigDecimal refundAmount;
     private final String paymentNumber;
@@ -46,11 +41,9 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
     private final String cardCountry;
 	private final UUID userToken;
     private final DateTime effectiveDate;
-    private final DateTime createdDate;
-    private final DateTime updatedDate;
 
     @JsonCreator
-    public DefaultPaymentInfoEvent(@JsonProperty("paymentId") String paymentId,
+    public DefaultPaymentInfoEvent(@JsonProperty("id") UUID id,
                        @JsonProperty("amount") BigDecimal amount,
                        @JsonProperty("refundAmount") BigDecimal refundAmount,
                        @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
@@ -63,10 +56,8 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
                        @JsonProperty("cardType") String cardType,
                        @JsonProperty("cardCountry") String cardCountry,
                        @JsonProperty("userToken") UUID userToken,
-                       @JsonProperty("effectiveDate") DateTime effectiveDate,
-                       @JsonProperty("createdDate") DateTime createdDate,
-                       @JsonProperty("updatedDate") DateTime updatedDate) {
-        this.paymentId = paymentId;
+                       @JsonProperty("effectiveDate") DateTime effectiveDate) {
+        super(id);
         this.amount = amount;
         this.refundAmount = refundAmount;
         this.bankIdentificationNumber = bankIdentificationNumber;
@@ -80,12 +71,10 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
         this.cardCountry = cardCountry;
         this.userToken = userToken;
         this.effectiveDate = effectiveDate;
-        this.createdDate = createdDate == null ? new DateTime(DateTimeZone.UTC) : createdDate;
-        this.updatedDate = updatedDate == null ? new DateTime(DateTimeZone.UTC) : updatedDate;
     }
 
     public DefaultPaymentInfoEvent(DefaultPaymentInfoEvent src) {
-        this(src.paymentId,
+        this(src.id,
              src.amount,
              src.refundAmount,
              src.bankIdentificationNumber,
@@ -98,9 +87,7 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
              src.cardType,
              src.cardCountry,
              src.userToken,
-             src.effectiveDate,
-             src.createdDate,
-             src.updatedDate);
+             src.effectiveDate);
     }
     
     @JsonIgnore
@@ -119,11 +106,6 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
     }
 
     @Override
-    public String getPaymentId() {
-        return paymentId;
-    }
-
-    @Override
     public BigDecimal getAmount() {
         return amount;
     }
@@ -131,11 +113,6 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
     @Override
     public String getBankIdentificationNumber() {
         return bankIdentificationNumber;
-    }
-
-    @Override
-    public DateTime getCreatedDate() {
-        return createdDate;
     }
 
     @Override
@@ -188,13 +165,8 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
         return type;
     }
 
-    @Override
-    public DateTime getUpdatedDate() {
-        return updatedDate;
-    }
-
     public static class Builder {
-        private String paymentId;
+        private UUID id;
         private BigDecimal amount;
         private BigDecimal refundAmount;
         private String paymentNumber;
@@ -208,14 +180,12 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
         private String cardCountry;
         private UUID userToken;
         private DateTime effectiveDate;
-        private DateTime createdDate;
-        private DateTime updatedDate;
 
         public Builder() {
         }
 
         public Builder(DefaultPaymentInfoEvent src) {
-            this.paymentId = src.paymentId;
+            this.id = src.id;
             this.amount = src.amount;
             this.refundAmount = src.refundAmount;
             this.paymentNumber = src.paymentNumber;
@@ -229,12 +199,10 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
             this.cardType = src.cardType;
             this.cardCountry = src.cardCountry;
             this.userToken = src.userToken;
-            this.createdDate = src.createdDate;
-            this.updatedDate = src.updatedDate;
         }
 
-        public Builder setPaymentId(String paymentId) {
-            this.paymentId = paymentId;
+        public Builder setId(UUID id) {
+            this.id = id;
             return this;
         }
 
@@ -250,11 +218,6 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
 
         public Builder setUserToken(UUID userToken) {
             this.userToken = userToken;
-            return this;
-        }
-
-        public Builder setCreatedDate(DateTime createdDate) {
-            this.createdDate = createdDate;
             return this;
         }
 
@@ -308,13 +271,8 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
             return this;
         }
 
-        public Builder setUpdatedDate(DateTime updatedDate) {
-            this.updatedDate = updatedDate;
-            return this;
-        }
-
         public PaymentInfoEvent build() {
-            return new DefaultPaymentInfoEvent(paymentId,
+            return new DefaultPaymentInfoEvent(id,
                                    amount,
                                    refundAmount,
                                    bankIdentificationNumber,
@@ -327,15 +285,13 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
                                    cardType,
                                    cardCountry,
                                    userToken,
-                                   effectiveDate,
-                                   createdDate,
-                                   updatedDate);
+                                   effectiveDate);
         }
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(paymentId,
+        return Objects.hashCode(id,
                                 amount,
                                 refundAmount,
                                 bankIdentificationNumber,
@@ -347,9 +303,7 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
                                 paymentMethod,
                                 cardType,
                                 cardCountry,
-                                effectiveDate,
-                                createdDate,
-                                updatedDate);
+                                effectiveDate);
     }
 
     @Override
@@ -364,10 +318,8 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
             return false;
         if (cardCountry != null ? !cardCountry.equals(that.cardCountry) : that.cardCountry != null) return false;
         if (cardType != null ? !cardType.equals(that.cardType) : that.cardType != null) return false;
-        if (createdDate != null ? !(getUnixTimestamp(createdDate) == getUnixTimestamp(that.createdDate)) : that.createdDate != null) return false;
-        if (effectiveDate != null ? !(getUnixTimestamp(effectiveDate) == getUnixTimestamp(that.effectiveDate)) : that.effectiveDate != null)
-            return false;
-        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) return false;
+        if (effectiveDate == null ? that.effectiveDate != null : effectiveDate.compareTo(that.effectiveDate) != 0) return false;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
             return false;
         if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null)
@@ -378,17 +330,12 @@ public class DefaultPaymentInfoEvent implements PaymentInfoEvent {
         if (refundAmount != null ? !refundAmount.equals(that.refundAmount) : that.refundAmount != null) return false;
         if (status != null ? !status.equals(that.status) : that.status != null) return false;
         if (type != null ? !type.equals(that.type) : that.type != null) return false;
-        if (updatedDate != null ? !(getUnixTimestamp(updatedDate) == getUnixTimestamp(that.updatedDate)) : that.updatedDate != null) return false;
 
         return true;
     }
 
     @Override
     public String toString() {
-        return "PaymentInfo [paymentId=" + paymentId + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethod=" + paymentMethod + ", cardType=" + cardType + ", cardCountry=" + cardCountry + ", effectiveDate=" + effectiveDate + ", createdDate=" + createdDate + ", updatedDate=" + updatedDate + "]";
-    }
-
-    private static long getUnixTimestamp(final DateTime dateTime) {
-        return dateTime.getMillis() / 1000;
+        return "PaymentInfo [id=" + id + ", amount=" + amount + ", refundAmount=" + refundAmount + ", paymentNumber=" + paymentNumber + ", bankIdentificationNumber=" + bankIdentificationNumber + ", status=" + status + ", type=" + type + ", referenceId=" + referenceId + ", paymentMethodId=" + paymentMethodId + ", paymentMethod=" + paymentMethod + ", cardType=" + cardType + ", cardCountry=" + cardCountry + ", effectiveDate=" + effectiveDate + "]";
     }
 }

@@ -22,8 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -209,10 +207,10 @@ public class DefaultPaymentApi implements PaymentApi {
 
                     } else {
                         
-                        PaymentAttempt newPaymentAttempt = new PaymentAttempt.Builder(paymentAttempt)
-                        .setRetryCount(paymentAttempt.getRetryCount() + 1)
-                        .setPaymentAttemptId(UUID.randomUUID())
-                        .build();
+                        PaymentAttempt newPaymentAttempt = new DefaultPaymentAttempt.Builder(paymentAttempt)
+                                                                                    .setRetryCount(paymentAttempt.getRetryCount() + 1)
+                                                                                    .setPaymentAttemptId(UUID.randomUUID())
+                                                                                    .build();
 
                         paymentDao.createPaymentAttempt(newPaymentAttempt, context);
                         Either<PaymentErrorEvent, PaymentInfoEvent> result =  processPayment(getPaymentProviderPlugin(account), account, invoice, newPaymentAttempt, context);
@@ -296,18 +294,18 @@ public class DefaultPaymentApi implements PaymentApi {
 
                 if (paymentMethodInfo instanceof CreditCardPaymentMethodInfo) {
                     CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethodInfo;
-                    paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getPaymentId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
+                    paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
                 }
                 else if (paymentMethodInfo instanceof PaypalPaymentMethodInfo) {
                     PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
-                    paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getPaymentId(), null, null, context);
+                    paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getId(), null, null, context);
                 }
             } else {
                 log.info(paymentMethodInfoOrError.getLeft().getMessage());
             }
 
-            if (paymentInfo.getPaymentId() != null) {
-                paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getPaymentAttemptId(), paymentInfo.getPaymentId(), context);
+            if (paymentInfo.getId() != null) {
+                paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfo.getId(), context);
             }
             postPaymentEvent(paymentInfo, account.getId());
        }
@@ -317,7 +315,7 @@ public class DefaultPaymentApi implements PaymentApi {
                 paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
                         //                                                                         paymentInfo.getRefundAmount(), TODO
                         paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency(),
-                                paymentAttempt.getPaymentAttemptId(),
+                                paymentAttempt.getId(),
                                 paymentAttempt.getPaymentAttemptDate(),
                                 context);
 
@@ -394,7 +392,7 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public PaymentAttempt getPaymentAttemptForPaymentId(String id) {
+    public PaymentAttempt getPaymentAttemptForPaymentId(UUID id) {
         return paymentDao.getPaymentAttemptForPaymentId(id);
     }
 
@@ -415,8 +413,13 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public List<PaymentInfoEvent> getPaymentInfo(List<String> invoiceIds) {
-        return paymentDao.getPaymentInfo(invoiceIds);
+    public List<PaymentInfoEvent> getPaymentInfoList(List<String> invoiceIds) {
+        return paymentDao.getPaymentInfoList(invoiceIds);
+    }
+
+    @Override
+    public PaymentInfoEvent getLastPaymentInfo(List<String> invoiceIds) {
+        return paymentDao.getLastPaymentInfo(invoiceIds);
     }
 
     @Override

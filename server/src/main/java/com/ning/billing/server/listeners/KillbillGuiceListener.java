@@ -72,9 +72,11 @@ public class KillbillGuiceListener extends SetupServer
         killbillBusService = theInjector.getInstance(BusService.class);
         killbilleventHandler = theInjector.getInstance(KillbillEventHandler.class); 
         
+        /*
         ObjectMapper mapper = theInjector.getInstance(ObjectMapper.class);
         mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
-
+*/
+        
         //
         // Fire all Startup levels up to service start
         //

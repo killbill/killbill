@@ -45,15 +45,15 @@ public class OverdueListener {
     public void handlePaymentInfoEvent(final PaymentInfoEvent event) {
         log.info(String.format("Received PaymentInfo event %s", event.toString()));
         try {
-            String paymentId = event.getPaymentId();
+            UUID paymentId = event.getId();
             PaymentAttempt attempt = paymentApi.getPaymentAttemptForPaymentId(paymentId);
             UUID accountId = attempt.getAccountId();
             dispatcher.processOverdueForAccount(accountId);
         } catch (PaymentApiException e) {
-            log.error("Payment exception encountered when trying process Overdue against payement: " + event.getPaymentId(), e);
+            log.error("Payment exception encountered when trying process Overdue against payement: " + event.getId(), e);
         }
     }
-
+ 
     @Subscribe
     public void handlePaymentErrorEvent(final PaymentErrorEvent event) {
         log.info(String.format("Received PaymentError event %s", event.toString()));

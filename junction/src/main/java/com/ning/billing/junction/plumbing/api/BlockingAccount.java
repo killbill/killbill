@@ -19,8 +19,8 @@ package com.ning.billing.junction.plumbing.api;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
@@ -52,29 +52,13 @@ public class BlockingAccount implements Account {
         return account.hasTag(tagDefinition);
     }
 
-    public String getUpdatedBy() {
-        return account.getUpdatedBy();
-    }
-
     public UUID getId() {
         return account.getId();
-    }
-
-    public String getCreatedBy() {
-        return account.getCreatedBy();
     }
 
     @Override
     public boolean hasTag(ControlTagType controlTagType) {
         return account.hasTag(controlTagType);
-    }
-
-    public DateTime getUpdatedDate() {
-        return account.getUpdatedDate();
-    }
-
-    public DateTime getCreatedDate() {
-        return account.getCreatedDate();
     }
 
     public void addTag(TagDefinition definition) {
@@ -205,8 +189,8 @@ public class BlockingAccount implements Account {
         return account.getStateOrProvince();
     }
 
-    public String getObjectName() {
-        return account.getObjectName();
+    public ObjectType getObjectType() {
+        return account.getObjectType();
     }
 
     public String getPostalCode() {

@@ -288,16 +288,8 @@ public class TestNotificationQueue {
                 return false;
             }
             @Override
-            public long getNotificationSleepTimeMs() {
+            public long getSleepTimeMs() {
                 return 10;
-            }
-            @Override
-            public int getDaoMaxReadyEvents() {
-                return 1;
-            }
-            @Override
-            public long getDaoClaimTimeMs() {
-                return 60000;
             }
         };
 
@@ -397,16 +389,8 @@ public class TestNotificationQueue {
                 return off;
             }
             @Override
-            public long getNotificationSleepTimeMs() {
+            public long getSleepTimeMs() {
                 return sleepTime;
-            }
-            @Override
-            public int getDaoMaxReadyEvents() {
-                return maxReadyEvents;
-            }
-            @Override
-            public long getDaoClaimTimeMs() {
-                return claimTimeMs;
             }
         };
     }

@@ -34,7 +34,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
-import com.ning.billing.util.notificationq.NotificationLifecycle.NotificationLifecycleState;
+import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>, CloseMe {
@@ -45,32 +45,34 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
     public BusEventEntry getNextBusEventEntry(@Bind("max") int max, @Bind("owner") String owner, @Bind("now") Date now);
     
     @SqlUpdate
-    public int claimBusEvent(@Bind("owner") String owner, @Bind("next_available") Date nextAvailable, @Bind("id") long id, @Bind("now") Date now);
+    public int claimBusEvent(@Bind("owner") String owner, @Bind("nextAvailable") Date nextAvailable,
+                             @Bind("recordId") Long id, @Bind("now") Date now);
 
     @SqlUpdate
-    public void clearBusEvent(@Bind("id") long id, @Bind("owner") String owner);
+    public void clearBusEvent(@Bind("recordId") Long id, @Bind("owner") String owner);
 
     @SqlUpdate
-    public void removeBusEventsById(@Bind("id") long id);
+    public void removeBusEventsById(@Bind("recordId") Long id);
     
     @SqlUpdate
     public void insertBusEvent(@Bind(binder = PersistentBusSqlBinder.class) BusEventEntry evt);
 
     @SqlUpdate
-    public void insertClaimedHistory(@Bind("owner_id") String owner, @Bind("claimed_dt") Date claimedDate, @Bind("bus_event_id") long id);
+    public void insertClaimedHistory(@Bind("ownerId") String owner, @Bind("claimedDate") Date claimedDate,
+                                     @Bind("busEventId") long id);
 
     
     public static class PersistentBusSqlBinder extends BinderBase implements Binder<Bind, BusEventEntry> {
 
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, BusEventEntry evt) {
-            stmt.bind("class_name", evt.getBusEventClass());
-            stmt.bind("event_json", evt.getBusEventJson()); 
-            stmt.bind("created_dt", getDate(new DateTime()));
-            stmt.bind("creating_owner", evt.getCreatedOwner());
-            stmt.bind("processing_available_dt", getDate(evt.getNextAvailableDate()));
-            stmt.bind("processing_owner", evt.getOwner());
-            stmt.bind("processing_state", NotificationLifecycleState.AVAILABLE.toString());
+            stmt.bind("className", evt.getBusEventClass());
+            stmt.bind("eventJson", evt.getBusEventJson());
+            stmt.bind("createdDate", getDate(new DateTime()));
+            stmt.bind("creatingOwner", evt.getCreatedOwner());
+            stmt.bind("processingAvailableDate", getDate(evt.getNextAvailableDate()));
+            stmt.bind("processingOwner", evt.getOwner());
+            stmt.bind("processingState", PersistentQueueEntryLifecycleState.AVAILABLE.toString());
         }
     }
     
@@ -80,15 +82,15 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
         public BusEventEntry map(int index, ResultSet r, StatementContext ctx)
                 throws SQLException {
 
-            final long id = r.getLong("id");
+            final Long recordId = r.getLong("record_id");
             final String className = r.getString("class_name"); 
             final String createdOwner = r.getString("creating_owner");
             final String eventJson = r.getString("event_json"); 
-            final DateTime nextAvailableDate = getDate(r, "processing_available_dt");
+            final DateTime nextAvailableDate = getDate(r, "processing_available_date");
             final String processingOwner = r.getString("processing_owner");
-            final NotificationLifecycleState processingState = NotificationLifecycleState.valueOf(r.getString("processing_state"));
+            final PersistentQueueEntryLifecycleState processingState = PersistentQueueEntryLifecycleState.valueOf(r.getString("processing_state"));
             
-            return new BusEventEntry(id, createdOwner, processingOwner, nextAvailableDate, processingState, className, eventJson);
+            return new BusEventEntry(recordId, createdOwner, processingOwner, nextAvailableDate, processingState, className, eventJson);
         }
     }
 }

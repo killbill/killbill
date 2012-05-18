@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
-import com.google.inject.name.Named;
-
 
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
@@ -135,21 +133,15 @@ public class Engine implements EventListener, EntitlementService {
                 }
             },
             new NotificationConfig() {
+                
+                @Override
+                public long getSleepTimeMs() {
+                    return config.getSleepTimeMs();
+                }
+                
                 @Override
                 public boolean isNotificationProcessingOff() {
                     return config.isNotificationProcessingOff();
-                }
-                @Override
-                public long getNotificationSleepTimeMs() {
-                    return config.getNotificationSleepTimeMs();
-                }
-                @Override
-                public int getDaoMaxReadyEvents() {
-                    return config.getDaoMaxReadyEvents();
-                }
-                @Override
-                public long getDaoClaimTimeMs() {
-                    return config.getDaoClaimTimeMs();
                 }
             });
         } catch (NotificationQueueAlreadyExists e) {

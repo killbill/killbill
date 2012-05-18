@@ -191,14 +191,14 @@ public class AccountJson extends AccountJsonSimple {
     }
 
     @JsonCreator
-    public AccountJson(@JsonProperty("account_id") String acountId,
+    public AccountJson(@JsonProperty("accountId") String accountId,
             @JsonProperty("name") String name,
-            @JsonProperty("first_name_length") Integer length,
+            @JsonProperty("firstNameLength") Integer length,
             @JsonProperty("external_key") String externalKey,
             @JsonProperty("email") String email,
-            @JsonProperty("billing_day") Integer billCycleDay,
+            @JsonProperty("billingDay") Integer billCycleDay,
             @JsonProperty("currency") String currency,
-            @JsonProperty("payment_provider") String paymentProvider,
+            @JsonProperty("paymentProvider") String paymentProvider,
             @JsonProperty("timezone") String timeZone,
             @JsonProperty("address1") String address1,
             @JsonProperty("address2") String address2,
@@ -206,7 +206,7 @@ public class AccountJson extends AccountJsonSimple {
             @JsonProperty("state") String state,
             @JsonProperty("country") String country,
             @JsonProperty("phone") String phone) {
-        super(acountId, externalKey);
+        super(accountId, externalKey);
         this.name = name;
         this.length = length;
         this.email = email;
@@ -279,7 +279,7 @@ public class AccountJson extends AccountJsonSimple {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-				+ ((acountId == null) ? 0 : acountId.hashCode());
+				+ ((accountId == null) ? 0 : accountId.hashCode());
 		result = prime * result
 				+ ((address1 == null) ? 0 : address1.hashCode());
 		result = prime * result
@@ -392,10 +392,10 @@ public class AccountJson extends AccountJsonSimple {
 			return false;
 		} else {
 			AccountJson other = (AccountJson) obj;
-			if (acountId == null) {
-				if (other.acountId != null)
+			if (accountId == null) {
+				if (other.accountId != null)
 					return false;
-			} else if (!acountId.equals(other.acountId))
+			} else if (!accountId.equals(other.accountId))
 				return false;
 		}
 		return true;

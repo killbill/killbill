@@ -28,8 +28,8 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.notificationq.NotificationLifecycle.NotificationLifecycleState;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
+import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
 public class MockNotificationQueue extends NotificationQueueBase implements NotificationQueue {
     private final TreeSet<Notification> notifications;
@@ -67,7 +67,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
         List<Notification> result = new ArrayList<Notification>();
 
         for (Notification notification : notifications) {
-            if (notification.getProcessingState() == NotificationLifecycleState.AVAILABLE) {
+            if (notification.getProcessingState() == PersistentQueueEntryLifecycleState.AVAILABLE) {
                 result.add(notification);
             }
         }
@@ -96,7 +96,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
         result = readyNotifications.size();
         for (Notification cur : readyNotifications) {
             handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
-            DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getUUID(), hostname, hostname, "MockQueue", clock.getUTCNow().plus(config.getDaoClaimTimeMs()), NotificationLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
+            DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), hostname, hostname, "MockQueue", clock.getUTCNow().plus(CLAIM_TIME_MS), PersistentQueueEntryLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
             oldNotifications.add(cur);
             processedNotifications.add(processedNotification);
         }

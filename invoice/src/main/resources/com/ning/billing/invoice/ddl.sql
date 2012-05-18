@@ -1,43 +1,47 @@
 DROP TABLE IF EXISTS invoice_items;
 DROP TABLE IF EXISTS recurring_invoice_items;
 CREATE TABLE recurring_invoice_items (
-  id char(36) NOT NULL,
-  invoice_id char(36) NOT NULL,
-  account_id char(36) NOT NULL,
-  bundle_id char(36),
-  subscription_id char(36),
-  plan_name varchar(50) NOT NULL,
-  phase_name varchar(50) NOT NULL,
-  start_date datetime NOT NULL,
-  end_date datetime NOT NULL,
-  amount numeric(10,4) NULL,
-  rate numeric(10,4) NULL,
-  currency char(3) NOT NULL,
-  reversed_item_id char(36),
-  created_by varchar(50) NOT NULL,
-  created_date datetime NOT NULL,
-  PRIMARY KEY(id)
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
+    invoice_id char(36) NOT NULL,
+    account_id char(36) NOT NULL,
+    bundle_id char(36),
+    subscription_id char(36),
+    plan_name varchar(50) NOT NULL,
+    phase_name varchar(50) NOT NULL,
+    start_date datetime NOT NULL,
+    end_date datetime NOT NULL,
+    amount numeric(10,4) NULL,
+    rate numeric(10,4) NULL,
+    currency char(3) NOT NULL,
+    reversed_item_id char(36),
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
+CREATE UNIQUE INDEX recurring_invoice_items_id ON recurring_invoice_items(id);
 CREATE INDEX recurring_invoice_items_subscription_id ON recurring_invoice_items(subscription_id ASC);
 CREATE INDEX recurring_invoice_items_invoice_id ON recurring_invoice_items(invoice_id ASC);
 
 DROP TABLE IF EXISTS fixed_invoice_items;
 CREATE TABLE fixed_invoice_items (
-  id char(36) NOT NULL,
-  invoice_id char(36) NOT NULL,
-  account_id char(36) NOT NULL,
-  bundle_id char(36),
-  subscription_id char(36),
-  plan_name varchar(50) NOT NULL,
-  phase_name varchar(50) NOT NULL,
-  start_date datetime NOT NULL,
-  end_date datetime NOT NULL,
-  amount numeric(10,4) NULL,
-  currency char(3) NOT NULL,
-  created_by varchar(50) NOT NULL,
-  created_date datetime NOT NULL,
-  PRIMARY KEY(id)
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
+    invoice_id char(36) NOT NULL,
+    account_id char(36) NOT NULL,
+    bundle_id char(36),
+    subscription_id char(36),
+    plan_name varchar(50) NOT NULL,
+    phase_name varchar(50) NOT NULL,
+    start_date datetime NOT NULL,
+    end_date datetime NOT NULL,
+    amount numeric(10,4) NULL,
+    currency char(3) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
+CREATE UNIQUE INDEX fixed_invoice_items_id ON fixed_invoice_items(id);
 CREATE INDEX fixed_invoice_items_subscription_id ON fixed_invoice_items(subscription_id ASC);
 CREATE INDEX fixed_invoice_items_invoice_id ON fixed_invoice_items(invoice_id ASC);
 
@@ -45,33 +49,34 @@ DROP TABLE IF EXISTS invoice_locking;
 
 DROP TABLE IF EXISTS invoices;
 CREATE TABLE invoices (
-  invoice_number int NOT NULL AUTO_INCREMENT,
-  id char(36) NOT NULL,
-  account_id char(36) NOT NULL,
-  invoice_date datetime NOT NULL,
-  target_date datetime NOT NULL,
-  currency char(3) NOT NULL,
-  migrated bool NOT NULL,
-  created_by varchar(50) NOT NULL,
-  created_date datetime NOT NULL,
-  PRIMARY KEY(invoice_number)
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
+    account_id char(36) NOT NULL,
+    invoice_date datetime NOT NULL,
+    target_date datetime NOT NULL,
+    currency char(3) NOT NULL,
+    migrated bool NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
-CREATE INDEX invoices_invoice_number ON invoices(invoice_number ASC);
-CREATE INDEX invoices_id ON invoices(id ASC);
+CREATE UNIQUE INDEX invoices_id ON invoices(id);
 CREATE INDEX invoices_account_id ON invoices(account_id ASC);
 
 DROP TABLE IF EXISTS invoice_payments;
 CREATE TABLE invoice_payments (
-  id char(36) NOT NULL,
-  invoice_id char(36) NOT NULL,
-  payment_attempt_id char(36) COLLATE utf8_bin NOT NULL,
-  payment_attempt_date datetime,
-  amount numeric(10,4),
-  currency char(3),
-  created_by varchar(50) NOT NULL,
-  created_date datetime NOT NULL,
-  PRIMARY KEY(invoice_id, payment_attempt_id)
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
+    invoice_id char(36) NOT NULL,
+    payment_attempt_id char(36) COLLATE utf8_bin NOT NULL,
+    payment_attempt_date datetime,
+    amount numeric(10,4),
+    currency char(3),
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    PRIMARY KEY(record_id)
 ) ENGINE=innodb;
+CREATE UNIQUE INDEX invoice_payments_id ON invoice_payments(id);
 CREATE UNIQUE INDEX invoice_payments_unique ON invoice_payments(invoice_id, payment_attempt_id);
 
 DROP VIEW IF EXISTS invoice_payment_summary;

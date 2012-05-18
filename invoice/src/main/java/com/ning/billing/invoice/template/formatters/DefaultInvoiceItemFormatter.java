@@ -123,14 +123,4 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     public UUID getId() {
         return item.getId();
     }
-
-    @Override
-    public String getCreatedBy() {
-        return item.getCreatedBy();
-    }
-
-    @Override
-    public DateTime getCreatedDate() {
-        return item.getCreatedDate();
-    }
 }

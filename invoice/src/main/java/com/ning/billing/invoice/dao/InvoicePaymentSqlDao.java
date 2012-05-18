@@ -28,9 +28,11 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -51,7 +53,10 @@ import com.ning.billing.invoice.api.InvoicePayment;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(InvoicePaymentSqlDao.InvoicePaymentMapper.class)
-public interface InvoicePaymentSqlDao extends Transactional<InvoicePaymentSqlDao>, Transmogrifier {
+public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Transactional<InvoicePaymentSqlDao>, AuditSqlDao, Transmogrifier {
+    @SqlQuery
+    List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
+    
     @SqlQuery
     public InvoicePayment getByPaymentAttemptId(@Bind("paymentAttempt") final String paymentAttemptId);
 
@@ -81,15 +86,13 @@ public interface InvoicePaymentSqlDao extends Transactional<InvoicePaymentSqlDao
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
         @Override
         public InvoicePayment map(int index, ResultSet result, StatementContext context) throws SQLException {
-            final UUID id = UUID.fromString(result.getString("id"));
-            final UUID paymentAttemptId = UUID.fromString(result.getString("payment_attempt_id"));
-            final UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
+            final UUID id = getUUID(result, "id");
+            final UUID paymentAttemptId = getUUID(result, "payment_attempt_id");
+            final UUID invoiceId = getUUID(result, "invoice_id");
             final DateTime paymentAttemptDate = getDate(result, "payment_attempt_date");
             final BigDecimal amount = result.getBigDecimal("amount");
             final String currencyString = result.getString("currency");
             final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
-            final String createdBy = result.getString("created_by");
-            final DateTime createdDate = getDate(result, "created_date");
 
             return new InvoicePayment() {
                 @Override
@@ -115,14 +118,6 @@ public interface InvoicePaymentSqlDao extends Transactional<InvoicePaymentSqlDao
                 @Override
                 public Currency getCurrency() {
                     return currency;
-                }
-                @Override
-                public String getCreatedBy() {
-                    return createdBy;
-                }
-                @Override
-                public DateTime getCreatedDate() {
-                    return createdDate ;
                 }
             };
         }

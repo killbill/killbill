@@ -16,16 +16,12 @@
 
 package com.ning.billing.jaxrs.json;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonView;
 
-import com.ning.billing.entitlement.api.timeline.BundleTimeline;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
 public class BundleJsonNoSubsciptions  extends BundleJsonSimple {
@@ -35,9 +31,9 @@ public class BundleJsonNoSubsciptions  extends BundleJsonSimple {
 
 
     @JsonCreator
-    public BundleJsonNoSubsciptions(@JsonProperty("bundle_id") String bundleId,
-            @JsonProperty("account_id") String accountId,
-            @JsonProperty("external_key") String externalKey,
+    public BundleJsonNoSubsciptions(@JsonProperty("bundleId") String bundleId,
+            @JsonProperty("accountId") String accountId,
+            @JsonProperty("externalKey") String externalKey,
             @JsonProperty("subscriptions") List<SubscriptionJsonWithEvents> subscriptions) {
         super(bundleId, externalKey);
         this.accountId = accountId;
@@ -49,7 +45,7 @@ public class BundleJsonNoSubsciptions  extends BundleJsonSimple {
 
     
     public BundleJsonNoSubsciptions(SubscriptionBundle bundle) {
-        super(bundle.getId().toString(), bundle.getKey());        
+        super(bundle.getId().toString(), bundle.getKey());
         this.accountId = bundle.getAccountId().toString();
     }
     

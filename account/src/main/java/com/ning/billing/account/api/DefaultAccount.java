@@ -21,14 +21,12 @@ import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.ExtendedEntityBase;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
-
-import javax.annotation.Nullable;
 
 public class DefaultAccount extends ExtendedEntityBase implements Account {
     private final String externalKey;
@@ -50,42 +48,24 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 	private final String phone;
     private final boolean isMigrated;
     private final boolean isNotifiedForInvoices;
-    private final String updatedBy;
-    private final DateTime updatedDate;
-    
-    
-	//intended for creation and migration
-	public DefaultAccount(final String createdBy, final DateTime createdDate,
-                          final String updatedBy, final DateTime updatedDate,
-                          final AccountData data) {
-		this(UUID.randomUUID(), createdBy, createdDate, updatedBy, updatedDate, data);
-	}
 
     public DefaultAccount(final AccountData data) {
-		this(UUID.randomUUID(), null, null, null, null, data);
-	}
-
-    public DefaultAccount(final UUID id, final AccountData data) {
-		this(id, null, null, null, null, data);
+		this(UUID.randomUUID(), data);
 	}
 
 	/**
 	 * This call is used to update an existing account
-	 *  
+	 *
 	 * @param id UUID id of the existing account to update
 	 * @param data AccountData new data for the existing account
 	 */
-	public DefaultAccount(final UUID id, @Nullable final String createdBy, @Nullable final DateTime createdDate,
-                          @Nullable final String updatedBy, @Nullable final DateTime updatedDate,
-                          final AccountData data) {
+	public DefaultAccount(final UUID id, final AccountData data) {
 		this(id, data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
 				data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
 				data.getTimeZone(), data.getLocale(),
 				data.getAddress1(), data.getAddress2(), data.getCompanyName(),
 				data.getCity(), data.getStateOrProvince(), data.getCountry(),
-				data.getPostalCode(), data.getPhone(), data.isMigrated(), data.isNotifiedForInvoices(),
-                createdBy, createdDate,
-                updatedBy, updatedDate);
+				data.getPostalCode(), data.getPhone(), data.isMigrated(), data.isNotifiedForInvoices());
 	}
 
 	/*
@@ -98,11 +78,8 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
                           final String postalCode, final String phone,
-                          final boolean isMigrated, final boolean isNotifiedForInvoices,
-                          final String createdBy, final DateTime createdDate,
-                          final String updatedBy, final DateTime updatedDate) {
-
-		super(id, createdBy, createdDate);
+                          final boolean isMigrated, final boolean isNotifiedForInvoices) {
+		super(id);
 		this.externalKey = externalKey;
 		this.email = email;
 		this.name = name;
@@ -122,8 +99,6 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
 		this.phone = phone;
         this.isMigrated = isMigrated;
         this.isNotifiedForInvoices = isNotifiedForInvoices;
-        this.updatedBy = updatedBy;
-        this.updatedDate = updatedDate;
 	}
 
     @Override
@@ -142,8 +117,8 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
     }
 
     @Override
-	public String getObjectName() {
-		return ObjectType;
+	public ObjectType getObjectType() {
+		return ObjectType.ACCOUNT;
 	}
 
 	@Override
@@ -234,16 +209,6 @@ public class DefaultAccount extends ExtendedEntityBase implements Account {
     @Override
     public boolean isNotifiedForInvoices() {
         return isNotifiedForInvoices;
-    }
-
-    @Override
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    @Override
-    public DateTime getUpdatedDate() {
-        return updatedDate;
     }
 
     @Override

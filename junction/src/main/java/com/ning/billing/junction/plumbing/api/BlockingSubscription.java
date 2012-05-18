@@ -19,6 +19,7 @@ package com.ning.billing.junction.plumbing.api;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTime;
 
@@ -67,16 +68,8 @@ public class BlockingSubscription implements Subscription {
         return subscription.getId();
     }
 
-    public String getCreatedBy() {
-        return subscription.getCreatedBy();
-    }
-
     public boolean hasTag(ControlTagType controlTagType) {
         return subscription.hasTag(controlTagType);
-    }
-
-    public DateTime getCreatedDate() {
-        return subscription.getCreatedDate();
     }
 
     public void addTag(TagDefinition definition) {
@@ -140,8 +133,8 @@ public class BlockingSubscription implements Subscription {
         subscription.clearPersistedFields(context);
     }
 
-    public String getObjectName() {
-        return subscription.getObjectName();
+    public ObjectType getObjectType() {
+        return subscription.getObjectType();
     }
 
     public boolean cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException {

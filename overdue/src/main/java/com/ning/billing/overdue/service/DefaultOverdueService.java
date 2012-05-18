@@ -94,7 +94,7 @@ public class DefaultOverdueService implements ExtendedOverdueService {
                 overdueConfig = new OverdueConfig();
             } catch (IllegalArgumentException e) {
                 overdueConfig = new OverdueConfig();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 throw new ServiceException(e);
             }
             

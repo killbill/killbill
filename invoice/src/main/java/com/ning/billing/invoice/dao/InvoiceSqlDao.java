@@ -20,9 +20,10 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.UuidMapper;
+import com.ning.billing.util.dao.AuditSqlDao;
+import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.EntityDao;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -53,7 +54,7 @@ import java.util.UUID;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(InvoiceSqlDao.InvoiceMapper.class)
-public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<InvoiceSqlDao>, Transmogrifier, CloseMe {
+public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Transactional<InvoiceSqlDao>, Transmogrifier, CloseMe {
     @Override
     @SqlUpdate
     void create(@InvoiceBinder Invoice invoice, @CallContextBinder final CallContext context);
@@ -117,10 +118,8 @@ public interface InvoiceSqlDao extends EntityDao<Invoice>, Transactional<Invoice
             DateTime targetDate = new DateTime(result.getTimestamp("target_date"));
             Currency currency = Currency.valueOf(result.getString("currency"));
             boolean isMigrationInvoice = result.getBoolean("migrated");
-            String createdBy = result.getString("created_by");
-            DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
-            return new DefaultInvoice(id, accountId, invoiceNumber, invoiceDate, targetDate, currency, isMigrationInvoice, createdBy, createdDate);
+            return new DefaultInvoice(id, accountId, invoiceNumber, invoiceDate, targetDate, currency, isMigrationInvoice);
         }
     }
 

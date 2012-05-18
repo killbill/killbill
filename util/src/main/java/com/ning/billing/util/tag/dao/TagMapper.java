@@ -44,10 +44,8 @@ public class TagMapper extends MapperBase implements ResultSetMapper<Tag> {
 
         if (thisTagType == null) {
             UUID id = UUID.fromString(result.getString("id"));
-            String createdBy = result.getString("created_by");
-            DateTime createdDate = new DateTime(result.getTimestamp("created_date"));
 
-            return new DescriptiveTag(id, createdBy, createdDate, name);
+            return new DescriptiveTag(id, name);
         } else {
             return new DefaultControlTag(thisTagType);
         }

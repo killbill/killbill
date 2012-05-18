@@ -26,19 +26,9 @@ import com.ning.billing.config.NotificationConfig;
 public interface OverdueProperties extends NotificationConfig, KillbillConfig  {
 
     @Override
-    @Config("killbill.overdue.dao.claim.time")
-    @Default("60000")
-    public long getDaoClaimTimeMs();
-
-    @Override   
-    @Config("killbill.overdue.dao.ready.max")
-    @Default("10")
-    public int getDaoMaxReadyEvents();
-
-    @Override
     @Config("killbill.overdue.engine.notifications.sleep")
     @Default("500")
-    public long getNotificationSleepTimeMs();
+    public long getSleepTimeMs();
 
     @Override
     @Config("killbill.notifications.off")

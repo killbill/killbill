@@ -43,29 +43,22 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.InvoiceJson;
+
+import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
-import com.ning.billing.jaxrs.util.TagHelper;
-import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.util.api.TagUserApi;
-
 
 
 @Path(BaseJaxrsResource.INVOICES_PATH)
 public class InvoiceResource implements BaseJaxrsResource {
 
 
-    private static final Logger log = LoggerFactory.getLogger(AccountResource.class);
+    private static final Logger log = LoggerFactory.getLogger(InvoiceResource.class);
 
     private final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
     
@@ -93,9 +86,9 @@ public class InvoiceResource implements BaseJaxrsResource {
             Preconditions.checkNotNull(accountId, "% query parameter must be specified", QUERY_ACCOUNT_ID);
             accountApi.getAccountById(UUID.fromString(accountId));
             List<Invoice> invoices = invoiceApi.getInvoicesByAccount(UUID.fromString(accountId));
-            List<InvoiceJson> result = new LinkedList<InvoiceJson>();
+            List<InvoiceJsonSimple> result = new LinkedList<InvoiceJsonSimple>();
             for (Invoice cur : invoices) {
-                result.add(new InvoiceJson(cur));
+                result.add(new InvoiceJsonSimple(cur));
             }
             return Response.status(Status.OK).entity(result).build();
         } catch (AccountApiException e) {
@@ -110,14 +103,14 @@ public class InvoiceResource implements BaseJaxrsResource {
     @Produces(APPLICATION_JSON)
     public Response getInvoice(@PathParam("invoiceId") String invoiceId) {
         Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId));
-        InvoiceJson json = new InvoiceJson(invoice);
+        InvoiceJsonSimple json = new InvoiceJsonSimple(invoice);
         return Response.status(Status.OK).entity(json).build();
     }
 
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createFutureInvoice(final InvoiceJson invoice,
+    public Response createFutureInvoice(final InvoiceJsonSimple invoice,
             @QueryParam(QUERY_ACCOUNT_ID) final String accountId,
             @QueryParam(QUERY_TARGET_DATE) final String targetDate,
             @QueryParam(QUERY_DRY_RUN) @DefaultValue("false") final Boolean dryRun,
@@ -136,7 +129,7 @@ public class InvoiceResource implements BaseJaxrsResource {
             Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRun.booleanValue(),
                     context.createContext(createdBy, reason, comment));
             if (dryRun) {
-                return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice)).build();
+                return Response.status(Status.OK).entity(new InvoiceJsonSimple(generatedInvoice)).build();
             } else {
                return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", generatedInvoice.getId());
             }

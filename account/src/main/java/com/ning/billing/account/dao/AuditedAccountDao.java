@@ -17,15 +17,16 @@
 package com.ning.billing.account.dao;
 
 import java.sql.DataTruncation;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.audit.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.dao.EntityAudit;
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.dao.TagDao;
 import org.skife.jdbi.v2.IDBI;
@@ -40,28 +41,18 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
-import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
-import com.ning.billing.util.dao.AuditedDaoBase;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.tag.Tag;
 
-
-
-    
-
-public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
-
+public class AuditedAccountDao implements AccountDao {
     private final static Logger log = LoggerFactory.getLogger(AuditedAccountDao.class);
     
-    private static final String ACCOUNT_EMAIL_HISTORY_TABLE = "account_email_history";
-
     private final AccountSqlDao accountSqlDao;
-    private final AccountEmailSqlDao accountEmailSqlDao;
     private final TagDao tagDao;
     private final CustomFieldDao customFieldDao;
     private final Bus eventBus;
@@ -70,7 +61,6 @@ public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
     public AuditedAccountDao(IDBI dbi, Bus eventBus, TagDao tagDao, CustomFieldDao customFieldDao) {
         this.eventBus = eventBus;
         this.accountSqlDao = dbi.onDemand(AccountSqlDao.class);
-        this.accountEmailSqlDao = dbi.onDemand(AccountEmailSqlDao.class);
         this.tagDao = tagDao;
         this.customFieldDao = customFieldDao;
     }
@@ -99,11 +89,11 @@ public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
     }
 
     @Override
-    public Account getById(final String id) {
+    public Account getById(final UUID id) {
         return accountSqlDao.inTransaction(new Transaction<Account, AccountSqlDao>() {
             @Override
             public Account inTransaction(final AccountSqlDao accountSqlDao, final TransactionStatus status) throws Exception {
-                Account account = accountSqlDao.getById(id);
+                Account account = accountSqlDao.getById(id.toString());
                 if (account != null) {
                     setCustomFieldsFromWithinTransaction(account, accountSqlDao);
                     setTagsFromWithinTransaction(account, accountSqlDao);
@@ -141,13 +131,16 @@ public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
                     }
                     transactionalDao.create(account, context);
-                    UUID historyId = UUID.randomUUID();
 
-                    accountSqlDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.INSERT, context);
+                    // insert history
+                    Long recordId = accountSqlDao.getRecordId(account.getId().toString());
+                    EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
+                    accountSqlDao.insertHistoryFromTransaction(history, context);
 
-                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
-                    auditDao.insertAuditFromTransaction("account_history", historyId.toString(),
-                                                         ChangeType.INSERT, context);
+                    // insert audit
+                    Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
+                    accountSqlDao.insertAuditFromTransaction(audit, context);
 
                     saveTagsFromWithinTransaction(account, transactionalDao, context);
                     saveCustomFieldsFromWithinTransaction(account, transactionalDao, context);
@@ -190,12 +183,13 @@ public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
 
                     transactional.update(account, context);
 
-                    UUID historyId = UUID.randomUUID();
+                    Long recordId = accountSqlDao.getRecordId(account.getId().toString());
+                    EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
+                    accountSqlDao.insertHistoryFromTransaction(history, context);
 
-                    accountSqlDao.insertAccountHistoryFromTransaction(account, historyId.toString(), ChangeType.UPDATE, context);
-
-                    AuditSqlDao auditDao = accountSqlDao.become(AuditSqlDao.class);
-                    auditDao.insertAuditFromTransaction("account_history" ,historyId.toString(), ChangeType.INSERT, context);
+                    Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
+                    accountSqlDao.insertAuditFromTransaction(audit, context);
 
                     saveTagsFromWithinTransaction(account, transactional, context);
                     saveCustomFieldsFromWithinTransaction(account, transactional, context);
@@ -221,71 +215,13 @@ public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
     }
 
     @Override
-    public List<AccountEmail> getEmails(final UUID accountId) {
-        return accountEmailSqlDao.getByAccountId(accountId.toString());
-    }
-
-    @Override
-    public void saveEmails(final UUID accountId, final List<AccountEmail> emails, final CallContext context) {
-        final List<AccountEmail> existingEmails = accountEmailSqlDao.getByAccountId(accountId.toString());
-        final List<AccountEmail> updatedEmails = new ArrayList<AccountEmail>();
-
-        Iterator<AccountEmail> existingEmailIterator = existingEmails.iterator();
-        while (existingEmailIterator.hasNext()) {
-            AccountEmail existingEmail = existingEmailIterator.next();
-
-            Iterator<AccountEmail> newEmailIterator = emails.iterator();
-            while (newEmailIterator.hasNext()) {
-                AccountEmail newEmail = newEmailIterator.next();
-                if (newEmail.getId().equals(existingEmail.getId())) {
-                    // check equality; if not equal, add to updated
-                    if (!newEmail.equals(existingEmail)) {
-                        updatedEmails.add(newEmail);
-                    }
-
-                    // remove from both
-                    newEmailIterator.remove();
-                    existingEmailIterator.remove();
-                }
-            }
-        }
-
-        // remaining emails in newEmail are inserts; remaining emails in existingEmail are deletes
-        accountEmailSqlDao.inTransaction(new Transaction<Void, AccountEmailSqlDao>() {
-            @Override
-            public Void inTransaction(AccountEmailSqlDao dao, TransactionStatus transactionStatus) throws Exception {
-                dao.create(emails, context);
-                dao.update(updatedEmails, context);
-                dao.delete(existingEmails, context);
-
-                List<String> insertHistoryIdList = getIdList(emails.size());
-                List<String> updateHistoryIdList = getIdList(updatedEmails.size());
-                List<String> deleteHistoryIdList = getIdList(existingEmails.size());
-
-                // insert histories
-                dao.insertAccountEmailHistoryFromTransaction(insertHistoryIdList, emails, ChangeType.INSERT, context);
-                dao.insertAccountEmailHistoryFromTransaction(updateHistoryIdList, updatedEmails, ChangeType.UPDATE, context);
-                dao.insertAccountEmailHistoryFromTransaction(deleteHistoryIdList, existingEmails, ChangeType.DELETE, context);
-
-                // insert audits
-                AuditSqlDao auditSqlDao = dao.become(AuditSqlDao.class);
-                auditSqlDao.insertAuditFromTransaction(ACCOUNT_EMAIL_HISTORY_TABLE, insertHistoryIdList, ChangeType.INSERT, context);
-                auditSqlDao.insertAuditFromTransaction(ACCOUNT_EMAIL_HISTORY_TABLE, updateHistoryIdList, ChangeType.UPDATE, context);
-                auditSqlDao.insertAuditFromTransaction(ACCOUNT_EMAIL_HISTORY_TABLE, deleteHistoryIdList, ChangeType.DELETE, context);
-
-                return null;
-            }
-        });
-    }
-
-    @Override
     public void test() {
         accountSqlDao.test();
     }
 
     private void setCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
         CustomFieldSqlDao customFieldSqlDao = transactionalDao.become(CustomFieldSqlDao.class);
-        List<CustomField> fields = customFieldSqlDao.load(account.getId().toString(), account.getObjectName());
+        List<CustomField> fields = customFieldSqlDao.load(account.getId().toString(), account.getObjectType());
 
         account.clearFields();
         if (fields != null) {
@@ -294,7 +230,7 @@ public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
     }
 
     private void setTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao) {
-        List<Tag> tags = tagDao.loadTagsFromTransaction(transactionalDao, account.getId(), Account.ObjectType);
+        List<Tag> tags = tagDao.loadEntitiesFromTransaction(transactionalDao, account.getId(), ObjectType.ACCOUNT);
         account.clearTags();
 
         if (tags != null) {
@@ -304,13 +240,11 @@ public class AuditedAccountDao extends AuditedDaoBase implements AccountDao {
 
     private void saveTagsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
                                                final CallContext context) {
-        tagDao.saveTagsFromTransaction(transactionalDao, account.getId(), account.getObjectName(), account.getTagList(), context);
+        tagDao.saveEntitiesFromTransaction(transactionalDao, account.getId(), account.getObjectType(), account.getTagList(), context);
     }
 
     private void saveCustomFieldsFromWithinTransaction(final Account account, final AccountSqlDao transactionalDao,
                                                        final CallContext context) {
-        customFieldDao.saveFields(transactionalDao, account.getId(), account.getObjectName(), account.getFieldList(), context);
+        customFieldDao.saveEntitiesFromTransaction(transactionalDao, account.getId(), account.getObjectType(), account.getFieldList(), context);
     }
-
-
 }

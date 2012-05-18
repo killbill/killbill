@@ -5,24 +5,24 @@ insertSubscription() ::= <<
         id
       , bundle_id
       , category
-      , start_dt
-      , bundle_start_dt
+      , start_date
+      , bundle_start_date
       , active_version
-      , ctd_dt
-      , ptd_dt
+      , charged_through_date
+      , paid_through_date
       , created_by
       , created_date
       , updated_by
       , updated_date
     ) values (
         :id
-      , :bundle_id
+      , :bundleId
       , :category
-      , :start_dt
-      , :bundle_start_dt
-      , :active_version
-      , :ctd_dt
-      , :ptd_dt
+      , :startDate
+      , :bundleStartDate
+      , :activeVersion
+      , :chargedThroughDate
+      , :paidThroughDate
       , :userName
       , :createdDate
       , :userName
@@ -30,40 +30,40 @@ insertSubscription() ::= <<
     );
 >>
 
-getSubscriptionFromId(id) ::= <<
+getSubscriptionFromId() ::= <<
     select
         id
       , bundle_id
       , category
-      , start_dt
-      , bundle_start_dt
+      , start_date
+      , bundle_start_date
       , active_version
-      , ctd_dt
-      , ptd_dt    
+      , charged_through_date
+      , paid_through_date    
     from subscriptions
     where id = :id
     ;
 >>
 
-getSubscriptionsFromBundleId(bundle_id) ::= <<
+getSubscriptionsFromBundleId() ::= <<
     select
       id
       , bundle_id
       , category
-      , start_dt
-      , bundle_start_dt
+      , start_date
+      , bundle_start_date
       , active_version
-      , ctd_dt
-      , ptd_dt    
+      , charged_through_date
+      , paid_through_date    
     from subscriptions
-    where bundle_id = :bundle_id
+    where bundle_id = :bundleId
     ;
 >>
 
 updateChargedThroughDate() ::= <<
     update subscriptions
     set
-      ctd_dt = :ctd_dt
+      charged_through_date = :chargedThroughDate
       , updated_by = :userName
       , updated_date = :updatedDate
     where id = :id
@@ -73,7 +73,7 @@ updateChargedThroughDate() ::= <<
 updateActiveVersion() ::= <<
     update subscriptions
     set
-      active_version = :active_version
+      active_version = :activeVersion
       , updated_by = :userName
       , updated_date = :updatedDate
     where id = :id
@@ -83,11 +83,33 @@ updateActiveVersion() ::= <<
 updateForRepair() ::= <<
     update subscriptions
     set
-      active_version = :active_version
-      , start_dt = :start_dt
-      , bundle_start_dt = :bundle_start_dt
+      active_version = :activeVersion
+      , start_date = :startDate
+      , bundle_start_date = :bundleStartDate
       , updated_by = :userName
       , updated_date = :updatedDate
     where id = :id
     ;
+>>
+
+getRecordId() ::= <<
+    SELECT record_id
+    FROM subscriptions
+    WHERE id = :id;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL, NULL);
 >>

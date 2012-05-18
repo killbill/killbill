@@ -30,10 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.TransactionCallback;
-import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -49,7 +46,6 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
-import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
@@ -58,7 +54,6 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceService;
@@ -85,7 +80,8 @@ public class TestIntegrationBase implements TestListenerStatus {
     protected static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
     protected static long AT_LEAST_ONE_MONTH_MS =  31L * 24L * 3600L * 1000L;
 
-    protected static final long DELAY = 20000; //MDW Note fixed test by increasing the delay from 10000
+
+    protected static final long DELAY = 5000;
 
     @Inject
     protected IDBI dbi;
@@ -300,7 +296,7 @@ public class TestIntegrationBase implements TestListenerStatus {
             }
             @Override
             public String getPaymentProviderName() {
-                return MockModule.PLUGIN_NAME;
+                return BeatrixModule.PLUGIN_NAME;
             }
 
             @Override

@@ -24,19 +24,9 @@ import com.google.common.annotations.VisibleForTesting;
 public interface EntitlementConfig extends NotificationConfig, KillbillConfig  {
 
 	@Override
-    @Config("killbill.entitlement.dao.claim.time")
-    @Default("60000")
-    public long getDaoClaimTimeMs();
-
-	@Override
-    @Config("killbill.entitlement.dao.ready.max")
-    @Default("10")
-    public int getDaoMaxReadyEvents();
-
-	@Override
     @Config("killbill.entitlement.engine.notifications.sleep")
     @Default("500")
-    public long getNotificationSleepTimeMs();
+    public long getSleepTimeMs();    
 
 	@Override
     @Config("killbill.notifications.off")

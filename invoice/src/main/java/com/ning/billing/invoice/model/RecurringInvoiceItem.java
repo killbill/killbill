@@ -46,22 +46,22 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
         this.reversedItemId = reversedItemId;
     }
 
-    public RecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
+    public RecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId,
+                                String planName, String phaseName,
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
-                                Currency currency,
-                                String createdBy, DateTime createdDate) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdBy, createdDate);
+                                Currency currency) {
+        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
         this.rate = rate;
         this.reversedItemId = null;
     }
 
-    public RecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
+    public RecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId,
+                                String planName, String phaseName,
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
-                                Currency currency, UUID reversedItemId,
-                                String createdBy, DateTime createdDate) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdBy, createdDate);
+                                Currency currency, UUID reversedItemId) {
+        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
         this.rate = rate;
         this.reversedItemId = reversedItemId;
     }

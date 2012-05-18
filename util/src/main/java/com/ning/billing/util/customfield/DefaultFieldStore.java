@@ -17,14 +17,16 @@
 package com.ning.billing.util.customfield;
 
 import java.util.UUID;
-import com.ning.billing.util.entity.EntityCollectionBase;
+
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.entity.collection.EntityCollectionBase;
 
 public class DefaultFieldStore extends EntityCollectionBase<CustomField> implements FieldStore {
-    public DefaultFieldStore(UUID objectId, String objectType) {
+    public DefaultFieldStore(UUID objectId, ObjectType objectType) {
         super(objectId, objectType);
     }
 
-    public static DefaultFieldStore create(UUID objectId, String objectType) {
+    public static DefaultFieldStore create(UUID objectId, ObjectType objectType) {
         return new DefaultFieldStore(objectId, objectType);
     }
 

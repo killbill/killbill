@@ -50,7 +50,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionEvents;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
 @Test(groups = "slow")
-@Guice(modules = {MockModule.class})
+@Guice(modules = {BeatrixModule.class})
 public class TestRepairIntegration extends TestIntegrationBase {
 
     

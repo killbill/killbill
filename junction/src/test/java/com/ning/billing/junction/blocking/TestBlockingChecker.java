@@ -215,7 +215,7 @@ public class TestBlockingChecker {
         }
         
         
-        //BLOCKED Account
+        //BLOCKED ACCOUNT
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
@@ -293,7 +293,7 @@ public class TestBlockingChecker {
         }
         
         
-        //BLOCKED Account
+        //BLOCKED ACCOUNT
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
@@ -338,7 +338,7 @@ public class TestBlockingChecker {
         checker.checkBlockedEntitlement(account);
         checker.checkBlockedBilling(account);
 
-        //BLOCKED Account
+        //BLOCKED ACCOUNT
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);

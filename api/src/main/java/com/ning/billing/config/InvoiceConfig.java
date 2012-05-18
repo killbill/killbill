@@ -21,22 +21,12 @@ import org.skife.config.Default;
 
 public interface InvoiceConfig extends NotificationConfig, KillbillConfig  {
 
-	@Override
-    @Config("killbill.invoice.dao.claim.time")
-    @Default("60000")
-    public long getDaoClaimTimeMs();
-
-	@Override	
-    @Config("killbill.invoice.dao.ready.max")
-    @Default("10")
-    public int getDaoMaxReadyEvents();
-
-	@Override
+    @Override    
     @Config("killbill.invoice.engine.notifications.sleep")
     @Default("500")
-    public long getNotificationSleepTimeMs();
+    public long getSleepTimeMs();
 
-	@Override
+    @Override
     @Config("killbill.notifications.off")
     @Default("false")
     public boolean isNotificationProcessingOff();

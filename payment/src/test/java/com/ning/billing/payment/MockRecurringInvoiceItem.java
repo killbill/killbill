@@ -62,30 +62,28 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     public MockRecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
-                                Currency currency,
-                                String createdBy, DateTime createdDate) {
-        this(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdBy, createdDate, rate, null);
+                                Currency currency) {
+        this(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, rate, null);
 
     }
 
     public MockRecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
-                                Currency currency, UUID reversedItemId,
-                                String createdBy, DateTime createdDate) {
-        this(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, createdBy, createdDate, rate, reversedItemId);
+                                Currency currency, UUID reversedItemId) {
+        this(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, rate, reversedItemId);
     }
     public MockRecurringInvoiceItem(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
             DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency, BigDecimal rate, UUID reversedItemId){
         this(UUID.randomUUID(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
-                startDate, endDate, amount, currency, null, null, rate, reversedItemId);
+                startDate, endDate, amount, currency, rate, reversedItemId);
     }
 
 
     public MockRecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, @Nullable UUID bundleId, @Nullable UUID subscriptionId, String planName, String phaseName,
             DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-            @Nullable String createdBy, @Nullable DateTime createdDate, BigDecimal rate, UUID reversedItemId) {
-        super(id, createdBy, createdDate);
+            BigDecimal rate, UUID reversedItemId) {
+        super(id);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.subscriptionId = subscriptionId;
@@ -98,11 +96,6 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
         this.currency = currency;
         this.rate = rate;
         this.reversedItemId = reversedItemId;
-
-    }
-
-    public DateTime getCreatedDate() {
-        return createdDate;
     }
 
     @Override

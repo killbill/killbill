@@ -35,11 +35,15 @@ public abstract class NotificationQueueBase extends PersistentQueueBase implemen
 
     protected final static Logger log = LoggerFactory.getLogger(NotificationQueueBase.class);
 
-    protected static final String NOTIFICATION_THREAD_PREFIX = "Notification-";
-    protected static final long STOP_WAIT_TIMEOUT_MS = 60000;
+    public final static int CLAIM_TIME_MS = (5 * 60 * 1000); // 5 minutes
+    
+    private final static String NOTIFICATION_THREAD_PREFIX = "Notification-";
+    private final static int NB_THREADS = 1;
 
-    protected final String svcName;
-    protected final String queueName;
+    
+    private final String svcName;
+    private final String queueName;
+    
     protected final NotificationQueueHandler handler;
     protected final NotificationConfig config;
 
@@ -64,7 +68,7 @@ public abstract class NotificationQueueBase extends PersistentQueueBase implemen
                 });
                 return th;
             }
-        }), 1, STOP_WAIT_TIMEOUT_MS, config.getNotificationSleepTimeMs());
+        }), NB_THREADS, config);
 
         this.clock = clock;
         this.svcName = svcName;
@@ -75,6 +79,21 @@ public abstract class NotificationQueueBase extends PersistentQueueBase implemen
         this.nbProcessedEvents = new AtomicLong();
     }
 
+    @Override
+    public void startQueue() {
+        if (config.isNotificationProcessingOff()) {
+            return;
+        }
+        super.startQueue();
+    }
+    
+    @Override
+    public void stopQueue() {
+        if (config.isNotificationProcessingOff()) {
+            return;
+        }
+        super.stopQueue();
+    }
 
     @Override
     public int processReadyNotification() {

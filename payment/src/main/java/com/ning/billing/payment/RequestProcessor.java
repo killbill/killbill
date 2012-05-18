@@ -65,8 +65,6 @@ public class RequestProcessor {
  
     @Subscribe
     public void receiveInvoice(InvoiceCreationEvent event) {
-
-
         log.info("Received invoice creation notification for account {} and invoice {}", event.getAccountId(), event.getInvoiceId());
         PaymentErrorEvent errorEvent = null;
         try {

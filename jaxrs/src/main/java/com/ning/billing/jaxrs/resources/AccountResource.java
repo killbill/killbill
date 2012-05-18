@@ -69,7 +69,6 @@ import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.customfield.CustomField;
@@ -244,6 +243,7 @@ public class AccountResource implements BaseJaxrsResource {
             Account account = accountApi.getAccountById(UUID.fromString(accountId));
            
             List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
+
             List<PaymentAttempt> payments = new LinkedList<PaymentAttempt>();
 
             if (invoices.size() > 0) {

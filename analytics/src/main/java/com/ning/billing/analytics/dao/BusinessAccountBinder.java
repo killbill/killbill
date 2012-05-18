@@ -50,12 +50,12 @@ public @interface BusinessAccountBinder
                     final DateTime dateTimeNow = new DateTime(DateTimeZone.UTC);
 
                     if (account.getCreatedDt() != null) {
-                        q.bind("created_dt", account.getCreatedDt().getMillis());
+                        q.bind("created_date", account.getCreatedDt().getMillis());
                     }
                     else {
-                        q.bind("created_dt", dateTimeNow.getMillis());
+                        q.bind("created_date", dateTimeNow.getMillis());
                     }
-                    q.bind("updated_dt", dateTimeNow.getMillis());
+                    q.bind("updated_date", dateTimeNow.getMillis());
 
                     q.bind("account_key", account.getKey());
                     q.bind("balance", account.getRoundedBalance());

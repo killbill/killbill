@@ -16,12 +16,13 @@
 
 package com.ning.billing.entitlement.events;
 
+import com.ning.billing.util.entity.Entity;
 import org.joda.time.DateTime;
 
 import java.util.UUID;
 
 
-public interface EntitlementEvent extends Comparable<EntitlementEvent> {
+public interface EntitlementEvent extends Comparable<EntitlementEvent>, Entity {
 
     public enum EventType {
         API_USER,
@@ -31,8 +32,6 @@ public interface EntitlementEvent extends Comparable<EntitlementEvent> {
     public EventType getType();
 
     public long getTotalOrdering();
-
-    public UUID getId();
 
     public long getActiveVersion();
 

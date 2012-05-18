@@ -40,7 +40,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.beatrix.integration.MockModule;
+import com.ning.billing.beatrix.integration.BeatrixModule;
 import com.ning.billing.beatrix.integration.TestIntegrationBase;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -61,7 +61,7 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.XMLLoader;
 
 @Test(groups = "slow")
-@Guice(modules = {MockModule.class})
+@Guice(modules = {BeatrixModule.class})
 public class TestOverdueIntegration extends TestIntegrationBase {
     private final String configXml =  
             "<overdueConfig>" +

@@ -52,11 +52,4 @@ public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
     public void installInvoiceMigrationApi() {
 
     }
-
-    @Override
-    public void configure() {
-        super.configure();
-
-        install(new FieldStoreModule());
-    }
 }

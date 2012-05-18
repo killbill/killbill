@@ -1,66 +1,68 @@
 group BundleSqlDao;
 
-insertBundle() ::= <<
-    insert into bundles (
-      id
-      , start_dt
-      , external_key
-      , account_id
-      , last_sys_update_dt
-    ) values (
-      :id
-      , :start_dt
-      , :external_key
-      , :account_id
-      , :last_sys_update_dt
-    );
+fields(prefix) ::= <<
+    <prefix>id,
+    <prefix>start_date,
+    <prefix>external_key,
+    <prefix>account_id,
+    <prefix>last_sys_update_date
 >>
 
-updateBundleLastSysTime(id, last_sys_update_dt)  ::= <<
+insertBundle() ::= <<
+    insert into bundles (<fields()>)
+    values (:id, :startDate, :externalKey, :accountId, :lastSysUpdateDate);
+>>
+
+updateBundleLastSysTime()  ::= <<
     update bundles
     set
-        last_sys_update_dt = :last_sys_update_dt
+        last_sys_update_date = :lastSysUpdateDate
     where id = :id
     ;
 >>
 
-getBundleFromId(id) ::= <<
-    select
-      id
-      , start_dt
-      , external_key
-      , account_id
-      , last_sys_update_dt
+getBundleFromId() ::= <<
+    select <fields()>
     from bundles
     where
       id = :id
     ;
 >>
 
-getBundleFromKey(external_key) ::= <<
-    select
-      id
-      , start_dt
-      , external_key
-      , account_id
-      , last_sys_update_dt
+getBundleFromKey() ::= <<
+    select <fields()>
     from bundles
     where
-      external_key = :external_key
+      external_key = :externalKey
     ;
 >>
 
-
-getBundleFromAccount(account_id) ::= <<
-    select
-      id
-      , start_dt
-      , external_key
-      , account_id
-      , last_sys_update_dt
+getBundleFromAccount() ::= <<
+    select <fields()>
     from bundles
     where
-      account_id = :account_id
+      account_id = :accountId
     ;
 >>
 
+getRecordId() ::= <<
+    SELECT record_id
+    FROM bundles
+    WHERE id = :id;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL, NULL);
+>>

@@ -22,6 +22,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.dao.AuditSqlDao;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -45,14 +47,15 @@ import com.ning.billing.util.dao.MapperBase;
 
 
 @ExternalizedSqlViaStringTemplate3()
-public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Transmogrifier {
+public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<SubscriptionBundle>,
+                                      AuditSqlDao, CloseMe, Transmogrifier {
 
     @SqlUpdate
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle,
                              @CallContextBinder final CallContext context);
 
     @SqlUpdate
-    public void updateBundleLastSysTime(@Bind("id") String id, @Bind("last_sys_update_dt") Date lastSysUpdate);
+    public void updateBundleLastSysTime(@Bind("id") String id, @Bind("lastSysUpdateDate") Date lastSysUpdate);
     
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
@@ -60,20 +63,20 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
 
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
-    public SubscriptionBundle getBundleFromKey(@Bind("external_key") String externalKey);
+    public SubscriptionBundle getBundleFromKey(@Bind("externalKey") String externalKey);
 
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
-    public List<SubscriptionBundle> getBundleFromAccount(@Bind("account_id") String accountId);
+    public List<SubscriptionBundle> getBundleFromAccount(@Bind("accountId") String accountId);
 
     public static class SubscriptionBundleBinder extends BinderBase implements Binder<Bind, SubscriptionBundleData> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, SubscriptionBundleData bundle) {
             stmt.bind("id", bundle.getId().toString());
-            stmt.bind("start_dt", getDate(bundle.getStartDate()));
-            stmt.bind("external_key", bundle.getKey());
-            stmt.bind("account_id", bundle.getAccountId().toString());
-            stmt.bind("last_sys_update_dt", getDate(bundle.getLastSysUpdateTime()));            
+            stmt.bind("startDate", getDate(bundle.getStartDate()));
+            stmt.bind("externalKey", bundle.getKey());
+            stmt.bind("accountId", bundle.getAccountId().toString());
+            stmt.bind("lastSysUpdateDate", getDate(bundle.getLastSysUpdateTime()));
         }
     }
 
@@ -85,8 +88,8 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, CloseMe, Tran
             UUID id = UUID.fromString(r.getString("id"));
             String key = r.getString("external_key");
             UUID accountId = UUID.fromString(r.getString("account_id"));
-            DateTime startDate = getDate(r, "start_dt");
-            DateTime lastSysUpdateDate = getDate(r, "last_sys_update_dt");
+            DateTime startDate = getDate(r, "start_date");
+            DateTime lastSysUpdateDate = getDate(r, "last_sys_update_date");
             SubscriptionBundleData bundle = new SubscriptionBundleData(id, key, accountId, startDate, lastSysUpdateDate);
             return bundle;
         }

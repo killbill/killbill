@@ -98,7 +98,7 @@ public class RetryService implements KillbillService {
     }
 
     public void scheduleRetry(PaymentAttempt paymentAttempt, DateTime timeOfRetry) {
-        final String id = paymentAttempt.getPaymentAttemptId().toString();
+        final String id = paymentAttempt.getId().toString();
 
         NotificationKey key = new NotificationKey() {
             @Override

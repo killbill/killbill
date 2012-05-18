@@ -45,7 +45,7 @@ import com.ning.billing.util.clock.Clock;
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     private final AtomicBoolean makeNextInvoiceFail = new AtomicBoolean(false);
     private final AtomicBoolean makeAllInvoicesFail = new AtomicBoolean(false);
-    private final Map<String, PaymentInfoEvent> payments = new ConcurrentHashMap<String, PaymentInfoEvent>();
+    private final Map<UUID, PaymentInfoEvent> payments = new ConcurrentHashMap<UUID, PaymentInfoEvent>();
     private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
     private final Map<String, PaymentMethodInfo> paymentMethods = new ConcurrentHashMap<String, PaymentMethodInfo>();
     private final Clock clock;
@@ -69,17 +69,16 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
             return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "test error", account.getId(), invoice.getId(), null));
         }
         else {
-            PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setPaymentId(UUID.randomUUID().toString())
+            PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID())
                                                  .setAmount(invoice.getBalance())
                                                  .setStatus("Processed")
                                                  .setBankIdentificationNumber("1234")
-                                                 .setCreatedDate(clock.getUTCNow())
                                                  .setEffectiveDate(clock.getUTCNow())
                                                  .setPaymentNumber("12345")
                                                  .setReferenceId("12345")
                                                  .setType("Electronic")
                                                  .build();
-            payments.put(payment.getPaymentId(), payment);
+            payments.put(payment.getId(), payment);
             return Either.right(payment);
         }
     }

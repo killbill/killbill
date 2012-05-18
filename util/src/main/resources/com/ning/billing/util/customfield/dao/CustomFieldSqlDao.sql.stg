@@ -1,17 +1,17 @@
 group CustomFieldSqlDao;
 
-batchInsertFromTransaction() ::= <<
+insertFromTransaction() ::= <<
     INSERT INTO custom_fields(id, object_id, object_type, field_name, field_value, created_by, created_date, updated_by, updated_date)
     VALUES (:id, :objectId, :objectType, :fieldName, :fieldValue, :userName, :createdDate, :userName, :updatedDate);
 >>
 
-batchUpdateFromTransaction() ::= <<
+updateFromTransaction() ::= <<
     UPDATE custom_fields
     SET field_value = :fieldValue, updated_by = :userName, updated_date = :updatedDate
     WHERE object_id = :objectId AND object_type = :objectType AND field_name = :fieldName;
 >>
 
-batchDeleteFromTransaction() ::= <<
+deleteFromTransaction() ::= <<
     DELETE FROM custom_fields
     WHERE object_id = :objectId AND object_type = :objectType AND field_name = :fieldName;
 >>
@@ -20,6 +20,56 @@ load() ::= <<
     SELECT id, object_id, object_type, field_name, field_value, created_by, created_date, updated_by, updated_date
     FROM custom_fields
     WHERE object_id = :objectId AND object_type = :objectType;
+>>
+
+getRecordIds() ::= <<
+    SELECT record_id, id
+    FROM custom_fields
+    WHERE object_id = :objectId AND object_type = :objectType;
+>>
+
+historyFields(prefix) ::= <<
+  <prefix>record_id,
+  <prefix>id,
+  <prefix>object_id,
+  <prefix>object_type,
+  <prefix>field_name,
+  <prefix>field_value,
+  <prefix>updated_by,
+  <prefix>date,
+  <prefix>change_type
+>>
+
+addHistoryFromTransaction() ::= <<
+    INSERT INTO custom_field_history(<historyFields()>)
+    VALUES(:recordId, :id, :objectId, :objectType, :fieldName, :fieldValue, :userName, :updatedDate, :changeType);
+>>
+
+getMaxHistoryRecordId() ::= <<
+    SELECT MAX(history_record_id)
+    FROM custom_field_history;
+>>
+
+getHistoryRecordIds() ::= <<
+    SELECT history_record_id, record_id
+    FROM custom_field_history
+    WHERE history_record_id > :maxHistoryRecordId;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, NULL, NULL, NULL);
 >>
 
 test() ::= <<

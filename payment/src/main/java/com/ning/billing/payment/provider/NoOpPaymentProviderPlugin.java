@@ -51,10 +51,9 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
             return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unknown", "test error", account.getId(), invoice.getId(), null));
         }
         PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder()
-                                             .setPaymentId(UUID.randomUUID().toString())
+                                             .setId(UUID.randomUUID())
                                              .setAmount(invoice.getBalance())
                                              .setStatus("Processed")
-                                             .setCreatedDate(new DateTime(DateTimeZone.UTC))
                                              .setEffectiveDate(new DateTime(DateTimeZone.UTC))
                                              .setType("Electronic")
                                              .build();
@@ -69,7 +68,7 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
     @Override
     public Either<PaymentErrorEvent, String> createPaymentProviderAccount(Account account) {
         return Either.left((PaymentErrorEvent) new DefaultPaymentErrorEvent("unsupported",
-                                            "Account creation not supported in this plugin",
+                                            "ACCOUNT creation not supported in this plugin",
                                             account.getId(),
                                             null, null));
     }

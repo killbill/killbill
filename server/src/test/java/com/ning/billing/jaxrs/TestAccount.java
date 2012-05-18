@@ -72,10 +72,10 @@ public class TestAccount extends TestJaxrsBase {
 		Assert.assertTrue(objFromJson.equals(input));
 		
 		// Update Account
-		AccountJson newInput = new AccountJson(objFromJson.getAcountId(),
+		AccountJson newInput = new AccountJson(objFromJson.getAccountId(),
 				"zozo", 4, objFromJson.getExternalKey(), "rr@google.com", 18, "EUR", "none", "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
 		baseJson = mapper.writeValueAsString(newInput);
-		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAcountId();
+		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAccountId();
 		response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 		baseJson = response.getResponseBody();
@@ -88,7 +88,7 @@ public class TestAccount extends TestJaxrsBase {
 	public void testUpdateNonExistentAccount() throws Exception {
 		AccountJson input = getAccountJson("xoxo", "shghaahwe", "xoxo@yahoo.com");
 		String baseJson = mapper.writeValueAsString(input);
-		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + input.getAcountId();
+		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + input.getAccountId();
 		Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
 		String body = response.getResponseBody();
@@ -119,7 +119,7 @@ public class TestAccount extends TestJaxrsBase {
 	    AccountJson accountJson = createAccount("poney", "shdddqgfhwe", "poney@yahoo.com");
 	    assertNotNull(accountJson);
 	    
-	    BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAcountId(), "996599");
+	    BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAccountId(), "996599");
 	    assertNotNull(bundleJson);
 	    
         SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
@@ -131,7 +131,7 @@ public class TestAccount extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
         
         
-        final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAcountId() + "/" + BaseJaxrsResource.TIMELINE;
+        final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + BaseJaxrsResource.TIMELINE;
         
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
@@ -160,7 +160,7 @@ public class TestAccount extends TestJaxrsBase {
 	        
 	    Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(BaseJaxrsResource.QUERY_TAGS, input.getName());
-        String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + BaseJaxrsResource.TAGS + "/" + accountJson.getAcountId() ;
+        String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + BaseJaxrsResource.TAGS + "/" + accountJson.getAccountId() ;
 	    response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
         
@@ -190,7 +190,7 @@ public class TestAccount extends TestJaxrsBase {
         customFields.add(new CustomFieldJson("3", "value3"));  
         String baseJson = mapper.writeValueAsString(customFields);
 
-        String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + BaseJaxrsResource.CUSTOM_FIELDS + "/" + accountJson.getAcountId() ;
+        String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + BaseJaxrsResource.CUSTOM_FIELDS + "/" + accountJson.getAccountId() ;
         Response response = doPost(uri,baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
         String location = response.getHeader("Location");

@@ -19,6 +19,7 @@ package com.ning.billing.util.customfield;
 import java.util.List;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.Entity;
 
 public interface Customizable {
@@ -38,5 +39,5 @@ public interface Customizable {
 
     public void clearPersistedFields(CallContext context);
 
-    public String getObjectName();
+    public ObjectType getObjectType();
 }

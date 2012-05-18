@@ -38,6 +38,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 import com.ning.billing.util.tag.Tag;
@@ -215,23 +216,13 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public String getObjectName() {
-        return invoice.getObjectName();
+    public ObjectType getObjectType() {
+        return invoice.getObjectType();
     }
 
     @Override
     public UUID getId() {
         return invoice.getId();
-    }
-
-    @Override
-    public String getCreatedBy() {
-        return invoice.getCreatedBy();
-    }
-
-    @Override
-    public DateTime getCreatedDate() {
-        return invoice.getCreatedDate();
     }
 
     @Override

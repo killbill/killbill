@@ -22,26 +22,28 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.config.PersistentQueueConfig;
+
 
 public abstract class PersistentQueueBase implements QueueLifecycle {
 
     private static final Logger log = LoggerFactory.getLogger(PersistentQueueBase.class);
-
+    
+    private static final long waitTimeoutMs = 15L * 1000L; // 15 seconds
+    
     private final int nbThreads;
     private final Executor executor;
     private final String svcName;
     private final long sleepTimeMs;
-    private final long waitTimeoutMs;
 
     private boolean isProcessingEvents;
     private int curActiveThreads;
     
-    public PersistentQueueBase(final String svcName, final Executor executor, final int nbThreads, final long waitTimeoutMs, final long sleepTimeMs) {
+    public PersistentQueueBase(final String svcName, final Executor executor, final int nbThreads, final PersistentQueueConfig config) {
         this.executor = executor;
         this.nbThreads = nbThreads;
         this.svcName = svcName;
-        this.waitTimeoutMs = waitTimeoutMs;
-        this.sleepTimeMs = sleepTimeMs;
+        this.sleepTimeMs = config.getSleepTimeMs();
         this.isProcessingEvents = false;
         this.curActiveThreads = 0;
     }

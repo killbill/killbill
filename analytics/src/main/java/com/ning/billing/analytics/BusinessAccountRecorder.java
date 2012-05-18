@@ -87,7 +87,7 @@ public class BusinessAccountRecorder {
      */
     public void accountUpdated(final PaymentInfoEvent paymentInfo) {
         try {
-            final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getPaymentId());
+            final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getId());
             if (paymentAttempt == null) {
                 return;
             }
@@ -155,56 +155,46 @@ public class BusinessAccountRecorder {
     }
 
     private void updateBusinessAccountFromAccount(final Account account, final BusinessAccount bac) {
+        DateTime lastInvoiceDate = null;
+        BigDecimal totalInvoiceBalance = BigDecimal.ZERO;
+        String lastPaymentStatus = null;
+        String paymentMethod = null;
+        String creditCardType = null;
+        String billingAddressCountry = null;
 
-        try {
-            DateTime lastInvoiceDate = null;
-            BigDecimal totalInvoiceBalance = BigDecimal.ZERO;
-            String lastPaymentStatus = null;
-            String paymentMethod = null;
-            String creditCardType = null;
-            String billingAddressCountry = null;
+        // Retrieve invoices information
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId());
+        if (invoices != null && invoices.size() > 0) {
+            final List<String> invoiceIds = new ArrayList<String>();
+            for (final Invoice invoice : invoices) {
+                invoiceIds.add(invoice.getId().toString());
+                totalInvoiceBalance = totalInvoiceBalance.add(invoice.getBalance());
 
-            // Retrieve invoices information
-            final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId());
-            if (invoices != null && invoices.size() > 0) {
-                final List<String> invoiceIds = new ArrayList<String>();
-                for (final Invoice invoice : invoices) {
-                    invoiceIds.add(invoice.getId().toString());
-                    totalInvoiceBalance = totalInvoiceBalance.add(invoice.getBalance());
-
-                    if (lastInvoiceDate == null || invoice.getInvoiceDate().isAfter(lastInvoiceDate)) {
-                        lastInvoiceDate = invoice.getInvoiceDate();
-                    }
-                }
-
-                // Retrieve payments information for these invoices
-                DateTime lastPaymentDate = null;
-                final List<PaymentInfoEvent> payments = paymentApi.getPaymentInfo(invoiceIds);
-                if (payments != null) {
-                    for (final PaymentInfoEvent payment : payments) {
-                        // Use the last payment method/type/country as the default one for the account
-                        if (lastPaymentDate == null || payment.getCreatedDate().isAfter(lastPaymentDate)) {
-                            lastPaymentDate = payment.getCreatedDate();
-
-                            lastPaymentStatus = payment.getStatus();
-                            paymentMethod = payment.getPaymentMethod();
-                            creditCardType = payment.getCardType();
-                            billingAddressCountry = payment.getCardCountry();
-                        }
-                    }
+                if (lastInvoiceDate == null || invoice.getInvoiceDate().isAfter(lastInvoiceDate)) {
+                    lastInvoiceDate = invoice.getInvoiceDate();
                 }
             }
 
-            bac.setLastPaymentStatus(lastPaymentStatus);
-            bac.setPaymentMethod(paymentMethod);
-            bac.setCreditCardType(creditCardType);
-            bac.setBillingAddressCountry(billingAddressCountry);
-            bac.setLastInvoiceDate(lastInvoiceDate);
-            bac.setTotalInvoiceBalance(totalInvoiceBalance);
+            // Retrieve payments information for these invoices
+            try {
+                final PaymentInfoEvent payment = paymentApi.getLastPaymentInfo(invoiceIds);
 
-            bac.setBalance(invoiceUserApi.getAccountBalance(account.getId()));
-        } catch (PaymentApiException e) {
-            log.error("Failed to update Business account", e);
+                lastPaymentStatus = payment.getStatus();
+                paymentMethod = payment.getPaymentMethod();
+                creditCardType = payment.getCardType();
+                billingAddressCountry = payment.getCardCountry();
+
+                bac.setLastPaymentStatus(lastPaymentStatus);
+                bac.setPaymentMethod(paymentMethod);
+                bac.setCreditCardType(creditCardType);
+                bac.setBillingAddressCountry(billingAddressCountry);
+                bac.setLastInvoiceDate(lastInvoiceDate);
+                bac.setTotalInvoiceBalance(totalInvoiceBalance);
+
+                bac.setBalance(invoiceUserApi.getAccountBalance(account.getId()));
+            } catch (PaymentApiException ex) {
+                // TODO: handle this exception
+            }
         }
     }
 }

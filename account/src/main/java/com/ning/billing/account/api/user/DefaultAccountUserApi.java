@@ -19,6 +19,7 @@ package com.ning.billing.account.api.user;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.account.dao.AccountEmailDao;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -39,12 +40,14 @@ import com.ning.billing.util.tag.TagDefinition;
 
 public class DefaultAccountUserApi implements AccountUserApi {
     private final CallContextFactory factory;
-    private final AccountDao dao;
+    private final AccountDao accountDao;
+    private final AccountEmailDao accountEmailDao;
 
     @Inject
-    public DefaultAccountUserApi(final CallContextFactory factory, final AccountDao dao) {
+    public DefaultAccountUserApi(final CallContextFactory factory, final AccountDao accountDao, final AccountEmailDao accountEmailDao) {
         this.factory = factory;
-        this.dao = dao;
+        this.accountDao = accountDao;
+        this.accountEmailDao = accountEmailDao;
     }
 
     @Override
@@ -55,7 +58,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
         account.addTagsFromDefinitions(tagDefinitions);
 
         try {
-            dao.create(account, context);
+            accountDao.create(account, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }
@@ -65,7 +68,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public Account getAccountByKey(final String key) throws AccountApiException {
-        Account account = dao.getAccountByKey(key);
+        Account account = accountDao.getAccountByKey(key);
         if(account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, key);
         }
@@ -74,7 +77,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public Account getAccountById(final UUID id) throws AccountApiException {
-        Account account = dao.getById(id.toString());
+        Account account = accountDao.getById(id);
         if(account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, id);
         }
@@ -83,18 +86,18 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public List<Account> getAccounts() {
-        return dao.get();
+        return accountDao.get();
     }
 
     @Override
     public UUID getIdFromKey(final String externalKey) throws AccountApiException {
-        return dao.getIdFromKey(externalKey);
+        return accountDao.getIdFromKey(externalKey);
     }
 
     @Override
     public void updateAccount(final Account account, final CallContext context) throws AccountApiException {
         try {
-            dao.update(account, context);
+            accountDao.update(account, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
         }
@@ -106,7 +109,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
         Account account = new DefaultAccount(accountId, accountData);
 
         try {
-            dao.update(account, context);
+            accountDao.update(account, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, e.getCode(), e.getMessage());
         }
@@ -133,7 +136,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
         account.addTagsFromDefinitions(tagDefinitions);
 
         try {
-            dao.create(account, migrationContext);
+            accountDao.create(account, migrationContext);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }
@@ -143,11 +146,11 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId) {
-        return dao.getEmails(accountId);
+        return accountEmailDao.getEmails(accountId);
     }
 
     @Override
     public void saveEmails(final UUID accountId, final List<AccountEmail> newEmails, final CallContext context) {
-        dao.saveEmails(accountId, newEmails, context);
+        accountEmailDao.saveEmails(accountId, newEmails, context);
     }
 }

@@ -23,15 +23,17 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccountService;
 import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.AuditedAccountDao;
+import com.ning.billing.account.dao.AuditedAccountEmailDao;
 import com.ning.billing.util.glue.RealImplementation;
 
 public class AccountModule extends AbstractModule {
-
     private void installConfig() {
     }
 
     protected void installAccountDao() {
+        bind(AccountEmailDao.class).to(AuditedAccountEmailDao.class).asEagerSingleton();
         bind(AccountDao.class).to(AuditedAccountDao.class).asEagerSingleton();
     }
 

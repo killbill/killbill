@@ -32,7 +32,6 @@ import org.testng.Assert;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
@@ -45,7 +44,6 @@ import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.Entitl
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import org.testng.annotations.Test;
 
 public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlan() {

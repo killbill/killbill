@@ -17,7 +17,6 @@
 package com.ning.billing.util.tag;
 
 import java.util.UUID;
-import org.joda.time.DateTime;
 
 public class DefaultControlTag extends DescriptiveTag implements ControlTag {
     private final ControlTagType controlTagType;
@@ -29,14 +28,30 @@ public class DefaultControlTag extends DescriptiveTag implements ControlTag {
     }
 
     // use to hydrate objects when loaded from the persistence layer
-    public DefaultControlTag(final UUID id, final String createdBy,
-                             final DateTime createdDate, final ControlTagType controlTagType) {
-        super(id, createdBy, createdDate, controlTagType.toString());
+    public DefaultControlTag(final UUID id, final ControlTagType controlTagType) {
+        super(id, controlTagType.toString());
         this.controlTagType = controlTagType;
     }
 
     @Override
     public ControlTagType getControlTagType() {
         return controlTagType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DefaultControlTag that = (DefaultControlTag) o;
+
+        if (controlTagType != that.controlTagType) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return controlTagType != null ? controlTagType.hashCode() : 0;
     }
 }

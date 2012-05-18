@@ -17,13 +17,6 @@
 package com.ning.billing.config;
 
 
-public interface NotificationConfig {
-
-    public long getDaoClaimTimeMs();
-
-    public int getDaoMaxReadyEvents();
-
-    public long getNotificationSleepTimeMs();
-
+public interface NotificationConfig extends PersistentQueueConfig {
     public boolean isNotificationProcessingOff();
 }

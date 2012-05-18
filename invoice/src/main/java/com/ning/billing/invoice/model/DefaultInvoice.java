@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.ExtendedEntityBase;
 import org.joda.time.DateTime;
 
@@ -45,13 +46,13 @@ public class DefaultInvoice extends ExtendedEntityBase implements Invoice {
 
     // used to create a new invoice
     public DefaultInvoice(UUID accountId, DateTime invoiceDate, DateTime targetDate, Currency currency) {
-        this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, null, null);
+        this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
     }
 
     // used to hydrate invoice from persistence layer
     public DefaultInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber, DateTime invoiceDate,
-                          DateTime targetDate, Currency currency, boolean isMigrationInvoice, @Nullable String createdBy, @Nullable DateTime createdDate) {
-        super(invoiceId, createdBy, createdDate);
+                          DateTime targetDate, Currency currency, boolean isMigrationInvoice) {
+        super(invoiceId);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
         this.invoiceDate = invoiceDate;
@@ -109,11 +110,6 @@ public class DefaultInvoice extends ExtendedEntityBase implements Invoice {
     @Override
     public int getNumberOfPayments() {
         return payments.size();
-    }
-
-    @Override
-    public UUID getId() {
-        return id;
     }
 
     @Override
@@ -196,11 +192,7 @@ public class DefaultInvoice extends ExtendedEntityBase implements Invoice {
         }
 
         DateTime lastPaymentAttempt = getLastPaymentAttempt();
-        if (lastPaymentAttempt == null) {
-            return true;
-        }
-
-        return !lastPaymentAttempt.plusDays(numberOfDays).isAfter(targetDate);
+        return (lastPaymentAttempt == null) || lastPaymentAttempt.plusDays(numberOfDays).isAfter(targetDate);
     }
 
     @Override
@@ -209,8 +201,8 @@ public class DefaultInvoice extends ExtendedEntityBase implements Invoice {
     }
 
     @Override
-    public String getObjectName() {
-        return Invoice.ObjectType;
+    public ObjectType getObjectType() {
+        return ObjectType.INVOICE;
     }
 
     @Override

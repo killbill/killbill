@@ -22,25 +22,25 @@ import org.codehaus.jackson.map.annotate.JsonView;
 public class AccountJsonSimple {
 
     @JsonView(BundleTimelineViews.Base.class)
-    protected final String acountId;
+    protected final String accountId;
     
     @JsonView(BundleTimelineViews.Base.class)
     protected final String externalKey;
     
     public AccountJsonSimple() {
-        this.acountId = null;
+        this.accountId = null;
         this.externalKey = null;
     }
 
     @JsonCreator
-    public AccountJsonSimple(@JsonProperty("account_id") String acountId,
-            @JsonProperty("external_key") String externalKey) {
-        this.acountId = acountId;
+    public AccountJsonSimple(@JsonProperty("accountId") String accountId,
+            @JsonProperty("externalKey") String externalKey) {
+        this.accountId = accountId;
         this.externalKey = externalKey;
     }
 
-    public String getAcountId() {
-        return acountId;
+    public String getAccountId() {
+        return accountId;
     }
 
     public String getExternalKey() {

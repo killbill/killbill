@@ -29,7 +29,6 @@ import java.util.UUID;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.util.entity.EntityPersistenceException;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.Handle;
 import org.testng.annotations.Test;
@@ -63,7 +62,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         return new DefaultAccount(UUID.randomUUID(), thisKey, thisEmail, name, firstNameLength, Currency.USD,
                 billCycleDay, null, timeZone, locale,
                 null, null, null, null, null, null, null, // add null address fields
-                phone, false, false, "test", DateTime.now(), "test", DateTime.now());
+                phone, false, false);
     }
 
     @Test
@@ -76,7 +75,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertNotNull(r);
         assertEquals(r.getExternalKey(), a.getExternalKey());
 
-        r = accountDao.getById(r.getId().toString());
+        r = accountDao.getById(r.getId());
         assertNotNull(r);
         assertEquals(r.getExternalKey(), a.getExternalKey());
 
@@ -112,7 +111,7 @@ public class TestAccountDao extends AccountDaoTestBase {
 
         accountDao.create(account, context);
 
-        account = accountDao.getById(id.toString());
+        account = accountDao.getById(id);
         assertNotNull(account);
         assertEquals(account.getId(), id);
         assertEquals(account.getExternalKey(), key);
@@ -139,7 +138,7 @@ public class TestAccountDao extends AccountDaoTestBase {
     @Test
     public void testTags() throws EntityPersistenceException {
         Account account = createTestAccount(1);
-        TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only");
+        TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", false);
         TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
         tagDescriptionDao.create(definition, context);
 
@@ -147,7 +146,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertEquals(account.getTagList().size(), 1);
         accountDao.create(account, context);
 
-        Account thisAccount = accountDao.getById(account.getId().toString());
+        Account thisAccount = accountDao.getById(account.getId());
         List<Tag> tagList = thisAccount.getTagList();
         assertEquals(tagList.size(), 1);
         Tag tag = tagList.get(0);
@@ -273,7 +272,7 @@ public class TestAccountDao extends AccountDaoTestBase {
             }
         };
 
-        Account updatedAccount = new DefaultAccount(account.getId(), null, null, null, null, accountData);
+        Account updatedAccount = new DefaultAccount(account.getId(), accountData);
         accountDao.update(updatedAccount, context);
 
         Account savedAccount = accountDao.getAccountByKey(account.getExternalKey());
@@ -301,8 +300,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         DefaultAccount account = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null, null, false, false,
-                                                    null, null, null, null);
+                                                    null, null, null, null, null, null, null, null, false, false);
         accountDao.create(account, context);
 
         String address1 = "123 address 1";
@@ -318,11 +316,11 @@ public class TestAccountDao extends AccountDaoTestBase {
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     address1, address2, companyName, city, stateOrProvince, country,
-                                                    postalCode, phone, false, false, null, null, null, null);
+                                                    postalCode, phone, false, false);
 
         accountDao.update(updatedAccount, context);
 
-        Account savedAccount = accountDao.getById(accountId.toString());
+        Account savedAccount = accountDao.getById(accountId);
 
         assertNotNull(savedAccount);
         assertEquals(savedAccount.getId(), accountId);
@@ -345,18 +343,18 @@ public class TestAccountDao extends AccountDaoTestBase {
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     "123 address 1", "456 address 2", null, "Cambridge Bay",
                                                     "Nunavut", "Canada", "X0B 0C0", "18001112222",
-                                                    false, false, null, null, null, null);
+                                                    false, false);
         accountDao.create(account, context);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                     null, null, null, null, null, null, null, null,
-                                                    false, false, null, null, null, null);
+                                                    false, false);
 
         accountDao.update(updatedAccount, context);
 
-        Account savedAccount = accountDao.getById(accountId.toString());
+        Account savedAccount = accountDao.getById(accountId);
 
         assertNotNull(savedAccount);
         assertEquals(savedAccount.getId(), accountId);
@@ -378,13 +376,13 @@ public class TestAccountDao extends AccountDaoTestBase {
         DefaultAccount account = new DefaultAccount(accountId, originalExternalKey, "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     null, null, null, null, null, null, null, null, null, null,
-                                                    false, false, null, null, null, null);
+                                                    false, false);
         accountDao.create(account, context);
 
         DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey1338", "myemail1337@glam.com",
                                                     "John Smith", 4, Currency.USD, 15, null,
                                                     null, null, null, null, null, null, null, null, null, null,
-                                                    false, false, null, null, null, null);
+                                                    false, false);
         accountDao.update(updatedAccount, context);
     }
 
@@ -398,8 +396,8 @@ public class TestAccountDao extends AccountDaoTestBase {
         // add a new e-mail
         final AccountEmail email = new DefaultAccountEmail(accountId, "test@gmail.com");
         emails.add(email);
-        accountDao.saveEmails(accountId, emails, context);
-        emails = accountDao.getEmails(accountId);
+        accountEmailDao.saveEmails(accountId, emails, context);
+        emails = accountEmailDao.getEmails(accountId);
         assertEquals(emails.size(), 1);
 
         // verify that history and audit contain one entry
@@ -409,16 +407,16 @@ public class TestAccountDao extends AccountDaoTestBase {
         AccountEmail updatedEmail = new DefaultAccountEmail(email, "test2@gmail.com");
         emails.clear();
         emails.add(updatedEmail);
-        accountDao.saveEmails(accountId, emails, context);
-        emails = accountDao.getEmails(accountId);
+        accountEmailDao.saveEmails(accountId, emails, context);
+        emails = accountEmailDao.getEmails(accountId);
         assertEquals(emails.size(), 1);
 
         // verify that history and audit contain two entries
         verifyAccountEmailAuditAndHistoryCount(accountId, 2);
 
         // delete e-mail
-        accountDao.saveEmails(accountId, new ArrayList<AccountEmail>(), context);
-        emails = accountDao.getEmails(accountId);
+        accountEmailDao.saveEmails(accountId, new ArrayList<AccountEmail>(), context);
+        emails = accountEmailDao.getEmails(accountId);
         assertEquals(emails.size(), 0);
 
         // verify that history and audit contain three entries
@@ -437,10 +435,12 @@ public class TestAccountDao extends AccountDaoTestBase {
         List<Map<String, Object>> result = handle.select(sb.toString());
         assertEquals(result.size(), expectedCount);
 
+        // ***** NOT IDEAL
+        // ... but this works after the email record has been deleted; will likely fail when multiple emails exist for the same account
         // verify history table
         sb = new StringBuilder();
-        sb.append("select * from account_email_history ");
-        sb.append(String.format("where account_id='%s'", accountId.toString()));
+        sb.append("select * from account_email_history aeh ");
+        sb.append(String.format("where aeh.account_id='%s'", accountId.toString()));
         result = handle.select(sb.toString());
         assertEquals(result.size(), expectedCount);
 

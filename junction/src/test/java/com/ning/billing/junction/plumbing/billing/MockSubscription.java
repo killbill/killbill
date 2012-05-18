@@ -19,6 +19,7 @@ package com.ning.billing.junction.plumbing.billing;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -50,16 +51,8 @@ public class MockSubscription implements Subscription {
         return sub.getId();
     }
 
-    public String getCreatedBy() {
-        return sub.getCreatedBy();
-    }
-
     public boolean hasTag(TagDefinition tagDefinition) {
         return sub.hasTag(tagDefinition);
-    }
-
-    public DateTime getCreatedDate() {
-        return sub.getCreatedDate();
     }
 
     public String getFieldValue(String fieldName) {
@@ -126,12 +119,13 @@ public class MockSubscription implements Subscription {
         sub.clearPersistedFields(context);
     }
 
-    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException {
-        return sub.cancel(requestedDate, eot, context);
+    @Override
+    public ObjectType getObjectType() {
+        return sub.getObjectType();
     }
 
-    public String getObjectName() {
-        return sub.getObjectName();
+    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException {
+        return sub.cancel(requestedDate, eot, context);
     }
 
     public boolean uncancel(CallContext context) throws EntitlementUserApiException {
