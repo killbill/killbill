@@ -20,8 +20,10 @@ import java.util.SortedSet;
 import java.util.UUID;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.joda.time.DateTime;
 
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.mock.glue.MockJunctionModule;
@@ -37,7 +39,56 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
 
             @Override
             public BlockingState getBlockingStateFor(Blockable overdueable) {
-                throw new NotImplementedException();
+                return new BlockingState() {
+
+                    @Override
+                    public String getStateName() {
+                        return BlockingApi.CLEAR_STATE_NAME;
+                    }
+
+                    @Override
+                    public Type getType() {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+
+                    @Override
+                    public DateTime getTimestamp() {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+
+                    @Override
+                    public boolean isBlockChange() {
+                        // TODO Auto-generated method stub
+                        return false;
+                    }
+
+                    @Override
+                    public boolean isBlockEntitlement() {
+                        // TODO Auto-generated method stub
+                        return false;
+                    }
+
+                    @Override
+                    public boolean isBlockBilling() {
+                        // TODO Auto-generated method stub
+                        return false;
+                    }
+
+                    @Override
+                    public int compareTo(BlockingState arg0) {
+                        // TODO Auto-generated method stub
+                        return 0;
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+                    
+                };
             }
 
             @Override

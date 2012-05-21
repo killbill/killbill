@@ -31,9 +31,11 @@ import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
+import com.ning.billing.overdue.config.DefaultOverdueState;
+import com.ning.billing.overdue.config.DefaultOverdueStateSet;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.config.api.OverdueError;
-import com.ning.billing.overdue.service.ExtendedOverdueService;
+import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.clock.Clock;
 
 public class OverdueWrapperFactory {
@@ -44,7 +46,7 @@ public class OverdueWrapperFactory {
     private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
     private final BlockingApi api;
     private final Clock clock;
-    private  OverdueConfig overdueConfig;
+    private OverdueStateSet<SubscriptionBundle> overdueStates;
 
     @Inject
     public OverdueWrapperFactory(BlockingApi api, Clock clock, 
@@ -60,12 +62,10 @@ public class OverdueWrapperFactory {
 
     @SuppressWarnings("unchecked")
     public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(T bloackable) throws OverdueError {
-        if (overdueConfig == null) {
-            throw new OverdueError(ErrorCode.OVERDUE_NOT_CONFIGURED);
-        }
+  
         if(bloackable instanceof SubscriptionBundle) {
-            return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle)bloackable, api, overdueConfig.getBundleStateSet(), 
-                    clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle );
+            return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle)bloackable, api, overdueStates, 
+                    clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
         } else {
             throw new OverdueError(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, bloackable.getId(), bloackable.getClass());
         }
@@ -79,7 +79,7 @@ public class OverdueWrapperFactory {
             switch (state.getType()) {
             case SUBSCRIPTION_BUNDLE : {
                 SubscriptionBundle bundle = entitlementApi.getBundleFromId(id);
-                return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>(bundle, api, overdueConfig.getBundleStateSet(), 
+                return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>(bundle, api, overdueStates, 
                         clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle );
             }
             default : {
@@ -93,7 +93,18 @@ public class OverdueWrapperFactory {
     }
     
     public void setOverdueConfig(OverdueConfig config) {
-        overdueConfig = config;
+        if(config != null) {
+            overdueStates = config.getBundleStateSet();
+        } else {
+            overdueStates = new DefaultOverdueStateSet<SubscriptionBundle>() {
+
+                @SuppressWarnings("unchecked")
+                @Override
+                protected DefaultOverdueState<SubscriptionBundle>[] getStates() {
+                    return new DefaultOverdueState[0];
+                }
+            };
+        }
     }
 
 }

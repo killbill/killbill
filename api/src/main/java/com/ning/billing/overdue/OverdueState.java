@@ -37,4 +37,6 @@ public interface OverdueState<T extends Blockable> {
     public boolean isClearState();
 
     public Period getReevaluationInterval() throws OverdueApiException;
+
+    public Condition<T> getCondition();
 }

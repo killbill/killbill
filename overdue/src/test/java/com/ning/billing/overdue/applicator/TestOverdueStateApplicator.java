@@ -45,15 +45,10 @@ import com.ning.billing.util.config.XMLLoader;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
-@Guice( modules = {DefaultOverdueModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, BusModule.class, NotificationQueueModule.class, TestDbiModule.class})
 public class TestOverdueStateApplicator extends OverdueTestBase {
     @Inject
     OverdueStateApplicator<SubscriptionBundle> applicator;
-    
-    @Inject
-    BlockingApi blockingApi;
-  
-    
+        
     @Test( groups={"fast"} , enabled = true)
      public void testApplicator() throws Exception {
          InputStream is = new ByteArrayInputStream(configXml.getBytes());
@@ -66,37 +61,27 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
          ((ZombieControl)bundle).addResult("getId", UUID.randomUUID());
          
          OverdueState<SubscriptionBundle> state;
-         BlockingState result;
          
          state = config.getBundleStateSet().findState("OD1");
          applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
-         result = ((ApplicatorBlockingApi)blockingApi).getBlockingState();
-         Assert.assertEquals(result.getStateName(),state.getName());
-         Assert.assertEquals(result.isBlockChange(), state.blockChanges());
-         Assert.assertEquals(result.isBlockEntitlement(), state.disableEntitlementAndChangesBlocked());
-         Assert.assertEquals(result.isBlockBilling(), state.disableEntitlementAndChangesBlocked());
+         checkStateApplied(state);
+         
         
          state = config.getBundleStateSet().findState("OD2");
          applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
-         result = ((ApplicatorBlockingApi)blockingApi).getBlockingState();
-         Assert.assertEquals(result.getStateName(),state.getName());
-         Assert.assertEquals(result.isBlockChange(), state.blockChanges());
-         Assert.assertEquals(result.isBlockEntitlement(), state.disableEntitlementAndChangesBlocked());
-         Assert.assertEquals(result.isBlockBilling(), state.disableEntitlementAndChangesBlocked());
+         checkStateApplied(state);
         
          state = config.getBundleStateSet().findState("OD3");
          applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
-         result = ((ApplicatorBlockingApi)blockingApi).getBlockingState();
-         Assert.assertEquals(result.getStateName(),state.getName());
-         Assert.assertEquals(result.isBlockChange(), state.blockChanges());
-         Assert.assertEquals(result.isBlockEntitlement(), state.disableEntitlementAndChangesBlocked());
-         Assert.assertEquals(result.isBlockBilling(), state.disableEntitlementAndChangesBlocked());
+         checkStateApplied(state);
         
          
         //TODO
         // Check blocking API called with correct arguments for the state
         // Check notification is posted with correct time delay
     }
+
+
     
     
 }

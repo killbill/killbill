@@ -112,7 +112,7 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
         return autoReevaluationInterval.toJodaPeriod();       
     }
 	
-    protected DefaultCondition<T> getCondition() {
+    public DefaultCondition<T> getCondition() {
 		return condition;
 	}
 

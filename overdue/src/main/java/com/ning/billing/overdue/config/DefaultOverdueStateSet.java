@@ -41,7 +41,7 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
     private DefaultOverdueState<T> clearState = new DefaultOverdueState<T>().setName(BlockingApi.CLEAR_STATE_NAME).setClearState(true);
 
     protected abstract DefaultOverdueState<T>[] getStates();
-
+    
     @Override
     public OverdueState<T> findState(String stateName) throws OverdueApiException {
         if(stateName.equals( BlockingApi.CLEAR_STATE_NAME)) {
@@ -92,4 +92,10 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
 
         return errors;
     }
+
+    @Override
+    public int size() {
+        return getStates().length;
+    }
+    
 }
