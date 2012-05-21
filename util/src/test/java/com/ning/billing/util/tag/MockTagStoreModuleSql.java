@@ -21,7 +21,7 @@ import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 

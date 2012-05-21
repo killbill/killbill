@@ -45,6 +45,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
+import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.api.PaymentApi;
@@ -54,7 +55,6 @@ import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.setup.PaymentTestModuleWithEmbeddedDb;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.CallContextModule;
 
 public class TestPaymentInvoiceIntegration {

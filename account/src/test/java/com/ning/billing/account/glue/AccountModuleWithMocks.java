@@ -20,7 +20,7 @@ import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.glue.CallContextModule;

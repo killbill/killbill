@@ -20,10 +20,10 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
+import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.CallContextModule;
 
 @Guice(modules = { PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class })
