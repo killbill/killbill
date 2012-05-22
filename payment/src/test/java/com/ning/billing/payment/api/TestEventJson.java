@@ -49,7 +49,7 @@ public class TestEventJson {
     
     @Test(groups= {"fast"})
     public void testPaymentInfoEvent() throws Exception {
-        PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12), new BigDecimal(12.9), "BNP", "eeert", "success",
+        PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12), new BigDecimal(12.9), "BNP", "eeert", "success",
                 "credit", "ref", "paypal", "paypal", "", "", UUID.randomUUID(), new DateTime(), new DateTime(), new DateTime());
         
         String json = mapper.writeValueAsString(e);

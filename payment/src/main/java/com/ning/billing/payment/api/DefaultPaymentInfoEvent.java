@@ -34,6 +34,7 @@ import com.ning.billing.util.bus.BusEvent.BusEventType;
 public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEvent {
 
     private final UUID accountId;
+    private final UUID invoiceId;    
     private final BigDecimal amount;
     private final BigDecimal refundAmount;
     private final String paymentNumber;
@@ -53,6 +54,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     @JsonCreator
     public DefaultPaymentInfoEvent(@JsonProperty("id") UUID id,
             @JsonProperty("accountId") UUID accountId,
+            @JsonProperty("invoiceId") UUID invoiceId,            
             @JsonProperty("amount") BigDecimal amount,
             @JsonProperty("refundAmount") BigDecimal refundAmount,
             @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
@@ -70,6 +72,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
             @JsonProperty("updatedDate") DateTime updatedDate) {
         super(id);
         this.accountId = accountId;
+        this.invoiceId = invoiceId;
         this.amount = amount;
         this.refundAmount = refundAmount;
         this.bankIdentificationNumber = bankIdentificationNumber;
@@ -90,6 +93,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     public DefaultPaymentInfoEvent(DefaultPaymentInfoEvent src) {
         this(src.id,
                 src.accountId,
+                src.invoiceId,
                 src.amount,
                 src.refundAmount,
                 src.bankIdentificationNumber,
@@ -109,7 +113,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     
 
     public DefaultPaymentInfoEvent(PaymentInfoPlugin info, UUID accountId, UUID invoiceId) {
-        this(UUID.randomUUID(), accountId, info.getAmount(), info.getRefundAmount(), info.getBankIdentificationNumber(), info.getPaymentNumber(),
+        this(UUID.randomUUID(), accountId,  invoiceId, info.getAmount(), info.getRefundAmount(), info.getBankIdentificationNumber(), info.getPaymentNumber(),
                 info.getStatus(), info.getCardType(), info.getReferenceId(), info.getPaymentMethodId(), info.getPaymentMethod(), info.getCardType(), info.getCardCountry(),
                 null, info.getEffectiveDate(), info.getCreatedDate(), info.getUpdatedDate());
     }
@@ -139,6 +143,11 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     @Override
     public UUID getAccountId() {
         return accountId;
+    }
+
+    @Override
+    public UUID getInvoiceId() {
+        return invoiceId;
     }
 
     @Override
@@ -216,7 +225,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
         private UUID id;
         private UUID accountId;
-        private UUID paymentId;
+        private UUID invoiceId;
         private BigDecimal amount;
         private BigDecimal refundAmount;
         private String paymentNumber;
@@ -239,6 +248,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         public Builder(DefaultPaymentInfoEvent src) {
             this.id = src.id;
             this.accountId = src.accountId;
+            this.invoiceId = src.invoiceId;
             this.amount = src.amount;
             this.refundAmount = src.refundAmount;
             this.paymentNumber = src.paymentNumber;
@@ -263,8 +273,8 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         }
 
 
-        public Builder setPaymentId(UUID paymentId) {
-            this.paymentId = paymentId;
+        public Builder setInvoiceId(UUID invoiceId) {
+            this.invoiceId = invoiceId;
             return this;
         }
 
@@ -351,6 +361,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         public PaymentInfoEvent build() {
             return new DefaultPaymentInfoEvent(id,
                     accountId,
+                    invoiceId,
                     amount,
                     refundAmount,
                     bankIdentificationNumber,

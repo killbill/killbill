@@ -101,9 +101,8 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
         @Override
         public PaymentInfoEvent map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
 
-            // STEPH
-            UUID accountId = null;
-            
+            UUID accountId = getUUID(rs, "account_id");
+            UUID invoiceId = getUUID(rs, "invoice_id");            
             UUID id = getUUID(rs, "id");
             BigDecimal amount = rs.getBigDecimal("amount");
             BigDecimal refundAmount = rs.getBigDecimal("refund_amount");
@@ -122,6 +121,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
 
             return new DefaultPaymentInfoEvent(id,
                     accountId,
+                    invoiceId,
                     amount,
                     refundAmount,
                     bankIdentificationNumber,

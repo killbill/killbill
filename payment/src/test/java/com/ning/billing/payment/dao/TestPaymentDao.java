@@ -40,10 +40,11 @@ import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public abstract class TestPaymentDao {
+
     protected PaymentDao paymentDao;
     protected CallContext context = new TestCallContext("PaymentTests");
 
-    @Test
+    @Test(groups={"slow"})
     public void testCreatePayment() {
         PaymentInfoEvent paymentInfo = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID())
                 .setAmount(BigDecimal.TEN)
@@ -59,7 +60,7 @@ public abstract class TestPaymentDao {
         paymentDao.savePaymentInfo(paymentInfo, context);
     }
 
-    @Test
+    @Test(groups={"slow"})
     public void testUpdatePaymentInfo() {
         PaymentInfoEvent paymentInfo = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID())
                 .setAmount(BigDecimal.TEN)
@@ -77,7 +78,7 @@ public abstract class TestPaymentDao {
         paymentDao.updatePaymentInfo("CreditCard", paymentInfo.getId(), "Visa", "US", context);
     }
 
-    @Test
+    @Test(groups={"slow"})
     public void testUpdatePaymentAttempt() {
         PaymentAttempt paymentAttempt = new DefaultPaymentAttempt.Builder().setPaymentAttemptId(UUID.randomUUID())
                 .setPaymentId(UUID.randomUUID())
@@ -91,7 +92,7 @@ public abstract class TestPaymentDao {
         paymentDao.createPaymentAttempt(paymentAttempt, PaymentAttemptStatus.IN_PROCESSING, context);
     }
 
-    @Test
+    @Test(groups={"slow"})
     public void testGetPaymentForInvoice() throws AccountApiException {
         final UUID invoiceId = UUID.randomUUID();
         final UUID paymentAttemptId = UUID.randomUUID();
@@ -132,6 +133,7 @@ public abstract class TestPaymentDao {
                 .build();
 
         paymentDao.savePaymentInfo(originalPaymentInfo, thisContext);
+        paymentDao.updatePaymentAttemptWithPaymentId(originalPaymentAttempt.getId(), originalPaymentInfo.getId(), thisContext);
         PaymentInfoEvent paymentInfo = paymentDao.getPaymentInfoList(Arrays.asList(invoiceId)).get(0);
         Assert.assertEquals(paymentInfo, originalPaymentInfo);
 

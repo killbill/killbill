@@ -61,14 +61,16 @@ public class AuditedPaymentDao implements PaymentDao {
 
     @Override
     public PaymentAttempt createPaymentAttempt(final PaymentAttempt paymentAttempt, final PaymentAttemptStatus paymentAttemptStatus, final CallContext context) {
+        
+        final PaymentAttempt newPaymentAttempt = new DefaultPaymentAttempt(paymentAttempt, paymentAttemptStatus);
         return paymentAttemptSqlDao.inTransaction(new Transaction<PaymentAttempt, PaymentAttemptSqlDao>() {
             @Override
             public PaymentAttempt inTransaction(PaymentAttemptSqlDao transactional, TransactionStatus status) throws Exception {
-                transactional.insertPaymentAttempt(paymentAttempt, context);
-                PaymentAttempt savedPaymentAttempt = transactional.getPaymentAttemptById(paymentAttempt.getId().toString());
+                transactional.insertPaymentAttempt(newPaymentAttempt, context);
+                PaymentAttempt savedPaymentAttempt = transactional.getPaymentAttemptById(newPaymentAttempt.getId().toString());
 
-                Long recordId = transactional.getRecordId(paymentAttempt.getId().toString());
-                EntityHistory<PaymentAttempt> history = new EntityHistory<PaymentAttempt>(paymentAttempt.getId(), recordId, paymentAttempt, ChangeType.INSERT);
+                Long recordId = transactional.getRecordId(newPaymentAttempt.getId().toString());
+                EntityHistory<PaymentAttempt> history = new EntityHistory<PaymentAttempt>(newPaymentAttempt.getId(), recordId, newPaymentAttempt, ChangeType.INSERT);
                 transactional.insertHistoryFromTransaction(history, context);
 
                 Long historyRecordId = transactional.getHistoryRecordId(recordId);
@@ -81,10 +83,12 @@ public class AuditedPaymentDao implements PaymentDao {
 
     @Override
     public PaymentAttempt createPaymentAttempt(final Invoice invoice, final PaymentAttemptStatus paymentAttemptStatus, final CallContext context) {
+
+        final PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice, paymentAttemptStatus);
+        
         return paymentAttemptSqlDao.inTransaction(new Transaction<PaymentAttempt, PaymentAttemptSqlDao>() {
             @Override
             public PaymentAttempt inTransaction(PaymentAttemptSqlDao transactional, TransactionStatus status) throws Exception {
-                final PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice, paymentAttemptStatus);
 
                 transactional.insertPaymentAttempt(paymentAttempt, context);
 

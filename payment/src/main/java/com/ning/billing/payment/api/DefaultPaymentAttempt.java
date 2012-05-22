@@ -71,8 +71,13 @@ public class DefaultPaymentAttempt extends EntityBase implements PaymentAttempt 
     }
     
     public DefaultPaymentAttempt(UUID paymentAttemptId, Invoice invoice, PaymentAttemptStatus paymentAttemptStatus) {
-           this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null, null, null, paymentAttemptStatus);
+        this(paymentAttemptId, invoice.getId(), invoice.getAccountId(), invoice.getBalance(), invoice.getCurrency(), invoice.getInvoiceDate(), null, null, null, null, null, paymentAttemptStatus);
     }
+
+    public DefaultPaymentAttempt(PaymentAttempt input, PaymentAttemptStatus paymentAttemptStatus) {
+        this(input.getId(), input.getInvoiceId(), input.getAccountId(), input.getAmount(), input.getCurrency(), input.getInvoiceDate(), null, null, null, null, null, paymentAttemptStatus);
+    }
+
 
     @Override public DateTime getInvoiceDate() {
         return invoiceDate;

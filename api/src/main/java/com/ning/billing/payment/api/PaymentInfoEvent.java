@@ -25,6 +25,8 @@ import com.ning.billing.util.bus.BusEvent;
 public interface PaymentInfoEvent extends Entity, BusEvent {
 
     public UUID getAccountId();
+    
+    public UUID getInvoiceId();
 
     public BigDecimal getAmount();
 

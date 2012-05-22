@@ -39,6 +39,8 @@ updatePaymentInfo() ::= <<
 
 getPaymentInfoList(invoiceIds) ::= <<
     SELECT <paymentInfoFields("p.")>
+    , pa.account_id
+    , pa.invoice_id
       FROM payments p, payment_attempts pa
     WHERE pa.invoice_id in (<invoiceIds>)
        AND pa.payment_id = p.id
@@ -46,6 +48,8 @@ getPaymentInfoList(invoiceIds) ::= <<
 
 getLastPaymentInfo(invoiceIds) ::= <<
     SELECT <paymentInfoFields("p.")>
+    , pa.account_id
+    , pa.invoice_id
     FROM payments p, payment_attempts pa
     WHERE pa.invoice_id in (<invoiceIds>)
     AND pa.payment_id = p.id
@@ -55,6 +59,8 @@ getLastPaymentInfo(invoiceIds) ::= <<
 
 getPaymentInfoForPaymentAttemptId() ::= <<
     SELECT <paymentInfoFields("p.")>
+    , pa.account_id
+    , pa.invoice_id
       FROM payments p, payment_attempts pa
     WHERE pa.payment_attempt_id = :payment_attempt_id
        AND pa.payment_id = p.id
@@ -62,6 +68,8 @@ getPaymentInfoForPaymentAttemptId() ::= <<
 
 getPaymentInfo() ::= <<
     SELECT <paymentInfoFields()>
+    , null as account_id
+    , null as invoice_id
     FROM payments
     WHERE id = :id
 >>
