@@ -52,32 +52,30 @@ import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
 
 public class RequestProcessor {
-    
+
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
-    
+
     private final static int NB_PAYMENT_THREADS = 3; // STEPH
     private final static String PAYMENT_GROUP_NAME = "payment-grp";
     private final static String PAYMENT_TH_NAME = "payment-th";
 
-    
+
     private final AccountUserApi accountUserApi;
     private final PaymentApi paymentApi;
-    private final Bus eventBus;
     private final Clock clock;
-    private final ExecutorService executor;
-    
+
     private static final Logger log = LoggerFactory.getLogger(RequestProcessor.class);
 
     @Inject
     public RequestProcessor(final Clock clock,
             final AccountUserApi accountUserApi,
-            final PaymentApi paymentApi,
-            final Bus eventBus,
+            final PaymentApi paymentApi,           
             final GlobalLocker locker) {
         this.clock = clock;
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
-        this.eventBus = eventBus;
+
+        /*
         this.executor = Executors.newFixedThreadPool(NB_PAYMENT_THREADS, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
@@ -86,42 +84,30 @@ public class RequestProcessor {
                         PAYMENT_TH_NAME);
             }
         });
+         */
     }
-    
+
 
     @Subscribe
     public void processInvoiceEvent(InvoiceCreationEvent event) {
         log.info("Received invoice creation notification for account {} and invoice {}", event.getAccountId(), event.getInvoiceId());
-        PaymentErrorEvent errorEvent = null;
+
+        Account account = null;        
         try {
-            final Account account = accountUserApi.getAccountById(event.getAccountId());
-            if (account != null) {
-                CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
-                PaymentInfoEvent result = paymentApi.createPayment(account, event.getInvoiceId(), context);
-                postPaymentEvent(result, account.getId());
+            account = accountUserApi.getAccountById(event.getAccountId());
+            if (account == null) {
+                log.error("Failed to process invoice, account {} does not exist!", event.getAccountId());
                 return;
-            } else {
-                errorEvent = new DefaultPaymentErrorEvent(null, "Failed to retrieve account", event.getAccountId(), null, null);
             }
+
+            CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken(), clock);
+            paymentApi.createPayment(account, event.getInvoiceId(), context);
         } catch(AccountApiException e) {
             log.error("Failed to process invoice payment", e);
-            errorEvent = new DefaultPaymentErrorEvent(null, e.getMessage(), event.getAccountId(), null, null);            
         } catch (PaymentApiException e) {
-            log.error("Failed to process invoice payment", e);
-            errorEvent = new DefaultPaymentErrorEvent(null, e.getMessage(), event.getAccountId(), null, null);                        
-        }
-        postPaymentEvent(errorEvent, event.getAccountId());
-    }
-    
-    private void postPaymentEvent(BusEvent ev, UUID accountId) {
-        if (ev == null) {
-            return;
-        }
-        try {
-            eventBus.post(ev);
-        } catch (EventBusException e) {
-            log.error("Failed to post Payment event event for account {} ", accountId, e);
+            log.error("Failed to process invoice payment", e);            
         }
     }
-
 }
+
+

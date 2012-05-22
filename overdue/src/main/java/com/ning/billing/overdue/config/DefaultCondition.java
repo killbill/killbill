@@ -59,11 +59,17 @@ public class DefaultCondition<T extends Blockable> extends ValidatingConfig<Over
      * @see com.ning.billing.catalog.overdue.Condition#evaluate(com.ning.billing.catalog.api.overdue.BillingState, org.joda.time.DateTime)
      */
 	@Override
-    public boolean evaluate(BillingState state, DateTime now) {
+    public boolean evaluate(BillingState<T> state, DateTime now) {
+	    DateTime unpaidInvoiceTriggerDate = null;
+	    if( timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null && state.getDateOfEarliestUnpaidInvoice() != null) {  // no date => no unpaid invoices
+	        unpaidInvoiceTriggerDate = state.getDateOfEarliestUnpaidInvoice().plus(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds.toJodaPeriod());
+	    }
+        
 		return 
 				(numberOfUnpaidInvoicesEqualsOrExceeds == null || state.getNumberOfUnpaidInvoices() >= numberOfUnpaidInvoicesEqualsOrExceeds.intValue() ) &&
 				(totalUnpaidInvoiceBalanceEqualsOrExceeds == null || totalUnpaidInvoiceBalanceEqualsOrExceeds.compareTo(state.getBalanceOfUnpaidInvoices()) <= 0) &&
-				(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds == null || !timeSinceEarliestUnpaidInvoiceEqualsOrExceeds.addToDateTime(state.getDateOfEarliestUnpaidInvoice()).isAfter(now)) &&
+				(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds == null ||
+				    (unpaidInvoiceTriggerDate != null && !unpaidInvoiceTriggerDate.isAfter(now))) &&
 				(responseForLastFailedPayment == null || responseIsIn(state.getResponseForLastFailedPayment(), responseForLastFailedPayment)) &&
 				(controlTag == null || isTagIn(controlTag, state.getTags()));
 	}

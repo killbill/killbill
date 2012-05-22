@@ -40,7 +40,11 @@ import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
@@ -57,6 +61,8 @@ public class DefaultPaymentApi implements PaymentApi {
     private final FailedPaymentRetryService retryService;
     private final PaymentDao paymentDao;
     private final PaymentConfig config;
+    private final Bus eventBus;    
+
     private final GlobalLocker locker;
     
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentApi.class);
@@ -68,6 +74,7 @@ public class DefaultPaymentApi implements PaymentApi {
             final FailedPaymentRetryService retryService,
             final PaymentDao paymentDao,
             final PaymentConfig config,
+            final Bus eventBus,
             final GlobalLocker locker) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
@@ -75,6 +82,7 @@ public class DefaultPaymentApi implements PaymentApi {
         this.retryService = retryService;
         this.paymentDao = paymentDao;
         this.config = config;
+        this.eventBus = eventBus;        
         this.locker = locker;
     }
 
@@ -187,6 +195,18 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
+    public PaymentInfoEvent createPayment(final Account account, final UUID invoiceId, final CallContext context)
+    throws PaymentApiException {
+
+        return new WithAccountLock<PaymentInfoEvent>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<PaymentInfoEvent>() {
+            @Override
+            public PaymentInfoEvent doOperation() throws PaymentApiException {
+                    return createPaymentWithAccountLocked(account, invoiceId, context);
+            }
+        });
+    }
+    
+    @Override
     public PaymentInfoEvent createPayment(final String accountKey, final UUID invoiceId, final CallContext context) 
         throws PaymentApiException {
 
@@ -196,7 +216,7 @@ public class DefaultPaymentApi implements PaymentApi {
             public PaymentInfoEvent doOperation() throws PaymentApiException {
                 try {
                     final Account account = accountUserApi.getAccountByKey(accountKey);
-                    return createPayment(account, invoiceId, context);
+                    return createPaymentWithAccountLocked(account, invoiceId, context);
                 } catch (AccountApiException e) {
                     throw new PaymentApiException(e);
                 }
@@ -246,40 +266,28 @@ public class DefaultPaymentApi implements PaymentApi {
         });
     }
 
-    @Override
-    public PaymentInfoEvent createPayment(final Account account, final UUID invoiceId, final CallContext context) 
+    private PaymentInfoEvent createPaymentWithAccountLocked(final Account account, final UUID invoiceId, final CallContext context) 
     throws PaymentApiException {
 
-        return new WithAccountLock<PaymentInfoEvent>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<PaymentInfoEvent>() {
+        try {
+            final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+            Invoice invoice = invoicePaymentApi.getInvoice(invoiceId);
 
-            @Override
-            public PaymentInfoEvent doOperation()
-            throws PaymentApiException {
-
-                try {
-                    final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
-
-
-
-                    Invoice invoice = invoicePaymentApi.getInvoice(invoiceId);
-
-                        if (invoice.isMigrationInvoice()) {
-                            log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
-                            return null;
-                        }
-
-                        PaymentInfoEvent result = null;
-                        if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0 ) {
-                            PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice, PaymentAttemptStatus.IN_PROCESSING, context);
-                            result = processPaymentWithAccountLocked(plugin, account, invoice, paymentAttempt, context);
-                        }
-
-                    return result;
-                } catch (PaymentPluginApiException e) {
-                    throw new PaymentApiException(e, ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), e.getMessage());
-                }
+            if (invoice.isMigrationInvoice()) {
+                log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
+                return null;
             }
-        });
+
+            PaymentInfoEvent result = null;
+            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0 ) {
+                PaymentAttempt paymentAttempt = paymentDao.createPaymentAttempt(invoice, PaymentAttemptStatus.IN_PROCESSING, context);
+                result = processPaymentWithAccountLocked(plugin, account, invoice, paymentAttempt, context);
+            }
+
+            return result;
+        } catch (PaymentPluginApiException e) {
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), e.getMessage());
+        }
     }
 
 
@@ -287,41 +295,49 @@ public class DefaultPaymentApi implements PaymentApi {
             PaymentAttempt paymentAttempt, CallContext context) throws PaymentPluginApiException {
 
         PaymentInfoEvent paymentInfo = null;
+        BusEvent event = null;
         try {
             paymentInfo = new DefaultPaymentInfoEvent(plugin.processInvoice(account, invoice), account.getId(), invoice.getId());
+
+            paymentDao.savePaymentInfo(paymentInfo, context);
+
+            final String paymentMethodId = paymentInfo.getPaymentMethodId();
+            log.debug("Fetching payment method info for payment method id " + ((paymentMethodId == null) ? "null" : paymentMethodId));
+            PaymentMethodInfo paymentMethodInfo = plugin.getPaymentMethodInfo(paymentMethodId);
+
+            if (paymentMethodInfo instanceof CreditCardPaymentMethodInfo) {
+                CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethodInfo;
+                paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
+
+
+            } else if (paymentMethodInfo instanceof PaypalPaymentMethodInfo) {
+                PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
+                paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getId(), null, null, context);
+            }
+            if (paymentInfo.getId() != null) {
+                paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfo.getId(), context);
+            }
+
+            invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
+                        paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
+                          /*paymentInfo.getRefundAmount(), */
+                          paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency(),
+                            paymentAttempt.getId(),
+                              paymentAttempt.getPaymentAttemptDate(),
+                                context);
+            event = paymentInfo;
+            return paymentInfo;
         } catch (PaymentPluginApiException e) {
             log.info("Could not process a payment for " + paymentAttempt + ", error was " + e.getMessage());
             scheduleRetry(paymentAttempt);
+            event = new DefaultPaymentErrorEvent(null, e.getMessage(), account.getId(), invoice.getId(), context.getUserToken());                        
             throw e;
+        } finally {
+            postPaymentEvent(event, account.getId());
         }
 
-        paymentDao.savePaymentInfo(paymentInfo, context);
-
-        final String paymentMethodId = paymentInfo.getPaymentMethodId();
-        log.debug("Fetching payment method info for payment method id " + ((paymentMethodId == null) ? "null" : paymentMethodId));
-        PaymentMethodInfo paymentMethodInfo = plugin.getPaymentMethodInfo(paymentMethodId);
-
-        if (paymentMethodInfo instanceof CreditCardPaymentMethodInfo) {
-            CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethodInfo;
-            paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
-
-        } else if (paymentMethodInfo instanceof PaypalPaymentMethodInfo) {
-            PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
-            paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getId(), null, null, context);
-        }
-        if (paymentInfo.getId() != null) {
-            paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfo.getId(), context);
-        }
-
-        invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
-                    paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
-                      /*paymentInfo.getRefundAmount(), */
-                      paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : invoice.getCurrency(),
-                        paymentAttempt.getId(),
-                          paymentAttempt.getPaymentAttemptDate(),
-                            context);
-        return paymentInfo;
     }
+   
 
     private void scheduleRetry(PaymentAttempt paymentAttempt) {
         final List<Integer> retryDays = config.getPaymentRetryDays();
@@ -455,6 +471,17 @@ public class DefaultPaymentApi implements PaymentApi {
         }
 
         return pluginRegistry.getPlugin(paymentProviderName);
+    }
+
+    private void postPaymentEvent(BusEvent ev, UUID accountId) {
+        if (ev == null) {
+            return;
+        }
+        try {
+            eventBus.post(ev);
+        } catch (EventBusException e) {
+            log.error("Failed to post Payment event event for account {} ", accountId, e);
+        }
     }
 
 

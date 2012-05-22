@@ -48,12 +48,14 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
+import com.ning.billing.mock.glue.MockPaymentModule;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckPoster;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueProperties;
-import com.ning.billing.overdue.glue.OverdueModule;
+import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
@@ -65,6 +67,7 @@ import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MySqlGlobalLocker;
+import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
@@ -108,13 +111,12 @@ public class TestOverdueCheckNotifier {
 	@BeforeClass(groups={"slow"})
 	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
 		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION,  new OverdueModule() {
+        final Injector g = Guice.createInjector(Stage.PRODUCTION,  new MockInvoiceModule(), new MockPaymentModule(), new BusModule(), new DefaultOverdueModule() {
 			
             protected void configure() {
                 super.configure();
                 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
                 bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
-                bind(Bus.class).to(InMemoryBus.class).asEagerSingleton();
                 bind(NotificationQueueService.class).to(DefaultNotificationQueueService.class).asEagerSingleton();
                 final InvoiceConfig invoiceConfig = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
                 bind(InvoiceConfig.class).toInstance(invoiceConfig);

@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -27,11 +28,11 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
+import com.ning.billing.overdue.config.api.OverdueError;
 import com.ning.billing.util.clock.Clock;
 
 public abstract class BillingStateCalculator<T extends Blockable> {
@@ -57,10 +58,14 @@ public abstract class BillingStateCalculator<T extends Blockable> {
         this.clock = clock;
     }
     
-    public abstract BillingState<T> calculateBillingState(T overdueable) throws EntitlementUserApiException;
+    public abstract BillingState<T> calculateBillingState(T overdueable) throws OverdueError;
     
-    protected DateTime earliest(SortedSet<Invoice> unpaidInvoices) {
-        return unpaidInvoices.first().getInvoiceDate();
+    protected Invoice earliest(SortedSet<Invoice> unpaidInvoices) {
+        try {
+            return unpaidInvoices.first();
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     protected BigDecimal sumBalance(SortedSet<Invoice> unpaidInvoices) {

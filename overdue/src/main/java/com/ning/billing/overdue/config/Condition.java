@@ -25,6 +25,6 @@ import com.ning.billing.overdue.config.api.BillingState;
 
 public interface Condition<T extends Blockable> {
 
-    public boolean evaluate(BillingState state, DateTime now);
+    public boolean evaluate(BillingState<T> state, DateTime now);
 
 }

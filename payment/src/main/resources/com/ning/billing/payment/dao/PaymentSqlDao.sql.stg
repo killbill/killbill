@@ -62,7 +62,7 @@ getPaymentInfoForPaymentAttemptId() ::= <<
     , pa.account_id
     , pa.invoice_id
       FROM payments p, payment_attempts pa
-    WHERE pa.payment_attempt_id = :payment_attempt_id
+    WHERE pa.id = :payment_attempt_id
        AND pa.payment_id = p.id
 >>
 

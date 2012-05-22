@@ -49,10 +49,11 @@ public class TestCondition {
 				"</condition>";
 		InputStream is = new ByteArrayInputStream(xml.getBytes());
 		MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is,  MockCondition.class);
+		UUID unpaidInvoiceId = UUID.randomUUID();		        
 		
-		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 2, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, new DateTime(), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, BigDecimal.ZERO, new DateTime(), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 2, BigDecimal.ZERO, new DateTime(), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 		
 		Assert.assertTrue(!c.evaluate(state0, new DateTime()));
 		Assert.assertTrue(c.evaluate(state1, new DateTime()));
@@ -67,10 +68,11 @@ public class TestCondition {
 				"</condition>";
 		InputStream is = new ByteArrayInputStream(xml.getBytes());
 		MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is,  MockCondition.class);
+        UUID unpaidInvoiceId = UUID.randomUUID();               
 		
-		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), new DateTime(), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, new DateTime(), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), new DateTime(), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), new DateTime(), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 		
 		Assert.assertTrue(!c.evaluate(state0, new DateTime()));
 		Assert.assertTrue(c.evaluate(state1, new DateTime()));
@@ -86,12 +88,13 @@ public class TestCondition {
 				"</condition>";
 		InputStream is = new ByteArrayInputStream(xml.getBytes());
 		MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is,  MockCondition.class);
+        UUID unpaidInvoiceId = UUID.randomUUID();               
 		
 		DateTime now = new DateTime();
 		
-		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, null, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 		
 		Assert.assertTrue(!c.evaluate(state0, now));
 		Assert.assertTrue(c.evaluate(state1, now));
@@ -106,12 +109,13 @@ public class TestCondition {
 				"</condition>";
 		InputStream is = new ByteArrayInputStream(xml.getBytes());
 		MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is,  MockCondition.class);
+        UUID unpaidInvoiceId = UUID.randomUUID();               
 		
 		DateTime now = new DateTime();
 		
-		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{});
-		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
-		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), PaymentResponse.DO_NOT_HONOR , new Tag[]{});
+		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, null, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{});
+		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), unpaidInvoiceId, PaymentResponse.DO_NOT_HONOR , new Tag[]{});
 		
 		Assert.assertTrue(!c.evaluate(state0, now));
 		Assert.assertTrue(c.evaluate(state1, now));
@@ -126,12 +130,13 @@ public class TestCondition {
 				"</condition>";
 		InputStream is = new ByteArrayInputStream(xml.getBytes());
 		MockCondition c = XMLLoader.getObjectFromStreamNoValidation(is,  MockCondition.class);
+        UUID unpaidInvoiceId = UUID.randomUUID();               
 		
 		DateTime now = new DateTime();
 		
-		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, now, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag("Tag")});
-		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
-		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), 
+		BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L,1L), 0, BigDecimal.ZERO, null, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF),new DescriptiveTag("Tag")});
+		BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("100.00"), now.minusDays(10), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
+		BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L,1L), 1, new BigDecimal("200.00"), now.minusDays(20), unpaidInvoiceId, 
 				PaymentResponse.DO_NOT_HONOR, 
 				new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF), 
 						  new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF),

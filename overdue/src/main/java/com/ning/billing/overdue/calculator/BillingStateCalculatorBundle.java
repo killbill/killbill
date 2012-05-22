@@ -36,6 +36,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.overdue.config.api.BillingStateBundle;
+import com.ning.billing.overdue.config.api.OverdueError;
 import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.Tag;
@@ -49,38 +50,48 @@ public class BillingStateCalculatorBundle  extends BillingStateCalculator<Subscr
         super(invoiceApi, clock);
         this.entitlementApi = entitlementApi;
     }
-    
-    @Override
-    public BillingStateBundle calculateBillingState(SubscriptionBundle bundle) throws EntitlementUserApiException {
-        
-        SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId());
- 
-        Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId());
-        
-        UUID id = bundle.getId();
-        int numberOfUnpaidInvoices = unpaidInvoices.size(); 
-        BigDecimal unpaidInvoiceBalance = sumBalance(unpaidInvoices);
-        DateTime dateOfEarliestUnpaidInvoice = earliest(unpaidInvoices);
-        PaymentResponse responseForLastFailedPayment = PaymentResponse.INSUFFICIENT_FUNDS; //TODO MDW
-        Tag[] tags = new Tag[]{}; //TODO MDW
-        Product basePlanProduct = basePlan.getCurrentPlan().getProduct();
-        BillingPeriod basePlanBillingPeriod = basePlan.getCurrentPlan().getBillingPeriod();
-        PriceList basePlanPriceList = basePlan.getCurrentPriceList();
-        PhaseType basePlanPhaseType = basePlan.getCurrentPhase().getPhaseType();
-        
 
-        return new BillingStateBundle( 
-            id, 
-            numberOfUnpaidInvoices, 
-            unpaidInvoiceBalance,
-            dateOfEarliestUnpaidInvoice,
-            responseForLastFailedPayment,
-            tags, 
-            basePlanProduct,
-            basePlanBillingPeriod, 
-            basePlanPriceList, 
-            basePlanPhaseType);
-        
+    @Override
+    public BillingStateBundle calculateBillingState(SubscriptionBundle bundle) throws OverdueError {
+        try {
+            SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId());
+
+            Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId());
+
+            UUID id = bundle.getId();
+            int numberOfUnpaidInvoices = unpaidInvoices.size(); 
+            BigDecimal unpaidInvoiceBalance = sumBalance(unpaidInvoices);
+            DateTime dateOfEarliestUnpaidInvoice = null;
+            UUID idOfEarliestUnpaidInvoice = null;
+            Invoice invoice = earliest(unpaidInvoices);
+            if(invoice != null) {
+                dateOfEarliestUnpaidInvoice = invoice.getInvoiceDate();
+                idOfEarliestUnpaidInvoice = invoice.getId();
+            }
+            PaymentResponse responseForLastFailedPayment = PaymentResponse.INSUFFICIENT_FUNDS; //TODO MDW
+            Tag[] tags = new Tag[]{}; //TODO MDW
+            Product basePlanProduct = basePlan.getCurrentPlan().getProduct();
+            BillingPeriod basePlanBillingPeriod = basePlan.getCurrentPlan().getBillingPeriod();
+            PriceList basePlanPriceList = basePlan.getCurrentPriceList();
+            PhaseType basePlanPhaseType = basePlan.getCurrentPhase().getPhaseType();
+
+
+            return new BillingStateBundle( 
+                    id, 
+                    numberOfUnpaidInvoices, 
+                    unpaidInvoiceBalance,
+                    dateOfEarliestUnpaidInvoice,
+                    idOfEarliestUnpaidInvoice,
+                    responseForLastFailedPayment,
+                    tags, 
+                    basePlanProduct,
+                    basePlanBillingPeriod, 
+                    basePlanPriceList, 
+                    basePlanPhaseType);
+        } catch (EntitlementUserApiException e) {
+            throw new OverdueError(e);
+        }
+
     }
 
     public SortedSet<Invoice> unpaidInvoicesForBundle(UUID bundleId, UUID accountId) {
@@ -103,6 +114,6 @@ public class BillingStateCalculatorBundle  extends BillingStateCalculator<Subscr
         }
         return false;
     }
-    
-    
+
+
 }

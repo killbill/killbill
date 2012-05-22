@@ -48,7 +48,7 @@ public interface PaymentApi {
         throws PaymentApiException;
     
     public PaymentInfoEvent createPayment(final Account account, final UUID invoiceId, final CallContext context)
-        throws PaymentApiException;
+    throws PaymentApiException;
     
     public PaymentInfoEvent createPaymentForPaymentAttempt(final String accountKey, final UUID paymentAttemptId, final CallContext context)
         throws PaymentApiException;

@@ -14,19 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.config.api;
+package com.ning.billing.beatrix.integration.overdue;
 
-import org.joda.time.DateTime;
+import com.ning.billing.overdue.OverdueService;
+import com.ning.billing.overdue.glue.DefaultOverdueModule;
 
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.overdue.OverdueApiException;
-import com.ning.billing.overdue.OverdueState;
+public class IntegrationTestOverdueModule extends DefaultOverdueModule {
+   
+    
+    protected void installOverdueService() {
+        bind(OverdueService.class).to(MockOverdueService.class);    
+    }
 
-public interface OverdueStateSet<T extends Blockable> {
-
-    public abstract OverdueState<T> getClearState() throws OverdueApiException;
-
-    public abstract OverdueState<T> findState(String stateName) throws OverdueApiException;
-
-    public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) throws OverdueApiException;
+     
 }

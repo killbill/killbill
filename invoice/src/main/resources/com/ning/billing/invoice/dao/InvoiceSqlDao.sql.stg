@@ -82,6 +82,7 @@ getUnpaidInvoicesByAccountId() ::= <<
   WHERE i.account_id = :accountId AND NOT (i.target_date > :upToDate) AND migrated = 'FALSE'
   GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
   HAVING (SUM(iis.amount_invoiced) > SUM(ips.total_paid)) OR (SUM(ips.total_paid) IS NULL)
+  AND SUM(iis.amount_invoiced) > 0
   ORDER BY i.target_date ASC;
 >>
 

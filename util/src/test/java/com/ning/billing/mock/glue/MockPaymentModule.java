@@ -14,21 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.glue;
-
-import org.skife.config.ConfigurationObjectFactory;
+package com.ning.billing.mock.glue;
 
 import com.google.inject.AbstractModule;
-import com.ning.billing.overdue.OverdueProperties;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.payment.api.PaymentApi;
 
-
-public class OverdueModule extends AbstractModule {
+public class MockPaymentModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        final OverdueProperties config = new ConfigurationObjectFactory(System.getProperties()).build(OverdueProperties.class);
-        bind(OverdueProperties.class).toInstance(config);
+       
+        bind(PaymentApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(PaymentApi.class));
+        
     }
-    
-
 }

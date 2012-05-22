@@ -117,7 +117,7 @@ public class TimedoutPaymentRetryService implements RetryService {
             }
             paymentApi.createPaymentForPaymentAttempt(UUID.fromString(paymentAttemptId), context);
         } catch (PaymentApiException e) {
-            log.error(String.format("Failed to retry payment for %s"), e);
+            log.error(String.format("Failed to retry payment for %s",paymentAttemptId), e);
         }
         */
     }

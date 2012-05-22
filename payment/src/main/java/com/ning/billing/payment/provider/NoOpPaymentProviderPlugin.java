@@ -33,8 +33,17 @@ import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 
 public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
-    @Override
+    private boolean makeAllInvoicesFail;
 
+    public boolean isMakeAllInvoicesFail() {
+        return makeAllInvoicesFail;
+    }
+
+    public void setMakeAllInvoicesFail(boolean makeAllInvoicesFail) {
+        this.makeAllInvoicesFail = makeAllInvoicesFail;
+    } 
+
+    @Override
     public PaymentInfoPlugin processInvoice(final Account account, final Invoice invoice)
             throws PaymentPluginApiException {
         PaymentInfoPlugin payment = new PaymentInfoPlugin() {

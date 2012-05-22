@@ -28,19 +28,24 @@ public class BillingState<T extends Blockable> {
 	private final UUID objectId;
 	private final int numberOfUnpaidInvoices;
 	private final BigDecimal balanceOfUnpaidInvoices;
-	private final DateTime dateOfEarliestUnpaidInvoice;
+    private final DateTime dateOfEarliestUnpaidInvoice;
+    private final UUID idOfEarliestUnpaidInvoice;
 	private final PaymentResponse responseForLastFailedPayment;
 	private final Tag[] tags;
 	
-	public BillingState(UUID id, int numberOfUnpaidInvoices, BigDecimal balanceOfUnpaidInvoices,
+	public BillingState(UUID id, 
+	        int numberOfUnpaidInvoices, 
+	        BigDecimal balanceOfUnpaidInvoices,
 			DateTime dateOfEarliestUnpaidInvoice,
+			UUID idOfEarliestUnpaidInvoice,
 			PaymentResponse responseForLastFailedPayment,
 			Tag[] tags) {
 		super();
 		this.objectId = id;
 		this.numberOfUnpaidInvoices = numberOfUnpaidInvoices;
 		this.balanceOfUnpaidInvoices = balanceOfUnpaidInvoices;
-		this.dateOfEarliestUnpaidInvoice = dateOfEarliestUnpaidInvoice;
+        this.dateOfEarliestUnpaidInvoice = dateOfEarliestUnpaidInvoice;
+        this.idOfEarliestUnpaidInvoice = idOfEarliestUnpaidInvoice;
 		this.responseForLastFailedPayment = responseForLastFailedPayment;
 		this.tags = tags;
 	}
@@ -61,7 +66,11 @@ public class BillingState<T extends Blockable> {
 		return dateOfEarliestUnpaidInvoice;
 	}
 	
-	public PaymentResponse getResponseForLastFailedPayment() {
+	public UUID getIdOfEarliestUnpaidInvoice() {
+        return idOfEarliestUnpaidInvoice;
+    }
+
+    public PaymentResponse getResponseForLastFailedPayment() {
 		return responseForLastFailedPayment;
 	}
 

@@ -46,6 +46,7 @@ import com.ning.billing.util.clock.Clock;
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     
     private final AtomicBoolean makeNextInvoiceFail = new AtomicBoolean(false);
+    private final AtomicBoolean makeAllInvoicesFail = new AtomicBoolean(false);
     private final Map<UUID, PaymentInfoEvent> payments = new ConcurrentHashMap<UUID, PaymentInfoEvent>();
     private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
     private final Map<String, PaymentMethodInfo> paymentMethods = new ConcurrentHashMap<String, PaymentMethodInfo>();
@@ -60,9 +61,13 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         makeNextInvoiceFail.set(true);
     }
 
+    public void makeAllInvoicesFail(boolean failure) {
+        makeAllInvoicesFail.set(failure);
+    }
+
     @Override
     public PaymentInfoPlugin processInvoice(Account account, Invoice invoice) throws PaymentPluginApiException {
-        if (makeNextInvoiceFail.getAndSet(false)) {
+        if (makeNextInvoiceFail.getAndSet(false) || makeAllInvoicesFail.get()) {
             throw new PaymentPluginApiException("", "test error");
         }
 

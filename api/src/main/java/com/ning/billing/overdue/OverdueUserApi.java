@@ -27,4 +27,7 @@ public interface OverdueUserApi {
     public <T extends Blockable> void setOverrideBillingStateForAccount(T overdueable, BillingState<T> state) throws OverdueError;
 
     public <T extends Blockable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueError;
+
+    public <T extends Blockable> BillingState<T> getBillingStateFor(T overdueable) throws OverdueError;
+
 }

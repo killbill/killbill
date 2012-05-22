@@ -14,19 +14,23 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.config.api;
+package com.ning.billing.mock.glue;
 
-import org.joda.time.DateTime;
+import com.google.inject.AbstractModule;
+import com.ning.billing.glue.OverdueModule;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.overdue.OverdueUserApi;
 
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.overdue.OverdueApiException;
-import com.ning.billing.overdue.OverdueState;
+public class MockOverdueModule extends AbstractModule implements OverdueModule {
 
-public interface OverdueStateSet<T extends Blockable> {
+    @Override
+    public void installOverdueUserApi() {
+        bind(OverdueUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(OverdueUserApi.class));
+    }
 
-    public abstract OverdueState<T> getClearState() throws OverdueApiException;
+    @Override
+    protected void configure() {
+        installOverdueUserApi();
+    }
 
-    public abstract OverdueState<T> findState(String stateName) throws OverdueApiException;
-
-    public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) throws OverdueApiException;
 }

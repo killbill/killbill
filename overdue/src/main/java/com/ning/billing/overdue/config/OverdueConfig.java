@@ -32,7 +32,7 @@ import com.ning.billing.util.config.ValidationErrors;
 public class OverdueConfig  extends ValidatingConfig<OverdueConfig> {
 
     @XmlElement(required=true, name="bundleOverdueStates")
-    private OverdueStatesBundle bundleOverdueStates;
+    private OverdueStatesBundle bundleOverdueStates = new OverdueStatesBundle();
 
     public DefaultOverdueStateSet<SubscriptionBundle> getBundleStateSet() {
         return bundleOverdueStates;

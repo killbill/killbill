@@ -14,19 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.config.api;
+package com.ning.billing.glue;
 
-import org.joda.time.DateTime;
+public interface OverdueModule {
 
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.overdue.OverdueApiException;
-import com.ning.billing.overdue.OverdueState;
+    public abstract void installOverdueUserApi();
 
-public interface OverdueStateSet<T extends Blockable> {
-
-    public abstract OverdueState<T> getClearState() throws OverdueApiException;
-
-    public abstract OverdueState<T> findState(String stateName) throws OverdueApiException;
-
-    public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) throws OverdueApiException;
 }

@@ -46,8 +46,8 @@ public class OverdueStateApplicator<T extends Blockable>{
         this.poster = poster;
     }
 
-    public void apply(T overdueable, OverdueState<T> previousOverdueState, OverdueState<T> nextOverdueState) throws OverdueError {
-        if(previousOverdueState.getName().equals(nextOverdueState.getName())) {
+    public void apply(T overdueable, String previousOverdueStateName, OverdueState<T> nextOverdueState) throws OverdueError {
+        if(previousOverdueStateName.equals(nextOverdueState.getName())) {
             return; // nothing to do
         }
 

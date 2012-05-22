@@ -115,7 +115,7 @@ public class FailedPaymentRetryService implements RetryService {
             // STEPH
             paymentApi.createPaymentForPaymentAttempt(null, paymentAttemptId, context);
         } catch (PaymentApiException e) {
-            log.error(String.format("Failed to retry payment for %s"), e);
+            log.error(String.format("Failed to retry payment for %s", paymentAttemptId), e);
         }
     }
 }
