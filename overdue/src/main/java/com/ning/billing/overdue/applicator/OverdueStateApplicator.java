@@ -58,7 +58,7 @@ public class OverdueStateApplicator<T extends Blockable>{
             }
         } catch(OverdueApiException e) {
             if(e.getCode() != ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
-                new OverdueError(e);
+                throw new OverdueError(e);
             }
         }
 
