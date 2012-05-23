@@ -173,7 +173,6 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
             accounts.put(account.getAccountKey(),
                 new PaymentProviderAccount.Builder()
                                           .copyFrom(account)
-                                          // STEPH
                                           .setDefaultPaymentMethod("paypal")
                                           .build());
             List<PaymentMethodInfo> paymentMethodsToUpdate = new ArrayList<PaymentMethodInfo>();

@@ -55,10 +55,11 @@ public class RequestProcessor {
 
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
 
+    /*
     private final static int NB_PAYMENT_THREADS = 3; // STEPH
     private final static String PAYMENT_GROUP_NAME = "payment-grp";
     private final static String PAYMENT_TH_NAME = "payment-th";
-
+*/
 
     private final AccountUserApi accountUserApi;
     private final PaymentApi paymentApi;

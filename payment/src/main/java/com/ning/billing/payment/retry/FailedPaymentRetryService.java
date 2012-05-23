@@ -28,6 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -52,14 +55,17 @@ public class FailedPaymentRetryService implements RetryService {
     private final NotificationQueueService notificationQueueService;
     private final PaymentConfig config;
     private final PaymentApi paymentApi;
+    private final AccountUserApi accountUserApi;
     
     private NotificationQueue retryQueue;
     
     @Inject
-    public FailedPaymentRetryService(Clock clock,
-                        NotificationQueueService notificationQueueService,
-                        PaymentConfig config,
-                        PaymentApi paymentApi) {
+    public FailedPaymentRetryService(final AccountUserApi accountUserApi,
+            final Clock clock,
+            final NotificationQueueService notificationQueueService,
+            final PaymentConfig config,
+            final PaymentApi paymentApi) {
+        this.accountUserApi = accountUserApi;
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.paymentApi = paymentApi;
@@ -109,12 +115,19 @@ public class FailedPaymentRetryService implements RetryService {
     private void retry(UUID paymentAttemptId, CallContext context) {
         try {
             PaymentInfoEvent paymentInfo = paymentApi.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
+            if (paymentInfo == null) {
+                log.error(String.format("Failed to retry payment for paymentId %s: no such PaymentInfo", paymentAttemptId));
+                return;
+            }
             if (paymentInfo != null && PaymentStatus.Processed.equals(PaymentStatus.valueOf(paymentInfo.getStatus()))) {
                 return;
             }
-            // STEPH
-            paymentApi.createPaymentForPaymentAttempt(null, paymentAttemptId, context);
+            
+            Account account = accountUserApi.getAccountById(paymentInfo.getAccountId());
+            paymentApi.createPaymentForPaymentAttempt(account.getExternalKey(), paymentAttemptId, context);
         } catch (PaymentApiException e) {
+            log.error(String.format("Failed to retry payment for %s", paymentAttemptId), e);
+        } catch (AccountApiException e) {
             log.error(String.format("Failed to retry payment for %s", paymentAttemptId), e);
         }
     }
