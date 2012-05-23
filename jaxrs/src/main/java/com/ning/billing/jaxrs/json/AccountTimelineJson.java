@@ -103,7 +103,9 @@ public class AccountTimelineJson {
             String status = cur.getPaymentId() != null ? "Success" : "Failed";
             BigDecimal paidAmount = cur.getPaymentId() != null ? cur.getAmount() : BigDecimal.ZERO;
             
-            this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(), paidAmount, cur.getInvoiceId(), cur.getPaymentId(), cur.getCreatedDate(), cur.getUpdatedDate(),
+            this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(), paidAmount, account.getId().toString(),
+                    cur.getInvoiceId().toString(), cur.getPaymentId().toString(), 
+                    cur.getCreatedDate(), cur.getUpdatedDate(),
                     cur.getRetryCount(), cur.getCurrency().toString(), status,
                     getBundleExternalKey(cur.getInvoiceId(), invoices, bundles)));
           }

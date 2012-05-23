@@ -38,12 +38,15 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
@@ -52,118 +55,150 @@ import com.ning.http.client.Response;
 
 public class TestAccount extends TestJaxrsBase {
 
-	private static final Logger log = LoggerFactory.getLogger(TestAccount.class);
+    private static final Logger log = LoggerFactory.getLogger(TestAccount.class);
 
 
-	
-	
-	@Test(groups="slow", enabled=true)
-	public void testAccountOk() throws Exception {
-		
-		AccountJson input = createAccount("xoxo", "shdgfhwe", "xoxo@yahoo.com");
-		
-		// Retrieves by external key
-		Map<String, String> queryParams = new HashMap<String, String>();
-		queryParams.put(BaseJaxrsResource.QUERY_EXTERNAL_KEY, "shdgfhwe");
-		Response response = doGet(BaseJaxrsResource.ACCOUNTS_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-		String baseJson = response.getResponseBody();
-		AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
-		Assert.assertTrue(objFromJson.equals(input));
-		
-		// Update Account
-		AccountJson newInput = new AccountJson(objFromJson.getAccountId(),
-				"zozo", 4, objFromJson.getExternalKey(), "rr@google.com", 18, "EUR", "none", "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
-		baseJson = mapper.writeValueAsString(newInput);
-		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAccountId();
-		response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-		baseJson = response.getResponseBody();
-		objFromJson = mapper.readValue(baseJson, AccountJson.class);
-		Assert.assertTrue(objFromJson.equals(newInput));
-	}
 
 
-	@Test(groups="slow", enabled=true)
-	public void testUpdateNonExistentAccount() throws Exception {
-		AccountJson input = getAccountJson("xoxo", "shghaahwe", "xoxo@yahoo.com");
-		String baseJson = mapper.writeValueAsString(input);
-		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + input.getAccountId();
-		Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-		Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
-		String body = response.getResponseBody();
-		Assert.assertEquals(body, "");
-	}
-	
-	
-	@Test(groups="slow", enabled=true)
-	public void testAccountNonExistent() throws Exception {
-		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747";
-		Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-		Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
-	}
-	
-	@Test(groups="slow", enabled=true)
-	public void testAccountBadAccountId() throws Exception {
-		final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/yo";
-		Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-		Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
-	}
-	
-	@Test(groups="slow", enabled=true)
-	public void testAccountTimeline() throws Exception {
-	    
+    @Test(groups="slow", enabled=true)
+    public void testAccountOk() throws Exception {
+
+        AccountJson input = createAccount("xoxo", "shdgfhwe", "xoxo@yahoo.com");
+
+        // Retrieves by external key
+        Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(BaseJaxrsResource.QUERY_EXTERNAL_KEY, "shdgfhwe");
+        Response response = doGet(BaseJaxrsResource.ACCOUNTS_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        String baseJson = response.getResponseBody();
+        AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
+        Assert.assertTrue(objFromJson.equals(input));
+
+        // Update Account
+        AccountJson newInput = new AccountJson(objFromJson.getAccountId(),
+                "zozo", 4, objFromJson.getExternalKey(), "rr@google.com", 18, "EUR", "none", "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
+        baseJson = mapper.writeValueAsString(newInput);
+        final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAccountId();
+        response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        objFromJson = mapper.readValue(baseJson, AccountJson.class);
+        Assert.assertTrue(objFromJson.equals(newInput));
+    }
+
+
+    @Test(groups="slow", enabled=true)
+    public void testUpdateNonExistentAccount() throws Exception {
+        AccountJson input = getAccountJson("xoxo", "shghaahwe", "xoxo@yahoo.com");
+        String baseJson = mapper.writeValueAsString(input);
+        final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + input.getAccountId();
+        Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
+        String body = response.getResponseBody();
+        Assert.assertEquals(body, "");
+    }
+
+
+    @Test(groups="slow", enabled=true)
+    public void testAccountNonExistent() throws Exception {
+        final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747";
+        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
+    }
+
+    @Test(groups="slow", enabled=true)
+    public void testAccountBadAccountId() throws Exception {
+        final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/yo";
+        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
+    }
+
+    @Test(groups="slow", enabled=true)
+    public void testAccountTimeline() throws Exception {
+
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
-        
-        
-	    AccountJson accountJson = createAccount("poney", "shdddqgfhwe", "poney@yahoo.com");
-	    assertNotNull(accountJson);
-	    
-	    BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAccountId(), "996599");
-	    assertNotNull(bundleJson);
-	    
+
+
+        AccountJson accountJson = createAccount("poney", "shdddqgfhwe", "poney@yahoo.com");
+        assertNotNull(accountJson);
+
+        BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAccountId(), "996599");
+        assertNotNull(bundleJson);
+
         SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
-        
+
         // MOVE AFTER TRIAL
         clock.addMonths(3);
 
         crappyWaitForLackOfProperSynchonization();
-        
-        
+
+
         final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + BaseJaxrsResource.TIMELINE;
-        
+
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         String baseJson = response.getResponseBody();
         AccountTimelineJson objFromJson = mapper.readValue(baseJson, AccountTimelineJson.class);
         assertNotNull(objFromJson);
         log.info(baseJson);
-        
-            Assert.assertEquals(objFromJson.getPayments().size(), 3);
+
+        Assert.assertEquals(objFromJson.getPayments().size(), 3);
         Assert.assertEquals(objFromJson.getInvoices().size(), 4);   
         Assert.assertEquals(objFromJson.getBundles().size(), 1); 
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().size(), 1);
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);        
- 	}
+    }
 
-	@Test(groups="slow", enabled=false)
-	public void testAccountWithTags() throws Exception {
-	    //Create Tag definition
-	    TagDefinitionJson input = new TagDefinitionJson("yoyo", "nothing more to say");
-	    String baseJson = mapper.writeValueAsString(input);
-	    Response response = doPost(BaseJaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-	    assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
-	    
-	    AccountJson accountJson = createAccount("couroucoucou", "shdwdsqgfhwe", "couroucoucou@yahoo.com");
-	    assertNotNull(accountJson);
-	        
-	    Map<String, String> queryParams = new HashMap<String, String>();
+
+    @Test(groups="slow", enabled=true)
+    public void testAccountPayments() throws Exception {
+
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+
+
+        AccountJson accountJson = createAccount("ermenehildo", "shtyrgfhwe", "ermenehildo@yahoo.com");
+        assertNotNull(accountJson);
+
+        BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAccountId(), "396199");
+        assertNotNull(bundleJson);
+
+        SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        assertNotNull(subscriptionJson);
+
+        // MOVE AFTER TRIAL
+        clock.addMonths(3);
+
+        crappyWaitForLackOfProperSynchonization();
+
+
+        final String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + BaseJaxrsResource.PAYMENTS;
+
+        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        String baseJson = response.getResponseBody();
+        List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        Assert.assertEquals(objFromJson.size(), 3);
+    }
+
+
+    @Test(groups="slow", enabled=false)
+    public void testAccountWithTags() throws Exception {
+        //Create Tag definition
+        TagDefinitionJson input = new TagDefinitionJson("yoyo", "nothing more to say");
+        String baseJson = mapper.writeValueAsString(input);
+        Response response = doPost(BaseJaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+        AccountJson accountJson = createAccount("couroucoucou", "shdwdsqgfhwe", "couroucoucou@yahoo.com");
+        assertNotNull(accountJson);
+
+        Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(BaseJaxrsResource.QUERY_TAGS, input.getName());
         String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + BaseJaxrsResource.TAGS + "/" + accountJson.getAccountId() ;
-	    response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
-        
+
         /*
          * STEPH Some how Location returns the ID twice (confused) :
          * Location: http://127.0.0.1:8080/1.0/kb/accounts/tags/ebb5f830-6f0a-4521-9553-521d173169be/ebb5f830-6f0a-4521-9553-521d173169be
@@ -174,16 +209,16 @@ public class TestAccount extends TestJaxrsBase {
         // Retrieves by Id based on Location returned
         response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        */
+         */
 
-	}
-	
+    }
+
     @Test(groups="slow", enabled=false)
-	public void testAccountWithCustomFields() throws Exception {
-        
+    public void testAccountWithCustomFields() throws Exception {
+
         AccountJson accountJson = createAccount("carafe", "shdwhwgaz", "carafe@yahoo.com");
         assertNotNull(accountJson);
-        
+
         List<CustomFieldJson> customFields =  new LinkedList<CustomFieldJson>();
         customFields.add(new CustomFieldJson("1", "value1"));
         customFields.add(new CustomFieldJson("2", "value2"));
@@ -199,6 +234,6 @@ public class TestAccount extends TestJaxrsBase {
         // Retrieves by Id based on Location returned
         response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        
-	}
+
+    }
 }

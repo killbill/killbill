@@ -47,7 +47,12 @@ public interface BaseJaxrsResource {
 	public static final String QUERY_CALL_TIMEOUT = "call_timeout_sec";    
 	public static final String QUERY_DRY_RUN = "dry_run";      
 	public static final String QUERY_TARGET_DATE = "target_date";          
-	public static final String QUERY_ACCOUNT_ID = "account_id";           	
+	
+	public static final String QUERY_ACCOUNT_ID = "account_id";
+
+	public static final String QUERY_PAYMENT_EXTERNAL = "external_payment";
+	public static final String QUERY_PAYMENT_LAST4_CC = "last4_cc";
+	public static final String QUERY_PAYMENT_NAME_ON_CC= "name_on_cc";	
 	
 	public static final String QUERY_TAGS = "tag_list";    
 	public static final String QUERY_CUSTOM_FIELDS = "custom_field_list";    	
@@ -67,6 +72,7 @@ public interface BaseJaxrsResource {
     public static final String INVOICES = "invoices";     
     public static final String INVOICES_PATH = PREFIX + "/" + INVOICES;
 
+    public static final String PAYMENTS = "payments";     
     
     public static final String TAGS = "tags";
     public static final String CUSTOM_FIELDS = "custom_fields";    

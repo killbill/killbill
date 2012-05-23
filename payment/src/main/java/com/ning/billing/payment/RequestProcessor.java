@@ -16,12 +16,8 @@
 
 package com.ning.billing.payment;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,24 +28,18 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentErrorEvent;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.globallocker.GlobalLock;
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.LockFailedException;
-import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
 
 public class RequestProcessor {
 
@@ -64,17 +54,20 @@ public class RequestProcessor {
     private final AccountUserApi accountUserApi;
     private final PaymentApi paymentApi;
     private final Clock clock;
+    private final TagUserApi tagUserApi;
+    
 
     private static final Logger log = LoggerFactory.getLogger(RequestProcessor.class);
 
     @Inject
     public RequestProcessor(final Clock clock,
             final AccountUserApi accountUserApi,
-            final PaymentApi paymentApi,           
-            final GlobalLocker locker) {
+            final PaymentApi paymentApi,
+            final TagUserApi tagUserApi) {        
         this.clock = clock;
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
+        this.tagUserApi = tagUserApi;
 
         /*
         this.executor = Executors.newFixedThreadPool(NB_PAYMENT_THREADS, new ThreadFactory() {
@@ -91,7 +84,9 @@ public class RequestProcessor {
 
     @Subscribe
     public void processInvoiceEvent(InvoiceCreationEvent event) {
-        log.info("Received invoice creation notification for account {} and invoice {}", event.getAccountId(), event.getInvoiceId());
+        
+        log.info("Received invoice creation notification for account {} and invoice {}",
+                    event.getAccountId(), event.getInvoiceId());
 
         Account account = null;        
         try {
@@ -100,7 +95,9 @@ public class RequestProcessor {
                 log.error("Failed to process invoice, account {} does not exist!", event.getAccountId());
                 return;
             }
-
+            if (isAccountAutoPayOff(account.getId())) {
+                return;
+            }
             CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken(), clock);
             paymentApi.createPayment(account, event.getInvoiceId(), context);
         } catch(AccountApiException e) {
@@ -108,6 +105,16 @@ public class RequestProcessor {
         } catch (PaymentApiException e) {
             log.error("Failed to process invoice payment", e);            
         }
+    }
+    
+    private boolean isAccountAutoPayOff(UUID accountId) {
+        Map<String, Tag> accountTags =  tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
+        for (Tag cur : accountTags.values()) {
+            if (cur.getTagDefinitionName().equals(ControlTagType.AUTO_PAY_OFF.toString())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

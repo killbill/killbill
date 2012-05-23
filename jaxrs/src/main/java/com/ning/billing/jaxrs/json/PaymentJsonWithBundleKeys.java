@@ -35,15 +35,16 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
     @JsonCreator
     public PaymentJsonWithBundleKeys(@JsonProperty("amount") BigDecimal amount,
             @JsonProperty("paidAmount") BigDecimal paidAmount,
-            @JsonProperty("invoiceId") UUID invoiceId,
-            @JsonProperty("paymentId") UUID paymentId,
+            @JsonProperty("accountId") String accountId,
+            @JsonProperty("invoiceId") String invoiceId,
+            @JsonProperty("paymentId") String paymentId,
             @JsonProperty("requestedDt") DateTime requestedDate,
             @JsonProperty("effectiveDt") DateTime effectiveDate,
             @JsonProperty("retryCount") Integer retryCount,
             @JsonProperty("currency") String currency,            
             @JsonProperty("status") String status,
             @JsonProperty("externalBundleKeys") String bundleKeys) {
-        super(amount, paidAmount, invoiceId, paymentId, requestedDate, effectiveDate, retryCount, currency, status);
+        super(amount, paidAmount, accountId, invoiceId, paymentId, requestedDate, effectiveDate, retryCount, currency, status);
         this.bundleKeys = bundleKeys;
     }
     

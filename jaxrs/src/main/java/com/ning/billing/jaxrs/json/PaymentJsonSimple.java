@@ -24,6 +24,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonView;
 import org.joda.time.DateTime;
 
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class PaymentJsonSimple {
@@ -32,9 +33,11 @@ public class PaymentJsonSimple {
 
     private final BigDecimal amount;
 
-    private final UUID invoiceId;
+    private final String accountId;
     
-    private final UUID paymentId;
+    private final String invoiceId;
+    
+    private final String paymentId;
     
     private final DateTime requestedDate;
     
@@ -50,6 +53,7 @@ public class PaymentJsonSimple {
         this.amount = null;
         this.paidAmount = null;
         this.invoiceId = null;
+        this.accountId = null;
         this.paymentId = null;
         this.requestedDate = null;
         this.effectiveDate = null;
@@ -61,8 +65,9 @@ public class PaymentJsonSimple {
     @JsonCreator
     public PaymentJsonSimple(@JsonProperty("amount") BigDecimal amount,
             @JsonProperty("paidAmount") BigDecimal paidAmount,
-            @JsonProperty("invoiceId") UUID invoiceId,
-            @JsonProperty("paymentId") UUID paymentId,
+            @JsonProperty("accountId") String accountId,            
+            @JsonProperty("invoiceId") String invoiceId,
+            @JsonProperty("paymentId") String paymentId,
             @JsonProperty("requestedDate") DateTime requestedDate,
             @JsonProperty("effectiveDate") DateTime effectiveDate,
             @JsonProperty("retryCount") Integer retryCount,
@@ -72,6 +77,7 @@ public class PaymentJsonSimple {
         this.amount = amount;
         this.paidAmount = paidAmount;
         this.invoiceId = invoiceId;
+        this.accountId = accountId;        
         this.paymentId = paymentId;
         this.requestedDate = DefaultClock.toUTCDateTime(requestedDate);
         this.effectiveDate = DefaultClock.toUTCDateTime(effectiveDate);
@@ -80,15 +86,32 @@ public class PaymentJsonSimple {
         this.status = status;
     }
 
+    public PaymentJsonSimple(PaymentInfoEvent src) {
+        this.amount = src.getAmount();
+        this.paidAmount = src.getAmount(); // STEPH ?
+        this.invoiceId = src.getInvoiceId().toString();
+        this.accountId = src.getAccountId().toString();
+        this.paymentId = src.getId().toString();
+        this.requestedDate = src.getCreatedDate();
+        this.effectiveDate = src.getEffectiveDate();
+        this.currency = null; // Should it really be part of the payment object since this is per account?
+        this.retryCount = null; // do we need that?
+        this.status = src.getStatus();
+    }
+
     public BigDecimal getPaidAmount() {
         return paidAmount;
     }
 
-    public UUID getInvoiceId() {
+    public String getInvoiceId() {
         return invoiceId;
     }
 
-    public UUID getPaymentId() {
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public String getPaymentId() {
         return paymentId;
     }
 

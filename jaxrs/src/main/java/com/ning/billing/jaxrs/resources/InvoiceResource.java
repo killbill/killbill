@@ -18,6 +18,8 @@ package com.ning.billing.jaxrs.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
@@ -50,8 +53,12 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 
 
 @Path(BaseJaxrsResource.INVOICES_PATH)
@@ -64,16 +71,19 @@ public class InvoiceResource implements BaseJaxrsResource {
     
     private final AccountUserApi accountApi;
     private final InvoiceUserApi invoiceApi;
+    private final PaymentApi paymentApi;
     private final Context context;
     private final JaxrsUriBuilder uriBuilder;
     
     @Inject
     public InvoiceResource(final AccountUserApi accountApi,
             final InvoiceUserApi invoiceApi,
+            final PaymentApi paymentApi,            
             final Context context,
             final JaxrsUriBuilder uriBuilder) {
         this.accountApi = accountApi;
         this.invoiceApi = invoiceApi;
+        this.paymentApi = paymentApi;
         this.context = context;
         this.uriBuilder = uriBuilder;
     }
@@ -139,6 +149,47 @@ public class InvoiceResource implements BaseJaxrsResource {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();  
         } catch (NullPointerException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();            
+        }
+    }
+    
+    @GET
+    @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENTS)
+    @Produces(APPLICATION_JSON)
+    public Response getPayments(@PathParam("invoiceId") String invoiceId) {
+        try {
+            List<PaymentInfoEvent> payments = paymentApi.getPaymentInfo(Collections.singletonList(UUID.fromString(invoiceId)));
+            List<PaymentJsonSimple> result =  new ArrayList<PaymentJsonSimple>(payments.size());
+            for (PaymentInfoEvent cur : payments) {
+                result.add(new PaymentJsonSimple(cur));
+            }
+            return Response.status(Status.OK).entity(result).build();
+        } catch (PaymentApiException e) {
+            return Response.status(Status.NOT_FOUND).build();     
+        }
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON)
+    @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENTS)
+    public Response createInstantPayment(PaymentJsonSimple payment,
+            @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+        try {
+            Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()));
+            paymentApi.createPayment(account, UUID.fromString(payment.getInvoiceId()), context.createContext(createdBy, reason, comment));
+            Response response = uriBuilder.buildResponse(InvoiceResource.class, "getPayments", payment.getInvoiceId());
+            return response;
+        } catch (PaymentApiException e) {
+            final String error = String.format("Failed to create payment %s", e.getMessage());
+            return Response.status(Status.BAD_REQUEST).entity(error).build();
+        } catch (AccountApiException e) {
+            final String error = String.format("Failed to create payment, can't find account %s", payment.getAccountId());
+            return Response.status(Status.BAD_REQUEST).entity(error).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 }

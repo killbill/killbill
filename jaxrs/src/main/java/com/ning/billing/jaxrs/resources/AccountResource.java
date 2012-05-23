@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -66,12 +67,14 @@ import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.customfield.CustomField;
@@ -275,6 +278,33 @@ public class AccountResource implements BaseJaxrsResource {
         }
     }
     
+    /*****************************  PAYMENTS *********************************/
+    
+    @GET
+    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENTS)
+    @Produces(APPLICATION_JSON)
+    public Response getPayments(@PathParam("accountId") String accountId,
+            @QueryParam(QUERY_PAYMENT_LAST4_CC) final String last4CC,
+            @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC) {
+        try {
+            List<Invoice> invoices =  invoiceApi.getInvoicesByAccount(UUID.fromString(accountId));
+            List<UUID> invoicesId = new ArrayList<UUID>(Collections2.transform(invoices, new Function<Invoice, UUID>() {
+                @Override
+                public UUID apply(Invoice input) {
+                    return input.getId();
+                }
+            }));
+            List<PaymentInfoEvent> payments = paymentApi.getPaymentInfo(invoicesId); 
+            List<PaymentJsonSimple> result =  new ArrayList<PaymentJsonSimple>(payments.size());
+            for (PaymentInfoEvent cur : payments) {
+                result.add(new PaymentJsonSimple(cur));
+            }
+            return Response.status(Status.OK).entity(result).build();
+        } catch (PaymentApiException e) {
+            return Response.status(Status.NOT_FOUND).build();     
+        }
+    }
+
     
     /****************************      TAGS     ******************************/
     
