@@ -16,16 +16,16 @@
 
 package com.ning.billing.junction.api;
 
+import java.util.List;
+import java.util.SortedSet;
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
+import com.ning.billing.entitlement.api.billing.BillingEvent;
 
-public interface BillingApi extends ChargeThruApi {
-    /**
-     *
-     * @param accountId 
-     * @return an ordered list of billing event for the given accounts
-     *
-     */
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId);
+public interface BillingEventSet extends SortedSet<BillingEvent> {
+
+    public abstract boolean isAccountAutoInvoiceOff();
+
+    public abstract List<UUID> getSubscriptionIdsWithAutoInvoiceOff();
+
 }

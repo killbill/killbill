@@ -14,18 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.junction.api;
+package com.ning.billing.overdue;
 
-import java.util.UUID;
+import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.config.api.BillingState;
 
-public interface BillingApi extends ChargeThruApi {
-    /**
-     *
-     * @param accountId 
-     * @return an ordered list of billing event for the given accounts
-     *
-     */
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId);
+
+
+public interface Condition<T extends Blockable> {
+
+    public boolean evaluate(BillingState<T> state, DateTime now);
+
 }

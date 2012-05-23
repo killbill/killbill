@@ -17,8 +17,6 @@
 package com.ning.billing.junction.plumbing.billing;
 
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -41,6 +39,8 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BillingApi;
+import com.ning.billing.junction.api.BillingEventSet;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -56,11 +56,12 @@ public class DefaultBillingApi implements BillingApi {
     private final EntitlementUserApi entitlementUserApi;
     private final CatalogService catalogService;
     private final BlockingCalculator blockCalculator;
+//    private final TagUserApi tagApi;
 
     @Inject
     public DefaultBillingApi(final ChargeThruApi chargeThruApi, final CallContextFactory factory, final AccountUserApi accountApi, 
             final BillCycleDayCalculator bcdCalculator, final EntitlementUserApi entitlementUserApi, final BlockingCalculator blockCalculator,
-            final CatalogService catalogService) {
+            final CatalogService catalogService) { //, final TagUserApi tagApi) {
 
         this.chargeThruApi = chargeThruApi;
         this.accountApi = accountApi;
@@ -69,17 +70,20 @@ public class DefaultBillingApi implements BillingApi {
         this.entitlementUserApi = entitlementUserApi;
         this.catalogService = catalogService;
         this.blockCalculator = blockCalculator;
+  //      this.tagApi = tagApi;
     }
 
     @Override
-    public SortedSet<BillingEvent> getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId) {
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId) {
         CallContext context = factory.createCallContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
 
         List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
-        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
+        BillingEventSet result = new DefaultBillingEventSet();
 
         try {
             Account account = accountApi.getAccountById(accountId);
+            
+
             for (final SubscriptionBundle bundle: bundles) {
                 List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundle.getId());
 
