@@ -49,8 +49,8 @@ public class OverdueWrapper<T extends Blockable> {
     }
 
     public OverdueState<T> refresh() throws OverdueError, OverdueApiException {
-        if(overdueStateSet == null) { // No configuration available
-            return null;
+        if(overdueStateSet.size() < 1) { // No configuration available
+            return overdueStateSet.getClearState();
         } 
         
         OverdueState<T> nextOverdueState;

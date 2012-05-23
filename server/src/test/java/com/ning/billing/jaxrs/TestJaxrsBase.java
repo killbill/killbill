@@ -46,7 +46,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.inject.Module;
@@ -76,7 +75,7 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
-import com.ning.billing.util.glue.FieldStoreModule;
+import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.http.client.AsyncCompletionHandler;
@@ -190,7 +189,7 @@ public class TestJaxrsBase {
             */
             install(new EmailModule());
             install(new GlobalLockerModule());
-            install(new FieldStoreModule());
+            install(new CustomFieldModule());
             install(new TagStoreModule());
             install(new CatalogModule());
             install(new BusModule());

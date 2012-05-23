@@ -444,11 +444,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void saveCustomFields(SubscriptionData subscription, CallContext context) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public Map<UUID, List<EntitlementEvent>> getEventsForBundle(UUID bundleId) {
         // TODO Auto-generated method stub
         return null;

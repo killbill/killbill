@@ -25,6 +25,8 @@ public interface CallContext {
     public String getUserName();
     public CallOrigin getCallOrigin();
     public UserType getUserType();
+    public String getReasonCode();
+    public String getComment();
     public DateTime getCreatedDate();
     public DateTime getUpdatedDate();
 }

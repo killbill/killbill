@@ -16,21 +16,14 @@
 
 package com.ning.billing.analytics;
 
-import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.ControlTagType;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 
 public class MockAccount implements Account
 {
@@ -152,101 +145,6 @@ public class MockAccount implements Account
     }
 
     @Override
-    public String getFieldValue(String fieldName) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setFieldValue(String fieldName, String fieldValue) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<CustomField> getFieldList() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setFields(List<CustomField> fields) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void saveFields(List<CustomField> fields, CallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void clearFields() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void clearPersistedFields(CallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ObjectType getObjectType() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<Tag> getTagList() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean hasTag(TagDefinition tagDefinition) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean hasTag(ControlTagType controlTagType) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addTag(TagDefinition definition) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addTags(List<Tag> tags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void clearTags() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void removeTag(TagDefinition definition) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean generateInvoice() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean processPayment() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public MutableAccountData toMutableAccountData() {
         throw new UnsupportedOperationException();
     }
@@ -255,5 +153,4 @@ public class MockAccount implements Account
     public BlockingState getBlockingState() {
         throw new UnsupportedOperationException();
     }
-
 }

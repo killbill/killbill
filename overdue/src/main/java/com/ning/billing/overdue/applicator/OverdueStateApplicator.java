@@ -16,7 +16,6 @@
 
 package com.ning.billing.overdue.applicator;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -66,9 +65,6 @@ public class OverdueStateApplicator<T extends Blockable>{
         if(nextOverdueState.isClearState()) {
             clear(overdueable);
         }
-
-
-
     }
 
 

@@ -18,8 +18,8 @@ package com.ning.billing.junction;
 
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
+import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockDbHelperModule;
-import com.ning.billing.util.clock.MockClockModule;
 import com.ning.billing.util.glue.CallContextModule;
 
 

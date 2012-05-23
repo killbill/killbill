@@ -29,6 +29,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.Condition;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.config.ValidatingConfig;

@@ -19,7 +19,6 @@ package com.ning.billing.junction.plumbing.billing;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -34,94 +33,12 @@ import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
-
 
 public class MockSubscription implements Subscription {
     Subscription sub = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
 
-    public List<Tag> getTagList() {
-        return sub.getTagList();
-    }
-
     public UUID getId() {
         return sub.getId();
-    }
-
-    public boolean hasTag(TagDefinition tagDefinition) {
-        return sub.hasTag(tagDefinition);
-    }
-
-    public String getFieldValue(String fieldName) {
-        return sub.getFieldValue(fieldName);
-    }
-
-    public boolean hasTag(ControlTagType controlTagType) {
-        return sub.hasTag(controlTagType);
-    }
-
-    public void setFieldValue(String fieldName, String fieldValue) {
-        sub.setFieldValue(fieldName, fieldValue);
-    }
-
-    public void addTag(TagDefinition definition) {
-        sub.addTag(definition);
-    }
-
-    public void addTags(List<Tag> tags) {
-        sub.addTags(tags);
-    }
-
-    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
-        sub.saveFieldValue(fieldName, fieldValue, context);
-    }
-
-    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
-        sub.addTagsFromDefinitions(tagDefinitions);
-    }
-
-    public List<CustomField> getFieldList() {
-        return sub.getFieldList();
-    }
-
-    public void clearTags() {
-        sub.clearTags();
-    }
-
-    public void setFields(List<CustomField> fields) {
-        sub.setFields(fields);
-    }
-
-    public void removeTag(TagDefinition definition) {
-        sub.removeTag(definition);
-    }
-
-    public void saveFields(List<CustomField> fields, CallContext context) {
-        sub.saveFields(fields, context);
-    }
-
-    public boolean generateInvoice() {
-        return sub.generateInvoice();
-    }
-
-    public boolean processPayment() {
-        return sub.processPayment();
-    }
-
-    public void clearFields() {
-        sub.clearFields();
-    }
-
-    public void clearPersistedFields(CallContext context) {
-        sub.clearPersistedFields(context);
-    }
-
-    @Override
-    public ObjectType getObjectType() {
-        return sub.getObjectType();
     }
 
     public boolean cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException {

@@ -178,7 +178,9 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
        
     }
     
-    
+    public void testCorrectBehaviorForNoOverdueConfig() {
+        //TODO with no overdue config the system should be fine - take no action but see no NPEs
+    }
     
     
     

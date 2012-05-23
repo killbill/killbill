@@ -45,9 +45,9 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionEvents;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
@@ -147,9 +147,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
         des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
         NewEvent ne = createNewEvent(SubscriptionTransitionType.CANCEL, baseSubscription.getStartDate(), null);
-        
-        
-        SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+
+        SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
         
         // FIRST ISSUE DRY RUN
         BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
@@ -341,7 +340,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
         des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
 
-        SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+        SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
         
         // FIRST ISSUE DRY RUN
         BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
@@ -521,7 +520,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         if (inTrial) {
             des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
         }
-        SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+        SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
         
         // FIRST ISSUE DRY RUN
         BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
@@ -647,7 +646,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
         des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(2).getEventId()));
 
-        SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+        SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
         
         // SKIP DRY RUN AND DO REPAIR...
         BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
@@ -699,7 +698,7 @@ public class TestRepairBP extends TestApiBaseRepair {
                 List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));                
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));                                
-                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
 
                 BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
@@ -735,7 +734,7 @@ public class TestRepairBP extends TestApiBaseRepair {
                 List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));                
                 des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));                                
-                SubscriptionTimeline sRepair = createSubscriptionReapir(baseSubscription.getId(), des, Collections.singletonList(ne));
+                SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
 
                 BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 

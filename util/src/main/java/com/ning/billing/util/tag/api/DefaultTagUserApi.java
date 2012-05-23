@@ -17,76 +17,83 @@
 package com.ning.billing.util.tag.api;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.util.dao.ObjectType;
-import org.joda.time.DateTime;
+import com.ning.billing.util.tag.dao.TagDao;
 
 import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.DefaultControlTag;
-import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
-public class DefaultTagDefinitionUserApi implements TagUserApi {
-    private TagDefinitionDao dao;
+public class DefaultTagUserApi implements TagUserApi {
+    private final TagDefinitionDao tagDefinitionDao;
+    private final TagDao tagDao;
 
     @Inject
-    public DefaultTagDefinitionUserApi(TagDefinitionDao dao) {
-        this.dao = dao;
+    public DefaultTagUserApi(TagDefinitionDao tagDefinitionDao, TagDao tagDao) {
+        this.tagDefinitionDao = tagDefinitionDao;
+        this.tagDao = tagDao;
     }
 
     @Override
     public List<TagDefinition> getTagDefinitions() {
-        return dao.getTagDefinitions();
+        return tagDefinitionDao.getTagDefinitions();
     }
 
     @Override
     public TagDefinition create(final String definitionName, final String description, final CallContext context) throws TagDefinitionApiException {
-        return dao.create(definitionName, description, context);
+        return tagDefinitionDao.create(definitionName, description, context);
     }
 
     @Override
     public void deleteAllTagsForDefinition(final String definitionName, final CallContext context)
             throws TagDefinitionApiException {
-        dao.deleteAllTagsForDefinition(definitionName, context);
+        tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
     }
 
     @Override
     public void deleteTagDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
-        dao.deleteAllTagsForDefinition(definitionName, context);
+        tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
     }
 
 	@Override
-	public TagDefinition getTagDefinition(String name)
+	public TagDefinition getTagDefinition(final String name)
 			throws TagDefinitionApiException {
-		return dao.getByName(name);
+		return tagDefinitionDao.getByName(name);
 	}
 
     @Override
-    public List<Tag> createControlTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public void addTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) {
+        tagDao.insertTags(objectId, objectType, tagDefinitions, context);
     }
 
     @Override
-    public Tag createControlTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public void addTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) {
+        tagDao.insertTag(objectId, objectType, tagDefinition, context);
     }
 
     @Override
-    public List<Tag> createDescriptiveTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public void removeTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) {
+        tagDao.deleteTag(objectId, objectType, tagDefinition, context);
     }
 
     @Override
-    public Tag createDescriptiveTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public void removeTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) {
+        // TODO: consider making this batch
+        for (TagDefinition tagDefinition : tagDefinitions) {
+            tagDao.deleteTag(objectId, objectType, tagDefinition, context);
+        }
+    }
+
+    @Override
+    public Map<String, Tag> getTags(final UUID objectId, final ObjectType objectType) {
+        return tagDao.loadEntities(objectId, objectType);
     }
 
 //    @Override

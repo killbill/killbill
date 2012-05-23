@@ -22,7 +22,6 @@ import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
-import com.ning.billing.util.glue.FieldStoreModule;
 
 
 public class InvoiceModuleWithMocks extends DefaultInvoiceModule {

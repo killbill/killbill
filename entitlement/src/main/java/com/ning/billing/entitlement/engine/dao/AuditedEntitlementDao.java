@@ -25,15 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import javax.annotation.Nullable;
 
-import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-
-import com.ning.billing.util.dao.EntityAudit;
-import com.ning.billing.util.dao.TableName;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -71,15 +64,17 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
+import com.ning.billing.util.dao.EntityAudit;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-
-import javax.annotation.Nullable;
 
 public class AuditedEntitlementDao implements EntitlementDao {
     private final static Logger log = LoggerFactory.getLogger(AuditedEntitlementDao.class);
@@ -90,13 +85,11 @@ public class AuditedEntitlementDao implements EntitlementDao {
     private final EntitlementEventSqlDao eventsDao;
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
-    private final CustomFieldDao customFieldDao;
     private final Bus eventBus;
 
     @Inject
     public AuditedEntitlementDao(final IDBI dbi, final Clock clock,
                                  final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                                 final CustomFieldDao customFieldDao,
                                  final Bus eventBus) {
 
         this.clock = clock;
@@ -105,7 +98,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
         this.bundlesDao = dbi.onDemand(BundleSqlDao.class);
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
-        this.customFieldDao = customFieldDao;
         this.eventBus = eventBus;
     }
 
@@ -468,12 +460,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
         }
     }
 
-    private void updateCustomFieldsFromTransaction(final SubscriptionSqlDao transactionalDao,
-            final SubscriptionData subscription,
-            final CallContext context) {
-        customFieldDao.saveEntitiesFromTransaction(transactionalDao, subscription.getId(), subscription.getObjectType(), subscription.getFieldList(), context);
-    }
-
     private Subscription buildSubscription(final SubscriptionFactory factory, final Subscription input) {
         if (input == null) {
             return null;
@@ -559,7 +545,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
             default:
                 break;
             }
-            loadCustomFields((SubscriptionData) reloaded);
+
             result.add(reloaded);
         }
         return result;
@@ -646,7 +632,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
         });
     }
 
-
     private Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId, boolean rebuildSubscription) {
         List<Subscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
         for (Subscription cur : subscriptions) {
@@ -666,26 +651,4 @@ public class AuditedEntitlementDao implements EntitlementDao {
             throw new RuntimeException(e);
         }
     }
-
-    @Override
-    public void saveCustomFields(final SubscriptionData subscription, final CallContext context) {
-        subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
-            @Override
-            public Void inTransaction(SubscriptionSqlDao transactional,
-                    TransactionStatus status) throws Exception {
-                updateCustomFieldsFromTransaction(transactional, subscription, context);
-                return null;
-            }
-        });
-    }
-
-    private void loadCustomFields(final SubscriptionData subscription) {
-        CustomFieldSqlDao customFieldSqlDao = subscriptionsDao.become(CustomFieldSqlDao.class);
-        List<CustomField> fields = customFieldSqlDao.load(subscription.getId().toString(), subscription.getObjectType());
-        subscription.clearFields();
-        if (fields != null) {
-            subscription.setFields(fields);
-        }
-    }
- 
 }

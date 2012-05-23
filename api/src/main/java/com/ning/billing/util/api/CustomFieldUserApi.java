@@ -14,23 +14,18 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag;
+package com.ning.billing.util.api;
+
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.dao.ObjectType;
 
 import java.util.List;
-import org.joda.time.DateTime;
+import java.util.Map;
+import java.util.UUID;
 
-public interface Taggable {
-    public List<Tag> getTagList();
+public interface CustomFieldUserApi {
+    Map<String, CustomField> getCustomFields(UUID objectId, ObjectType objectType);
 
-    public boolean hasTag(TagDefinition tagDefinition);
-    public boolean hasTag(ControlTagType controlTagType);
-
-    public void addTag(TagDefinition definition);
-    public void addTags(List<Tag> tags);
-    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions);
-    public void clearTags();
-    public void removeTag(TagDefinition definition);
-
-    public boolean generateInvoice();
-    public boolean processPayment();
+    void saveCustomFields(UUID objectId, ObjectType objectType, List<CustomField> fields, CallContext context);
 }

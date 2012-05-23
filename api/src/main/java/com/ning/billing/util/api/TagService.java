@@ -14,15 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.util.glue;
+package com.ning.billing.util.api;
 
-import com.google.inject.AbstractModule;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.lifecycle.KillbillService;
 
-public class FieldStoreModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
-    }
+public interface TagService extends KillbillService {
+    public TagUserApi getTagDefinitionUserApi();
 }

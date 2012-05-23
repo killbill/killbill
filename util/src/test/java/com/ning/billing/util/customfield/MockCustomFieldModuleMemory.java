@@ -14,10 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.util.entity;
+package com.ning.billing.util.customfield;
 
-import com.ning.billing.util.customfield.Customizable;
-import com.ning.billing.util.tag.Taggable;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.customfield.dao.MockCustomFieldDao;
+import com.ning.billing.util.glue.CustomFieldModule;
 
-public interface ExtendedEntity extends Entity, Taggable, Customizable {
+public class MockCustomFieldModuleMemory extends CustomFieldModule {
+    @Override
+    protected void installCustomFieldDao() {
+        bind(CustomFieldDao.class).to(MockCustomFieldDao.class).asEagerSingleton();
+    }
 }

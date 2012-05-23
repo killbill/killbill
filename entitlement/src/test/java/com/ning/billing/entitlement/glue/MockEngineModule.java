@@ -19,7 +19,7 @@ package com.ning.billing.entitlement.glue;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.util.clock.MockClockModule;
+import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 

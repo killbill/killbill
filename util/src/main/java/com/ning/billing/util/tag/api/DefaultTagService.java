@@ -17,16 +17,16 @@
 package com.ning.billing.util.tag.api;
 
 import com.google.inject.Inject;
-import com.ning.billing.util.api.TagDefinitionService;
+import com.ning.billing.util.api.TagService;
 import com.ning.billing.util.api.TagUserApi;
 
-public class DefaultTagDefinitionService implements TagDefinitionService {
+public class DefaultTagService implements TagService {
     
     private static final String TAG_DEFINITION_SERVICE_NAME = "tag-service";
     private final TagUserApi api;
 
     @Inject
-    public DefaultTagDefinitionService(final TagUserApi api) {
+    public DefaultTagService(final TagUserApi api) {
         this.api = api;
     }
 

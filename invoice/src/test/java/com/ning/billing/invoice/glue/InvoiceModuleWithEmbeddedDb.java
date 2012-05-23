@@ -46,7 +46,7 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.glue.FieldStoreModule;
+import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
@@ -100,7 +100,7 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
 
         bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
         bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
-        install(new FieldStoreModule());
+        install(new CustomFieldModule());
         install(new TagStoreModule());
 
         installNotificationQueue();

@@ -47,10 +47,13 @@ import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
+import com.ning.billing.util.customfield.MockCustomFieldModuleMemory;
 import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.tag.MockTagStoreModuleMemory;
 
 @Test
-@Guice(modules = { PaymentTestModule.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class})
+@Guice(modules = {MockCustomFieldModuleMemory.class, MockTagStoreModuleMemory.class, PaymentTestModule.class,
+        AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class})
 public class TestNotifyInvoicePaymentApi {
     @Inject
     private Bus eventBus;

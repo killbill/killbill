@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.config;
+package com.ning.billing.overdue;
 
 import org.joda.time.DateTime;
 

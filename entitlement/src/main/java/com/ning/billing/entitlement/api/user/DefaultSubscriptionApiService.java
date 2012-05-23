@@ -308,11 +308,6 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         }
     }
 
-
-    public void commitCustomFields(SubscriptionData subscription, CallContext context) {
-        dao.saveCustomFields(subscription, context);
-    }
-
     private void validateRequestedDate(SubscriptionData subscription, DateTime now, DateTime requestedDate)
         throws EntitlementUserApiException {
 

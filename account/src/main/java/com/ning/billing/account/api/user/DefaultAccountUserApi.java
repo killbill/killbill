@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.dao.AccountEmailDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -42,23 +45,35 @@ public class DefaultAccountUserApi implements AccountUserApi {
     private final CallContextFactory factory;
     private final AccountDao accountDao;
     private final AccountEmailDao accountEmailDao;
+    private final TagDao tagDao;
+    private final CustomFieldDao customFieldDao;
 
     @Inject
-    public DefaultAccountUserApi(final CallContextFactory factory, final AccountDao accountDao, final AccountEmailDao accountEmailDao) {
+    public DefaultAccountUserApi(final CallContextFactory factory, final AccountDao accountDao,
+                                 final AccountEmailDao accountEmailDao, final TagDao tagDao,
+                                 final CustomFieldDao customFieldDao) {
         this.factory = factory;
         this.accountDao = accountDao;
         this.accountEmailDao = accountEmailDao;
+        this.tagDao = tagDao;
+        this.customFieldDao = customFieldDao;
     }
 
     @Override
     public Account createAccount(final AccountData data, final List<CustomField> fields,
                                  final List<TagDefinition> tagDefinitions, final CallContext context) throws AccountApiException {
         Account account = new DefaultAccount(data);
-        account.setFields(fields);
-        account.addTagsFromDefinitions(tagDefinitions);
 
         try {
+            // TODO: move this into a transaction?
             accountDao.create(account, context);
+            if (tagDefinitions != null) {
+                tagDao.insertTags(account.getId(), ObjectType.ACCOUNT, tagDefinitions, context);
+            }
+
+            if (fields != null) {
+                customFieldDao.saveEntities(account.getId(), ObjectType.ACCOUNT, fields, context);
+            }
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }
@@ -132,11 +147,12 @@ public class DefaultAccountUserApi implements AccountUserApi {
         DateTime updatedDate = data.getUpdatedDate() == null ? context.getUpdatedDate() : data.getUpdatedDate();
         CallContext migrationContext = factory.toMigrationCallContext(context, createdDate, updatedDate);
 		Account account = new DefaultAccount(data);
-        account.setFields(fields);
-        account.addTagsFromDefinitions(tagDefinitions);
 
         try {
+            // TODO: move this into a transaction?
             accountDao.create(account, migrationContext);
+            tagDao.insertTags(account.getId(), ObjectType.ACCOUNT, tagDefinitions, context);
+            customFieldDao.saveEntities(account.getId(), ObjectType.ACCOUNT, fields, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }

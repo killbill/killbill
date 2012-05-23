@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
@@ -39,6 +40,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.dao.ObjectType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +88,7 @@ public class AccountResource implements BaseJaxrsResource {
 
     private final AccountUserApi accountApi;
     private final EntitlementUserApi entitlementApi;
+    private final CustomFieldUserApi customFieldApi;
     private final EntitlementTimelineApi timelineApi;
     private final InvoiceUserApi invoiceApi;
     private final PaymentApi paymentApi;
@@ -100,6 +104,7 @@ public class AccountResource implements BaseJaxrsResource {
             final InvoiceUserApi invoiceApi,
             final PaymentApi paymentApi,
             final EntitlementTimelineApi timelineApi,
+            final CustomFieldUserApi customFieldUserApi,
             final TagUserApi tagUserApi,
             final TagHelper tagHelper,
             final Context context) {
@@ -107,6 +112,7 @@ public class AccountResource implements BaseJaxrsResource {
     	this.accountApi = accountApi;
     	this.tagUserApi = tagUserApi;
         this.entitlementApi = entitlementApi;
+        this.customFieldApi = customFieldUserApi;
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.timelineApi = timelineApi;
@@ -278,10 +284,10 @@ public class AccountResource implements BaseJaxrsResource {
     public Response getAccountTags(@PathParam("accountId") String accountId) {
         try {
             Account account = accountApi.getAccountById(UUID.fromString(accountId));
-            List<Tag> tags = account.getTagList();
+            Map<String, Tag> tags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
             Collection<String> tagNameList = (tags.size() == 0) ?
                     Collections.<String>emptyList() :
-                Collections2.transform(tags, new Function<Tag, String>() {
+                Collections2.transform(tags.values(), new Function<Tag, String>() {
                 @Override
                 public String apply(Tag input) {
                     return input.getTagDefinitionName();
@@ -309,8 +315,9 @@ public class AccountResource implements BaseJaxrsResource {
             
             Account account = accountApi.getAccountById(UUID.fromString(accountId));
 
-            List<TagDefinition> input = tagHelper.getTagDifinitionFromTagList(tagList);
-            account.addTagsFromDefinitions(input);
+            List<TagDefinition> input = tagHelper.getTagDefinitionFromTagList(tagList);
+            tagUserApi.addTags(account.getId(), ObjectType.ACCOUNT, input, context.createContext(createdBy, reason, comment));
+
             Response response = uriBuilder.buildResponse(AccountResource.class, "getAccountTags", account.getId());
             return response;
         } catch (AccountApiException e) {
@@ -337,22 +344,8 @@ public class AccountResource implements BaseJaxrsResource {
         try {
             Account account = accountApi.getAccountById(UUID.fromString(accountId));
 
-            // Tag APIs needs tome rework...
-            String inputTagList = tagList;
-            if (inputTagList == null) {
-                List<Tag> existingTags = account.getTagList();
-                StringBuilder tmp = new StringBuilder();
-                for (Tag cur : existingTags) {
-                    tmp.append(cur.getTagDefinitionName());
-                    tmp.append(",");
-                }
-                inputTagList = tmp.toString();
-            }
-
-            List<TagDefinition> input = tagHelper.getTagDifinitionFromTagList(tagList);   
-            for (TagDefinition cur : input) {
-                account.removeTag(cur);
-            }
+            List<TagDefinition> input = tagHelper.getTagDefinitionFromTagList(tagList);
+            tagUserApi.removeTags(account.getId(), ObjectType.ACCOUNT, input, context.createContext(createdBy, reason, comment));
 
             return Response.status(Status.OK).build();
         } catch (AccountApiException e) {
@@ -374,9 +367,10 @@ public class AccountResource implements BaseJaxrsResource {
     public Response getAccountCustomFields(@PathParam("accountId") String accountId) {
         try {
             Account account = accountApi.getAccountById(UUID.fromString(accountId));
-            List<CustomField> fields = account.getFieldList();
+            Map<String, CustomField> fields = customFieldApi.getCustomFields(account.getId(), ObjectType.ACCOUNT);
+
             List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
-            for (CustomField cur : fields) {
+            for (CustomField cur : fields.values()) {
                 result.add(new CustomFieldJson(cur));
             }
             return Response.status(Status.OK).entity(result).build();
@@ -403,7 +397,8 @@ public class AccountResource implements BaseJaxrsResource {
             for (CustomFieldJson cur : customFields) {
                 input.add(new StringCustomField(cur.getName(), cur.getValue()));
             }
-            account.saveFields(input, context.createContext(createdBy, reason, comment));
+
+            customFieldApi.saveCustomFields(account.getId(), ObjectType.ACCOUNT, input, context.createContext(createdBy, reason, comment));
             Response response = uriBuilder.buildResponse(AccountResource.class, "getAccountCustomFields", account.getId());            
             return response;
         } catch (AccountApiException e) {
@@ -420,7 +415,7 @@ public class AccountResource implements BaseJaxrsResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam("accountId") final String accountId,
-            @QueryParam(QUERY_CUSTOM_FIELDS) final String cutomFieldList,
+            @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
             @HeaderParam(HDR_CREATED_BY) final String createdBy,
             @HeaderParam(HDR_REASON) final String reason,
             @HeaderParam(HDR_COMMENT) final String comment) {

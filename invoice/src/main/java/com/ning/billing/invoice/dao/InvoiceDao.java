@@ -19,15 +19,13 @@ package com.ning.billing.invoice.dao;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.tag.Taggable;
-import com.ning.billing.util.tag.dao.TaggableDao;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-public interface InvoiceDao extends TaggableDao {
+public interface InvoiceDao {
     void create(Invoice invoice, CallContext context);
 
     Invoice getById(final UUID id);
@@ -53,4 +51,9 @@ public interface InvoiceDao extends TaggableDao {
     void test();
 
 	List<Invoice> getAllInvoicesByAccount(final UUID accountId);
+
+    void setWrittenOff(UUID invoiceId, CallContext context);
+
+    void removeWrittenOff(UUID invoiceId, CallContext context);
+
 }

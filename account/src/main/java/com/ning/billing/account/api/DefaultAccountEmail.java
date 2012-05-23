@@ -31,7 +31,7 @@ public class DefaultAccountEmail extends UpdatableEntityBase implements AccountE
     }
 
     public DefaultAccountEmail(AccountEmail source, String newEmail) {
-        this(source.getId(), source.getAccountId(), newEmail);
+        this(source.getAccountId(), newEmail);
     }
 
     public DefaultAccountEmail(UUID id, UUID accountId, String email) {
@@ -57,13 +57,16 @@ public class DefaultAccountEmail extends UpdatableEntityBase implements AccountE
 
         DefaultAccountEmail that = (DefaultAccountEmail) o;
 
-        if (!id.equals(that.id)) return false;
+        if (!accountId.equals(that.accountId)) return false;
+        if (!email.equals(that.email)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        int result = accountId.hashCode();
+        result = 31 * result + email.hashCode();
+        return result;
     }
 }
