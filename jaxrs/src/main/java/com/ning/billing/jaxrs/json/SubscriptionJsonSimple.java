@@ -21,7 +21,6 @@ import org.codehaus.jackson.map.annotate.JsonView;
 
 public class SubscriptionJsonSimple {
     
-    @JsonView(BundleTimelineViews.Base.class)
     protected final String subscriptionId;
 
     public SubscriptionJsonSimple() {

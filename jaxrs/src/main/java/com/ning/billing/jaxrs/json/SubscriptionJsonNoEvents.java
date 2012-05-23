@@ -33,27 +33,19 @@ import com.ning.billing.util.clock.DefaultClock;
 
 public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final DateTime startDate;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String bundleId;
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final String productName;
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final String productCategory;
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final String billingPeriod;
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final String priceList;
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final DateTime chargedThroughDate;
-    
 
 
     @JsonCreator

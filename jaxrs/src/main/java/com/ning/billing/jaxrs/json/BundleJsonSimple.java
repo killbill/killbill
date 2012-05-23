@@ -21,10 +21,8 @@ import org.codehaus.jackson.map.annotate.JsonView;
 
 public class BundleJsonSimple {
     
-    @JsonView(BundleTimelineViews.Base.class)
     protected final String bundleId;
 
-    @JsonView(BundleTimelineViews.Base.class)
     protected final String externalKey;
 
     @JsonCreator

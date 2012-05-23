@@ -34,16 +34,12 @@ import com.ning.billing.payment.api.PaymentAttempt;
 
 public class AccountTimelineJson {
 
-    @JsonView(BundleTimelineViews.ReadTimeline.class)
     private final List<PaymentJsonWithBundleKeys> payments;
 
-    @JsonView(BundleTimelineViews.ReadTimeline.class)
     private final List<InvoiceJsonWithBundleKeys> invoices;
     
-    @JsonView(BundleTimelineViews.ReadTimeline.class)
     private final AccountJsonSimple account;
     
-    @JsonView(BundleTimelineViews.Timeline.class)
     private final List<BundleJsonWithSubscriptions> bundles;
     
     @JsonCreator

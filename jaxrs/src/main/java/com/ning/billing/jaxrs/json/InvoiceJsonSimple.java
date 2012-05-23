@@ -27,22 +27,16 @@ import com.ning.billing.invoice.api.Invoice;
 
 public class InvoiceJsonSimple {
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final BigDecimal amount;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String invoiceId;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final DateTime invoiceDate;
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final DateTime targetDate;
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final String invoiceNumber;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final BigDecimal balance;
 
     

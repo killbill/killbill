@@ -26,7 +26,6 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
 public class BundleJsonNoSubsciptions  extends BundleJsonSimple {
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final String accountId;
 
 

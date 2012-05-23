@@ -24,19 +24,14 @@ import org.codehaus.jackson.map.annotate.JsonView;
 
 public class BundleTimelineJson {
 
-    @JsonView(BundleTimelineViews.Timeline.class)
     private final String viewId;
 
-    @JsonView(BundleTimelineViews.Timeline.class)
     private final BundleJsonWithSubscriptions bundle;
 
-    @JsonView(BundleTimelineViews.ReadTimeline.class)
     private final List<PaymentJsonSimple> payments;
 
-    @JsonView(BundleTimelineViews.ReadTimeline.class)
     private final List<InvoiceJsonSimple> invoices;
 
-    @JsonView(BundleTimelineViews.WriteTimeline.class)
     private final String resonForChange;
 
     @JsonCreator

@@ -33,22 +33,17 @@ import com.ning.billing.util.clock.DefaultClock;
 
 public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
     
-    @JsonView(BundleTimelineViews.ReadTimeline.class)
     private final List<SubscriptionReadEventJson> events;
 
-    @JsonView(BundleTimelineViews.WriteTimeline.class)
     private final List<SubscriptionDeletedEventJson> deletedEvents;
 
-    @JsonView(BundleTimelineViews.WriteTimeline.class)
     private final List<SubscriptionNewEventJson> newEvents;
 
 
     public static class SubscriptionReadEventJson extends SubscriptionBaseEventJson {
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final String eventId;
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final DateTime effectiveDate;
 
         public SubscriptionReadEventJson() {
@@ -135,23 +130,16 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
 
     public static class SubscriptionBaseEventJson {
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final String billingPeriod;
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final DateTime requestedDate;
 
-
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final String product;
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final String priceList;
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final String eventType;
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final String phase;
 
         public SubscriptionBaseEventJson() {

@@ -29,43 +29,30 @@ public class AccountJson extends AccountJsonSimple {
 
     // STEPH Missing city, locale, postalCode from https://home.ninginc.com:8443/display/REVINFRA/Killbill+1.0+APIs
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final String name;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final Integer length;
         
-    @JsonView(BundleTimelineViews.Base.class)
     private final String email;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final Integer billCycleDay;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String currency;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String paymentProvider;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String timeZone;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String address1;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String address2;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String company;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String state;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String country;
     
-    @JsonView(BundleTimelineViews.Base.class)
     private final String phone;
 
 

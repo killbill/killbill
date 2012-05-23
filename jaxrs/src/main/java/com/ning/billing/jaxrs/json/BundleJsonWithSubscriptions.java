@@ -29,7 +29,6 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
 public class BundleJsonWithSubscriptions extends BundleJsonSimple {
 
-    @JsonView(BundleTimelineViews.Timeline.class)
     private final List<SubscriptionJsonWithEvents> subscriptions;
 
     @JsonCreator
