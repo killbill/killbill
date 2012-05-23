@@ -16,17 +16,16 @@
 
 package com.ning.billing.account.api.user;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountData;
-import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTimeZone;
 
 public class DefaultAccountCreationEvent implements AccountCreationEvent {

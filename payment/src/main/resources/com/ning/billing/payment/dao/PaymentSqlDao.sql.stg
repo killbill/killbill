@@ -2,6 +2,7 @@ group PaymentSqlDao;
 
 paymentInfoFields(prefix) ::= <<
     <prefix>id,
+    <prefix>external_payment_id,
     <prefix>amount,
     <prefix>refund_amount,
     <prefix>bank_identification_number,
@@ -22,16 +23,16 @@ paymentInfoFields(prefix) ::= <<
 
 insertPaymentInfo() ::= <<
     INSERT INTO payments (<paymentInfoFields()>)
-    VALUES (:id, :amount, :refund_amount, :bank_identification_number, :payment_number,
-    :payment_type, :status, :reference_id, :payment_method_id, :payment_method, :card_type,
-    :card_country, :effective_date, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :externalPaymentId, :amount, :refundAmount, :bankIdentificationNumber, :paymentNumber,
+    :paymentType, :status, :referenceId, :paymentMethodId, :paymentMethod, :cardType,
+    :cardCountry, :effectiveDate, :userName, :createdDate, :userName, :createdDate);
 >>
 
 updatePaymentInfo() ::= <<
     UPDATE payments
-       SET payment_method = :payment_method,
-           card_type = :card_type,
-           card_country = :card_country,
+       SET payment_method = :paymentMethod,
+           card_type = :cardType,
+           card_country = :cardCountry,
            updated_by = :userName,
            updated_date = :updatedDate
      WHERE id = :id
@@ -56,7 +57,7 @@ getLastPaymentInfo(invoiceIds) ::= <<
 getPaymentInfoForPaymentAttemptId() ::= <<
     SELECT <paymentInfoFields("p.")>
       FROM payments p, payment_attempts pa
-    WHERE pa.payment_attempt_id = :payment_attempt_id
+    WHERE pa.payment_attempt_id = :paymentAttemptId
        AND pa.payment_id = p.id
 >>
 
@@ -69,6 +70,7 @@ getPaymentInfo() ::= <<
 historyFields(prefix) ::= <<
     record_id,
     id,
+    external_payment_id,
     amount,
     refund_amount,
     payment_number,
@@ -89,9 +91,9 @@ historyFields(prefix) ::= <<
 
 insertHistoryFromTransaction() ::= <<
     INSERT INTO payment_history (<historyFields()>)
-    VALUES (:recordId, :id, :amount, :refund_amount, :bank_identification_number, :payment_number,
-    :payment_type, :status, :reference_id, :payment_method_id, :payment_method, :card_type,
-    :card_country, :effective_date, :userName, :createdDate, :userName, :updatedDate);
+    VALUES (:recordId, :id, :externalPaymentId, :amount, :refundAmount, :bankIdentificationNumber, :paymentNumber,
+    :paymentType, :status, :referenceId, :paymentMethodId, :paymentMethod, :cardType,
+    :cardCountry, :effectiveDate, :userName, :createdDate, :userName, :updatedDate);
 >>
 
 getRecordId() ::= <<

@@ -279,7 +279,7 @@ public class TestAnalyticsService {
         invoiceCreationNotification = new DefaultInvoiceCreationEvent(invoice.getId(), account.getId(),
                 INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow(), null);
 
-        paymentInfoNotification = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID()).setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
+        paymentInfoNotification = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID()).setExternalPaymentId("12345abcdef").setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
         final PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
                 ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getId(), 1, null, null);
         paymentDao.createPaymentAttempt(paymentAttempt, context);

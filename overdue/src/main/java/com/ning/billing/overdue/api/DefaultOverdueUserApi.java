@@ -16,12 +16,9 @@
 
 package com.ning.billing.overdue.api;
 
-import org.apache.commons.lang.NotImplementedException;
-
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
@@ -72,7 +69,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     @Override
     public <T extends Blockable> void setOverrideBillingStateForAccount(
             T overdueable, BillingState<T> state) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
     
 }

@@ -45,6 +45,7 @@ public abstract class TestPaymentDao {
     @Test
     public void testCreatePayment() {
         PaymentInfoEvent paymentInfo = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID())
+                .setExternalPaymentId("40863fe3f6dca54")
                 .setAmount(BigDecimal.TEN)
                 .setStatus("Processed")
                 .setBankIdentificationNumber("1234")
@@ -61,6 +62,7 @@ public abstract class TestPaymentDao {
     @Test
     public void testUpdatePaymentInfo() {
         PaymentInfoEvent paymentInfo = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID())
+                .setExternalPaymentId("40863fe3f6dca54")
                 .setAmount(BigDecimal.TEN)
                 .setStatus("Processed")
                 .setBankIdentificationNumber("1234")
@@ -118,6 +120,7 @@ public abstract class TestPaymentDao {
         Assert.assertEquals(attempt3, attempt4);
 
         PaymentInfoEvent originalPaymentInfo = new DefaultPaymentInfoEvent.Builder().setId(paymentId)
+                .setExternalPaymentId("test test")
                 .setAmount(invoiceAmount)
                 .setStatus("Processed")
                 .setBankIdentificationNumber("1234")

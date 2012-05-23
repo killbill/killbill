@@ -15,7 +15,7 @@
  */
 package com.ning.billing.jaxrs.json;
 
-import org.codehaus.jackson.annotate.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 import com.ning.billing.util.customfield.CustomField;
 

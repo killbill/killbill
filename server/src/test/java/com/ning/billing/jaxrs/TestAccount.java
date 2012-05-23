@@ -28,10 +28,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response.Status;
 
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.PropertyNamingStrategy;
 import org.joda.time.DateTime;
-import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -42,7 +39,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
@@ -119,7 +116,7 @@ public class TestAccount extends TestJaxrsBase {
 	    AccountJson accountJson = createAccount("poney", "shdddqgfhwe", "poney@yahoo.com");
 	    assertNotNull(accountJson);
 	    
-	    BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAccountId(), "996599");
+	    BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "996599");
 	    assertNotNull(bundleJson);
 	    
         SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);

@@ -64,7 +64,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -144,10 +144,10 @@ public class AccountResource implements BaseJaxrsResource {
             accountApi.getAccountById(uuid);
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid);
-            Collection<BundleJsonNoSubsciptions> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJsonNoSubsciptions>() {
+            Collection<BundleJsonNoSubscriptions> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJsonNoSubscriptions>() {
                 @Override
-                public BundleJsonNoSubsciptions apply(SubscriptionBundle input) {
-                    return new BundleJsonNoSubsciptions(input);
+                public BundleJsonNoSubscriptions apply(SubscriptionBundle input) {
+                    return new BundleJsonNoSubscriptions(input);
                 }
             });
             return Response.status(Status.OK).entity(result).build();

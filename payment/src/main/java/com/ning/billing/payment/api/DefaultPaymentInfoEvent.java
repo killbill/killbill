@@ -19,15 +19,16 @@ package com.ning.billing.payment.api;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.entity.EntityBase;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
 
 import com.google.common.base.Objects;
 
 public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEvent {
+    private final String externalPaymentId;
     private final BigDecimal amount;
     private final BigDecimal refundAmount;
     private final String paymentNumber;
@@ -44,20 +45,22 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
     @JsonCreator
     public DefaultPaymentInfoEvent(@JsonProperty("id") UUID id,
-                       @JsonProperty("amount") BigDecimal amount,
-                       @JsonProperty("refundAmount") BigDecimal refundAmount,
-                       @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
-                       @JsonProperty("paymentNumber") String paymentNumber,
-                       @JsonProperty("status") String status,
-                       @JsonProperty("type") String type,
-                       @JsonProperty("referenceId") String referenceId,
-                       @JsonProperty("paymentMethodId") String paymentMethodId,
-                       @JsonProperty("paymentMethod") String paymentMethod,
-                       @JsonProperty("cardType") String cardType,
-                       @JsonProperty("cardCountry") String cardCountry,
-                       @JsonProperty("userToken") UUID userToken,
-                       @JsonProperty("effectiveDate") DateTime effectiveDate) {
+                                   @JsonProperty("externalPaymentId") String externalPaymentId,
+                                   @JsonProperty("amount") BigDecimal amount,
+                                   @JsonProperty("refundAmount") BigDecimal refundAmount,
+                                   @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
+                                   @JsonProperty("paymentNumber") String paymentNumber,
+                                   @JsonProperty("status") String status,
+                                   @JsonProperty("type") String type,
+                                   @JsonProperty("referenceId") String referenceId,
+                                   @JsonProperty("paymentMethodId") String paymentMethodId,
+                                   @JsonProperty("paymentMethod") String paymentMethod,
+                                   @JsonProperty("cardType") String cardType,
+                                   @JsonProperty("cardCountry") String cardCountry,
+                                   @JsonProperty("userToken") UUID userToken,
+                                   @JsonProperty("effectiveDate") DateTime effectiveDate) {
         super(id);
+        this.externalPaymentId = externalPaymentId;
         this.amount = amount;
         this.refundAmount = refundAmount;
         this.bankIdentificationNumber = bankIdentificationNumber;
@@ -75,6 +78,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
     public DefaultPaymentInfoEvent(DefaultPaymentInfoEvent src) {
         this(src.id,
+             src.externalPaymentId,
              src.amount,
              src.refundAmount,
              src.bankIdentificationNumber,
@@ -103,6 +107,11 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
     public Builder cloner() {
         return new Builder(this);
+    }
+
+    @Override
+    public String getExternalPaymentId() {
+        return externalPaymentId;
     }
 
     @Override
@@ -167,6 +176,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
     public static class Builder {
         private UUID id;
+        private String externalPaymentId;
         private BigDecimal amount;
         private BigDecimal refundAmount;
         private String paymentNumber;
@@ -186,6 +196,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
         public Builder(DefaultPaymentInfoEvent src) {
             this.id = src.id;
+            this.externalPaymentId = src.externalPaymentId;
             this.amount = src.amount;
             this.refundAmount = src.refundAmount;
             this.paymentNumber = src.paymentNumber;
@@ -203,6 +214,11 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
         public Builder setId(UUID id) {
             this.id = id;
+            return this;
+        }
+
+        public Builder setExternalPaymentId(String externalPaymentId) {
+            this.externalPaymentId = externalPaymentId;
             return this;
         }
 
@@ -273,6 +289,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
         public PaymentInfoEvent build() {
             return new DefaultPaymentInfoEvent(id,
+                                   externalPaymentId,
                                    amount,
                                    refundAmount,
                                    bankIdentificationNumber,
@@ -292,6 +309,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     @Override
     public int hashCode() {
         return Objects.hashCode(id,
+                                externalPaymentId,
                                 amount,
                                 refundAmount,
                                 bankIdentificationNumber,
@@ -313,6 +331,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
         final DefaultPaymentInfoEvent that = (DefaultPaymentInfoEvent) o;
 
+        if (!externalPaymentId.equals(that.externalPaymentId)) return false;
         if (amount != null ? !(amount.compareTo(that.amount) == 0) : that.amount != null) return false;
         if (bankIdentificationNumber != null ? !bankIdentificationNumber.equals(that.bankIdentificationNumber) : that.bankIdentificationNumber != null)
             return false;

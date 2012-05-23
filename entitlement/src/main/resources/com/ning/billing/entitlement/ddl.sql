@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS entitlement_events;
-CREATE TABLE entitlement_events (
+DROP TABLE IF EXISTS subscription_events;
+CREATE TABLE subscription_events (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
     event_type varchar(9) NOT NULL,
@@ -20,9 +21,9 @@ CREATE TABLE entitlement_events (
     updated_date datetime NOT NULL,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
-CREATE UNIQUE INDEX entitlement_events_id ON entitlement_events(id);
-CREATE INDEX idx_ent_1 ON entitlement_events(subscription_id,is_active,effective_date);
-CREATE INDEX idx_ent_2 ON entitlement_events(subscription_id,effective_date,created_date,requested_date,id);
+CREATE UNIQUE INDEX subscription_events_id ON subscription_events(id);
+CREATE INDEX idx_ent_1 ON subscription_events(subscription_id, is_active, effective_date);
+CREATE INDEX idx_ent_2 ON subscription_events(subscription_id, effective_date, created_date, requested_date,id);
 
 DROP TABLE IF EXISTS subscriptions;
 CREATE TABLE subscriptions (

@@ -34,7 +34,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.http.client.Response;
@@ -53,7 +53,7 @@ public class TestSubscription extends TestJaxrsBase {
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
         
         AccountJson accountJson = createAccount("xil", "shdxilhkkl", "xil@yahoo.com");
-        BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAccountId(), "99999");
+        BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "99999");
 
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;

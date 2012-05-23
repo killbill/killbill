@@ -44,7 +44,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -71,7 +71,7 @@ public class BundleResource implements BaseJaxrsResource {
     public Response getBundle(@PathParam("bundleId") final String bundleId) throws EntitlementUserApiException {
         try {
             SubscriptionBundle bundle = entitlementApi.getBundleFromId(UUID.fromString(bundleId));
-            BundleJsonNoSubsciptions json = new BundleJsonNoSubsciptions(bundle);
+            BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
             return Response.status(Status.OK).entity(json).build();
         } catch (EntitlementUserApiException e) {
             if (e.getCode() == ErrorCode.ENT_GET_INVALID_BUNDLE_ID.getCode()) {
@@ -88,7 +88,7 @@ public class BundleResource implements BaseJaxrsResource {
     public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey) throws EntitlementUserApiException {
         try {
             SubscriptionBundle bundle = entitlementApi.getBundleForKey(externalKey);
-            BundleJsonNoSubsciptions json = new BundleJsonNoSubsciptions(bundle);
+            BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
             return Response.status(Status.OK).entity(json).build();
         } catch (EntitlementUserApiException e) {
             if (e.getCode() == ErrorCode.ENT_GET_INVALID_BUNDLE_KEY.getCode()) {
@@ -103,7 +103,7 @@ public class BundleResource implements BaseJaxrsResource {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createBundle(final BundleJsonNoSubsciptions json,
+    public Response createBundle(final BundleJsonNoSubscriptions json,
             @HeaderParam(HDR_CREATED_BY) final String createdBy,
             @HeaderParam(HDR_REASON) final String reason,
             @HeaderParam(HDR_COMMENT) final String comment) {

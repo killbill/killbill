@@ -18,24 +18,13 @@ package com.ning.billing.payment.api;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.ning.billing.util.jackson.ObjectMapper;
 import org.joda.time.DateTime;
 import org.testng.Assert;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-
 public class TestEventJson {
-
-
     private ObjectMapper mapper = new ObjectMapper();
-
-    @BeforeTest(groups= {"fast"})
-    public void setup() {
-        mapper = new ObjectMapper();
-        mapper.disable(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS);
-    }
 
     @Test(groups= {"fast"})
     public void testPaymentErrorEvent() throws Exception {
@@ -49,7 +38,7 @@ public class TestEventJson {
     
     @Test(groups= {"fast"})
     public void testPaymentInfoEvent() throws Exception {
-        PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), new BigDecimal(12), new BigDecimal(12.9), "BNP", "eeert", "success",
+        PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), "932587sdkjgfh", new BigDecimal(12), new BigDecimal(12.9), "BNP", "eeert", "success",
                 "credit", "ref", "paypal", "paypal", "", "", UUID.randomUUID(), new DateTime());
         
         String json = mapper.writeValueAsString(e);

@@ -16,8 +16,8 @@
 
 package com.ning.billing.payment.api;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonValue;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public abstract class Either<T, V> {
     public static <T, V> Either<T, V> left(T value) {

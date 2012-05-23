@@ -65,6 +65,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         }
         else {
             PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID())
+                                                 .setExternalPaymentId("238957t49regyuihfd")
                                                  .setAmount(invoice.getBalance())
                                                  .setStatus("Processed")
                                                  .setBankIdentificationNumber("1234")

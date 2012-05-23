@@ -23,6 +23,8 @@ import org.joda.time.DateTime;
 import com.ning.billing.util.bus.BusEvent;
 
 public interface PaymentInfoEvent extends Entity, BusEvent {
+    public String getExternalPaymentId();
+
     public BigDecimal getAmount();
 
     public String getBankIdentificationNumber();

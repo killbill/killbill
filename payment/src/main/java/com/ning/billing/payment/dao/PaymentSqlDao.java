@@ -49,13 +49,13 @@ import com.ning.billing.payment.api.PaymentInfoEvent;
 @RegisterMapper(PaymentSqlDao.PaymentInfoMapper.class)
 public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEntitySqlDao<PaymentInfoEvent>, CloseMe {
     @SqlQuery
-    PaymentInfoEvent getPaymentInfoForPaymentAttemptId(@Bind("payment_attempt_id") String paymentAttemptId);
+    PaymentInfoEvent getPaymentInfoForPaymentAttemptId(@Bind("paymentAttemptId") String paymentAttemptId);
 
     @SqlUpdate
-    void updatePaymentInfo(@Bind("payment_method") String paymentMethod,
+    void updatePaymentInfo(@Bind("paymentMethod") String paymentMethod,
                            @Bind("id") String paymentId,
-                           @Bind("card_type") String cardType,
-                           @Bind("card_country") String cardCountry,
+                           @Bind("cardType") String cardType,
+                           @Bind("cardCountry") String cardCountry,
                            @CallContextBinder CallContext context);
 
     @SqlQuery
@@ -80,18 +80,19 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentInfoEvent paymentInfo) {
             stmt.bind("id", paymentInfo.getId().toString());
+            stmt.bind("externalPaymentId", paymentInfo.getExternalPaymentId());
             stmt.bind("amount", paymentInfo.getAmount());
-            stmt.bind("refund_amount", paymentInfo.getRefundAmount());
-            stmt.bind("payment_number", paymentInfo.getPaymentNumber());
-            stmt.bind("bank_identification_number", paymentInfo.getBankIdentificationNumber());
+            stmt.bind("refundAmount", paymentInfo.getRefundAmount());
+            stmt.bind("paymentNumber", paymentInfo.getPaymentNumber());
+            stmt.bind("bankIdentificationNumber", paymentInfo.getBankIdentificationNumber());
             stmt.bind("status", paymentInfo.getStatus());
-            stmt.bind("payment_type", paymentInfo.getType());
-            stmt.bind("reference_id", paymentInfo.getReferenceId());
-            stmt.bind("payment_method_id", paymentInfo.getPaymentMethodId());
-            stmt.bind("payment_method", paymentInfo.getPaymentMethod());
-            stmt.bind("card_type", paymentInfo.getCardType());
-            stmt.bind("card_country", paymentInfo.getCardCountry());
-            stmt.bind("effective_date", getDate(paymentInfo.getEffectiveDate()));
+            stmt.bind("paymentType", paymentInfo.getType());
+            stmt.bind("referenceId", paymentInfo.getReferenceId());
+            stmt.bind("paymentMethodId", paymentInfo.getPaymentMethodId());
+            stmt.bind("paymentMethod", paymentInfo.getPaymentMethod());
+            stmt.bind("cardType", paymentInfo.getCardType());
+            stmt.bind("cardCountry", paymentInfo.getCardCountry());
+            stmt.bind("effectiveDate", getDate(paymentInfo.getEffectiveDate()));
         }
     }
 
@@ -99,6 +100,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
         @Override
         public PaymentInfoEvent map(int index, ResultSet rs, StatementContext ctx) throws SQLException {
             UUID id = getUUID(rs, "id");
+            String externalPaymentId = rs.getString("external_payment_id");
             BigDecimal amount = rs.getBigDecimal("amount");
             BigDecimal refundAmount = rs.getBigDecimal("refund_amount");
             String paymentNumber = rs.getString("payment_number");
@@ -115,6 +117,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
             UUID userToken = null; //rs.getString("user_token") != null ? UUID.fromString(rs.getString("user_token")) : null;
             
             return new DefaultPaymentInfoEvent(id,
+                                   externalPaymentId,
                                    amount,
                                    refundAmount,
                                    bankIdentificationNumber,

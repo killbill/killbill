@@ -16,11 +16,9 @@
 
 package com.ning.billing.payment.api;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
-
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
-
 
 public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
     public static final String TYPE = "PayPal";

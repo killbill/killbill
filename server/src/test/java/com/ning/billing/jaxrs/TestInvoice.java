@@ -37,7 +37,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
@@ -60,7 +60,7 @@ public class TestInvoice extends TestJaxrsBase  {
         AccountJson accountJson = createAccount("poupou", "qhddffrwe", "poupou@yahoo.com");
         assertNotNull(accountJson);
         
-        BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAccountId(), "9967599");
+        BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "9967599");
         assertNotNull(bundleJson);
         
         SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);

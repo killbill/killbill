@@ -63,7 +63,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
@@ -329,8 +329,8 @@ public class TestJaxrsBase {
 
 
 
-    protected BundleJsonNoSubsciptions createBundle(String accountId, String key) throws Exception {
-        BundleJsonNoSubsciptions input = new BundleJsonNoSubsciptions(null, accountId, key, null);
+    protected BundleJsonNoSubscriptions createBundle(String accountId, String key) throws Exception {
+        BundleJsonNoSubscriptions input = new BundleJsonNoSubscriptions(null, accountId, key, null);
         String baseJson = mapper.writeValueAsString(input);
         Response response = doPost(BaseJaxrsResource.BUNDLES_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -343,7 +343,7 @@ public class TestJaxrsBase {
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         baseJson = response.getResponseBody();
-        BundleJsonNoSubsciptions objFromJson = mapper.readValue(baseJson, BundleJsonNoSubsciptions.class);
+        BundleJsonNoSubscriptions objFromJson = mapper.readValue(baseJson, BundleJsonNoSubscriptions.class);
         Assert.assertTrue(objFromJson.equalsNoId(input));
         return objFromJson;
     }
