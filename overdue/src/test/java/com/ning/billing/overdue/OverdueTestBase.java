@@ -26,6 +26,7 @@ import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -148,9 +149,7 @@ public class OverdueTestBase {
     protected void setupMySQL() throws IOException
     {
         final String utilDdl = IOUtils.toString(TestOverdueStateApplicator.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
         helper.startMysql();
-
         helper.initDb(utilDdl);
     }
 
@@ -161,12 +160,13 @@ public class OverdueTestBase {
         setupMySQL();
         service.registerForBus();
         service.initialize();
- 
+        service.start();
     }
 
     @AfterClass(groups = "slow")
     public void tearDown() throws Exception {
         helper.stopMysql();
+        service.stop();
     }
 
 
@@ -175,11 +175,11 @@ public class OverdueTestBase {
 
         // Pre test cleanup
         helper.cleanupAllTables();
-
         clock.resetDeltaFromReality();
 
     }
-    
+
+
     protected void checkStateApplied( OverdueState<SubscriptionBundle> state) {
         BlockingState result = ((ApplicatorBlockingApi)blockingApi).getBlockingState();
         checkStateApplied( result, state);

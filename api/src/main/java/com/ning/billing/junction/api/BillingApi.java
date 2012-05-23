@@ -16,8 +16,10 @@
 
 package com.ning.billing.junction.api;
 
+import java.util.SortedSet;
 import java.util.UUID;
 
+import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 
 public interface BillingApi extends ChargeThruApi {
@@ -27,5 +29,5 @@ public interface BillingApi extends ChargeThruApi {
      * @return an ordered list of billing event for the given accounts
      *
      */
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId);
+    public SortedSet<BillingEvent> getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId);
 }

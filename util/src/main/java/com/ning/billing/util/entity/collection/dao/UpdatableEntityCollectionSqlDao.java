@@ -30,12 +30,14 @@ import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import java.util.List;
 
 public interface UpdatableEntityCollectionSqlDao<T extends Entity> extends EntityCollectionSqlDao<T>,
         CollectionHistorySqlDao<T>,
-        AuditSqlDao {
+        AuditSqlDao, CloseMe, Transmogrifier {
     @SqlBatch(transactional=false)
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,

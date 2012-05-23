@@ -17,6 +17,7 @@
 package com.ning.billing.junction.plumbing.billing;
 
 import java.util.List;
+import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -40,7 +41,6 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BillingEventSet;
-import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -74,7 +74,7 @@ public class DefaultBillingApi implements BillingApi {
     }
 
     @Override
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId) {
+    public SortedSet<BillingEvent> getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId) {
         CallContext context = factory.createCallContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
 
         List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);

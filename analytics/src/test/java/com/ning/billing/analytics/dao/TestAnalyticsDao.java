@@ -38,6 +38,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
+import com.ning.billing.util.tag.Tag;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -115,9 +116,9 @@ public class TestAnalyticsDao
 
     private void setupBusinessAccount()
     {
-        final List<String> tags = new ArrayList<String>();
-        tags.add("batch1");
-        tags.add("great,guy");
+        final List<Tag> tags = new ArrayList<Tag>();
+        tags.add(getMockTag("batch1"));
+        tags.add(getMockTag("great,guy"));
         account = new BusinessAccount(ACCOUNT_KEY, BigDecimal.ONE, tags, new DateTime(DateTimeZone.UTC), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE");
 
         final IDBI dbi = helper.getDBI();
@@ -130,6 +131,14 @@ public class TestAnalyticsDao
         catch (Throwable t) {
             Assert.fail(t.toString());
         }
+    }
+
+    private Tag getMockTag(String tagDefinitionName) {
+        Tag tag = BrainDeadProxyFactory.createBrainDeadProxyFor(Tag.class);
+        ZombieControl zombie = (ZombieControl) tag;
+        zombie.addResult("getTagDefinitionName", tagDefinitionName);
+        zombie.addResult("toString", tagDefinitionName);
+        return tag;
     }
 
     @AfterClass(groups = "slow")
@@ -337,12 +346,12 @@ public class TestAnalyticsDao
         Assert.assertEquals(foundAccount.getCreatedDt(), foundAccount.getUpdatedDt());
         // Verify the joiner stuff
         Assert.assertEquals(foundAccount.getTags().size(), 2);
-        Assert.assertEquals(foundAccount.getTags().get(0), "batch1");
-        Assert.assertEquals(foundAccount.getTags().get(1), "great,guy");
+        Assert.assertEquals(foundAccount.getTags().get(0).getTagDefinitionName(), "batch1");
+        Assert.assertEquals(foundAccount.getTags().get(1).getTagDefinitionName(), "great,guy");
         // Verify the dates by backfilling them
         account.setCreatedDt(foundAccount.getCreatedDt());
         account.setUpdatedDt(foundAccount.getUpdatedDt());
-        Assert.assertEquals(foundAccount, account);
+        Assert.assertTrue(foundAccount.equals(account));
 
         // Try to update the account
         final DateTime previousUpdatedDt = account.getUpdatedDt();

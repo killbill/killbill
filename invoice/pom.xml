@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.11-SNAPSHOT</version>
+        <version>0.1.12-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-invoice</artifactId>
@@ -46,6 +46,21 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+            <version>1.9.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-jaxrs</artifactId>
+            <version>1.9.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.5</version>
         </dependency>
        <!-- TEST SCOPE -->
         <dependency>

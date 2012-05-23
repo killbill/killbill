@@ -48,21 +48,33 @@ public abstract class AuditedCollectionDaoBase<T extends Entity> implements Audi
                 T existingEntity = existingEntityIterator.next();
                 if (entity.equals(existingEntity)) {
                     // if the entities match, remove from both lists
-                    entitiesToUpdate.add(entity);
+                    // this requires that the id is *not* part of the equals statement
                     entityIterator.remove();
                     existingEntityIterator.remove();
+
+                    // if the entities have the same hashcode (e.g. same data), don't bother updating
+                    if (entity.hashCode() != existingEntity.hashCode()) {
+                        entitiesToUpdate.add(entity);
+                    }
                 }
             }
         }
 
-        dao.insertFromTransaction(objectId.toString(), objectType, entities, context);
-        dao.updateFromTransaction(objectId.toString(), objectType, entitiesToUpdate, context);
+        if (entities.size() != 0) {
+            dao.insertFromTransaction(objectId.toString(), objectType, entities, context);
+        }
+
+        if (entitiesToUpdate.size() != 0) {
+            dao.updateFromTransaction(objectId.toString(), objectType, entitiesToUpdate, context);
+        }
 
         // get all custom entities (including those that are about to be deleted) from the database in order to get the record ids
         List<Mapper<UUID, Long>> recordIds = dao.getRecordIds(objectId.toString(), objectType);
         Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);
 
-        dao.deleteFromTransaction(objectId.toString(), objectType, existingEntities, context);
+        if (existingEntities.size() != 0) {
+            dao.deleteFromTransaction(objectId.toString(), objectType, existingEntities, context);
+        }
 
         List<EntityHistory<T>> entityHistories = new ArrayList<EntityHistory<T>>();
         entityHistories.addAll(convertToHistory(entities, recordIdMap, ChangeType.INSERT));
@@ -81,15 +93,29 @@ public abstract class AuditedCollectionDaoBase<T extends Entity> implements Audi
     }
 
     @Override
-    public List<T> loadEntities(final UUID objectId, final ObjectType objectType) {
-        UpdatableEntityCollectionSqlDao thisDao = getSqlDao();
-        return thisDao.load(objectId.toString(), objectType);
+    public void saveEntities(UUID objectId, ObjectType objectType, List<T> entities, CallContext context) {
+        this.saveEntitiesFromTransaction(getSqlDao(), objectId, objectType, entities, context);
     }
 
     @Override
-    public List<T> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType) {
+    public Map<String, T> loadEntities(final UUID objectId, final ObjectType objectType) {
+        UpdatableEntityCollectionSqlDao<T> thisDao = getSqlDao();
+        return getMap(thisDao, objectId, objectType);
+    }
+
+    @Override
+    public Map<String, T> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType) {
         UpdatableEntityCollectionSqlDao<T> thisDao = transmogrifyDao(dao);
-        return thisDao.load(objectId.toString(), objectType);
+        return getMap(thisDao, objectId, objectType);
+    }
+
+    private Map<String, T> getMap(final UpdatableEntityCollectionSqlDao<T> dao, final UUID objectId, final ObjectType objectType) {
+        List<T> entities = dao.load(objectId.toString(), objectType);
+        Map<String, T> results = new HashMap<String, T>();
+        for (T entity : entities) {
+            results.put(getKey(entity), entity);
+        }
+        return results;
     }
 
     protected List<EntityHistory<T>> convertToHistory(List<T> entities, Map<UUID, Long> recordIds, ChangeType changeType) {
@@ -134,4 +160,5 @@ public abstract class AuditedCollectionDaoBase<T extends Entity> implements Audi
     protected abstract TableName getTableName();
     protected abstract UpdatableEntityCollectionSqlDao<T> transmogrifyDao(Transmogrifier transactionalDao);
     protected abstract UpdatableEntityCollectionSqlDao<T> getSqlDao();
+    protected abstract String getKey(T entity);
 }

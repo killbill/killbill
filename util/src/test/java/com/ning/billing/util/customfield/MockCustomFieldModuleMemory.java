@@ -14,29 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag.api;
+package com.ning.billing.util.customfield;
 
-import com.google.inject.Inject;
-import com.ning.billing.util.api.TagDefinitionService;
-import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.customfield.dao.MockCustomFieldDao;
+import com.ning.billing.util.glue.CustomFieldModule;
 
-public class DefaultTagDefinitionService implements TagDefinitionService {
-    
-    private static final String TAG_DEFINITION_SERVICE_NAME = "tag-service";
-    private final TagUserApi api;
-
-    @Inject
-    public DefaultTagDefinitionService(final TagUserApi api) {
-        this.api = api;
-    }
-
+public class MockCustomFieldModuleMemory extends CustomFieldModule {
     @Override
-    public TagUserApi getTagDefinitionUserApi() {
-        return api;
-    }
-
-    @Override
-    public String getName() {
-        return TAG_DEFINITION_SERVICE_NAME;
+    protected void installCustomFieldDao() {
+        bind(CustomFieldDao.class).to(MockCustomFieldDao.class).asEagerSingleton();
     }
 }

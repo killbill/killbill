@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.annotations.AfterClass;
@@ -45,6 +46,7 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 
 public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
+    protected IDBI dbi;
     protected InvoiceDao invoiceDao;
     protected RecurringInvoiceItemSqlDao recurringInvoiceItemDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
@@ -64,30 +66,32 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
-            module = new InvoiceModuleWithEmbeddedDb();
-            final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-            final String utilDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        module = new InvoiceModuleWithEmbeddedDb();
+        dbi = module.getDbi();
 
-            module.startDb();
-            module.initDb(invoiceDdl);
-            module.initDb(utilDdl);
+        final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+        final String utilDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
-            final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
+        module.startDb();
+        module.initDb(invoiceDdl);
+        module.initDb(utilDdl);
 
-            invoiceDao = injector.getInstance(InvoiceDao.class);
-            invoiceDao.test();
+        final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
 
-            recurringInvoiceItemDao = module.getInvoiceItemSqlDao();
+        invoiceDao = injector.getInstance(InvoiceDao.class);
+        invoiceDao.test();
 
-            invoicePaymentDao = module.getInvoicePaymentSqlDao();
-            clock = injector.getInstance(Clock.class);
-            context = new DefaultCallContextFactory(clock).createCallContext("Count Rogan", CallOrigin.TEST, UserType.TEST);
-            generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
+        recurringInvoiceItemDao = module.getInvoiceItemSqlDao();
 
-            BusService busService = injector.getInstance(BusService.class);
-            ((DefaultBusService) busService).startBus();
+        invoicePaymentDao = module.getInvoicePaymentSqlDao();
+        clock = injector.getInstance(Clock.class);
+        context = new DefaultCallContextFactory(clock).createCallContext("Count Rogan", CallOrigin.TEST, UserType.TEST);
+        generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
 
-            assertTrue(true);
+        BusService busService = injector.getInstance(BusService.class);
+        ((DefaultBusService) busService).startBus();
+
+        assertTrue(true);
        
     }
 

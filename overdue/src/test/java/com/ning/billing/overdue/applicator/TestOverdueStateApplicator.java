@@ -49,12 +49,10 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
     @Inject
     OverdueStateApplicator<SubscriptionBundle> applicator;
         
-    @Test( groups={"fast"} , enabled = true)
+    @Test( groups={"slow"} , enabled = false)
      public void testApplicator() throws Exception {
          InputStream is = new ByteArrayInputStream(configXml.getBytes());
          config = XMLLoader.getObjectFromStreamNoValidation(is,  OverdueConfig.class);
-         service.registerForBus();
-         service.initialize();
          overdueWrapperFactory.setOverdueConfig(config);
          
          SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
@@ -77,7 +75,6 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
         
          
         //TODO
-        // Check blocking API called with correct arguments for the state
         // Check notification is posted with correct time delay
     }
 

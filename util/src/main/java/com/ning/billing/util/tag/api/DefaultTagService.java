@@ -14,23 +14,29 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag;
+package com.ning.billing.util.tag.api;
 
-import java.util.List;
-import org.joda.time.DateTime;
+import com.google.inject.Inject;
+import com.ning.billing.util.api.TagService;
+import com.ning.billing.util.api.TagUserApi;
 
-public interface Taggable {
-    public List<Tag> getTagList();
+public class DefaultTagService implements TagService {
+    
+    private static final String TAG_DEFINITION_SERVICE_NAME = "tag-service";
+    private final TagUserApi api;
 
-    public boolean hasTag(TagDefinition tagDefinition);
-    public boolean hasTag(ControlTagType controlTagType);
+    @Inject
+    public DefaultTagService(final TagUserApi api) {
+        this.api = api;
+    }
 
-    public void addTag(TagDefinition definition);
-    public void addTags(List<Tag> tags);
-    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions);
-    public void clearTags();
-    public void removeTag(TagDefinition definition);
+    @Override
+    public TagUserApi getTagDefinitionUserApi() {
+        return api;
+    }
 
-    public boolean generateInvoice();
-    public boolean processPayment();
+    @Override
+    public String getName() {
+        return TAG_DEFINITION_SERVICE_NAME;
+    }
 }

@@ -36,13 +36,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.template.translation.TranslatorConfig;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -176,102 +170,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public String getFieldValue(String fieldName) {
-        return invoice.getFieldValue(fieldName);
-    }
-
-    @Override
-    public void setFieldValue(String fieldName, String fieldValue) {
-        invoice.setFieldValue(fieldName, fieldValue);
-    }
-
-    @Override
-    public void saveFieldValue(String fieldName, String fieldValue, CallContext context) {
-        invoice.saveFieldValue(fieldName, fieldValue, context);
-    }
-
-    @Override
-    public List<CustomField> getFieldList() {
-        return invoice.getFieldList();
-    }
-
-    @Override
-    public void setFields(List<CustomField> fields) {
-        invoice.setFields(fields);
-    }
-
-    @Override
-    public void saveFields(List<CustomField> fields, CallContext context) {
-        invoice.saveFields(fields, context);
-    }
-
-    @Override
-    public void clearFields() {
-        invoice.clearFields();
-    }
-
-    @Override
-    public void clearPersistedFields(CallContext context) {
-        invoice.clearPersistedFields(context);
-    }
-
-    @Override
-    public ObjectType getObjectType() {
-        return invoice.getObjectType();
-    }
-
-    @Override
     public UUID getId() {
         return invoice.getId();
-    }
-
-    @Override
-    public List<Tag> getTagList() {
-        return invoice.getTagList();
-    }
-
-    @Override
-    public boolean hasTag(TagDefinition tagDefinition) {
-        return invoice.hasTag(tagDefinition);
-    }
-
-    @Override
-    public boolean hasTag(ControlTagType controlTagType) {
-        return invoice.hasTag(controlTagType);
-    }
-
-    @Override
-    public void addTag(TagDefinition definition) {
-        invoice.addTag(definition);
-    }
-
-    @Override
-    public void addTags(List<Tag> tags) {
-        invoice.addTags(tags);
-    }
-
-    @Override
-    public void addTagsFromDefinitions(List<TagDefinition> tagDefinitions) {
-        invoice.addTagsFromDefinitions(tagDefinitions);
-    }
-
-    @Override
-    public void clearTags() {
-        invoice.clearTags();
-    }
-
-    @Override
-    public void removeTag(TagDefinition definition) {
-        invoice.removeTag(definition);
-    }
-
-    @Override
-    public boolean generateInvoice() {
-        return invoice.generateInvoice();
-    }
-
-    @Override
-    public boolean processPayment() {
-        return invoice.processPayment();
     }
 }

@@ -20,7 +20,18 @@ import static org.testng.Assert.fail;
 
 import java.io.IOException;
 
+import org.apache.commons.io.IOUtils;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.TransactionCallback;
+import org.skife.jdbi.v2.TransactionStatus;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -29,21 +40,6 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
-import org.apache.commons.io.IOUtils;
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.TransactionCallback;
-import org.skife.jdbi.v2.TransactionStatus;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-
-import com.ning.billing.util.bus.DefaultBusService;
-import com.ning.billing.util.bus.BusService;
-import org.testng.annotations.BeforeMethod;
 
 public abstract class AccountDaoTestBase {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
@@ -71,10 +67,7 @@ public abstract class AccountDaoTestBase {
             BusService busService = new DefaultBusService(bus);
             ((DefaultBusService) busService).startBus();
 
-            TagDao tagDao = new AuditedTagDao(dbi);
-            CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi);
-
-            accountDao = new AuditedAccountDao(dbi, bus, tagDao, customFieldDao);
+            accountDao = new AuditedAccountDao(dbi, bus);
             accountDao.test();
 
             accountEmailDao = new AuditedAccountEmailDao(dbi);

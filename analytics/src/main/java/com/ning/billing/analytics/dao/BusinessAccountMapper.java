@@ -19,6 +19,7 @@ package com.ning.billing.analytics.dao;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.ning.billing.analytics.BusinessAccount;
+import com.ning.billing.util.tag.Tag;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
@@ -29,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class BusinessAccountMapper implements ResultSetMapper<BusinessAccount>
 {
@@ -37,8 +39,18 @@ public class BusinessAccountMapper implements ResultSetMapper<BusinessAccount>
     @Override
     public BusinessAccount map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException
     {
-        final List<String> tags = new ArrayList<String>();
-        Iterables.addAll(tags, splitter.split(r.getString(5)));
+        final List<String> tagNames = new ArrayList<String>();
+        Iterables.addAll(tagNames, splitter.split(r.getString(5)));
+
+        final List<Tag> tags = new ArrayList<Tag>();
+        for (final String tagName : tagNames) {
+            tags.add(new Tag() {
+                private final UUID id = UUID.randomUUID();
+                @Override public String getTagDefinitionName() {return tagName;}
+                @Override public UUID getId() {return id;}
+                @Override public String toString() {return tagName;}
+            });
+        }
 
         final BusinessAccount account = new BusinessAccount(
             r.getString(1),

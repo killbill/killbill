@@ -64,7 +64,7 @@ public abstract class TestApiBaseRepair extends TestApiBase {
     }
 
     
-    protected SubscriptionTimeline createSubscriptionReapir(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
+    protected SubscriptionTimeline createSubscriptionRepair(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
         return new SubscriptionTimeline() {
             @Override
             public UUID getId() {

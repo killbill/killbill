@@ -19,6 +19,7 @@ package com.ning.billing.util.tag.dao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import java.util.HashMap;
@@ -37,23 +38,37 @@ public class MockTagDao implements TagDao {
     }
 
     @Override
-    public List<Tag> loadEntities(UUID objectId, ObjectType objectType) {
-        return tagStore.get(objectId);
+    public void saveEntities(UUID objectId, ObjectType objectType, List<Tag> tags, CallContext context) {
+        tagStore.put(objectId, tags) ;
     }
 
     @Override
-    public List<Tag> loadEntitiesFromTransaction(Transmogrifier dao, UUID objectId, ObjectType objectType) {
-        return tagStore.get(objectId);
+    public Map<String, Tag> loadEntities(UUID objectId, ObjectType objectType) {
+        return getMap(tagStore.get(objectId));
     }
 
     @Override
-    public void addTag(final String tagName, final UUID objectId, final ObjectType objectType, final CallContext context) {
+    public Map<String, Tag> loadEntitiesFromTransaction(Transmogrifier dao, UUID objectId, ObjectType objectType) {
+        return getMap(tagStore.get(objectId));
+    }
+
+    private Map<String, Tag> getMap(List<Tag> tags) {
+        Map<String, Tag> map = new HashMap<String, Tag>();
+        for (Tag tag : tags) {
+            map.put(tag.getTagDefinitionName(), tag);
+        }
+        return map;
+    }
+
+    @Override
+    public void insertTag(final UUID objectId, final ObjectType objectType,
+                          final TagDefinition tagDefinition, final CallContext context) {
         Tag tag = new Tag() {
             private UUID id = UUID.randomUUID();
 
             @Override
             public String getTagDefinitionName() {
-                return tagName;
+                return tagDefinition.getName();
             }
 
             @Override
@@ -66,13 +81,22 @@ public class MockTagDao implements TagDao {
     }
 
     @Override
-    public void removeTag(String tagName, UUID objectId, ObjectType objectType, CallContext context) {
+    public void insertTags(final UUID objectId, final ObjectType objectType,
+                           final List<TagDefinition> tagDefinitions, final CallContext context) {
+        for (TagDefinition tagDefinition : tagDefinitions) {
+            insertTag(objectId, objectType, tagDefinition, context);
+        }
+    }
+
+    @Override
+    public void deleteTag(final UUID objectId, final ObjectType objectType,
+                          final TagDefinition tagDefinition, final CallContext context) {
         List<Tag> tags = tagStore.get(objectId);
         if (tags != null) {
             Iterator<Tag> tagIterator = tags.iterator();
             while (tagIterator.hasNext()) {
                 Tag tag = tagIterator.next();
-                if (tag.getTagDefinitionName().equals(tagName)) {
+                if (tag.getTagDefinitionName().equals(tagDefinition.getName())) {
                     tagIterator.remove();
                 }
             }

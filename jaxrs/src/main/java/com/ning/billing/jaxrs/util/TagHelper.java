@@ -33,12 +33,12 @@ public class TagHelper {
         this.tagUserApi = tagUserApi;
     }
     
-    public List<TagDefinition> getTagDifinitionFromTagList(final String tagList) throws TagDefinitionApiException {
+    public List<TagDefinition> getTagDefinitionFromTagList(final String tagList) throws TagDefinitionApiException {
         List<TagDefinition> result = new LinkedList<TagDefinition>();
         String [] tagParts = tagList.split(",\\s*");
         for (String cur : tagParts) {
             TagDefinition curDef = tagUserApi.getTagDefinition(cur);
-            // Yack should throw excption
+            // Yack should throw exception
             if (curDef == null) {
                 throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, cur);
             }

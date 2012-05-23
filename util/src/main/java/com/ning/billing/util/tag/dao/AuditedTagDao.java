@@ -28,7 +28,11 @@ import com.ning.billing.util.dao.Mapper;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.DefaultControlTag;
+import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -48,11 +52,13 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag> implements TagD
     }
 
     @Override
-    public void addTag(final String tagName, final UUID objectId, final ObjectType objectType, final CallContext context) {
+    public void insertTag(final UUID objectId, final ObjectType objectType,
+                          final TagDefinition tagDefinition, final CallContext context) {
         tagSqlDao.inTransaction(new Transaction<Void, TagSqlDao>() {
             @Override
             public Void inTransaction(final TagSqlDao tagSqlDao, final TransactionStatus status) throws Exception {
                 String tagId = UUID.randomUUID().toString();
+                String tagName = tagDefinition.getName();
                 tagSqlDao.addTagFromTransaction(tagId, tagName, objectId.toString(), objectType, context);
 
                 Tag tag = tagSqlDao.findTag(tagName, objectId.toString(), objectType);
@@ -80,10 +86,27 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag> implements TagD
     }
 
     @Override
-    public void removeTag(final String tagName, final UUID objectId, final ObjectType objectType, final CallContext context) {
+    public void insertTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) {
+        List<Tag> tags = new ArrayList<Tag>();
+        for (TagDefinition tagDefinition : tagDefinitions) {
+            if (tagDefinition.isControlTag()) {
+                ControlTagType controlTagType = ControlTagType.valueOf(tagDefinition.getName());
+                tags.add(new DefaultControlTag(controlTagType));
+            } else {
+                tags.add(new DescriptiveTag(tagDefinition));
+            }
+        }
+
+        saveEntities(objectId, objectType, tags, context);
+    }
+
+    @Override
+    public void deleteTag(final UUID objectId, final ObjectType objectType,
+                          final TagDefinition tagDefinition, final CallContext context) {
         tagSqlDao.inTransaction(new Transaction<Void, TagSqlDao>() {
             @Override
             public Void inTransaction(final TagSqlDao tagSqlDao, final TransactionStatus status) throws Exception {
+                String tagName = tagDefinition.getName();
                 Tag tag = tagSqlDao.findTag(tagName, objectId.toString(), objectType);
 
                 if (tag == null) {
@@ -128,5 +151,10 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag> implements TagD
     @Override
     protected UpdatableEntityCollectionSqlDao<Tag> getSqlDao() {
         return tagSqlDao;
+    }
+
+    @Override
+    protected String getKey(Tag entity) {
+        return entity.getTagDefinitionName();
     }
 }

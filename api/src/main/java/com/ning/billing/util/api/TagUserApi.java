@@ -17,6 +17,7 @@
 package com.ning.billing.util.api;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
@@ -67,11 +68,10 @@ public interface TagUserApi {
 	 */
 	public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
 
-	public List<Tag> createControlTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException;
+    public void addTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context);
+    public void addTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context);
+    public void removeTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context);
+    public void removeTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context);
 
-    public Tag createControlTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException;
-
-	public List<Tag> createDescriptiveTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions) throws TagDefinitionApiException;
-
-	public Tag createDescriptiveTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition) throws TagDefinitionApiException;
+    public Map<String, Tag> getTags(UUID objectId, ObjectType objectType);
 }

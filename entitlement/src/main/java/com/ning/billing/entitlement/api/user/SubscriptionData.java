@@ -24,7 +24,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,10 +52,9 @@ import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.entity.ExtendedEntityBase;
+import com.ning.billing.util.entity.EntityBase;
 
-public class SubscriptionData extends ExtendedEntityBase implements Subscription {
+public class SubscriptionData extends EntityBase implements Subscription {
 
     private final static Logger log = LoggerFactory.getLogger(SubscriptionData.class);
 
@@ -104,30 +102,6 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
         this.activeVersion = builder.getActiveVersion();
         this.chargedThroughDate = builder.getChargedThroughDate();
         this.paidThroughDate = builder.getPaidThroughDate();
-    }
-
-    @Override
-    public ObjectType getObjectType() {
-        return ObjectType.SUBSCRIPTION;
-    }
-
-    @Override
-    public void saveFieldValue(String fieldName, @Nullable String fieldValue,
-            CallContext context) {
-        super.setFieldValue(fieldName, fieldValue);
-        apiService.commitCustomFields(this, context);
-    }
-
-    @Override
-    public void saveFields(List<CustomField> fields, CallContext context) {
-        super.setFields(fields);
-        apiService.commitCustomFields(this, context);
-    }
-
-    @Override
-    public void clearPersistedFields(CallContext context) {
-        super.clearFields();
-        apiService.commitCustomFields(this, context);
     }
 
     @Override
@@ -310,7 +284,7 @@ public class SubscriptionData extends ExtendedEntityBase implements Subscription
         }
         for (SubscriptionTransitionData  cur : transitions) {
             if (cur.getId().equals(event.getId())) {
-                SubscriptionTransitionData withSeq = new SubscriptionTransitionData((SubscriptionTransitionData) cur, seqId); 
+                SubscriptionTransitionData withSeq = new SubscriptionTransitionData(cur, seqId);
                 return new DefaultSubscriptionEvent(withSeq, startDate);
             }
         }

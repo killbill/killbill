@@ -47,6 +47,11 @@ public class DescriptiveTag extends EntityBase implements Tag {
     }
 
     @Override
+    public String toString() {
+        return tagDefinitionName;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

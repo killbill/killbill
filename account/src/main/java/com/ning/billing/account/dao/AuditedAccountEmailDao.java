@@ -26,6 +26,7 @@ import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlD
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,12 +40,17 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId) {
-        return super.loadEntities(accountId, ObjectType.ACCOUNT_EMAIL);
+        return new ArrayList<AccountEmail>(super.loadEntities(accountId, ObjectType.ACCOUNT_EMAIL).values());
     }
 
     @Override
     public void saveEmails(final UUID accountId, final List<AccountEmail> emails, final CallContext context) {
-        super.saveEntitiesFromTransaction(accountEmailSqlDao, accountId, ObjectType.ACCOUNT_EMAIL, emails, context);
+        super.saveEntities(accountId, ObjectType.ACCOUNT_EMAIL, emails, context);
+    }
+
+    @Override
+    public String getKey(AccountEmail entity) {
+        return entity.getEmail();
     }
 
     public void test() {

@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.11-SNAPSHOT</version>
+        <version>0.1.12-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-account</artifactId>
@@ -87,6 +87,11 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.0</version>
         </dependency>
     </dependencies>
     <build>

@@ -19,8 +19,11 @@ package com.ning.billing.analytics;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,20 +50,25 @@ public class BusinessAccountRecorder {
     private final AccountUserApi accountApi;
     private final InvoiceUserApi invoiceUserApi;
     private final PaymentApi paymentApi;
+    private final TagUserApi tagUserApi;
 
     @Inject
-    public BusinessAccountRecorder(final BusinessAccountDao dao, final AccountUserApi accountApi, final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi) {
+    public BusinessAccountRecorder(final BusinessAccountDao dao, final AccountUserApi accountApi,
+                                   final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi,
+                                   final TagUserApi tagUserApi) {
         this.dao = dao;
         this.accountApi = accountApi;
         this.invoiceUserApi = invoiceUserApi;
         this.paymentApi = paymentApi;
+        this.tagUserApi = tagUserApi;
     }
 
     public void accountCreated(final AccountData data) {
         Account account;
         try {
             account = accountApi.getAccountByKey(data.getExternalKey());
-            final BusinessAccount bac = createBusinessAccountFromAccount(account);
+            Map<String, Tag> tags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
+            final BusinessAccount bac = createBusinessAccountFromAccount(account, new ArrayList<Tag>(tags.values()));
 
             log.info("ACCOUNT CREATION " + bac);
             dao.createAccount(bac);
@@ -109,6 +117,7 @@ public class BusinessAccountRecorder {
     public void accountUpdated(final UUID accountId) {
         try {
             final Account account = accountApi.getAccountById(accountId);
+            final Map<String, Tag> tags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
 
             if (account == null) {
                 log.warn("Couldn't find account {}", accountId);
@@ -117,7 +126,7 @@ public class BusinessAccountRecorder {
 
             BusinessAccount bac = dao.getAccount(account.getExternalKey());
             if (bac == null) {
-                bac = createBusinessAccountFromAccount(account);
+                bac = createBusinessAccountFromAccount(account, new ArrayList<Tag>(tags.values()));
                 log.info("ACCOUNT CREATION " + bac);
                 dao.createAccount(bac);
             } else {
@@ -131,12 +140,7 @@ public class BusinessAccountRecorder {
 
     }
 
-    private BusinessAccount createBusinessAccountFromAccount(final Account account) {
-        final List<String> tags = new ArrayList<String>();
-        for (final Tag tag : account.getTagList()) {
-            tags.add(tag.getTagDefinitionName());
-        }
-
+    private BusinessAccount createBusinessAccountFromAccount(final Account account, final List<Tag> tags) {
         final BusinessAccount bac = new BusinessAccount(
                 account.getExternalKey(),
                 invoiceUserApi.getAccountBalance(account.getId()),
@@ -178,11 +182,12 @@ public class BusinessAccountRecorder {
             // Retrieve payments information for these invoices
             try {
                 final PaymentInfoEvent payment = paymentApi.getLastPaymentInfo(invoiceIds);
-
-                lastPaymentStatus = payment.getStatus();
-                paymentMethod = payment.getPaymentMethod();
-                creditCardType = payment.getCardType();
-                billingAddressCountry = payment.getCardCountry();
+                if (payment != null) {
+                    lastPaymentStatus = payment.getStatus();
+                    paymentMethod = payment.getPaymentMethod();
+                    creditCardType = payment.getCardType();
+                    billingAddressCountry = payment.getCardCountry();
+                }
 
                 bac.setLastPaymentStatus(lastPaymentStatus);
                 bac.setPaymentMethod(paymentMethod);

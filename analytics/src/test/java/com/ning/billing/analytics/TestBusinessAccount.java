@@ -16,6 +16,8 @@
 
 package com.ning.billing.analytics;
 
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.util.tag.Tag;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -31,7 +33,7 @@ public class TestBusinessAccount
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception
     {
-        account = new BusinessAccount("pierre", BigDecimal.ONE, Collections.singletonList("batch15"), new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
+        account = new BusinessAccount("pierre", BigDecimal.ONE, Collections.singletonList(getMockTag("batch15")), new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
     }
 
     @Test(groups = "fast", enabled = false)
@@ -41,7 +43,14 @@ public class TestBusinessAccount
         Assert.assertEquals(account, account);
         Assert.assertTrue(account.equals(account));
 
-        final BusinessAccount otherAccount = new BusinessAccount("pierre cardin", BigDecimal.ONE, Collections.singletonList("batch15"), new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
+        final BusinessAccount otherAccount = new BusinessAccount("pierre cardin", BigDecimal.ONE, Collections.singletonList(getMockTag("batch15")), new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
         Assert.assertFalse(account.equals(otherAccount));
+    }
+
+    private Tag getMockTag(String tagDefinitionName) {
+        Tag tag = BrainDeadProxyFactory.createBrainDeadProxyFor(Tag.class);
+        BrainDeadProxyFactory.ZombieControl zombie = (BrainDeadProxyFactory.ZombieControl) tag;
+        zombie.addResult("getTagDefinitionName", tagDefinitionName);
+        return tag;
     }
 }

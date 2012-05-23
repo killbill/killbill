@@ -16,7 +16,9 @@
 
 package com.ning.billing.analytics;
 
+import com.google.common.base.Joiner;
 import com.ning.billing.analytics.utils.Rounder;
+import com.ning.billing.util.tag.Tag;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -30,7 +32,7 @@ public class BusinessAccount
 
     private final String key;
     private BigDecimal balance;
-    private List<String> tags;
+    private List<Tag> tags;
     private DateTime lastInvoiceDate;
     private BigDecimal totalInvoiceBalance;
     private String lastPaymentStatus;
@@ -38,7 +40,7 @@ public class BusinessAccount
     private String creditCardType;
     private String billingAddressCountry;
 
-    public BusinessAccount(final String key, final BigDecimal balance, final List<String> tags, final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus, final String paymentMethod, final String creditCardType, final String billingAddressCountry)
+    public BusinessAccount(final String key, final BigDecimal balance, final List<Tag> tags, final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus, final String paymentMethod, final String creditCardType, final String billingAddressCountry)
     {
         this.key = key;
         this.balance = balance;
@@ -131,12 +133,12 @@ public class BusinessAccount
         this.paymentMethod = paymentMethod;
     }
 
-    public List<String> getTags()
+    public List<Tag> getTags()
     {
         return tags;
     }
 
-    public void setTags(final List<String> tags)
+    public void setTags(final List<Tag> tags)
     {
         this.tags = tags;
     }
@@ -175,7 +177,9 @@ public class BusinessAccount
         sb.append(", createdDt=").append(createdDt);
         sb.append(", updatedDt=").append(updatedDt);
         sb.append(", key='").append(key).append('\'');
-        sb.append(", tags=").append(tags);
+        sb.append(", tags=");
+        final Joiner joiner = Joiner.on(";").skipNulls();
+        sb.append(joiner.join(tags));
         sb.append(", lastInvoiceDate=").append(lastInvoiceDate);
         sb.append(", totalInvoiceBalance=").append(totalInvoiceBalance);
         sb.append(", lastPaymentStatus='").append(lastPaymentStatus).append('\'');
@@ -198,7 +202,7 @@ public class BusinessAccount
 
         final BusinessAccount that = (BusinessAccount) o;
 
-        if (balance != null ? !(Rounder.round(balance) == Rounder.round(that.balance)) : that.balance != null) {
+        if (balance == null ? that.balance != null : balance.compareTo(that.balance) != 0) {
             return false;
         }
         if (billingAddressCountry != null ? !billingAddressCountry.equals(that.billingAddressCountry) : that.billingAddressCountry != null) {
@@ -222,10 +226,10 @@ public class BusinessAccount
         if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null) {
             return false;
         }
-        if (tags != null ? !tags.equals(that.tags) : that.tags != null) {
+        if (tags != null ? !tags.toString().equals(that.tags.toString()) : that.tags != null) {
             return false;
         }
-        if (totalInvoiceBalance != null ? !(Rounder.round(totalInvoiceBalance) == Rounder.round(that.totalInvoiceBalance)) : that.totalInvoiceBalance != null) {
+        if (totalInvoiceBalance == null ? that.totalInvoiceBalance != null : totalInvoiceBalance.compareTo(that.totalInvoiceBalance) != 0) {
             return false;
         }
         if (updatedDt != null ? updatedDt.compareTo(that.updatedDt) != 0 : that.updatedDt != null) {

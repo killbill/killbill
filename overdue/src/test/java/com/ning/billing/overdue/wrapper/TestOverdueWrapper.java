@@ -36,7 +36,6 @@ public class TestOverdueWrapper extends OverdueTestBase {
         config = XMLLoader.getObjectFromStreamNoValidation(is,  OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
         
-
         SubscriptionBundle bundle;
         OverdueWrapper<SubscriptionBundle> wrapper ;
         OverdueState<SubscriptionBundle> state;

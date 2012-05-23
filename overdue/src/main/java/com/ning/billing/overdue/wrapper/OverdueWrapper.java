@@ -49,7 +49,7 @@ public class OverdueWrapper<T extends Blockable> {
     }
 
     public OverdueState<T> refresh() throws OverdueError, OverdueApiException {
-        if(overdueStateSet.size() >= 0) { // No configuration available
+        if(overdueStateSet.size() < 1) { // No configuration available
             return overdueStateSet.getClearState();
         } 
         

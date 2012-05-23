@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.tag;
 
+import java.util.UUID;
+
 public enum ControlTagType {
     AUTO_PAY_OFF("Suspends payments until removed.", true, false),
     AUTO_INVOICING_OFF("Suspends invoicing until removed.", false, true), 
@@ -42,5 +44,17 @@ public enum ControlTagType {
 
     public boolean getAutoInvoicingOff() {
         return this.autoInvoicingOff;
+    }
+
+    public TagDefinition toTagDefinition() {
+        return new TagDefinition() {
+            @Override public String getName() {return this.toString();}
+
+            @Override public String getDescription() {return description;}
+
+            @Override public Boolean isControlTag() {return true;}
+
+            @Override public UUID getId() {return null;}
+        };
     }
 }

@@ -39,7 +39,6 @@ public interface SubscriptionApiService {
     public boolean recreatePlan(SubscriptionData subscription, PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
         throws EntitlementUserApiException;
 
-
     public boolean cancel(SubscriptionData subscription, DateTime requestedDate, boolean eot, CallContext context)
         throws EntitlementUserApiException;
 
@@ -49,6 +48,4 @@ public interface SubscriptionApiService {
     public boolean changePlan(SubscriptionData subscription, String productName, BillingPeriod term,
             String priceList, DateTime requestedDate, CallContext context)
         throws EntitlementUserApiException;
-
-    public void commitCustomFields(SubscriptionData subscription, CallContext context);
 }

@@ -67,7 +67,7 @@ public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition> {
             UUID id = UUID.fromString(result.getString("id"));
             String name = result.getString("name");
             String description = result.getString("description");
-            return new DefaultTagDefinition(id, name, description);
+            return new DefaultTagDefinition(id, name, description, false);
         }
     }
 

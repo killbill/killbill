@@ -21,6 +21,8 @@ import static org.testng.Assert.assertNotNull;
 import java.util.UUID;
 
 import com.ning.billing.payment.api.DefaultPaymentAttempt;
+import com.ning.billing.util.customfield.MockCustomFieldModuleMemory;
+import com.ning.billing.util.tag.MockTagStoreModuleMemory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -48,7 +50,8 @@ import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
 @Test
-@Guice(modules = { PaymentTestModule.class, AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class})
+@Guice(modules = {MockCustomFieldModuleMemory.class, MockTagStoreModuleMemory.class, PaymentTestModule.class,
+        AccountModuleWithMocks.class, InvoiceModuleWithMocks.class, MockJunctionModule.class})
 public class TestNotifyInvoicePaymentApi {
     @Inject
     private Bus eventBus;

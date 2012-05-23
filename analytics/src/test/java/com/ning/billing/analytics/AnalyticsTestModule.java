@@ -30,7 +30,7 @@ import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.ClockModule;
-import com.ning.billing.util.glue.FieldStoreModule;
+import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
@@ -48,7 +48,7 @@ public class AnalyticsTestModule extends AnalyticsModule
         install(new GlobalLockerModule());
         install(new ClockModule());
         install(new CallContextModule());
-        install(new FieldStoreModule());
+        install(new CustomFieldModule());
         install(new TagStoreModule());
         install(new AccountModule());
         install(new BusModule());

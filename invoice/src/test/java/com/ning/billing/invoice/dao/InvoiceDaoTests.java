@@ -17,7 +17,6 @@
 package com.ning.billing.invoice.dao;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
@@ -26,8 +25,13 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
@@ -649,11 +653,12 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate1, Currency.USD);
         invoiceDao.create(invoice, context);
+        invoiceDao.setWrittenOff(invoice.getId(), context);
 
-        invoiceDao.addControlTag(ControlTagType.WRITTEN_OFF, invoice.getId(), context);
-
-        Invoice savedInvoice = invoiceDao.getById(invoice.getId());
-        assertTrue(savedInvoice.hasTag(ControlTagType.WRITTEN_OFF));
+        TagDao tagDao = new AuditedTagDao(dbi);
+        Map<String, Tag> tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE);
+        assertEquals(tags.size(), 1);
+        assertTrue(tags.containsKey(ControlTagType.WRITTEN_OFF.toString()));
     }
 
     @Test
@@ -679,14 +684,15 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate1, Currency.USD);
         invoiceDao.create(invoice, context);
+        invoiceDao.setWrittenOff(invoice.getId(), context);
 
-        invoiceDao.addControlTag(ControlTagType.WRITTEN_OFF, invoice.getId(), context);
+        TagDao tagDao = new AuditedTagDao(dbi);
+        Map<String, Tag> tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE);
+        assertEquals(tags.size(), 1);
+        assertTrue(tags.containsKey(ControlTagType.WRITTEN_OFF.toString()));
 
-        Invoice savedInvoice = invoiceDao.getById(invoice.getId());
-        assertTrue(savedInvoice.hasTag(ControlTagType.WRITTEN_OFF));
-
-        invoiceDao.removeControlTag(ControlTagType.WRITTEN_OFF, invoice.getId(), context);
-        savedInvoice = invoiceDao.getById(invoice.getId());
-        assertFalse(savedInvoice.hasTag(ControlTagType.WRITTEN_OFF));
+        invoiceDao.removeWrittenOff(invoice.getId(), context);
+        tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE);
+        assertEquals(tags.size(), 0);
     }
 }

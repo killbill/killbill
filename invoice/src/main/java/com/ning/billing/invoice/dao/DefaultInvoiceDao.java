@@ -25,7 +25,6 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
@@ -36,13 +35,10 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.dao.TagDao;
 
 public class DefaultInvoiceDao implements InvoiceDao {
@@ -251,13 +247,13 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void addControlTag(ControlTagType controlTagType, UUID invoiceId, CallContext context) {
-        tagDao.addTag(controlTagType.toString(), invoiceId, ObjectType.INVOICE, context);
+    public void setWrittenOff(UUID invoiceId, CallContext context) {
+        tagDao.insertTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.toTagDefinition(), context);
     }
 
     @Override
-    public void removeControlTag(ControlTagType controlTagType, UUID invoiceId, CallContext context) {
-        tagDao.removeTag(controlTagType.toString(), invoiceId, ObjectType.INVOICE, context);
+    public void removeWrittenOff(UUID invoiceId, CallContext context) {
+        tagDao.deleteTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.toTagDefinition(), context);
     }
 
     @Override
@@ -268,15 +264,11 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private void populateChildren(final Invoice invoice, InvoiceSqlDao invoiceSqlDao) {
         getInvoiceItemsWithinTransaction(invoice, invoiceSqlDao);
         getInvoicePaymentsWithinTransaction(invoice, invoiceSqlDao);
-        getTagsWithinTransaction(invoice, invoiceSqlDao);
-        getFieldsWithinTransaction(invoice, invoiceSqlDao);
     }
 
     private void populateChildren(List<Invoice> invoices, InvoiceSqlDao invoiceSqlDao) {
         getInvoiceItemsWithinTransaction(invoices, invoiceSqlDao);
         getInvoicePaymentsWithinTransaction(invoices, invoiceSqlDao);
-        getTagsWithinTransaction(invoices, invoiceSqlDao);
-        getFieldsWithinTransaction(invoices, invoiceSqlDao);
     }
 
     private void getInvoiceItemsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao) {
@@ -306,30 +298,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
         String invoiceId = invoice.getId().toString();
         List<InvoicePayment> invoicePayments = invoicePaymentSqlDao.getPaymentsForInvoice(invoiceId);
         invoice.addPayments(invoicePayments);
-    }
-
-    private void getTagsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceSqlDao) {
-        for (final Invoice invoice : invoices) {
-            getTagsWithinTransaction(invoice, invoiceSqlDao);
-        }
-    }
-
-    private void getTagsWithinTransaction(final Invoice invoice, final Transmogrifier dao) {
-        List<Tag> tags = tagDao.loadEntitiesFromTransaction(dao, invoice.getId(), ObjectType.INVOICE);
-        invoice.addTags(tags);
-    }
-
-    private void getFieldsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceSqlDao) {
-        for (final Invoice invoice : invoices) {
-            getFieldsWithinTransaction(invoice, invoiceSqlDao);
-        }
-    }
-
-    private void getFieldsWithinTransaction(final Invoice invoice, final InvoiceSqlDao invoiceSqlDao) {
-        CustomFieldSqlDao customFieldSqlDao = invoiceSqlDao.become(CustomFieldSqlDao.class);
-        String invoiceId = invoice.getId().toString();
-        List<CustomField> customFields = customFieldSqlDao.load(invoiceId, ObjectType.INVOICE);
-        invoice.setFields(customFields);
     }
 
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
