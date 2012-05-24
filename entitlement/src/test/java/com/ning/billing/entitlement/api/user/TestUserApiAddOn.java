@@ -324,7 +324,6 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    //TODO MDW - debugging reenable if you find this
     @Test(enabled=true, groups={"slow"})
     public void testAddonCreateWithSubscriptionAlign() {
 

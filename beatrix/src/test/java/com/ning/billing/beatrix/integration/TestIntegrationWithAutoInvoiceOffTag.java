@@ -14,27 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.model;
+package com.ning.billing.beatrix.integration;
 
-import com.ning.billing.entitlement.api.billing.BillingEvent;
-
-import java.util.ArrayList;
-import java.util.Collection;
-
-public class BillingEventSet extends ArrayList<BillingEvent> {
-    public BillingEventSet() {
-        super();
-    }
-
-    public BillingEventSet(Collection<BillingEvent> events) {
-        super();
-        if(events != null) {
-            addAll(events);
-            
-        }
-    }
-
-    public boolean isLast(final BillingEvent event) {
-        return (super.indexOf(event) == size() - 1);
-    }
+public class TestIntegrationWithAutoInvoiceOffTag {
+    
+    //TODO MDW write this test TestIntegrationWithAutoInvoiceOffTag
 }

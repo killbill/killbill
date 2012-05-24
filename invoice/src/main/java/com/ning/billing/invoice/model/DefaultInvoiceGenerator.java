@@ -41,6 +41,7 @@ import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
@@ -70,12 +71,15 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         validateTargetDate(targetDate);
 
-        Collections.sort(events);
-
         List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         if (existingInvoices != null) {
             for (Invoice invoice : existingInvoices) {
-                existingItems.addAll(invoice.getInvoiceItems());
+                for(InvoiceItem item : invoice.getInvoiceItems()) {
+                    if(!events.getSubscriptionAndBundleIdsWithAutoInvoiceOff()
+                            .contains(item.getBundleId())) { //don't add items with auto_invoice_off tag 
+                        existingItems.add(item);
+                    }
+                }
             }
 
             Collections.sort(existingItems);
@@ -246,16 +250,36 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private List<InvoiceItem> generateInvoiceItems(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
                                                    final DateTime targetDate, final Currency currency) throws InvoiceApiException {
         List<InvoiceItem> items = new ArrayList<InvoiceItem>();
-
-        for (int i = 0; i < events.size(); i++) {
-            BillingEvent thisEvent = events.get(i);
-            BillingEvent nextEvent = events.isLast(thisEvent) ? null : events.get(i + 1);
-            if (nextEvent != null) {
-                nextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-            }
-
-            items.addAll(processEvents(invoiceId, accountId, thisEvent, nextEvent, targetDate, currency));
+        
+        if(events.size() == 0) {
+            return items;
         }
+
+        Iterator<BillingEvent> eventIt = events.iterator();
+
+        BillingEvent nextEvent = eventIt.next();
+        while(eventIt.hasNext()) {
+            BillingEvent thisEvent = nextEvent;
+            nextEvent = eventIt.next();
+            if(!events.getSubscriptionAndBundleIdsWithAutoInvoiceOff().
+                    contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
+                BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
+                items.addAll(processEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency));
+            }
+        }
+        items.addAll(processEvents(invoiceId, accountId, nextEvent, null, targetDate, currency));
+        
+// The above should reproduce the semantics of the code below using iterator instead of list.
+//
+//        for (int i = 0; i < events.size(); i++) {
+//            BillingEvent thisEvent = events.get(i);
+//            BillingEvent nextEvent = events.isLast(thisEvent) ? null : events.get(i + 1);
+//            if (nextEvent != null) {
+//                nextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
+//            }
+//
+//            items.addAll(processEvents(invoiceId, accountId, thisEvent, nextEvent, targetDate, currency));
+//        }
 
         return items;
     }

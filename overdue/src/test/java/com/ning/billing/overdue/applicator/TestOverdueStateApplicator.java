@@ -73,9 +73,6 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
          applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
          checkStateApplied(state);
         
-         
-        //TODO
-        // Check notification is posted with correct time delay
     }
 
 

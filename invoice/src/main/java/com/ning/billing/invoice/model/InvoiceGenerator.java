@@ -16,15 +16,17 @@
 
 package com.ning.billing.invoice.model;
 
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.InvoiceItem;
-import org.joda.time.DateTime;
-
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.junction.api.BillingEventSet;
 
 public interface InvoiceGenerator {
     public Invoice generateInvoice(UUID accountId, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,

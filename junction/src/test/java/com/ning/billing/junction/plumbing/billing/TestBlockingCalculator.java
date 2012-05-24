@@ -556,7 +556,7 @@ public class TestBlockingCalculator {
         final BillingModeType billingModeType = BillingModeType.IN_ADVANCE;
         final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
         final SubscriptionTransitionType type = SubscriptionTransitionType.CHANGE;
-        final Long totalOrdering = 0L; //TODO
+        final Long totalOrdering = 0L; 
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                 fixedPrice, recurringPrice, currency,

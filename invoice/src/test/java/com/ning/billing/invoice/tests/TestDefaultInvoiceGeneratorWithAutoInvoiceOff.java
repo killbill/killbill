@@ -14,20 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.junction.api;
+package com.ning.billing.invoice.tests;
 
-import java.util.List;
-import java.util.SortedSet;
-import java.util.UUID;
+public class TestDefaultInvoiceGeneratorWithAutoInvoiceOff {
 
-import com.ning.billing.entitlement.api.billing.BillingEvent;
-
-public interface BillingEventSet extends SortedSet<BillingEvent> {
-
-    public abstract boolean isAccountAutoInvoiceOff();
-
-    public abstract List<UUID> getSubscriptionAndBundleIdsWithAutoInvoiceOff();
     
-    public boolean isLast(BillingEvent event);
-
+    //TODO MDW - write this test TestDefaultInvoiceGeneratorWithAutoInvoiceOff
 }
