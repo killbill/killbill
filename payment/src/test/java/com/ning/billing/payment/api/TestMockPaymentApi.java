@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
-import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
+import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.glue.CallContextModule;
 

@@ -85,21 +85,6 @@ public class MockPaymentInfoPlugin implements PaymentInfoPlugin {
     }
 
     @Override
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    @Override
-    public String getCardType() {
-        return cardType;
-    }
-
-    @Override
-    public String getCardCountry() {
-        return cardCountry;
-    }
-
-    @Override
     public String getReferenceId() {
         return referenceId;
     }

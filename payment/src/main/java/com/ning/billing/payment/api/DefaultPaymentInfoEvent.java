@@ -112,10 +112,68 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     }
     
 
+    public DefaultPaymentInfoEvent(PaymentInfoPlugin info, CreditCardPaymentMethodInfo methodInfo,  UUID accountId, UUID invoiceId) {
+        this(UUID.randomUUID(),
+                accountId,
+                invoiceId,
+                info.getAmount(),
+                info.getRefundAmount(),
+                info.getBankIdentificationNumber(),
+                info.getPaymentNumber(),
+                info.getStatus(),
+                info.getType(),
+                info.getReferenceId(),
+                info.getPaymentMethodId(),
+                methodInfo.getType(),
+                methodInfo.getCardType(),
+                methodInfo.getCardCountry(),
+                null,
+                info.getEffectiveDate(),
+                info.getCreatedDate(),
+                info.getUpdatedDate());
+    }
+
+    
+    public DefaultPaymentInfoEvent(PaymentInfoPlugin info, PaypalPaymentMethodInfo methodInfo,  UUID accountId, UUID invoiceId) {
+        this(UUID.randomUUID(),
+                accountId,
+                invoiceId,
+                info.getAmount(),
+                info.getRefundAmount(),
+                info.getBankIdentificationNumber(),
+                info.getPaymentNumber(),
+                info.getStatus(),
+                info.getType(),
+                info.getReferenceId(),
+                info.getPaymentMethodId(),
+                methodInfo.getType(),
+                null,
+                null,
+                null,
+                info.getEffectiveDate(),
+                info.getCreatedDate(),
+                info.getUpdatedDate());
+    }
+
     public DefaultPaymentInfoEvent(PaymentInfoPlugin info, UUID accountId, UUID invoiceId) {
-        this(UUID.randomUUID(), accountId,  invoiceId, info.getAmount(), info.getRefundAmount(), info.getBankIdentificationNumber(), info.getPaymentNumber(),
-                info.getStatus(), info.getCardType(), info.getReferenceId(), info.getPaymentMethodId(), info.getPaymentMethod(), info.getCardType(), info.getCardCountry(),
-                null, info.getEffectiveDate(), info.getCreatedDate(), info.getUpdatedDate());
+        this(UUID.randomUUID(),
+                accountId,
+                invoiceId,
+                info.getAmount(),
+                info.getRefundAmount(),
+                info.getBankIdentificationNumber(),
+                info.getPaymentNumber(),
+                info.getStatus(),
+                info.getType(),
+                info.getReferenceId(),
+                info.getPaymentMethodId(),
+                null,
+                null,
+                null,
+                null,
+                info.getEffectiveDate(),
+                info.getCreatedDate(),
+                info.getUpdatedDate());
     }
 
     

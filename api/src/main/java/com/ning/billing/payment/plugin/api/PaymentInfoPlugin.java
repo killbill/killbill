@@ -32,12 +32,6 @@ public interface PaymentInfoPlugin {
 
     public String getPaymentNumber();
 
-    public String getPaymentMethod();
-
-    public String getCardType();
-
-    public String getCardCountry();
-
     public String getReferenceId();
 
     public String getPaymentMethodId();

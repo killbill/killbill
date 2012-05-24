@@ -30,16 +30,13 @@ public interface PaymentDao {
     PaymentAttempt createPaymentAttempt(Invoice invoice, PaymentAttemptStatus status, CallContext context);
     PaymentAttempt createPaymentAttempt(PaymentAttempt paymentAttempt, PaymentAttemptStatus status, CallContext context);
 
-    void savePaymentInfo(PaymentInfoEvent right, CallContext context);
-
+    void insertPaymentInfoWithPaymentAttemptUpdate(PaymentInfoEvent paymentInfo, UUID paymentAttemptId, CallContext context);
+    
+    
     PaymentAttempt getPaymentAttemptForPaymentId(UUID paymentId);
     List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<UUID> invoiceIds);
 
-    void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, UUID paymentId, CallContext context);
-
     List<PaymentAttempt> getPaymentAttemptsForInvoiceId(UUID invoiceId);
-
-    void updatePaymentInfo(String paymentMethodType, UUID paymentId, String cardType, String cardCountry, CallContext context);
 
     List<PaymentInfoEvent> getPaymentInfoList(List<UUID> invoiceIds);
 

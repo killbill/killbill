@@ -40,7 +40,7 @@ import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.RequestProcessor;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.payment.setup.PaymentTestModuleWithMocks;
+import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 

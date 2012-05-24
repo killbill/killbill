@@ -57,7 +57,7 @@ public abstract class TestPaymentDao {
                 .setEffectiveDate(new DefaultClock().getUTCNow())
                 .build();
 
-        paymentDao.savePaymentInfo(paymentInfo, context);
+        paymentDao.insertPaymentInfoWithPaymentAttemptUpdate(paymentInfo, null, context);
     }
 
     @Test(groups={"slow"})
@@ -74,8 +74,7 @@ public abstract class TestPaymentDao {
                 .build();
 
         CallContext context = new TestCallContext("PaymentTests");
-        paymentDao.savePaymentInfo(paymentInfo, context);
-        paymentDao.updatePaymentInfo("CreditCard", paymentInfo.getId(), "Visa", "US", context);
+        paymentDao.insertPaymentInfoWithPaymentAttemptUpdate(paymentInfo, null, context);
     }
 
     @Test(groups={"slow"})
@@ -132,16 +131,8 @@ public abstract class TestPaymentDao {
                 .setEffectiveDate(clock.getUTCNow())
                 .build();
 
-        paymentDao.savePaymentInfo(originalPaymentInfo, thisContext);
-        paymentDao.updatePaymentAttemptWithPaymentId(originalPaymentAttempt.getId(), originalPaymentInfo.getId(), thisContext);
+        paymentDao.insertPaymentInfoWithPaymentAttemptUpdate(originalPaymentInfo, originalPaymentAttempt.getId(), thisContext);
         PaymentInfoEvent paymentInfo = paymentDao.getPaymentInfoList(Arrays.asList(invoiceId)).get(0);
         Assert.assertEquals(paymentInfo, originalPaymentInfo);
-
-        clock.setDeltaFromReality(60 * 60 * 1000); // move clock forward one hour
-        paymentDao.updatePaymentInfo(originalPaymentInfo.getPaymentMethod(), originalPaymentInfo.getId(), originalPaymentInfo.getCardType(), originalPaymentInfo.getCardCountry(), thisContext);
-        paymentInfo = paymentDao.getPaymentInfoList(Arrays.asList(invoiceId)).get(0);
-        // TODO: replace these asserts
-//        Assert.assertEquals(paymentInfo.getCreatedDate().compareTo(attempt.getCreatedDate()), 0);
-//        Assert.assertTrue(paymentInfo.getUpdatedDate().isAfter(originalPaymentInfo.getUpdatedDate()));
     }
 }

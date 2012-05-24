@@ -91,10 +91,6 @@ public class RequestProcessor {
         Account account = null;        
         try {
             account = accountUserApi.getAccountById(event.getAccountId());
-            if (account == null) {
-                log.error("Failed to process invoice, account {} does not exist!", event.getAccountId());
-                return;
-            }
             if (isAccountAutoPayOff(account.getId())) {
                 return;
             }

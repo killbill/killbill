@@ -285,8 +285,7 @@ public class TestAnalyticsService {
         final PaymentAttempt paymentAttempt = new DefaultPaymentAttempt(UUID.randomUUID(), invoice.getId(), account.getId(), BigDecimal.TEN,
                 ACCOUNT_CURRENCY, clock.getUTCNow(), clock.getUTCNow(), paymentInfoNotification.getId(), 1, new DateTime(), new DateTime(), PaymentAttemptStatus.COMPLETED_SUCCESS);
         paymentDao.createPaymentAttempt(paymentAttempt, PaymentAttemptStatus.COMPLETED_SUCCESS, context);
-        paymentDao.savePaymentInfo(paymentInfoNotification, context);
-        paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfoNotification.getId(), context);
+        paymentDao.insertPaymentInfoWithPaymentAttemptUpdate(paymentInfoNotification, paymentAttempt.getId(), context);
         Assert.assertEquals(paymentDao.getPaymentInfoList(Arrays.asList(invoice.getId())).size(), 1);
     }
 

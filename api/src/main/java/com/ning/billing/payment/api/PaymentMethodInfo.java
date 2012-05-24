@@ -16,7 +16,6 @@
 
 package com.ning.billing.payment.api;
 
-import java.util.UUID;
 
 import com.google.common.base.Objects;
 

@@ -74,43 +74,30 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void savePaymentInfo(PaymentInfoEvent paymentInfo, CallContext context) {
+    public void insertPaymentInfoWithPaymentAttemptUpdate(PaymentInfoEvent paymentInfo, UUID paymentAttemptId,
+            CallContext context) {
+
         payments.put(paymentInfo.getId(), paymentInfo);
-    }
-
-    @Override
-    public void updatePaymentAttemptWithPaymentId(UUID paymentAttemptId, UUID paymentId, CallContext context) {
-        PaymentAttempt existingPaymentAttempt = paymentAttempts.get(paymentAttemptId);
-
-        if (existingPaymentAttempt != null) {
-            paymentAttempts.put(existingPaymentAttempt.getId(),
-                                ((DefaultPaymentAttempt) existingPaymentAttempt).cloner().setPaymentId(paymentId).build());
+        if (paymentAttemptId != null) {
+            PaymentAttempt existingPaymentAttempt = paymentAttempts.get(paymentAttemptId);
+            if (existingPaymentAttempt != null) {
+                paymentAttempts.put(existingPaymentAttempt.getId(),
+                        ((DefaultPaymentAttempt) existingPaymentAttempt).cloner().setPaymentId(paymentInfo.getId()).build());
+            }
         }
     }
 
     @Override
     public List<PaymentAttempt> getPaymentAttemptsForInvoiceId(final UUID invoiceId) {
         Collection<PaymentAttempt> attempts =  Collections2.filter(paymentAttempts.values(), new Predicate<PaymentAttempt>() {
-                @Override
-                public boolean apply(PaymentAttempt input) {
-                    return invoiceId.equals(input.getInvoiceId());
-                }
-            });
+            @Override
+            public boolean apply(PaymentAttempt input) {
+                return invoiceId.equals(input.getInvoiceId());
+            }
+        });
         return new ArrayList<PaymentAttempt>(attempts);
     }
 
-    @Override
-    public void updatePaymentInfo(String paymentMethodType, UUID paymentId, String cardType, String cardCountry, CallContext context) {
-        DefaultPaymentInfoEvent existingPayment = (DefaultPaymentInfoEvent) payments.get(paymentId);
-        if (existingPayment != null) {
-            PaymentInfoEvent payment = existingPayment.cloner()
-                    .setPaymentMethod(paymentMethodType)
-                    .setCardType(cardType)
-                    .setCardCountry(cardCountry)
-                    .build();
-            payments.put(paymentId, payment);
-        }
-    }
 
     @Override
     public List<PaymentInfoEvent> getPaymentInfoList(List<UUID> invoiceIds) {
@@ -164,5 +151,6 @@ public class MockPaymentDao implements PaymentDao {
         // TODO Auto-generated method stub
         return null;
     }
+
 
 }

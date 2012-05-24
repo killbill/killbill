@@ -76,24 +76,12 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
                 return null;
             }
             @Override
-            public String getPaymentMethod() {
-                return null;
-            }
-            @Override
             public DateTime getEffectiveDate() {
                 return null;
             }
             @Override
             public DateTime getCreatedDate() {
                 return new DateTime(DateTimeZone.UTC);
-            }
-            @Override
-            public String getCardType() {
-                return null;
-            }
-            @Override
-            public String getCardCountry() {
-                return null;
             }
             @Override
             public String getBankIdentificationNumber() {

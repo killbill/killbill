@@ -23,6 +23,7 @@ import com.google.common.base.Strings;
 
 
 public final class PaypalPaymentMethodInfo extends PaymentMethodInfo {
+
     public static final String TYPE = "PayPal";
 
     public static final class Builder extends BuilderBase<PaypalPaymentMethodInfo, Builder> {

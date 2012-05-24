@@ -21,6 +21,9 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 
 public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
+    
+    public static final String TYPE = "CreditCard";
+    
     private final String cardHolderName;
     private final String cardType;
     private final String expirationDate;
@@ -47,7 +50,7 @@ public final class CreditCardPaymentMethodInfo extends PaymentMethodInfo {
                                        @JsonProperty("cardPostalCode") String cardPostalCode,
                                        @JsonProperty("cardCountry") String cardCountry) {
 
-      super(id, accountId, defaultMethod, "CreditCard");
+      super(id, accountId, defaultMethod, TYPE);
       this.cardHolderName = cardHolderName;
       this.cardType = cardType;
       this.expirationDate = expirationDate;

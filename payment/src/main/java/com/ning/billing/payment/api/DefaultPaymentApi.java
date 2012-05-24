@@ -36,6 +36,7 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.dao.PaymentDao;
 
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
@@ -296,27 +297,26 @@ public class DefaultPaymentApi implements PaymentApi {
         PaymentInfoEvent paymentInfo = null;
         BusEvent event = null;
         try {
-            paymentInfo = new DefaultPaymentInfoEvent(plugin.processInvoice(account, invoice), account.getId(), invoice.getId());
+            
+            PaymentInfoPlugin paymentPluginInfo =  plugin.processInvoice(account, invoice);
+            final String paymentMethodId = paymentPluginInfo.getPaymentMethodId();
 
-            paymentDao.savePaymentInfo(paymentInfo, context);
-
-            final String paymentMethodId = paymentInfo.getPaymentMethodId();
             log.debug("Fetching payment method info for payment method id " + ((paymentMethodId == null) ? "null" : paymentMethodId));
             PaymentMethodInfo paymentMethodInfo = plugin.getPaymentMethodInfo(paymentMethodId);
 
             if (paymentMethodInfo instanceof CreditCardPaymentMethodInfo) {
                 CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethodInfo;
-                paymentDao.updatePaymentInfo(ccPaymentMethod.getType(), paymentInfo.getId(), ccPaymentMethod.getCardType(), ccPaymentMethod.getCardCountry(), context);
-
+                paymentInfo = new DefaultPaymentInfoEvent(paymentPluginInfo, ccPaymentMethod ,account.getId(), invoice.getId());
 
             } else if (paymentMethodInfo instanceof PaypalPaymentMethodInfo) {
                 PaypalPaymentMethodInfo paypalPaymentMethodInfo = (PaypalPaymentMethodInfo)paymentMethodInfo;
-                paymentDao.updatePaymentInfo(paypalPaymentMethodInfo.getType(), paymentInfo.getId(), null, null, context);
+                paymentInfo = new DefaultPaymentInfoEvent(paymentPluginInfo, paypalPaymentMethodInfo ,account.getId(), invoice.getId());
+            } else {
+                paymentInfo = new DefaultPaymentInfoEvent(paymentPluginInfo, account.getId(), invoice.getId());
             }
-            if (paymentInfo.getId() != null) {
-                paymentDao.updatePaymentAttemptWithPaymentId(paymentAttempt.getId(), paymentInfo.getId(), context);
-            }
+            paymentDao.insertPaymentInfoWithPaymentAttemptUpdate(paymentInfo, paymentAttempt.getId(), context);
 
+ 
             invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
                         paymentInfo == null || paymentInfo.getStatus().equalsIgnoreCase("Error") ? null : paymentInfo.getAmount(),
                           /*paymentInfo.getRefundAmount(), */
