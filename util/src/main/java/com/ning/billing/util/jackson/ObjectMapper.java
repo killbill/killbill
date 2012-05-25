@@ -14,23 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.util.dao;
+package com.ning.billing.util.jackson;
 
-public enum ObjectType {
-    ACCOUNT("account"),
-    ACCOUNT_EMAIL("account email"),
-    BUNDLE("subscription bundle"),
-    INVOICE("invoice"),
-    PAYMENT("payment"),
-    RECURRING_INVOICE_ITEM("recurring_invoice_item"),
-    SUBSCRIPTION("subscription");
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
-    private final String objectName;
-    ObjectType(String objectName) {
-        this.objectName = objectName;
-    }
-
-    public String getObjectName() {
-        return objectName;
+public class ObjectMapper extends com.fasterxml.jackson.databind.ObjectMapper {
+    public ObjectMapper() {
+        this.registerModule(new JodaModule());
+        this.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 }

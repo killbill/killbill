@@ -16,6 +16,10 @@
 
 package com.ning.billing.account.api.user;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.ChangedField;
@@ -24,11 +28,6 @@ import com.ning.billing.account.api.DefaultChangedField;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonDeserialize;
 
 public class DefaultAccountChangeEvent implements AccountChangeEvent {
 	

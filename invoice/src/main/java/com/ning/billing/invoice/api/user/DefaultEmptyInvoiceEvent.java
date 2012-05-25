@@ -13,23 +13,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.invoice.api.user;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 
 public class DefaultEmptyInvoiceEvent implements EmptyInvoiceEvent {
-
     private final UUID accountId;
     private final DateTime processingDate;
     private final UUID userToken;
-
     
     @JsonCreator
     public DefaultEmptyInvoiceEvent(@JsonProperty("accountId") final UUID accountId,

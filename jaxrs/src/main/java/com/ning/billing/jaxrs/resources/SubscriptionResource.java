@@ -19,6 +19,7 @@ package com.ning.billing.jaxrs.resources;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
@@ -36,6 +37,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.util.TagHelper;
+import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -60,13 +66,14 @@ import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.userrequest.CompletionUserRequestBase;
 
-@Path(BaseJaxrsResource.SUBSCRIPTIONS_PATH)
-public class SubscriptionResource implements BaseJaxrsResource {
-
+@Path(JaxrsResource.SUBSCRIPTIONS_PATH)
+public class SubscriptionResource extends JaxRsResourceBase {
     private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
+    private static final String ID_PARAM_NAME = "subscriptionId";
+    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
+    private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
     private final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
 
@@ -77,7 +84,9 @@ public class SubscriptionResource implements BaseJaxrsResource {
     
     @Inject
     public SubscriptionResource(final JaxrsUriBuilder uriBuilder, final EntitlementUserApi entitlementApi,
-            final Clock clock, final Context context, final KillbillEventHandler killbillHandler) {
+            final Context context, final KillbillEventHandler killbillHandler,
+            final TagUserApi tagUserApi, final TagHelper tagHelper, final CustomFieldUserApi customFieldUserApi) {
+        super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
         this.uriBuilder = uriBuilder;
         this.entitlementApi = entitlementApi;
         this.context = context;
@@ -341,5 +350,77 @@ public class SubscriptionResource implements BaseJaxrsResource {
                 }
             }
         }
+    }
+
+    @GET
+    @Path(CUSTOM_FIELD_URI)
+    @Produces(APPLICATION_JSON)
+    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id) {
+        return super.getCustomFields(UUID.fromString(id));
+    }
+
+    @POST
+    @Path(CUSTOM_FIELD_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+            final List<CustomFieldJson> customFields,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.createCustomFields(UUID.fromString(id), customFields,
+                context.createContext(createdBy, reason, comment));
+    }
+
+    @DELETE
+    @Path(CUSTOM_FIELD_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+            @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.deleteCustomFields(UUID.fromString(id), customFieldList,
+                context.createContext(createdBy, reason, comment));
+    }
+
+    @GET
+    @Path(TAG_URI)
+    @Produces(APPLICATION_JSON)
+    public Response getTags(@PathParam(ID_PARAM_NAME) String id) {
+        return super.getTags(UUID.fromString(id));
+    }
+
+    @POST
+    @Path(TAG_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
+            @QueryParam(QUERY_TAGS) final String tagList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.createTags(UUID.fromString(id), tagList,
+                                context.createContext(createdBy, reason, comment));
+    }
+
+    @DELETE
+    @Path(TAG_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
+            @QueryParam(QUERY_TAGS) final String tagList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+
+        return super.deleteTags(UUID.fromString(id), tagList,
+                                context.createContext(createdBy, reason, comment));
+    }
+
+    @Override
+    protected ObjectType getObjectType() {
+        return ObjectType.SUBSCRIPTION;
     }
 }

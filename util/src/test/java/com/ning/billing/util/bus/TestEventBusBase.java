@@ -17,20 +17,18 @@ package com.ning.billing.util.bus;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
-
 
 public class TestEventBusBase {
 

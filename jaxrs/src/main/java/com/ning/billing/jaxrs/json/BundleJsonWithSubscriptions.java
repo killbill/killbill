@@ -19,9 +19,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonView;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;

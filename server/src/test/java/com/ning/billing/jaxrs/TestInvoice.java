@@ -24,6 +24,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response.Status;
 
+import com.ning.billing.jaxrs.resources.JaxrsResource;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.format.DateTimeFormatter;
@@ -37,10 +38,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubsciptions;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
-import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.http.client.Response;
 
 public class TestInvoice extends TestJaxrsBase  {
@@ -60,7 +60,7 @@ public class TestInvoice extends TestJaxrsBase  {
         AccountJson accountJson = createAccount("poupou", "qhddffrwe", "poupou@yahoo.com");
         assertNotNull(accountJson);
         
-        BundleJsonNoSubsciptions bundleJson = createBundle(accountJson.getAccountId(), "9967599");
+        BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "9967599");
         assertNotNull(bundleJson);
         
         SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
@@ -72,9 +72,9 @@ public class TestInvoice extends TestJaxrsBase  {
 
         crappyWaitForLackOfProperSynchonization();
         
-        String uri = BaseJaxrsResource.INVOICES_PATH;
+        String uri = JaxrsResource.INVOICES_PATH;
         Map<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(BaseJaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId());
+        queryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId());
         
         Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
@@ -85,7 +85,7 @@ public class TestInvoice extends TestJaxrsBase  {
         assertEquals(objFromJson.size(), 4);
         
         // Check we can retrieve an individual invoice
-        uri = BaseJaxrsResource.INVOICES_PATH + "/" + objFromJson.get(0).getInvoiceId();
+        uri = JaxrsResource.INVOICES_PATH + "/" + objFromJson.get(0).getInvoiceId();
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());        
         baseJson = response.getResponseBody();
@@ -95,9 +95,9 @@ public class TestInvoice extends TestJaxrsBase  {
         
         // Then create a dryRun Invoice
         DateTime futureDate = clock.getUTCNow().plusMonths(1).plusDays(3);
-        uri = BaseJaxrsResource.INVOICES_PATH;
-        queryParams.put(BaseJaxrsResource.QUERY_TARGET_DATE, futureDate.toString());
-        queryParams.put(BaseJaxrsResource.QUERY_DRY_RUN, "true");        
+        uri = JaxrsResource.INVOICES_PATH;
+        queryParams.put(JaxrsResource.QUERY_TARGET_DATE, futureDate.toString());
+        queryParams.put(JaxrsResource.QUERY_DRY_RUN, "true");
         response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode()); 
         baseJson = response.getResponseBody();
@@ -106,7 +106,7 @@ public class TestInvoice extends TestJaxrsBase  {
         log.info(baseJson);
         
         // The one more time with no DryRun
-        queryParams.remove(BaseJaxrsResource.QUERY_DRY_RUN);
+        queryParams.remove(JaxrsResource.QUERY_DRY_RUN);
         response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
         
@@ -114,7 +114,7 @@ public class TestInvoice extends TestJaxrsBase  {
         Assert.assertNotNull(location);
         
         // Check again # invoices, should be 5 this time
-        uri = BaseJaxrsResource.INVOICES_PATH;
+        uri = JaxrsResource.INVOICES_PATH;
         response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();

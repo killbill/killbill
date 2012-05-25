@@ -1,8 +1,8 @@
 package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
 import com.ning.billing.invoice.api.Invoice;
