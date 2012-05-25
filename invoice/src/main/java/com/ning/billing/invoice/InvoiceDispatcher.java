@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -146,13 +147,14 @@ public class InvoiceDispatcher {
             Account account = accountUserApi.getAccountById(accountId);
             BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
             
+            List<Invoice> invoices = new ArrayList<Invoice>();
             if (billingEvents.isAccountAutoInvoiceOff()) {
-                return null; //nothing to do invoicing is off on this account
-            }
+                invoices = invoiceDao.getInvoicesByAccount(accountId); //no need to fetch, invoicing is off on this account
+            } 
 
             Currency targetCurrency = account.getCurrency();
 
-            List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
+            
             Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency);
 
             if (invoice == null) {
